@@ -925,126 +925,129 @@ if($cc_email_count > 0){
             </optgroup>
           </select>
 
-          <!-- Live Attachment Format Summary & Deliverability Badge -->
-          <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-              <span style="width:26px;height:26px;border-radius:6px;background:#E2E8F0;color:#475569;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
-              <div style="min-width:0;">
-                <div id="fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Select Resume Format
-                </div>
-                <div id="fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
-                  Choose a resume format above to attach candidate resumes.
-                </div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span id="fwd_batch_count_badge" style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 5 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 5 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
-                📎 {{ count($applicationData ?? []) }} / 5 Max Resumes
-              </span>
-            </div>
-          </div>
-
-          @if(($candidatesWithoutResumeCount ?? 0) > 0)
-            <div id="fwd_missing_resume_banner" style="margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;display:flex;align-items:center;gap:10px;">
-              <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
-              <div style="font-size:12px;color:#92400E;line-height:1.4;">
-                <strong>Resume Notice:</strong> {{ $candidatesWithoutResumeCount }} of {{ count($applicationData ?? []) }} selected profiles has no resume document uploaded. You can attach a resume directly below or send using Option 5 (Pre-Screened Report).
-              </div>
-            </div>
-          @endif
-
-          <!-- Multi-Profile Attached Resumes Roster -->
-          <div id="fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
-            @foreach($applicationData as $idx => $cand)
-              @php
-                $hasResume = !empty($cand->has_resume);
-                $candSafeName = !empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_' . $cand->id);
-                $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
-                $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
-              @endphp
-              <div class="fwd-cand-card" id="fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;transition:all 0.2s ease;">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                    {{-- Avatar / Sequence badge --}}
-                    <div style="position:relative;flex-shrink:0;">
-                      <span id="fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
-                        {{ $idx + 1 }}
-                      </span>
-                      <span id="fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:{{ $hasResume ? '#10B981' : '#F59E0B' }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">
-                        {{ $hasResume ? '✓' : '!' }}
-                      </span>
-                    </div>
-
-                    {{-- Candidate Name & Dynamic Filename --}}
-                    <div style="min-width:0;flex:1;">
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-                        <span style="font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                          {{ $candDisplayName }}
-                        </span>
-                        <span style="font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                          • {{ $candDesignation }}
-                        </span>
-                      </div>
-                      <div class="fwd-cand-filename" id="fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        {{ $hasResume ? ('Jeroworks_' . $candSafeName . '.pdf') : 'No resume uploaded' }}
-                      </div>
-                    </div>
-                  </div>
-
-                  {{-- Candidate Status Pill & Inline Upload Action --}}
-                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                    <div id="fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
-                      {{ $hasResume ? '✓ Attached (100%)' : '⚠ No Resume' }}
-                    </div>
-
-                    <div id="fwd_quick_upload_wrap_{{ $cand->id }}" style="{{ $hasResume ? 'display:none;' : 'display:inline-flex;' }}">
-                      <input type="file" id="fwd_quick_file_{{ $cand->id }}" accept=".pdf,.doc,.docx" style="display:none;" onchange="uploadCandidateResumeInlineProd({{ $cand->id }}, this)" />
-                      <button type="button" class="btn btn-xs btn-light-primary fw-bold" onclick="document.getElementById('fwd_quick_file_{{ $cand->id }}').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Upload Resume Document">
-                        <span id="fwd_upload_spin_{{ $cand->id }}" class="spinner-border spinner-border-sm me-1" style="display:none;width:10px;height:10px;"></span>
-                        <span id="fwd_upload_txt_{{ $cand->id }}">+ Upload CV</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {{-- Candidate Progress Bar (Active Rendering) --}}
-                <div id="fwd_cand_progress_wrap_{{ $cand->id }}" style="display:none;margin-top:8px;">
-                  <div style="height:4px;width:100%;background:#E5E7EB;border-radius:2px;overflow:hidden;">
-                    <div id="fwd_cand_progress_bar_{{ $cand->id }}" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:2px;transition:width 0.2s ease;"></div>
-                  </div>
-                </div>
-              </div>
-            @endforeach
-          </div>
-
-          <!-- Master Resume Compilation Progress Bar -->
-          <div id="fwd_compile_progress_container" style="display:none;margin-top:10px;padding:11px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <!-- Hidden by default until user selects a format from the dropdown above -->
+          <div id="fwd_format_details_section" style="display:none;">
+            <!-- Live Attachment Format Summary & Deliverability Badge -->
+            <div id="fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
               <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                <span id="fwd_compile_spinner" class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:#0D9488!important;display:inline-block;"></span>
-                <span id="fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#0F766E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Preparing custom resume attachments...
+                <span style="width:26px;height:26px;border-radius:6px;background:#E2E8F0;color:#475569;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
+                <div style="min-width:0;">
+                  <div id="fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    Select Resume Format
+                  </div>
+                  <div id="fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
+                    Choose a resume format above to attach candidate resumes.
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span id="fwd_batch_count_badge" style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 5 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 5 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
+                  📎 {{ count($applicationData ?? []) }} / 5 Max Resumes
                 </span>
               </div>
-              <span id="fwd_compile_pct_badge" style="font-size:12px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 8px;border-radius:10px;border:1px solid #99F6E4;flex-shrink:0;">
-                0%
-              </span>
             </div>
-            <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
-              <div id="fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
+
+            @if(($candidatesWithoutResumeCount ?? 0) > 0)
+              <div id="fwd_missing_resume_banner" style="margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;display:flex;align-items:center;gap:10px;">
+                <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
+                <div style="font-size:12px;color:#92400E;line-height:1.4;">
+                  <strong>Resume Notice:</strong> {{ $candidatesWithoutResumeCount }} of {{ count($applicationData ?? []) }} selected profiles has no resume document uploaded. You can attach a resume directly below or send using Option 5 (Pre-Screened Report).
+                </div>
+              </div>
+            @endif
+
+            <!-- Multi-Profile Attached Resumes Roster -->
+            <div id="fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+              @foreach($applicationData as $idx => $cand)
+                @php
+                  $hasResume = !empty($cand->has_resume);
+                  $candSafeName = !empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_' . $cand->id);
+                  $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
+                  $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
+                @endphp
+                <div class="fwd-cand-card" id="fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;transition:all 0.2s ease;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                      {{-- Avatar / Sequence badge --}}
+                      <div style="position:relative;flex-shrink:0;">
+                        <span id="fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
+                          {{ $idx + 1 }}
+                        </span>
+                        <span id="fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:{{ $hasResume ? '#10B981' : '#F59E0B' }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">
+                          {{ $hasResume ? '✓' : '!' }}
+                        </span>
+                      </div>
+
+                      {{-- Candidate Name & Dynamic Filename --}}
+                      <div style="min-width:0;flex:1;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+                          <span style="font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ $candDisplayName }}
+                          </span>
+                          <span style="font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            • {{ $candDesignation }}
+                          </span>
+                        </div>
+                        <div class="fwd-cand-filename" id="fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          {{ $hasResume ? ('Jeroworks_' . $candSafeName . '.pdf') : 'No resume uploaded' }}
+                        </div>
+                      </div>
+                    </div>
+
+                    {{-- Candidate Status Pill & Inline Upload Action --}}
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                      <div id="fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                        {{ $hasResume ? '✓ Attached (100%)' : '⚠ No Resume' }}
+                      </div>
+
+                      <div id="fwd_quick_upload_wrap_{{ $cand->id }}" style="{{ $hasResume ? 'display:none;' : 'display:inline-flex;' }}">
+                        <input type="file" id="fwd_quick_file_{{ $cand->id }}" accept=".pdf,.doc,.docx" style="display:none;" onchange="uploadCandidateResumeInlineProd({{ $cand->id }}, this)" />
+                        <button type="button" class="btn btn-xs btn-light-primary fw-bold" onclick="document.getElementById('fwd_quick_file_{{ $cand->id }}').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Upload Resume Document">
+                          <span id="fwd_upload_spin_{{ $cand->id }}" class="spinner-border spinner-border-sm me-1" style="display:none;width:10px;height:10px;"></span>
+                          <span id="fwd_upload_txt_{{ $cand->id }}">+ Upload CV</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {{-- Candidate Progress Bar (Active Rendering) --}}
+                  <div id="fwd_cand_progress_wrap_{{ $cand->id }}" style="display:none;margin-top:8px;">
+                    <div style="height:4px;width:100%;background:#E5E7EB;border-radius:2px;overflow:hidden;">
+                      <div id="fwd_cand_progress_bar_{{ $cand->id }}" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:2px;transition:width 0.2s ease;"></div>
+                    </div>
+                  </div>
+                </div>
+              @endforeach
             </div>
-            <div id="fwd_compile_hint" style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
-              <span id="fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
-              <span id="fwd_compile_count">0 / {{ count($applicationData ?? []) }}</span>
+
+            <!-- Master Resume Compilation Progress Bar -->
+            <div id="fwd_compile_progress_container" style="display:none;margin-top:10px;padding:11px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                  <span id="fwd_compile_spinner" class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:#0D9488!important;display:inline-block;"></span>
+                  <span id="fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#0F766E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    Preparing custom resume attachments...
+                  </span>
+                </div>
+                <span id="fwd_compile_pct_badge" style="font-size:12px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 8px;border-radius:10px;border:1px solid #99F6E4;flex-shrink:0;">
+                  0%
+                </span>
+              </div>
+              <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
+                <div id="fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
+              </div>
+              <div id="fwd_compile_hint" style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
+                <span id="fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
+                <span id="fwd_compile_count">0 / {{ count($applicationData ?? []) }}</span>
+              </div>
             </div>
+            @if(count($applicationData ?? []) > 5)
+              <div style="margin-top:7px;padding:7px 11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;color:#991B1B;font-size:11.5px;display:flex;align-items:center;gap:6px;">
+                <span>⚠️</span>
+                <span><strong>Notice:</strong> You selected {{ count($applicationData) }} candidates. To ensure 100% email deliverability and avoid mail server rejections, a maximum of 5 resumes will be attached per batch.</span>
+              </div>
+            @endif
           </div>
-          @if(count($applicationData ?? []) > 5)
-            <div style="margin-top:7px;padding:7px 11px;background:#FEF2F2;border:1px solid #FECACA;border-radius:7px;color:#991B1B;font-size:11.5px;display:flex;align-items:center;gap:6px;">
-              <span>⚠️</span>
-              <span><strong>Notice:</strong> You selected {{ count($applicationData) }} candidates. To ensure 100% email deliverability and avoid mail server rejections, a maximum of 5 resumes will be attached per batch.</span>
-            </div>
-          @endif
         </div>
       </div>
     </div>
@@ -1586,6 +1589,7 @@ function updateSendButtonState() {
 
     // Default state: No format chosen yet -> Keep Send ready for validation prompt, no background compilation
     if (!optId) {
+        $('#fwd_format_details_section').hide();
         _fwdGlobalToken++;
         _fwdIsCompiling = false;
         btn.disabled = false;
@@ -1611,6 +1615,8 @@ function updateSendButtonState() {
         });
         return;
     }
+
+    $('#fwd_format_details_section').show();
 
     // Option 1 (Original Resume): Send is immediately active
     if (optId === 1) {
@@ -1885,6 +1891,7 @@ window.onFwdFormatChange = function (el) {
     var $el = $(el || '#fwd_resume_format');
     var val = $el.val();
     if (!val) {
+        $('#fwd_format_details_section').slideUp(150);
         $('#fwd_preview_format_title').text('Select Resume Format');
         $('#fwd_preview_desc').text('Choose a resume format above to attach candidate resumes.');
         $('#fwd_attachment_preview_card').css({ 'background': '#F8FAFC', 'border-color': '#E2E8F0' });
@@ -1892,6 +1899,7 @@ window.onFwdFormatChange = function (el) {
         updateSendButtonState();
         return;
     }
+    $('#fwd_format_details_section').slideDown(150);
     var sel = $el.find('option:selected');
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
