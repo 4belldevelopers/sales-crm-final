@@ -539,23 +539,6 @@
                         </svg>
                     </span> Mass Email </a>
 
-
-                <a href="javascript:void(0);" type="button"
-                    class="btn btn-sm btn-flex btn-light-primary fwd_resume fw-bolder me-3 d-none cvh-legacy-hide" data-toggle="modal"
-                    data-target="#fwd_resume"> <span class="svg-icon svg-icon-primary svg-icon-1x">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
-                            height="24px" viewBox="0 0 24 24" version="1.1">
-                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                <rect x="0" y="0" width="24" height="24" />
-                                <path
-                                    d="M18,2 L20,2 C21.6568542,2 23,3.34314575 23,5 L23,19 C23,20.6568542 21.6568542,22 20,22 L18,22 L18,2 Z"
-                                    fill="#000000" opacity="0.3" />
-                                <path
-                                    d="M5,2 L17,2 C18.6568542,2 20,3.34314575 20,5 L20,19 C20,20.6568542 18.6568542,22 17,22 L5,22 C4.44771525,22 4,21.5522847 4,21 L4,3 C4,2.44771525 4.44771525,2 5,2 Z M12,11 C13.1045695,11 14,10.1045695 14,9 C14,7.8954305 13.1045695,7 12,7 C10.8954305,7 10,7.8954305 10,9 C10,10.1045695 10.8954305,11 12,11 Z M7.00036205,16.4995035 C6.98863236,16.6619875 7.26484009,17 7.4041679,17 C11.463736,17 14.5228466,17 16.5815,17 C16.9988413,17 17.0053266,16.6221713 16.9988413,16.5 C16.8360465,13.4332455 14.6506758,12 11.9907452,12 C9.36772908,12 7.21569918,13.5165724 7.00036205,16.4995035 Z"
-                                    fill="#000000" />
-                            </g>
-                        </svg>
-                    </span> Fwd Resume </a>
                 {{-- <a href="javascript:void(0);"  type="button" class="btn btn-sm btn-flex btn-light-primary fw-bolder me-3 send_email d-none" data-toggle="modal" data-target="#send_email"> <span class="svg-icon svg-icon-primary svg-icon-1x">
       <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -1419,11 +1402,6 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
                             </span> Send Email
                         </a>
-                        <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary fwd_resume" id="kt_fwd_resume_drawer_toggle">
-                            <span class="svg-icon svg-icon-primary svg-icon-1x">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="m9 14 3 3 3-3"/><path d="M12 17v-6"/></svg>
-                            </span> Forward Resume
-                        </a>
                         <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-success test_fwd_resume" id="kt_test_fwd_resume_drawer_toggle">
                             <span class="svg-icon svg-icon-success svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
@@ -1568,38 +1546,6 @@
     </div>
 
 
-    <!--begin::Fwd Resume - Drawer-->
-    <div id="kt_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="fwd-resume"
-        data-kt-drawer-activate="true" data-kt-drawer-overlay="false"
-        data-kt-drawer-width="{default:'90%', 'lg': '80%'}" data-kt-drawer-direction="end"
-        data-kt-drawer-toggle="#kt_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_fwd_resume_drawer_close">
-        <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
-            <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
-                <div class="d-flex align-items-center py-1">
-                    <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
-                </div>
-                <div class="card-toolbar">
-                    <button type="button" class="btn btn-sm btn-icon btn-active-light-danger me-n5"
-                        id="kt_fwd_resume_drawer_close">
-                        <span class="svg-icon svg-icon-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                                width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g transform="translate(12.000000, 12.000000) rotate(-45.000000) translate(-12.000000, -12.000000) translate(4.000000, 4.000000)"
-                                    fill="currentColor">
-                                    <rect x="0" y="7" width="16" height="2" rx="1"/>
-                                    <rect opacity="0.5"
-                                        transform="translate(8.000000, 8.000000) rotate(-270.000000) translate(-8.000000, -8.000000)"
-                                        x="0" y="7" width="16" height="2" rx="1"/>
-                                </g>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="application_fwd_resume_body_content"></div>
-        </div>
-    </div>
-    <!--end::Fwd Resume - Drawer-->
 
     <!--begin::Test Fwd Resume - Drawer-->
     <div id="kt_test_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="test-fwd-resume"
@@ -1796,110 +1742,6 @@
 
             $('#inputSearch').keyup(function() {
                 // tableLoad('filter');
-            });
-
-
-            $(document).on('click', '.fwd_resume', function(e) {
-                e.preventDefault();
-
-                if (window._fwdGlobalToken !== undefined) {
-                    window._fwdGlobalToken++;
-                    window._fwdIsCompiling = false;
-                }
-
-                var arr = [];
-                var jobIdArr = [];
-                var matchMap = {};
-                $('.chk_list_item:checked').each(function() {
-                    var jobId = $(this).attr('data-jobId');
-                    var candId = $(this).val();
-                    var matchVal = $(this).attr('data-match');
-                    arr.push(candId);
-                    jobIdArr.push(jobId);
-                    if (matchVal !== undefined && matchVal !== '') {
-                        matchMap[candId] = parseInt(matchVal, 10);
-                    }
-                });
-
-                if (arr.length === 0) {
-                    Swal.fire({
-                        title: 'No Candidate Selected',
-                        text: 'Please select at least one candidate before forwarding resumes.',
-                        icon: 'warning',
-                        confirmButtonColor: '#0D9488'
-                    });
-                    return;
-                }
-
-                if (arr.length > 5) {
-                    Swal.fire({
-                        title: 'Maximum 5 Candidates Allowed',
-                        html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
-                              '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. You can forward a maximum of 5 candidates in a single request.</p>' +
-                              '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer then click Forward Resume to continue.</p>' +
-                              '</div>',
-                        icon: 'warning',
-                        confirmButtonText: 'OK, I Understand',
-                        confirmButtonColor: '#0D9488',
-                        allowOutsideClick: true,
-                        didOpen: function() {
-                            var popup = Swal.getPopup();
-                            if (popup) {
-                                popup.style.cursor = 'pointer';
-                                popup.addEventListener('click', function(e) {
-                                    if (e.target && (e.target.classList.contains('swal2-confirm') || e.target.closest('.swal2-confirm'))) {
-                                        return;
-                                    }
-                                    Swal.close();
-                                    if (typeof clearCvSelection === 'function') { clearCvSelection(); }
-                                });
-                            }
-                        }
-                    }).then(function() {
-                        if (typeof clearCvSelection === 'function') { clearCvSelection(); }
-                    });
-                    return;
-                }
-
-                // Open the Forward Resume drawer
-                var drawerEl = document.getElementById('kt_fwd_resume_drawer');
-                if (drawerEl && typeof KTDrawer !== 'undefined') {
-                    var drawer = KTDrawer.getInstance(drawerEl);
-                    if (drawer) { drawer.show(); }
-                }
-
-                $('#application_mass_mail_body_content').html('');
-                $('#application_fwd_resume_body_content').html(
-                    '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                    '<span class="spinner-border spinner-border-sm text-primary me-2"></span> Loading...</div>'
-                );
-
-                var id = jobIdArr[0];
-                var url = "{{ route('service_company.cvtracker.fwd_resume', ':id') }}";
-                url = url.replace(':id', id);
-                var token = "{{ csrf_token() }}";
-
-                $.ajax({
-                    type: 'POST',
-                    url: url,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'arr': arr,
-                        'jobIdArr': jobIdArr,
-                        'matchMap': matchMap
-                    },
-                    cache: false,
-                    success: function(response) {
-                        if (response.status == "success") {
-                            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['editor1']) {
-                                try { CKEDITOR.instances['editor1'].destroy(true); } catch(e) {}
-                            }
-                            $('#application_fwd_resume_body_content').html(response.view);
-                        }
-                    }
-                });
-
             });
 
             $(document).on('click', '.test_fwd_resume', function(e) {
@@ -2490,12 +2332,11 @@
             });
 
             $(document).on('click', '.chk_list', function(e) {
-                $('#application_fwd_resume_body_content').html('');
                 $('#application_test_fwd_resume_body_content').html('');
 
                 if ($(".chk_list").prop('checked') == true) {
                     var chk_list = $('.chk_list').val();
-                    $('.fwd_resume, .test_fwd_resume').removeClass("d-none");
+                    $('.test_fwd_resume').removeClass("d-none");
                     $('.custom_hide').addClass("d-none");
                     $('.mass_mail').removeClass("d-none");
                     $('.send_email').removeClass("d-none");
@@ -2504,7 +2345,7 @@
                     $('.application_copy').removeClass("d-none");
 
                 } else {
-                    $('.fwd_resume, .test_fwd_resume').addClass("d-none");
+                    $('.test_fwd_resume').addClass("d-none");
                     $('.send_email').addClass("d-none");
                     $('.mass_mail').addClass("d-none");
                     $('.app_copy').addClass("d-none");
@@ -2517,7 +2358,6 @@
 
             $(document).on('click', '.chk_list_item', function() {
                   
-                $('#application_fwd_resume_body_content').html('');
                 $('#application_test_fwd_resume_body_content').html('');
                 var i = 0;
                 var arr = [];
@@ -2526,7 +2366,7 @@
                 });
                 setTimeout(() => {
                     if (arr.length > 0) {
-                        $('.fwd_resume, .test_fwd_resume').removeClass("d-none");
+                        $('.test_fwd_resume').removeClass("d-none");
                         $('.mass_mail').removeClass("d-none");
                         $('.send_email').removeClass("d-none");
                         $('.custom_hide').addClass("d-none");
@@ -2534,7 +2374,7 @@
                         $('.app_copy').removeClass("d-none");
                         $('.application_copy').removeClass("d-none");
                     } else {
-                        $('.fwd_resume, .test_fwd_resume').addClass("d-none");
+                        $('.test_fwd_resume').addClass("d-none");
                         $('.mass_mail').addClass("d-none");
                         $('.downloadexcell').addClass("d-none");
                         $('.send_email').addClass("d-none");
@@ -2555,16 +2395,15 @@
                 $('#cvh_selection_master_chk').prop('checked', n > 0);
                 if (n === 0) {
                     $('.chk_list, #cvh_selection_master_chk').prop('checked', false);
-                    $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                    $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                     $('.custom_hide').removeClass('d-none');
                 }
             }
             function clearCvSelection() {
                 $('.chk_list, .chk_list_item, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
                 $('#myTable tbody tr').removeClass('table-active selected');
-                $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                 $('.custom_hide').removeClass('d-none');
-                $('#application_fwd_resume_body_content').html('');
                 $('#application_test_fwd_resume_body_content').html('');
                 updateCvSelectionBar();
             }

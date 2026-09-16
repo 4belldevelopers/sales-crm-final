@@ -759,6 +759,11 @@ window.closeTestFwdResumeDrawer = function() {
         var drawerAptk = KTDrawer.getInstance(drawerAptkEl);
         if (drawerAptk) { drawerAptk.hide(); }
     }
+    var drawerClientAppEl = document.getElementById('kt_test_fwd_resume_drawer_clientapp');
+    if (drawerClientAppEl && typeof KTDrawer !== 'undefined') {
+        var drawerClientApp = KTDrawer.getInstance(drawerClientAppEl);
+        if (drawerClientApp) { drawerClientApp.hide(); }
+    }
     closeTestEmailRecipientDrawer();
     $('#application_test_fwd_resume_body_content').html('');
 };
@@ -1596,7 +1601,7 @@ window.onTestFwdSubmitClick = async function (e) {
                 } else {
                     $('.chk_list, .chk_list_item, #cvh_selection_master_chk, #chk_all_list').prop('checked', false);
                     $('#myTable tbody tr').removeClass('table-active selected');
-                    $('.fwd_resume, .test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+                    $('.test_fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
                     $('.custom_hide').removeClass('d-none');
                     $('#cvh_selected_count').text('0');
                     $('#cvh_selection_bar').removeClass('show');
