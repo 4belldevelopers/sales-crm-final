@@ -263,39 +263,79 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 ],
             ];
         }
-        // ── Hiring filter: sort clients by active job count DESC via MySQL ──
+        // ── Hiring filter: sort internal & direct clients by active job count DESC (excluding main company) ──
         if ($hiringFilter) {
-            // Get client_ids ordered by active job count (only clients with ≥1 active job)
-            $orderedClientIds = DB::table('jobs')
-                ->where('company_id', $company_id)
-                ->where('status', 'active')
-                ->whereNotNull('client_id')
-                ->select('client_id', DB::raw('COUNT(*) as active_count'))
-                ->groupBy('client_id')
-                ->orderByDesc('active_count')
-                ->pluck('client_id')
-                ->toArray();
+            // INTENT: Get active internal client job counts (excluding main company self_company = 1). Tenancy: company_id bound.
+            $internalHiring = DB::table('jobs')
+                ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                ->where('jobs.company_id', $company_id)
+                ->where('jobs.status', 'active')
+                ->where('clients.company_id', $company_id)
+                ->where('clients.self_company', '!=', 1)
+                ->select('jobs.client_id as id', DB::raw("'internal' as type"), DB::raw('COUNT(jobs.id) as active_count'))
+                ->groupBy('jobs.client_id')
+                ->get();
 
-            if (empty($orderedClientIds)) {
+            // INTENT: Get active direct client job counts shared via recommendation_relation. Tenancy: to_company_id bound.
+            $directHiring = DB::table('recommendation_relation')
+                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                ->where('recommendation_relation.to_company_id', $company_id)
+                ->where('recommendation_relation.from_company_id', '!=', $company_id)
+                ->where('recommendation_relation.final_status', 1)
+                ->where('jobs.status', 'active')
+                ->select('recommendation_relation.from_company_id as id', DB::raw("'direct' as type"), DB::raw('COUNT(jobs.id) as active_count'))
+                ->groupBy('recommendation_relation.from_company_id')
+                ->get();
+
+            $allHiringItems = $internalHiring->concat($directHiring)
+                ->sortByDesc('active_count')
+                ->values();
+
+            if ($allHiringItems->isEmpty()) {
                 $total = 0;
                 $data = [];
             } else {
-                // Paginate the ordered IDs in PHP
-                $total = count($orderedClientIds);
-                $pageIds = array_slice($orderedClientIds, $from, $size);
+                $total = $allHiringItems->count();
+                $pageItems = $allHiringItems->slice($from, $size)->values();
 
-                // Fetch those clients from ES (matching client_id, company_id, or _id)
-                $hiringMust = $must;
-                $hiringMust[] = [
-                    'bool' => [
-                        'should' => [
-                            ['terms' => ['client_id' => $pageIds]],
-                            ['terms' => ['company_id' => $pageIds]],
-                            ['terms' => ['_id' => array_map('strval', $pageIds)]],
+                $pageInternalClientIds = $pageItems->where('type', 'internal')->pluck('id')->toArray();
+                $pageDirectCompanyIds = $pageItems->where('type', 'direct')->pluck('id')->toArray();
+
+                $shouldClause = [];
+                if (! empty($pageInternalClientIds)) {
+                    $shouldClause[] = [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['company_id' => (int) $company_id]],
+                                ['term' => ['self_company' => 0]],
+                                ['terms' => ['client_id' => array_map('intval', $pageInternalClientIds)]],
+                            ],
                         ],
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+                    ];
+                }
+                if (! empty($pageDirectCompanyIds)) {
+                    $shouldClause[] = [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['self_company' => 1]],
+                                ['terms' => ['company_id' => array_map('intval', $pageDirectCompanyIds)]],
+                            ],
+                            'must_not' => [
+                                ['term' => ['company_id' => (int) $company_id]],
+                            ],
+                        ],
+                    ];
+                }
+
+                $hiringMust = $must;
+                if (! empty($shouldClause)) {
+                    $hiringMust[] = [
+                        'bool' => [
+                            'should' => $shouldClause,
+                            'minimum_should_match' => 1,
+                        ],
+                    ];
+                }
 
                 $hiringParams = [
                     'index' => ELASTIC_CLIENT_LIST,
@@ -309,27 +349,25 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     ? $this->elasticService->getClient()->search($hiringParams)
                     : ['hits' => ['hits' => []]];
 
-                // Re-order ES hits to match MySQL active-count order
-                $hitsByClientId = [];
+                $indexedHits = [];
                 foreach ($hiringResp['hits']['hits'] as $hit) {
                     $src = $hit['_source'];
-                    $cId = $src['client_id'] ?? null;
-                    $compKey = $src['company_id'] ?? null;
-                    $docKey = $hit['_id'] ?? null;
-                    if ($cId) {
-                        $hitsByClientId[$cId] = $src;
-                    }
-                    if ($compKey) {
-                        $hitsByClientId[$compKey] = $src;
-                    }
-                    if ($docKey) {
-                        $hitsByClientId[$docKey] = $src;
+                    $isSelf = (int) ($src['self_company'] ?? 0);
+                    $cCompId = (int) ($src['company_id'] ?? 0);
+                    $cClientId = (int) ($src['client_id'] ?? 0);
+
+                    if ($isSelf === 0 && $cCompId === (int) $company_id) {
+                        $indexedHits['internal_'.$cClientId] = $src;
+                    } elseif ($isSelf === 1 && $cCompId !== (int) $company_id) {
+                        $indexedHits['direct_'.$cCompId] = $src;
                     }
                 }
+
                 $data = [];
-                foreach ($pageIds as $cid) {
-                    if (isset($hitsByClientId[$cid])) {
-                        $data[] = $hitsByClientId[$cid];
+                foreach ($pageItems as $pItem) {
+                    $key = $pItem->type.'_'.$pItem->id;
+                    if (isset($indexedHits[$key])) {
+                        $data[] = $indexedHits[$key];
                     }
                 }
             }
@@ -561,10 +599,11 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
         // ── Hiring filter: sort direct clients by active job count DESC ──
         if ($hiringFilter) {
-            // Direct clients: jobs shared via recommendation_relation where to_company_id = $company_id
+            // INTENT: Direct clients with active jobs shared via recommendation_relation. Tenancy: to_company_id = $company_id, from_company_id != $company_id.
             $orderedCompanyIds = DB::table('recommendation_relation')
                 ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
                 ->where('recommendation_relation.to_company_id', $company_id)
+                ->where('recommendation_relation.from_company_id', '!=', $company_id)
                 ->where('recommendation_relation.final_status', 1)
                 ->where('jobs.status', 'active')
                 ->select('recommendation_relation.from_company_id', DB::raw('COUNT(jobs.id) as active_count'))
@@ -799,15 +838,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             ];
         }
         if ($hiringFilter) {
-            // Sort internal clients by active job count DESC
+            // INTENT: Sort internal clients by active job count DESC (excluding main company self_company = 1). Tenancy: jobs.company_id = clients.company_id = $company_id.
             $orderedClientIds = DB::table('jobs')
-                ->where('company_id', $company_id)
-                ->where('status', 'active')
-                ->whereNotNull('client_id')
-                ->select('client_id', DB::raw('COUNT(*) as active_count'))
-                ->groupBy('client_id')
+                ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                ->where('jobs.company_id', $company_id)
+                ->where('jobs.status', 'active')
+                ->where('clients.company_id', $company_id)
+                ->where('clients.self_company', '!=', 1)
+                ->select('jobs.client_id', DB::raw('COUNT(jobs.id) as active_count'))
+                ->groupBy('jobs.client_id')
                 ->orderByDesc('active_count')
-                ->pluck('client_id')
+                ->pluck('jobs.client_id')
                 ->toArray();
 
             if (empty($orderedClientIds)) {
@@ -1143,15 +1184,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $clientCounter['clientRequest'] = $count;
         $clientCounter['clientAll'] = $clientCustom + $clientDirect;
 
-        // Clients Actively Hiring Count (unique client_ids with active jobs)
-        $clientHiring = DB::table('jobs')
-            ->where('company_id', $company_id)
-            ->where('status', 'active')
-            ->whereNotNull('client_id')
+        // INTENT: Clients Actively Hiring Count (unique internal clients + direct clients with active jobs, excluding main company self_company = 1). Tenancy: scoped by company_id / to_company_id.
+        $internalHiringCount = DB::table('jobs')
+            ->join('clients', 'clients.id', '=', 'jobs.client_id')
+            ->where('jobs.company_id', $company_id)
+            ->where('jobs.status', 'active')
+            ->where('clients.company_id', $company_id)
+            ->where('clients.self_company', '!=', 1)
             ->distinct()
-            ->count('client_id');
+            ->count('clients.id');
 
-        $clientCounter['clientHiring'] = $clientHiring;
+        $directHiringCount = DB::table('recommendation_relation')
+            ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+            ->where('recommendation_relation.to_company_id', $company_id)
+            ->where('recommendation_relation.from_company_id', '!=', $company_id)
+            ->where('recommendation_relation.final_status', 1)
+            ->where('jobs.status', 'active')
+            ->distinct()
+            ->count('recommendation_relation.from_company_id');
+
+        $clientCounter['clientHiring'] = $internalHiringCount + $directHiringCount;
 
         return $clientCounter;
     }
