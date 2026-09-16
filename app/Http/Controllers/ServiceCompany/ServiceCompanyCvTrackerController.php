@@ -2779,7 +2779,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
-                'job_applications.candidate_id',
                 'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
@@ -2804,7 +2803,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
-                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -2869,7 +2867,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
         $appIds = collect($this->applicationData)->pluck('id')->toArray();
-        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
 
         $cjseSkills = collect();
         if (! empty($appIds)) {
@@ -2887,10 +2884,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $benchSkills = collect();
-        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
-        if (! empty($allBenchIds)) {
+        if (! empty($appIds)) {
             $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $allBenchIds)
+                ->whereIn('candidate_id', $appIds)
                 ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
                 ->orderBy('skill_key')
                 ->get()
@@ -2972,7 +2968,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $seenSkillNames = [];
 
             // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            $benchList = $benchSkills->get($cand->id);
             if ($benchList && count($benchList) > 0) {
                 foreach ($benchList as $bRow) {
                     $sn = trim((string) $bRow->skill_key);
@@ -3229,7 +3225,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $this->applicationData = DB::table('job_applications')
             ->select(
                 'job_applications.id',
-                'job_applications.candidate_id',
                 'job_applications.condidate_type',
                 'job_applications.full_name',
                 'job_applications.current_designation',
@@ -3254,7 +3249,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.np_id',
                 'job_applications.serving_notice_period_mode',
                 'job_applications.current_company',
-                'job_applications.cur_company_name',
                 'job_applications.skills',
                 'job_applications.resume',
                 'job_applications.rating',
@@ -3332,7 +3326,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         // Bulk-load real skill experiences and ratings for selected candidates matching showdetail logic
         $appIds = collect($this->applicationData)->pluck('id')->toArray();
-        $benchCandIds = collect($this->applicationData)->where('condidate_type', 'bench_condidate')->pluck('candidate_id')->filter()->toArray();
 
         $cjseSkills = collect();
         if (! empty($appIds)) {
@@ -3350,10 +3343,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $benchSkills = collect();
-        $allBenchIds = array_unique(array_filter(array_merge($appIds, $benchCandIds)));
-        if (! empty($allBenchIds)) {
+        if (! empty($appIds)) {
             $benchSkills = DB::table('bench_candidate_skill_experience')
-                ->whereIn('candidate_id', $allBenchIds)
+                ->whereIn('candidate_id', $appIds)
                 ->select('candidate_id', 'skill_key', 'year', 'month', 'total_months', 'rating')
                 ->orderBy('skill_key')
                 ->get()
@@ -3438,7 +3430,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $seenSkillNames = [];
 
             // A. Check bench candidate skills if applicable
-            $benchList = $benchSkills->get($cand->id) ?? ($cand->candidate_id ? $benchSkills->get($cand->candidate_id) : null);
+            $benchList = $benchSkills->get($cand->id);
             if ($benchList && count($benchList) > 0) {
                 foreach ($benchList as $bRow) {
                     $sn = trim((string) $bRow->skill_key);
