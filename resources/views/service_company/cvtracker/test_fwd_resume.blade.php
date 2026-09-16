@@ -4,149 +4,611 @@
     $currencySymbole = GeneralMethod::currencySymbole();
 @endphp 
 
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
+<script>
+if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
+    CKEDITOR.tools.enableHtml5Elements(document);
+}
+
+function initTestFwdCkEditor() {
+    if (typeof CKEDITOR === 'undefined') {
+        setTimeout(initTestFwdCkEditor, 100);
+        return;
+    }
+    var editorElement = document.getElementById('test_editor1');
+    if (!editorElement) {
+        setTimeout(initTestFwdCkEditor, 100);
+        return;
+    }
+    if (CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try {
+            CKEDITOR.instances['test_editor1'].destroy(true);
+        } catch(destroyErr) {}
+    }
+    try {
+        CKEDITOR.config.height = 300;
+        CKEDITOR.config.width = '100%';
+        CKEDITOR.replace('test_editor1', {
+            height: 300,
+            width: '100%'
+        });
+    } catch(err) {
+        console.warn('CKEditor test init error:', err);
+    }
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(initTestFwdCkEditor, 50);
+} else {
+    document.addEventListener('DOMContentLoaded', initTestFwdCkEditor);
+}
+$(document).ready(function() {
+    setTimeout(initTestFwdCkEditor, 100);
+});
+setTimeout(initTestFwdCkEditor, 250);
+</script>
+
+<div class="main_container" id="test_main_container">
+@php
+$template_body = '';
+$to_email = '';
+if(!empty($to_email_from_count) && $to_email_from_count > 0 && !empty($to_email_from_data)){
+    $to_email = implode(', ', $to_email_from_data);
+}
+$cc_email = '';
+if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
+    $cc_email = implode(', ', $cc_email_data);
+}
+@endphp
+
 <style>
-.test-fwd-container { font-family: 'Poppins', sans-serif; }
-.test-fwd-badge { background: #ECFDF5; border: 1px solid #10B981; color: #047857; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
-.test-fwd-card { border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px; background: #FFFFFF; transition: all 0.2s ease; margin-bottom: 8px; }
-.test-fwd-card:hover { border-color: #10B981; }
-.test-fwd-roster-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+/* mm-* form design — identical to production forward resume drawer */
+.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; min-height: 100%; }
+#test_form1 { display: flex; flex-direction: column; height: 100%; flex: 1; min-height: 0; }
+.mm-form-body { flex: 1; overflow-y: auto; }
+.mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
+.mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
+.mm-label-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mm-label-icon svg { width: 14px; height: 14px; }
+.mm-ic-blue   { background: #EFF6FF; color: #2563EB; }
+.mm-ic-green  { background: #DCFCE7; color: #16A34A; }
+.mm-ic-purple { background: #F5F3FF; color: #7C3AED; }
+.mm-ic-teal   { background: #F0FDF4; color: #0D9488; }
+.mm-ic-orange { background: #FFF7ED; color: #EA580C; }
+.mm-req { color: #EF4444; margin-left: 1px; }
+.mm-field-col { flex: 1; min-width: 0; position: relative; }
+.mm-input { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB; outline: none; transition: border-color 0.15s; }
+.mm-input:focus { border-color: #93C5FD; background: #fff; }
+.mm-input[readonly] { color: #6B7280; cursor: default; background: #F3F4F6; }
+.mm-hint { font-size: 11.5px; color: #9CA3AF; margin-top: 5px; line-height: 1.4; }
+.mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+.mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+
+.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+.mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+#test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
+.mm-row-body { align-items: flex-start; }
+.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
+.mm-add-email-btn:hover { color: #1d4ed8; }
+.mm-input-with-btn { padding-right: 110px; }
+
+/* Replicated Modern Header */
+.mm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 16px;
+}
+.mm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.mm-header-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 9px;
+  background: #EEF2FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mm-header-text { min-width: 0; }
+.mm-header-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+.mm-header-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.3;
+}
+.mm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mm-header-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-cancel:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+.mm-header-btn-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border-radius: 7px;
+  border: none;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-send:hover {
+  background: #1D4ED8;
+}
+.mm-header-btn-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Recipient Drawer Styles */
+.rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
+.rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
+.rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
+.rcp-header-subtitle { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.rcp-close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; border-radius: 6px; }
+.rcp-close-btn:hover { color: #374151; background: #F3F4F6; }
+.rcp-tabs-wrap { display: flex; gap: 10px; padding: 12px 20px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; }
+.rcp-tab-card { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.rcp-tab-card.active { border-color: #2563EB; background: #EFF6FF; }
+.rcp-tab-icon { color: #6B7280; }
+.rcp-tab-card.active .rcp-tab-icon { color: #2563EB; }
+.rcp-tab-title { font-size: 13px; font-weight: 600; color: #111827; }
+.rcp-tab-card.active .rcp-tab-title { color: #1D4ED8; }
+.rcp-tab-sub { font-size: 11px; color: #6B7280; }
+.rcp-search-wrap { padding: 12px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; display: flex; gap: 8px; }
+.rcp-search-box { flex: 1; position: relative; }
+.rcp-search-box input { width: 100%; padding: 8px 30px 8px 34px; font-size: 12.5px; border: 1px solid #E5E7EB; border-radius: 7px; background: #F9FAFB; outline: none; }
+.rcp-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9CA3AF; pointer-events: none; }
+.rcp-body-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.rcp-contact-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border: 1px solid #F3F4F6; border-radius: 8px; margin-bottom: 8px; background: #fff; transition: all 0.15s; }
+.rcp-contact-item:hover { border-color: #E5E7EB; background: #F9FAFB; }
+.rcp-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.rcp-info { margin-left: 10px; min-width: 0; flex: 1; }
+.rcp-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-email { font-size: 11.5px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-role { font-size: 11px; color: #9CA3AF; }
+.rcp-toggle-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #DBEAFE; background: #EFF6FF; color: #2563EB; transition: all 0.15s; }
+.rcp-toggle-btn.is-added { border-color: #DCFCE7; background: #DCFCE7; color: #16A34A; }
+.rcp-toggle-btn:hover { opacity: 0.85; }
+.rcp-footer { padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.rcp-btn-cancel { padding: 8px 16px; border: 1px solid #E5E7EB; background: #fff; border-radius: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; }
+.rcp-btn-done { padding: 8px 20px; border: none; background: #2563EB; border-radius: 7px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
 </style>
 
-<div class="test-fwd-container p-5">
-    {{-- Header Banner: Clearly marks this as an Isolated Test Environment --}}
-    <div class="d-flex align-items-center justify-content-between pb-4 border-bottom mb-4">
-        <div>
-            <div class="test-fwd-badge mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
-                ISOLATED TEST FORWARD RESUME PIPELINE
-            </div>
-            <h5 class="fw-bolder text-gray-900 mb-0">Next-Gen Client WASM + Direct Cloudflare R2 Delivery</h5>
-            <div class="text-muted fs-7">0% Server CPU · 0% MySQL Load · Zero Local Disk Writes · Auto R2 Cleanup</div>
-        </div>
-        <button type="button" class="btn btn-sm btn-icon btn-light-danger" id="kt_test_fwd_resume_drawer_close" onclick="closeTestFwdResumeDrawer()">
-            <span class="svg-icon svg-icon-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor"/><rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor"/></svg>
-            </span>
-        </button>
+<div class="mm-wrap">
+<form id="test_form1">
+  {{-- Header: Identical layout to Production Forward Resume Drawer --}}
+  <div class="mm-header">
+    <div class="mm-header-left">
+      <div class="mm-header-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <div class="mm-header-text">
+        <h3 class="mm-header-title">Forward Candidate Resumes</h3>
+        <p class="mm-header-subtitle">Send selected candidate profiles to a client or hiring stakeholder.</p>
+      </div>
     </div>
+    <div class="mm-header-actions">
+      <button type="button" class="mm-header-btn-cancel" onclick="closeTestFwdResumeDrawer()">Cancel</button>
+      <button type="button" class="mm-header-btn-send" name="btnTestSubmit" id="btnTestSubmit" value="btnTestSubmit" onclick="if(window.onTestFwdSubmitClick) window.onTestFwdSubmitClick(event);">
+        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Email
+        </span>
+        <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
+          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+          <span id="test_fwd_btn_progress_text">Sending...</span>
+        </span>
+      </button>
+    </div>
+  </div>
 
-    {{-- Step 1: Format Selector --}}
-    <div class="mb-4">
-        <label class="form-label fw-bold text-gray-700 fs-7">Select Resume Attachment Format</label>
-        <select class="form-select form-select-solid fs-7" id="test_fwd_resume_format">
-            <option value="1" data-desc="Attach original candidate resume directly from storage.">Option 1: Original Candidate Resume</option>
-            <option value="5" selected data-desc="Compile comprehensive executive candidate dossier with skill matrix, ratings, and branding.">Option 5: Executive Prescreen Report (Client WASM)</option>
-            <option value="49" data-desc="Compile standard branded Jeroworks vector resume with contact redaction.">Option 49: Jeroworks Branded Vector Resume</option>
+  <div class="mm-form-body">
+
+    {{-- From --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        </span>
+        From
+      </div>
+      <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
+        <select class="mm-select" name="from_email" id="test_from_email" style="flex:1;min-width:0;">
+          <option value="notify@jeroworks.com">{{ $userdata->name ?? $userdata->email }} &lt;notify@jeroworks.com&gt;</option>
+          @if(!empty($userdata->email) && $userdata->email !== 'notify@jeroworks.com')
+            <option value="{{ $userdata->email }}">{{ $userdata->name ?? $userdata->email }} &lt;{{ $userdata->email }}&gt;</option>
+          @endif
         </select>
-        <div class="form-text fs-8 text-muted mt-1" id="test_fwd_format_hint">Compiles in browser RAM and uploads directly to Cloudflare R2 bucket.</div>
+      </div>
     </div>
 
-    {{-- Candidate Roster & Real-time Compilation Status --}}
-    <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-            <label class="form-label fw-bold text-gray-700 fs-7 mb-0">Selected Candidates Roster (Max 5)</label>
-            <span class="badge badge-light-primary fs-8 fw-bolder" id="test_fwd_candidate_count">{{ count($applicationData ?? []) }} Candidates</span>
+    {{-- To --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </span>
+        To <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div style="position:relative;">
+          <input class="mm-input mm-input-with-btn" name="to_email" id="test_to_email" value="{{ $to_email }}" placeholder="Enter recipient email addresses separated by commas">
+          <a href="javascript:;" class="mm-add-email-btn test_to_email_panel">+ Add Email</a>
         </div>
+        <div class="mm-hint">Add one or more email addresses separated by commas</div>
+      </div>
+    </div>
 
-        {{-- Overall Progress Container --}}
-        <div id="test_fwd_progress_wrap" class="p-3 bg-light-primary rounded border border-primary border-dashed mb-3" style="display:none;">
-            <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="fs-7 fw-bold text-primary" id="test_fwd_progress_status">Processing...</span>
-                <span class="fs-8 fw-bolder text-primary" id="test_fwd_progress_pct">0%</span>
-            </div>
-            <div class="progress h-6px bg-light-primary">
-                <div class="progress-bar bg-primary" id="test_fwd_progress_bar" role="progressbar" style="width: 0%"></div>
-            </div>
-            <div class="text-muted fs-9 mt-1" id="test_fwd_progress_detail">Initializing client-side document engine...</div>
+    {{-- CC --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        CC
+      </div>
+      <div class="mm-field-col">
+        <div style="position:relative;">
+          <input class="mm-input mm-input-with-btn" name="cc_email_panel" id="test_cc_email_panel" value="{{ $cc_email }}" placeholder="Enter CC email addresses">
+          <a href="javascript:;" class="mm-add-email-btn test_cc_email_panel">+ Add Email</a>
         </div>
+        <div class="mm-hint">Add email addresses separated by commas</div>
+      </div>
+    </div>
 
-        <div id="test_fwd_roster_container">
-            @foreach($applicationData ?? [] as $cand)
-                <div class="test-fwd-card" id="test_cand_card_{{ $cand->id }}">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="symbol symbol-30px symbol-circle bg-light-primary">
-                                <span class="symbol-label text-primary fw-bolder fs-8">{{ strtoupper(substr($cand->full_name ?? 'C', 0, 1)) }}</span>
-                            </div>
-                            <div>
-                                <div class="fw-bolder text-gray-900 fs-7">{{ $cand->full_name ?? 'Candidate' }}</div>
-                                <div class="text-muted fs-8">{{ $cand->current_designation ?? 'Professional' }} · {{ $cand->experience ?? 'Experience' }}</div>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="test-fwd-roster-badge bg-light-warning text-warning" id="test_cand_status_{{ $cand->id }}">Pending Compilation</span>
-                        </div>
-                    </div>
-                </div>
+    {{-- Template --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </span>
+        Template
+      </div>
+      <div class="mm-field-col">
+        <select name="template" id="test_template" class="mm-select">
+          <option value="">Select Email Template...</option>
+          @if(!empty($templateData))
+            @foreach($templateData as $tdata)
+              <option value="{{ $tdata->id }}">{{ $tdata->display_name ?? ($tdata->name ?? 'Template #' . $tdata->id) }}</option>
             @endforeach
+          @endif
+        </select>
+        <div class="mm-hint">Choosing a template replaces the Subject and Body below</div>
+      </div>
+    </div>
+
+    {{-- Subject --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </span>
+        Subject <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <input class="mm-input" name="subject" id="test_subject" placeholder="Enter email subject" value="Forwarded Candidate Profiles: {{ !empty($applicationData[0]->full_name) ? $applicationData[0]->full_name : 'Profiles' }}">
+      </div>
+    </div>
+
+    {{-- Resume Attachment Format Selector (Download Resume Center Integration - All Options 1, 5, 41-53) --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </span>
+        Attach Resume
+      </div>
+      <div class="mm-field-col">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#1F2937;">
+            <input type="checkbox" id="test_fwd_attach_cv_toggle" name="attached_cv" value="1" checked style="width:16px;height:16px;accent-color:#0D9488;cursor:pointer;" onchange="if(window.onTestFwdAttachToggle) window.onTestFwdAttachToggle(this);">
+            <span>Attach Resume to Email</span>
+          </label>
         </div>
-    </div>
 
-    {{-- Step 2: Recipient Details --}}
-    <div class="mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-1">
-            <label class="form-label fw-bold text-gray-700 fs-7 mb-0 required">Send To (Email Address)</label>
-            <button type="button" class="btn btn-xs btn-link text-primary fw-bolder p-0" id="test_btn_add_quick_contact">Quick Add Contact</button>
+        <div id="test_fwd_format_container">
+          <select name="attached_cv_format" id="test_fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.onTestFwdFormatChange) window.onTestFwdFormatChange(this);">
+            <optgroup label="1. Standard Resume Options">
+              <option value="1" selected data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
+              <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
+            </optgroup>
+            <optgroup label="2. Pre-Screened Report">
+              <option value="5" data-label="Pre-Screened Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">5. Pre-Screened Report PDF</option>
+            </optgroup>
+            <optgroup label="3. Recruiter Packages (Report + Resume)">
+              <option value="42" data-label="Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.">42. Pre-Screened Report + Resume + Company Branding</option>
+              <option value="43" data-label="Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">43. Pre-Screened Report + Resume without Company Branding</option>
+            </optgroup>
+            <optgroup label="4. Highlighted Skills">
+              <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">44. Resume + Highlighted Keywords</option>
+              <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">45. Resume + Highlighted Keywords + Company Branding</option>
+              <option value="46" data-label="Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.">46. Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</option>
+              <option value="47" data-label="Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">47. Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</option>
+            </optgroup>
+            <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
+              <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">48. Hide Contact Details</option>
+              <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">49. Hide Candidate Name & Contacts Details</option>
+              <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">50. Hide Contact Details + Company Branding</option>
+              <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">51. Hide Contact Details + Pre-Screened Report (Branded)</option>
+              <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + Pre-Screened Report without Company Branding</option>
+              <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">53. Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
+            </optgroup>
+          </select>
+
+          <!-- Live Attachment Format Summary & Deliverability Badge -->
+          <div id="test_fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <span style="width:26px;height:26px;border-radius:6px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
+              <div style="min-width:0;">
+                <div id="test_fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#166534;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  1. Original Candidate Resume
+                </div>
+                <div id="test_fwd_preview_desc" style="font-size:11px;color:#15803D;margin-top:1px;">
+                  Pristine resume file as originally uploaded by candidate/agency.
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <span id="test_fwd_batch_count_badge" style="font-size:11px;font-weight:600;color:{{ count($applicationData ?? []) > 5 ? '#B91C1C' : '#15803D' }};background:{{ count($applicationData ?? []) > 5 ? '#FEE2E2' : '#DCFCE7' }};padding:3px 9px;border-radius:12px;white-space:nowrap;">
+                📎 {{ count($applicationData ?? []) }} / 5 Max Resumes
+              </span>
+            </div>
+          </div>
+
+          <!-- Multi-Profile Attached Resumes Roster -->
+          <div id="test_fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+            @foreach($applicationData as $idx => $cand)
+              @php
+                $candSafeName = !empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_' . $cand->id);
+                $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
+                $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
+              @endphp
+              <div class="test-fwd-cand-card" id="test_fwd_cand_card_{{ $cand->id }}" style="padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;transition:all 0.2s ease;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+                    {{-- Avatar / Sequence badge --}}
+                    <div style="position:relative;flex-shrink:0;">
+                      <span id="test_fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
+                        {{ $idx + 1 }}
+                      </span>
+                      <span id="test_fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#10B981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">✓</span>
+                    </div>
+
+                    {{-- Candidate Name & Dynamic Filename --}}
+                    <div style="min-width:0;flex:1;">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
+                        <span style="font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          {{ $candDisplayName }}
+                        </span>
+                        <span style="font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          • {{ $candDesignation }}
+                        </span>
+                      </div>
+                      <div class="test-fwd-cand-filename" id="test_fwd_cand_filename_{{ $cand->id }}" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:#059669;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        Jeroworks_{{ $candSafeName }}.pdf
+                      </div>
+                    </div>
+                  </div>
+
+                  {{-- Candidate Status Pill --}}
+                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <div id="test_fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:#DCFCE7;color:#15803D;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                      ✓ Attached (100%)
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Candidate Progress Bar --}}
+                <div id="test_fwd_cand_progress_wrap_{{ $cand->id }}" style="display:none;margin-top:6px;">
+                  <div style="height:3px;width:100%;background:#E5E7EB;border-radius:2px;overflow:hidden;">
+                    <div id="test_fwd_cand_progress_bar_{{ $cand->id }}" style="height:100%;width:0%;background:#0D9488;border-radius:2px;transition:width 0.2s ease;"></div>
+                  </div>
+                </div>
+              </div>
+            @endforeach
+          </div>
+
+          <!-- Live Compilation Progress Bar Container -->
+          <div id="test_fwd_compile_progress_container" style="display:none;margin-top:10px;padding:10px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="test_fwd_compile_spinner" class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;color:#0D9488;"></span>
+                <span id="test_fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#134E4A;">Preparing custom format in browser memory...</span>
+              </div>
+              <span id="test_fwd_compile_pct_badge" style="font-size:11px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 7px;border-radius:10px;border:1px solid #99F6E4;">
+                0%
+              </span>
+            </div>
+            <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
+              <div id="test_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
+            </div>
+            <div id="test_fwd_compile_hint" style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
+              <span id="test_fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
+              <span id="test_fwd_compile_count">0 / {{ count($applicationData ?? []) }}</span>
+            </div>
+          </div>
         </div>
-        <input type="text" class="form-control form-control-solid fs-7" id="test_to_email" placeholder="client@company.com, manager@domain.com" />
-        <div class="form-text fs-8 text-muted">Separate multiple emails with commas.</div>
+      </div>
     </div>
 
-    <div class="mb-4">
-        <label class="form-label fw-bold text-gray-700 fs-7">CC (Carbon Copy)</label>
-        <input type="text" class="form-control form-control-solid fs-7" id="test_cc_email" placeholder="recruiter@team.com" />
-    </div>
-
-    <div class="mb-4">
-        <label class="form-label fw-bold text-gray-700 fs-7 required">Email Subject</label>
-        <input type="text" class="form-control form-control-solid fs-7" id="test_email_subject" value="Forwarded Candidate Profiles: {{ !empty($applicationData[0]->full_name) ? $applicationData[0]->full_name : 'Profiles' }}" />
-    </div>
-
-    {{-- Step 3: Message Body --}}
-    <div class="mb-4">
-        <label class="form-label fw-bold text-gray-700 fs-7">Message Content</label>
-        <textarea class="form-control form-control-solid fs-7" id="test_email_body" rows="6">Dear Hiring Team,
-
-Please review the attached pre-screened candidate profile(s) for your open requisition. The vector resumes and executive prescreen dossiers are attached for your immediate evaluation.
-
-Best regards,
-{{ auth()->user()->name ?? 'Recruitment Team' }}
-{{ $companyName ?? 'JERO Hiring Partner' }}</textarea>
-    </div>
-
-    {{-- Step 4: Actions --}}
-    <div class="d-flex align-items-center justify-content-between pt-3 border-top">
-        <button type="button" class="btn btn-sm btn-light" onclick="closeTestFwdResumeDrawer()">Cancel</button>
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-sm btn-light-primary fw-bolder" id="test_btn_recompile" onclick="startTestCompilation()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
-                Recompile PDFs
-            </button>
-            <button type="button" class="btn btn-sm btn-success fw-bolder" id="test_btn_send" onclick="sendTestForwardResume()">
-                <span class="indicator-label d-flex align-items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    Send Test Email (Direct R2)
-                </span>
-                <span class="indicator-progress" style="display:none;">
-                    <span class="spinner-border spinner-border-sm align-middle me-2"></span>
-                    <span id="test_btn_spinner_text">Sending...</span>
-                </span>
-            </button>
+    {{-- Body --}}
+    <div class="mm-row mm-row-body">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        Email Body
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-editor-wrap">
+          <textarea id="test_editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
         </div>
+      </div>
     </div>
+
+  </div>
+</form>
 </div>
 
-{{-- Load the Isolated Document Engines --}}
-@include('service_company.cvtracker._forward_resume_engine')
-@include('service_company.cvtracker._test_forward_resume_engine')
+{{-- Enterprise Add Email Recipient Drawer --}}
+<div id="kt_test_recipient_drawer_toggle" style="display:none;"></div>
+<div id="kt_test_recipient_drawer" class="bg-white shadow" data-kt-drawer="true" data-kt-drawer-name="recipient-drawer-test" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '490px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_test_recipient_drawer_toggle" data-kt-drawer-close="#kt_test_recipient_drawer_close">
+  <div class="rcp-container">
+    <div class="rcp-header">
+      <div class="rcp-header-left">
+        <h3 class="rcp-header-title">Add Email Recipient</h3>
+        <p class="rcp-header-subtitle">Choose a contact from your internal team or client company.</p>
+      </div>
+      <button type="button" class="rcp-close-btn" id="kt_test_recipient_drawer_close" onclick="closeTestEmailRecipientDrawer()" title="Close drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="rcp-tabs-wrap">
+      <div class="rcp-tab-card active" id="test_rcp_tab_internal" data-tab="internal">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Internal Team</div>
+          <div class="rcp-tab-sub">{{ count($internal_team_data ?? []) }} available</div>
+        </div>
+      </div>
+      <div class="rcp-tab-card" id="test_rcp_tab_client" data-tab="client">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Client Contacts</div>
+          <div class="rcp-tab-sub">{{ count($client_contacts_data ?? []) }} available</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rcp-search-wrap">
+      <div class="rcp-search-box">
+        <span class="rcp-search-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="test_rcp_search_input" placeholder="Search by name, email, or role...">
+      </div>
+    </div>
+
+    <div class="rcp-body-list">
+      <div id="test_rcp_section_internal">
+        @if(!empty($internal_team_data))
+          @foreach($internal_team_data as $itUser)
+            <div class="rcp-contact-item" data-name="{{ strtolower($itUser->name ?? '') }}" data-email="{{ strtolower($itUser->email ?? '') }}" data-role="{{ strtolower($itUser->display_name ?? ($itUser->role_name ?? '')) }}">
+              <div style="display:flex;align-items:center;min-width:0;flex:1;">
+                <div class="rcp-avatar" style="background:#EFF6FF;color:#2563EB;">{{ strtoupper(substr($itUser->name ?? 'U', 0, 1)) }}</div>
+                <div class="rcp-info">
+                  <div class="rcp-name">{{ $itUser->name ?? 'Team Member' }}</div>
+                  <div class="rcp-email">{{ $itUser->email }}</div>
+                  <div class="rcp-role">{{ $itUser->display_name ?? ($itUser->role_name ?? 'Team Member') }}</div>
+                </div>
+              </div>
+              <button type="button" class="rcp-toggle-btn test-rcp-toggle-btn" data-email="{{ $itUser->email }}">
+                <span class="rcp-btn-label-add">+ Add</span>
+                <span class="rcp-btn-label-added" style="display:none;">✓ Added</span>
+              </button>
+            </div>
+          @endforeach
+        @endif
+      </div>
+      <div id="test_rcp_section_client" style="display:none;">
+        @if(!empty($client_contacts_data))
+          @foreach($client_contacts_data as $ccUser)
+            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? '') }}">
+              <div style="display:flex;align-items:center;min-width:0;flex:1;">
+                <div class="rcp-avatar" style="background:#DCFCE7;color:#15803D;">{{ strtoupper(substr($ccUser->name ?? 'C', 0, 1)) }}</div>
+                <div class="rcp-info">
+                  <div class="rcp-name">{{ $ccUser->name ?? 'Client Contact' }}</div>
+                  <div class="rcp-email">{{ $ccUser->email }}</div>
+                  <div class="rcp-role">{{ $ccUser->company_name ?? 'Client' }}</div>
+                </div>
+              </div>
+              <button type="button" class="rcp-toggle-btn test-rcp-toggle-btn" data-email="{{ $ccUser->email }}">
+                <span class="rcp-btn-label-add">+ Add</span>
+                <span class="rcp-btn-label-added" style="display:none;">✓ Added</span>
+              </button>
+            </div>
+          @endforeach
+        @endif
+      </div>
+    </div>
+
+    <div class="rcp-footer">
+      <span id="test_rcp_footer_count_text" style="font-size:12px;color:#6B7280;">0 recipients selected</span>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="rcp-btn-cancel" onclick="closeTestEmailRecipientDrawer()">Cancel</button>
+        <button type="button" class="rcp-btn-done" onclick="closeTestEmailRecipientDrawer()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 
 <script>
-window.testCompiledAttachments = window.testCompiledAttachments || {};
-window.testR2UploadedUuids = window.testR2UploadedUuids || [];
-var _testGlobalToken = 0;
+window._testFwdCompiledAttachments = window._testFwdCompiledAttachments || {};
+window._testFwdR2UploadedUuids = window._testFwdR2UploadedUuids || [];
+var _testFwdGlobalToken = 0;
+var _testFwdIsCompiling = false;
 
 window.closeTestFwdResumeDrawer = function() {
-    _testGlobalToken++;
+    _testFwdGlobalToken++;
+    _testFwdIsCompiling = false;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { CKEDITOR.instances['test_editor1'].destroy(true); } catch(e) {}
+    }
     var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
     if (drawerEl && typeof KTDrawer !== 'undefined') {
         var drawer = KTDrawer.getInstance(drawerEl);
@@ -157,6 +619,7 @@ window.closeTestFwdResumeDrawer = function() {
         var drawerAptk = KTDrawer.getInstance(drawerAptkEl);
         if (drawerAptk) { drawerAptk.hide(); }
     }
+    closeTestEmailRecipientDrawer();
     $('#application_test_fwd_resume_body_content').html('');
 };
 
@@ -168,194 +631,684 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
-async function startTestCompilation() {
-    var optId = parseInt($('#test_fwd_resume_format').val(), 10) || 5;
-    var candidates = @json($applicationData ?? []);
-    var companyData = {
-        companyName: @json($companyName ?? 'Hiring Partner'),
-        companyLogo: @json($companyLogo ?? '')
-    };
-    var jobSkills = @json($jobSkills ?? []);
-    var thisToken = ++_testGlobalToken;
-
-    $('#test_fwd_progress_wrap').show();
-    $('#test_fwd_progress_bar').css('width', '5%');
-    $('#test_fwd_progress_pct').text('5%');
-    $('#test_fwd_progress_status').text('Compiling Vector Documents in Browser...');
-
-    window.testCompiledAttachments[optId] = {};
-    window.testR2UploadedUuids = [];
-
-    var intentUrl = "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}";
-    var csrfToken = "{{ csrf_token() }}";
-    var total = candidates.length;
-
-    try {
-        for (var i = 0; i < total; i++) {
-            if (thisToken !== _testGlobalToken) return;
-
-            var cand = candidates[i];
-            var candName = cand.full_name || ('Candidate #' + (i + 1));
-            var safeName = candName.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, '_').trim();
-            var filename = 'Prescreen_Report_' + safeName + '.pdf';
-            if (optId === 49) filename = 'Jeroworks_' + safeName + '.pdf';
-            if (optId === 1) filename = 'Original_' + safeName + '.pdf';
-
-            $('#test_cand_status_' + cand.id).attr('class', 'test-fwd-roster-badge bg-light-primary text-primary').text('Rendering WASM...');
-
-            // Step 1: Vector Compilation via WASM
-            var pdfBlob = await window.AgyTestForwardResumeEngine.compileCandidate(cand, optId, companyData, jobSkills, function(subMsg) {
-                if (thisToken !== _testGlobalToken) return;
-                $('#test_fwd_progress_detail').text(candName + ': ' + subMsg);
-            });
-
-            if (!pdfBlob) throw new Error('Failed to generate vector PDF for ' + candName);
-
-            // Step 2: Direct-to-R2 Presigned Upload
-            $('#test_cand_status_' + cand.id).attr('class', 'test-fwd-roster-badge bg-light-info text-info').text('Uploading to R2...');
-
-            var uploadResult = await window.AgyTestForwardResumeEngine.uploadToR2(
-                cand.id,
-                pdfBlob,
-                filename,
-                intentUrl,
-                csrfToken,
-                function(upMsg) {
-                    if (thisToken !== _testGlobalToken) return;
-                    $('#test_fwd_progress_detail').text(candName + ': ' + upMsg);
-                }
-            );
-
-            window.testCompiledAttachments[optId][cand.id] = {
-                blob: pdfBlob,
-                r2_uuid: uploadResult.attachment_uuid,
-                filename: filename
-            };
-            window.testR2UploadedUuids.push(uploadResult.attachment_uuid);
-
-            var pct = Math.round(((i + 1) / total) * 100);
-            $('#test_fwd_progress_bar').css('width', pct + '%');
-            $('#test_fwd_progress_pct').text(pct + '%');
-            $('#test_cand_status_' + cand.id)
-                .attr('class', 'test-fwd-roster-badge bg-light-success text-success')
-                .text('✓ Ready in R2 (' + formatBytes(pdfBlob.size) + ')');
+function updateTestRosterFilenames(optId) {
+    $('.test-fwd-cand-filename').each(function () {
+        var safeName = $(this).attr('data-safename') || 'Candidate';
+        var filename = 'Jeroworks_' + safeName + '.pdf';
+        if (optId === 5) {
+            filename = 'Prescreen_Report_' + safeName + '.pdf';
+        } else if (optId === 49) {
+            filename = 'Jeroworks_Resume.pdf';
         }
+        $(this).text(filename);
+    });
+}
 
-        $('#test_fwd_progress_status').text('✓ All candidate resumes ready in Cloudflare R2!');
-        $('#test_fwd_progress_detail').text('Zero server disk writes. Ready to send test email.');
-    } catch(err) {
-        console.error('[TestForwardResume Error]', err);
-        $('#test_fwd_progress_status').text('Compilation or Upload Error');
-        $('#test_fwd_progress_detail').text(err.message || 'An error occurred during vector rendering.');
-        Swal.fire({
-            title: 'Test Engine Notice',
-            text: err.message || 'Could not complete client-side compilation or R2 upload.',
-            icon: 'warning',
-            confirmButtonColor: '#10B981'
+function updateTestSendButtonState() {
+    var isAttach = $('#test_fwd_attach_cv_toggle').is(':checked');
+    var optId = parseInt($('#test_fwd_resume_format').val(), 10) || 1;
+    var btn = document.getElementById('btnTestSubmit');
+    if (!btn) return;
+
+    updateTestRosterFilenames(optId);
+
+    var candidatesList = @json($applicationData ?? []);
+    var selectedIds = [];
+    $('.chk_list_item:checked').each(function () { selectedIds.push(String($(this).val())); });
+    var candidatesToProcess = candidatesList.filter(function (cand) {
+        return selectedIds.length === 0 || selectedIds.indexOf(String(cand.id)) !== -1;
+    });
+    if (candidatesToProcess.length === 0) {
+        candidatesToProcess = candidatesList;
+    }
+
+    // Option 1 or unchecking Attach Resume: Send is immediately ready
+    if (!isAttach || optId === 1) {
+        _testFwdGlobalToken++;
+        _testFwdIsCompiling = false;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        $('#test_fwd_compile_progress_container').hide();
+        candidatesToProcess.forEach(function (c) {
+            $('#test_fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#test_fwd_cand_check_' + c.id).css('display', 'flex');
+            $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)');
+            $('#test_fwd_cand_progress_wrap_' + c.id).hide();
         });
+        return;
+    }
+
+    // Custom format (Option 5 or 41-53): Check if already compiled
+    var cached = window._testFwdCompiledAttachments[optId] || {};
+    var allReady = candidatesToProcess.length > 0 && candidatesToProcess.every(function (c) {
+        return !!cached[c.id];
+    });
+
+    if (allReady) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        $('#test_fwd_compile_progress_container').show();
+        $('#test_fwd_compile_spinner').hide();
+        $('#test_fwd_compile_status_text').html('✓ All ' + candidatesToProcess.length + ' candidate resumes compiled & verified (100%)');
+        $('#test_fwd_compile_pct_badge').text('100%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
+        $('#test_fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
+        $('#test_fwd_compile_count').text(candidatesToProcess.length + ' / ' + candidatesToProcess.length);
+        $('#test_fwd_compile_step_detail').text('All candidate attachments ready. You can send now.');
+
+        candidatesToProcess.forEach(function (c) {
+            var blob = cached[c.id];
+            var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
+            $('#test_fwd_cand_card_' + c.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#test_fwd_cand_check_' + c.id).css('display', 'flex');
+            $('#test_fwd_cand_status_' + c.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+            $('#test_fwd_cand_progress_wrap_' + c.id).hide();
+        });
+    } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+        $('#test_fwd_compile_progress_container').show();
+        $('#test_fwd_compile_spinner').show();
+        startTestCompilationForOption(optId);
     }
 }
 
-async function sendTestForwardResume() {
-    var toEmail = $.trim($('#test_to_email').val());
-    var ccEmail = $.trim($('#test_cc_email').val());
-    var subject = $.trim($('#test_email_subject').val());
-    var body = $.trim($('#test_email_body').val());
+async function startTestCompilationForOption(optId) {
+    if (optId === 1) return;
+    _testFwdIsCompiling = true;
+    var thisToken = ++_testFwdGlobalToken;
 
-    if (!toEmail) {
-        Swal.fire({ title: 'Recipient Required', text: 'Please enter at least one recipient email address.', icon: 'warning', confirmButtonColor: '#10B981' });
+    var btn = document.getElementById('btnTestSubmit');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    }
+
+    $('#test_fwd_compile_progress_container').show();
+    $('#test_fwd_compile_spinner').show();
+    $('#test_fwd_compile_progress_bar').css({ 'width': '5%', 'background': 'linear-gradient(90deg, #0D9488, #059669)' });
+    $('#test_fwd_compile_pct_badge').text('5%').css({ 'color': '#0D9488', 'background': '#CCFBF1', 'border-color': '#99F6E4' });
+    $('#test_fwd_compile_status_text').text('Initializing document rendering engine...');
+    $('#test_fwd_compile_step_detail').text('Loading Rust WASM core and vector fonts...');
+
+    try {
+        var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+        if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+            throw new Error('Forward Resume engine core is not loaded.');
+        }
+
+        if (thisToken !== _testFwdGlobalToken) return;
+
+        $('#test_fwd_compile_progress_bar').css('width', '10%');
+        $('#test_fwd_compile_pct_badge').text('10%');
+        $('#test_fwd_compile_status_text').text('Engine ready. Preparing candidate resumes...');
+
+        var candidatesList = @json($applicationData ?? []);
+        var companyData = {
+            companyName: @json($companyName ?? 'Hiring Partner'),
+            companyLogo: @json($companyLogo ?? '')
+        };
+        var jobSkills = @json($jobSkills ?? []);
+
+        var selectedIds = [];
+        $('.chk_list_item:checked').each(function () { selectedIds.push(String($(this).val())); });
+        var candidatesToProcess = candidatesList.filter(function (cand) {
+            return selectedIds.length === 0 || selectedIds.indexOf(String(cand.id)) !== -1;
+        });
+        if (candidatesToProcess.length === 0) {
+            candidatesToProcess = candidatesList;
+        }
+
+        if (!window._testFwdCompiledAttachments[optId]) {
+            window._testFwdCompiledAttachments[optId] = {};
+        }
+
+        var total = candidatesToProcess.length;
+        for (var i = 0; i < total; i++) {
+            if (thisToken !== _testFwdGlobalToken) return;
+
+            var cand = candidatesToProcess[i];
+            var candName = cand.full_name || ('Candidate #' + (i + 1));
+            var startPct = 10 + Math.round((i / total) * 90);
+            var endPct = 10 + Math.round(((i + 1) / total) * 90);
+
+            $('#test_fwd_cand_card_' + cand.id).css({ 'background': '#F0FDFA', 'border-color': '#99F6E4' });
+            $('#test_fwd_cand_progress_wrap_' + cand.id).show();
+            $('#test_fwd_cand_progress_bar_' + cand.id).css('width', '25%');
+            $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#CCFBF1', 'color': '#0D9488' }).html(
+                '<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;margin-right:4px;"></span> Rendering...'
+            );
+
+            $('#test_fwd_compile_progress_bar').css('width', startPct + '%');
+            $('#test_fwd_compile_pct_badge').text(startPct + '%');
+            $('#test_fwd_compile_status_text').text('Rendering ' + candName + ' (' + (i + 1) + '/' + total + ')...');
+            $('#test_fwd_compile_count').text(i + ' / ' + total);
+
+            if (!window._testFwdCompiledAttachments[optId][cand.id]) {
+                var pdfBlob = await engine.generateAttachmentForCandidate(
+                    cand,
+                    optId,
+                    companyData,
+                    jobSkills,
+                    function (subMsg) {
+                        if (thisToken !== _testFwdGlobalToken) return;
+                        var midPct = Math.round(startPct + (endPct - startPct) * 0.5);
+                        $('#test_fwd_compile_progress_bar').css('width', midPct + '%');
+                        $('#test_fwd_compile_pct_badge').text(midPct + '%');
+                        $('#test_fwd_compile_step_detail').text(subMsg);
+                        $('#test_fwd_cand_progress_bar_' + cand.id).css('width', '65%');
+                    }
+                );
+
+                if (!pdfBlob) {
+                    throw new Error('Failed to render resume for ' + candName);
+                }
+                window._testFwdCompiledAttachments[optId][cand.id] = pdfBlob;
+            }
+
+            if (thisToken !== _testFwdGlobalToken) return;
+
+            var blob = window._testFwdCompiledAttachments[optId][cand.id];
+            var sizeStr = blob ? (' • ' + formatBytes(blob.size)) : '';
+            $('#test_fwd_cand_card_' + cand.id).css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+            $('#test_fwd_cand_check_' + cand.id).css('display', 'flex');
+            $('#test_fwd_cand_progress_wrap_' + cand.id).hide();
+            $('#test_fwd_cand_status_' + cand.id).css({ 'background': '#DCFCE7', 'color': '#15803D' }).text('✓ Attached (100%)' + sizeStr);
+
+            $('#test_fwd_compile_progress_bar').css('width', endPct + '%');
+            $('#test_fwd_compile_pct_badge').text(endPct + '%');
+            $('#test_fwd_compile_count').text((i + 1) + ' / ' + total);
+        }
+
+        if (thisToken !== _testFwdGlobalToken) return;
+
+        _testFwdIsCompiling = false;
+        $('#test_fwd_compile_progress_bar').css({ 'width': '100%', 'background': '#059669' });
+        $('#test_fwd_compile_pct_badge').text('100%').css({ 'color': '#059669', 'background': '#DCFCE7', 'border-color': '#86EFAC' });
+        $('#test_fwd_compile_spinner').hide();
+        $('#test_fwd_compile_status_text').html('✓ All ' + total + ' candidate profiles compiled & verified (100%)');
+        $('#test_fwd_compile_step_detail').text('All attachments generated and verified. Ready to send.');
+
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        }
+    } catch (err) {
+        if (thisToken !== _testFwdGlobalToken) return;
+        _testFwdIsCompiling = false;
+        console.error('Test resume compilation error:', err);
+        $('#test_fwd_compile_spinner').hide();
+        $('#test_fwd_compile_progress_bar').css({ 'background': '#EF4444' });
+        $('#test_fwd_compile_pct_badge').text('Error').css({ 'color': '#DC2626', 'background': '#FEE2E2', 'border-color': '#FCA5A5' });
+        $('#test_fwd_compile_status_text').html('⚠️ Could not prepare custom format: ' + (err.message || 'WASM error'));
+        $('#test_fwd_compile_step_detail').text('Please re-select the format or switch to Option 1 (Original Resume).');
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+        }
+    }
+}
+
+window.onTestFwdFormatChange = function (el) {
+    var $el = $(el || '#test_fwd_resume_format');
+    var sel = $el.find('option:selected');
+    var label = sel.attr('data-label') || sel.text();
+    var desc = sel.attr('data-desc') || '';
+
+    $('#test_fwd_preview_format_title').text(label);
+    $('#test_fwd_preview_desc').text(desc);
+
+    updateTestSendButtonState();
+};
+
+window.onTestFwdAttachToggle = function (el) {
+    var $el = $(el || '#test_fwd_attach_cv_toggle');
+    if ($el.is(':checked')) {
+        $('#test_fwd_format_container').slideDown(150);
+    } else {
+        $('#test_fwd_format_container').slideUp(150);
+    }
+    updateTestSendButtonState();
+};
+
+// Template change populates Subject and Editor
+$('#test_template').on('change', function() {
+    var template = $(this).val();
+    if (template > 0) {
+        var id = template;
+        var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
+        url = url.replace(':id', id);
+        var token = "{{ csrf_token() }}";
+        var to_email = $('#test_to_email').val() || 'info@jero.co.in';
+
+        var selectedApplicantListing = [];
+        var jqueryarray = @json($applicationData ?? []);
+        jqueryarray.forEach(function(mval) {
+            selectedApplicantListing.push(mval.id);
+        });
+        var WijobIdArr = [];
+        $('.chk_list_item:checked').each(function() {
+            WijobIdArr.push($(this).attr('data-wiseid'));
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                '_token': token,
+                '_method': 'POST',
+                'template': template,
+                'selectedApplicantListing': selectedApplicantListing,
+                'to_email': to_email,
+                'mailtype': 1,
+                'WijobIdArr': WijobIdArr
+            },
+            success: function(response) {
+                if (response.status == "success") {
+                    $('#test_subject').val(response.subject);
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                        CKEDITOR.instances['test_editor1'].setData(response.template_body);
+                    } else {
+                        $('#test_editor1').val(response.template_body);
+                    }
+                }
+            }
+        });
+    }
+});
+
+// Submit click handler
+window.onTestFwdSubmitClick = async function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var isAttachChecked = $('#test_fwd_attach_cv_toggle').is(':checked');
+    var attached_cv = isAttachChecked ? 1 : 0;
+    var optId = parseInt($('#test_fwd_resume_format').val(), 10) || 1;
+
+    var to_email = ($('#test_to_email').val() || '').trim();
+    var cc_email = ($('#test_cc_email_panel').val() || '').trim();
+    var subject  = ($('#test_subject').val() || '').trim();
+
+    var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!to_email) {
+        $('#test_to_email').css('border-color', '#EF4444').focus();
+        Swal.fire({
+            title: 'Recipient Email Required',
+            text: 'Please enter at least one valid recipient email address in the "To" field.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
         return;
+    }
+
+    var toList = to_email.split(',').map(function(e) { return e.trim(); }).filter(Boolean);
+    for (var ti = 0; ti < toList.length; ti++) {
+        if (!emailRegex.test(toList[ti])) {
+            $('#test_to_email').css('border-color', '#EF4444').focus();
+            Swal.fire({
+                title: 'Invalid Email Address',
+                html: 'The recipient email address <code>' + $('<div>').text(toList[ti]).html() + '</code> is invalid.',
+                icon: 'warning',
+                confirmButtonColor: '#0D9488'
+            });
+            return;
+        }
+    }
+    $('#test_to_email').css('border-color', '#E5E7EB');
+
+    if (cc_email) {
+        var ccList = cc_email.split(',').map(function(e) { return e.trim(); }).filter(Boolean);
+        for (var ci = 0; ci < ccList.length; ci++) {
+            if (!emailRegex.test(ccList[ci])) {
+                $('#test_cc_email_panel').css('border-color', '#EF4444').focus();
+                Swal.fire({
+                    title: 'Invalid CC Email Address',
+                    html: 'The CC email address <code>' + $('<div>').text(ccList[ci]).html() + '</code> is invalid.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
+        }
+        $('#test_cc_email_panel').css('border-color', '#E5E7EB');
     }
 
     if (!subject) {
-        Swal.fire({ title: 'Subject Required', text: 'Please enter an email subject.', icon: 'warning', confirmButtonColor: '#10B981' });
-        return;
-    }
-
-    if (!window.testR2UploadedUuids || window.testR2UploadedUuids.length === 0) {
+        $('#test_subject').css('border-color', '#EF4444').focus();
         Swal.fire({
-            title: 'Attachments Not Ready',
-            text: 'Resumes are still uploading to R2. Please click "Recompile PDFs" or wait for upload to complete.',
-            icon: 'info',
-            confirmButtonColor: '#10B981'
+            title: 'Subject Required',
+            text: 'Please enter an email subject before forwarding resumes.',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
         });
         return;
     }
+    $('#test_subject').css('border-color', '#E5E7EB');
 
-    // UI Loading State
-    var btn = $('#test_btn_send');
-    btn.prop('disabled', true);
-    btn.find('.indicator-label').hide();
-    btn.find('.indicator-progress').show();
+    if (attached_cv === 1 && optId !== 1 && _testFwdIsCompiling) {
+        Swal.fire('Please Wait', 'Resume attachments are still being prepared in browser RAM. Please wait until progress reaches 100%.', 'info');
+        return;
+    }
 
-    var sendUrl = "{{ route('service_company.cvtracker.test_fwd_resume_send') }}";
-    var candIds = @json(array_map('strval', $arr ?? []));
+    var btn = document.getElementById("btnTestSubmit");
+    btn.disabled = true;
+    btn.style.cursor = 'not-allowed';
+    btn.style.opacity = '0.85';
 
-    try {
-        var resp = await $.ajax({
-            type: 'POST',
-            url: sendUrl,
-            data: {
-                _token: "{{ csrf_token() }}",
-                to_email: toEmail,
-                cc_email: ccEmail,
-                subject: subject,
-                editor1: body,
-                attachment_uuids: window.testR2UploadedUuids,
-                arr: candIds
-            }
+    $(btn).find('.indicator-label').hide();
+    $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
+    $('#test_fwd_btn_progress_text').text('Processing...');
+
+    function restoreBtn() {
+        $(btn).find('.indicator-progress').hide();
+        $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        btn.disabled = false;
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
+    }
+
+    var token = "{{ csrf_token() }}";
+    var arr = [];
+    $('.chk_list_item:checked').each(function () { arr.push($(this).val()); });
+
+    var template = $('#test_template').val();
+    var from_email = $('#test_from_email').val();
+    var editor1 = (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances.test_editor1) ? CKEDITOR.instances.test_editor1.getData() : ($('#test_editor1').val() || '');
+
+    var uploadedAttachmentIds = [];
+
+    // If attached_cv == 1 and optId != 1, upload compiled blobs directly to Cloudflare R2 via presigned PUT URLs
+    if (attached_cv === 1 && optId !== 1) {
+        $('#test_fwd_btn_progress_text').text('Preparing files...');
+        var cached = window._testFwdCompiledAttachments[optId] || {};
+        var candidatesList = @json($applicationData ?? []);
+        var selectedIds = arr.map(function(aid) { return String(aid); });
+        var candidatesToProcess = candidatesList.filter(function (cand) {
+            return selectedIds.length === 0 || selectedIds.indexOf(String(cand.id)) !== -1;
         });
-
-        if (resp.status === 'success') {
-            Swal.fire({
-                title: 'Test Email Dispatched!',
-                html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
-                      '<p style="margin-bottom:8px;">Your test email with <strong>' + window.testR2UploadedUuids.length + ' vector resume(s)</strong> was queued successfully.</p>' +
-                      '<p style="color:#059669;font-weight:600;margin:0;">Files will be automatically deleted from Cloudflare R2 upon delivery.</p>' +
-                      '</div>',
-                icon: 'success',
-                confirmButtonColor: '#10B981'
-            }).then(function() {
-                closeTestFwdResumeDrawer();
-            });
-        } else {
-            throw new Error(resp.message || 'Dispatch rejected by server.');
+        if (candidatesToProcess.length === 0) {
+            candidatesToProcess = candidatesList;
         }
-    } catch(sendErr) {
-        console.error('[TestForwardResume Send Error]', sendErr);
-        Swal.fire({
-            title: 'Send Error',
-            text: (sendErr.responseJSON && sendErr.responseJSON.message) ? sendErr.responseJSON.message : sendErr.message,
-            icon: 'error',
-            confirmButtonColor: '#EF4444'
-        });
-    } finally {
-        btn.prop('disabled', false);
-        btn.find('.indicator-label').show();
-        btn.find('.indicator-progress').hide();
+
+        try {
+            var filesToInitiate = [];
+            var candidateBlobs = {};
+
+            for (var c = 0; c < candidatesToProcess.length; c++) {
+                var cand = candidatesToProcess[c];
+                var blob = cached[cand.id];
+                if (!blob) {
+                    $('#test_fwd_btn_progress_text').text('Rendering ' + (cand.full_name || 'Resume') + '...');
+                    var companyData = {
+                        companyName: @json($companyName ?? 'Hiring Partner'),
+                        companyLogo: @json($companyLogo ?? '')
+                    };
+                    var jobSkills = @json($jobSkills ?? []);
+                    var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
+                    blob = await engine.generateAttachmentForCandidate(cand, optId, companyData, jobSkills);
+                    cached[cand.id] = blob;
+                }
+                if (blob) {
+                    var safeCandName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
+                    var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeCandName + '.pdf') : ('Jeroworks_' + safeCandName + '.pdf');
+                    var outName = (blob && blob.filename) ? blob.filename : defaultName;
+                    candidateBlobs[cand.id] = { blob: blob, filename: outName };
+                    filesToInitiate.push({
+                        candidate_id: cand.id,
+                        candidate_name: cand.full_name || ('Candidate #' + cand.id),
+                        filename: outName,
+                        size: blob.size,
+                        mime: blob.type || 'application/pdf'
+                    });
+                }
+            }
+
+            if (filesToInitiate.length > 0) {
+                $('#test_fwd_btn_progress_text').text('Uploading to R2...');
+
+                var initiateJson = await new Promise(function(resolve, reject) {
+                    $.ajax({
+                        url: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': token
+                        },
+                        data: JSON.stringify({ files: filesToInitiate }),
+                        success: resolve,
+                        error: function(xhr, status, error) {
+                            resolve({ status: 'fallback', message: (xhr.responseJSON && xhr.responseJSON.message) || error });
+                        }
+                    });
+                });
+
+                var attMap = (initiateJson && (initiateJson.attachments || initiateJson.uploads)) ? (initiateJson.attachments || initiateJson.uploads) : null;
+
+                if (attMap) {
+                    $('#test_fwd_btn_progress_text').text('R2 sync...');
+
+                    var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
+                        var initInfo = attMap[item.candidate_id];
+                        if (!initInfo || !initInfo.upload_url) {
+                            throw new Error('Missing presigned upload URL for candidate ' + item.candidate_id);
+                        }
+                        var blobInfo = candidateBlobs[item.candidate_id];
+                        var r2Res = await fetch(initInfo.upload_url, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': item.mime || 'application/pdf'
+                            },
+                            body: blobInfo.blob
+                        });
+                        if (!r2Res.ok) {
+                            throw new Error('Cloudflare R2 returned HTTP ' + r2Res.status);
+                        }
+                        return {
+                            candidate_id: item.candidate_id,
+                            attachment_id: initInfo.attachment_id
+                        };
+                    }));
+
+                    uploadResults.forEach(function (res) {
+                        if (res.status === 'fulfilled' && res.value && res.value.attachment_id) {
+                            uploadedAttachmentIds.push(res.value.attachment_id);
+                        }
+                    });
+                }
+            }
+        } catch (prepErr) {
+            console.error('Test attachment preparation error:', prepErr);
+        }
     }
+
+    $('#test_fwd_btn_progress_text').text('Dispatching email...');
+
+    $.ajax({
+        url: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+        type: 'POST',
+        data: {
+            '_token': token,
+            'template': template,
+            'from_email': from_email,
+            'to_email': to_email,
+            'cc_email': cc_email,
+            'subject': subject,
+            'attached_cv': attached_cv,
+            'attached_cv_format': optId,
+            'editor1': editor1,
+            'arr': arr,
+            'attachment_uuids': uploadedAttachmentIds,
+            'attachment_ids': uploadedAttachmentIds
+        },
+        success: function (response) {
+            restoreBtn();
+            if (response.status === 'success') {
+                Swal.fire({
+                    title: 'Forwarded Successfully',
+                    text: response.message || 'Resumes forwarded successfully to ' + toList.join(', '),
+                    icon: 'success',
+                    confirmButtonColor: '#0D9488'
+                }).then(function() {
+                    closeTestFwdResumeDrawer();
+                });
+            } else if (response.status === 'coinCheck') {
+                Swal.fire({
+                    title: 'Insufficient Coins',
+                    text: response.message || 'Your account does not have enough coins.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Dispatch Notice',
+                    text: response.message || 'Server error forwarding resumes.',
+                    icon: 'error',
+                    confirmButtonColor: '#EF4444'
+                });
+            }
+        },
+        error: function (xhr) {
+            restoreBtn();
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Failed to dispatch email';
+            Swal.fire('Error', msg, 'error');
+        }
+    });
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RECIPIENT DRAWER CONTROLLER
+// ══════════════════════════════════════════════════════════════════════════════
+var _testCurrentRcpTarget = 'to';
+
+function getTestRcpTargetInput() {
+    return _testCurrentRcpTarget === 'to' ? $('#test_to_email') : $('#test_cc_email_panel');
 }
 
-// Quick add contact helper
-$('#test_btn_add_quick_contact').on('click', function() {
-    var quickEmail = prompt('Enter recipient email address:');
-    if (quickEmail && quickEmail.indexOf('@') !== -1) {
-        var current = $.trim($('#test_to_email').val());
-        if (current) {
-            $('#test_to_email').val(current + ', ' + quickEmail);
+function getTestExistingEmails() {
+    var raw = getTestRcpTargetInput().val() || '';
+    return raw.split(',').map(function(e) { return e.trim().toLowerCase(); }).filter(Boolean);
+}
+
+function syncTestRecipientDrawerState() {
+    var existing = getTestExistingEmails();
+    $('.test-rcp-toggle-btn').each(function() {
+        var email = ($(this).attr('data-email') || '').trim().toLowerCase();
+        if (email && existing.indexOf(email) !== -1) {
+            $(this).addClass('is-added');
+            $(this).find('.rcp-btn-label-add').hide();
+            $(this).find('.rcp-btn-label-added').css('display', 'inline-flex').show();
         } else {
-            $('#test_to_email').val(quickEmail);
+            $(this).removeClass('is-added');
+            $(this).find('.rcp-btn-label-added').hide();
+            $(this).find('.rcp-btn-label-add').show();
+        }
+    });
+    var count = existing.length;
+    $('#test_rcp_footer_count_text').text(count + (count === 1 ? ' recipient selected' : ' recipients selected'));
+}
+
+window.openTestEmailRecipientDrawer = function(target) {
+    _testCurrentRcpTarget = target || 'to';
+    syncTestRecipientDrawerState();
+    $('#test_rcp_search_input').val('');
+    applyTestRcpSearch();
+
+    var drawerEl = document.getElementById('kt_test_recipient_drawer');
+    if (drawerEl) {
+        if (drawerEl.parentElement !== document.body) {
+            $('body > #kt_test_recipient_drawer').not(drawerEl).remove();
+            document.body.appendChild(drawerEl);
+        }
+        if (typeof KTDrawer !== 'undefined') {
+            var drawer = KTDrawer.getInstance(drawerEl);
+            if (!drawer) {
+                KTDrawer.createInstances();
+                drawer = KTDrawer.getInstance(drawerEl);
+            }
+            if (drawer) { drawer.show(); }
         }
     }
+};
+
+window.closeTestEmailRecipientDrawer = function() {
+    var drawerEl = document.getElementById('kt_test_recipient_drawer');
+    if (drawerEl && typeof KTDrawer !== 'undefined') {
+        var drawer = KTDrawer.getInstance(drawerEl);
+        if (drawer) { drawer.hide(); }
+    }
+};
+
+$(document).off('click', '.test_to_email_panel').on('click', '.test_to_email_panel', function(e) {
+    e.preventDefault();
+    openTestEmailRecipientDrawer('to');
+});
+$(document).off('click', '.test_cc_email_panel').on('click', '.test_cc_email_panel', function(e) {
+    e.preventDefault();
+    openTestEmailRecipientDrawer('cc');
 });
 
-// Format change triggers compilation
-$('#test_fwd_resume_format').on('change', function() {
-    startTestCompilation();
+// Tab switching
+$(document).off('click', '#test_rcp_tab_internal, #test_rcp_tab_client').on('click', '#test_rcp_tab_internal, #test_rcp_tab_client', function() {
+    var tab = $(this).attr('data-tab');
+    $('#test_rcp_tab_internal, #test_rcp_tab_client').removeClass('active');
+    $(this).addClass('active');
+    if (tab === 'internal') {
+        $('#test_rcp_section_internal').show();
+        $('#test_rcp_section_client').hide();
+    } else {
+        $('#test_rcp_section_internal').hide();
+        $('#test_rcp_section_client').show();
+    }
+    applyTestRcpSearch();
 });
 
-// Automatically trigger compilation on initial drawer load
-$(document).ready(function() {
-    setTimeout(startTestCompilation, 200);
+// Toggle Add/Added
+$(document).off('click', '.test-rcp-toggle-btn').on('click', '.test-rcp-toggle-btn', function(e) {
+    e.preventDefault();
+    var email = $(this).attr('data-email');
+    if (!email) return;
+    var $input = getTestRcpTargetInput();
+    var current = ($input.val() || '').trim();
+    var list = current ? current.split(',').map(function(e) { return e.trim(); }).filter(Boolean) : [];
+    var lowerList = list.map(function(e) { return e.toLowerCase(); });
+
+    if ($(this).hasClass('is-added')) {
+        list = list.filter(function(e) { return e.toLowerCase() !== email.toLowerCase(); });
+    } else {
+        if (lowerList.indexOf(email.toLowerCase()) === -1) {
+            list.push(email);
+        }
+    }
+    $input.val(list.join(', ')).trigger('input');
+    syncTestRecipientDrawerState();
 });
+
+function applyTestRcpSearch() {
+    var q = ($('#test_rcp_search_input').val() || '').toLowerCase().trim();
+    var isInternal = $('#test_rcp_tab_internal').hasClass('active');
+    var $sec = isInternal ? $('#test_rcp_section_internal') : $('#test_rcp_section_client');
+
+    $sec.find('.rcp-contact-item').each(function() {
+        var name = $(this).attr('data-name') || '';
+        var email = $(this).attr('data-email') || '';
+        var role = $(this).attr('data-role') || '';
+        var match = !q || name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || role.indexOf(q) !== -1;
+        $(this).toggle(match);
+    });
+}
+$(document).off('input', '#test_rcp_search_input').on('input', '#test_rcp_search_input', applyTestRcpSearch);
+
+// Initial synchronization on drawer load
+$(document).ready(function () {
+    setTimeout(updateTestSendButtonState, 150);
+});
+updateTestSendButtonState();
 </script>
