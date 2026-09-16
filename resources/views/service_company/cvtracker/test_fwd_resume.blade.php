@@ -52,9 +52,6 @@ setTimeout(initTestFwdCkEditor, 250);
 @php
 $template_body = '';
 $to_email = '';
-if(!empty($to_email_from_count) && $to_email_from_count > 0 && !empty($to_email_from_data)){
-    $to_email = implode(', ', $to_email_from_data);
-}
 $cc_email = '';
 if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     $cc_email = implode(', ', $cc_email_data);
@@ -278,7 +275,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
       <div class="mm-field-col">
         <div style="position:relative;">
-          <input class="mm-input mm-input-with-btn" name="to_email" id="test_to_email" value="{{ $to_email }}" placeholder="Enter recipient email addresses separated by commas">
+          <input class="mm-input mm-input-with-btn" name="to_email" id="test_to_email" value="" placeholder="Enter recipient email addresses separated by commas">
           <a href="javascript:;" class="mm-add-email-btn test_to_email_panel">+ Add Email</a>
         </div>
         <div class="mm-hint">Add one or more email addresses separated by commas</div>
