@@ -4,6 +4,8 @@
 		$currencySymbole 				=	GeneralMethod::currencySymbole();
 			
 @endphp 
+
+@include('service_company.cvtracker._forward_resume_engine') 
 {{--
     NOTE: AgyForwardResumeEngine.js and AgyForwardResumeHelper.js are intentionally
     NOT included here. This blade is injected into the DOM via jQuery's $.html() which
@@ -112,9 +114,101 @@ if($cc_email_count > 0){
 .mm-editor-wrap .cke { width: 100% !important; border: none !important; }
 #editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
 .mm-row-body { align-items: flex-start; }
-.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; }
+.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
 .mm-add-email-btn:hover { color: #1d4ed8; }
 .mm-input-with-btn { padding-right: 110px; }
+
+/* Tag / Chip input container for To and CC email addresses */
+.mm-tag-box {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 105px 5px 8px;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  background: #F9FAFB;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  cursor: text;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.mm-tag-box.is-focused {
+  border-color: #93C5FD;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+}
+.mm-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.mm-email-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 1.35;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.mm-email-tag.is-invalid {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
+}
+.mm-email-tag-text {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mm-email-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: #6B7280;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s;
+  margin-left: 2px;
+}
+.mm-email-tag-remove:hover {
+  background: #DBEAFE;
+  color: #1E3A8A;
+}
+.mm-email-tag.is-invalid .mm-email-tag-remove:hover {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.mm-tag-input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-size: 12.5px !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #374151 !important;
+  min-width: 160px;
+  flex: 1;
+  padding: 4px 2px !important;
+  box-shadow: none !important;
+}
 
 /* Replicated Modern Header */
 .mm-header {
@@ -727,11 +821,13 @@ if($cc_email_count > 0){
         To Email ID <span class="mm-req">*</span>
       </div>
       <div class="mm-field-col">
-        <div style="position:relative;">
-          <input class="mm-input mm-input-with-btn" name="to_email" id="to_email" value="" placeholder="Enter recipient email">
+        <div class="mm-tag-box" id="to_email_tag_box" onclick="$('#to_email_input').focus();">
+          <div class="mm-tag-list" id="to_email_tags"></div>
+          <input type="text" class="mm-tag-input" id="to_email_input" placeholder="Type recipient email and press Enter...">
           <a href="javascript:;" class="mm-add-email-btn to_email_panel">+ Add Email</a>
         </div>
-        <div class="mm-hint">Please enter recipient email</div>
+        <input type="hidden" name="to_email" id="to_email" value="">
+        <div class="mm-hint">Type email address and press Enter or comma, or click "+ Add Email"</div>
       </div>
     </div>
 
@@ -744,11 +840,13 @@ if($cc_email_count > 0){
         CC Email ID
       </div>
       <div class="mm-field-col">
-        <div style="position:relative;">
-          <input class="mm-input mm-input-with-btn" name="cc_email_panel" id="cc_email_panel" value="" placeholder="Enter CC email">
+        <div class="mm-tag-box" id="cc_email_tag_box" onclick="$('#cc_email_input').focus();">
+          <div class="mm-tag-list" id="cc_email_tags"></div>
+          <input type="text" class="mm-tag-input" id="cc_email_input" placeholder="Type CC email and press Enter...">
           <a href="javascript:;" class="mm-add-email-btn cc_email_panel">+ Add Email</a>
         </div>
-        <div class="mm-hint">Add email addresses separated by commas</div>
+        <input type="hidden" name="cc_email_panel" id="cc_email_panel" value="{{ $cc_email }}">
+        <div class="mm-hint">Type CC address and press Enter or comma, or click "+ Add Email"</div>
       </div>
     </div>
 
@@ -1644,6 +1742,20 @@ window.onFwdSubmitClick = async function (e) {
     var attached_cv = isAttachChecked ? 1 : 0;
     var optId = parseInt($('#fwd_resume_format').val(), 10) || 1;
 
+    // Commit any typed text in the tag inputs before validating
+    if (typeof window.processFwdTagInputText === 'function') {
+        var toInputVal = ($('#to_email_input').val() || '').trim();
+        if (toInputVal) {
+            window.processFwdTagInputText('to', toInputVal);
+            $('#to_email_input').val('');
+        }
+        var ccInputVal = ($('#cc_email_input').val() || '').trim();
+        if (ccInputVal) {
+            window.processFwdTagInputText('cc', ccInputVal);
+            $('#cc_email_input').val('');
+        }
+    }
+
     // ══════════════════════════════════════════════════════════════════════════════
     // 1. STRICT RECIPIENT & FORM VALIDATION (CLIENT-SIDE)
     // ══════════════════════════════════════════════════════════════════════════════
@@ -1655,7 +1767,8 @@ window.onFwdSubmitClick = async function (e) {
 
     // A. Validate To Email (Mandatory)
     if (!to_email) {
-        $('#to_email').css('border-color', '#EF4444').focus();
+        $('#to_email_tag_box').css('border-color', '#EF4444');
+        $('#to_email_input').focus();
         Swal.fire({
             title: 'Recipient Email Required',
             text: 'Please enter at least one valid recipient email address in the "To Email ID" field.',
@@ -1667,7 +1780,8 @@ window.onFwdSubmitClick = async function (e) {
 
     var toList = to_email.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
     if (toList.length === 0) {
-        $('#to_email').css('border-color', '#EF4444').focus();
+        $('#to_email_tag_box').css('border-color', '#EF4444');
+        $('#to_email_input').focus();
         Swal.fire({
             title: 'Recipient Email Required',
             text: 'Please enter at least one valid recipient email address in the "To Email ID" field.',
@@ -1679,7 +1793,8 @@ window.onFwdSubmitClick = async function (e) {
 
     for (var ti = 0; ti < toList.length; ti++) {
         if (!emailRegex.test(toList[ti])) {
-            $('#to_email').css('border-color', '#EF4444').focus();
+            $('#to_email_tag_box').css('border-color', '#EF4444');
+            $('#to_email_input').focus();
             Swal.fire({
                 title: 'Invalid Email Address',
                 html: 'The recipient email address <code>' + $('<div>').text(toList[ti]).html() + '</code> is invalid. Please enter a valid email address.',
@@ -1689,14 +1804,15 @@ window.onFwdSubmitClick = async function (e) {
             return;
         }
     }
-    $('#to_email').css('border-color', '#E5E7EB');
+    $('#to_email_tag_box').css('border-color', '#E5E7EB');
 
     // B. Validate CC Email (Optional, but if entered, must be valid)
     if (cc_email) {
         var ccList = cc_email.split(',').map(function(e) { return e.trim(); }).filter(function(e) { return e.length > 0; });
         for (var ci = 0; ci < ccList.length; ci++) {
             if (!emailRegex.test(ccList[ci])) {
-                $('#cc_email_panel').css('border-color', '#EF4444').focus();
+                $('#cc_email_tag_box').css('border-color', '#EF4444');
+                $('#cc_email_input').focus();
                 Swal.fire({
                     title: 'Invalid CC Email Address',
                     html: 'The CC email address <code>' + $('<div>').text(ccList[ci]).html() + '</code> is invalid. Please enter a valid email address.',
@@ -1706,7 +1822,7 @@ window.onFwdSubmitClick = async function (e) {
                 return;
             }
         }
-        $('#cc_email_panel').css('border-color', '#E5E7EB');
+        $('#cc_email_tag_box').css('border-color', '#E5E7EB');
     }
 
     // C. Validate Subject (Mandatory)
@@ -2010,24 +2126,137 @@ $(document).off('click', '#btnSubmit').on('click', '#btnSubmit', function(e) {
     }
 });
 
-// Initialize button state immediately
-$(document).ready(function () {
-    setTimeout(updateSendButtonState, 100);
-});
-updateSendButtonState();
+// ══════════════════════════════════════════════════════════════════════════════
+// EMAIL TAG / CHIP SYSTEM FOR TO AND CC FIELDS
+// ══════════════════════════════════════════════════════════════════════════════
+window._fwdEmailTags = {
+    to: [],
+    cc: []
+};
+
+var emailTagRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+window.renderFwdTags = function(target) {
+    var list = window._fwdEmailTags[target] || [];
+    var $container = (target === 'to') ? $('#to_email_tags') : $('#cc_email_tags');
+    var $hidden = (target === 'to') ? $('#to_email') : $('#cc_email_panel');
+    var $input = (target === 'to') ? $('#to_email_input') : $('#cc_email_input');
+
+    $container.empty();
+    list.forEach(function(email, idx) {
+        var isValid = emailTagRegex.test(email);
+        var $tag = $(
+            '<span class="mm-email-tag' + (isValid ? '' : ' is-invalid') + '" title="' + $('<div>').text(email).html() + '">' +
+              '<span class="mm-email-tag-text">' + $('<div>').text(email).html() + '</span>' +
+              '<span class="mm-email-tag-remove" data-target="' + target + '" data-idx="' + idx + '" title="Remove email">&times;</span>' +
+            '</span>'
+        );
+        $container.append($tag);
+    });
+
+    $hidden.val(list.join(', ')).trigger('input');
+
+    if (list.length > 0) {
+        $input.attr('placeholder', 'Add another email...');
+    } else {
+        $input.attr('placeholder', (target === 'to') ? 'Type recipient email and press Enter...' : 'Type CC email and press Enter...');
+    }
+
+    syncRecipientDrawerState();
+};
+
+window.addFwdEmailTag = function(target, email) {
+    if (!email) return false;
+    email = String(email).trim();
+    if (!email) return false;
+
+    if (!window._fwdEmailTags[target]) window._fwdEmailTags[target] = [];
+    var lower = email.toLowerCase();
+    var exists = window._fwdEmailTags[target].some(function(e) { return e.toLowerCase() === lower; });
+    if (!exists) {
+        window._fwdEmailTags[target].push(email);
+        renderFwdTags(target);
+        return true;
+    }
+    return false;
+};
+
+window.removeFwdEmailTag = function(target, index) {
+    if (window._fwdEmailTags[target] && window._fwdEmailTags[target][index] !== undefined) {
+        window._fwdEmailTags[target].splice(index, 1);
+        renderFwdTags(target);
+    }
+};
+
+window.removeFwdEmailByAddress = function(target, email) {
+    if (!window._fwdEmailTags[target]) return;
+    var lower = String(email || '').trim().toLowerCase();
+    var idx = window._fwdEmailTags[target].findIndex(function(e) { return e.toLowerCase() === lower; });
+    if (idx !== -1) {
+        window._fwdEmailTags[target].splice(idx, 1);
+        renderFwdTags(target);
+    }
+};
+
+window.processFwdTagInputText = function(target, text) {
+    if (!text) return;
+    var items = String(text).split(/[\s,;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+    items.forEach(function(item) {
+        addFwdEmailTag(target, item);
+    });
+};
+
+function setupFwdTagInput(target) {
+    var $box = (target === 'to') ? $('#to_email_tag_box') : $('#cc_email_tag_box');
+    var $input = (target === 'to') ? $('#to_email_input') : $('#cc_email_input');
+
+    $input.off('focus blur keydown paste').on('focus', function() {
+        $box.addClass('is-focused');
+    }).on('blur', function() {
+        $box.removeClass('is-focused');
+        var val = $(this).val().trim();
+        if (val) {
+            processFwdTagInputText(target, val);
+            $(this).val('');
+        }
+    }).on('keydown', function(e) {
+        var val = $(this).val();
+        if (e.key === 'Enter' || e.key === ',' || e.keyCode === 13 || e.keyCode === 188 || e.key === 'Tab' || e.keyCode === 9) {
+            if (val.trim()) {
+                e.preventDefault();
+                processFwdTagInputText(target, val);
+                $(this).val('');
+            }
+        } else if ((e.key === 'Backspace' || e.keyCode === 8) && !val) {
+            if (window._fwdEmailTags[target].length > 0) {
+                removeFwdEmailTag(target, window._fwdEmailTags[target].length - 1);
+            }
+        }
+    }).on('paste', function(e) {
+        var pasted = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+        if (pasted && (pasted.indexOf(',') !== -1 || pasted.indexOf(';') !== -1 || pasted.indexOf('\n') !== -1 || pasted.indexOf(' ') !== -1)) {
+            e.preventDefault();
+            processFwdTagInputText(target, pasted);
+            $(this).val('');
+        }
+    });
+
+    $box.off('click', '.mm-email-tag-remove').on('click', '.mm-email-tag-remove', function(e) {
+        e.stopPropagation();
+        var t = $(this).attr('data-target') || target;
+        var idx = parseInt($(this).attr('data-idx'), 10);
+        removeFwdEmailTag(t, idx);
+    });
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // ENTERPRISE ADD EMAIL RECIPIENT DRAWER CONTROLLER
 // ══════════════════════════════════════════════════════════════════════════════
 var _currentRcpTarget = 'to'; // 'to' or 'cc'
 
-function getRcpTargetInput() {
-    return _currentRcpTarget === 'to' ? $('#to_email') : $('#cc_email_panel');
-}
-
 function getExistingEmails() {
-    var raw = getRcpTargetInput().val() || '';
-    return raw.split(',').map(function(e) { return e.trim().toLowerCase(); }).filter(function(e) { return e.length > 0; });
+    var list = (window._fwdEmailTags && window._fwdEmailTags[_currentRcpTarget]) ? window._fwdEmailTags[_currentRcpTarget] : [];
+    return list.map(function(e) { return e.trim().toLowerCase(); }).filter(Boolean);
 }
 
 function syncRecipientDrawerState() {
@@ -2062,28 +2291,35 @@ function updateRcpFooterCount(totalCount) {
 
 function addEmailToTarget(email) {
     if (!email) return;
-    var $input = getRcpTargetInput();
-    var current = ($input.val() || '').trim();
-    var list = current ? current.split(',').map(function(e) { return e.trim(); }).filter(Boolean) : [];
-    var lowerList = list.map(function(e) { return e.toLowerCase(); });
-
-    if (lowerList.indexOf(email.toLowerCase()) === -1) {
-        list.push(email);
-        $input.val(list.join(', ')).trigger('input');
-    }
+    addFwdEmailTag(_currentRcpTarget, email);
     syncRecipientDrawerState();
 }
 
 function removeEmailFromTarget(email) {
     if (!email) return;
-    var $input = getRcpTargetInput();
-    var current = ($input.val() || '').trim();
-    var list = current ? current.split(',').map(function(e) { return e.trim(); }).filter(Boolean) : [];
-    var lowerEmail = email.toLowerCase();
-    list = list.filter(function(e) { return e.toLowerCase() !== lowerEmail; });
-    $input.val(list.join(', ')).trigger('input');
+    removeFwdEmailByAddress(_currentRcpTarget, email);
     syncRecipientDrawerState();
 }
+
+function initFwdDrawerTagsAndSendState() {
+    var initTo = ($('#to_email').val() || '').trim();
+    window._fwdEmailTags.to = initTo ? initTo.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    renderFwdTags('to');
+
+    var initCc = ($('#cc_email_panel').val() || '').trim();
+    window._fwdEmailTags.cc = initCc ? initCc.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    renderFwdTags('cc');
+
+    setupFwdTagInput('to');
+    setupFwdTagInput('cc');
+
+    updateSendButtonState();
+}
+
+$(document).ready(function () {
+    setTimeout(initFwdDrawerTagsAndSendState, 100);
+});
+setTimeout(initFwdDrawerTagsAndSendState, 200);
 
 window.openEmailRecipientDrawer = function(target) {
     _currentRcpTarget = target || 'to';
