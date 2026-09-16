@@ -68,6 +68,13 @@ class EnsureOneDeviceLogin
         $currentSessionId = session()->getId();
         if (! DeviceSessionManager::enforce($user->id, $currentSessionId)) {
             Auth::logout();
+            if ($request->expectsJson() || $request->ajax() || $request->isXmlHttpRequest()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'You have been logged in from another device. Please login again.',
+                    'redirect' => url('/login'),
+                ], 401);
+            }
             return redirect('/login')->withErrors([
                 'device_message' => 'You have been logged in from another device. Please login again.',
             ]);

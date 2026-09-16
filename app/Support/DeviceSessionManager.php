@@ -30,6 +30,7 @@ class DeviceSessionManager
             $old = Redis::get(self::KEY_PREFIX . $userId);
             if ($old && $old !== $sessionId) {
                 session()->getHandler()->destroy($old);
+                event(new \App\Events\SingleDeviceLogout($userId, $sessionId));
             }
             Redis::setex(self::KEY_PREFIX . $userId, self::TTL_SECONDS, $sessionId);
         } catch (\Throwable) {

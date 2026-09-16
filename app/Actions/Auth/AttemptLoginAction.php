@@ -83,11 +83,6 @@ class AttemptLoginAction
             }
         }
 
-        if ($user->id === 1) {
-            $this->logAttempt($request, true, $captchaOk, $startAt);
-            return redirect(route('superadmin.dashboard.index'));
-        }
-
         $user->last_login = Carbon::now()->toDateTimeString();
         $user->save();
 
@@ -98,6 +93,11 @@ class AttemptLoginAction
         // Phase 1.2: 1 async bulk ES call replaces 4 synchronous round-trips.
         RecordLastLoginEsJob::dispatch($user->id, $user->company_id, now()->toIso8601String())
             ->onConnection('emails');
+
+        if ($user->id === 1) {
+            $this->logAttempt($request, true, $captchaOk, $startAt);
+            return redirect(route('superadmin.dashboard.index'));
+        }
 
         $this->logAttempt($request, true, $captchaOk, $startAt);
         return redirect()->intended(TenantRouter::dashboardUrl($user));

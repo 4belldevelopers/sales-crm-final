@@ -984,12 +984,12 @@
                                     <!--begin::Heading-->
                                     <div class="d-flex align-items-center mb-2">          
                                         <!--begin::Title-->     
-                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser['rank']}}</span>
+                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser['rank'] ?? '-'}}</span>
                                         <!--end::Title-->
 
                                                                 <!--begin::Label-->  
                                             <span class="badge badge-light-success fs-base">                                    
-                                                Scored   {{$ownUser['score']}}
+                                                Scored   {{$ownUser['score'] ?? 0}}
                                             </span> 
                                             
                                             <!--end::Label-->            
@@ -1034,12 +1034,12 @@
                                     <!--begin::Heading-->
                                     <div class="d-flex align-items-center mb-2">          
                                         <!--begin::Title-->     
-                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser_global['rank']}}</span>
+                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser_global['rank'] ?? '-'}}</span>
                                         <!--end::Title-->
 
                                                                 <!--begin::Label-->  
                                             <span class="badge badge-light-success fs-base">                                    
-                                                Scored  {{$ownUser_global['score']}}
+                                                Scored  {{$ownUser_global['score'] ?? 0}}
                                             </span>  
                                             
                                             <!--end::Label-->            
@@ -1080,12 +1080,12 @@
                                     <!--begin::Heading-->
                                     <div class="d-flex align-items-center mb-2">          
                                         <!--begin::Title-->     
-                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser_global_company['rank']}}</span>
+                                        <span class="fs-2hx fw-bold text-gray-800 me-2 lh-1 ls-n2">#{{$ownUser_global_company['rank'] ?? '-'}}</span>
                                         <!--end::Title-->
 
                                                                 <!--begin::Label-->  
                                             <span class="badge badge-light-success fs-base">                                    
-                                                Scored   {{$ownUser_global_company['score']}}
+                                                Scored   {{$ownUser_global_company['score'] ?? 0}}
                                             </span>  
                                             
                                             <!--end::Label-->            
@@ -1144,10 +1144,8 @@
 
                                         <!--begin::Label-->
                                         <div class="text-gray-500 flex-grow-1 me-4">Score</div>
-                                        <!--end::Label-->
-
-                                        <!--begin::Stats-->
-                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_internal_rank['score']}}</div>
+                                                                    <!--begin::Stats-->
+                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_internal_rank['score'] ?? 0}}</div>
                                         <!--end::Stats-->
                                     </div>
                                     <!--end::Label-->
@@ -1159,11 +1157,11 @@
                                         <!--end::Bullet-->
 
                                         <!--begin::Label-->
-                                        <div class="text-gray-500 flex-grow-1 me-4">Internally Rank {{($ownUser_daily_internal_rank['rank']==1) ? '🏆' : ''}}</div>
+                                        <div class="text-gray-500 flex-grow-1 me-4">Internally Rank {{isset($ownUser_daily_internal_rank['rank']) && $ownUser_daily_internal_rank['rank'] == 1 ? '🏆' : ''}}</div>
                                         <!--end::Label-->
 
                                         <!--begin::Stats-->
-                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_internal_rank['rank']}}</div>
+                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_internal_rank['rank'] ?? '-'}}</div>
                                         <!--end::Stats-->                    
                                     </div>
                                     <!--end::Label-->
@@ -1175,11 +1173,11 @@
                                         <!--end::Bullet-->
 
                                         <!--begin::Label-->
-                                        <div class="text-gray-500 flex-grow-1 me-4">Globally Rank {{($ownUser_daily_global_rank['rank']==1) ? '🏆' : ''}}</div>
+                                        <div class="text-gray-500 flex-grow-1 me-4">Globally Rank {{isset($ownUser_daily_global_rank['rank']) && $ownUser_daily_global_rank['rank'] == 1 ? '🏆' : ''}}</div>
                                         <!--end::Label-->
 
                                         <!--begin::Stats-->
-                                        <div class=" fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_global_rank['rank']}}</div>
+                                        <div class=" fw-bolder text-gray-700 text-xxl-end">{{$ownUser_daily_global_rank['rank'] ?? '-'}}</div>
                                         <!--end::Stats-->                      
                                     </div>
                                     <!--end::Label-->
@@ -3859,14 +3857,14 @@
     </div>
 
 
-    @if($global_company_type==3);
-        @if($ownUser_global['rank'] <= 3)
+    @if(($global_company_type ?? 0) == 3)
+        @if(isset($ownUser_global['rank']) && $ownUser_global['rank'] <= 3)
             <div id="animation-container">
                 <div class="congrats-message" id="congratsText">🏆 Congratulations! 🏆</div>
             </div>
         @endif
     @else
-        @if($ownUser['rank'] <= 3)
+        @if(isset($ownUser['rank']) && $ownUser['rank'] <= 3)
             <div id="animation-container">
                 <div class="congrats-message" id="congratsText">🏆 Congratulations! 🏆</div>
             </div>
@@ -3875,10 +3873,10 @@
     @endif
 
     @php
-    if($global_company_type==3){
-        $topRankShow = $ownUser_global['rank'];
+    if(($global_company_type ?? 0) == 3){
+        $topRankShow = $ownUser_global['rank'] ?? '-';
     }else{
-        $topRankShow = $ownUser['rank'];
+        $topRankShow = $ownUser['rank'] ?? '-';
     }
 
     @endphp
