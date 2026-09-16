@@ -3025,6 +3025,179 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Isolated Test Forward Resume: Drawer Loader (0% Server Load / WASM + Direct R2 Beta)
+     */
+    public function test_fwd_resume(Request $request)
+    {
+        $rawArr = is_array($request->arr) ? $request->arr : [];
+        $this->arr = array_slice($rawArr, 0, 5);
+        $this->jobIdArr = $request->jobIdArr;
+
+        $this->applicationData = DB::table('job_applications')
+            ->select(
+                'job_applications.id',
+                'job_applications.full_name',
+                'job_applications.current_designation',
+                'job_applications.phone',
+                'job_applications.email',
+                'job_applications.linkedin',
+                'job_applications.city',
+                'job_applications.state',
+                'job_applications.country',
+                'job_applications.wm',
+                'job_applications.total_exp',
+                'job_applications.ctc',
+                'job_applications.ectc',
+                'job_applications.current_company',
+                'job_applications.skills',
+                'job_applications.resume',
+                'job_applications.rating',
+                'job_applications.careersummary',
+                'job_applications.cover_letter',
+                'job_applications.recruiter_note'
+            )
+            ->whereIn('job_applications.id', $this->arr)
+            ->get();
+
+        $companyRow = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', auth()->user()->company_id)->first();
+        $this->companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
+        $this->companyLogo = ($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '';
+
+        $jobSkillsList = [];
+        if (! empty($this->jobIdArr)) {
+            $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
+            $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
+            $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+        }
+        $this->jobSkills = $jobSkillsList;
+
+        $view = view('service_company.cvtracker.test_fwd_resume', $this->data)->render();
+
+        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+    }
+
+    /**
+     * Isolated Test Forward Resume: Direct-to-R2 Presigned Upload Intent Generator
+     */
+    public function test_fwd_resume_intent(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+        $files = $request->input('files', []);
+
+        if (empty($files) || ! is_array($files)) {
+            return response()->json(['status' => 'error', 'message' => 'No files provided for upload intent.'], 422);
+        }
+
+        $uploadService = app(\App\Services\ForwardResumeUploadService::class);
+        $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+
+        if (empty($results)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cloudflare R2 storage is not configured or failed to generate presigned upload URLs.'
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'uploads' => $results
+        ]);
+    }
+
+    /**
+     * Isolated Test Forward Resume: Micro-Dispatch Send Endpoint
+     */
+    public function test_fwd_resume_send(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+        $subject = trim((string) $request->subject);
+        $toRaw = $request->to_email;
+        $message = (string) $request->editor1;
+        $attachmentUuids = $request->input('attachment_uuids', []);
+        $arr = $request->arr ?: [];
+
+        if (empty($toRaw)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Recipient email (To) is required.']);
+        }
+
+        $to = array_values(array_filter(array_map('trim', explode(',', $toRaw))));
+        foreach ($to as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid recipient email format: {$email}"]);
+            }
+        }
+
+        if (empty($subject)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Subject is required.']);
+        }
+
+        if (empty($attachmentUuids) || ! is_array($attachmentUuids)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'No verified Cloudflare R2 attachments provided.']);
+        }
+
+        // Coin validation
+        $eventId = 43;
+        $coinsRequ = count($to);
+        $coinsDeductions = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+        if ($coinsDeductions->status) {
+            return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+        }
+
+        $fwdRequestUuid = (string) \Illuminate\Support\Str::uuid();
+        
+        // Record ForwardRequest if table exists
+        if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
+            \App\Models\ForwardRequest::create([
+                'uuid' => $fwdRequestUuid,
+                'company_id' => $companyId,
+                'user_id' => $userId,
+                'candidate_count' => count($attachmentUuids),
+                'recipient_count' => count($to),
+                'status' => 'SENT',
+            ]);
+        }
+
+        $companyRow = DB::table('companies')->select('company_name')->where('id', $companyId)->first();
+        $companyName = $companyRow ? $companyRow->company_name : 'Hiring Partner';
+
+        $data = [
+            'message' => $message,
+            'subject' => $subject,
+            'company_name' => $companyName,
+            'consultant_name' => 'JERO Recruitment',
+            'position' => 'Candidate Requisition',
+            'candidate_skills' => []
+        ];
+
+        $fromAddress = auth()->user()->email;
+        $senderName = auth()->user()->name ?? 'Recruitment Team';
+        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
+
+        // Dispatch SendForwardResumeBatchMailJob (Streams bytes from R2 into RAM, delivers email, and purges R2 files upon delivery)
+        \App\Jobs\SendForwardResumeBatchMailJob::dispatch(
+            $fwdRequestUuid,
+            $to,
+            $subject,
+            'email.resume-forward.forward-resume',
+            (object) $data,
+            $attachmentUuids,
+            $fromAddress,
+            $senderName,
+            $cc,
+            $companyId
+        )->onConnection('emails');
+
+        GeneralMethod::coinsDeductions($companyId, $eventId, $userId, $companyId, '', '');
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'Test email dispatched successfully! PDF streamed from Cloudflare R2 and will be automatically cleaned up upon delivery.'
+        ]);
+    }
+
     public function offerSendMail(Request $request)
     {
 
