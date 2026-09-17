@@ -30,7 +30,7 @@ class EnsureOneDeviceLoginTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->middleware = new EnsureOneDeviceLogin();
+        $this->middleware = new EnsureOneDeviceLogin;
     }
 
     private function activeUser(int $id = 1, int $companyId = 1): GenericUser
@@ -42,6 +42,7 @@ class EnsureOneDeviceLoginTest extends TestCase
     {
         $request = Request::create('/dashboard', 'GET');
         $request->setLaravelSession($this->app->make('session.store'));
+
         return $request;
     }
 
@@ -54,6 +55,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -69,7 +71,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
         Auth::shouldReceive('logout')->once();
 
-        $response = $this->middleware->handle($this->makeRequest(), fn() => response('ok'));
+        $response = $this->middleware->handle($this->makeRequest(), fn () => response('ok'));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertStringContainsString('/login', $response->headers->get('Location'));
@@ -88,6 +90,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -103,14 +106,14 @@ class EnsureOneDeviceLoginTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
         Auth::shouldReceive('logout')->once();
 
-        $loginAt     = now()->subHour()->timestamp;
-        $userEpoch   = now()->timestamp; // epoch is AFTER login → session is stale
+        $loginAt = now()->subHour()->timestamp;
+        $userEpoch = now()->timestamp; // epoch is AFTER login → session is stale
 
         $request = $this->makeRequest();
         $request->getSession()->put('login_at', $loginAt);
         Cache::put('user:epoch:3', $userEpoch, 3600);
 
-        $response = $this->middleware->handle($request, fn() => response('ok'));
+        $response = $this->middleware->handle($request, fn () => response('ok'));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertStringContainsString('/login', $response->headers->get('Location'));
@@ -123,14 +126,14 @@ class EnsureOneDeviceLoginTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
         Auth::shouldReceive('logout')->once();
 
-        $loginAt      = now()->subHour()->timestamp;
+        $loginAt = now()->subHour()->timestamp;
         $companyEpoch = now()->timestamp; // company blocked after this session logged in
 
         $request = $this->makeRequest();
         $request->getSession()->put('login_at', $loginAt);
         Cache::put('company:epoch:7', $companyEpoch, 3600);
 
-        $response = $this->middleware->handle($request, fn() => response('ok'));
+        $response = $this->middleware->handle($request, fn () => response('ok'));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertStringContainsString('/login', $response->headers->get('Location'));
@@ -143,7 +146,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
         Auth::shouldReceive('logout')->never();
 
-        $loginAt   = now()->timestamp;
+        $loginAt = now()->timestamp;
         $userEpoch = now()->subHour()->timestamp; // epoch is BEFORE login → session is fresh
 
         $request = $this->makeRequest();
@@ -156,6 +159,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($request, function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -176,6 +180,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -193,7 +198,7 @@ class EnsureOneDeviceLoginTest extends TestCase
 
         Redis::shouldReceive('get')->with('user:session:7')->andReturn('OTHER-SESSION');
 
-        $response = $this->middleware->handle($this->makeRequest(), fn() => response('ok'));
+        $response = $this->middleware->handle($this->makeRequest(), fn () => response('ok'));
 
         $this->assertSame(302, $response->getStatusCode());
         $this->assertStringContainsString('/login', $response->headers->get('Location'));
@@ -212,6 +217,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -230,6 +236,7 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
             $reached = true;
+
             return response('ok');
         });
 
@@ -255,6 +262,54 @@ class EnsureOneDeviceLoginTest extends TestCase
         $reached = false;
         $this->middleware->handle($request, function () use (&$reached) {
             $reached = true;
+
+            return response('ok');
+        });
+
+        $this->assertTrue($reached);
+    }
+
+    public function test_single_device_passes_when_feature_is_disabled(): void
+    {
+        config(['auth.single_device_login.enabled' => false]);
+
+        $user = $this->activeUser(15, 1);
+        Auth::shouldReceive('check')->once()->andReturn(true);
+        Auth::shouldReceive('user')->andReturn($user);
+        Auth::shouldReceive('logout')->never();
+
+        // Should not call Redis when disabled
+        Redis::shouldReceive('get')->never();
+
+        $reached = false;
+        $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
+            $reached = true;
+
+            return response('ok');
+        });
+
+        $this->assertTrue($reached);
+    }
+
+    public function test_single_device_passes_when_user_email_is_exempt(): void
+    {
+        config([
+            'auth.single_device_login.enabled' => true,
+            'auth.single_device_login.exempt_emails' => ['exempt@example.com'],
+        ]);
+
+        $user = new GenericUser(['id' => 16, 'company_id' => 1, 'status' => 'active', 'email' => 'exempt@example.com']);
+        Auth::shouldReceive('check')->once()->andReturn(true);
+        Auth::shouldReceive('user')->andReturn($user);
+        Auth::shouldReceive('logout')->never();
+
+        // Should not call Redis when exempt
+        Redis::shouldReceive('get')->never();
+
+        $reached = false;
+        $this->middleware->handle($this->makeRequest(), function () use (&$reached) {
+            $reached = true;
+
             return response('ok');
         });
 

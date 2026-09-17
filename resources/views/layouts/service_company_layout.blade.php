@@ -1622,6 +1622,9 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
                     toastr.success(htmlMessage);
                 });
 
+            // Current session ID for this browser tab
+            const currentTabSessionId = "{{ session()->getId() }}";
+
             // --- Single-Device Real-time Auto-Logout Handler ---
             function triggerAutoLogout() {
                 window.location.href = "{{ url('/login') }}";
@@ -1643,8 +1646,8 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
                 .catch(() => {});
             }
 
-            // 1. Check every 15 seconds
-            setInterval(checkDeviceSession, 15000);
+            // 1. Check every 30 seconds
+            setInterval(checkDeviceSession, 30000);
 
             // 2. Check immediately when user switches back to this browser tab
             document.addEventListener('visibilitychange', function () {
@@ -1657,7 +1660,11 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
             if (userId && window.Echo) {
                 window.Echo.private(`App.Models.User.${userId}`)
                     .listen('.SingleDeviceLogout', (data) => {
-                        console.warn("⚠️ Single device logout event received:", data);
+                        // If this event was broadcasted by our own fresh login, ignore it!
+                        if (data && data.newSessionId && data.newSessionId === currentTabSessionId) {
+                            return;
+                        }
+                        console.warn("⚠️ Single device logout event received for previous session:", data);
                         triggerAutoLogout();
                     });
             }
