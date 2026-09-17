@@ -230,9 +230,6 @@
                         }
 
                         $hasResume = !empty($row->resume);
-                        $cvBadge = $hasResume
-                            ? '<span class="badge badge-light-success py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="Resume Document Uploaded">✓ CV</span>'
-                            : '<span class="badge badge-light-warning py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="No Resume Uploaded">⚠ No CV</span>';
 
                         if ($flag == 1) {
                             echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
@@ -261,7 +258,7 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>' . $cvBadge . '
+                                '</sup></a>
 																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
@@ -310,7 +307,7 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>' . $cvBadge . '
+                                '</sup></a>
 																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
