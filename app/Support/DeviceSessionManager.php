@@ -5,55 +5,73 @@ namespace App\Support;
 use Illuminate\Support\Facades\Redis;
 
 /**
- * V2_login Phase 3.1 — Redis-only single-device session enforcement.
+ * Single Active Device Session Manager.
  *
- * Key: user:session:{userId} → authoritative session ID (7-day TTL).
- * On login: recordLogin() overwrites the key and destroys any previous session.
- * Per request: enforce() does a single Redis GET; returns false if mismatch.
- * Fail-open: if Redis is unavailable or key is missing, seeds the key and allows.
+ * Key: user:session:{userId} -> authoritative session ID (7-day TTL).
+ * On login: recordLogin() overwrites the Redis key and destroys previous session data.
+ * Per request: enforce() checks Redis first, with fall-back comparison against
+ * users.active_session stored in DB/User model for cold-cache and Redis-outage safety.
  *
- * This replaces the previous pattern of writing users.session_id to MySQL on every
- * request (BUG-01 / EnsureOneDeviceLogin).
+ * Intent: Ensures a user account can be active on ONLY one device at a time without
+ * performing N+1 database queries on every HTTP request.
  */
 class DeviceSessionManager
 {
     private const KEY_PREFIX = 'user:session:';
+
     private const TTL_SECONDS = 604800; // 7 days
 
     /**
-     * Called on successful login. Destroys the previous device's session (if any),
-     * then records the new session as the authoritative one.
+     * Called on successful login. Destroys the previous device's session in storage,
+     * then records the new session ID as the authoritative active session.
+     *
+     * @param  int  $userId  Target user ID
+     * @param  string  $sessionId  New active session ID
      */
     public static function recordLogin(int $userId, string $sessionId): void
     {
         try {
-            $old = Redis::get(self::KEY_PREFIX . $userId);
+            $old = Redis::get(self::KEY_PREFIX.$userId);
             if ($old && $old !== $sessionId) {
                 session()->getHandler()->destroy($old);
                 event(new \App\Events\SingleDeviceLogout($userId, $sessionId));
             }
-            Redis::setex(self::KEY_PREFIX . $userId, self::TTL_SECONDS, $sessionId);
+            Redis::setex(self::KEY_PREFIX.$userId, self::TTL_SECONDS, $sessionId);
         } catch (\Throwable) {
-            // Redis down — log but don't break login
+            // Redis down — log/swallow but allow login flow to complete
         }
     }
 
     /**
-     * Per-request check. Returns false when the current session is not the authoritative one
-     * (i.e., the user has logged in from another device since this session was created).
+     * Per-request single-session enforcement check.
+     * Compares incoming request's session ID with authoritative Redis key or DB fallback.
      *
-     * Fail-open: on Redis outage or cold cache, seeds the key and allows through.
+     * @param  int  $userId  Target user ID
+     * @param  string  $currentSessionId  Current incoming session ID
+     * @param  string|null  $dbActiveSession  Active session stored on User model (users.active_session)
+     * @return bool True if session is valid and active; false if invalidated by newer login
      */
-    public static function enforce(int $userId, string $currentSessionId): bool
+    public static function enforce(int $userId, string $currentSessionId, ?string $dbActiveSession = null): bool
     {
         try {
-            $stored = Redis::get(self::KEY_PREFIX . $userId);
+            $stored = Redis::get(self::KEY_PREFIX.$userId);
         } catch (\Throwable) {
-            return true; // Redis down — fail-open
+            $stored = null; // Redis outage fallback
         }
 
         if ($stored === null) {
-            Redis::setex(self::KEY_PREFIX . $userId, self::TTL_SECONDS, $currentSessionId);
+            // Cold cache / Redis fallback: check against user's active_session in DB/memory
+            if ($dbActiveSession !== null && $dbActiveSession !== '') {
+                if ($dbActiveSession !== $currentSessionId) {
+                    return false;
+                }
+            }
+            try {
+                Redis::setex(self::KEY_PREFIX.$userId, self::TTL_SECONDS, $currentSessionId);
+            } catch (\Throwable) {
+                // Ignore Redis write errors during outage fallback
+            }
+
             return true;
         }
 
@@ -61,19 +79,21 @@ class DeviceSessionManager
     }
 
     /**
-     * Destroys the stored session and clears the Redis key.
-     * Called by admin actions that force-logout a specific user.
+     * Destroys the active session and clears the Redis session key for a user.
+     * Called by logout actions or admin force-logout triggers.
+     *
+     * @param  int  $userId  Target user ID
      */
     public static function invalidate(int $userId): void
     {
         try {
-            $stored = Redis::get(self::KEY_PREFIX . $userId);
+            $stored = Redis::get(self::KEY_PREFIX.$userId);
             if ($stored) {
                 session()->getHandler()->destroy($stored);
             }
-            Redis::del(self::KEY_PREFIX . $userId);
+            Redis::del(self::KEY_PREFIX.$userId);
         } catch (\Throwable) {
-            // swallow — Redis down
+            // Swallow — Redis outage
         }
     }
 }
