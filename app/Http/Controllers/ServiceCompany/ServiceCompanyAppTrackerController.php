@@ -364,6 +364,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->whereIn('job_id', $jobIds)
             ->get()
             ->groupBy('job_id')
+            ->map(function ($items) {
+                return collect($items)
+                    ->unique(fn ($item) => mb_strtolower(trim($item->skill_name)))
+                    ->values()
+                    ->all();
+            })
             ->toArray();
 
         // Batch duplicate detection (was N+1 #4)

@@ -54,12 +54,16 @@
                     $skillArr = $row->matched_skills;
                     $allCandidateSkills = array_filter(array_map('trim', explode(',', (string) @$row->skills)));
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkillsForDisplay ?? []);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    $targetJobId = $row->job_id ?? ($jobid ?? 0);
+                    if ($targetJobId > 0) {
+                        $percentageString = GeneralMethod::skill_percentage($targetJobId, $allCandidateSkills);
+                        $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
+                    } else {
+                        $matches = $row->matched_skill_count ?? 0;
+                        $totalElements = count($requiredSkillsForDisplay ?? []);
+                        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                        $percentage = (int) round(min($matchPercentage, 100));
+                    }
 
                     $matchNum = (float) $percentage;
                     if ($matchNum == 0) {

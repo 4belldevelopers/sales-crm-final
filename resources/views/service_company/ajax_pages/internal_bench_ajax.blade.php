@@ -64,12 +64,16 @@
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills); //$row->matched_skills;//
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkillsForDisplay ?? []);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    $targetJobId = $row->job_id ?? ($jobid ?? 0);
+                    if ($targetJobId > 0) {
+                        $percentageString = GeneralMethod::skill_percentage($targetJobId, $skillArr);
+                        $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
+                    } else {
+                        $matches = $row->matched_skill_count ?? 0;
+                        $totalElements = count($requiredSkillsForDisplay ?? []);
+                        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                        $percentage = (int) round(min($matchPercentage, 100));
+                    }
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used across the other apptracker tabs: >90

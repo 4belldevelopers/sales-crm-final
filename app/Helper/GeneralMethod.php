@@ -6222,107 +6222,133 @@ END:VCALENDAR";
     }
 
     /**
-     * Compute match % from pre-fetched job_skills array — no DB hit.
-     * Used by all_apptracker blade after prepareRowMaps() pre-fetches skills in one batch.
+     * Canonical skill match percentage calculation between a job and a candidate.
+     * Guaranteed identical percentage between candidate drawer and all candidate lists.
+     * Tenancy note: When querying job_metronics_skills by job_id, deduplicates distinct skill names.
+     *
+     * @param int|array|\Illuminate\Support\Collection $jobSkillsOrId
+     * @param string|array|\Illuminate\Support\Collection $candidateSkills
+     * @return array ['percentage' => int, 'percentage_str' => string, 'percentage_float' => float, 'matched_count' => int, 'total' => int, 'matched_skills' => array]
      */
-    public static function skill_percentage_from_array(array $job_skills, array $skillArr): string
+    public static function calculateSkillMatch($jobSkillsOrId, $candidateSkills): array
     {
-        $lowercaseArray1 = array_map(fn ($i) => strtolower(trim($i)), $job_skills);
-        $lowercaseArray2 = array_map(fn ($i) => strtolower(trim($i)), $skillArr);
-
-        $matches = 0;
-        foreach ($lowercaseArray1 as $required) {
-            foreach ($lowercaseArray2 as $candidate) {
-                if (self::skillMatchesPhrasePrefix($required, $candidate)) {
-                    $matches++;
-                    break;
+        // 1. Extract and normalize unique job required skills
+        $rawJobSkills = [];
+        if (is_numeric($jobSkillsOrId) && (int) $jobSkillsOrId > 0) {
+            $rawJobSkills = DB::table('job_metronics_skills')
+                ->where('job_id', (int) $jobSkillsOrId)
+                ->pluck('skill_name')
+                ->toArray();
+        } elseif (is_iterable($jobSkillsOrId)) {
+            foreach ($jobSkillsOrId as $item) {
+                if (is_object($item)) {
+                    $s = trim((string) ($item->skill_name ?? ($item->skill ?? '')));
+                } elseif (is_array($item)) {
+                    $s = trim((string) ($item['skill_name'] ?? ($item['skill'] ?? '')));
+                } else {
+                    $s = trim((string) $item);
+                }
+                if ($s !== '') {
+                    $rawJobSkills[] = $s;
                 }
             }
         }
 
-        $total = count($lowercaseArray1);
-        $pct = $total > 0 ? min(($matches / $total) * 100, 100) : 0;
+        $uniqueJobSkills = [];
+        foreach ($rawJobSkills as $s) {
+            $cleaned = mb_strtolower(trim((string) $s));
+            if ($cleaned !== '') {
+                $uniqueJobSkills[$cleaned] = trim((string) $s);
+            }
+        }
 
-        return round($pct, 1).'%';
+        $totalJobSkills = count($uniqueJobSkills);
+        if ($totalJobSkills === 0) {
+            return [
+                'percentage' => 0,
+                'percentage_str' => '0%',
+                'percentage_float' => 0.0,
+                'matched_count' => 0,
+                'total' => 0,
+                'matched_skills' => [],
+            ];
+        }
+
+        // 2. Extract and normalize candidate skills
+        $rawCandSkills = [];
+        if (is_string($candidateSkills)) {
+            $rawCandSkills = array_filter(array_map('trim', explode(',', $candidateSkills)), 'strlen');
+        } elseif (is_iterable($candidateSkills)) {
+            foreach ($candidateSkills as $item) {
+                if (is_object($item)) {
+                    $s = trim((string) ($item->skills ?? ($item->skill ?? ($item->skill_name ?? ''))));
+                } elseif (is_array($item)) {
+                    $s = trim((string) ($item['skills'] ?? ($item['skill'] ?? ($item['skill_name'] ?? ''))));
+                } else {
+                    $s = trim((string) $item);
+                }
+                if ($s !== '') {
+                    $rawCandSkills[] = $s;
+                }
+            }
+        }
+
+        $cleanedCandSkills = [];
+        foreach ($rawCandSkills as $cs) {
+            $csTrim = trim((string) $cs);
+            $cLower = mb_strtolower($csTrim);
+            if ($cLower !== '') {
+                $cleanedCandSkills[$cLower] = $csTrim;
+            }
+        }
+
+        // 3. Match each unique required job skill against candidate skills
+        $matches = 0;
+        $matchedSkills = [];
+        foreach ($uniqueJobSkills as $reqLower => $reqOriginal) {
+            $isMatched = false;
+            foreach ($cleanedCandSkills as $candLower => $candOriginal) {
+                if ($reqLower === $candLower || self::skillMatchesPhrasePrefix($reqLower, $candLower) || self::skillMatchesPhrasePrefix($candLower, $reqLower)) {
+                    $isMatched = true;
+                    break;
+                }
+            }
+            if ($isMatched) {
+                $matches++;
+                $matchedSkills[] = $reqOriginal;
+            }
+        }
+
+        $pctFloat = min(($matches / $totalJobSkills) * 100, 100);
+        $roundedInt = (int) round($pctFloat);
+
+        return [
+            'percentage' => $roundedInt,
+            'percentage_str' => $roundedInt . '%',
+            'percentage_float' => round($pctFloat, 1),
+            'matched_count' => $matches,
+            'total' => $totalJobSkills,
+            'matched_skills' => $matchedSkills,
+        ];
+    }
+
+    /**
+     * Compute match % from pre-fetched job_skills array — no DB hit.
+     * Used across apptracker blades after prepareRowMaps() pre-fetches skills in one batch.
+     */
+    public static function skill_percentage_from_array(array $job_skills, array $skillArr): string
+    {
+        return self::calculateSkillMatch($job_skills, $skillArr)['percentage_str'];
     }
 
     public static function skill_percentage($jobId, $skillArr)
     {
-
-        $job_skills = DB::table('job_metronics_skills')->where('job_metronics_skills.job_id', $jobId)->pluck('skill_name')->toArray();
-
-        $lowercaseArray1 = array_map(function ($item) {
-            return strtolower(trim($item));
-        }, $job_skills);
-
-        $lowercaseArray2 = array_map(function ($item) {
-            return strtolower(trim($item));
-        }, $skillArr);
-
-        // in_array() required an EXACT string match between the job's
-        // skill keyword ("java") and the candidate's own skill entry
-        // ("java developer") — never equal, so a candidate whose skill
-        // list only had compound entries scored 0% even when they
-        // clearly had the skill. Same phrase-prefix check
-        // buildSkillMatchClause()/matchedSkillsList() use elsewhere.
-        $matches = 0;
-        foreach ($lowercaseArray1 as $required) {
-            foreach ($lowercaseArray2 as $candidate) {
-                if (self::skillMatchesPhrasePrefix($required, $candidate)) {
-                    $matches++;
-                    break;
-                }
-            }
-        }
-
-        $totalElements = count($lowercaseArray1);
-        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-
-        // Ensure the percentage does not exceed 100%
-        $matchPercentage = min($matchPercentage, 100);
-
-        $percentage = round($matchPercentage, 1).'%';
-
-        return $percentage; // Rounds to 2 decimal places
-
+        return self::calculateSkillMatch($jobId, $skillArr)['percentage_str'];
     }
 
     public static function skill_match_percentage($jobId, $skillArr)
     {
-
-        $job_skills = DB::table('job_metronics_skills')->where('job_metronics_skills.job_id', $jobId)->pluck('skill_name')->toArray();
-
-        $lowercaseArray1 = array_map(function ($item) {
-            return strtolower(trim($item));
-        }, $job_skills);
-
-        $lowercaseArray2 = array_map(function ($item) {
-            return strtolower(trim($item));
-        }, $skillArr);
-
-        // Same phrase-prefix fix as skill_percentage() above — in_array()
-        // required an exact string match, so a candidate skill of "java
-        // developer" never counted against a required "java".
-        $matches = 0;
-        foreach ($lowercaseArray1 as $required) {
-            foreach ($lowercaseArray2 as $candidate) {
-                if (self::skillMatchesPhrasePrefix($required, $candidate)) {
-                    $matches++;
-                    break;
-                }
-            }
-        }
-
-        $totalElements = count($lowercaseArray1);
-        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-
-        // Ensure the percentage does not exceed 100%
-        $matchPercentage = min($matchPercentage, 100);
-
-        $percentage = round($matchPercentage, 1);
-
-        return $percentage; // Rounds to 2 decimal places
-
+        return self::calculateSkillMatch($jobId, $skillArr)['percentage_float'];
     }
 
     public static function profilesCompletion()
