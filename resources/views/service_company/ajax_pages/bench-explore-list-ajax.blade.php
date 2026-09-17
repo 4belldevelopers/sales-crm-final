@@ -85,11 +85,9 @@
     $skillArrc_skills = is_array($jobSkillsRaw) ? array_column($jobSkillsRaw, 'skill_name') : [];
     $percentage       = GeneralMethod::skill_percentage($jobDetails->id ?? 0, $skillArr);
 
-    $matchNum = (float) rtrim($percentage ?: '0%', '%');
-    if ($matchNum == 0) { $matchBg = '#F1F5F9'; $matchColor = '#64748B'; }
-    elseif ($matchNum < 50) { $matchBg = '#FEE2E2'; $matchColor = '#DC2626'; }
-    elseif ($matchNum <= 90) { $matchBg = '#FEF3C7'; $matchColor = '#D97706'; }
-    else { $matchBg = '#DCFCE7'; $matchColor = '#16A34A'; }
+    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+    $matchBg = $matchStyle['bg'];
+    $matchColor = $matchStyle['color'];
     $matchBadge = '<span class="bxr-match-badge" style="background:'.$matchBg.';color:'.$matchColor.';">Match '.$percentage.'</span>';
 
     $matchedSkillsArr   = GeneralMethod::matchedSkillsList($skillArr, $skillArrc_skills);

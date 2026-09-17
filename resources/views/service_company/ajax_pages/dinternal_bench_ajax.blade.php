@@ -65,18 +65,10 @@
                         $percentage = (int) round(min($matchPercentage, 100));
                     }
 
-                    // Match % badge — color reflects the numeric match score, same
-                    // thresholds/colors used across the other apptracker tabs: >90
-                    // green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
-                    if ($percentage == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($percentage < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($percentage <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.$percentage.'%</span>';
 
                     // Matched skill highlighting, three tiers — mirrors
