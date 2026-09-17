@@ -555,9 +555,20 @@
   //  if(@$country_id > 0)
   //  {
   
-     $city_name	= @$application->city_name ? ucwords(@$application->city_name).',' : '';
-     $state_name	= @$application->state_name ? ucwords(@$application->state_name).',' : ''; 
-     $country_name	= ucwords(@$application->country_name);	
+      $candRawCity = (!empty(@$application->city_name) && !preg_match('/^\d+$/', trim((string) @$application->city_name)))
+          ? @$application->city_name
+          : ((!empty(@$application->city) && !preg_match('/^\d+$/', trim((string) @$application->city))) ? @$application->city : '');
+      $city_name	= $candRawCity ? ucwords($candRawCity).',' : '';
+
+      $candRawState = (!empty(@$application->state_name) && !preg_match('/^\d+$/', trim((string) @$application->state_name)))
+          ? @$application->state_name
+          : ((!empty(@$application->state) && !preg_match('/^\d+$/', trim((string) @$application->state))) ? @$application->state : '');
+      $state_name	= $candRawState ? ucwords($candRawState).',' : '';
+
+      $candRawCountry = (!empty(@$application->country_name) && !preg_match('/^\d+$/', trim((string) @$application->country_name)))
+          ? @$application->country_name
+          : ((!empty(@$application->country) && !preg_match('/^\d+$/', trim((string) @$application->country))) ? @$application->country : '');
+      $country_name	= ucwords($candRawCountry);	
    		$currencySymbole 	=	GeneralMethod::currencySymbole(); 
       // dd($currencySymbole);
    		$current_ctc_cur	=	$current_ectc_cur	=	"";
@@ -647,19 +658,28 @@
 
       $__hdrIsVerified = (bool) preg_match('/verified|active|success/i', (string) @$application->css_style);
 
-      // Availability — same NP mode rules used in Profile Overview card.
+      // Availability — same NP mode rules used across candidate lists & profile.
       $__hdrAvailability = '';
+      $__isBenchCand = (@$application->condidate_type == 'bench_condidate');
       if ((@$application->serving_notice_period_mode == 0) && (int) @$application->np_id > 0) {
           $__hdrAvailability = $application->np_id . ' Days';
       } elseif (@$application->serving_notice_period_mode == 1 && !empty($application->np_id)) {
-          $__hdrAvailability = 'Available ' . date('d M Y', strtotime($application->np_id));
+          $__npDateTs = strtotime($application->np_id);
+          if ($__npDateTs !== false && date('Y-m-d', $__npDateTs) < date('Y-m-d')) {
+              $__hdrAvailability = 'Immediate Joiner';
+          } elseif ($__npDateTs !== false) {
+              $__dateFmt = date('d M Y', $__npDateTs);
+              $__hdrAvailability = $__isBenchCand ? ('Available ' . $__dateFmt) : ('SNP LWD ' . $__dateFmt);
+          } else {
+              $__hdrAvailability = trim((string) @$application->np_id);
+          }
       } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
           $__hdrAvailability = 'Immediate Joiner';
       } else {
           $__hdrAvailability = trim((string) @$application->np_id);
       }
       if ($__hdrAvailability === '') { $__hdrAvailability = '—'; }
-      $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false || stripos($__hdrAvailability, 'Available') === 0);
+      $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false);
 
       // Skill match — unified canonical matching engine (identical to candidate lists).
       $__hdrMatchCalc = GeneralMethod::calculateSkillMatch($jobSkill ?? [], $__hdrSkillsArr);
@@ -1178,9 +1198,21 @@
         }
         // candidate summary for the submission banner
         $__te = trim((string) @$application->total_exp);
-        $rcvBExp = ($__te !== '') ? ($__te . ' Years') : '--';
-        if((@$application->serving_notice_period_mode == 0) || (@$application->serving_notice_period_mode == 1)){
-            $rcvBNotice = 'Available ' . date('d M Y', strtotime(@$application->np_id));
+        $__isBenchCand = (@$application->condidate_type == 'bench_condidate');
+        if (@$application->serving_notice_period_mode == 0) {
+            $rcvBNotice = !empty(@$application->np_id) ? (@$application->np_id . ' Days') : '--';
+        } elseif (@$application->serving_notice_period_mode == 1) {
+            $__npDateTs = !empty(@$application->np_id) ? strtotime(@$application->np_id) : false;
+            if ($__npDateTs !== false && date('Y-m-d', $__npDateTs) < date('Y-m-d')) {
+                $rcvBNotice = 'Immediate';
+            } elseif ($__npDateTs !== false) {
+                $__dateFmt = date('d M Y', $__npDateTs);
+                $rcvBNotice = $__isBenchCand ? ('Available ' . $__dateFmt) : ('SNP LWD ' . $__dateFmt);
+            } else {
+                $rcvBNotice = trim((string) @$application->np_id);
+            }
+        } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
+            $rcvBNotice = 'Immediate';
         } else {
             $rcvBNotice = trim((string) @$application->np_id);
         }
@@ -4974,13 +5006,22 @@ setTimeout(() => {
   $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
   $rsNpRaw=trim((string)@$application->np_id);
   $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
+  $rsIsBench = (@$application->condidate_type === 'bench_condidate');
   if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
   elseif($rsNpMode===0&&(int)$rsNpRaw>0){ $rsNotice=$rsNpRaw.' Days'; }
-  elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
-  elseif($rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){
+      if (date('Y-m-d', $rsNpTs) < date('Y-m-d')) {
+          $rsNotice = 'Immediate';
+      } else {
+          $rsNotice = $rsIsBench ? ('Available '.date('d M Y',$rsNpTs)) : ('SNP LWD '.date('d M Y',$rsNpTs));
+      }
+  }
+  elseif($rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){
+      $rsNotice = $rsIsBench ? ('Available '.date('d M Y',$rsNpTs)) : ('SNP LWD '.date('d M Y',$rsNpTs));
+  }
   else { $rsNotice=$rsNpRaw; }
-  if($rsNotice===''||$rsNotice==='Available '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
-  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate');
+  if($rsNotice===''||$rsNotice==='Available '||$rsNotice==='SNP LWD '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate'||stripos($rsNotice,'Immediate')!==false);
   $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
   if($rsLoc==='') $rsLoc=trim($country_name??'');
   if($rsLoc==='') $rsLoc='--';
