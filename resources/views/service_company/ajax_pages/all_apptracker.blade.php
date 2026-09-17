@@ -113,19 +113,10 @@
 
                     $percentage = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);
 
-                    // Match % badge — color reflects the numeric match score, same
-                    // thresholds/colors as the CV Tracker page: >90 green, 50-90 orange,
-                    // 0<50 red, exactly 0 neutral grey.
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));

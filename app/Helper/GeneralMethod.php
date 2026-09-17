@@ -6351,6 +6351,42 @@ END:VCALENDAR";
         return self::calculateSkillMatch($jobId, $skillArr)['percentage_float'];
     }
 
+    /**
+     * Standardized skill match percentage badge color style.
+     * >= 85%  -> Green  (#dcfce7 / #16a34a)
+     * 50%-84% -> Orange (#fef3c7 / #d97706)
+     * < 50%   -> Red    (#fee2e2 / #dc2626)
+     *
+     * @param int|float|string $percentage
+     * @return array ['bg' => string, 'color' => string, 'class' => string, 'name' => string]
+     */
+    public static function getSkillMatchBadgeStyle($percentage): array
+    {
+        $val = (float) rtrim((string) $percentage, '%');
+        if ($val >= 85) {
+            return [
+                'bg' => '#dcfce7',
+                'color' => '#16a34a',
+                'class' => 'cdr-mpb-green',
+                'name' => 'green',
+            ];
+        } elseif ($val >= 50) {
+            return [
+                'bg' => '#fef3c7',
+                'color' => '#d97706',
+                'class' => 'cdr-mpb-amber',
+                'name' => 'orange',
+            ];
+        } else {
+            return [
+                'bg' => '#fee2e2',
+                'color' => '#dc2626',
+                'class' => 'cdr-mpb-red',
+                'name' => 'red',
+            ];
+        }
+    }
+
     public static function profilesCompletion()
     {
         $company_id = auth()->user()->company_id;

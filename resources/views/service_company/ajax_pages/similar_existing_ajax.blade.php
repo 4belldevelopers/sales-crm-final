@@ -156,18 +156,10 @@
                     );
                     $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
 
-                    // Match % badge — color reflects the numeric match score, same
-                    // thresholds/colors used on the Pool tab / CV Tracker: >90 green,
-                    // 50-90 orange, 0<50 red, exactly 0 neutral grey.
-                    if ($percentage == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($percentage < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($percentage <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     // Tooltip breaking down WHY this candidate scored this
                     // percentage — matched vs missing skills — so the badge
                     // isn't just an unexplained number. Uses a plain native

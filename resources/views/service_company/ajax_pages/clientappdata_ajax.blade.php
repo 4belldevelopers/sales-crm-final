@@ -101,16 +101,9 @@
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
 
                     if ($flag == 1) {
