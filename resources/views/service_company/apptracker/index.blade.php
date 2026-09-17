@@ -916,7 +916,7 @@
                         <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-success test_fwd_resume" id="kt_test_fwd_resume_drawer_toggle_aptk">
                             <span class="svg-icon svg-icon-success svg-icon-1x">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
-                            </span> Test Forward Resume
+                            </span> Forward Resume
                         </a>
                         <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-primary application_copy" data-toggle="modal" data-target="#application_copy">
                             <span class="svg-icon svg-icon-primary svg-icon-1x">
@@ -1050,7 +1050,7 @@
         data-kt-drawer-toggle="#kt_test_fwd_resume_drawer_toggle_aptk" data-kt-drawer-close="#kt_test_fwd_resume_drawer_close_aptk">
         <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
             <div class="card-header px-5 py-0 flex-shrink-0" style="display:none!important;">
-                <h3 class="card-title fw-bolder text-dark mb-0">Test Forward Resume</h3>
+                <h3 class="card-title fw-bolder text-dark mb-0">Forward Resume</h3>
                 <div class="card-toolbar">
                     <button type="button" class="btn btn-sm btn-icon btn-active-light-danger" id="kt_test_fwd_resume_drawer_close_aptk">
                         <span class="svg-icon svg-icon-1">
@@ -1919,8 +1919,8 @@
                 Swal.fire({
                     title: 'Maximum 5 Candidates Allowed',
                     html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
-                          '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. The test forward resume engine supports up to 5 candidates.</p>' +
-                          '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer to test.</p>' +
+                          '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. The forward resume engine supports up to 5 candidates.</p>' +
+                          '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer.</p>' +
                           '</div>',
                     icon: 'warning',
                     confirmButtonText: 'OK, I Understand',
@@ -1936,7 +1936,7 @@
             }
             $('#application_test_fwd_resume_body_content').html(
                 '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Test Forward Resume Engine...</div>'
+                '<span class="spinner-border spinner-border-sm text-success me-2"></span> Loading Forward Resume Engine...</div>'
             );
 
             $.ajax({
@@ -1955,11 +1955,11 @@
                         }
                         $('#application_test_fwd_resume_body_content').html(response.view);
                     } else {
-                        toastr.error(response.message || 'Failed to initialize Test Forward Resume');
+                        toastr.error(response.message || 'Failed to initialize Forward Resume');
                     }
                 },
                 error: function() {
-                    toastr.error('Server error initializing Test Forward Resume');
+                    toastr.error('Server error initializing Forward Resume');
                 }
             });
         });
