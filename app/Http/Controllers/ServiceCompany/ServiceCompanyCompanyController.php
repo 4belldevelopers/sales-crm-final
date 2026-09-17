@@ -317,7 +317,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		];
 		// dd($cachePayload);
 
-		$versionKey = 'allfindagencyversion_user_'.$this->user->id;
+		$versionKey = 'allfindagencyversion_global';
 		$version = cache()->get($versionKey, 1);
 		$cacheKeySet = 'ats:allfindagency:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
 		/* ----------------------------
@@ -388,9 +388,9 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
     $cacheKey = "final_vendors_{$company_id}_".md5(json_encode($skillsList))."_{$parent_employment_type}_{$country_id_job}_{$request->get('page', 1)}";
 
 	// 1. Try to get from cache
-	 if (!$forceRefresh && Cache::has($cacheKey)) {
-        return response()->json(Cache::get($cacheKey));
-    }
+	if (!$forceRefresh && Cache::has($cacheKeySet)) {
+		return response()->json(Cache::get($cacheKeySet));
+	}
 	// dd("fdl");
     
     
@@ -1069,7 +1069,10 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 		
 		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_FIND_AGENCY_TIME));
 
-	    return response()->json($responseData);
+	    return response()->json($responseData)
+			->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+			->header('Pragma', 'no-cache')
+			->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
 
 	}
 
@@ -1199,7 +1202,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 	    }
 		
           $cachekeys = [
-				'allfindagencyversion_user_'.$this->user->id
+				'allfindagencyversion_global'
 			];
 			foreach ($cachekeys as $key) {
 				GeneralMethod::cacheClean($key);

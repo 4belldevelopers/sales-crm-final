@@ -177,7 +177,13 @@ class CompanyObserver
             DB::table('commericial_details')->insert($detailRows);
         }
 
-        // Intent: queue a read-model refresh so new tenant defaults are visible in agency search without an inline ES write.
+        // Intent: Refresh ES read-model inline and via queue so new company is immediately visible in agency search.
+        try {
+            app(\App\Services\ElasticCaompanyIndex::class)->companyIndexElastic($company->id);
+            \App\Helper\GeneralMethod::cacheClean('allfindagencyversion_global');
+        } catch (\Throwable $e) {
+            Log::warning('[CompanyObserver] Inline ES company indexing failed: ' . $e->getMessage());
+        }
         ElasticCompanyIndex::dispatch($company->id)->afterCommit();
     }
 

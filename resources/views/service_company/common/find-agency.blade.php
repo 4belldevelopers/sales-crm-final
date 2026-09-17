@@ -1369,8 +1369,9 @@ function filtersdataget() {
             $('.loadingMessage').css({ display: 'block' });
             
             return $.ajax({
-                url: `{!! route('service_company.find.findAgencyData') !!}?page=${page}`,
+                url: `{!! route('service_company.find.findAgencyData') !!}?page=${page}&_t=${new Date().getTime()}`,
                 type: 'GET',
+                cache: false,
                 data: {
                 jobid:jobid, 
                 search:search,

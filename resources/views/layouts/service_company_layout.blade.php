@@ -2962,7 +2962,6 @@ $( document ).ready(function() {
                   });
                   return; // ⛔ STOP EXECUTION
             }
-            //  flatpickrfunDefine();
 
         var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
@@ -2999,7 +2998,6 @@ $( document ).ready(function() {
                   });
                   return; // ⛔ STOP EXECUTION
             }
-            //  flatpickrfunDefine();
 
         var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
   
@@ -3037,7 +3035,6 @@ $( document ).ready(function() {
                   });
                   return; // ⛔ STOP EXECUTION
             }
-      //  flatpickrfunDefine();
        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
 				$('#kt_client_activitiesApplication_toggle').trigger('click');
 				var id    		=	$(this).data('row-id');
@@ -3177,35 +3174,6 @@ $( document ).ready(function() {
 
 
 
-                function flatpickrfunDefine(){
-                          var id    		=	'1';
-                          var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
-                          url     		=	url.replace(':id', id);
-                          var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}";
-                          (function(){ var _el=document.getElementById('interview_schedule_drawer'); if(!_el)return; if(!_el.classList.contains('drawer'))_el.classList.add('drawer','drawer-end'); _el.classList.add('drawer-on'); _el.style.transform='none'; })();
-              window.isdShellSetStep('main');
-                          $.ajax({
-                                  type  		:	'GET',
-                                  url   		:	url,
-                                  beforeSend	:	function() {
-                                                $('#app_interview_schedule_content').html('<img src="'+baseurl+'" height="35px" width="100%">');
-                                          },
-                                  success 	:	function (response) {
-                                                   localStorage.setItem('interviewShow', true);
-                                                    $('#app_interview_schedule_content').html(response.view);	
-                                                    setTimeout(() => {
-                                                      $('#kt_activities_scroll').removeAttr('style');
-                                                    }, 5);	
-                                                  
-                                          }
-                          });
-                }
-                if (localStorage.getItem('interviewShow') === 'true') {
-                    console.log('interviewShow is set to true');
-                } else {
-                    flatpickrfunDefine();
-                    console.log('interviewShow is not set or not true');
-                }
                
 
                 
