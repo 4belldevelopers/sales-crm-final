@@ -2,6 +2,7 @@
 
 namespace App\Actions\Auth;
 
+use App\Support\DeviceSessionManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -16,6 +17,7 @@ class LogoutAction
         auth()->logout();
 
         if ($user) {
+            DeviceSessionManager::invalidate($user->id);
             $user->session_id = null;
             $user->save();
         }
