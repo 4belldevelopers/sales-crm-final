@@ -14495,7 +14495,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
         // Company Data
         $company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
-        $this->company_name = @$company_arr->company_name;
+        $this->company_name = GeneralMethod::companyDetailsByClient($this->job->id);
         $this->logo_path = url('img/client-default.png');
         if (! empty(@$company_arr->logo) && strlen(@$company_arr->logo) > 10) {
             $this->logo_path = url('public/user-uploads/company-logo/'.@$company_arr->logo);
@@ -14642,7 +14642,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $this->skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $this->job->id)->get();
 
         $company_arr = DB::table('companies')->select('*')->where('id', $this->job->company_id)->first();
-        $this->company_name = @$company_arr->company_name;
+        $this->company_name = GeneralMethod::companyDetailsByClient($this->job->id);
         $this->logo_path = url('img/client-default.png');
         if (! empty(@$company_arr->logo) && strlen(@$company_arr->logo) > 10) {
             $this->logo_path = url('public/user-uploads/company-logo/'.@$company_arr->logo);

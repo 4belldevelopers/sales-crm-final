@@ -636,10 +636,10 @@
                     $client_name_com = GeneralMethod::companyDetailsByClient($row->jobId);
                     if (!empty($client_name_com)) {
                         $client_title_name = $client_name_com;
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
+                        $client_name = ucwords(mb_substr($client_title_name, 0, 40));
                     } else {
                         $client_title_name = $row->client_name;
-                        $client_name = ucwords(mb_substr($client_title_name, 0, 15));
+                        $client_name = ucwords(mb_substr($client_title_name, 0, 40));
                     }
 
                     echo '<div class="d-flex flex-column">

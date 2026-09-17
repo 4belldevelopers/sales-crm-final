@@ -113,7 +113,7 @@
                         <a href="javascript:void(0);"
                             class="text-dark fw-bolder text-hover-primary fs-6">{{ strtoupper(substr(@$jobtitle, 0, 20)) }}</a>
                         <a href="javascript:void(0);"
-                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$company_or_client, 0, 20)) }}</a>
+                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$company_or_client, 0, 50)) }}</a>
                     </div>
                     <!--begin::User details-->
                     <div class="d-flex flex-column ml-2 show-detail-open" data-id="{{$id}}">

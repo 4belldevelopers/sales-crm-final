@@ -1379,7 +1379,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             'bool' => [
                 'should' => [
                     ['bool' => ['must' => [['term' => ['client_id' => $id]], ['term' => ['ClientComID' => 0]]]]],
-                    ['bool' => ['must' => array_merge([['term' => ['client_id' => $id]], ['range' => ['ClientComID' => ['gt' => 0]]], ['range' => ['jobId' => ['gt' => 0]]]], [['bool' => ['must_not' => [['terms' => ['job_master_status_id' => [8, 9]]]]]]])]],
+                    ['bool' => ['must' => array_merge([['term' => ['client_id' => $id]], ['range' => ['ClientComID' => ['gt' => 0]]], ['range' => ['jobId' => ['gt' => 0]]]], [['bool' => ['must_not' => [['terms' => ['job_master_status_id' => [9]]]]]]])]],
                     ['bool' => ['must' => [['term' => ['client_id' => $id]], ['range' => ['jobId' => ['gt' => 0]]]]]],
                 ],
                 'minimum_should_match' => 1,

@@ -56,8 +56,8 @@
         $jobTitle  = ucwords(mb_substr($row->title ?? '', 0, 22));
         $clientName = '';
         $clientFull = GeneralMethod::companyDetailsByClient($row->jobId);
-        if (!empty($clientFull)) { $clientName = ucwords(mb_substr($clientFull, 0, 20)); }
-        else { $clientName = ucwords(mb_substr($row->client_name ?? '', 0, 20)); }
+        if (!empty($clientFull)) { $clientName = ucwords(mb_substr($clientFull, 0, 40)); }
+        else { $clientName = ucwords(mb_substr($row->client_name ?? '', 0, 40)); }
 
         /* ── Job status ── */
         $jobStatusRaw = 'active';
