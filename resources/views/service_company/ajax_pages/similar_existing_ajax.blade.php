@@ -220,10 +220,6 @@
                         return strtolower($representativeByRequired[$req]);
                     }, array_keys($satisfiedRequired));
                     $unmatchedSkills = array_values(array_udiff($allSkillsList, $matchedRepresentativeStrings, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
-
                     foreach ($mandatoryMatched as $req) {
                         $display = ucfirst($representativeByRequired[$req] ?? $req);
                         $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . $display . '</span>  ';
@@ -232,12 +228,8 @@
                         $display = ucfirst($representativeByRequired[$req] ?? $req);
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . $display . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkills as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkills, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {
