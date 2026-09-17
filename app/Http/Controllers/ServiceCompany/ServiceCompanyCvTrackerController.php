@@ -3160,10 +3160,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
                 $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             }
-            if (! empty($cand->linkedin)) {
+            $hasLinkedin = ! empty($cand->linkedin) && ! in_array(strtolower(trim((string) $cand->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+            if ($hasLinkedin) {
                 $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
             } else {
-                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => '-'];
             }
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
                 $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
@@ -3665,10 +3666,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
                 $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             }
-            if (! empty($cand->linkedin)) {
+            $hasLinkedin = ! empty($cand->linkedin) && ! in_array(strtolower(trim((string) $cand->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+            if ($hasLinkedin) {
                 $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
             } else {
-                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => '-'];
             }
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
                 $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];

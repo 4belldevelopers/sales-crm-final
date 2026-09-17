@@ -5031,8 +5031,9 @@ setTimeout(() => {
   $rsValidation=[];
   if(!empty($application->resume))   $rsValidation[]=['label'=>'RESUME','status'=>'Verified'];
   if(!empty($application->email)||!empty($application->secondrary_email)) $rsValidation[]=['label'=>'EMAIL ID','status'=>'Verified'];
-  if(!empty($application->phone)||!empty($application->secondary_mobile)) $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'Verified'];
-  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
+  $hasLinkedin = !empty($application->linkedin) && !in_array(strtolower(trim((string) $application->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+  if($hasLinkedin) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
+  else $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'-'];
   if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
   if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'JOB DESCRIPTION','status'=>'Shared with candidate'];
   if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
@@ -6342,8 +6343,11 @@ function buildValidationRows(validation){
     {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged',icon:rsIconJobDescription}
   ];
   var cells=slots.map(function(row){
-    var status=map[row.key] || map[row.fallbackKey] || '--';
-    var verified=/verified|confirmed|completed|discussed|shared/i.test(status);
+    var status=map[row.key] || map[row.fallbackKey] || '-';
+    if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+    var verified=/verified|confirmed|completed|shared/i.test(status);
+    var isBlank=(status === '-' || status === '--' || !status);
+    var textColor=verified?'#16a34a':(isBlank?'#94a3b8':'#b45309');
     return {stack:[
       {columns:[
         {text:'',width:'*'},
@@ -6352,7 +6356,7 @@ function buildValidationRows(validation){
         {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.7,0,0]},
         {text:'',width:'*'}
       ],columnGap:0,margin:[0,0,0,7]},
-      {text:status,fontSize:6.5,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,0,0,0]}
+      {text:status,fontSize:6.5,bold:true,color:textColor,alignment:'center',margin:[0,0,0,0]}
     ],margin:[2,7,2,7]};
   });
   return [cells];

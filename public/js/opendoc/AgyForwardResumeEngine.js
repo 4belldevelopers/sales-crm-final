@@ -1713,8 +1713,11 @@
       { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
     ];
     var cells = slots.map(function (row) {
-      var status = map[row.key] || map[row.fallbackKey] || '--';
-      var verified = /verified|confirmed|completed|discussed|shared/i.test(status);
+      var status = map[row.key] || map[row.fallbackKey] || '-';
+      if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+      var verified = /verified|confirmed|completed|shared/i.test(status);
+      var isBlank = (status === '-' || status === '--' || !status);
+      var textColor = verified ? '#16a34a' : (isBlank ? '#94a3b8' : '#b45309');
       return {
         stack: [
           {
@@ -1728,7 +1731,7 @@
             columnGap: 0,
             margin: [0, 0, 0, 7]
           },
-          { text: status, fontSize: 6.5, bold: true, color: verified ? '#16a34a' : '#b45309', alignment: 'center', margin: [0, 0, 0, 0] }
+          { text: status, fontSize: 6.5, bold: true, color: textColor, alignment: 'center', margin: [0, 0, 0, 0] }
         ],
         margin: [2, 7, 2, 7]
       };
@@ -2354,8 +2357,9 @@
       if (candidate.resume) validation.push({ label: 'RESUME', status: 'Verified' });
       if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
       if (candidate.phone || candidate.secondary_mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
-      if (candidate.linkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
-      else validation.push({ label: 'LINKEDIN ID', status: 'Discussed' });
+      var hasLinkedin = !!(candidate.linkedin && !/^(--|-|na|n\/a|null|none)$/i.test(String(candidate.linkedin).trim()));
+      if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
+      else validation.push({ label: 'LINKEDIN ID', status: '-' });
       if (candidate.current_designation || candidate.current_company) validation.push({ label: 'JOB DESCRIPTION', status: 'Shared with candidate' });
     }
 
