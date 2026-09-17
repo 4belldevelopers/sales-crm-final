@@ -16,12 +16,8 @@ class LogoutAction
         $user = auth()->user();
 
         if ($user) {
-<<<<<<< HEAD
-            \App\Support\DeviceSessionManager::invalidate($user->id);
-            $user->active_session = null;
-=======
             DeviceSessionManager::invalidate($user->id);
->>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
+            $user->active_session = null;
             $user->session_id = null;
             $user->save();
         }
