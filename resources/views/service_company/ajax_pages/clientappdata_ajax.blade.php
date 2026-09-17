@@ -86,19 +86,11 @@
                     $jobRequiredSkills = array_values(array_unique(array_filter(array_map('trim', DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray()))));
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
-
                     foreach ($matchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);

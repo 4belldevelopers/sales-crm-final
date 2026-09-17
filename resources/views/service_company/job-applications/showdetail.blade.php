@@ -633,8 +633,8 @@
          no new route data, no scoring change. */
       $__hdrSkillsRaw = trim((string) @$application->skills);
       $__hdrSkillsArr = $__hdrSkillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $__hdrSkillsRaw)), 'strlen')) : [];
-      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 8);
-      $__hdrSkillsMore  = max(0, count($__hdrSkillsArr) - count($__hdrSkillsShown));
+      $__hdrSkillsShown = $__hdrSkillsArr;
+      $__hdrSkillsMore  = 0;
 
       // Initials for avatar (up to 2 letters).
       $__hdrFullName = trim((string) @$application->full_name);
@@ -937,10 +937,10 @@
           @foreach($__hdrSkillsShown as $__s)
             @php
               $__sNorm = mb_strtolower(trim($__s));
-              $__isMatch = isset($__hdrJobSkills[$__sNorm]);
-              if (!$__isMatch && !empty($__hdrJobSkills)) {
+              $__isMatch = false;
+              if (!empty($__hdrJobSkills)) {
                   foreach ($__hdrJobSkills as $__jsNorm => $__jsOriginal) {
-                      if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($__jsNorm, $__sNorm)) {
+                      if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($__jsOriginal, $__s)) {
                           $__isMatch = true;
                           break;
                       }
@@ -949,9 +949,6 @@
             @endphp
             <span class="cdr-skill-tag {{ $__isMatch ? 'cdr-skill-match' : 'cdr-skill-plain' }}">{{ ucwords(strtolower($__s)) }}</span>
           @endforeach
-          @if($__hdrSkillsMore > 0)
-            <span class="cdr-skill-tag cdr-skill-more">+{{ $__hdrSkillsMore }} More</span>
-          @endif
         </div>
       @endif
 
@@ -1413,16 +1410,62 @@
 
         function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
 
+        /**
+         * Intent: Parse compound skill into individual alternative sub-phrases (e.g. "Postman / Rest Assured" -> ["Postman", "Rest Assured"]).
+         */
+        function parseSkillSubTerms(raw){
+          if(!raw) return [];
+          var parts = String(raw).split(/[\/,|]|\bor\b/i).map(function(s){ return s.trim(); }).filter(Boolean);
+          return parts.length > 0 ? parts : [String(raw).trim()];
+        }
+
+        /**
+         * Intent: Build strict regex pattern for a single phrase ensuring contiguous matching, word boundaries, and plural flex.
+         */
+        function skillTermToRegexPattern(term){
+          var words = String(term).trim().split(/[\s\-]+/).filter(Boolean);
+          if(!words.length) return escRe(term);
+          var wp = words.map(function(w){
+            var cw = escRe(w);
+            if(cw.length > 3 && cw.toLowerCase().endsWith('s') && !cw.toLowerCase().endsWith('ss')){
+              cw = cw.slice(0, -1) + 's?';
+            } else if(cw.length > 2 && !/[0-9+#.]/.test(cw)){
+              cw = cw + 's?';
+            }
+            return cw;
+          });
+          var phrase = wp.join('[\\s\\-]+');
+          var startB = /^\w/.test(term) ? '\\b' : '(?:^|[\\s,;!?()\\[\\]\\/\\-])';
+          var endB = /\w$/.test(term) ? '\\b' : '(?=[\\s,;!?()\\[\\]\\/\\-]|$)';
+          return startB + phrase + endB;
+        }
+
+        /**
+         * Intent: Build RegExp for a keyword that may contain slash/comma alternatives.
+         */
+        function buildSkillRegex(skillName){
+          var subterms = parseSkillSubTerms(skillName);
+          var patterns = subterms.map(skillTermToRegexPattern);
+          return new RegExp('(' + patterns.join('|') + ')', 'gi');
+        }
+
         function buildRegex(){
           var act = activeList();
           if(!act.length) return null;
-          var pat = act.map(escRe).sort(function(a,b){ return b.length-a.length; }).join('|');
-          return new RegExp('('+pat+')','gi');
+          var allPatterns = [];
+          act.forEach(function(k){
+            var subterms = parseSkillSubTerms(k);
+            subterms.forEach(function(st){
+              allPatterns.push(skillTermToRegexPattern(st));
+            });
+          });
+          allPatterns.sort(function(a,b){ return b.length - a.length; });
+          return new RegExp('(' + allPatterns.join('|') + ')', 'gi');
         }
 
         function countOccurrences(){
           Object.keys(keywords).forEach(function(k){
-            var re = new RegExp(escRe(k),'gi');
+            var re = buildSkillRegex(k);
             var m = resumeText.match(re);
             keywords[k].count = m ? m.length : 0;
           });
@@ -1578,7 +1621,7 @@
           var key = Object.keys(keywords).filter(function(k){ return k.toLowerCase()===name.toLowerCase(); })[0];
           if(key){ keywords[key].active = true; }
           else {
-            var re = new RegExp(escRe(name),'gi'); var m = resumeText.match(re);
+            var re = buildSkillRegex(name); var m = resumeText.match(re);
             keywords[name] = { type: type||'custom', active:true, count: m?m.length:0 };
           }
           renderChips(); applyHighlights();

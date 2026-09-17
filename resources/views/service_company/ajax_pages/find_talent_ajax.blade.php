@@ -42,24 +42,36 @@
         }
         $skillArr = explode(',', $row->skills);
         $skilltag = '';
-        $viewMore = 0;
+        $jobRequiredSkills = !empty($jobid) ? array_values(array_unique(array_filter(array_map('trim', \Illuminate\Support\Facades\DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray())))) : [];
+
         if ($skillExperiences->isNotEmpty()) {
-            foreach ($skillExperiences as $key => $exp) {
-                if ($key < 5) {
-                    $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">'
-                        . ucfirst($exp->skill_key) . '</span> ';
+            foreach ($skillExperiences as $exp) {
+                $sval = trim($exp->skill_key ?? '');
+                if (!$sval) continue;
+                $isMatched = false;
+                foreach ($jobRequiredSkills as $req) {
+                    if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($req, $sval)) { $isMatched = true; break; }
+                }
+                if ($isMatched) {
+                    $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span> ';
                 } else {
-                    $viewMore++;
+                    $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' . ucfirst($sval) . '</span> ';
                 }
             }
         } else {
-            foreach (array_slice($skillArr, 0, 5) as $sval) {
+            foreach ($skillArr as $sval) {
                 $sval = trim($sval);
-                if ($sval) $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' . ucfirst($sval) . '</span> ';
+                if (!$sval) continue;
+                $isMatched = false;
+                foreach ($jobRequiredSkills as $req) {
+                    if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($req, $sval)) { $isMatched = true; break; }
+                }
+                if ($isMatched) {
+                    $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span> ';
+                } else {
+                    $skilltag .= '<span class="badge badge-light my-1" style="font-weight:400;color:#3f4254;">' . ucfirst($sval) . '</span> ';
+                }
             }
-        }
-        if ($viewMore > 0) {
-            $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;">+' . $viewMore . ' more</span>';
         }
 
         /* ── Experience ── */

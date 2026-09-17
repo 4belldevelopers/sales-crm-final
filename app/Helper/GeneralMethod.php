@@ -6305,12 +6305,13 @@ END:VCALENDAR";
         // 3. Match each unique required job skill against candidate skills
         $matches = 0;
         $matchedSkills = [];
+        $candidateMatchedSkills = [];
         foreach ($uniqueJobSkills as $reqLower => $reqOriginal) {
             $isMatched = false;
             foreach ($cleanedCandSkills as $candLower => $candOriginal) {
-                if ($reqLower === $candLower || self::skillMatchesPhrasePrefix($reqLower, $candLower) || self::skillMatchesPhrasePrefix($candLower, $reqLower)) {
+                if (self::skillMatchesPhrasePrefix($reqOriginal, $candOriginal)) {
                     $isMatched = true;
-                    break;
+                    $candidateMatchedSkills[] = $candOriginal;
                 }
             }
             if ($isMatched) {
@@ -6329,6 +6330,7 @@ END:VCALENDAR";
             'matched_count' => $matches,
             'total' => $totalJobSkills,
             'matched_skills' => $matchedSkills,
+            'candidate_matched_skills' => array_values(array_unique($candidateMatchedSkills)),
         ];
     }
 
@@ -11635,51 +11637,140 @@ END:VCALENDAR";
     // from).
     // Mirrors buildSkillMatchClause()'s match_phrase_prefix semantics in
     // PHP: a required skill counts as matched when its words appear as a
-    // consecutive prefix match within the candidate's skill text — e.g.
-    // required "java" matches a candidate skill entry of "Java Developer"
-    // or "Sr. Java Fullstack Developer", not only an exact "Java". The
-    // candidate-list endpoints used to compute matched_skills with a plain
-    // array_intersect() (exact string equality), so a candidate ES itself
-    // had already returned via this same phrase-prefix query would show up
-    // in results with NONE of their skill tags highlighted as matched.
-    public static function skillMatchesPhrasePrefix(string $requiredSkill, string $candidateSkill): bool
+    /**
+     * Intent: Splits compound skill terms separated by slash (/), comma (,), pipe (|), or ' or '.
+     * Example: "Postman / Rest Assured" -> ["Postman", "Rest Assured"].
+     * Used across matching engine and highlighting so alternative skill requirements are recognized.
+     */
+    public static function decomposeSkillAlternatives(string $skill): array
     {
-        $requiredWords = preg_split('/[\s\/,\-]+/', strtolower(trim($requiredSkill)), -1, PREG_SPLIT_NO_EMPTY);
-        $candidateWords = preg_split('/[\s\/,\-]+/', strtolower(trim($candidateSkill)), -1, PREG_SPLIT_NO_EMPTY);
-        $wordCount = count($requiredWords);
-        if ($wordCount === 0 || count($candidateWords) < $wordCount) {
-            return false;
-        }
-
-        for ($i = 0; $i <= count($candidateWords) - $wordCount; $i++) {
-            $isMatch = true;
-            foreach ($requiredWords as $idx => $word) {
-                $candidateWord = $candidateWords[$i + $idx];
-                // Every word must match exactly except the LAST word of the
-                // required skill, which only needs to be a prefix — same as
-                // match_phrase_prefix treating the final query token as a
-                // prefix search.
-                $isLastWord = $idx === $wordCount - 1;
-                if ($isLastWord ? ! str_starts_with($candidateWord, $word) : $candidateWord !== $word) {
-                    $isMatch = false;
-                    break;
-                }
+        $parts = preg_split('/[\/,|]|\bor\b/i', $skill, -1, PREG_SPLIT_NO_EMPTY);
+        $results = [];
+        foreach ($parts as $p) {
+            $clean = trim($p);
+            if ($clean !== '') {
+                $results[] = $clean;
             }
-            if ($isMatch) {
-                return true;
+        }
+        return !empty($results) ? array_values(array_unique($results)) : [trim($skill)];
+    }
+
+    /**
+     * Intent: Normalizes individual technology words for singular/plural comparison without altering protected tech names.
+     */
+    public static function normalizeSkillWord(string $w): string
+    {
+        $w = strtolower(trim($w));
+        if (in_array($w, ['cypress', 'express', 'redis', 'kubernetes', 'jenkins', 'nodejs', 'nextjs', 'reactjs', 'vuejs', 'rxjs', 'postgres', 'postgresql', 'canvas', 'pandas', 'devops', 'spring', 'jboss'])) {
+            return $w;
+        }
+        if (strlen($w) > 3 && str_ends_with($w, 'ies')) {
+            return substr($w, 0, -3) . 'y';
+        }
+        if (strlen($w) > 3 && str_ends_with($w, 's') && !str_ends_with($w, 'ss')) {
+            return substr($w, 0, -1);
+        }
+        return $w;
+    }
+
+    /**
+     * Intent: Matches a single atomic required skill against a candidate skill with strict contiguous phrase checking.
+     * Guarantees:
+     * - Multi-word requirements (e.g. "BDD framework") must appear contiguously with word boundaries.
+     * - Word boundary precision avoids false positives (e.g. "Java" never matches "JavaScript", "C" never matches "C++").
+     * - Framework suffixes like ".js" or "js" are normalized (e.g. "React.js" matches "React").
+     */
+    public static function singleSkillMatches(string $requiredTerm, string $candidateTerm): bool
+    {
+        $req = strtolower(trim($requiredTerm));
+        $cand = strtolower(trim($candidateTerm));
+
+        if ($req === '' || $cand === '') return false;
+        if ($req === $cand) return true;
+
+        // Direct clean match (e.g. "rest-assured" vs "rest assured")
+        $cleanReq = preg_replace('/[.\-_\s]+/', '', $req);
+        $cleanCand = preg_replace('/[.\-_\s]+/', '', $cand);
+        if ($cleanReq === $cleanCand && strlen($cleanReq) > 1) return true;
+
+        // Tokenize into words
+        $reqWords = array_values(array_filter(preg_split('/[\s\-_.\\/]+/', $req), 'strlen'));
+        $candWords = array_values(array_filter(preg_split('/[\s\-_.\\/]+/', $cand), 'strlen'));
+
+        if (empty($reqWords) || empty($candWords)) return false;
+
+        $normalizeTech = function(string $w): string {
+            $w = self::normalizeSkillWord($w);
+            if (strlen($w) > 4 && str_ends_with($w, 'js') && in_array(substr($w, 0, -2), ['react', 'node', 'vue', 'angular', 'next', 'nuxt'])) {
+                return substr($w, 0, -2);
+            }
+            return $w;
+        };
+
+        $normReqWords = array_map($normalizeTech, $reqWords);
+        $normCandWords = array_map($normalizeTech, $candWords);
+
+        // Filter out standalone 'js' token if preceded by framework name
+        $cleanTokens = function(array $tokens): array {
+            $res = [];
+            foreach ($tokens as $t) {
+                if ($t === 'js' && !empty($res) && in_array(end($res), ['react', 'node', 'vue', 'angular', 'next', 'nuxt'])) {
+                    continue;
+                }
+                $res[] = $t;
+            }
+            return $res;
+        };
+
+        $normReqWords = $cleanTokens($normReqWords);
+        $normCandWords = $cleanTokens($normCandWords);
+
+        $reqLen = count($normReqWords);
+        $candLen = count($normCandWords);
+
+        // Required phrase must appear contiguously in candidate skill
+        if ($candLen >= $reqLen) {
+            for ($i = 0; $i <= $candLen - $reqLen; $i++) {
+                $match = true;
+                for ($j = 0; $j < $reqLen; $j++) {
+                    if ($normCandWords[$i + $j] !== $normReqWords[$j]) {
+                        $match = false;
+                        break;
+                    }
+                }
+                if ($match) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
 
-    // Returns the subset of $candidateSkills that phrase-prefix-match any
-    // entry in $requiredSkills — the "which of this candidate's skills
-    // satisfy the job's requirements" computation every AppTracker tab's
-    // results endpoint needs for its Match % badge and skill highlighting
-    // (see skillMatchesPhrasePrefix() above). Preserves each matched
-    // candidate skill's original wording/casing (callers ucfirst() it for
-    // display), only $requiredSkills is expected pre-lowercased.
+    /**
+     * Intent: GOD-level semantic skill matching between a required skill and a candidate skill.
+     * Handles compound skills (/ , | or), contiguous multi-word phrases, and word boundary precision.
+     */
+    public static function skillMatchesPhrasePrefix(string $requiredSkill, string $candidateSkill): bool
+    {
+        $reqAlternatives = self::decomposeSkillAlternatives($requiredSkill);
+        $candAlternatives = self::decomposeSkillAlternatives($candidateSkill);
+
+        foreach ($reqAlternatives as $reqAlt) {
+            foreach ($candAlternatives as $candAlt) {
+                if (self::singleSkillMatches($reqAlt, $candAlt)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Intent: Returns the subset of $candidateSkills that satisfy any entry in $requiredSkills.
+     * Preserves original wording/casing of matched candidate skills.
+     */
     public static function matchedSkillsList(array $candidateSkills, array $requiredSkills): array
     {
         $matched = [];
