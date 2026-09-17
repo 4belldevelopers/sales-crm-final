@@ -2064,7 +2064,6 @@
         $(document).on('click', '.chk_list', function() {
             if ($(".chk_list").prop('checked') == true) {
                 var chk_list = $('.chk_list').val();
-                $('.fwd_resume').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
                 $('.mass_mail').removeClass("d-none");
                 $('.downloadexcell').removeClass("d-none");
@@ -2072,7 +2071,6 @@
                 $('.app_copy').removeClass("d-none");
                 $('.application_copy').removeClass("d-none");
             } else {
-                $('.fwd_resume').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
                 $('.mass_mail').addClass("d-none");
                 $('.downloadexcell').addClass("d-none");
@@ -2089,7 +2087,6 @@
                 arr.push($(this).val());
             });
             if (arr.length > 0) {
-                $('.fwd_resume').removeClass("d-none");
                 $('.custom_hide').addClass("d-none");
                 $('.mass_mail').removeClass("d-none");
                 $('.downloadexcell').removeClass("d-none");
@@ -2097,7 +2094,6 @@
                 $('.app_copy').removeClass("d-none");
                 $('.application_copy').removeClass("d-none");
             } else {
-                $('.fwd_resume').addClass("d-none");
                 $('.custom_hide').removeClass("d-none");
                 $('.send_email').addClass("d-none");
                 $('.downloadexcell').addClass("d-none");
@@ -2108,7 +2104,7 @@
             updateAptkSelectionBar();
         });
 
-        /* Selection bar: live count + clear-selection controls (checkbox + close X) ΓÇö
+        /* Selection bar: live count + clear-selection controls (checkbox + close X) —
            same behavior as the Pool tab / CV Tracker's #cvh_selection_bar. */
         function updateAptkSelectionBar() {
             var n = $('.chk_list_item:checked').length;
@@ -2118,7 +2114,7 @@
         }
         function clearAptkSelection() {
             $('.chk_list, .chk_list_item').prop('checked', false);
-            $('.fwd_resume, .send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
+            $('.send_email, .mass_mail, .app_copy, .downloadexcell, .application_copy').addClass('d-none');
             $('.custom_hide').removeClass('d-none');
             updateAptkSelectionBar();
         }
