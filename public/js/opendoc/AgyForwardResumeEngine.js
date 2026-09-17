@@ -294,12 +294,15 @@
 
   function cityOnly(value) {
     value = clean(value, '--');
-    if (isGap(value)) return '--';
+    if (isGap(value) || /^\d+$/.test(String(value).trim())) return '--';
     var commaParts = value.split(',').map(function (part) { return clean(part, ''); }).filter(Boolean);
-    if (commaParts.length > 1) return commaParts[0];
+    var candidateCity = commaParts.length > 0 ? commaParts[0] : value;
+    if (/^\d+$/.test(String(candidateCity).trim())) return '--';
+    if (commaParts.length > 1) return candidateCity;
     var states = 'andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
     var pattern = new RegExp('\\s+(' + states + ')$', 'i');
-    return clean(value.replace(pattern, ''), '--');
+    var res = clean(value.replace(pattern, ''), '--');
+    return /^\d+$/.test(String(res).trim()) ? '--' : res;
   }
 
   function matchTone(score, completeness) {
@@ -2299,10 +2302,22 @@
     candidate = candidate || {};
     companyData = companyData || {};
 
-    var locParts = [candidate.city, candidate.state, candidate.country].filter(function (p) {
-      return p && String(p).trim() !== '' && String(p).trim() !== '--';
+    var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
+      || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
+      || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
+
+    var stateName = (!/^\d+$/.test(String(candidate.state_name || '').trim()) && candidate.state_name)
+      || (!/^\d+$/.test(String(candidate.state || '').trim()) && candidate.state) || '';
+
+    var countryName = (!/^\d+$/.test(String(candidate.country_name || '').trim()) && candidate.country_name)
+      || (!/^\d+$/.test(String(candidate.country || '').trim()) && candidate.country) || '';
+
+    var locParts = [cityName, stateName, countryName].filter(function (p) {
+      return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
     });
-    var formattedLocation = candidate.location || (locParts.length ? locParts.join(', ') : '--');
+    var rawLoc = candidate.location ? String(candidate.location).trim() : '';
+    if (/^\d+$/.test(rawLoc)) rawLoc = '';
+    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : '--');
 
     var exp = candidate.experience;
     if (!exp && candidate.total_exp) {
@@ -2347,6 +2362,36 @@
     var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
 
+    var isBench = (candidate.condidate_type === 'bench_condidate');
+    var rawNotice = candidate.notice;
+    if (!rawNotice && candidate.np_id) {
+      var npRaw = String(candidate.np_id).trim();
+      var npMode = parseInt(candidate.serving_notice_period_mode, 10);
+      var npTs = Date.parse(npRaw);
+      if (npMode === 2 || npRaw.toLowerCase() === 'immediate') {
+        rawNotice = 'Immediate';
+      } else if (npMode === 0 && parseInt(npRaw, 10) > 0) {
+        rawNotice = parseInt(npRaw, 10) + ' Days';
+      } else if (npMode === 1 && !isNaN(npTs) && (new Date(npTs)).getFullYear() > 1970) {
+        var dObj = new Date(npTs);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dObj < today) {
+          rawNotice = 'Immediate';
+        } else {
+          var dStr = dObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          rawNotice = isBench ? ('Available ' + dStr) : ('SNP LWD ' + dStr);
+        }
+      } else {
+        rawNotice = npRaw;
+      }
+    } else if (!rawNotice) {
+      rawNotice = '--';
+    }
+    if (/01\s*jan\s*1970/i.test(rawNotice)) {
+      rawNotice = candidate.is_immediate ? 'Immediate' : '--';
+    }
+
     return {
       id: candidate.id,
       name: candidate.full_name || candidate.name || 'Candidate',
@@ -2361,7 +2406,7 @@
       company: candidate.current_company || candidate.company || '',
       location: formattedLocation,
       experience: exp,
-      notice: candidate.notice || candidate.np_id || '--',
+      notice: rawNotice,
       education: candidate.qualification_name || candidate.education || 'Graduate',
       workMode: candidate.work_mode || candidate.wm || 'Hybrid',
       reportId: reportId,

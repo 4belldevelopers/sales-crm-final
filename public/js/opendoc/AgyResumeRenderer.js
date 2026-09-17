@@ -308,12 +308,15 @@
 
   function cityOnly(value) {
     value = clean(value, '--');
-    if (isGap(value)) return '--';
+    if (isGap(value) || /^\d+$/.test(String(value).trim())) return '--';
     var commaParts = value.split(',').map(function (part) { return clean(part, ''); }).filter(Boolean);
-    if (commaParts.length > 1) return commaParts[0];
+    var candidateCity = commaParts.length > 0 ? commaParts[0] : value;
+    if (/^\d+$/.test(String(candidateCity).trim())) return '--';
+    if (commaParts.length > 1) return candidateCity;
     var states = 'andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
     var pattern = new RegExp('\\s+(' + states + ')$', 'i');
-    return clean(value.replace(pattern, ''), '--');
+    var res = clean(value.replace(pattern, ''), '--');
+    return /^\d+$/.test(String(res).trim()) ? '--' : res;
   }
 
   function matchTone(score, completeness) {
