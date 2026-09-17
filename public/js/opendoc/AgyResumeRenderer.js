@@ -1703,11 +1703,11 @@
       var exp = Number(skill.exp || 0);
       var expText = clean(skill.expText, '');
       var stars = [];
-      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 6.4, margin: [0, 0.5, 1.2, 0] });
+      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 7.7, margin: [0, 0.5, 1.2, 0] });
       rows.push([
         { text: clean(skill.name).toUpperCase(), style: 'tableCellBold', alignment: 'left' },
         { text: expText !== '' && expText !== '--' ? expText : (exp > 0 ? exp + ' Year' + (exp > 1 ? 's' : '') : '--'), style: 'tableCell', color: '#334155' },
-        { columns: stars, columnGap: 0, alignment: 'center', margin: [20, 5, 0, 5] }
+        { columns: stars, columnGap: 0, alignment: 'center', margin: [17, 5, 0, 5] }
       ]);
     });
     return rows;
@@ -1783,9 +1783,9 @@
         small: { fontSize: 7.4, color: '#64748b' },
         sectionTitle: { fontSize: 8.2, bold: true, color: '#1d4ed8' },
         sectionTitleMuted: { fontSize: 8, bold: true, color: '#334155' },
-        tableHead: { fontSize: 7, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
-        tableCell: { fontSize: 7.2, color: '#334155', margin: [0, 6, 0, 6] },
-        tableCellBold: { fontSize: 7.2, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
+        tableHead: { fontSize: 8.4, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
+        tableCell: { fontSize: 8.6, color: '#334155', margin: [0, 6, 0, 6] },
+        tableCellBold: { fontSize: 8.6, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
         metricLabel: { fontSize: 6, color: '#64748b' },
         metricValue: { fontSize: 7.2, bold: true, color: '#0f172a' },
         muted: { fontSize: 7, color: '#64748b' },
