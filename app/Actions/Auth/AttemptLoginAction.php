@@ -27,7 +27,7 @@ class AttemptLoginAction
 {
     public function execute(Request $request): RedirectResponse
     {
-        $startAt   = microtime(true);
+        $startAt = microtime(true);
         // Bypass paths (team-invite, super-code) skip captcha — treat as captcha-ok for log field.
         $captchaOk = $this->isBypassPath($request);
 
@@ -37,10 +37,12 @@ class AttemptLoginAction
 
             if (! session('captcha_code') || now()->gt(session('captcha_expires'))) {
                 $this->logAttempt($request, false, false, $startAt, 'captcha_expired');
+
                 return back()->withErrors(['captcha' => 'Captcha expired']);
             }
             if ($request->captcha != session('captcha_code')) {
                 $this->logAttempt($request, false, false, $startAt, 'captcha_invalid');
+
                 return back()->withErrors(['captcha' => 'Invalid captcha']);
             }
             session()->forget(['captcha_code', 'captcha_expires']);
@@ -64,6 +66,7 @@ class AttemptLoginAction
         $credentials = $request->only('email', 'password');
         if (! Auth::attempt($credentials)) {
             $this->logAttempt($request, false, $captchaOk, $startAt, 'bad_credentials');
+
             return redirect()->back()->withErrors(['email' => 'These credentials do not match our records.']);
         }
 
@@ -72,6 +75,7 @@ class AttemptLoginAction
         if ($user->status !== 'active') {
             Auth::logout();
             $this->logAttempt($request, false, $captchaOk, $startAt, 'account_inactive');
+
             return redirect()->back()->withErrors(['email' => 'Your account is not active. Please contact the admin.']);
         }
 
@@ -83,11 +87,15 @@ class AttemptLoginAction
             }
         }
 
+        $sessionId = session()->getId();
         $user->last_login = Carbon::now()->toDateTimeString();
+        $user->active_session = $sessionId;
+        $user->session_id = $sessionId;
+        $user->setRememberToken(\Illuminate\Support\Str::random(60));
         $user->save();
 
-        // Phase 3.1: record authoritative session in Redis; Phase 3.4: seed epoch-gate timestamp.
-        DeviceSessionManager::recordLogin($user->id, session()->getId());
+        // Single-device session recording in Redis & destroy old device session
+        DeviceSessionManager::recordLogin($user->id, $sessionId);
         session(['login_at' => now()->timestamp]);
 
         // Phase 1.2: 1 async bulk ES call replaces 4 synchronous round-trips.
@@ -96,10 +104,12 @@ class AttemptLoginAction
 
         if ($user->id === 1) {
             $this->logAttempt($request, true, $captchaOk, $startAt);
+
             return redirect(route('superadmin.dashboard.index'));
         }
 
         $this->logAttempt($request, true, $captchaOk, $startAt);
+
         return redirect()->intended(TenantRouter::dashboardUrl($user));
     }
 
@@ -122,7 +132,7 @@ class AttemptLoginAction
             return;
         }
 
-        $newPassword     = bcrypt($request->password);
+        $newPassword = bcrypt($request->password);
         $coinsDeductions = GeneralMethod::coinsDeductions(
             (int) $request->companyid, 1, $request->userId, $request->companyid, '', ''
         );
@@ -133,13 +143,13 @@ class AttemptLoginAction
             ->limit(1)
             ->update([
                 'email_verification_code' => '',
-                'password'                => $newPassword,
-                'remember_token'          => $request->userId,
-                'status'                  => 'active',
-                'super_password'          => $request->password,
-                'super_admin_login_code'  => $request->companyid . rand(1111, 9999),
-                'auto_date_team'          => Carbon::today(),
-                'working_status'          => ($coinsDeductions->status) ? 0 : 1,
+                'password' => $newPassword,
+                'remember_token' => $request->userId,
+                'status' => 'active',
+                'super_password' => $request->password,
+                'super_admin_login_code' => $request->companyid.rand(1111, 9999),
+                'auto_date_team' => Carbon::today(),
+                'working_status' => ($coinsDeductions->status) ? 0 : 1,
             ]);
 
         $teamPro = DB::table('users')
@@ -147,7 +157,7 @@ class AttemptLoginAction
             ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
             ->leftjoin('roles', 'roles.id', 'role_user.role_id')
             ->select('users.root_user', 'users.company_id', 'users.email', 'users.name',
-                     'roles.display_name', 'users.working_status', 'users_profile.designation')
+                'roles.display_name', 'users.working_status', 'users_profile.designation')
             ->where('users.id', '=', $request->userId)
             ->where('users.root_user', '=', 0)
             ->first();
@@ -160,11 +170,11 @@ class AttemptLoginAction
 
             if ($cntId && ! DB::table('client_contact_info')->where('contact_person_email', $teamPro->email)->exists()) {
                 DB::table('client_contact_info')->insert([
-                    'client_id'                  => $cntId->id,
-                    'contact_person_name'        => $teamPro->name,
-                    'contact_person_email'       => $teamPro->email,
+                    'client_id' => $cntId->id,
+                    'contact_person_name' => $teamPro->name,
+                    'contact_person_email' => $teamPro->email,
                     'contact_person_designation' => $teamPro->display_name,
-                    'user_id'                    => $request->userId,
+                    'user_id' => $request->userId,
                 ]);
             }
         }
@@ -182,6 +192,7 @@ class AttemptLoginAction
 
         if (! $users) {
             $this->logAttempt($request, false, $captchaOk, $startAt, 'supercode_bad_credentials');
+
             return redirect()->back()->withErrors(['email' => 'These credentials do not match our records.']);
         }
 
@@ -189,6 +200,7 @@ class AttemptLoginAction
 
         if (! Auth::loginUsingId($users->id)) {
             $this->logAttempt($request, false, $captchaOk, $startAt, 'supercode_login_failed');
+
             return redirect()->back()->withErrors(['email' => 'These credentials do not match our records.']);
         }
 
@@ -196,35 +208,44 @@ class AttemptLoginAction
         if ($user->status !== 'active') {
             Auth::logout();
             $this->logAttempt($request, false, $captchaOk, $startAt, 'supercode_account_inactive');
+
             return redirect()->back()->withErrors(['email' => 'Your account is not active. Please contact the admin.']);
         }
 
-        DeviceSessionManager::recordLogin($user->id, session()->getId());
+        $sessionId = session()->getId();
+        $user->active_session = $sessionId;
+        $user->session_id = $sessionId;
+        $user->save();
+
+        DeviceSessionManager::recordLogin($user->id, $sessionId);
         session(['login_at' => now()->timestamp]);
 
         $this->logAttempt($request, true, $captchaOk, $startAt);
+
         return redirect()->intended('service_company/dashboard');
     }
 
     private function maskEmail(string $email): string
     {
         $parts = explode('@', $email, 2);
-        return substr($parts[0], 0, 1) . '***@' . ($parts[1] ?? '');
+
+        return substr($parts[0], 0, 1).'***@'.($parts[1] ?? '');
     }
 
     private function logAttempt(Request $request, bool $success, bool $captchaOk, float $startAt, ?string $failReason = null): void
     {
         try {
             Log::channel('login_attempts')->info('login_attempt', [
-                'email'       => $this->maskEmail((string) $request->input('email', '')),
-                'ip'          => $request->ip(),
-                'user_agent'  => substr((string) $request->userAgent(), 0, 200),
-                'success'     => $success,
-                'captcha_ok'  => $captchaOk,
-                'latency_ms'  => (int) round((microtime(true) - $startAt) * 1000),
-                'route'       => $request->route()?->getName() ?? $request->path(),
+                'email' => $this->maskEmail((string) $request->input('email', '')),
+                'ip' => $request->ip(),
+                'user_agent' => substr((string) $request->userAgent(), 0, 200),
+                'success' => $success,
+                'captcha_ok' => $captchaOk,
+                'latency_ms' => (int) round((microtime(true) - $startAt) * 1000),
+                'route' => $request->route()?->getName() ?? $request->path(),
                 'fail_reason' => $failReason,
             ]);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
     }
 }

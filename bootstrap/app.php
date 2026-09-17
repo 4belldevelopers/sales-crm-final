@@ -36,8 +36,9 @@ return Application::configure(basePath: dirname(__DIR__))
             '*/auth-custom-package/validateClientPackage',
         ]);
 
-        // Phase 5.7: security headers on every response.
+        // Security headers and single-device session enforcement on web requests.
         $middleware->append(SecurityHeaders::class);
+        $middleware->appendToGroup('web', EnsureOneDeviceLogin::class);
 
         $middleware->alias([
             'auth' => Authenticate::class,

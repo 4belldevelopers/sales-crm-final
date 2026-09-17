@@ -33,18 +33,20 @@ class EnsureOneDeviceLogin
 
         // 1. Super-admin impersonation: throttle-clear the super_admin_login_code.
         if (session()->has('token_check')) {
-            $throttleKey = 'token_check_save_' . $user->id;
+            $throttleKey = 'token_check_save_'.$user->id;
             if (! Cache::has($throttleKey)) {
                 $user->super_admin_login_code = '';
                 $user->save();
                 Cache::put($throttleKey, true, 60);
             }
+
             return $next($request);
         }
 
         // 2. Account status.
         if ($user->status !== 'active') {
             Auth::logout();
+
             return redirect('/login')->withErrors([
                 'device_message' => 'Your account has been suspended. To resolve this issue, please contact the administrator or send an email to support@jero.works for further assistance.',
             ]);
@@ -54,29 +56,36 @@ class EnsureOneDeviceLogin
         //    login_at is written to session by AttemptLoginAction on every successful login.
         $loginAt = (int) session('login_at', 0);
         if ($loginAt > 0) {
-            $userEpoch    = (int) Cache::get('user:epoch:' . $user->id, 0);
-            $companyEpoch = (int) Cache::get('company:epoch:' . $user->company_id, 0);
+            $userEpoch = (int) Cache::get('user:epoch:'.$user->id, 0);
+            $companyEpoch = (int) Cache::get('company:epoch:'.$user->company_id, 0);
             if ($loginAt < $userEpoch || $loginAt < $companyEpoch) {
                 Auth::logout();
+
                 return redirect('/login')->withErrors([
                     'device_message' => 'Your session has been terminated by an administrator.',
                 ]);
             }
         }
 
-        // 4. Single-device enforcement (1 Redis GET, no MySQL write).
+        // 4. Single-device enforcement (Redis GET with DB active_session fallback).
         $currentSessionId = session()->getId();
-        if (! DeviceSessionManager::enforce($user->id, $currentSessionId)) {
+        if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->active_session)) {
             Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $message = 'Your account was logged in from another device. You have been logged out.';
+
             if ($request->expectsJson() || $request->ajax() || $request->isXmlHttpRequest()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'You have been logged in from another device. Please login again.',
+                    'message' => $message,
                     'redirect' => url('/login'),
                 ], 401);
             }
+
             return redirect('/login')->withErrors([
-                'device_message' => 'You have been logged in from another device. Please login again.',
+                'device_message' => $message,
             ]);
         }
 

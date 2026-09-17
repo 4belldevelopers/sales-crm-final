@@ -13,14 +13,17 @@ class LogoutAction
     public function execute(Request $request): RedirectResponse
     {
         $user = auth()->user();
-        auth()->logout();
 
         if ($user) {
+            \App\Support\DeviceSessionManager::invalidate($user->id);
+            $user->active_session = null;
             $user->session_id = null;
             $user->save();
         }
 
+        auth()->logout();
         $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         if (module_enabled('Subdomain')) {
             if ($user && $user->is_superadmin) {
