@@ -87,6 +87,7 @@ class AttemptLoginAction
             }
         }
 
+        $request->session()->regenerate();
         $sessionId = session()->getId();
         $user->last_login = Carbon::now()->toDateTimeString();
         $user->active_session = $sessionId;
@@ -94,16 +95,8 @@ class AttemptLoginAction
         $user->setRememberToken(\Illuminate\Support\Str::random(60));
         $user->save();
 
-<<<<<<< HEAD
         // Single-device session recording in Redis & destroy old device session
         DeviceSessionManager::recordLogin($user->id, $sessionId);
-=======
-        // Regenerate session ID to prevent fixation and ensure the authenticated session ID matches subsequent requests.
-        $request->session()->regenerate();
-
-        // Phase 3.1: record authoritative session in Redis; Phase 3.4: seed epoch-gate timestamp.
-        DeviceSessionManager::recordLogin($user->id, session()->getId(), $user->email);
->>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
         session(['login_at' => now()->timestamp]);
 
         // Phase 1.2: 1 async bulk ES call replaces 4 synchronous round-trips.
@@ -220,18 +213,13 @@ class AttemptLoginAction
             return redirect()->back()->withErrors(['email' => 'Your account is not active. Please contact the admin.']);
         }
 
-<<<<<<< HEAD
+        $request->session()->regenerate();
         $sessionId = session()->getId();
         $user->active_session = $sessionId;
         $user->session_id = $sessionId;
         $user->save();
 
         DeviceSessionManager::recordLogin($user->id, $sessionId);
-=======
-        $request->session()->regenerate();
-
-        DeviceSessionManager::recordLogin($user->id, session()->getId(), $user->email);
->>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
         session(['login_at' => now()->timestamp]);
 
         $this->logAttempt($request, true, $captchaOk, $startAt);

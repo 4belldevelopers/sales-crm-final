@@ -73,11 +73,7 @@ class EnsureOneDeviceLogin
 
         // 4. Single-device enforcement (Redis GET with DB active_session fallback).
         $currentSessionId = session()->getId();
-<<<<<<< HEAD
-        if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->active_session)) {
-=======
-        if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->email ?? null)) {
->>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
+        if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->active_session, $user->email ?? null)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
