@@ -3345,69 +3345,55 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
 
-        // Intent: Fetch candidate record strictly from Elasticsearch (read index) without fallback to MySQL per CQRS architecture.
-        try {
-            if ($AddJobWiseCondidate) {
-                $params = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $id,
-                ];
-
-                $response = $this->elasticService->getClient()->get($params);
-                $this->application = (object) $response['_source'];
-
-                $this->application->id = $this->application->candidate_id;
-                $this->application->master_status_name = $this->application->name;
-                $this->application->offer_currency = $this->application->of_offer_currency;
-                $this->application->offer_mode = $this->application->of_offer_mode;
-                $this->application->offer_amount = $this->application->of_offer_amount;
-                $this->application->joined_date = $this->application->of_joined_date;
-                $this->application->hashname = ($this->application->hashname) ? $this->application->hashname : $this->application->resume;
-                $this->application->child_status_id = $this->application->childStatus;
-                $this->application->master_status_id = $this->application->job_master_status_id;
-            } else {
-                $params = [
-                    'index' => ELASTIC_CANDIDATES_BENCH,
-                    'id' => $id,
-                ];
-
-                $response = $this->elasticService->getClient()->get($params);
-                $this->application = (object) $response['_source'];
-            }
-        } catch (\Throwable $e) {
-            \Log::error('Elasticsearch candidate retrieval failed in show()', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-            ]);
-            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate record not found in search index.']);
-        }
-
-        if (empty($this->application)) {
-            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate details not found.']);
-        }
-
-        try {
+        if ($AddJobWiseCondidate) {
             $params = [
-                'index' => ELASTIC_JOBS,
-                'id' => $jobId,
+                'index' => ELASTIC_CANDIDATES,
+                'id' => $id,
             ];
 
             $response = $this->elasticService->getClient()->get($params);
-            $this->job = (object) $response['_source'];
-        } catch (\Throwable $e) {
-            \Log::warning('Elasticsearch job retrieval failed in show()', [
-                'jobId' => $jobId,
-                'error' => $e->getMessage(),
-            ]);
-            $this->job = (object) ['comId' => $this->CaptainCompanyid, 'title' => '—'];
+            $this->application = (object) $response['_source'];
+
+            // dd($this->application);
+
+            $this->application->id = $this->application->candidate_id;
+            $this->application->master_status_name = $this->application->name;
+            $this->application->offer_currency = $this->application->of_offer_currency;
+            $this->application->offer_mode = $this->application->of_offer_mode;
+            $this->application->offer_amount = $this->application->of_offer_amount;
+            $this->application->joined_date = $this->application->of_joined_date;
+            $this->application->hashname = ($this->application->hashname) ? $this->application->hashname : $this->application->resume;
+            $this->application->child_status_id = $this->application->childStatus;
+            $this->application->master_status_id = $this->application->job_master_status_id;
+
+            // dd($this->application->master_status_id,$this->application->from_company_id,auth()->user()->company_id);
+
+        } else {
+
+            $params = [
+                'index' => ELASTIC_CANDIDATES_BENCH,
+                'id' => $id,
+            ];
+
+            $response = $this->elasticService->getClient()->get($params);
+            $this->application = (object) $response['_source'];
+
         }
 
-        $targetComId = $this->job->comId ?? $this->CaptainCompanyid;
+        $params = [
+            'index' => ELASTIC_JOBS,
+            'id' => $jobId,
+        ];
+
+        $response = $this->elasticService->getClient()->get($params);
+        $this->job = (object) $response['_source'];
+
         $skills = DB::table('job_metronics_skills')
             ->select('id', 'skill_name')
             ->where('job_id', $jobId)
-            ->where('company_id', $targetComId)
+            ->where('company_id', $this->job->comId)
             ->get();
+        //  dd($skills);
 
         $existingSkillIds = DB::table('candidate_job_skill_exp')
             ->where('job_id', $jobId)
@@ -3427,69 +3413,57 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     DB::table('candidate_job_skill_exp')->insert($values);
                     $expId = DB::getPdo()->lastInsertId();
 
-                    try {
-                        $this->elasticService->getClient()->deleteByQuery([
-                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                            'conflicts' => 'proceed',
-                            'body' => [
-                                'query' => [
-                                    'bool' => [
-                                        'must' => [
-                                            ['term' => ['candidate_id' => (int) $this->application->id]],
-                                            ['term' => ['job_id' => (int) $jobId]],
-                                            ['term' => ['job_skill_id' => (int) $skill->id]],
-                                        ],
+                    $this->elasticService->getClient()->deleteByQuery([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'conflicts' => 'proceed',   // important for production queues
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['candidate_id' => (int) $this->application->id]],
+                                        ['term' => ['job_id' => (int) $jobId]],
+                                        ['term' => ['job_skill_id' => (int) $skill->id]],
                                     ],
                                 ],
                             ],
-                        ]);
+                        ],
+                    ]);
 
-                        $this->elasticService->getClient()->index([
-                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                            'id' => $expId,
-                            'body' => [
-                                'candidate_id' => (int) $this->application->id,
-                                'job_id' => (int) $jobId,
-                                'job_skill_id' => (int) $skill->id,
-                                'skill_name' => $skill->skill_name,
-                                'rating' => null,
-                                'skill_value' => null,
-                                'created_at' => now()->toIso8601String(),
-                                'updated_at' => now()->toIso8601String(),
-                            ],
-                        ]);
-                    } catch (\Throwable $e) {
-                        // ES skill exp sync error suppressed to prevent blocking drawer
-                    }
+                    $this->elasticService->getClient()->index([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'id' => $expId,
+                        'body' => [
+                            'candidate_id' => (int) $this->application->id,
+                            'job_id' => (int) $jobId,
+                            'job_skill_id' => (int) $skill->id,
+                            'skill_name' => $skill->skill_name,
+                            'rating' => null,
+                            'skill_value' => null,   // default exp
+                            'created_at' => now()->toIso8601String(),
+                            'updated_at' => now()->toIso8601String(),
+                        ],
+                    ]);
                 }
             }
         }
 
-        $exists = false;
-        try {
-            $params = [
-                'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                'body' => [
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['application_id' => $this->application->id]],
-                                ['term' => ['job_id' => (int) $jobId]],
-                            ],
+        $params = [
+            'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['application_id' => $this->application->id]],
+                            ['term' => ['job_id' => (int) $jobId]],
                         ],
                     ],
-                    'size' => 1,
                 ],
-            ];
+                'size' => 1,   // we only need to know if one exists
+            ],
+        ];
 
-            $response = $this->elasticService->getClient()->search($params);
-            $exists = ! empty($response['hits']['hits']);
-        } catch (\Throwable $e) {
-            $exists = DB::table('application_additional_detail')
-                ->where('application_id', $this->application->id)
-                ->where('job_id', (int) $jobId)
-                ->exists();
-        }
+        $response = $this->elasticService->getClient()->search($params);
+        $exists = ! empty($response['hits']['hits']);
 
         if (! $exists) {
             $job_additional_detail_count = DB::table('job_additional_detail')->select('*')->where('job_id', $jobId)->orderBy('job_additional_detail.id', 'ASC')->count();
@@ -3508,26 +3482,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ];
                         DB::table('application_additional_detail')->insert($values);
                         $expId = DB::getPdo()->lastInsertId();
-                        try {
-                            $this->elasticService->getClient()->update([
-                                'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                                'id' => $expId,
-                                'body' => [
-                                    'doc' => [
-                                        'job_id' => $jobId,
-                                        'question_id' => @$jd->id,
-                                        'application_id' => $this->application->id,
-                                        'job_detail_value' => @$jd->detail_value,
-                                        'application_detail_value' => null,
-                                        'created_at' => now()->toIso8601String(),
-                                        'updated_at' => now()->toIso8601String(),
-                                    ],
-                                    'doc_as_upsert' => true,
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
+                            'id' => $expId,   // store as ES _id
+                            'body' => [
+                                'doc' => [
+                                    'job_id' => $jobId,
+                                    'question_id' => @$jd->id,
+                                    'application_id' => $this->application->id,
+                                    'job_detail_value' => @$jd->detail_value,
+                                    'application_detail_value' => null,
+                                    'created_at' => now()->toIso8601String(),
+                                    'updated_at' => now()->toIso8601String(),
                                 ],
-                            ]);
-                        } catch (\Throwable $e) {
-                            // ES question update error suppressed
-                        }
+                                'doc_as_upsert' => true, // 🔥 key to avoiding conflicts
+                            ],
+                        ]);
                     }
 
                     $inc++;
@@ -3536,10 +3506,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $this->client_contuser_arr = $this->job->client_contact_info_jobs ?? [];
+        $this->client_contuser_arr = ($this->job->client_contact_info_jobs);
         $this->clientjobAssignListCaptain = '';
-        if (($this->job->comId ?? 0) != $company_id) {
-            $job_assign = $this->job->job_assign ?? [];
+        if ($this->job->comId != $company_id) {
+            $job_assign = $this->job->job_assign;
             $jobAssign = collect($job_assign);
             $this->jobAssignListCaptain = $jobAssign
                 ->where('spok_user_id', '>', 0)
@@ -3570,35 +3540,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // dd($this->notesArr);
 
-        $this->scheduleDateArr = [];
-        try {
-            $params = [
-                'index' => ELASTIC_INERTVIEW_TRACKER,
-                'body' => [
-                    '_source' => ['schedule_date'],
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['interview_job_wise_con_id' => (int) $id]],
-                                ['term' => ['job_application_id' => (int) $this->application->id]],
-                            ],
+        $params = [
+            'index' => ELASTIC_INERTVIEW_TRACKER,
+            'body' => [
+                '_source' => ['schedule_date'],
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['interview_job_wise_con_id' => (int) $id]],
+                            ['term' => ['job_application_id' => (int) $this->application->id]],
                         ],
                     ],
-                    'sort' => [
-                        ['id' => ['order' => 'asc']],
-                    ],
-                    'size' => 100, // optimized size limit
                 ],
-            ];
+                'sort' => [
+                    ['id' => ['order' => 'asc']],
+                ],
+                'size' => 100, // optimized size limit
+            ],
+        ];
 
-            $response = $this->elasticService->getClient()->search($params);
+        $response = $this->elasticService->getClient()->search($params);
 
-            $this->scheduleDateArr = collect($response['hits']['hits'] ?? [])->pluck('_source.schedule_date')->filter()->map(function ($date) {
-                return Carbon::parse($date)->format('Y-m-d H:i:s');
-            })->toArray();
-        } catch (\Throwable $e) {
-            $this->scheduleDateArr = [];
-        }
+        $this->scheduleDateArr = collect($response['hits']['hits'] ?? [])->pluck('_source.schedule_date')->filter()->map(function ($date) {
+            return Carbon::parse($date)->format('Y-m-d H:i:s');
+        })
+            ->toArray();
 
         // dd($this->scheduleDateArr);
 
@@ -3632,35 +3598,27 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->skillShow = false;
         }
 
-        $this->job_additional_detail = null;
-        try {
-            $params = [
-                'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                'body' => [
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['application_id' => $this->application->id]],
-                                ['term' => ['job_id' => $this->job_id]],
-                            ],
+        $params = [
+            'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
+            'body' => [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            ['term' => ['application_id' => $this->application->id]],
+                            ['term' => ['job_id' => $this->job_id]],
                         ],
                     ],
-                    'sort' => [
-                        ['id' => ['order' => 'desc']],
-                    ],
-                    'size' => 100, // optimized size limit
                 ],
-            ];
+                'sort' => [
+                    ['id' => ['order' => 'desc']],
+                ],
+                'size' => 100, // optimized size limit
+            ],
+        ];
 
-            $response = $this->elasticService->getClient()->search($params);
-            $this->job_additional_detail = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
-        } catch (\Throwable $e) {
-            $dbAddDetail = DB::table('application_additional_detail')
-                ->where('application_id', $this->application->id)
-                ->where('job_id', $this->job_id)
-                ->get();
-            $this->job_additional_detail = $dbAddDetail->isNotEmpty() ? $dbAddDetail->toArray() : null;
-        }
+        $response = $this->elasticService->getClient()->search($params);
+        // return users
+        $this->job_additional_detail = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
 
         // dd($this->job_id,$this->application->id,$this->job_additional_detail);
 
@@ -3860,6 +3818,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $submittedBy = $this->application->submitted_by ?? null;
         $this->submittedByCompany = ! empty($submittedBy) ? DB::table('companies')->select('companies.company_name')->join('users', 'users.company_id', '=', 'companies.id')->where('users.id', $submittedBy)->first() : null;
 
+        // $view = view('service_company.job-applications.show', $this->data)->render();
         try {
             $view = view('service_company.job-applications.showdetail', $this->data)->render();
             $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
