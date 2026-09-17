@@ -62,18 +62,16 @@
                     }
                     $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
                     $percentage = '0%';
-                    if (@$row->wiseId) {
-                        if (!$hasFilterSkills) {
-                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
-                        } elseif (!empty($percentBasis)) {
-                            $matches = 0;
-                            foreach ($percentBasis as $req) {
-                                foreach ($candidateSkillsLower as $cand) {
-                                    if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
-                                }
+                    if (!empty($row->jobId)) {
+                        $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                    } elseif (!empty($percentBasis)) {
+                        $matches = 0;
+                        foreach ($percentBasis as $req) {
+                            foreach ($candidateSkillsLower as $cand) {
+                                if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
                             }
-                            $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
                         }
+                        $percentage = ((int) round(min(($matches / count($percentBasis)) * 100, 100))) . '%';
                     }
                     $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -185,20 +183,18 @@
                         // Match % — against the same basis driving the highlighting
                         // above, rather than always the row's own job.
                         $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
-                        if (@$row->wiseId) {
-                            if (!$hasFilterSkills) {
-                                $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
-                            } elseif (!empty($percentBasis)) {
-                                $matches = 0;
-                                foreach ($percentBasis as $req) {
-                                    foreach ($candidateSkillsLower as $cand) {
-                                        if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
-                                    }
+                        if (!empty($row->jobId)) {
+                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                        } elseif (!empty($percentBasis)) {
+                            $matches = 0;
+                            foreach ($percentBasis as $req) {
+                                foreach ($candidateSkillsLower as $cand) {
+                                    if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
                                 }
-                                $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
-                            } else {
-                                $percentage = '0%';
                             }
+                            $percentage = ((int) round(min(($matches / count($percentBasis)) * 100, 100))) . '%';
+                        } else {
+                            $percentage = '0%';
                         }
 
                         // Match % badge — color reflects the numeric match score:

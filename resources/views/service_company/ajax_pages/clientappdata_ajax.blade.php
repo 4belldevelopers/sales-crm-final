@@ -83,7 +83,7 @@
                     // GeneralMethod::matchedSkillsList(). No mandatory/starred
                     // tier — this page has no user-driven skill filter to
                     // star against.
-                    $jobRequiredSkills = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray();
+                    $jobRequiredSkills = array_values(array_unique(array_filter(array_map('trim', DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray()))));
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
                     $maxUnmatchedShown = 6;

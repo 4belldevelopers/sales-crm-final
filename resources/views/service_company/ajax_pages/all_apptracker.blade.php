@@ -107,7 +107,8 @@
                     $skillArr = explode(',', $row->skills);
 
                     // BUG-04 fix N+1 #2 & #3: use pre-fetched skill map instead of per-row DB queries
-                    $preSkillRows = $rowMaps['skills'][$row->job_id] ?? [];
+                    $rowJobId = $row->job_id ?: ($row->jobId ?? 0);
+                    $preSkillRows = $rowMaps['skills'][$rowJobId] ?? [];
                     $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
 
                     $percentage = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);

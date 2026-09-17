@@ -69,14 +69,14 @@
                     }
                     $skilltag = '';
                     $skilltagclass = '';
-                    $skillArr = $row->matched_skills;//explode(',', $row->skills);
+                    $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
+                    $candidateAllSkills = is_array($row->all_skills ?? null) ? $row->all_skills : (explode(',', (string) @$row->skills) ?: $skillArr);
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkills);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    $percentageString = GeneralMethod::skill_percentage(
+                        $row->job_id ?? $jobid,
+                        $candidateAllSkills
+                    );
+                    $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used across the other apptracker tabs: >90
@@ -90,12 +90,18 @@
                     } else {
                         $matchBg = '#dcfce7'; $matchColor = '#16a34a';
                     }
-                    // Tooltip breaking down WHY this candidate scored this
-                    // percentage — matched vs missing skills — so the badge
-                    // isn't just an unexplained number. Uses a plain native
-                    // title attribute since this partial is AJAX-injected.
-                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
-                        foreach ($skillArr as $matched) {
+
+                    $jobSkillsForDisplay = \Illuminate\Support\Facades\DB::table('job_metronics_skills')
+                        ->where('job_id', $row->job_id ?? $jobid)
+                        ->pluck('skill_name')
+                        ->map(fn($s) => strtolower(trim($s)))
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    // Tooltip breaking down WHY this candidate scored this percentage
+                    $missingSkills = array_values(array_filter($jobSkillsForDisplay, function ($required) use ($candidateAllSkills) {
+                        foreach ($candidateAllSkills as $matched) {
                             if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) return false;
                         }
                         return true;
@@ -107,7 +113,7 @@
                     if (!empty($missingSkills)) {
                         $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
                     }
-                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No required skills configured for this job';
 
                     $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;cursor:help;">Match ' . $percentage . '%</span>';
 

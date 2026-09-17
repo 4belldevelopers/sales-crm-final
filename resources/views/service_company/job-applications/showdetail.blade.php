@@ -661,7 +661,14 @@
       if ($__hdrAvailability === '') { $__hdrAvailability = '—'; }
       $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false || stripos($__hdrAvailability, 'Available') === 0);
 
-      // Skill match — purely a presentation count; job skill list already in $jobSkill.
+      // Skill match — unified canonical matching engine (identical to candidate lists).
+      $__hdrMatchCalc = GeneralMethod::calculateSkillMatch($jobSkill ?? [], $__hdrSkillsArr);
+      $__hdrJobTotal   = $__hdrMatchCalc['total'];
+      $__hdrMatchedCount = $__hdrMatchCalc['matched_count'];
+      $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
+      $__hdrOverallPct = $__hdrMatchCalc['percentage'];
+      $__hdrMatchedSkillNames = $__hdrMatchCalc['matched_skills'];
+
       $__hdrJobSkills = [];
       if (!empty($jobSkill)) {
           foreach ($jobSkill as $__js) {
@@ -670,17 +677,6 @@
               if ($__sn !== '') { $__hdrJobSkills[mb_strtolower($__sn)] = $__sn; }
           }
       }
-      $__hdrMatchedCount = 0;
-      $__hdrMatchedSkillNames = [];
-      foreach ($__hdrSkillsArr as $__cs) {
-          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) {
-              $__hdrMatchedCount++;
-              $__hdrMatchedSkillNames[] = $__cs;
-          }
-      }
-      $__hdrJobTotal   = count($__hdrJobSkills);
-      $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
-      $__hdrOverallPct = $__hdrJobTotal > 0 ? (int) round(($__hdrMatchedCount / $__hdrJobTotal) * 100) : 0;
 
       // Location match — uses the same formatted strings already prepared above.
       $__hdrJobLocs = [];
@@ -939,7 +935,18 @@
       @if(!empty($__hdrSkillsShown))
         <div class="cdr-skills-bar">
           @foreach($__hdrSkillsShown as $__s)
-            @php $__isMatch = isset($__hdrJobSkills[mb_strtolower($__s)]); @endphp
+            @php
+              $__sNorm = mb_strtolower(trim($__s));
+              $__isMatch = isset($__hdrJobSkills[$__sNorm]);
+              if (!$__isMatch && !empty($__hdrJobSkills)) {
+                  foreach ($__hdrJobSkills as $__jsNorm => $__jsOriginal) {
+                      if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($__jsNorm, $__sNorm)) {
+                          $__isMatch = true;
+                          break;
+                      }
+                  }
+              }
+            @endphp
             <span class="cdr-skill-tag {{ $__isMatch ? 'cdr-skill-match' : 'cdr-skill-plain' }}">{{ ucwords(strtolower($__s)) }}</span>
           @endforeach
           @if($__hdrSkillsMore > 0)

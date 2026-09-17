@@ -96,6 +96,7 @@
                         ->where('job_id', $row->job_id ?? $jobid)
                         ->pluck('skill_name')
                         ->map(fn($s) => strtolower(trim($s)))
+                        ->unique()
                         ->values()
                         ->toArray();
 
@@ -153,7 +154,7 @@
                         $row->job_id ?? $jobid,
                         $candidateAllSkills
                     );
-                    $percentage = (float) rtrim($percentageString ?: '0%', '%');
+                    $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
 
                     // Match % badge — color reflects the numeric match score, same
                     // thresholds/colors used on the Pool tab / CV Tracker: >90 green,
