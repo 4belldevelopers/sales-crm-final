@@ -31,7 +31,11 @@ class EnsureOneDeviceLogin
 
         $user = Auth::user();
 
-        // 1. Super-admin impersonation: throttle-clear the super_admin_login_code.
+        // 1. Super-admin direct access or impersonation: bypass single-device restriction.
+        if ($user->is_superadmin) {
+            return $next($request);
+        }
+
         if (session()->has('token_check')) {
             $throttleKey = 'token_check_save_'.$user->id;
             if (! Cache::has($throttleKey)) {

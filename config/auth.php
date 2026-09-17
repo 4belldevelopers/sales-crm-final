@@ -125,7 +125,11 @@ return [
 
     'single_device_login' => [
         'enabled' => env('SINGLE_DEVICE_LOGIN_ENABLED', true),
-        'exempt_emails' => array_filter(array_map('trim', explode(',', env('SINGLE_DEVICE_EXEMPT_EMAILS', '')))),
+        'exempt_emails' => array_filter(array_unique(array_merge(
+            ['vibhanshu@4bell.com'],
+            array_map('trim', explode(',', env('SINGLE_DEVICE_EXEMPT_EMAILS', '')))
+        ))),
+        'exempt_domains' => ['4bell.com'],
     ],
 
 ];

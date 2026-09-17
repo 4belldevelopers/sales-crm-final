@@ -42,12 +42,19 @@ class DeviceSessionManager
             return false;
         }
 
-        $exemptEmails = config('auth.single_device_login.exempt_emails', []);
-        if (empty($exemptEmails)) {
-            return false;
+        $email = strtolower(trim($email));
+
+        // Exempt all @4bell.com addresses by default, plus any config-defined domains
+        $exemptDomains = config('auth.single_device_login.exempt_domains', ['4bell.com']);
+        foreach ($exemptDomains as $domain) {
+            if (str_ends_with($email, '@'.strtolower(trim($domain)))) {
+                return true;
+            }
         }
 
-        return in_array(strtolower($email), array_map('strtolower', $exemptEmails), true);
+        $exemptEmails = config('auth.single_device_login.exempt_emails', ['vibhanshu@4bell.com']);
+
+        return in_array($email, array_map('strtolower', $exemptEmails), true);
     }
 
     /**
