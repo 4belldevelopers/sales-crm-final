@@ -3295,12 +3295,25 @@ END:VCALENDAR";
         }
 
         /**
-         * Tenancy / Intent Note: Always resolve Main/Parent Company name (companies.company_name)
-         * rather than Client company name (clients.name) for Job Details display.
+         * Tenancy / Intent Note: Format client/company name for job headers.
+         * - If internal client job (self_company == 1): display client name and main company (e.g. "Client Name / Main Company").
+         * - If direct client job (self_company != 1): display direct client company name (clients_name).
          */
-        $parent_company_name = ! empty($row->company_name) ? $row->company_name : (! empty($row->clients_name) ? $row->clients_name : '');
+        $client_name = trim((string) ($row->clients_name ?? ''));
+        $company_name = trim((string) ($row->company_name ?? ''));
+        $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
 
-        return ucwords(substr((string) $parent_company_name, 0, 30));
+        if ($is_self_company) {
+            if (! empty($client_name) && ! empty($company_name) && strcasecmp($client_name, $company_name) !== 0) {
+                $displayName = $client_name.' / '.$company_name;
+            } else {
+                $displayName = ! empty($company_name) ? $company_name : $client_name;
+            }
+        } else {
+            $displayName = ! empty($client_name) ? $client_name : $company_name;
+        }
+
+        return ucwords(substr((string) $displayName, 0, 50));
     }
 
     public static function companyOrClientDetails($jobid = '')
@@ -9662,6 +9675,7 @@ END:VCALENDAR";
                             'user_id' => $user_id,
                             'candidate_id' => $candidate_id,
                         ]);
+
                         return false;
                     }
                 }
@@ -9680,6 +9694,7 @@ END:VCALENDAR";
                             'user_id' => $user_id,
                             'candidate_id' => $candidate_id,
                         ]);
+
                         return false;
                     }
                 }
@@ -9697,6 +9712,7 @@ END:VCALENDAR";
                             'user_id' => $user_id,
                             'candidate_id' => $candidate_id,
                         ]);
+
                         return false;
                     }
                 }
@@ -9755,6 +9771,7 @@ END:VCALENDAR";
                         'user_id' => $user_id,
                         'candidate_id' => $candidate_id,
                     ]);
+
                     return false;
                 }
 
@@ -9836,9 +9853,10 @@ END:VCALENDAR";
                 return true;
             });
 
-            if (!$executed) {
+            if (! $executed) {
                 return;
             }
+
             return;
         }
 
@@ -13740,7 +13758,7 @@ END:VCALENDAR";
                                     ['term' => ['client_id' => $client_id]],
                                 ],
                                 'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [8, 9]]],
+                                    ['terms' => ['job_master_status_id' => [9]]],
                                 ],
                             ],
                         ],
@@ -13888,7 +13906,7 @@ END:VCALENDAR";
                                     ['term' => ['final_status' => 1]],
                                 ],
                                 'must_not' => [
-                                    ['terms' => ['job_master_status_id' => [8, 9]]],
+                                    ['terms' => ['job_master_status_id' => [9]]],
                                 ],
                             ],
                         ],

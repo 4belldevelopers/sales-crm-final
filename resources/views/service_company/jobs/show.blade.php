@@ -99,8 +99,8 @@ $companySizeValue = ($companySizeRaw === '' || $companySizeRaw === '-' || preg_m
     ? 'Not specified'
     : $companySizeRaw;
 
-// Intent: Always display the Main/Parent Company name in Job Details header
-$company_or_client = !empty(@$job->company_name) ? @$job->company_name : GeneralMethod::companyDetailsByClient($job->id);
+// Intent: Resolve Client Name / Main Company name for Job Details header
+$company_or_client = GeneralMethod::companyDetailsByClient($job->id);
 
 if(@$tabshow){
     if($job->self_company==1){

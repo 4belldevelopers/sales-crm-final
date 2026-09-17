@@ -3036,9 +3036,14 @@
                   Company Name 
                 </span>
                 @php
-                $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
+                $targetJobId = $jobId ?? @$application->job_id ?? @$application->jobId ?? 0;
+                $hdrCompanyOrClient = $targetJobId > 0 ? GeneralMethod::companyDetailsByClient($targetJobId) : '';
+                if (empty($hdrCompanyOrClient)) {
+                    $companies = $submittedByCompany ?? (!empty($application->submitted_by) ? DB::table('companies')->select('companies.company_name')->join('users','users.company_id','companies.id')->where('users.id', $application->submitted_by)->first() : null);
+                    $hdrCompanyOrClient = @$companies->company_name ?? '';
+                }
                 @endphp
-                <span class="own-value">{{ ucwords(strtolower(@$companies->company_name ?? '')) }}</span>
+                <span class="own-value">{{ ucwords(@$hdrCompanyOrClient) }}</span>
               </div>
               <div class="ownership-row">
                 <span class="own-label">

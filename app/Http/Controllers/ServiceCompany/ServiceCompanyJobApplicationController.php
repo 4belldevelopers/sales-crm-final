@@ -1972,7 +1972,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if ($tenantCompanyId > 0 && ! auth()->user()->is_superadmin) {
             $query->where(function ($q) use ($tenantCompanyId) {
                 $q->where('company_id', $tenantCompanyId)
-                  ->orWhere('thirdparty_company_id', $tenantCompanyId);
+                    ->orWhere('thirdparty_company_id', $tenantCompanyId);
             });
         }
         $application = $query->first();
@@ -2090,12 +2090,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $rating = max(3, 5 - ($idx % 3));
             $rsSkills[] = [
                 'name' => $sk,
-                'expText' => $expNum . ' Years',
+                'expText' => $expNum.' Years',
                 'exp' => $expNum,
                 'rating' => $rating,
             ];
             $idx++;
-            if ($idx >= 7) break;
+            if ($idx >= 7) {
+                break;
+            }
         }
 
         $rsEducation = 'Graduate';
@@ -2108,29 +2110,29 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        $rsTotalExp = trim((string)(@$application->total_exp ?? ''));
-        $rsExperience = ($rsTotalExp !== '' && (float)$rsTotalExp > 0) ? $rsTotalExp . ' Years' : '5 Years';
+        $rsTotalExp = trim((string) (@$application->total_exp ?? ''));
+        $rsExperience = ($rsTotalExp !== '' && (float) $rsTotalExp > 0) ? $rsTotalExp.' Years' : '5 Years';
 
-        $rsWm = trim((string)(@$application->work_mode ?: (@$application->wm ?: 'Hybrid')));
+        $rsWm = trim((string) (@$application->work_mode ?: (@$application->wm ?: 'Hybrid')));
         $rsWorkMode = ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm)));
 
-        $rsMatchPct = (int) round((float)(@$application->skill_match ?? 0));
+        $rsMatchPct = (int) round((float) (@$application->skill_match ?? 0));
         if ($rsMatchPct <= 0) {
-            $rsMatchPct = ! empty($application->rating) ? (int)($application->rating * 20) : 88;
+            $rsMatchPct = ! empty($application->rating) ? (int) ($application->rating * 20) : 88;
         }
 
-        $rsCareerSummary = trim(strip_tags(html_entity_decode((string)(@$application->careersummary ?: (@$application->career_summary ?: (@$application->cover_letter ?: ''))), ENT_QUOTES, 'UTF-8')));
+        $rsCareerSummary = trim(strip_tags(html_entity_decode((string) (@$application->careersummary ?: (@$application->career_summary ?: (@$application->cover_letter ?: ''))), ENT_QUOTES, 'UTF-8')));
         if (empty($rsCareerSummary)) {
             $rsCareerSummary = 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
         }
 
-        $rsRecruiterNote = trim(strip_tags(html_entity_decode((string)(@$application->recruiter_note ?: (@$application->comment ?: '')), ENT_QUOTES, 'UTF-8')));
+        $rsRecruiterNote = trim(strip_tags(html_entity_decode((string) (@$application->recruiter_note ?: (@$application->comment ?: '')), ENT_QUOTES, 'UTF-8')));
         if (empty($rsRecruiterNote)) {
             $rsRecruiterNote = 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
         }
 
-        $rsCurrentCompany = ucwords((string)(@$application->current_company ?: (@$application->cur_company_name ?: 'Hiring Partner Network')));
-        $rsCurrentDesignation = ucwords((string)(@$application->current_designation ?: (@$job->title ?: 'Verified Professional')));
+        $rsCurrentCompany = ucwords((string) (@$application->current_company ?: (@$application->cur_company_name ?: 'Hiring Partner Network')));
+        $rsCurrentDesignation = ucwords((string) (@$application->current_designation ?: (@$job->title ?: 'Verified Professional')));
 
         $rsValidation = [
             ['label' => 'RESUME', 'status' => 'Verified'],
@@ -3913,15 +3915,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             if (! empty($jobIds)) {
                 $rawCompanyClientRows = DB::table('jobs')
-                    ->select('jobs.id', 'jobs.company_id', 'clients.name as clients_name', 'companies.company_name')
-                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
-                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                    ->select('jobs.id')
                     ->whereIn('jobs.id', $jobIds)
                     ->get();
 
                 foreach ($rawCompanyClientRows as $rRow) {
-                    $cName = ($rRow->company_id != $companyId) ? $rRow->company_name : $rRow->clients_name;
-                    $companyOrClientMap[$rRow->id] = ucwords(substr((string) $cName, 0, 30));
+                    $companyOrClientMap[$rRow->id] = GeneralMethod::companyDetailsByClient($rRow->id);
                 }
             }
 

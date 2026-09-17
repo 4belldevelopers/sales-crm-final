@@ -463,12 +463,7 @@ class ShortlistBenchCandidateListingService
                 ];
 
                 // Client name logic matching GeneralMethod::companyDetailsByClient
-                if (($jobRow->job_company_id ?? null) != $companyId) {
-                    $clientName = ! empty($jobRow->company_name) ? ucwords(mb_substr($jobRow->company_name, 0, 30)) : '';
-                } else {
-                    $clientName = $jobRow->client_name ?? '';
-                }
-                $clientNamesMap[$jobRow->jobId] = $clientName;
+                $clientNamesMap[$jobRow->jobId] = GeneralMethod::companyDetailsByClient($jobRow->jobId);
             }
         }
 
@@ -501,7 +496,7 @@ class ShortlistBenchCandidateListingService
 
                 foreach ($hits as $hit) {
                     $candKey = ($hit['candidate_id'] ?? $hit['wiseId'] ?? rand());
-                    $duplicateFlagsMap[$candKey] = (($hit['duplicate'] ?? 0) == 1 || !empty($hit['is_duplicate'])) ? 1 : 0;
+                    $duplicateFlagsMap[$candKey] = (($hit['duplicate'] ?? 0) == 1 || ! empty($hit['is_duplicate'])) ? 1 : 0;
                 }
             }
         }
