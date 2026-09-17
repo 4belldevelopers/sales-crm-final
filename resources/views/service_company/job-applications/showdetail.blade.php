@@ -1198,6 +1198,7 @@
         }
         // candidate summary for the submission banner
         $__te = trim((string) @$application->total_exp);
+        $rcvBExp = ($__te !== '' && $__te !== '0') ? ($__te . ' Yrs') : '--';
         $__isBenchCand = (@$application->condidate_type == 'bench_condidate');
         if (@$application->serving_notice_period_mode == 0) {
             $rcvBNotice = !empty(@$application->np_id) ? (@$application->np_id . ' Days') : '--';
@@ -1325,21 +1326,21 @@
       </style>
 
       <div class="rcv-wrap"
-           data-url="{{ $rcvFetchUrl }}"
-           data-public="{{ $rcvPublicUrl }}"
-           data-ext="{{ $rcvExt }}"
-           data-logo="{{ $rcvCompanyLogo }}"
-           data-company="{{ $rcvCompanyName }}"
-           data-pdfconv="{{ $rcvConvertUrl }}"
-           data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
-           data-mask="{{ $rcvMaskContact ? '1' : '0' }}"
-           data-b-exp="{{ $rcvBExp }}"
-           data-b-cctc="{{ $rcvBCctc }}"
-           data-b-ectc="{{ $rcvBEctc }}"
-           data-b-notice="{{ $rcvBNotice }}"
-           data-b-loc="{{ $rcvBLoc }}"
-           data-b-presented="{{ $rcvBPresented }}"
-           data-ispdf="{{ $rcvIsPdf ? '1' : '0' }}">
+            data-url="{{ $rcvFetchUrl ?? '' }}"
+            data-public="{{ $rcvPublicUrl ?? '' }}"
+            data-ext="{{ $rcvExt ?? '' }}"
+            data-logo="{{ $rcvCompanyLogo ?? '' }}"
+            data-company="{{ $rcvCompanyName ?? '' }}"
+            data-pdfconv="{{ $rcvConvertUrl ?? '' }}"
+            data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
+            data-mask="{{ !empty($rcvMaskContact) ? '1' : '0' }}"
+            data-b-exp="{{ $rcvBExp ?? '--' }}"
+            data-b-cctc="{{ $rcvBCctc ?? '--' }}"
+            data-b-ectc="{{ $rcvBEctc ?? '--' }}"
+            data-b-notice="{{ $rcvBNotice ?? '--' }}"
+            data-b-loc="{{ $rcvBLoc ?? '--' }}"
+            data-b-presented="{{ $rcvBPresented ?? '--' }}"
+            data-ispdf="{{ !empty($rcvIsPdf) ? '1' : '0' }}">
         <!-- Keyword panel -->
         <aside class="rcv-side">
           <div class="rcv-side-head">
