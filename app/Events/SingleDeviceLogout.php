@@ -23,7 +23,7 @@ class SingleDeviceLogout implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('App.Models.User.' . $this->userId),
+            new PrivateChannel('App.Models.User.'.$this->userId),
         ];
     }
 
@@ -36,6 +36,7 @@ class SingleDeviceLogout implements ShouldBroadcast
     {
         return [
             'userId' => $this->userId,
+            'newSessionId' => $this->newSessionId,
             'message' => 'You have been logged in from another device. Please login again.',
             'redirect' => url('/login'),
         ];
