@@ -3345,7 +3345,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
 
-        $esCandFound = false;
+        // Intent: Fetch candidate record strictly from Elasticsearch (read index) without fallback to MySQL per CQRS architecture.
         try {
             if ($AddJobWiseCondidate) {
                 $params = [
@@ -3365,7 +3365,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $this->application->hashname = ($this->application->hashname) ? $this->application->hashname : $this->application->resume;
                 $this->application->child_status_id = $this->application->childStatus;
                 $this->application->master_status_id = $this->application->job_master_status_id;
-                $esCandFound = true;
             } else {
                 $params = [
                     'index' => ELASTIC_CANDIDATES_BENCH,
@@ -3374,63 +3373,33 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                 $response = $this->elasticService->getClient()->get($params);
                 $this->application = (object) $response['_source'];
-                $esCandFound = true;
             }
         } catch (\Throwable $e) {
-            \Log::warning('Elasticsearch candidate get failed in show(), falling back to DB', [
+            \Log::error('Elasticsearch candidate retrieval failed in show()', [
                 'id' => $id,
                 'error' => $e->getMessage(),
             ]);
-            $esCandFound = false;
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate record not found in search index.']);
         }
 
-        if (! $esCandFound || empty($this->application)) {
-            $candRecordId = $AddJobWiseCondidate ? ($AddJobWiseCondidate->candidate_id ?? $id) : $id;
-            $dbCand = DB::table('job_applications')->where('id', $candRecordId)->first();
-            if ($dbCand) {
-                $this->application = $dbCand;
-                $this->application->candidate_id = $dbCand->id;
-                $this->application->name = $dbCand->full_name ?? '';
-                $this->application->hashname = $dbCand->resume ?? '';
-                $this->application->master_status_name = '';
-                $this->application->offer_currency = '';
-                $this->application->offer_mode = '';
-                $this->application->offer_amount = '';
-                $this->application->joined_date = '';
-                $this->application->child_status_id = $dbCand->child_status_id ?? 0;
-                $this->application->master_status_id = $dbCand->master_status_id ?? 0;
-            } else {
-                return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate details not found.']);
-            }
+        if (empty($this->application)) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate details not found.']);
         }
 
-        $esJobFound = false;
-        if (! empty($jobId)) {
-            try {
-                $params = [
-                    'index' => ELASTIC_JOBS,
-                    'id' => $jobId,
-                ];
+        try {
+            $params = [
+                'index' => ELASTIC_JOBS,
+                'id' => $jobId,
+            ];
 
-                $response = $this->elasticService->getClient()->get($params);
-                $this->job = (object) $response['_source'];
-                $esJobFound = true;
-            } catch (\Throwable $e) {
-                \Log::warning('Elasticsearch job get failed in show(), falling back to DB', [
-                    'jobId' => $jobId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        if (! $esJobFound || empty($this->job)) {
-            $dbJob = ! empty($jobId) ? DB::table('jobs')->where('id', $jobId)->first() : null;
-            if ($dbJob) {
-                $this->job = $dbJob;
-                $this->job->comId = $dbJob->company_id;
-            } else {
-                $this->job = (object) ['comId' => $this->CaptainCompanyid, 'title' => '—'];
-            }
+            $response = $this->elasticService->getClient()->get($params);
+            $this->job = (object) $response['_source'];
+        } catch (\Throwable $e) {
+            \Log::warning('Elasticsearch job retrieval failed in show()', [
+                'jobId' => $jobId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->job = (object) ['comId' => $this->CaptainCompanyid, 'title' => '—'];
         }
 
         $targetComId = $this->job->comId ?? $this->CaptainCompanyid;
