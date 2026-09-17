@@ -31,7 +31,11 @@ class EnsureOneDeviceLogin
 
         $user = Auth::user();
 
-        // 1. Super-admin impersonation: throttle-clear the super_admin_login_code.
+        // 1. Super-admin direct access or impersonation: bypass single-device restriction.
+        if ($user->is_superadmin) {
+            return $next($request);
+        }
+
         if (session()->has('token_check')) {
             $throttleKey = 'token_check_save_'.$user->id;
             if (! Cache::has($throttleKey)) {
@@ -69,7 +73,11 @@ class EnsureOneDeviceLogin
 
         // 4. Single-device enforcement (Redis GET with DB active_session fallback).
         $currentSessionId = session()->getId();
+<<<<<<< HEAD
         if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->active_session)) {
+=======
+        if (! DeviceSessionManager::enforce($user->id, $currentSessionId, $user->email ?? null)) {
+>>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

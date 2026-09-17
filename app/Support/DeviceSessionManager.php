@@ -22,14 +22,52 @@ class DeviceSessionManager
     private const TTL_SECONDS = 604800; // 7 days
 
     /**
+<<<<<<< HEAD
      * Called on successful login. Destroys the previous device's session in storage,
      * then records the new session ID as the authoritative active session.
      *
      * @param  int  $userId  Target user ID
      * @param  string  $sessionId  New active session ID
+=======
+     * Check if single-device login enforcement is enabled in config.
      */
-    public static function recordLogin(int $userId, string $sessionId): void
+    public static function isEnabled(): bool
     {
+        return (bool) config('auth.single_device_login.enabled', true);
+    }
+
+    /**
+     * Check if a specific email address is exempt from single-device kicks.
+     */
+    public static function isExempt(?string $email = null): bool
+    {
+        if (! self::isEnabled()) {
+            return true;
+        }
+
+        if (empty($email)) {
+            return false;
+        }
+
+        $exemptEmails = config('auth.single_device_login.exempt_emails', []);
+        if (empty($exemptEmails)) {
+            return false;
+        }
+
+        return in_array(strtolower(trim($email)), array_map('strtolower', $exemptEmails), true);
+    }
+
+    /**
+     * Called on successful login. Destroys the previous device's session (if any),
+     * then records the new session as the authoritative one.
+>>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
+     */
+    public static function recordLogin(int $userId, string $sessionId, ?string $email = null): void
+    {
+        if (self::isExempt($email)) {
+            return;
+        }
+
         try {
             $old = Redis::get(self::KEY_PREFIX.$userId);
             if ($old && $old !== $sessionId) {
@@ -51,8 +89,16 @@ class DeviceSessionManager
      * @param  string|null  $dbActiveSession  Active session stored on User model (users.active_session)
      * @return bool True if session is valid and active; false if invalidated by newer login
      */
+<<<<<<< HEAD
     public static function enforce(int $userId, string $currentSessionId, ?string $dbActiveSession = null): bool
+=======
+    public static function enforce(int $userId, string $currentSessionId, ?string $email = null): bool
+>>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
     {
+        if (self::isExempt($email)) {
+            return true;
+        }
+
         try {
             $stored = Redis::get(self::KEY_PREFIX.$userId);
         } catch (\Throwable) {
@@ -60,6 +106,7 @@ class DeviceSessionManager
         }
 
         if ($stored === null) {
+<<<<<<< HEAD
             // Cold cache / Redis fallback: check against user's active_session in DB/memory
             if ($dbActiveSession !== null && $dbActiveSession !== '') {
                 if ($dbActiveSession !== $currentSessionId) {
@@ -71,6 +118,9 @@ class DeviceSessionManager
             } catch (\Throwable) {
                 // Ignore Redis write errors during outage fallback
             }
+=======
+            Redis::setex(self::KEY_PREFIX.$userId, self::TTL_SECONDS, $currentSessionId);
+>>>>>>> fe050944a32d421c01f57a1306b11d4af33520b1
 
             return true;
         }
