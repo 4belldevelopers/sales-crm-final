@@ -102,4 +102,31 @@ class DeviceSessionManagerTest extends TestCase
 
         $this->assertTrue(true); // reached here without exception
     }
+
+    public function test_disabled_toggle_bypasses_enforcement_and_recording(): void
+    {
+        config(['auth.single_device_login.enabled' => false]);
+
+        // No Redis calls should be made when disabled
+        Redis::shouldReceive('get')->never();
+        Redis::shouldReceive('setex')->never();
+
+        DeviceSessionManager::recordLogin(30, 'sess-X');
+        $this->assertTrue(DeviceSessionManager::enforce(30, 'sess-Y'));
+    }
+
+    public function test_exempt_email_bypasses_enforcement_and_recording(): void
+    {
+        config([
+            'auth.single_device_login.enabled' => true,
+            'auth.single_device_login.exempt_emails' => ['vip@example.com'],
+        ]);
+
+        // No Redis calls should be made for exempt emails
+        Redis::shouldReceive('get')->never();
+        Redis::shouldReceive('setex')->never();
+
+        DeviceSessionManager::recordLogin(31, 'sess-X', 'vip@example.com');
+        $this->assertTrue(DeviceSessionManager::enforce(31, 'sess-Y', 'vip@example.com'));
+    }
 }

@@ -112,4 +112,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Single-Device Session Enforcement
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, logging in from a new device immediately logs out any
+    | prior active device sessions (latest login wins). Specific emails
+    | (e.g. dev/admin test accounts) can be exempted via comma-separated list.
+    |
+    */
+
+    'single_device_login' => [
+        'enabled' => env('SINGLE_DEVICE_LOGIN_ENABLED', true),
+        'exempt_emails' => array_filter(array_map('trim', explode(',', env('SINGLE_DEVICE_EXEMPT_EMAILS', '')))),
+    ],
+
 ];

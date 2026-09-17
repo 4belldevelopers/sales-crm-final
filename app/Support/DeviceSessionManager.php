@@ -18,21 +18,55 @@ use Illuminate\Support\Facades\Redis;
 class DeviceSessionManager
 {
     private const KEY_PREFIX = 'user:session:';
+
     private const TTL_SECONDS = 604800; // 7 days
+
+    /**
+     * Check if single-device login enforcement is enabled in config.
+     */
+    public static function isEnabled(): bool
+    {
+        return (bool) config('auth.single_device_login.enabled', true);
+    }
+
+    /**
+     * Check if a specific email address is exempt from single-device kicks.
+     */
+    public static function isExempt(?string $email = null): bool
+    {
+        if (! self::isEnabled()) {
+            return true;
+        }
+
+        if (empty($email)) {
+            return false;
+        }
+
+        $exemptEmails = config('auth.single_device_login.exempt_emails', []);
+        if (empty($exemptEmails)) {
+            return false;
+        }
+
+        return in_array(strtolower($email), array_map('strtolower', $exemptEmails), true);
+    }
 
     /**
      * Called on successful login. Destroys the previous device's session (if any),
      * then records the new session as the authoritative one.
      */
-    public static function recordLogin(int $userId, string $sessionId): void
+    public static function recordLogin(int $userId, string $sessionId, ?string $email = null): void
     {
+        if (self::isExempt($email)) {
+            return;
+        }
+
         try {
-            $old = Redis::get(self::KEY_PREFIX . $userId);
+            $old = Redis::get(self::KEY_PREFIX.$userId);
             if ($old && $old !== $sessionId) {
                 session()->getHandler()->destroy($old);
                 event(new \App\Events\SingleDeviceLogout($userId, $sessionId));
             }
-            Redis::setex(self::KEY_PREFIX . $userId, self::TTL_SECONDS, $sessionId);
+            Redis::setex(self::KEY_PREFIX.$userId, self::TTL_SECONDS, $sessionId);
         } catch (\Throwable) {
             // Redis down — log but don't break login
         }
@@ -44,16 +78,21 @@ class DeviceSessionManager
      *
      * Fail-open: on Redis outage or cold cache, seeds the key and allows through.
      */
-    public static function enforce(int $userId, string $currentSessionId): bool
+    public static function enforce(int $userId, string $currentSessionId, ?string $email = null): bool
     {
+        if (self::isExempt($email)) {
+            return true;
+        }
+
         try {
-            $stored = Redis::get(self::KEY_PREFIX . $userId);
+            $stored = Redis::get(self::KEY_PREFIX.$userId);
         } catch (\Throwable) {
             return true; // Redis down — fail-open
         }
 
         if ($stored === null) {
-            Redis::setex(self::KEY_PREFIX . $userId, self::TTL_SECONDS, $currentSessionId);
+            Redis::setex(self::KEY_PREFIX.$userId, self::TTL_SECONDS, $currentSessionId);
+
             return true;
         }
 
@@ -67,11 +106,11 @@ class DeviceSessionManager
     public static function invalidate(int $userId): void
     {
         try {
-            $stored = Redis::get(self::KEY_PREFIX . $userId);
+            $stored = Redis::get(self::KEY_PREFIX.$userId);
             if ($stored) {
                 session()->getHandler()->destroy($stored);
             }
-            Redis::del(self::KEY_PREFIX . $userId);
+            Redis::del(self::KEY_PREFIX.$userId);
         } catch (\Throwable) {
             // swallow — Redis down
         }
