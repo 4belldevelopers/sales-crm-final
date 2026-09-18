@@ -7496,13 +7496,13 @@ END:VCALENDAR";
                     return [
                         'id' => $s->id,
                         'job_application_id' => $s->job_application_id,   // ← FIXED (you had wrong value)
-                        'skills' => strtolower($s->skills),
+                        'skills' => strtolower((string) $s->skills),
                     ];
                 })->toArray();
 
                 $application_skills = $skills
                     ->pluck('skills')
-                    ->map(fn ($skill) => strtolower($skill))
+                    ->map(fn ($skill) => strtolower((string) $skill))
                     ->implode(',');
 
                 $params = [
@@ -7686,16 +7686,16 @@ END:VCALENDAR";
                                 'id' => $wiseId,
                                 'candidate_id' => $application->id,
                                 'thirdparty_company_id' => $application->thirdparty_company_id,
-                                'full_name' => strtolower($application->full_name),
+                                'full_name' => strtolower((string) $application->full_name),
                                 'email' => $application->email,
                                 'phone' => $application->phone,
                                 'gender' => $application->gender,
                                 'np_id' => $application->np_id,
                                 'immediate_join' => $application->np_id,
                                 'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                                'country_name' => strtolower($application->country_name),
-                                'state_name' => strtolower($application->state_name),
-                                'city_name' => strtolower($application->city_name),
+                                'country_name' => strtolower((string) $application->country_name),
+                                'state_name' => strtolower((string) $application->state_name),
+                                'city_name' => strtolower((string) $application->city_name),
                                 'city_id' => $application->city_id,
                                 'skills' => $application_skills,
                                 'photo' => $application->photo,
@@ -7732,26 +7732,26 @@ END:VCALENDAR";
                                 'bill_rate_mode' => $application->bill_rate_mode,
                                 'condidate_type' => $application->condidate_type,
                                 'master_status_id' => $application->master_status_id,
-                                'title' => strtolower($application->title),
+                                'title' => strtolower((string) $application->title),
                                 'client_id' => $application->client_id,
                                 'employment_type' => $application->employment_type,
                                 'client_comapny_id' => $application->client_comapny_id,
                                 'location' => $application->location,
-                                'client_name' => strtolower($application->client_name),
-                                'posted_by' => strtolower($application->posted_by),
+                                'client_name' => strtolower((string) $application->client_name),
+                                'posted_by' => strtolower((string) $application->posted_by),
                                 'posted_by_image' => $application->posted_by_image,
                                 'name' => $application->name,
                                 'post_company_name' => $application->post_company_name,
                                 'css_style' => $application->css_style,
-                                'qualification_name' => strtolower($application->qualification_name),
+                                'qualification_name' => strtolower((string) $application->qualification_name),
                                 'final_status' => $application->final_status,
                                 'recommendation_id' => $application->recommendation_id,
                                 'from_company_id' => $application->from_company_id,
                                 'to_company_id' => $application->to_company_id,
                                 'company_id' => $application->company_id,
-                                'company_name' => strtolower($application->company_name),
-                                'apl_company_name' => strtolower($application->apl_company_name),
-                                'cur_company_name' => strtolower($application->cur_company_name),
+                                'company_name' => strtolower((string) $application->company_name),
+                                'apl_company_name' => strtolower((string) $application->apl_company_name),
+                                'cur_company_name' => strtolower((string) $application->cur_company_name),
                                 'job_status' => $application->job_status,
                                 'childStatus' => $application->childStatus,
                                 'wiseId' => $application->wiseId,
@@ -7807,7 +7807,7 @@ END:VCALENDAR";
                                 'document' => $application->document,
                                 'sub_for_approval' => $application->sub_for_approval,
                                 'own_company_name' => $application->own_company_name,
-                                'client_or_company_name' => strtolower($client_name_com),
+                                'client_or_company_name' => strtolower((string) $client_name_com),
                                 'rjobid' => $application->rjobid,
                                 'submitted_by' => $application->submitted_by,
                                 'hashname' => $application->hashname,
@@ -11279,14 +11279,14 @@ END:VCALENDAR";
                     return [
                         'id' => $s->id,
                         'job_application_id' => $s->id,
-                        'skills' => strtolower($s->skills),
+                        'skills' => strtolower((string) $s->skills),
                     ];
                 })
                 ->toArray();
             $application_skills = DB::table('job_application_skills')
                 ->where('job_application_id', $application->id)
                 ->pluck('skills') // only take skills column
-                ->map(fn ($skill) => strtolower($skill))
+                ->map(fn ($skill) => strtolower((string) $skill))
                 ->implode(',');
 
             $response = $elasticService->getClient()->update([
@@ -11298,16 +11298,16 @@ END:VCALENDAR";
                         'id' => $wiseId,
                         'candidate_id' => $application->id,
                         'thirdparty_company_id' => $application->thirdparty_company_id,
-                        'full_name' => strtolower($application->full_name),
+                        'full_name' => strtolower((string) $application->full_name),
                         'email' => $application->email,
                         'phone' => $application->phone,
                         'np_id' => $application->np_id,
                         'immediate_join' => $application->np_id,
                         'status_type' => 'DIRECT',
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                        'country_name' => strtolower($application->country_name),
-                        'state_name' => strtolower($application->state_name),
-                        'city_name' => strtolower($application->city_name),
+                        'country_name' => strtolower((string) $application->country_name),
+                        'state_name' => strtolower((string) $application->state_name),
+                        'city_name' => strtolower((string) $application->city_name),
                         'city_id' => $application->city_id,
                         'skills' => $application_skills,
                         'photo' => $application->photo,
@@ -11334,26 +11334,26 @@ END:VCALENDAR";
                         'bill_rate_mode' => $application->bill_rate_mode,
                         'condidate_type' => $application->condidate_type,
                         'master_status_id' => $application->master_status_id,
-                        'title' => strtolower($application->title),
+                        'title' => strtolower((string) $application->title),
                         'client_id' => $application->client_id,
                         'employment_type' => $application->employment_type,
                         'client_comapny_id' => $application->client_comapny_id,
                         'location' => $application->location,
-                        'client_name' => strtolower($application->client_name),
-                        'posted_by' => strtolower($application->posted_by),
+                        'client_name' => strtolower((string) $application->client_name),
+                        'posted_by' => strtolower((string) $application->posted_by),
                         'posted_by_image' => $application->posted_by_image,
                         'name' => $application->name,
                         'post_company_name' => $application->post_company_name,
                         'css_style' => $application->css_style,
-                        'qualification_name' => strtolower($application->qualification_name),
+                        'qualification_name' => strtolower((string) $application->qualification_name),
                         'final_status' => $application->final_status,
                         'recommendation_id' => $application->recommendation_id,
                         'from_company_id' => $application->from_company_id,
                         'to_company_id' => $application->to_company_id,
                         'company_id' => $application->company_id,
-                        'company_name' => strtolower($application->company_name),
-                        'apl_company_name' => strtolower($application->apl_company_name),
-                        'cur_company_name' => strtolower($application->cur_company_name),
+                        'company_name' => strtolower((string) $application->company_name),
+                        'apl_company_name' => strtolower((string) $application->apl_company_name),
+                        'cur_company_name' => strtolower((string) $application->cur_company_name),
                         'job_status' => $application->job_status,
                         'childStatus' => $application->childStatus,
                         'wiseId' => $application->wiseId,
@@ -11409,7 +11409,7 @@ END:VCALENDAR";
                         'document' => $application->document,
                         'sub_for_approval' => $application->sub_for_approval,
                         'own_company_name' => $application->own_company_name,
-                        'client_or_company_name' => strtolower($client_name_com),
+                        'client_or_company_name' => strtolower((string) $client_name_com),
                         'rjobid' => $application->rjobid,
                         'submitted_by' => $application->submitted_by,
                         'hashname' => $application->hashname,
