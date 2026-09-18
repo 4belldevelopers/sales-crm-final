@@ -1760,7 +1760,12 @@ END:VCALENDAR";
 
     }
 
-    public static function packageRedeem($event_name, $event_table_name, $event_table_id, $source_to_company_id = '')
+    /**
+     * Deduct package credits for an event and record transaction.
+     * Tenancy note: Operates strictly scoped to $company_id (passed or authenticated).
+     * Safe for queue workers (Horizon/Redis) where auth() is null by accepting explicit $userId.
+     */
+    public static function packageRedeem($event_name, $event_table_name, $event_table_id, $source_to_company_id = '', $userId = null)
     {
 
         $company_id = $source_to_company_id ?: (auth()->user()?->company_id ?? null);
@@ -1768,13 +1773,16 @@ END:VCALENDAR";
             return false;
         }
 
+        $resolvedUserId = $userId ?: (auth()->check() ? (int) auth()->id() : 0);
+
         $package_active = 0;
         $package_active_cnt = DB::table('package_active')->select('*')->where('company_id', $company_id)->count();
         if (($package_active_cnt > 0) && ($event_name != '')) {
             $package_active_row = '';
             $package_active_row = DB::table('package_active')->select('*')->where('company_id', $company_id)->first();
 
-            $f_id = DB::table('package_features')->select('id')->where('field_name', $event_name)->first()->id;
+            $featureRow = DB::table('package_features')->select('id')->where('field_name', $event_name)->first();
+            $f_id = $featureRow ? $featureRow->id : 0;
 
             if ($event_name == 'CVACCESS') {
                 $startdate = $enddate = $status = $quantity = $used = $balance = '';
@@ -1790,7 +1798,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => $f_id,
-                    'user_id' => $user_id ?: (auth()->check() ? auth()->id() : 0),
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1818,7 +1826,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1846,7 +1854,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1874,7 +1882,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1902,7 +1910,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2200,10 +2208,21 @@ END:VCALENDAR";
 
     }
 
-    public static function clientPackageRedeem($event_name, $event_table_name, $event_table_id, $company_id)
+    /**
+     * Deduct client package credits for an event and record transaction.
+     * Tenancy note: Operates strictly scoped to $company_id.
+     * Safe for queue workers (Horizon/Redis) where auth() is null by accepting optional $userId.
+     */
+    public static function clientPackageRedeem($event_name, $event_table_name, $event_table_id, $company_id = '', $userId = null)
     {
 
-        // $company_id 			=	auth()->user()->company_id;
+        $company_id = $company_id ?: (auth()->user()?->company_id ?? null);
+        if (! $company_id) {
+            return false;
+        }
+
+        $resolvedUserId = $userId ?: (auth()->check() ? (int) auth()->id() : 0);
+
         $package_active = 0;
         $package_active_cnt = DB::table('package_active')->select('*')->where('company_id', $company_id)->count();
 
@@ -2229,7 +2248,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2254,7 +2273,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2279,7 +2298,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2304,7 +2323,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2329,7 +2348,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2353,7 +2372,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2376,7 +2395,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2399,7 +2418,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2422,7 +2441,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2445,7 +2464,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2468,7 +2487,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2491,7 +2510,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2519,7 +2538,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2547,7 +2566,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2570,7 +2589,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2594,7 +2613,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
