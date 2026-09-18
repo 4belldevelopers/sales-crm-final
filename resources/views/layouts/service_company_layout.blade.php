@@ -2995,6 +2995,9 @@ $( document ).ready(function() {
 
   function closeMetronicDrawer(drawerId) {
       drawerId = drawerId || 'kt_activitiesApplication';
+      if (drawerId === 'kt_activitiesApplication') {
+          window.__activeCandidateDrawerId = null;
+      }
       var drawerEl = document.getElementById(drawerId);
       if (drawerEl) {
           var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
@@ -3152,6 +3155,9 @@ $( document ).ready(function() {
       };
   }
 
+  window.__candidateDrawerPromises = window.__candidateDrawerPromises || new Map();
+  window.__activeCandidateDrawerId = window.__activeCandidateDrawerId || null;
+
   function replenishDrawerCsrfTokens() {
       var activeCsrf = $('meta[name="csrf-token"]').attr('content');
       if (activeCsrf) {
@@ -3167,7 +3173,10 @@ $( document ).ready(function() {
              '</div>';
   }
 
-  function renderCandidateDrawerView(response) {
+  function renderCandidateDrawerView(response, id) {
+      if (id) {
+          window.__activeCandidateDrawerId = String(id);
+      }
       if (response && response.view) {
           $('#application_show_right_bar').html(response.view);
           replenishDrawerCsrfTokens();
@@ -3186,41 +3195,62 @@ $( document ).ready(function() {
   }
 
   function fetchCandidateDrawerPayload(id, currentSlug, callback) {
+      var sid = String(id);
+      if (window.__candidateDrawerPromises.has(sid)) {
+          var existingPromise = window.__candidateDrawerPromises.get(sid);
+          if (callback) {
+              existingPromise.then(function(res) { callback(null, res); }).catch(function(err) { callback(err); });
+          }
+          return existingPromise;
+      }
+
       var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
       var url = "{{ route('service_company.job-applications.show',':id') }}?slug=" + encodeURIComponent(currentSlug || '') + "&currentPage=" + currentPage;
-      url = url.replace(':id', id);
+      url = url.replace(':id', sid);
 
       var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      if (controller) prefetchAbortControllers.set(id, controller);
+      if (controller) prefetchAbortControllers.set(sid, controller);
 
-      window.__candidateDrawerInFlight.add(id);
+      window.__candidateDrawerInFlight.add(sid);
 
-      $.ajax({
-          type: 'GET',
-          url: url,
-          signal: controller ? controller.signal : undefined,
-          success: function(response) {
-              window.__candidateDrawerInFlight.delete(id);
-              prefetchAbortControllers.delete(id);
-              if (response && (response.view || typeof response === 'string')) {
-                  window.__candidateDrawerCache.set(String(id), response);
-                  if (window.__atsCandidateL2DB) {
-                      window.__atsCandidateL2DB.set(String(id), response);
+      var promise = new Promise(function(resolve, reject) {
+          $.ajax({
+              type: 'GET',
+              url: url,
+              signal: controller ? controller.signal : undefined,
+              success: function(response) {
+                  window.__candidateDrawerInFlight.delete(sid);
+                  window.__candidateDrawerPromises.delete(sid);
+                  prefetchAbortControllers.delete(sid);
+                  if (response && (response.view || typeof response === 'string')) {
+                      window.__candidateDrawerCache.set(sid, response);
+                      if (window.__atsCandidateL2DB) {
+                          window.__atsCandidateL2DB.set(sid, response);
+                      }
                   }
+                  if (callback) callback(null, response);
+                  resolve(response);
+              },
+              error: function(xhr, status, error) {
+                  window.__candidateDrawerInFlight.delete(sid);
+                  window.__candidateDrawerPromises.delete(sid);
+                  prefetchAbortControllers.delete(sid);
+                  if (callback) callback(xhr);
+                  reject(xhr);
               }
-              if (callback) callback(null, response);
-          },
-          error: function(xhr, status, error) {
-              window.__candidateDrawerInFlight.delete(id);
-              prefetchAbortControllers.delete(id);
-              if (callback) callback(xhr);
-          }
+          });
       });
+
+      window.__candidateDrawerPromises.set(sid, promise);
+      return promise;
   }
 
   window.invalidateCandidateDrawerCache = function(candidateId, broadcast) {
       if (!candidateId) return;
       var cid = String(candidateId);
+      if (window.__activeCandidateDrawerId === cid) {
+          window.__activeCandidateDrawerId = null;
+      }
       if (window.__candidateDrawerCache) {
           window.__candidateDrawerCache.delete(cid);
       }
@@ -3235,6 +3265,7 @@ $( document ).ready(function() {
   };
 
   window.purgeCandidateDrawerCaches = function(broadcast) {
+      window.__activeCandidateDrawerId = null;
       if (window.__candidateDrawerCache) {
           window.__candidateDrawerCache.clear();
       }
@@ -3298,7 +3329,7 @@ $( document ).ready(function() {
                $(this).attr('data-id') || $(this).data('id');
       if (!id) return;
       var sid = String(id);
-      if (window.__candidateDrawerCache.has(sid) || window.__candidateDrawerInFlight.has(sid)) {
+      if (window.__candidateDrawerCache.has(sid) || window.__candidateDrawerInFlight.has(sid) || window.__candidateDrawerPromises.has(sid)) {
           return;
       }
       if (window.__candidateDrawerInFlight.size >= 2) {
@@ -3325,7 +3356,11 @@ $( document ).ready(function() {
   });
 
   $(document).on('click', '.show-application-detail, .custom-show-application-detail', async function(e){
+      // Prevent bubbling so nested candidate containers don't trigger duplicate execution
       e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
       const connected = await isInternetAvailable();
       if (!connected) {
           Swal.fire({
@@ -3351,12 +3386,19 @@ $( document ).ready(function() {
       }
 
       id = String(id);
+
+      // If this exact candidate is already displayed in the drawer and drawer is open, keep it open
+      if (window.__activeCandidateDrawerId === id && $('#kt_activitiesApplication').hasClass('drawer-on')) {
+          openMetronicDrawer('kt_activitiesApplication');
+          return;
+      }
+
       openMetronicDrawer('kt_activitiesApplication');
 
-      // 1. Check L1 Browser RAM Cache (Zero-Read-Path Instant Render: 0 HTTP, 0 MySQL, 0 ES)
+      // 1. Check L1 Browser RAM Cache (Zero-Read-Path Instant Render: 0ms, 0 HTTP, 0 MySQL, 0 ES)
       if (window.__candidateDrawerCache.has(id)) {
           var cachedResponse = window.__candidateDrawerCache.get(id);
-          renderCandidateDrawerView(cachedResponse);
+          renderCandidateDrawerView(cachedResponse, id);
           return;
       }
 
@@ -3365,26 +3407,30 @@ $( document ).ready(function() {
           var l2Cached = await window.__atsCandidateL2DB.get(id);
           if (l2Cached) {
               window.__candidateDrawerCache.set(id, l2Cached);
-              renderCandidateDrawerView(l2Cached);
+              renderCandidateDrawerView(l2Cached, id);
               return;
           }
       }
 
-      $('#application_show_right_bar').html(getCandidateDrawerLoader());
+      // 3. Switching to a candidate not in cache: clear previous candidate DOM to prevent ghost flash
+      if (window.__activeCandidateDrawerId !== id) {
+          window.__activeCandidateDrawerId = null;
+          $('#application_show_right_bar').html(getCandidateDrawerLoader());
+      }
 
-      fetchCandidateDrawerPayload(id, "{{ $currentSlug ?? '' }}", function(err, response) {
-          if (err) {
-              var msg = (err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
-              $('#application_show_right_bar').html(
-                  '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
-                  '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
-                  '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
-                  '</div>'
-              );
-              return;
-          }
-          renderCandidateDrawerView(response);
-      });
+      // 4. Fetch or attach to in-flight promise (deduplicating hover prefetch)
+      try {
+          var response = await fetchCandidateDrawerPayload(id, "{{ $currentSlug ?? '' }}");
+          renderCandidateDrawerView(response, id);
+      } catch(err) {
+          var msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
+          $('#application_show_right_bar').html(
+              '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+              '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+              '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+              '</div>'
+          );
+      }
   });
 
   $(document).on('click', '.website-show-application-detail', async function(e){

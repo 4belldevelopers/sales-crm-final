@@ -140,12 +140,21 @@ To guarantee that no existing features or business logic break during developmen
 2. **Optimistic Visual Shell Pop:**
    - Table rows in CV Tracker & App Tracker already contain `data-*` attributes (`data-full-name`, `data-status`, `data-designation`, `data-salary`, `data-avatar`).
    - Populate the drawer's header card and pipeline stat cards synchronously from DOM attributes on `click` before background operations complete.
-3. **Throttled Hover Prefetching:**
+3. **Throttled Hover Prefetching & In-Flight Promise Sharing:**
    - Attach a debounced (120ms) `mouseenter` listener to candidate links:
      - Limits maximum concurrent prefetches to **2**.
      - Cancels via `AbortController` if the cursor leaves the link before 120ms.
      - Bypasses prefetching if `navigator.connection.saveData === true` or on slow cellular networks (`2g`).
-4. **Dynamic CSRF Token Replenishment:**
+   - **In-Flight Promise Sharing (`window.__candidateDrawerPromises`):**
+     - Active fetch requests are stored as shared Promises. If a recruiter hovers over a candidate (initiating prefetch) and clicks within 100–250ms, the click handler **attaches directly to the in-flight Promise** instead of dispatching a duplicate AJAX request or creating an async race condition.
+4. **Event Bubbling Isolation & Anti-Flicker Guard:**
+   - In Metronic candidate tables, both the parent anchor (`<a class="show-application-detail">`) and child avatar/title elements (`<div class="symbol-label show-application-detail">`) often share the trigger class.
+   - Click handlers enforce `e.stopPropagation()` and `e.stopImmediatePropagation()` to eliminate double-firing and prevent secondary click events from wiping out an already rendered drawer with a loader.
+5. **Active Drawer Pointer & Residual DOM Sanitization:**
+   - `window.__activeCandidateDrawerId` tracks the currently rendered application.
+   - If a recruiter clicks the already open candidate, the drawer remains open with zero DOM rebuilds or re-clears.
+   - When transitioning to a *different* candidate not yet in cache, the DOM container is cleanly reset with `getCandidateDrawerLoader()` to eliminate "ghost profile flashes" from previous candidate HTML.
+6. **Dynamic CSRF Token Replenishment:**
    - Whenever a drawer is mounted from cache, inject the active session CSRF token into all forms:
      ```javascript
      const activeCsrf = $('meta[name="csrf-token"]').attr('content');
