@@ -8037,15 +8037,18 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $this->color_change_action = 'text-black btn-light-black';
         }
 
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $mustNotTerms = array_merge(
+            [['term' => ['id' => $company_id]]],
+            array_map(fn ($saId) => ['term' => ['id' => $saId]], $superAdminCompanyIds)
+        );
         $params = [
             'index' => ELASTIC_COMPANIES_INDEX,
             'body' => [
                 'size' => 0,
                 'query' => [
                     'bool' => [
-                        'must_not' => [
-                            ['term' => ['id' => $company_id]],
-                        ],
+                        'must_not' => $mustNotTerms,
                     ],
                 ],
                 'aggs' => [
@@ -8243,12 +8246,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         $boostkeywordsDataList = $boostkeywordsDataList->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries');
 
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
         $findstring = explode(' ', $currentRowJob->title);
         if (! empty($findstring)) {
-            $boostkeywordsDataList = $boostkeywordsDataList->orWhere(function ($subquery) use ($findstring, $company_id) {
+            $boostkeywordsDataList = $boostkeywordsDataList->orWhere(function ($subquery) use ($findstring, $company_id, $superAdminCompanyIds) {
                 $subquery->whereIn('package_active.boostkeywords_text', $findstring);
                 $subquery->whereIn('companies.company_type', [1, 2]);
                 $subquery->where('companies.id', '!=', $company_id);
+                $subquery->whereNotIn('companies.id', $superAdminCompanyIds);
                 $subquery->whereNull('recommendation_relation.final_status');
             });
         }
@@ -8259,10 +8264,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $temp_skill_name = '';
                 $temp_skill_name = $jskill->skill_name;
                 if (! empty($temp_skill_name)) {
-                    $boostkeywordsDataList = $boostkeywordsDataList->orWhere(function ($subquery) use ($temp_skill_name, $company_id) {
+                    $boostkeywordsDataList = $boostkeywordsDataList->orWhere(function ($subquery) use ($temp_skill_name, $company_id, $superAdminCompanyIds) {
                         $subquery->where('package_active.boostkeywords_text', 'like', "%{$temp_skill_name}%");
                         $subquery->whereIn('companies.company_type', [1, 2]);
                         $subquery->where('companies.id', '!=', $company_id);
+                        $subquery->whereNotIn('companies.id', $superAdminCompanyIds);
                         $subquery->whereNull('recommendation_relation.final_status');
                     });
                 }
@@ -8788,14 +8794,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 ],
                             ],
 
-                            'must_not' => [
-
+                            'must_not' => array_merge(
                                 [
-                                    'term' => [
-                                        'company_id' => $company_id,
+                                    [
+                                        'term' => [
+                                            'company_id' => $company_id,
+                                        ],
                                     ],
                                 ],
-                            ],
+                                array_map(fn ($saId) => ['term' => ['company_id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                            ),
                         ],
                     ],
                 ],
@@ -8970,32 +8978,15 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $commercialFilter = [];
 
         if (! empty($commtype)) {
+            // Intent: Filter agencies by commericials.commtype and status on local_companies_elastic index.
             $commercialFilter[] = [
-
-                'nested' => [
-
-                    'path' => 'commercial_nested',
-
-                    'query' => [
-
-                        'bool' => [
-
-                            'must' => [
-
-                                [
-                                    'term' => [
-                                        'commercial_nested.commtype' => (int) $commtype,
-                                    ],
-                                ],
-
-                                [
-                                    'term' => [
-                                        'commercial_nested.status' => 1,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
+                'term' => [
+                    'commericials.commtype' => (int) $commtype,
+                ],
+            ];
+            $commercialFilter[] = [
+                'term' => [
+                    'commericials.status' => 1,
                 ],
             ];
         }
@@ -9049,13 +9040,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $industryFilter,
                     $globalSearchFilter
                 ),
-                'must_not' => [
+                'must_not' => array_merge(
                     [
-                        'term' => [
-                            'id' => $company_id,
+                        [
+                            'term' => [
+                                'id' => $company_id,
+                            ],
                         ],
                     ],
-                ],
+                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                ),
             ],
         ];
 
@@ -9079,8 +9073,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'track_scores' => true,
                 'query' => $finalQuery,
                 'sort' => [
-                    ['_score' => ['order' => 'desc']],
                     ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
+                    ['_score' => ['order' => 'desc']],
                     ['id' => ['order' => 'desc']],
                 ],
             ],
@@ -9110,20 +9104,38 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             $matchedCompanyId = $source['id'];
 
-            $matchedSkills = $companyMatchedSkills[$matchedCompanyId] ?? [];
+            $agencySkills = [];
+            if (!empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+                foreach ($source['job_metronics_skills'] as $jms) {
+                    if (!empty($jms['skill_name'])) {
+                        $agencySkills[] = strtolower(trim($jms['skill_name']));
+                    }
+                }
+            }
+            if (!empty($source['boostkeywords_skills']) && is_array($source['boostkeywords_skills'])) {
+                foreach ($source['boostkeywords_skills'] as $bks) {
+                    if (!empty($bks)) {
+                        $agencySkills[] = strtolower(trim(is_array($bks) ? ($bks['skill_name'] ?? '') : $bks));
+                    }
+                }
+            }
+            if (!empty($companyMatchedSkills[$matchedCompanyId])) {
+                foreach ($companyMatchedSkills[$matchedCompanyId] as $cms) {
+                    $agencySkills[] = strtolower(trim($cms));
+                }
+            }
+            $agencySkills = array_values(array_unique(array_filter($agencySkills)));
+
             $commonSkills = array_values(array_intersect(
-
                 array_map('strtolower', $searchSkills),
-                array_map('strtolower', $matchedSkills)
-
+                $agencySkills
             ));
 
             $source['matched_skills'] = $commonSkills;
-            // $source['matched_skills'] = $companyMatchedSkills[$matchedCompanyId] ?? [];
-            $source['search_skills'] = $searchSkills; // $companySkillMatchCount[$matchedCompanyId] ?? 0;
+            $source['search_skills'] = $searchSkills;
 
             $source['match_score'] = $hit['_score'];
-            $source['matched_skill_count'] = $hit['_score'];
+            $source['matched_skill_count'] = count($commonSkills);
 
             $data[] = $source;
         }
@@ -9223,8 +9235,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'from' => $from,
                 'size' => $size, // usually 20
                 'sort' => [
+                    ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
                     ['_score' => ['order' => 'desc']],
-                    ['leadCount' => ['order' => 'asc']],
                     ['id' => ['order' => 'desc']],
                 ],
                 'query' => [
@@ -9246,27 +9258,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                         ],
                                     ],
                                     [
-                                        'nested' => [
-                                            'path' => 'commercial_nested',
-                                            'query' => [
-                                                'bool' => [
-                                                    'must' => [
-
-                                                        [
-                                                            'term' => [
-                                                                'commercial_nested.status' => 1,
-                                                            ],
-                                                        ],
-
-                                                        [
-                                                            'terms' => [
-                                                                'commercial_nested.commtype' => $commtypeArr,
-                                                            ],
-                                                        ],
-
-                                                    ],
-                                                ],
-                                            ],
+                                        'term' => [
+                                            'commericials.status' => 1,
+                                        ],
+                                    ],
+                                    [
+                                        'terms' => [
+                                            'commericials.commtype' => $commtypeArr,
                                         ],
                                     ],
                                     ['terms' => ['company_type' => [1, 2]]],
@@ -9274,9 +9272,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                     ['term' => ['commericial_countries.country_id' => $country_id_job]],
                                 ],
 
-                                'must_not' => [
-                                    ['term' => ['id' => $company_id]],
-                                ],
+                                'must_not' => array_merge(
+                                    [['term' => ['id' => $company_id]]],
+                                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                                ),
                                 'should' => [
                                     [
                                         'nested' => [
@@ -9372,8 +9371,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         'from' => $from,
                         'size' => $size, // usually 20
                         'sort' => [
+                            ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
                             ['_score' => ['order' => 'desc']],
-                            ['leadCount' => ['order' => 'asc']],
                             ['id' => ['order' => 'desc']],
                         ],
                         'query' => [
@@ -9395,35 +9394,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                                 ],
                                             ],
                                             [
-                                                'nested' => [
-                                                    'path' => 'commercial_nested',
-                                                    'query' => [
-                                                        'bool' => [
-                                                            'must' => [
-
-                                                                [
-                                                                    'term' => [
-                                                                        'commercial_nested.status' => 1,
-                                                                    ],
-                                                                ],
-
-                                                                [
-                                                                    'terms' => [
-                                                                        'commercial_nested.commtype' => $commtypeArr,
-                                                                    ],
-                                                                ],
-
-                                                            ],
-                                                        ],
-                                                    ],
+                                                'term' => [
+                                                    'commericials.status' => 1,
+                                                ],
+                                            ],
+                                            [
+                                                'terms' => [
+                                                    'commericials.commtype' => $commtypeArr,
                                                 ],
                                             ],
                                             ['terms' => ['company_type' => [1, 2]]],
                                             ['term' => ['status' => 'active']],
                                         ],
-                                        'must_not' => [
-                                            ['term' => ['id' => $company_id]],
-                                        ],
+                                        'must_not' => array_merge(
+                                            [['term' => ['id' => $company_id]]],
+                                            array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                                        ),
                                         'should' => [
                                             [
                                                 'nested' => [
@@ -10305,53 +10291,46 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $join->on('recommendation_relation.job_id', '=', DB::raw("'".$jobId."'"));
         });
         $recommendedDataList = $recommendedDataList->leftJoin('td_industries', 'td_industries.ind_id', '=', 'companies.industries');
-        $recommendedDataList = $recommendedDataList->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $recommendedDataList = $recommendedDataList->whereIn('companies.company_type', [1, 2])
+            ->whereNotIn('companies.id', $superAdminCompanyIds)
+            ->whereNull('recommendation_relation.final_status');
 
-        // $recommendedDataList 		=	$recommendedDataList->whereNotIn('package_active.boostkeywords_status', [1] );
-
-        // ################################################################################# ------------- TITLE MATCH
         $findstring = explode(' ', $currentRowJob->title);
-        foreach ($findstring as $value) {
-            $recommendedDataList = $recommendedDataList->orWhere('jobs.title', 'like', "%{$value}%")->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-        }
-        if (! empty($currentJobSkill)) {
-            foreach ($currentJobSkill as $jskill) {
-                $recommendedDataList = $recommendedDataList->orWhere('jobs.title', 'like', "%{$jskill->skill_name}%")->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-                $recommendedDataList = $recommendedDataList->orWhere('job_metronics_skills.skill_name', 'like', "%{$jskill->skill_name}%")->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-            }
-        }
-
-        // ################################################################################# ------------- EXPERIENCE MATCH
-        if ($currentRowJob->min_exp >= 0 && $currentRowJob->max_exp >= 0) {
-            $recommendedDataList = $recommendedDataList->orWhereBetween('jobs.min_exp', [$currentRowJob->min_exp, $currentRowJob->max_exp])->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-            $recommendedDataList = $recommendedDataList->orWhereBetween('jobs.max_exp', [$currentRowJob->min_exp, $currentRowJob->max_exp])->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-        }
-
-        // ################################################################################# ------------ JOB TYPE
-        if ($currentRowJob->employment_type) {
-            $recommendedDataList = $recommendedDataList->orWhere('jobs.employment_type', $currentRowJob->employment_type)->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-        }
-
-        // ################################################################################# ------------  LOCATION
-        if (! empty($currentJobLocation)) {
-            foreach ($currentJobLocation as $cloc) {
-                if ($cloc->country_id == 101) {
-                    $recommendedDataList = $recommendedDataList->orWhere('client_location.city_id', $cloc->city_id)->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-                } else {
-                    $recommendedDataList = $recommendedDataList->orWhere('client_location.city', 'like', "%{$cloc->city}%")->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
+        $recommendedDataList = $recommendedDataList->where(function ($matchQuery) use ($findstring, $currentJobSkill, $currentRowJob, $currentJobLocation) {
+            foreach ($findstring as $value) {
+                if (! empty($value)) {
+                    $matchQuery->orWhere('jobs.title', 'like', "%{$value}%");
                 }
             }
-        }
-
-        $recommendedDataList = $recommendedDataList->where('companies.id', '>', 0)->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
-        $recommendedDataList = $recommendedDataList->where(function ($query) {
-            return $query->where('companies.id', '!=', auth()->user()->company_id)->whereIn('companies.company_type', [1, 2])->whereNull('recommendation_relation.final_status');
+            if (! empty($currentJobSkill)) {
+                foreach ($currentJobSkill as $jskill) {
+                    if (! empty($jskill->skill_name)) {
+                        $matchQuery->orWhere('jobs.title', 'like', "%{$jskill->skill_name}%");
+                        $matchQuery->orWhere('job_metronics_skills.skill_name', 'like', "%{$jskill->skill_name}%");
+                    }
+                }
+            }
+            if ($currentRowJob->min_exp >= 0 && $currentRowJob->max_exp >= 0) {
+                $matchQuery->orWhereBetween('jobs.min_exp', [$currentRowJob->min_exp, $currentRowJob->max_exp]);
+                $matchQuery->orWhereBetween('jobs.max_exp', [$currentRowJob->min_exp, $currentRowJob->max_exp]);
+            }
+            if ($currentRowJob->employment_type) {
+                $matchQuery->orWhere('jobs.employment_type', $currentRowJob->employment_type);
+            }
+            if (! empty($currentJobLocation)) {
+                foreach ($currentJobLocation as $cloc) {
+                    if ($cloc->country_id == 101) {
+                        $matchQuery->orWhere('client_location.city_id', $cloc->city_id);
+                    } else {
+                        $matchQuery->orWhere('client_location.city', 'like', "%{$cloc->city}%");
+                    }
+                }
+            }
         });
 
-        // ->on('package_active.boostkeywords_status', '!=',  DB::raw('1') )
-        // $recommendedDataList 	=	$recommendedDataList->where('package_active.boostkeywords_status', '!=',  1);
-
         $recommendedDataList = $recommendedDataList->where('companies.id', '!=', auth()->user()->company_id)
+            ->whereNotIn('companies.id', $superAdminCompanyIds)
             ->where('recommendation_relation.final_status', '!=', 1)
             ->whereIn('companies.company_type', [1, 2]);
 
@@ -11115,9 +11094,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                     ['term' => ['status' => 'active']],
                                 ],
                                 'must' => $mustConditions,
-                                'must_not' => [
-                                    ['term' => ['id' => $company_id]],
-                                ],
+                                'must_not' => array_merge(
+                                    [['term' => ['id' => $company_id]]],
+                                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                                ),
                             ],
                         ],
                         'score_mode' => 'sum',

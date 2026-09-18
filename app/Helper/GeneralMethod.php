@@ -58,6 +58,61 @@ END:VCALENDAR";
         return (int) $temp;
     }
 
+    /**
+     * Intent: Dynamically fetches and caches array of company IDs belonging to Super Admin users.
+     * Tenancy: System-wide utility used to exclude Super Admin companies from multi-tenant business listings and counts.
+     *
+     * @return array
+     */
+    public static function superAdminCompanyIds()
+    {
+        return Cache::remember('jero_super_admin_company_ids', 300, function () {
+            $companyIds = DB::table('users')
+                ->where(function ($q) {
+                    $q->where('is_superadmin', 1)
+                        ->orWhere('id', 1)
+                        ->orWhere('company_id', 1);
+                })
+                ->whereNotNull('company_id')
+                ->pluck('company_id')
+                ->unique()
+                ->toArray();
+
+            if (! in_array(1, $companyIds)) {
+                $companyIds[] = 1;
+            }
+
+            return array_values(array_unique(array_filter($companyIds)));
+        });
+    }
+
+    /**
+     * Intent: Dynamically fetches and caches array of user IDs belonging to Super Admin accounts.
+     * Tenancy: System-wide utility used to exclude Super Admin users from recruiter/candidate lists and user metrics.
+     *
+     * @return array
+     */
+    public static function superAdminUserIds()
+    {
+        return Cache::remember('jero_super_admin_user_ids', 300, function () {
+            $userIds = DB::table('users')
+                ->where(function ($q) {
+                    $q->where('is_superadmin', 1)
+                        ->orWhere('id', 1)
+                        ->orWhere('company_id', 1);
+                })
+                ->pluck('id')
+                ->unique()
+                ->toArray();
+
+            if (! in_array(1, $userIds)) {
+                $userIds[] = 1;
+            }
+
+            return array_values(array_unique(array_filter($userIds)));
+        });
+    }
+
     public static function getValidUploadFileName($fname)
     {
         $fname = trim($fname);

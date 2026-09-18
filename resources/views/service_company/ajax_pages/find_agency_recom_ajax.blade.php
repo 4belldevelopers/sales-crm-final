@@ -58,20 +58,18 @@
                     $skilltag .= '<span class="skill-tag">' . ucfirst($sval) . '</span>  ';
                 }
             }
-            $percentage=0;
-            $matches = count($row->matched_skills);
-            $totalElements = count($row->search_skills);
-            // dd($totalElements);
+            $percentage = 0;
+            $matches = count($row->matched_skills ?? []);
+            $totalElements = count($row->search_skills ?? []);
             $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
             $matchPercentage = min($matchPercentage, 100);
-            $percentage = round($matchPercentage, 1);
-            
+            $percentage = round($matchPercentage, 0);
 
-            // number_format($row->skill_match_percentage, 0); //number_format($row->match_percentage, 0, '.', ''); //$salary + $title + $jobtype + $experience + $skills + $location;
             $skillMatchSection = '';
-            if ($percentage > 0) {
+            if ($percentage > 0 || !empty($skilltag)) {
                 $skillMatchSection =
-                    '<div class="skill-tags" style="position: absolute;bottom: 5px;left: 11px;white-space: nowrap;">'.$percentage.' 
+                    '<div class="skill-tags d-flex align-items-center" style="position: absolute;bottom: 5px;left: 11px;white-space: nowrap;">
+                        <span class="badge" style="background-color: #e8fff3; color: #10b981; border: 1px solid #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 4px;">'.$percentage.'% Skill Match</span>
                    ' .$skilltag . '</div>';
             }
             if(is_iterable($row->industry) && count($row->industry)){
@@ -124,25 +122,14 @@
                         </div>
                     @endif   
                     <div class="agency-info">
-                    <div class="a-name">
-                        {{ substr(ucwords(@$row->company_name), 0, 30) }}
-                        {{-- <span class="badge-verified">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m9 12 2 2 4-4"/>
-                            <path d="M12 2 3 7v5c0 5 4 9.27 9 10.27C17 21.27 21 17 21 12V7l-9-5z"/>
-                        </svg>
-                        Verified
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="m9 12 2 2 4-4"/>
-                        </svg> --}}
+                    <div class="a-name" style="display: flex; align-items: center; gap: 6px;">
+                        <span>{{ substr(ucwords(@$row->company_name), 0, 30) }}</span>
+                        @if($percentage > 0)
+                            <span class="badge" style="background-color: #e8fff3; color: #10b981; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">{{ $percentage }}% Match</span>
+                        @endif
                     </div>
                     <div class="a-type">{{ substr(ucwords(@$ind_name), 0, 27) }}</div>
-                    {{-- <div class="skill-tags"> --}}
-                        {!! $skillMatchSection !!}
-                        {{-- <span class="skill-tag more">+6</span> --}}
-                    {{-- </div> --}}
+                    {!! $skillMatchSection !!}
                     </div>
                 </div>
             </td>
@@ -296,29 +283,40 @@
             <div class="loc-cell">
 
                 @php
-                    $locInfo = $row->_client_info ?? null;
-                    if (!$locInfo) {
-                        $clients = DB::table('clients')
-                            ->where('company_id', '=', $row->id)
-                            ->where('self_company', '=', 1)
+                    $cityDisplay = '';
+                    $countryDisplay = '';
+
+                    // Check if locInfo object already has city_name or city
+                    if (!empty($locInfo->city_name)) {
+                        $cityDisplay = $locInfo->city_name;
+                    } elseif (!empty($locInfo->city)) {
+                        $cityDisplay = $locInfo->city;
+                    }
+
+                    if (!empty($locInfo->country_code)) {
+                        $countryDisplay = strtoupper($locInfo->country_code);
+                    } elseif (!empty($locInfo->country_name)) {
+                        $countryDisplay = strtoupper(substr($locInfo->country_name, 0, 2));
+                    }
+
+                    if (empty($cityDisplay) || empty($countryDisplay)) {
+                        $clientLocData = DB::table('clients')
+                            ->join('client_location', 'client_location.client_id', '=', 'clients.id')
+                            ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
+                            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                            ->select(
+                                'client_location.city as direct_city',
+                                'city_list.city as city_name',
+                                'countries.country_name',
+                                'countries.sortname as country_code'
+                            )
+                            ->where('clients.company_id', '=', $row->id)
+                            ->where('clients.self_company', '=', 1)
                             ->first();
-                        if ($clients) {
-                            $locInfo = DB::table('client_location')
-                                ->leftJoin('countries', 'countries.id', '=', 'client_location.country_id')
-                                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-                                ->select(
-                                    'client_location.id',
-                                    'client_location.city',
-                                    'client_location.address',
-                                    'client_location.postcode',
-                                    'client_location.country_id',
-                                    'city_list.city as city_name',
-                                    'state_list.state as state_name',
-                                    'countries.country_name',
-                                )
-                                ->where('client_id', $clients->id)
-                                ->first();
+
+                        if ($clientLocData) {
+                            $cityDisplay = !empty($clientLocData->city_name) ? $clientLocData->city_name : ($clientLocData->direct_city ?? '');
+                            $countryDisplay = !empty($clientLocData->country_code) ? strtoupper($clientLocData->country_code) : (!empty($clientLocData->country_name) ? strtoupper(substr($clientLocData->country_name, 0, 2)) : 'IN');
                         }
                     }
                 @endphp
@@ -327,7 +325,13 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
-                {{ ucwords(substr(@$locInfo->city_name, 0, 10)) }}, {{ strtoupper(substr(@$locInfo->country_name, 0, 2)) }}
+                @if(!empty($cityDisplay))
+                    {{ ucwords(substr($cityDisplay, 0, 15)) }}@if(!empty($countryDisplay)), {{ $countryDisplay }}@endif
+                @elseif(!empty($countryDisplay))
+                    {{ $countryDisplay }}
+                @else
+                    Multiple Locations
+                @endif
                 </div>
                 <div class="loc-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

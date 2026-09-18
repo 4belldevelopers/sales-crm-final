@@ -1,38 +1,39 @@
 <?php
+
 /*** ########################################################
 Controller    	: 	AdminCompanyController
-Purmose			: 
+Purmose			:
 Author			:	Abu
 Company			:	4Bell
-Date			:	05-April-2021	
+Date			:	05-April-2021
 ########################################################** */
 
 namespace App\Http\Controllers\ServiceCompany;
 
 use App\Helper\Files;
-use App\Helper\Reply;
 use App\Helper\GeneralMethod;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use App\Models\Company;
-use Illuminate\Http\Request;
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Gate;
-use App\Jobs\QueueNotificationMailService;
+use App\Helper\Reply;
 use App\Http\Requests\Company\StoreCompany;
+use App\Jobs\QueueNotificationMailService;
+use App\Models\Company;
 use App\Models\Job;
 use App\Services\ElasticService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Yajra\DataTables\Facades\DataTables;
 
 class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 {
+    protected $elasticService;
 
-	protected $elasticService;
     public function __construct(ElasticService $elasticService)
     {
         parent::__construct();
         $this->pageTitle = 'menu.companies';
         $this->pageIcon = 'icon-film';
-		$this->elasticService = $elasticService;
+        $this->elasticService = $elasticService;
     }
 
     public function index()
@@ -42,89 +43,93 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $this->totalCompanies = Company::count();
         $this->activeCompanies = Company::where('status', 'active')->count();
         $this->inactiveCompanies = Company::where('status', 'inactive')->count();
+
         return view('service_company.company.index', $this->data);
     }
-    
+
     public function create()
-    	{
+    {
         abort_if(Gate::denies('add_company'), 403);
+
         return view('service_company.company.create', $this->data);
     }
-    
+
     public function store(StoreCompany $request)
-    	{
+    {
         abort_if(Gate::denies('add_company'), 403);
 
-        $setting = new Company();
-        $setting->company_name        = $request->input('company_name');
-        $setting->company_email       = $request->input('company_email');
-        $setting->company_phone       = $request->input('company_phone');
-        $setting->website             = $request->input('website');
-        $setting->address             = $request->input('address');
-        $setting->show_in_frontend    = $request->input('show_in_frontend');
-        $setting->job_opening_text    = 'Welcome!';
-        $setting->job_opening_title   = 'We want people to thrive. We believe you do your best work when you feel your best.';
+        $setting = new Company;
+        $setting->company_name = $request->input('company_name');
+        $setting->company_email = $request->input('company_email');
+        $setting->company_phone = $request->input('company_phone');
+        $setting->website = $request->input('website');
+        $setting->address = $request->input('address');
+        $setting->show_in_frontend = $request->input('show_in_frontend');
+        $setting->job_opening_text = 'Welcome!';
+        $setting->job_opening_title = 'We want people to thrive. We believe you do your best work when you feel your best.';
 
         if ($request->hasFile('logo')) {
-            $setting->logo = Files::upload($request->logo,'company-logo');
+            $setting->logo = Files::upload($request->logo, 'company-logo');
         }
 
         $setting->save();
 
-        return Reply::redirect(route('service_company.company.index'), __('menu.companies') . ' ' . __('messages.createdSuccessfully'));
+        return Reply::redirect(route('service_company.company.index'), __('menu.companies').' '.__('messages.createdSuccessfully'));
     }
-   
+
     public function show($id)
-    	{
+    {
         //
     }
-   
+
     public function edit($id)
-    	{
+    {
         abort_if(Gate::denies('edit_company'), 403);
 
         $this->company = Company::withoutGlobalScopes()->find($id);
+
         return view('service_company.company.edit', $this->data);
     }
-    
+
     public function update(StoreCompany $request, $id)
     {
         abort_if(Gate::denies('edit_company'), 403);
 
         $setting = Company::withoutGlobalScopes()->findOrFail($id);
-        $setting->company_name        = $request->input('company_name');
-        $setting->company_email       = $request->input('company_email');
-        $setting->company_phone       = $request->input('company_phone');
-        $setting->website             = $request->input('website');
-        $setting->address             = $request->input('address');
-        $setting->show_in_frontend    = $request->input('show_in_frontend');
+        $setting->company_name = $request->input('company_name');
+        $setting->company_email = $request->input('company_email');
+        $setting->company_phone = $request->input('company_phone');
+        $setting->website = $request->input('website');
+        $setting->address = $request->input('address');
+        $setting->show_in_frontend = $request->input('show_in_frontend');
 
-        //update company's jobs status
-        if($setting->status != $request->input('status')) {
+        // update company's jobs status
+        if ($setting->status != $request->input('status')) {
             Job::where('company_id', $id)->update(['status' => $request->status]);
         }
 
         $setting->status = $request->input('status');
 
         if ($request->hasFile('logo')) {
-            $setting->logo = Files::upload($request->logo,'company-logo');
+            $setting->logo = Files::upload($request->logo, 'company-logo');
         }
 
         $setting->save();
 
-        return Reply::redirect(route('service_company.company.index'), __('menu.companies') . ' ' . __('messages.updatedSuccessfully'));
+        return Reply::redirect(route('service_company.company.index'), __('menu.companies').' '.__('messages.updatedSuccessfully'));
     }
-    
+
     public function destroy($id)
-    	{
+    {
         abort_if(Gate::denies('delete_company'), 403);
 
         Company::destroy($id);
+
         return Reply::success(__('messages.recordDeleted'));
     }
 
     public function data()
-    	{
+    {
         abort_if(Gate::denies('view_company'), 403);
 
         $categories = Company::all();
@@ -134,26 +139,27 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                 $action = '';
 
                 if ($this->user->cans('edit_company')) {
-                    $action .= '<a href="' . route('service_company.company.edit', [$row->id]) . '" class="btn btn-primary btn-circle"
-                      data-toggle="tooltip" data-original-title="' . __('app.edit') . '"><i class="fa fa-pencil" aria-hidden="true"></i></a>';
+                    $action .= '<a href="'.route('service_company.company.edit', [$row->id]).'" class="btn btn-primary btn-circle"
+                      data-toggle="tooltip" data-original-title="'.__('app.edit').'"><i class="fa fa-pencil" aria-hidden="true"></i></a>';
                 }
 
                 if ($this->user->cans('delete_company')) {
                     $action .= ' <a href="javascript:;" class="btn btn-danger btn-circle sa-params"
-                      data-toggle="tooltip" data-row-id="' . $row->id . '" data-original-title="' . __('app.delete') . '"><i class="fa fa-times" aria-hidden="true"></i></a>';
+                      data-toggle="tooltip" data-row-id="'.$row->id.'" data-original-title="'.__('app.delete').'"><i class="fa fa-times" aria-hidden="true"></i></a>';
                 }
+
                 return $action;
             })
             ->editColumn('status', function ($row) {
-                if($row->status == 'active'){
+                if ($row->status == 'active') {
                     return '<label class="badge bg-success">'.__('app.active').'</label>';
                 }
-                if($row->status == 'inactive'){
+                if ($row->status == 'inactive') {
                     return '<label class="badge bg-danger">'.__('app.inactive').'</label>';
                 }
-             })
+            })
             ->editColumn('logo', function ($row) {
-                return '<img src="' . $row->logo_url . '" class="img-responsive" height="25" />';
+                return '<img src="'.$row->logo_url.'" class="img-responsive" height="25" />';
             })
             ->editColumn('company_name', function ($row) {
                 return ucfirst($row->company_name);
@@ -167,108 +173,111 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
      * Intent: Renders the Find Agency discovery page for tenant service companies.
      * Tenancy: Scoped to authenticated user's company_id. Job lookup uses soft fallback to prevent 404 ModelNotFoundException.
      *
-     * @param Request $request
      * @return \Illuminate\Contracts\View\View
      */
     public function findAgency(Request $request)
-	{
+    {
 
-		$this->pageTitle = __('Find Agency');
-		$company_id = auth()->user()->company_id;
+        $this->pageTitle = __('Find Agency');
+        $company_id = auth()->user()->company_id;
 
-		// Resolve job_id dynamically from request or fallback to company's latest job, using find() instead of findOrFail(48) to avoid 404
-		$id = $request->get('id') ?? $request->get('job_id') ?? Job::where('company_id', $company_id)->latest()->value('id');
-		$this->job = $id ? Job::withoutGlobalScopes()->find($id) : null;
-		$this->custome_count = 0;
+        // Resolve job_id dynamically from request or fallback to company's latest job, using find() instead of findOrFail(48) to avoid 404
+        $id = $request->get('id') ?? $request->get('job_id') ?? Job::where('company_id', $company_id)->latest()->value('id');
+        $this->job = $id ? Job::withoutGlobalScopes()->find($id) : null;
+        $this->custome_count = 0;
 
-		if ($id) {
-			session()->put('job_id', $id);
-			$gdFilterData = GeneralMethod::gdFilterData($id);
-		}
+        if ($id) {
+            session()->put('job_id', $id);
+            $gdFilterData = GeneralMethod::gdFilterData($id);
+        }
 
-		$this->default_loc = '';
-		$this->qualification ='';
-		$this->min_exp = '';
-		$this->max_exp = '';
-		$this->min_salary_currency = '';
-		$this->min_salary = '';
-		$this->max_salary = '';
-		$this->min_sal_mode = '';
-		$this->default_skill = '';
+        $this->default_loc = '';
+        $this->qualification = '';
+        $this->min_exp = '';
+        $this->max_exp = '';
+        $this->min_salary_currency = '';
+        $this->min_salary = '';
+        $this->max_salary = '';
+        $this->min_sal_mode = '';
+        $this->default_skill = '';
 
         $cities = DB::table('countries')
-        ->select('countries.country_name')
-        ->where('countries.country_name','!=','')
-        ->orderBy('countries.country_name')
-        ->get()
-        ->map(function($city) {
-            return $city->country_name;
-        });
+            ->select('countries.country_name')
+            ->where('countries.country_name', '!=', '')
+            ->orderBy('countries.country_name')
+            ->get()
+            ->map(function ($city) {
+                return $city->country_name;
+            });
 
-		$this->cities = $cities;
-		// dd($this->cities);
-		$this->qualificationTag = DB::table('qualification_master')
-			->select('*')
-			->orderBy('qualification_master.display_order', 'ASC')
-			->get()
-			->map(function ($row) {
-				return $row->name;
-			});
-            $this->td_industries = DB::table('td_industries')->select('ind_id as id','ind_name as name')->get();
+        $this->cities = $cities;
+        // dd($this->cities);
+        $this->qualificationTag = DB::table('qualification_master')
+            ->select('*')
+            ->orderBy('qualification_master.display_order', 'ASC')
+            ->get()
+            ->map(function ($row) {
+                return $row->name;
+            });
+        $this->td_industries = DB::table('td_industries')->select('ind_id as id', 'ind_name as name')->get();
 
-            // dd($this->td_industries);
+        // dd($this->td_industries);
 
-		$allCompanies = 0;
-		$activeCompanies = 0;
-		try {
-			$params = [
-				'index' => ELASTIC_COMPANIES_INDEX,
-				'body'  => [
-					'size' => 0,
-					'query' => [
-						'bool' => [
-							'must_not' => [
-								['term' => ['id' => $company_id]],
-							]
-						]
-					],
-					'aggs' => [
-						'all_companies' => [
-							'value_count' => [
-								'field' => 'id'
-							]
-						],
-						'active_companies' => [
-							'filter' => [
-								'term' => [
-									'status' => 'active'
-								]
-							]
-						]
-					]
-				]
-			];
+        $allCompanies = 0;
+        $activeCompanies = 0;
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        try {
+            $mustNotTerms = array_merge(
+                [['term' => ['id' => $company_id]]],
+                array_map(fn ($saId) => ['term' => ['id' => $saId]], $superAdminCompanyIds)
+            );
 
-			$response = $this->elasticService->getClient()->search($params);
-			$allCompanies = $response['aggregations']['all_companies']['value'] ?? 0;
-			$activeCompanies = $response['aggregations']['active_companies']['doc_count'] ?? 0;
-		} catch (\Throwable $e) {
-			// Intent: Gracefully fallback to database counts if ElasticSearch cluster or index is unavailable
-			$allCompanies = DB::table('companies')->where('id', '!=', $company_id)->count();
-			$activeCompanies = DB::table('companies')->where('id', '!=', $company_id)->where('status', 'active')->count();
-		}
+            $params = [
+                'index' => ELASTIC_COMPANIES_INDEX,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'must_not' => $mustNotTerms,
+                        ],
+                    ],
+                    'aggs' => [
+                        'all_companies' => [
+                            'value_count' => [
+                                'field' => 'id',
+                            ],
+                        ],
+                        'active_companies' => [
+                            'filter' => [
+                                'term' => [
+                                    'status' => 'active',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
 
-		$this->allCompanies = $allCompanies;
-		$this->activeCompanies = $activeCompanies;
+            $response = $this->elasticService->getClient()->search($params);
+            $allCompanies = $response['aggregations']['all_companies']['value'] ?? 0;
+            $activeCompanies = $response['aggregations']['active_companies']['doc_count'] ?? 0;
+        } catch (\Throwable $e) {
+            // Intent: Gracefully fallback to database counts if ElasticSearch cluster or index is unavailable
+            $allCompanies = DB::table('companies')->where('id', '!=', $company_id)->whereNotIn('id', $superAdminCompanyIds)->count();
+            $activeCompanies = DB::table('companies')->where('id', '!=', $company_id)->whereNotIn('id', $superAdminCompanyIds)->where('status', 'active')->count();
+        }
 
-		return view('service_company.common.find-agency', $this->data);
-	}
+        $this->allCompanies = $allCompanies;
+        $this->activeCompanies = $activeCompanies;
 
-	public function findAgencyData(Request $request)
-	{
+        return view('service_company.common.find-agency', $this->data);
+    }
 
-		$company_id = auth()->user()->company_id;
-          
+    public function findAgencyData(Request $request)
+    {
+
+        $company_id = auth()->user()->company_id;
+
         $searchTerms = request('cus_search');
         // dd($searchTerms);
         $custom_search = json_decode($searchTerms, true);
@@ -279,182 +288,179 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $custom_search_location = json_decode($searchTermsLocation, true);
 
         if (\request('app_int_outsource') != 0) {
-             $parent_employment_type = request('app_int_outsource');
-        }else{
+            $parent_employment_type = request('app_int_outsource');
+        } else {
             $parent_employment_type = 'all';
         }
-		$parent_employment_type = request('app_int_outsource');
-		$commtype = request('app_int_outsource');
+        $parent_employment_type = request('app_int_outsource');
+        $commtype = request('app_int_outsource');
 
-		// dd($parent_employment_type);
+        // dd($parent_employment_type);
 
         $currentJobSkill = ['skill'];
-    
-    	if (is_array($custom_search) && !empty($searchTerms)) {
-    		 $currentJobSkill = array_column($custom_search, 'value');
-    		//  dd($currentJobSkill);
-    	}
-		
-       $perPage = 10;
-       $page = $request->get('page', 1);
-       $skillsList = array_filter($currentJobSkill, fn($s) => $s !== 'skill');
-	   $skillsList = array_map('strtolower', $skillsList);
-		// dd($skillsList);
-		$searchQuery = $request->input('q');
-		$page = max((int) $request->input('page', 1), 1);
-		$size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
-		$from = ($page - 1) * $size;
 
-		$cachePayload = [
-			'page' => $page,
-			'size' => $size,
-			'q' => $searchQuery,
-			'company' => $company_id,
-			'kt_tagify_location' => $searchTermsLocation,
-			'app_int_outsource' => $parent_employment_type,
-			'user_id' => $this->user->id,
-			'skillsList' => $skillsList ?? []
-		];
-		// dd($cachePayload);
+        if (is_array($custom_search) && ! empty($searchTerms)) {
+            $currentJobSkill = array_column($custom_search, 'value');
+            //  dd($currentJobSkill);
+        }
 
-		$versionKey = 'allfindagencyversion_global';
-		$version = cache()->get($versionKey, 1);
-		$cacheKeySet = 'ats:allfindagency:' . $this->user->id . ':' . $version . ':' . md5(json_encode($cachePayload));
-		/* ----------------------------
-		⚡ Check DragonflyDB first
-		----------------------------- */
-		if (cache()->has($cacheKeySet)) {
-			// return response()->json(cache()->get($cacheKeySet));
-		}
+        $perPage = 10;
+        $page = $request->get('page', 1);
+        $skillsList = array_filter($currentJobSkill, fn ($s) => $s !== 'skill');
+        $skillsList = array_map('strtolower', $skillsList);
+        // dd($skillsList);
+        $searchQuery = $request->input('q');
+        $page = max((int) $request->input('page', 1), 1);
+        $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10); // Default 10 results per page
+        $from = ($page - 1) * $size;
 
-		// dd( $searchTermsLocation);
+        $cachePayload = [
+            'page' => $page,
+            'size' => $size,
+            'q' => $searchQuery,
+            'company' => $company_id,
+            'kt_tagify_location' => $searchTermsLocation,
+            'app_int_outsource' => $parent_employment_type,
+            'user_id' => $this->user->id,
+            'skillsList' => $skillsList ?? [],
+        ];
+        // dd($cachePayload);
 
+        $versionKey = 'allfindagencyversion_global';
+        $version = cache()->get($versionKey, 1);
+        $cacheKeySet = 'ats:allfindagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        /* ----------------------------
+        ⚡ Check DragonflyDB first
+        ----------------------------- */
+        if (cache()->has($cacheKeySet)) {
+            // return response()->json(cache()->get($cacheKeySet));
+        }
+
+        // dd( $searchTermsLocation);
 
         // dd($currentJobSkill);
-        if (is_array($custom_search_location) && !empty($searchTermsLocation)) {
-    		$country_id_job = 101;
-    		$currentJobLocation = array_column($custom_search_location, 'value');
-    		$job_country_id = DB::table('client_city_jobs')
-    					->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-    					->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-    					->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-    					->select('countries.id')
-    					->where('countries.country_name','=', $currentJobLocation[0])
-    					->where('client_city_jobs.job_id','=', $request->jobid)
-    					->first();
-    		if($job_country_id){
-    			$country_id_job = $job_country_id->id;
-    		}else{
-    			$job_country_id = DB::table('countries')
-    					->select('countries.id')
-    					->where('countries.country_name','=', $currentJobLocation[0])
-    					->first();
-    			$country_id_job = $job_country_id->id;
-    		}			
-    		   //    dd($country_id_job);
-       }else{
-    	$country_id_job = 101;
-    	$job_country_id = DB::table('client_city_jobs')
-    					->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-    					->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-    					->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-    					->select('countries.id')
-    					->where('countries.country_name','=', $searchTermsLocation)
-    					->first();
-    		if($job_country_id){
-    			$country_id_job = $job_country_id->id;
-    		}else{
-    			if(!empty($searchTermsLocation)){
-    			$job_country_id = DB::table('countries')
-    					->select('countries.id')
-    					->where('countries.country_name','=', $searchTermsLocation)
-    					->first();
-    			$country_id_job = @$job_country_id->id;
-    		}
-    		}		
-       }
-       $vendorIds = DB::table('companies')
-    		->where('company_type', '!=', 3)
-    		->where('package_id', '>', 0)
-    		->where('id', '!=', $company_id)
-    		->pluck('id');
-    		
-     // 		dd( $vendorIds);
-    // dd($skillsList);
-    // $skillsList = implode(",",$currentJobSkill);
-    $forceRefresh = $request->get('force_refresh', false);
-    
-    
-    $cacheKey = "final_vendors_{$company_id}_".md5(json_encode($skillsList))."_{$parent_employment_type}_{$country_id_job}_{$request->get('page', 1)}";
-
-	// 1. Try to get from cache
-	if (!$forceRefresh && Cache::has($cacheKeySet)) {
-		return response()->json(Cache::get($cacheKeySet));
-	}
-	// dd("fdl");
-    
-    
-    // 1. Cached vendor IDs
-    $vendorIds = Cache::remember("vendor_ids_for_company_{$company_id}", 300, function () use ($company_id) {
-        return DB::table('companies')
+        if (is_array($custom_search_location) && ! empty($searchTermsLocation)) {
+            $country_id_job = 101;
+            $currentJobLocation = array_column($custom_search_location, 'value');
+            $job_country_id = DB::table('client_city_jobs')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('countries.id')
+                ->where('countries.country_name', '=', $currentJobLocation[0])
+                ->where('client_city_jobs.job_id', '=', $request->jobid)
+                ->first();
+            if ($job_country_id) {
+                $country_id_job = $job_country_id->id;
+            } else {
+                $job_country_id = DB::table('countries')
+                    ->select('countries.id')
+                    ->where('countries.country_name', '=', $currentJobLocation[0])
+                    ->first();
+                $country_id_job = $job_country_id->id;
+            }
+            //    dd($country_id_job);
+        } else {
+            $country_id_job = 101;
+            $job_country_id = DB::table('client_city_jobs')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('countries.id')
+                ->where('countries.country_name', '=', $searchTermsLocation)
+                ->first();
+            if ($job_country_id) {
+                $country_id_job = $job_country_id->id;
+            } else {
+                if (! empty($searchTermsLocation)) {
+                    $job_country_id = DB::table('countries')
+                        ->select('countries.id')
+                        ->where('countries.country_name', '=', $searchTermsLocation)
+                        ->first();
+                    $country_id_job = @$job_country_id->id;
+                }
+            }
+        }
+        $superAdminCompanyIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $vendorIds = DB::table('companies')
             ->where('company_type', '!=', 3)
             ->where('package_id', '>', 0)
             ->where('id', '!=', $company_id)
+            ->whereNotIn('id', $superAdminCompanyIds)
             ->pluck('id');
-    });
-    // 2. Precompute: SimilarReq jobs count
-    $similarReqSub = DB::table('jobs as j')
-        ->select(DB::raw('COUNT(DISTINCT j.id) as SimilarReq'), DB::raw('COALESCE(j.company_id, rr.to_company_id) as vendor_id'))
-        ->leftJoin('job_metronics_skills as jms', 'jms.job_id', '=', 'j.id')
-        ->leftJoin('recommendation_relation as rr', 'rr.job_id', '=', 'j.id')
-        ->where('j.status', 'active');
-        if(count($skillsList)>0){
-			$similarReqSub = $similarReqSub->whereIn('jms.skill_name', $skillsList);
-		}
+
+        // 		dd( $vendorIds);
+        // dd($skillsList);
+        // $skillsList = implode(",",$currentJobSkill);
+        $forceRefresh = $request->get('force_refresh', false);
+
+        $cacheKey = "final_vendors_{$company_id}_".md5(json_encode($skillsList))."_{$parent_employment_type}_{$country_id_job}_{$request->get('page', 1)}";
+
+        // 1. Try to get from cache
+        if (! $forceRefresh && Cache::has($cacheKeySet)) {
+            return response()->json(Cache::get($cacheKeySet));
+        }
+        // dd("fdl");
+
+        // 1. Cached vendor IDs
+        $vendorIds = Cache::remember("vendor_ids_for_company_{$company_id}", 300, function () use ($company_id, $superAdminCompanyIds) {
+            return DB::table('companies')
+                ->where('company_type', '!=', 3)
+                ->where('package_id', '>', 0)
+                ->where('id', '!=', $company_id)
+                ->whereNotIn('id', $superAdminCompanyIds)
+                ->pluck('id');
+        });
+        // 2. Precompute: SimilarReq jobs count
+        $similarReqSub = DB::table('jobs as j')
+            ->select(DB::raw('COUNT(DISTINCT j.id) as SimilarReq'), DB::raw('COALESCE(j.company_id, rr.to_company_id) as vendor_id'))
+            ->leftJoin('job_metronics_skills as jms', 'jms.job_id', '=', 'j.id')
+            ->leftJoin('recommendation_relation as rr', 'rr.job_id', '=', 'j.id')
+            ->where('j.status', 'active');
+        if (count($skillsList) > 0) {
+            $similarReqSub = $similarReqSub->whereIn('jms.skill_name', $skillsList);
+        }
         $similarReqSub = $similarReqSub->when($parent_employment_type === '1' || $parent_employment_type === '0', function ($q) use ($parent_employment_type) {
             $q->where('j.employment_type', $parent_employment_type);
         })
-        ->groupBy('vendor_id');
-    
-    // 3. Precompute: Bench profiles count
-    $benchProfilesSub = DB::table('job_applications')
-        ->select(DB::raw('COUNT(DISTINCT job_applications.id) as benchProfilesCount'), 'job_applications.company_id as vendor_id')
-        ->join('job_application_skills', 'job_application_skills.job_application_id', '=', 'job_applications.id')
-        ->where('job_applications.status', 2)
-        ->where('job_applications.condidate_type', 'bench_condidate');
-		if(count($skillsList)>0){
-			$benchProfilesSub = $benchProfilesSub->whereIn('job_application_skills.skills', $skillsList);
-		}
+            ->groupBy('vendor_id');
+
+        // 3. Precompute: Bench profiles count
+        $benchProfilesSub = DB::table('job_applications')
+            ->select(DB::raw('COUNT(DISTINCT job_applications.id) as benchProfilesCount'), 'job_applications.company_id as vendor_id')
+            ->join('job_application_skills', 'job_application_skills.job_application_id', '=', 'job_applications.id')
+            ->where('job_applications.status', 2)
+            ->where('job_applications.condidate_type', 'bench_condidate');
+        if (count($skillsList) > 0) {
+            $benchProfilesSub = $benchProfilesSub->whereIn('job_application_skills.skills', $skillsList);
+        }
         $benchProfilesSub = $benchProfilesSub->groupBy('job_applications.company_id');
-    
-    // 4. Precompute: Other profiles count
-    $otherProfilesSub = DB::table('job_applications')
-        ->select(DB::raw('COUNT(DISTINCT job_applications.id) as otherProfilesCount'), DB::raw('COALESCE(add_job_wise_condidates.company_id, add_job_wise_condidates.thirdparty_company_id) as vendor_id'))
-        ->join('job_application_skills', 'job_application_skills.job_application_id', '=', 'job_applications.id')
-        ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
-        ->where('job_applications.condidate_type', 'other');
-		if(count($skillsList)>0){
-          $otherProfilesSub = $otherProfilesSub->whereIn('job_application_skills.skills', $skillsList);
-		}
+
+        // 4. Precompute: Other profiles count
+        $otherProfilesSub = DB::table('job_applications')
+            ->select(DB::raw('COUNT(DISTINCT job_applications.id) as otherProfilesCount'), DB::raw('COALESCE(add_job_wise_condidates.company_id, add_job_wise_condidates.thirdparty_company_id) as vendor_id'))
+            ->join('job_application_skills', 'job_application_skills.job_application_id', '=', 'job_applications.id')
+            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'job_applications.id')
+            ->where('job_applications.condidate_type', 'other');
+        if (count($skillsList) > 0) {
+            $otherProfilesSub = $otherProfilesSub->whereIn('job_application_skills.skills', $skillsList);
+        }
         $otherProfilesSub = $otherProfilesSub->where(function ($q) {
             $q->whereNotNull('add_job_wise_condidates.company_id')
-              ->orWhere(function ($q2) {
-                  $q2->whereNotNull('add_job_wise_condidates.thirdparty_company_id')
-                      ->where('add_job_wise_condidates.master_status_id', '!=', 8);
-              });
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('add_job_wise_condidates.thirdparty_company_id')
+                        ->where('add_job_wise_condidates.master_status_id', '!=', 8);
+                });
         })
-        ->groupBy('vendor_id');
+            ->groupBy('vendor_id');
 
-		if(empty($country_id_job)){
-			$country_id_job = 101;
-		}
+        if (empty($country_id_job)) {
+            $country_id_job = 101;
+        }
 
-		
-		// ['id' => ['order' => 'desc']]
+        // ['id' => ['order' => 'desc']]
 
-
-		
-		/*
+        /*
         |--------------------------------------------------------------------------
         | Commercial Filter
         |--------------------------------------------------------------------------
@@ -475,12 +481,10 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $custom_search = json_decode($searchTerms, true);
         $currentJobSkill = ['skill'];
 
-        if (is_array($custom_search) && !empty($searchTerms)) {
-                $currentJobSkill = array_column($custom_search, 'value');
+        if (is_array($custom_search) && ! empty($searchTerms)) {
+            $currentJobSkill = array_column($custom_search, 'value');
             //  dd($currentJobSkill);
         }
-
-
 
         /*
         |--------------------------------------------------------------------------
@@ -488,7 +492,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         |--------------------------------------------------------------------------
         */
 
-        $searchSkills = array_filter($currentJobSkill, fn($s) => $s !== 'skill');
+        $searchSkills = array_filter($currentJobSkill, fn ($s) => $s !== 'skill');
         $searchSkills = array_map('strtolower', $skillsList);
         $globalSearch = trim(request('search'));
 
@@ -514,7 +518,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $companySkillMatchCount = [];
         $companyMatchedSkills = [];
 
-        if (!empty($skills)) {
+        if (! empty($skills)) {
 
             /*
             |--------------------------------------------------------------------------
@@ -528,16 +532,16 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
                 $skill = strtolower(trim($skill));
 
-                if (!empty($skill)) {
+                if (! empty($skill)) {
 
                     $skillQueries[] = [
 
                         'wildcard' => [
 
                             'skill_name' => [
-                                'value' => '*' . $skill . '*'
-                            ]
-                        ]
+                                'value' => '*'.$skill.'*',
+                            ],
+                        ],
                     ];
                 }
             }
@@ -552,13 +556,13 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
                 'index' => ELASTIC_COMPANY_SKILLS,
 
-                'body'  => [
+                'body' => [
 
                     'size' => 10000,
 
                     '_source' => [
                         'company_id',
-                        'skill_name'
+                        'skill_name',
                     ],
 
                     'query' => [
@@ -572,22 +576,24 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
                                         'should' => $skillQueries,
 
-                                        'minimum_should_match' => 1
-                                    ]
-                                ]
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
                             ],
 
-                            'must_not' => [
-
+                            'must_not' => array_merge(
                                 [
-                                    'term' => [
-                                        'company_id' => $company_id
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
+                                    [
+                                        'term' => [
+                                            'company_id' => $company_id,
+                                        ],
+                                    ],
+                                ],
+                                array_map(fn ($saId) => ['term' => ['company_id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                            ),
+                        ],
+                    ],
+                ],
             ];
 
             $skillResponse = $this->elasticService->getClient()->search($skillSearchParams);
@@ -604,32 +610,31 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                 $matchedCompanyId = $source['company_id'];
 
                 $skillName = strtolower(trim($source['skill_name']));
-                if (!in_array($skillName, $SkillArrCheck)) {
-                          $SkillArrCheck[] = $skillName;
+                if (! in_array($skillName, $SkillArrCheck)) {
+                    $SkillArrCheck[] = $skillName;
 
-                /*
-                |--------------------------------------------------------------------------
-                | MATCH COUNT
-                |--------------------------------------------------------------------------
-                */
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MATCH COUNT
+                    |--------------------------------------------------------------------------
+                    */
 
-                if (!isset($companySkillMatchCount[$matchedCompanyId])) {
+                    if (! isset($companySkillMatchCount[$matchedCompanyId])) {
 
-                    $companySkillMatchCount[$matchedCompanyId] = 0;
+                        $companySkillMatchCount[$matchedCompanyId] = 0;
+                    }
+
+                    $companySkillMatchCount[$matchedCompanyId]++;
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | STORE MATCHED SKILLS
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $companyMatchedSkills[$matchedCompanyId][] = $skillName;
+
                 }
-
-                $companySkillMatchCount[$matchedCompanyId]++;
-
-                /*
-                |--------------------------------------------------------------------------
-                | STORE MATCHED SKILLS
-                |--------------------------------------------------------------------------
-                */
-
-                $companyMatchedSkills[$matchedCompanyId][] = $skillName;
-                
-                }
-
 
             }
 
@@ -664,11 +669,11 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                 'filter' => [
 
                     'term' => [
-                        'id' => $matchedCompanyId
-                    ]
+                        'id' => $matchedCompanyId,
+                    ],
                 ],
 
-                'weight' => ($matchedSkillCount * 100)
+                'weight' => ($matchedSkillCount * 100),
             ];
         }
 
@@ -688,7 +693,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
         $currentYear = date('Y');
 
-        if (!empty($experience)) {
+        if (! empty($experience)) {
 
             /*
             |--------------------------------------------------------------------------
@@ -703,13 +708,11 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                 $experienceFilter[] = [
                     'range' => [
                         'founded' => [
-                            'gte' => $minFoundedYear
-                        ]
-                    ]
+                            'gte' => $minFoundedYear,
+                        ],
+                    ],
                 ];
-            }
-
-            elseif ($experience == '3–5 years') {
+            } elseif ($experience == '3–5 years') {
 
                 $maxFoundedYear = $currentYear - 3;
                 $minFoundedYear = $currentYear - 5;
@@ -718,13 +721,11 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                     'range' => [
                         'founded' => [
                             'gte' => $minFoundedYear,
-                            'lte' => $maxFoundedYear
-                        ]
-                    ]
+                            'lte' => $maxFoundedYear,
+                        ],
+                    ],
                 ];
-            }
-
-            elseif ($experience == '5–10 years') {
+            } elseif ($experience == '5–10 years') {
 
                 $maxFoundedYear = $currentYear - 5;
                 $minFoundedYear = $currentYear - 10;
@@ -733,73 +734,54 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
                     'range' => [
                         'founded' => [
                             'gte' => $minFoundedYear,
-                            'lte' => $maxFoundedYear
-                        ]
-                    ]
+                            'lte' => $maxFoundedYear,
+                        ],
+                    ],
                 ];
-            }
-
-            elseif ($experience == '10+ years') {
+            } elseif ($experience == '10+ years') {
 
                 $maxFoundedYear = $currentYear - 10;
 
                 $experienceFilter[] = [
                     'range' => [
                         'founded' => [
-                            'lte' => $maxFoundedYear
-                        ]
-                    ]
+                            'lte' => $maxFoundedYear,
+                        ],
+                    ],
                 ];
             }
         }
-        if (!empty($industry)) {
+        if (! empty($industry)) {
 
-                $industryFilter[] = [
+            $industryFilter[] = [
 
-                    'terms' => [
-                        'industry.ind_id' => (array) $industry
-                    ]
-                ];
-        }
-        
-        $commtype = request('app_int_outsource');
-        $commercialFilter = [];
-
-        if (!empty($commtype)) {
-            $commercialFilter[] = [
-
-                'nested' => [
-
-                    'path' => 'commercial_nested',
-
-                    'query' => [
-
-                        'bool' => [
-
-                            'must' => [
-
-                                [
-                                    'term' => [
-                                        'commercial_nested.commtype' => (int)$commtype
-                                    ]
-                                ],
-
-                                [
-                                    'term' => [
-                                        'commercial_nested.status' => 1
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
+                'terms' => [
+                    'industry.ind_id' => (array) $industry,
+                ],
             ];
         }
 
+        $commtype = request('app_int_outsource');
+        $commercialFilter = [];
+
+        if (! empty($commtype)) {
+            // Intent: Filter agencies by commericials.commtype and status on the companies Elasticsearch index.
+            // Tenancy & Index note: The field indexed in local_companies_elastic is 'commericials' (object array), not 'commercial_nested'.
+            $commercialFilter[] = [
+                'term' => [
+                    'commericials.commtype' => (int) $commtype,
+                ],
+            ];
+            $commercialFilter[] = [
+                'term' => [
+                    'commericials.status' => 1,
+                ],
+            ];
+        }
 
         $globalSearchFilter = [];
 
-        if (!empty($globalSearch)) {
+        if (! empty($globalSearch)) {
 
             // $globalSearchFilter[] = [
 
@@ -843,7 +825,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
             'index' => ELASTIC_COMPANIES_INDEX,
 
-            'body'  => [
+            'body' => [
 
                 'from' => $from,
                 'size' => $size,
@@ -869,25 +851,25 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
                                         [
                                             'term' => [
-                                                'status' => 'active'
-                                            ]
+                                                'status' => 'active',
+                                            ],
                                         ],
                                         [
                                             'terms' => [
-                                                'company_type' => [1, 2]
-                                            ]
+                                                'company_type' => [1, 2],
+                                            ],
                                         ],
 
                                         [
                                             'term' => [
-                                                'status' => 'active'
-                                            ]
+                                                'status' => 'active',
+                                            ],
                                         ],
 
                                         [
                                             'term' => [
-                                                'commericial_countries.country_id' => $country_id_job
-                                            ]
+                                                'commericial_countries.country_id' => $country_id_job,
+                                            ],
                                         ],
 
                                         /*
@@ -909,62 +891,64 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
                                                             [
                                                                 'term' => [
-                                                                    'company_coins.event_type' => 'sales'
-                                                                ]
+                                                                    'company_coins.event_type' => 'sales',
+                                                                ],
                                                             ],
 
                                                             [
                                                                 'range' => [
                                                                     'company_coins.coins' => [
-                                                                        'gt' => 0
-                                                                    ]
-                                                                ]
-                                                            ]
+                                                                        'gt' => 0,
+                                                                    ],
+                                                                ],
+                                                            ],
 
-                                                        ]
-                                                    ]
-                                                ]
-                                            ]
-                                        ]
+                                                        ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
 
                                     ],
 
-                                    $commercialFilter,                                    
+                                    $commercialFilter,
                                     $experienceFilter,
                                     $industryFilter,
                                     $globalSearchFilter
                                 ),
 
-                                // EXCLUDE CURRENT COMPANY
-                                'must_not' => [
-
+                                // EXCLUDE CURRENT COMPANY & SUPER ADMIN COMPANIES
+                                'must_not' => array_merge(
                                     [
-                                        'term' => [
-                                            'id' => $company_id
-                                        ]
-                                    ]
-                                ]
-                            ]
+                                        [
+                                            'term' => [
+                                                'id' => $company_id,
+                                            ],
+                                        ],
+                                    ],
+                                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
+                                ),
+                            ],
                         ],
 
                         'functions' => $functions,
 
                         'score_mode' => 'sum',
 
-                        'boost_mode' => 'sum'
-                    ]
+                        'boost_mode' => 'sum',
+                    ],
                 ],
 
                 'sort' => [
 
                     [
                         '_score' => [
-                            'order' => 'desc'
-                        ]
+                            'order' => 'desc',
+                        ],
                     ],
 
-                ]
-            ]
+                ],
+            ],
         ];
 
         /*
@@ -984,12 +968,10 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         $total = $companyResponse['hits']['total']['value'] ?? 0;
 
         $data = [];
-        
+
         foreach ($companyResponse['hits']['hits'] as $hit) {
 
             $source = $hit['_source'];
-
-
 
             // $matchedSkills = $companyMatchedSkills[$matchedCompanyId] ?? [];
 
@@ -1037,7 +1019,7 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
 
             $source['matched_skills'] = $commonSkills;
             // $source['matched_skills'] = $companyMatchedSkills[$matchedCompanyId] ?? [];
-            $source['search_skills'] = $searchSkills;//$companySkillMatchCount[$matchedCompanyId] ?? 0;
+            $source['search_skills'] = $searchSkills; // $companySkillMatchCount[$matchedCompanyId] ?? 0;
 
             $source['match_score'] = $hit['_score'];
             $source['matched_skill_count'] = $hit['_score'];
@@ -1046,175 +1028,166 @@ class ServiceCompanyCompanyController extends ServiceCompanyBaseController
         }
         // dd($data);
 
-		$pagination = [
-			'total' => $total,
-			'current_page' => $page,
-			'per_page' => $size,
-			'last_page' =>ceil($total / $size),
-			'listType' => 'allcandidate',
-		];
+        $pagination = [
+            'total' => $total,
+            'current_page' => $page,
+            'per_page' => $size,
+            'last_page' => ceil($total / $size),
+            'listType' => 'allcandidate',
+        ];
 
-		$page_view = 'find_agency_ajax';
+        $page_view = 'find_agency_ajax';
 
-		$userPermissions = $this->userPermissions;
-		$app_int_outsource = request('app_int_outsource');
-        $hiringtype = $app_int_outsource ;
+        $userPermissions = $this->userPermissions;
+        $app_int_outsource = request('app_int_outsource');
+        $hiringtype = $app_int_outsource;
         $jobid = '';
-		
-		$responseData = [
-			'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data','userPermissions','app_int_outsource', 'jobid', 'currentJobSkill', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
-			'total' => $total,
-			'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-		];
-		
-		cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_FIND_AGENCY_TIME));
 
-	    return response()->json($responseData)
-			->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-			->header('Pragma', 'no-cache')
-			->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
+        $responseData = [
+            'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'app_int_outsource', 'jobid', 'currentJobSkill', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
+            'total' => $total,
+            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+        ];
 
-	}
+        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_FIND_AGENCY_TIME));
 
-	public function findAgencyRequest(Request $request,$id)
-	{
+        return response()->json($responseData)
+            ->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
 
-		$from_company_id = auth()->user()->company_id;
-		$from_user_id = $this->user->id;
-		$to_company_id = $id;
+    }
 
+    public function findAgencyRequest(Request $request, $id)
+    {
 
-		 $jobidGet = $_REQUEST['current_jobid'];
-		 $event_id = $_REQUEST['event_id'];
-		 $company_row = DB::table('companies')->select('companies.company_email','companies.id')->where('companies.id', '=', $to_company_id)->first();
+        $from_company_id = auth()->user()->company_id;
+        $from_user_id = $this->user->id;
+        $to_company_id = $id;
 
-		 if ($event_id == -1) {
-			// CLIENT INVIDATION IGNORE
-			DB::table('staffing_company_invitation')->where('from_company_id', $from_company_id)->where('to_company_id', $to_company_id)->where('to_status','=', 0)->where('to_invitation_status','=', 0)->delete();
+        $jobidGet = $_REQUEST['current_jobid'];
+        $event_id = $_REQUEST['event_id'];
+        $company_row = DB::table('companies')->select('companies.company_email', 'companies.id')->where('companies.id', '=', $to_company_id)->first();
 
-			return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => '']);
-		}else{
-		   $boostId = '';
-			if(@$request->boostercom==1){
-				$boostIdArr = explode(',',$request->boostids);
-				$boostId = $boostIdArr[0];
-				$boostkeywords = DB::table('boostkeywords')->where('id',$boostId)->first();
-				$clickCount = $boostkeywords->clickCount+1;
-				$boostkeywords = DB::table('boostkeywords')->where('id',$boostId)->update(['clickCount'=>$clickCount]);
-			}
-			
-			
-			$clientRow = DB::table('clients')->select('clients.id')->where('clients.company_id', '=', $from_company_id)->first();
-			
-			//###################################################         START CLIENT INVITATION
+        if ($event_id == -1) {
+            // CLIENT INVIDATION IGNORE
+            DB::table('staffing_company_invitation')->where('from_company_id', $from_company_id)->where('to_company_id', $to_company_id)->where('to_status', '=', 0)->where('to_invitation_status', '=', 0)->delete();
 
-			// CHECK CLIENT INVITATION SENT OR NOT 
-			$clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
-				->where('from_company_id', $from_company_id)
-				->where('to_company_id', $to_company_id)
-				->where('to_invitation_status', '!=', -1)
-				->count();
-				// dd($clientInvitationCounter);
-			if ($clientInvitationCounter == 0)		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
-			{
-				// GET COMPANY DETAILS
-				
-				// dd($company_row);
-				// INVITATION 
-				// staffing_company_invitation
-				$insertArr = array(
-					'from_company_id' => $from_company_id,
-					'from_client_id' => $clientRow->id,
-					'from_user_id' => $from_user_id,
-					'from_status' => 1,
-					'from_created_at' => date('Y-m-d'),
+            return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => '']);
+        } else {
+            $boostId = '';
+            if (@$request->boostercom == 1) {
+                $boostIdArr = explode(',', $request->boostids);
+                $boostId = $boostIdArr[0];
+                $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->first();
+                $clickCount = $boostkeywords->clickCount + 1;
+                $boostkeywords = DB::table('boostkeywords')->where('id', $boostId)->update(['clickCount' => $clickCount]);
+            }
 
-					'to_company_id' => $to_company_id,
-					'to_email' => $company_row->company_email,
-					'to_status' => 0,
-					'to_invitation_status' => 0
-				);
-				// dd($insertArr);
+            $clientRow = DB::table('clients')->select('clients.id')->where('clients.company_id', '=', $from_company_id)->first();
 
-				DB::table('staffing_company_invitation')->insert($insertArr);
-				$invitationId 		=	DB::getPdo()->lastInsertId();
-				GeneralMethod::clientRequestIndexElastic($invitationId);
+            // ###################################################         START CLIENT INVITATION
 
-				$Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
-											
-					$encode				=	base64_encode($invitationId);
-					$reqdate = date('d M Y');
-					$Url 				=	url('/invitation-company-register/'.$encode);				
-					$to 				=	$company_row->company_email;
-					$cc 				=	"abu@4bell.com";
-					$subject 			=	"Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
-					$message 			= '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
-				
-					$attachments = array();
-					$cc = array();
-					$basecompany = GeneralMethod::baseCompany();
-					$senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-					$fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-					$checkMailPermision = GeneralMethod::mailPermission(40);
-					if ($checkMailPermision) {
-						$mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
-						$subject = str_replace(["[COMPANY_NAME]", "[REQUEST_DATE]"], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
-						$template_description = $mailTypeSubject->body_description;
+            // CHECK CLIENT INVITATION SENT OR NOT
+            $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $to_company_id)
+                ->where('to_invitation_status', '!=', -1)
+                ->count();
+            // dd($clientInvitationCounter);
+            if ($clientInvitationCounter == 0) {		// INVITATION SENT :- IN CASE NO INVITATION AVAIL
+                // GET COMPANY DETAILS
 
-						$AcceptInvite ='<a href="'.$Url.'" rel="noopener"
+                // dd($company_row);
+                // INVITATION
+                // staffing_company_invitation
+                $insertArr = [
+                    'from_company_id' => $from_company_id,
+                    'from_client_id' => $clientRow->id,
+                    'from_user_id' => $from_user_id,
+                    'from_status' => 1,
+                    'from_created_at' => date('Y-m-d'),
+
+                    'to_company_id' => $to_company_id,
+                    'to_email' => $company_row->company_email,
+                    'to_status' => 0,
+                    'to_invitation_status' => 0,
+                ];
+                // dd($insertArr);
+
+                DB::table('staffing_company_invitation')->insert($insertArr);
+                $invitationId = DB::getPdo()->lastInsertId();
+                GeneralMethod::clientRequestIndexElastic($invitationId);
+
+                $Companies = Company::withoutGlobalScopes()->find(auth()->user()->company_id);
+
+                $encode = base64_encode($invitationId);
+                $reqdate = date('d M Y');
+                $Url = url('/invitation-company-register/'.$encode);
+                $to = $company_row->company_email;
+                $cc = 'abu@4bell.com';
+                $subject = "Invitation to Become a Staffing Partner | $Companies->company_name | $reqdate ";
+                $message = '<html><head><title>HTML email</title></head><body><p>Hi</p><table><tr><th><a href="'.$Url.'" target="_blank">Click here </a></th></tr><tr><th>Or Copy link</th></tr><tr><th>'.$Url.'</th></tr></table></body></html>';
+
+                $attachments = [];
+                $cc = [];
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                $checkMailPermision = GeneralMethod::mailPermission(40);
+                if ($checkMailPermision) {
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(40, 1);
+                    $subject = str_replace(['[COMPANY_NAME]', '[REQUEST_DATE]'], [$Companies->company_name, $reqdate], $mailTypeSubject->subject);
+                    $template_description = $mailTypeSubject->body_description;
+
+                    $AcceptInvite = '<a href="'.$Url.'" rel="noopener"
 																style="text-decoration:none;display:inline-block;text-align:center;padding:0.75575rem 1.3rem;font-size:0.925rem;line-height:1.5;border-radius:0.35rem;color:#ffffff;background-color:#009EF7;border:0px;margin-right:0.75rem!important;font-weight:600!important;outline:none!important;vertical-align:middle">Accept
 																Invite
 															</a>';
-						$urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
-															
+                    $urlLink = '<a href="'.$Url.'" rel="noopener" style="text-decoration:none;color: #009EF7">'.$Url.'</a>';
 
-						$template_description = str_replace(["[COMPANY_NAME]", "[ACCEPT_INVITE]", "[URL_LINK]"], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
+                    $template_description = str_replace(['[COMPANY_NAME]', '[ACCEPT_INVITE]', '[URL_LINK]'], [$Companies->company_name, $AcceptInvite, $urlLink], $template_description);
 
-						$message = $template_description;
-						$data = [
-							'message' => $message
-						];
+                    $message = $template_description;
+                    $data = [
+                        'message' => $message,
+                    ];
 
+                    QueueNotificationMailService::dispatch(
+                        $company_row->company_email,
+                        $subject,
+                        'email.common.index',
+                        (object) $data,
+                        $attachments,
+                        $fromAddress,
+                        $senderName,
+                        $cc,
+                        $company_row->id,
+                    )->onConnection('emails');
+                }
 
-					QueueNotificationMailService::dispatch(
-						$company_row->company_email,
-						$subject,
-						'email.common.index',
-						(object) $data,
-						$attachments,
-						$fromAddress,
-						$senderName,
-						$cc,
-						$company_row->id,
-					)->onConnection('emails');
-					}
+            } else {
+                $clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
+                    ->where('from_company_id', $from_company_id)
+                    ->where('to_company_id', $to_company_id)
+                    ->where('to_invitation_status', '=', 0)
+                    ->first();
+                if ($clientInvitationCounter) {
+                    GeneralMethod::clientRequestIndexElastic($clientInvitationCounter->id);
+                }
+            }
+        }
 
-			}else{
-				$clientInvitationCounter = DB::table('staffing_company_invitation')->select('*')
-				->where('from_company_id', $from_company_id)
-				->where('to_company_id', $to_company_id)
-				->where('to_invitation_status', '=', 0)
-				->first();
-				if($clientInvitationCounter){
-				   GeneralMethod::clientRequestIndexElastic($clientInvitationCounter->id);
-				}
-			}
-	    }
-		
-          $cachekeys = [
-				'allfindagencyversion_global'
-			];
-			foreach ($cachekeys as $key) {
-				GeneralMethod::cacheClean($key);
-			}
+        $cachekeys = [
+            'allfindagencyversion_global',
+        ];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
 
-		//################################################             END CLIENT INVITATION 
+        // ################################################             END CLIENT INVITATION
 
+        return Reply::dataOnly(['status' => 'success']);
 
-
-		return Reply::dataOnly(['status' => 'success']);
-
-	}
-
-
+    }
 }
