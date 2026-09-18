@@ -3863,26 +3863,50 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $r2Key = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
 
                     try {
-                        if (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumeFile)) {
-                            \Illuminate\Support\Facades\Storage::disk('r2')->copy($resumeFile, $r2Key);
-                        } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
-                            \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, file_get_contents(public_path('user-uploads/resumes/'.$resumeFile)));
+                        $fileBytes = null;
+                        $originalExt = strtolower(pathinfo(parse_url($resumeFile, PHP_URL_PATH) ?: $resumeFile, PATHINFO_EXTENSION));
+                        $mimeType = 'application/pdf';
+                        if ($originalExt === 'docx') {
+                            $mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                        } elseif ($originalExt === 'doc') {
+                            $mimeType = 'application/msword';
                         }
 
-                        \App\Models\ForwardAttachment::create([
-                            'uuid' => $attUuid,
-                            'company_id' => $companyId,
-                            'user_id' => $userId,
-                            'candidate_id' => $cand->id,
-                            'candidate_name' => $cand->full_name ?: 'Candidate',
-                            'r2_object_key' => $r2Key,
-                            'filename' => 'Jeroworks_'.$candName.'.pdf',
-                            'mime_type' => 'application/pdf',
-                            'size_bytes' => 1024,
-                            'status' => 'PENDING',
-                            'expires_at' => now()->addMinutes(30),
-                        ]);
-                        $attachmentUuids[] = $attUuid;
+                        if (filter_var($resumeFile, FILTER_VALIDATE_URL)) {
+                            $httpRes = \Illuminate\Support\Facades\Http::timeout(15)->get($resumeFile);
+                            if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
+                                $fileBytes = $httpRes->body();
+                            }
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumeFile)) {
+                            $fileBytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($resumeFile);
+                        } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
+                            $fileBytes = file_get_contents(public_path('user-uploads/resumes/'.$resumeFile));
+                        } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
+                            $fileBytes = file_get_contents(public_path('user-uploads/resume/'.$resumeFile));
+                        }
+
+                        if ($fileBytes !== null && strlen($fileBytes) > 50) {
+                            $putSuccess = $uploadService->putR2ObjectBytes($r2Key, $fileBytes, $mimeType);
+                            if (! $putSuccess) {
+                                \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, $fileBytes);
+                            }
+
+                            $filenameExt = $originalExt ? ('.'.$originalExt) : '.pdf';
+                            \App\Models\ForwardAttachment::create([
+                                'uuid' => $attUuid,
+                                'company_id' => $companyId,
+                                'candidate_id' => $cand->id,
+                                'r2_object_key' => $r2Key,
+                                'filename' => 'Jeroworks_'.$candName.$filenameExt,
+                                'mime_type' => $mimeType,
+                                'file_size_bytes' => strlen($fileBytes),
+                                'status' => 'PENDING',
+                                'expires_at' => now()->addMinutes(60),
+                            ]);
+                            $attachmentUuids[] = $attUuid;
+                        } else {
+                            \Log::warning('[test_fwd_resume_send] Option 1 resume file unreachable or empty for candidate '.$cand->id.': '.$resumeFile);
+                        }
                     } catch (\Throwable $e) {
                         \Log::warning('[test_fwd_resume_send] Option 1 fallback attachment error: '.$e->getMessage());
                     }

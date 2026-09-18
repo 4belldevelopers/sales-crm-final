@@ -45,7 +45,7 @@ return [
         'emails' => [
             'driver'       => env('QUEUE_EMAILS_DRIVER', env('QUEUE_CONNECTION', 'redis')),
             'table'        => 'custom_queue_jobs',
-            'queue'        => 'default',
+            'queue'        => env('QUEUE_EMAILS_QUEUE', 'mail'),
             'retry_after'  => 90,
             'after_commit' => true, // ADR-V2R-08/13 — prevents ghost-tenant mails on DB rollback
         ],

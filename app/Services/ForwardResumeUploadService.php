@@ -185,4 +185,38 @@ class ForwardResumeUploadService
             return false;
         }
     }
+
+    /**
+     * Put binary bytes directly into Cloudflare R2 temporary forward storage.
+     *
+     * @param  string  $objectKey  R2 key
+     * @param  string  $bytes  Raw bytes
+     * @param  string  $mime  MIME type
+     * @return bool True on success, false on failure
+     */
+    public function putR2ObjectBytes(string $objectKey, string $bytes, string $mime = 'application/pdf'): bool
+    {
+        if (! $this->client) {
+            return false;
+        }
+
+        try {
+            $this->client->putObject([
+                'Bucket' => $this->bucket,
+                'Key' => $objectKey,
+                'Body' => $bytes,
+                'ContentType' => $mime,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            \Log::error('[ForwardResumeUploadService] putR2ObjectBytes failed: '.$e->getMessage(), [
+                'bucket' => $this->bucket,
+                'key' => $objectKey,
+            ]);
+
+            return false;
+        }
+    }
 }
+
