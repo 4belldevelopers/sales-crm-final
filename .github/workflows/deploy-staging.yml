@@ -46,6 +46,10 @@ jobs:
             # without that perf optimization, until the duplicate names are cleaned up.
             php artisan route:clear
             php artisan view:cache
+            echo ">> Ensuring storage and cache permissions"
+            chown -R www:www storage bootstrap/cache || true
+            chmod -R 775 storage bootstrap/cache || true
+            chmod -R 777 storage/logs || true
             echo ">> Full Octane restart"
             # FrankenPHP + OPcache: `octane:reload` only gracefully reloads worker threads,
             # which re-read the SAME cached bytecode — so new code silently never takes effect

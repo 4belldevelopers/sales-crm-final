@@ -55,7 +55,7 @@ return [
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', env('LOG_STACK', 'single')),
-            'ignore_exceptions' => false,
+            'ignore_exceptions' => env('LOG_IGNORE_EXCEPTIONS', true),
         ],
 
         'single' => [
@@ -63,6 +63,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            'permission' => 0666,
         ],
 
         'daily' => [
@@ -71,6 +72,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+            'permission' => 0666,
         ],
 
         'coins_performance' => [
@@ -155,7 +157,7 @@ return [
         */
         'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null') === 'null'
             ? ['driver' => 'monolog', 'handler' => NullHandler::class]
-            : ['driver' => 'single', 'path' => storage_path('logs/deprecations.log'), 'level' => 'debug'],
+            : ['driver' => 'single', 'path' => storage_path('logs/deprecations.log'), 'level' => 'debug', 'permission' => 0666],
 
         // Phase 5.8 — structured JSON log for every login attempt.
         // Fields: email (masked), ip, user_agent, success, captcha_ok, latency_ms, route.
@@ -168,6 +170,7 @@ return [
                 'level' => 'info',
                 'days' => 30,
                 'formatter' => Monolog\Formatter\JsonFormatter::class,
+                'permission' => 0666,
             ],
 
     ],

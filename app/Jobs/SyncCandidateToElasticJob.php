@@ -48,10 +48,14 @@ class SyncCandidateToElasticJob implements ShouldQueue
         try {
             GeneralMethod::careerStore($this->candidateId);
         } catch (\Throwable $e) {
-            Log::error('SyncCandidateToElasticJob failed: '.$e->getMessage(), [
-                'candidate_id' => $this->candidateId,
-                'exception' => $e,
-            ]);
+            try {
+                Log::error('SyncCandidateToElasticJob failed: '.$e->getMessage(), [
+                    'candidate_id' => $this->candidateId,
+                    'exception' => $e,
+                ]);
+            } catch (\Throwable) {
+                // Safeguard against log driver permission failures
+            }
             throw $e;
         }
     }
