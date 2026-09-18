@@ -8386,14 +8386,10 @@ END:VCALENDAR";
 
             $client_name_com = '';
             $client_name = @$logos->clients_name;
-            if (@$logos->companyChech != auth()->user()->company_id) {
+            $currentCompanyId = auth()->check() ? auth()->user()->company_id : ($row->company_id ?? null);
+            if ($currentCompanyId && @$logos->companyChech != $currentCompanyId) {
                 $client_name = @$logos->company_name;
                 $client_name = ucwords(substr(@$client_name, 0, 30));
-                if (@$logos->companyChech != auth()->user()->company_id) {
-                    $client_name = @$logos->company_name;
-                    $client_name = ucwords(substr(@$client_name, 0, 30));
-                }
-
             }
             $client_name_com = $client_name;
 
