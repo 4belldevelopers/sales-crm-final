@@ -262,14 +262,18 @@ class ProcessCandidateSubmissionJob implements ShouldQueue
             GeneralMethod::packageRedeem('CVACCESS', 'job_applications', $appId, $this->userCompanyId, $this->submittedById);
 
             // 11. Main ES candidate index
-            GeneralMethod::JobApplicationsAddEditUpload($this->addJobWiseCandidateId);
+            GeneralMethod::JobApplicationsAddEditUpload($this->addJobWiseCandidateId, $this->userCompanyId);
 
         } catch (\Throwable $e) {
-            Log::error('ProcessCandidateSubmissionJob failed', [
-                'application_id' => $this->applicationId,
-                'error'          => $e->getMessage(),
-                'trace'          => $e->getTraceAsString(),
-            ]);
+            try {
+                Log::error('ProcessCandidateSubmissionJob failed', [
+                    'application_id' => $this->applicationId,
+                    'error'          => $e->getMessage(),
+                    'trace'          => $e->getTraceAsString(),
+                ]);
+            } catch (\Throwable) {
+                // Safeguard against monolog stream/file permission issues on server logs
+            }
             throw $e; // allow queue retry
         }
     }

@@ -7334,7 +7334,7 @@ END:VCALENDAR";
         // return ($totalCount) ? $totalCount : 0;
     }
 
-    public static function JobApplicationsAddEditUpload($getId)
+    public static function JobApplicationsAddEditUpload($getId, $companyIdOverride = null)
     {
         $response = '';
         $elasticService = app(ElasticService::class);
@@ -7536,10 +7536,10 @@ END:VCALENDAR";
 
                 $client_name_com = '';
                 $client_name = @$application->client_name;
-                if (@$application->client_comapny_id != auth()->user()->company_id) {
+                $activeCompanyId = $companyIdOverride ?: (auth()->check() ? auth()->user()->company_id : ($application->company_id ?: ($application->other_company ?: null)));
+                if ($activeCompanyId && @$application->client_comapny_id != $activeCompanyId) {
                     $client_name = @$application->cur_company_name;
                     $client_name = ucwords(substr(@$client_name, 0, 30));
-
                 }
 
                 $client_name_com = $client_name;
@@ -7641,7 +7641,7 @@ END:VCALENDAR";
 
                 // Intent: Evaluate candidate duplicate status in static method context without $this or undefined variables.
                 // TENANCY NOTE: Scope company duplicate checks by application company_id.
-                $companyId = $application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null));
+                $companyId = $companyIdOverride ?: ($application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null)));
                 if ($companyId) {
                     $company = DB::table('companies')->where('id', $companyId)->first();
                     $appDuplicate = $company->app_duplicate ?? 0;

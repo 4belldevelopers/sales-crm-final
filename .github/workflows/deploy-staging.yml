@@ -50,6 +50,9 @@ jobs:
             chown -R www:www storage bootstrap/cache || true
             chmod -R 775 storage bootstrap/cache || true
             chmod -R 777 storage/logs || true
+            echo ">> Restarting queue workers & Horizon"
+            php artisan queue:restart || true
+            php artisan horizon:terminate || true
             echo ">> Full Octane restart"
             # FrankenPHP + OPcache: `octane:reload` only gracefully reloads worker threads,
             # which re-read the SAME cached bytecode — so new code silently never takes effect
