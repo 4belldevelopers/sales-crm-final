@@ -2043,7 +2043,10 @@ $(document).on('click', '.hm-listing', function ()
    	  			});
    	});
 
-    $(document).on('click', '.spartner-listing', function (){
+    $(document).on('click', '.spartner-listing', function (e){
+        if (e.isPropagationStopped() || $('#kt_activitiesRecruiter').length) {
+            return;
+        }
   
 	$('#kt_activitiesStaffing_toggle').trigger('click');		
 	var id    		= $(this).data('row-id');

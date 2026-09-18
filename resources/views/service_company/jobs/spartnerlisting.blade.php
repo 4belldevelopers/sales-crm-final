@@ -2206,17 +2206,18 @@ $current_job_id = @$job_id;
      * Matches Profile Tabs V2 architecture (ProfileTabManager).
      */
     window.AgencyMarketplaceTabManager = {
-        initializedTabs: {
-            recommended: true
-        },
+        initializedTabs: {},
         activeRequests: {},
         searchTimers: {},
+        isInitialized: false,
 
         init: function() {
+            if (this.isInitialized) return;
+            this.isInitialized = true;
             var self = this;
 
             // Listen for Metronic / Bootstrap shown.bs.tab event
-            $(document).on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
+            $(document).off('shown.bs.tab', 'a[data-toggle="tab"]').on('shown.bs.tab', 'a[data-toggle="tab"]', function (e) {
                 var targetTab = $(e.target).attr('href');
                 if (!targetTab) return;
                 var tabKey = targetTab.replace('#', '');
@@ -2224,7 +2225,7 @@ $current_job_id = @$job_id;
             });
 
             // Direct click handler fallback
-            $(document).on('click', '.nav-tabs a[data-toggle="tab"]', function (e) {
+            $(document).off('click', '.nav-tabs a[data-toggle="tab"]').on('click', '.nav-tabs a[data-toggle="tab"]', function (e) {
                 var targetTab = $(this).attr('href');
                 if (!targetTab) return;
                 var tabKey = targetTab.replace('#', '');
@@ -2291,10 +2292,19 @@ $current_job_id = @$job_id;
         }
     };
 
-    $(document).ready(function() {
+    function initAgencyMarketplaceView() {
         AgencyMarketplaceTabManager.init();
-        // Load initial tab (Recommended Agency) ONCE on page launch
-        tableLoad(1);
+        if (!AgencyMarketplaceTabManager.initializedTabs['recommended']) {
+            AgencyMarketplaceTabManager.initializedTabs['recommended'] = true;
+            tableLoad(1);
+        }
+    }
+
+    // Execute immediately so AJAX drawer injection loads the active Recommended tab
+    initAgencyMarketplaceView();
+
+    $(document).ready(function() {
+        initAgencyMarketplaceView();
     });
 
     function filtersdata() {

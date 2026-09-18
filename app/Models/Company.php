@@ -69,6 +69,11 @@ class Company extends Model
         });
     }
 
+    public function scopeExcludeSuperAdmin($query)
+    {
+        return $query->whereNotIn('companies.id', \App\Helper\GeneralMethod::superAdminCompanyIds());
+    }
+
     public function industries_data()
     {
         return $this->hasMany(TdIndustry::class, 'ind_id', 'industries');

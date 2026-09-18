@@ -309,7 +309,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
   </div>
 </div>
 <div id="kt_activitiesRecruiter_toggle"></div>
-<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
+<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
   <div class="card shadow-none rounded-0 w-100">
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
@@ -889,12 +889,19 @@ $(document).ready(function(){
 		});
 
   // Intent: load the existing agencies drawer for dynamically-rendered Add Agency controls.
-  $(document).on('click', '.spartner-listing', function(){
+  $(document).on('click', '.spartner-listing', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) {
+            e.stopImmediatePropagation();
+        }
+
         $('#kt_activitiesRecruiter_toggle').trigger('click');
         var id = $(this).data('row-id');
         var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
         url = url.replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+        var loaderHtml = '<div style="padding:40px;text-align:center;font-family:Poppins,sans-serif;"><img src="'+baseurl+'" height="35px" style="margin-bottom:10px;"><div style="font-size:13px;color:#5e6278;font-weight:500;">Loading agencies...</div></div>';
         var errorHtml = '<div style="padding:24px;text-align:center;font-family:Poppins,sans-serif;font-size:13px;color:#f64e60;">Could not load agencies. Please try again.</div>';
 
         $.ajax({
@@ -902,13 +909,9 @@ $(document).ready(function(){
             url: url,
             cache: false,
             beforeSend: function() {
-                $('#kt_activitiesRecruiter_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
+                $('#kt_activitiesRecruiter_body').html(loaderHtml);
             },
-            success: function (response, textStatus, xhr) {
-                if (xhr.status === 304) {
-                    return;
-                }
-
+            success: function (response) {
                 if (response && response.view) {
                     $('#kt_activitiesRecruiter_body').html(response.view);
                     return;

@@ -2,18 +2,30 @@
 
 namespace App\Models;
 
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use Notifiable, HasRoles;
+    use HasRoles, Notifiable;
 
     public function scopeCompany($query)
     {
         return $query->where('users.company_id', auth()->user()->company_id);
+    }
+
+    /**
+     * Intent: Scope to exclude Super Admin users and Super Admin companies from business-facing user queries.
+     * Tenancy: Filters out users where is_superadmin = 1 or company_id belongs to Super Admin.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExcludeSuperAdmin($query)
+    {
+        return $query->where('users.is_superadmin', 0)
+            ->whereNotIn('users.company_id', \App\Helper\GeneralMethod::superAdminCompanyIds());
     }
 
     /** Only these 4 fields may be mass-assigned; sensitive fields (status, company_id, super_password…) require explicit property assignment. */
@@ -30,18 +42,21 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-    protected $appends =[
-        'profile_image_url', 'mobile_with_code', 'formatted_mobile'
+    protected $appends = [
+        'profile_image_url', 'mobile_with_code', 'formatted_mobile',
     ];
 
-    public function getProfileImageUrlAttribute(){
+    public function getProfileImageUrlAttribute()
+    {
         if (is_null($this->image)) {
             return asset('avatar.png');
         }
+
         return asset_url('profile/'.$this->image);
     }
 
-    public function role() {
+    public function role()
+    {
         return $this->hasOne(RoleUser::class, 'user_id');
     }
 
@@ -52,10 +67,10 @@ class User extends Authenticatable
 
     public function receivesBroadcastNotificationsOn()
     {
-        return 'App.Models.User.' . $this->id;
+        return 'App.Models.User.'.$this->id;
     }
 
-    public static function allAdmins($exceptId = NULL)
+    public static function allAdmins($exceptId = null)
     {
         $users = User::join('role_user', 'role_user.user_id', '=', 'users.id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
@@ -63,7 +78,7 @@ class User extends Authenticatable
             ->where('roles.name', 'admin')
             ->company();
 
-        if(!is_null($exceptId)){
+        if (! is_null($exceptId)) {
             $users->where('users.id', '<>', $exceptId);
         }
 
@@ -87,9 +102,10 @@ class User extends Authenticatable
 
     public function getFormattedMobileAttribute()
     {
-        if (!$this->calling_code) {
+        if (! $this->calling_code) {
             return $this->mobile;
         }
+
         return $this->calling_code.'-'.$this->mobile;
     }
 
@@ -97,6 +113,7 @@ class User extends Authenticatable
     {
         return $this->mobile_with_code;
     }
+
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id');
