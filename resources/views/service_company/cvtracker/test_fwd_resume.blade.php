@@ -1469,6 +1469,18 @@ window.onTestFwdSubmitClick = async function (e) {
     var token = "{{ csrf_token() }}";
     var arr = [];
     $('.chk_list_item:checked').each(function () { arr.push($(this).val()); });
+    if (arr.length === 0) {
+        $('.test-fwd-cand-card').each(function () {
+            var cid = $(this).data('cand-id') || $(this).attr('data-cand-id');
+            if (cid) arr.push(cid);
+        });
+    }
+    if (arr.length === 0) {
+        var defaultCands = @json($applicationData ?? []);
+        if (Array.isArray(defaultCands) && defaultCands.length > 0) {
+            arr = defaultCands.map(function (c) { return c.id; }).filter(Boolean);
+        }
+    }
 
     var template = $('#test_template').val();
     var from_email = $('#test_from_email').val();

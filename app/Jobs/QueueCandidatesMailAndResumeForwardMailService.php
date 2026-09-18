@@ -31,6 +31,8 @@ class QueueCandidatesMailAndResumeForwardMailService implements ShouldQueue
      */
     public function __construct($email,$subject,$view,$data,$attachments,$fromAddress,$senderName,$cc,$company_id)
     {
+        $this->afterCommit = true;
+        $this->onQueue('mail');
         $this->email = $email;
         $this->subject = $subject;
         $this->view = $view;

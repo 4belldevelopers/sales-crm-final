@@ -67,6 +67,8 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
         int $companyId,
         ?string $replyTo = null
     ) {
+        $this->afterCommit = true;
+        $this->onQueue('mail');
         $this->forwardRequestUuid = $forwardRequestUuid;
         $this->to = $to;
         $this->subject = $subject;
@@ -120,6 +122,46 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
             $att->update(['status' => 'PROCESSING']);
             $bytes = $uploadService->getR2ObjectBytes($att->r2_object_key);
 
+            // Fallback: If R2 object bytes are missing, try fetching candidate's original resume directly
+            if (($bytes === null || strlen($bytes) <= 50) && ! empty($att->candidate_id)) {
+                try {
+                    $cand = DB::table('job_applications')
+                        ->where('id', $att->candidate_id)
+                        ->where(function ($q) {
+                            $q->where('company_id', $this->companyId)
+                                ->orWhere('thirdparty_company_id', $this->companyId);
+                        })
+                        ->first();
+
+                    if ($cand && ! empty($cand->resume)) {
+                        $candResume = $cand->resume;
+                        if (filter_var($candResume, FILTER_VALIDATE_URL)) {
+                            $httpRes = \Illuminate\Support\Facades\Http::timeout(15)->get($candResume);
+                            if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
+                                $bytes = $httpRes->body();
+                            }
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($candResume)) {
+                            $bytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($candResume);
+                        } elseif (file_exists(public_path('user-uploads/resumes/'.$candResume))) {
+                            $bytes = file_get_contents(public_path('user-uploads/resumes/'.$candResume));
+                        } elseif (file_exists(public_path('user-uploads/resume/'.$candResume))) {
+                            $bytes = file_get_contents(public_path('user-uploads/resume/'.$candResume));
+                        }
+
+                        if ($bytes !== null && strlen($bytes) > 50) {
+                            // Recover R2 object for future cleanups
+                            $uploadService->putR2ObjectBytes($att->r2_object_key, $bytes, $att->mime_type ?: 'application/pdf');
+                            \Log::info("[ForwardResume: {$this->forwardRequestUuid}] Successfully recovered attachment bytes from original candidate resume", [
+                                'candidate_id' => $att->candidate_id,
+                                'size' => strlen($bytes),
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $recovErr) {
+                    \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] Candidate resume recovery failed: ".$recovErr->getMessage());
+                }
+            }
+
             if ($bytes !== null && strlen($bytes) > 50) {
                 $inMemoryAttachments[] = [
                     'bytes' => $bytes,
@@ -149,6 +191,7 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
         $fromAddressReply = ! empty($this->replyTo) ? $this->replyTo : $this->fromAddress;
         $fromNameReply = $this->senderName;
         $fromMailAddr = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : $this->fromAddress;
+        $mailHost = substr(strrchr($fromMailAddr, '@'), 1) ?: 'jeroworks.in';
 
         // 3. Dispatch to each recipient with Application-Level Idempotency & Traceability
         foreach ($this->to as $recipient) {
@@ -158,6 +201,7 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
             }
 
             $idempotencyKey = md5($this->forwardRequestUuid.':'.$trimmedTo);
+            $providerMsgId = "{$idempotencyKey}@{$mailHost}";
 
             // Fetch or create delivery attempt record (Correction 2)
             $attempt = ForwardDeliveryAttempt::firstOrCreate(
@@ -189,14 +233,14 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
                     $fromAddressReply,
                     $fromNameReply,
                     $inMemoryAttachments,
-                    $idempotencyKey
+                    $providerMsgId
                 ) {
                     $msg->to($trimmedTo)
                         ->subject($this->subject)
                         ->from($fromMailAddr, $this->senderName);
 
-                    // Traceability Message-ID (Correction 1)
-                    $msg->getHeaders()->addIdHeader('Message-ID', "{$idempotencyKey}@jero.works");
+                    // Traceability Message-ID aligned with envelope domain
+                    $msg->getHeaders()->addIdHeader('Message-ID', $providerMsgId);
 
                     // Clean & deduplicate CC
                     $cleanCc = [];
@@ -232,7 +276,7 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
                 $attempt->update([
                     'status' => 'SENT',
                     'sent_at' => now(),
-                    'provider_message_id' => "{$idempotencyKey}@jero.works",
+                    'provider_message_id' => $providerMsgId,
                 ]);
 
                 // Audit logging
