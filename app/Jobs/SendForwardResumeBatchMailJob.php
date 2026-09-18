@@ -87,25 +87,32 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
      */
     public function handle(ForwardResumeUploadService $uploadService): void
     {
-        $forwardRequest = ForwardRequest::byUuid($this->forwardRequestUuid)
-            ->forCompany($this->companyId)
-            ->first();
-
-        if (! $forwardRequest) {
-            \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] Job aborted: ForwardRequest not found", [
-                'company_id' => $this->companyId,
-            ]);
-
-            return;
+        $forwardRequest = null;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
+                $forwardRequest = ForwardRequest::byUuid($this->forwardRequestUuid)
+                    ->forCompany($this->companyId)
+                    ->first();
+                if ($forwardRequest) {
+                    $forwardRequest->update(['status' => 'PROCESSING']);
+                }
+            }
+        } catch (\Throwable $fwdErr) {
+            \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] ForwardRequest fetch warning: ".$fwdErr->getMessage());
         }
-
-        $forwardRequest->update(['status' => 'PROCESSING']);
 
         // 1. Resolve attachments and stream bytes from Cloudflare R2 into worker RAM
         $inMemoryAttachments = [];
-        $attachments = ForwardAttachment::whereIn('uuid', $this->attachmentUuids)
-            ->forCompany($this->companyId)
-            ->get();
+        $attachments = collect();
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                $attachments = ForwardAttachment::whereIn('uuid', $this->attachmentUuids)
+                    ->forCompany($this->companyId)
+                    ->get();
+            }
+        } catch (\Throwable $attDbErr) {
+            \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] ForwardAttachment DB query warning: ".$attDbErr->getMessage());
+        }
 
         foreach ($attachments as $att) {
             // Validate application-level expiration cutoff (Correction 4)
@@ -114,12 +121,19 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
                     'att_uuid' => $att->uuid,
                     'expires_at' => $att->expires_at->toIso8601String(),
                 ]);
-                $att->update(['status' => 'EXPIRED']);
+                try {
+                    $att->update(['status' => 'EXPIRED']);
+                } catch (\Throwable $e) {
+                }
 
                 continue;
             }
 
-            $att->update(['status' => 'PROCESSING']);
+            try {
+                $att->update(['status' => 'PROCESSING']);
+            } catch (\Throwable $e) {
+            }
+
             $bytes = $uploadService->getR2ObjectBytes($att->r2_object_key);
 
             // Fallback: If R2 object bytes are missing, try fetching candidate's original resume directly
@@ -149,7 +163,6 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
                         }
 
                         if ($bytes !== null && strlen($bytes) > 50) {
-                            // Recover R2 object for future cleanups
                             $uploadService->putR2ObjectBytes($att->r2_object_key, $bytes, $att->mime_type ?: 'application/pdf');
                             \Log::info("[ForwardResume: {$this->forwardRequestUuid}] Successfully recovered attachment bytes from original candidate resume", [
                                 'candidate_id' => $att->candidate_id,
@@ -176,21 +189,79 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
             }
         }
 
-        // 2. Fetch SMTP Configuration
-        $smtp = EmailSetting::where('status', '=', 0)->where('id', 9)->orderByDesc('id')->first();
-        if (! $smtp) {
-            $smtp = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
+        // Secondary In-Memory Fallback: If no attachments were resolved via R2 (e.g. S3/R2 was unconfigured or empty UUIDs),
+        // inspect candidate_ids from $this->data and attach candidate original resumes directly
+        if (empty($inMemoryAttachments) && ! empty($this->data->candidate_ids) && is_array($this->data->candidate_ids)) {
+            try {
+                $candidateRows = DB::table('job_applications')
+                    ->whereIn('id', $this->data->candidate_ids)
+                    ->where(function ($q) {
+                        $q->where('company_id', $this->companyId)
+                            ->orWhere('thirdparty_company_id', $this->companyId);
+                    })
+                    ->get();
+
+                foreach ($candidateRows as $cr) {
+                    $resumePath = $cr->resume;
+                    if (! empty($resumePath)) {
+                        $fBytes = null;
+                        $ext = strtolower(pathinfo(parse_url($resumePath, PHP_URL_PATH) ?: $resumePath, PATHINFO_EXTENSION));
+                        $fMime = 'application/pdf';
+                        if ($ext === 'docx') {
+                            $fMime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+                        } elseif ($ext === 'doc') {
+                            $fMime = 'application/msword';
+                        }
+
+                        if (filter_var($resumePath, FILTER_VALIDATE_URL)) {
+                            $hRes = \Illuminate\Support\Facades\Http::timeout(15)->get($resumePath);
+                            if ($hRes->successful() && strlen($hRes->body()) > 50) {
+                                $fBytes = $hRes->body();
+                            }
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumePath)) {
+                            $fBytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($resumePath);
+                        } elseif (file_exists(public_path('user-uploads/resumes/'.$resumePath))) {
+                            $fBytes = file_get_contents(public_path('user-uploads/resumes/'.$resumePath));
+                        } elseif (file_exists(public_path('user-uploads/resume/'.$resumePath))) {
+                            $fBytes = file_get_contents(public_path('user-uploads/resume/'.$resumePath));
+                        }
+
+                        if ($fBytes !== null && strlen($fBytes) > 50) {
+                            $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cr->full_name ?: 'Candidate'));
+                            $inMemoryAttachments[] = [
+                                'bytes' => $fBytes,
+                                'filename' => 'Jeroworks_'.$candName.($ext ? ('.'.$ext) : '.pdf'),
+                                'mime' => $fMime,
+                            ];
+                        }
+                    }
+                }
+            } catch (\Throwable $secErr) {
+                \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] Secondary resume attachment fallback warning: ".$secErr->getMessage());
+            }
         }
-        if (! $smtp) {
-            throw new \Exception('SMTP config not found for resume forward');
+
+        // 2. Fetch SMTP Configuration
+        $smtp = null;
+        try {
+            $smtp = EmailSetting::where('status', '=', 0)->where('id', 9)->orderByDesc('id')->first();
+            if (! $smtp) {
+                $smtp = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
+            }
+        } catch (\Throwable $smtpDbErr) {
+            \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] SMTP query error: ".$smtpDbErr->getMessage());
         }
 
         Mail::purge();
-        $this->setDynamicMailConfig($smtp, $this->senderName);
+        if ($smtp) {
+            $this->setDynamicMailConfig($smtp, $this->senderName);
+            $fromMailAddr = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : $this->fromAddress;
+        } else {
+            $fromMailAddr = config('mail.from.address') ?: $this->fromAddress;
+        }
 
         $fromAddressReply = ! empty($this->replyTo) ? $this->replyTo : $this->fromAddress;
         $fromNameReply = $this->senderName;
-        $fromMailAddr = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : $this->fromAddress;
         $mailHost = substr(strrchr($fromMailAddr, '@'), 1) ?: 'jeroworks.in';
 
         // 3. Dispatch to each recipient with Application-Level Idempotency & Traceability
@@ -203,28 +274,35 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
             $idempotencyKey = md5($this->forwardRequestUuid.':'.$trimmedTo);
             $providerMsgId = "{$idempotencyKey}@{$mailHost}";
 
-            // Fetch or create delivery attempt record (Correction 2)
-            $attempt = ForwardDeliveryAttempt::firstOrCreate(
-                [
-                    'forward_request_id' => $forwardRequest->id,
-                    'recipient_email' => $trimmedTo,
-                ],
-                [
-                    'status' => 'PENDING',
-                    'attempt_count' => 0,
-                    'idempotency_key' => $idempotencyKey,
-                ]
-            );
+            // Fetch or create delivery attempt record safely (if table exists)
+            $attempt = null;
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('forward_delivery_attempts') && $forwardRequest) {
+                    $attempt = ForwardDeliveryAttempt::firstOrCreate(
+                        [
+                            'forward_request_id' => $forwardRequest->id,
+                            'recipient_email' => $trimmedTo,
+                        ],
+                        [
+                            'status' => 'PENDING',
+                            'attempt_count' => 0,
+                            'idempotency_key' => $idempotencyKey,
+                        ]
+                    );
 
-            // Skip already successfully sent attempts
-            if ($attempt->status === 'SENT') {
-                \Log::info("[ForwardResume: {$this->forwardRequestUuid}] Skipped already SENT attempt for {$trimmedTo}");
+                    // Skip already successfully sent attempts
+                    if ($attempt->status === 'SENT') {
+                        \Log::info("[ForwardResume: {$this->forwardRequestUuid}] Skipped already SENT attempt for {$trimmedTo}");
 
-                continue;
+                        continue;
+                    }
+
+                    $attempt->increment('attempt_count');
+                    $attempt->update(['status' => 'SENDING']);
+                }
+            } catch (\Throwable $attErr) {
+                \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] Delivery attempt tracking warning: ".$attErr->getMessage());
             }
-
-            $attempt->increment('attempt_count');
-            $attempt->update(['status' => 'SENDING']);
 
             try {
                 Mail::send($this->view, ['data' => $this->data], function ($msg) use (
@@ -273,58 +351,80 @@ class SendForwardResumeBatchMailJob implements ShouldQueue
                 });
 
                 // Mark attempt successful
-                $attempt->update([
-                    'status' => 'SENT',
-                    'sent_at' => now(),
-                    'provider_message_id' => $providerMsgId,
-                ]);
+                if ($attempt) {
+                    try {
+                        $attempt->update([
+                            'status' => 'SENT',
+                            'sent_at' => now(),
+                            'provider_message_id' => $providerMsgId,
+                        ]);
+                    } catch (\Throwable $e) {
+                    }
+                }
 
                 // Audit logging
-                $created_at = now();
-                DB::table('email_count_companies')->insertGetId([
-                    'to_email' => $trimmedTo,
-                    'subject' => $this->subject,
-                    'mailBody' => json_encode($this->data),
-                    'emailType' => 2,
-                    'company_id' => $this->companyId,
-                    'created_at' => $created_at,
-                    'updated_at' => $created_at,
-                ]);
+                try {
+                    $created_at = now();
+                    DB::table('email_count_companies')->insertGetId([
+                        'to_email' => $trimmedTo,
+                        'subject' => $this->subject,
+                        'mailBody' => json_encode($this->data),
+                        'emailType' => 2,
+                        'company_id' => $this->companyId,
+                        'created_at' => $created_at,
+                        'updated_at' => $created_at,
+                    ]);
+                } catch (\Throwable $auditErr) {
+                    \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] email_count_companies logging skipped: ".$auditErr->getMessage());
+                }
             } catch (\Throwable $sendErr) {
-                $attempt->update([
-                    'status' => 'FAILED',
-                    'last_error' => $sendErr->getMessage(),
-                ]);
+                if ($attempt) {
+                    try {
+                        $attempt->update([
+                            'status' => 'FAILED',
+                            'last_error' => $sendErr->getMessage(),
+                        ]);
+                    } catch (\Throwable $e) {
+                    }
+                }
                 \Log::error("[ForwardResume: {$this->forwardRequestUuid}] Delivery failed for {$trimmedTo}: ".$sendErr->getMessage());
                 throw $sendErr; // Re-throw to allow Horizon retry with backoff
             }
         }
 
         // 4. Multi-Recipient Delivery Barrier (Correction 2 & 3):
-        // Check if ANY delivery attempt for this forward request is still in a non-terminal state
-        $hasPendingAttempts = ForwardDeliveryAttempt::where('forward_request_id', $forwardRequest->id)
-            ->whereNotIn('status', ['SENT', 'FAILED'])
-            ->exists();
+        if ($forwardRequest && \Illuminate\Support\Facades\Schema::hasTable('forward_delivery_attempts')) {
+            try {
+                $hasPendingAttempts = ForwardDeliveryAttempt::where('forward_request_id', $forwardRequest->id)
+                    ->whereNotIn('status', ['SENT', 'FAILED'])
+                    ->exists();
 
-        if (! $hasPendingAttempts) {
-            // Two-phase cleanup: Transition attachments to READY_FOR_CLEANUP, then delete from R2
-            foreach ($attachments as $att) {
-                $att->update(['status' => 'READY_FOR_CLEANUP']);
-                $deleted = $uploadService->deleteR2Attachment($att->r2_object_key);
-                if ($deleted) {
-                    $att->update([
-                        'status' => 'DELETED',
-                        'deleted_at' => now(),
+                if (! $hasPendingAttempts) {
+                    // Two-phase cleanup: Transition attachments to READY_FOR_CLEANUP, then delete from R2
+                    foreach ($attachments as $att) {
+                        try {
+                            $att->update(['status' => 'READY_FOR_CLEANUP']);
+                            $deleted = $uploadService->deleteR2Attachment($att->r2_object_key);
+                            if ($deleted) {
+                                $att->update([
+                                    'status' => 'DELETED',
+                                    'deleted_at' => now(),
+                                ]);
+                            }
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    $forwardRequest->update([
+                        'status' => 'COMPLETED',
+                        'completed_at' => now(),
                     ]);
+
+                    \Log::info("[ForwardResume: {$this->forwardRequestUuid}] All delivery attempts complete. Temporary R2 objects cleaned up.");
                 }
+            } catch (\Throwable $barrierErr) {
+                \Log::warning("[ForwardResume: {$this->forwardRequestUuid}] Multi-recipient delivery barrier warning: ".$barrierErr->getMessage());
             }
-
-            $forwardRequest->update([
-                'status' => 'COMPLETED',
-                'completed_at' => now(),
-            ]);
-
-            \Log::info("[ForwardResume: {$this->forwardRequestUuid}] All delivery attempts complete. Temporary R2 objects cleaned up.");
         }
     }
 

@@ -1815,7 +1815,12 @@ END:VCALENDAR";
 
     }
 
-    public static function packageRedeem($event_name, $event_table_name, $event_table_id, $source_to_company_id = '')
+    /**
+     * Deduct package credits for an event and record transaction.
+     * Tenancy note: Operates strictly scoped to $company_id (passed or authenticated).
+     * Safe for queue workers (Horizon/Redis) where auth() is null by accepting explicit $userId.
+     */
+    public static function packageRedeem($event_name, $event_table_name, $event_table_id, $source_to_company_id = '', $userId = null)
     {
 
         $company_id = $source_to_company_id ?: (auth()->user()?->company_id ?? null);
@@ -1823,13 +1828,16 @@ END:VCALENDAR";
             return false;
         }
 
+        $resolvedUserId = $userId ?: (auth()->check() ? (int) auth()->id() : 0);
+
         $package_active = 0;
         $package_active_cnt = DB::table('package_active')->select('*')->where('company_id', $company_id)->count();
         if (($package_active_cnt > 0) && ($event_name != '')) {
             $package_active_row = '';
             $package_active_row = DB::table('package_active')->select('*')->where('company_id', $company_id)->first();
 
-            $f_id = DB::table('package_features')->select('id')->where('field_name', $event_name)->first()->id;
+            $featureRow = DB::table('package_features')->select('id')->where('field_name', $event_name)->first();
+            $f_id = $featureRow ? $featureRow->id : 0;
 
             if ($event_name == 'CVACCESS') {
                 $startdate = $enddate = $status = $quantity = $used = $balance = '';
@@ -1845,7 +1853,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => $f_id,
-                    'user_id' => $user_id ?: (auth()->check() ? auth()->id() : 0),
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1873,7 +1881,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1901,7 +1909,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1929,7 +1937,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -1957,7 +1965,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2255,10 +2263,21 @@ END:VCALENDAR";
 
     }
 
-    public static function clientPackageRedeem($event_name, $event_table_name, $event_table_id, $company_id)
+    /**
+     * Deduct client package credits for an event and record transaction.
+     * Tenancy note: Operates strictly scoped to $company_id.
+     * Safe for queue workers (Horizon/Redis) where auth() is null by accepting optional $userId.
+     */
+    public static function clientPackageRedeem($event_name, $event_table_name, $event_table_id, $company_id = '', $userId = null)
     {
 
-        // $company_id 			=	auth()->user()->company_id;
+        $company_id = $company_id ?: (auth()->user()?->company_id ?? null);
+        if (! $company_id) {
+            return false;
+        }
+
+        $resolvedUserId = $userId ?: (auth()->check() ? (int) auth()->id() : 0);
+
         $package_active = 0;
         $package_active_cnt = DB::table('package_active')->select('*')->where('company_id', $company_id)->count();
 
@@ -2284,7 +2303,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2309,7 +2328,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2334,7 +2353,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2359,7 +2378,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2384,7 +2403,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2408,7 +2427,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2431,7 +2450,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2454,7 +2473,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2477,7 +2496,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2500,7 +2519,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2523,7 +2542,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2546,7 +2565,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2574,7 +2593,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2602,7 +2621,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2625,7 +2644,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => @$f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -2649,7 +2668,7 @@ END:VCALENDAR";
                     'package_invoice_id' => @$package_active_row->package_invoice_id,
                     'company_id' => $company_id,
                     'package_master_item' => (int) $f_id->id,
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $resolvedUserId,
                     'event_name' => $event_table_name,
                     'event_inserted_id' => @$event_table_id,
                 ];
@@ -7582,13 +7601,13 @@ END:VCALENDAR";
                     return [
                         'id' => $s->id,
                         'job_application_id' => $s->job_application_id,   // ← FIXED (you had wrong value)
-                        'skills' => strtolower($s->skills),
+                        'skills' => strtolower((string) $s->skills),
                     ];
                 })->toArray();
 
                 $application_skills = $skills
                     ->pluck('skills')
-                    ->map(fn ($skill) => strtolower($skill))
+                    ->map(fn ($skill) => strtolower((string) $skill))
                     ->implode(',');
 
                 $params = [
@@ -7772,16 +7791,16 @@ END:VCALENDAR";
                                 'id' => $wiseId,
                                 'candidate_id' => $application->id,
                                 'thirdparty_company_id' => $application->thirdparty_company_id,
-                                'full_name' => strtolower($application->full_name),
+                                'full_name' => strtolower((string) $application->full_name),
                                 'email' => $application->email,
                                 'phone' => $application->phone,
                                 'gender' => $application->gender,
                                 'np_id' => $application->np_id,
                                 'immediate_join' => $application->np_id,
                                 'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                                'country_name' => strtolower($application->country_name),
-                                'state_name' => strtolower($application->state_name),
-                                'city_name' => strtolower($application->city_name),
+                                'country_name' => strtolower((string) $application->country_name),
+                                'state_name' => strtolower((string) $application->state_name),
+                                'city_name' => strtolower((string) $application->city_name),
                                 'city_id' => $application->city_id,
                                 'skills' => $application_skills,
                                 'photo' => $application->photo,
@@ -7818,26 +7837,26 @@ END:VCALENDAR";
                                 'bill_rate_mode' => $application->bill_rate_mode,
                                 'condidate_type' => $application->condidate_type,
                                 'master_status_id' => $application->master_status_id,
-                                'title' => strtolower($application->title),
+                                'title' => strtolower((string) $application->title),
                                 'client_id' => $application->client_id,
                                 'employment_type' => $application->employment_type,
                                 'client_comapny_id' => $application->client_comapny_id,
                                 'location' => $application->location,
-                                'client_name' => strtolower($application->client_name),
-                                'posted_by' => strtolower($application->posted_by),
+                                'client_name' => strtolower((string) $application->client_name),
+                                'posted_by' => strtolower((string) $application->posted_by),
                                 'posted_by_image' => $application->posted_by_image,
                                 'name' => $application->name,
                                 'post_company_name' => $application->post_company_name,
                                 'css_style' => $application->css_style,
-                                'qualification_name' => strtolower($application->qualification_name),
+                                'qualification_name' => strtolower((string) $application->qualification_name),
                                 'final_status' => $application->final_status,
                                 'recommendation_id' => $application->recommendation_id,
                                 'from_company_id' => $application->from_company_id,
                                 'to_company_id' => $application->to_company_id,
                                 'company_id' => $application->company_id,
-                                'company_name' => strtolower($application->company_name),
-                                'apl_company_name' => strtolower($application->apl_company_name),
-                                'cur_company_name' => strtolower($application->cur_company_name),
+                                'company_name' => strtolower((string) $application->company_name),
+                                'apl_company_name' => strtolower((string) $application->apl_company_name),
+                                'cur_company_name' => strtolower((string) $application->cur_company_name),
                                 'job_status' => $application->job_status,
                                 'childStatus' => $application->childStatus,
                                 'wiseId' => $application->wiseId,
@@ -7893,7 +7912,7 @@ END:VCALENDAR";
                                 'document' => $application->document,
                                 'sub_for_approval' => $application->sub_for_approval,
                                 'own_company_name' => $application->own_company_name,
-                                'client_or_company_name' => strtolower($client_name_com),
+                                'client_or_company_name' => strtolower((string) $client_name_com),
                                 'rjobid' => $application->rjobid,
                                 'submitted_by' => $application->submitted_by,
                                 'hashname' => $application->hashname,
@@ -11365,14 +11384,14 @@ END:VCALENDAR";
                     return [
                         'id' => $s->id,
                         'job_application_id' => $s->id,
-                        'skills' => strtolower($s->skills),
+                        'skills' => strtolower((string) $s->skills),
                     ];
                 })
                 ->toArray();
             $application_skills = DB::table('job_application_skills')
                 ->where('job_application_id', $application->id)
                 ->pluck('skills') // only take skills column
-                ->map(fn ($skill) => strtolower($skill))
+                ->map(fn ($skill) => strtolower((string) $skill))
                 ->implode(',');
 
             $response = $elasticService->getClient()->update([
@@ -11384,16 +11403,16 @@ END:VCALENDAR";
                         'id' => $wiseId,
                         'candidate_id' => $application->id,
                         'thirdparty_company_id' => $application->thirdparty_company_id,
-                        'full_name' => strtolower($application->full_name),
+                        'full_name' => strtolower((string) $application->full_name),
                         'email' => $application->email,
                         'phone' => $application->phone,
                         'np_id' => $application->np_id,
                         'immediate_join' => $application->np_id,
                         'status_type' => 'DIRECT',
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                        'country_name' => strtolower($application->country_name),
-                        'state_name' => strtolower($application->state_name),
-                        'city_name' => strtolower($application->city_name),
+                        'country_name' => strtolower((string) $application->country_name),
+                        'state_name' => strtolower((string) $application->state_name),
+                        'city_name' => strtolower((string) $application->city_name),
                         'city_id' => $application->city_id,
                         'skills' => $application_skills,
                         'photo' => $application->photo,
@@ -11420,26 +11439,26 @@ END:VCALENDAR";
                         'bill_rate_mode' => $application->bill_rate_mode,
                         'condidate_type' => $application->condidate_type,
                         'master_status_id' => $application->master_status_id,
-                        'title' => strtolower($application->title),
+                        'title' => strtolower((string) $application->title),
                         'client_id' => $application->client_id,
                         'employment_type' => $application->employment_type,
                         'client_comapny_id' => $application->client_comapny_id,
                         'location' => $application->location,
-                        'client_name' => strtolower($application->client_name),
-                        'posted_by' => strtolower($application->posted_by),
+                        'client_name' => strtolower((string) $application->client_name),
+                        'posted_by' => strtolower((string) $application->posted_by),
                         'posted_by_image' => $application->posted_by_image,
                         'name' => $application->name,
                         'post_company_name' => $application->post_company_name,
                         'css_style' => $application->css_style,
-                        'qualification_name' => strtolower($application->qualification_name),
+                        'qualification_name' => strtolower((string) $application->qualification_name),
                         'final_status' => $application->final_status,
                         'recommendation_id' => $application->recommendation_id,
                         'from_company_id' => $application->from_company_id,
                         'to_company_id' => $application->to_company_id,
                         'company_id' => $application->company_id,
-                        'company_name' => strtolower($application->company_name),
-                        'apl_company_name' => strtolower($application->apl_company_name),
-                        'cur_company_name' => strtolower($application->cur_company_name),
+                        'company_name' => strtolower((string) $application->company_name),
+                        'apl_company_name' => strtolower((string) $application->apl_company_name),
+                        'cur_company_name' => strtolower((string) $application->cur_company_name),
                         'job_status' => $application->job_status,
                         'childStatus' => $application->childStatus,
                         'wiseId' => $application->wiseId,
@@ -11495,7 +11514,7 @@ END:VCALENDAR";
                         'document' => $application->document,
                         'sub_for_approval' => $application->sub_for_approval,
                         'own_company_name' => $application->own_company_name,
-                        'client_or_company_name' => strtolower($client_name_com),
+                        'client_or_company_name' => strtolower((string) $client_name_com),
                         'rjobid' => $application->rjobid,
                         'submitted_by' => $application->submitted_by,
                         'hashname' => $application->hashname,

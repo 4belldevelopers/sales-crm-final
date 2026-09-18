@@ -2930,18 +2930,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
             } elseif ($npMode === 0 && (int) $npRaw > 0) {
-                $cand->notice = (int) $npRaw . ' Days';
+                $cand->notice = (int) $npRaw.' Days';
                 $cand->is_immediate = false;
             } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
                 if (date('Y-m-d', $npTs) < date('Y-m-d')) {
                     $cand->notice = 'Immediate';
                     $cand->is_immediate = true;
                 } else {
-                    $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                    $cand->notice = $isBench ? ('Available '.date('d M Y', $npTs)) : ('SNP LWD '.date('d M Y', $npTs));
                     $cand->is_immediate = false;
                 }
             } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                $cand->notice = $isBench ? ('Available '.date('d M Y', $npTs)) : ('SNP LWD '.date('d M Y', $npTs));
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
@@ -2949,18 +2949,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
 
             // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
-            $cityName = (!empty($cand->city_name) && !preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-            if (!$cityName && !empty($cand->city) && !preg_match('/^\d+$/', trim((string) $cand->city))) {
+            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
                 $cityName = trim((string) $cand->city);
             }
 
-            $stateName = (!empty($cand->state_name) && !preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-            if (!$stateName && !empty($cand->state) && !preg_match('/^\d+$/', trim((string) $cand->state))) {
+            $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
+            if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
                 $stateName = trim((string) $cand->state);
             }
 
-            $countryName = (!empty($cand->country_name) && !preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
-            if (!$countryName && !empty($cand->country) && !preg_match('/^\d+$/', trim((string) $cand->country))) {
+            $countryName = (! empty($cand->country_name) && ! preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
+            if (! $countryName && ! empty($cand->country) && ! preg_match('/^\d+$/', trim((string) $cand->country))) {
                 $countryName = trim((string) $cand->country);
             }
 
@@ -3437,18 +3437,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
             } elseif ($npMode === 0 && (int) $npRaw > 0) {
-                $cand->notice = (int) $npRaw . ' Days';
+                $cand->notice = (int) $npRaw.' Days';
                 $cand->is_immediate = false;
             } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
                 if (date('Y-m-d', $npTs) < date('Y-m-d')) {
                     $cand->notice = 'Immediate';
                     $cand->is_immediate = true;
                 } else {
-                    $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                    $cand->notice = $isBench ? ('Available '.date('d M Y', $npTs)) : ('SNP LWD '.date('d M Y', $npTs));
                     $cand->is_immediate = false;
                 }
             } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                $cand->notice = $isBench ? ('Available '.date('d M Y', $npTs)) : ('SNP LWD '.date('d M Y', $npTs));
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
@@ -3456,18 +3456,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
 
             // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
-            $cityName = (!empty($cand->city_name) && !preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-            if (!$cityName && !empty($cand->city) && !preg_match('/^\d+$/', trim((string) $cand->city))) {
+            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
                 $cityName = trim((string) $cand->city);
             }
 
-            $stateName = (!empty($cand->state_name) && !preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-            if (!$stateName && !empty($cand->state) && !preg_match('/^\d+$/', trim((string) $cand->state))) {
+            $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
+            if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
                 $stateName = trim((string) $cand->state);
             }
 
-            $countryName = (!empty($cand->country_name) && !preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
-            if (!$countryName && !empty($cand->country) && !preg_match('/^\d+$/', trim((string) $cand->country))) {
+            $countryName = (! empty($cand->country_name) && ! preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
+            if (! $countryName && ! empty($cand->country) && ! preg_match('/^\d+$/', trim((string) $cand->country))) {
                 $countryName = trim((string) $cand->country);
             }
 
@@ -3937,6 +3937,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'consultant_name' => 'JERO Recruitment',
             'position' => 'Candidate Requisition',
             'candidate_skills' => [],
+            'candidate_ids' => $arr,
         ];
 
         $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
