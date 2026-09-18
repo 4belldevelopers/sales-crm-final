@@ -338,7 +338,7 @@ if(!empty($conactPersonListing)){
                   <h4 class="" style="margin: 10px 0px;">Location - <?php echo ucwords(@$jobCitySelected); ?> </h4>
                   <h5 class="" style="margin: 10px 0px;">Experience- <?php echo @$job->min_exp; ?>-<?php echo @$job->max_exp; ?> Years</h5>
                   <p> <?php echo @$job->job_description; ?> </p>
-                  <h5 class="" style="margin: 10px 0px;">About <?php echo ucwords(@$job->client_name); ?></h5>
+                  <h5 class="" style="margin: 10px 0px;">About <?php echo ucwords(@$company_name ?: @$job->client_name); ?></h5>
                   <p class="fw-bold fs-6 text-justify"> <?php echo ucfirst(@$job->client_description); ?> </p>
                 </div>
               </div>

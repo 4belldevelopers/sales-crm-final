@@ -60,7 +60,8 @@
     }
 
     $clientTypeKey   = 'direct';
-    $clientTypeLabel = 'Direct Client';
+    $parentCompName  = $row->company_name ?? ($row->clients_name ?? '');
+    $clientTypeLabel = !empty($parentCompName) ? $parentCompName : 'Direct Client';
     /* The numeric suffix "Internal Client · 1410" is the job-owning company
        (comId) — same on both badges, so users scan "Internal\D" first, ID
        second. */

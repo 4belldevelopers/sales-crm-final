@@ -170,7 +170,7 @@ return array (
   'internal_clients' => 'Internal Clients',
   'client_requests' => 'Client requests',
   'direct_clinet_tag' => 'Direct Client',
-  'internal_client_tag' => 'Internal Client',
+  'internal_client_tag' => 'Internal',
   'Agency' => 'Agency',
   'Agencies' => 'Agencies',
   'jero_small' => 'Jero.works',

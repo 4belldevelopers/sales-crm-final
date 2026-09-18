@@ -258,7 +258,7 @@ return [
         // Transactional & batch mail — isolated supervisor
         'supervisor-mail' => [
             'connection' => 'redis',
-            'queue' => ['mail', 'mails'],
+            'queue' => ['mail', 'mails', 'emails'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'size',
             'maxProcesses' => 4,

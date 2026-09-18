@@ -845,7 +845,7 @@
 
                         var status = bsTwoLineText(r.Status); // muted contains "Internal"/"Client" somewhere in its text
                         var isInternal = (status.muted || '').toLowerCase().indexOf('internal') !== -1;
-                        var clientLabel = isInternal ? 'Internal Client' : 'Direct Client';
+                        var clientLabel = isInternal ? 'Internal' : 'Direct Client';
 
                         var expCellHtml =
                             '<div class="bs-exp-row"><i class="fa fa-clock"></i> ' + expRange + '</div>' +

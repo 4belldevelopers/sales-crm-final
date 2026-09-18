@@ -68,7 +68,7 @@
             $skillMatchSection = '';
             if ($percentage > 0 || !empty($skilltag)) {
                 $skillMatchSection =
-                    '<div class="skill-tags d-flex align-items-center" style="position: absolute;bottom: 5px;left: 11px;white-space: nowrap;">
+                    '<div class="" style="position: absolute; bottom: 0; white-space: nowrap; overflow: hidden;">
                         <span class="badge" style="background-color: #e8fff3; color: #10b981; border: 1px solid #a7f3d0; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-right: 4px;">'.$percentage.'% Skill Match</span>
                    ' .$skilltag . '</div>';
             }
@@ -129,9 +129,9 @@
                         @endif
                     </div>
                     <div class="a-type">{{ substr(ucwords(@$ind_name), 0, 27) }}</div>
-                    {!! $skillMatchSection !!}
                     </div>
                 </div>
+                {!! $skillMatchSection !!}
             </td>
             <td class="match-cell">
                 @php
@@ -308,7 +308,7 @@
                                 'client_location.city as direct_city',
                                 'city_list.city as city_name',
                                 'countries.country_name',
-                                'countries.sortname as country_code'
+                                'countries.country_code as country_code'
                             )
                             ->where('clients.company_id', '=', $row->id)
                             ->where('clients.self_company', '=', 1)
