@@ -1,268 +1,314 @@
-# V4 Architecture Plan — Unified Prescreen Dossier Bridge: Forward Resume & Candidate Drawer
+# V4 Architecture Plan — Unified Canonical Candidate Dossier & Prescreen Engine
 
-**Document Version:** 4.0.0  
+**Document Version:** 4.1.0 (Principal Architect Reviewed & Hardened)  
 **Target Environment:** JERO ATS & Talent Marketplace (`testing.jero.works`)  
-**Scope:** Forward Resume Prescreen Report, Candidate Drawer (`showdetail.blade.php`), CV Tracker (`fwd_resume`), AgyForwardResumeEngine  
-**Architectural Pattern:** CQRS (MySQL Writes, Elasticsearch/Memory Reads) + Reactive Client-Side Cache Bridge + SSOT Canonical Data Contract  
+**Scope:** Candidate Drawer (`showdetail.blade.php`), Forward Resume (`fwd_resume`), AgyForwardResumeEngine, Prescreen PDF Generator, Client Portal  
+**Architectural Patterns:** CQRS + Backend SSOT + Bounded Cache Accelerator + Secure Preview/Final Send Split + Multi-Tenant Scoping  
 
 ---
 
-## 1. Executive Summary & Problem Definition
+## 1. Executive Summary & Core Architectural Goals
 
-### 1.1 The Current Problem
-Currently, the **Candidate Drawer** and the **Forward Resume Prescreen Report** operate on separate, isolated data-assembly pipelines:
-1. **Candidate Drawer (`showdetail.blade.php`)**:
-   - Calculates skill match percentage using the modern canonical algorithm: `GeneralMethod::calculateSkillMatch($jobSkills, $candidateSkills)`.
-   - Computes 7 real-time validation badges (Notice Period status, Budget/CTC alignment, Relocation willingness, Experience criteria, etc.).
-   - Renders the Prescreen Dossier in `#rsData` element and displays PDF via client-side PDFMake engine.
-2. **Forward Resume Section (`ServiceCompanyCvTrackerController::fwd_resume`)**:
-   - Runs **11 separate, un-optimized MySQL queries** per candidate when loading the modal.
-   - Derives match percentage from checkbox data attributes (`data-match`) or falls back to legacy/hardcoded formulas (e.g. `GeneralMethod::skill_percentage` or `85%`).
-   - Does **not** share the Candidate Drawer's 7 validation badges or exact skill rating mapping.
+### 1.1 Engineering Principles
+1. **Database + Canonical Service = Single Source of Truth (SSOT)**: The browser cache is strictly a **client-side read accelerator** for instant UI rendering; it must **never** be treated as authoritative.
+2. **Authoritative Security Wall (Preview vs. Final Send)**:
+   - **Preview Mode**: Accelerated by validated browser cache for instant UI rendering (`< 10ms P95`).
+   - **Final Send / Forward / Email / Audit Mode**: Must **ALWAYS** be generated, validated, and signed authoritatively on the backend by `CandidateDossierService`. Browser-supplied payloads are **never trusted** for billing, emailing, client delivery, or permission validation.
+3. **Composite Identity & Context-Aware Caching**: Candidate dossiers are intrinsically linked to both Candidate and Job. Cache identity is strictly `${candidate_id}:${job_id}` with composite revision tracking.
+4. **Tenant Isolation by Construction**: All dossier resolutions enforce strict multi-tenant scoping (`company_id`, candidate access scope, and job ownership) to prevent data leaks across organizations.
 
-**Consequence:** Recruiters see one match percentage and set of badges in the Candidate Drawer, but when they generate or email the Forward Resume Prescreen Report, the numbers, badges, and details can diverge.
+### 1.2 The 5 Stated Goals & Measurable SLAs
 
-### 1.2 The God-Level Architectural Goal
-1. **100% Data & Visual Parity (SSOT)**: The Prescreen Report and Candidate Drawer must share the exact same canonical data contract. Match %, badges, notice period, and skill stars must be mathematically and visually identical.
-2. **0ms Instant Load (0% Server Load)**: When a candidate's drawer has already been viewed/loaded in the recruiter's session, Forward Resume copies the dossier directly from in-memory cache with zero HTTP roundtrips, 0% MySQL load, and 0% Elasticsearch load.
-3. **Reactive Real-Time Freshness (Zero Stale Data Guarantee)**: If any candidate data is updated in the drawer (Notice Period, Skills, CTC, Prescreen Questions), the cache is immediately invalidated and updated. The Prescreen Report **always reflects 100% fresh, updated data**.
-4. **Batch Fallback for Table Checkbox Selections**: If candidates are selected directly from table checkboxes without opening their drawers, a single batch dossier endpoint provides the exact canonical drawer schema without running fragmented legacy queries.
+| Goal | Description | Measurable SLA |
+| :--- | :--- | :--- |
+| **Goal 1: Canonical Data Parity** | Candidate Drawer, Forward Resume, Prescreen PDF, and Client Portal consume the exact same versioned `CandidateDossier` contract. | 100% semantic and calculation parity across all consumer views. |
+| **Goal 2: Instant Cached Experience** | An already-authorized, same-session cached dossier opens without additional HTTP, MySQL, or Elasticsearch requests. | **< 10ms P95** retrieval; 0 additional network/DB queries. |
+| **Goal 3: Revision-Safe Freshness** | Every dossier contains a server-generated `dossier_revision`. Cached data is only considered fresh when `candidate_id`, `job_id`, `schema_version`, and `dossier_revision` match. | Zero stale reads on mutations; auto-invalidation across tabs via Reverb. |
+| **Goal 4: Secure Finalization** | Browser cache accelerates preview UI but is prohibited from authoritative persistence or forwarding. | 100% backend-verified generation on final dispatch. |
+| **Goal 5: Batch Efficiency** | Uncached candidate selections from tables are resolved through a single batch request with bounded database access and zero N+1 queries. | **< 500ms P95** for 50 candidates; 3–6 optimized queries max. |
 
 ---
 
-## 2. End-to-End System Flow Diagram
+## 2. Target System Architecture
+
+```
+                    ┌────────────────────────────────────────┐
+                    │               MySQL DB                 │
+                    │   Authoritative State & Transactions   │
+                    └───────────────────┬────────────────────┘
+                                        │
+                                        ▼
+                 ┌──────────────────────────────────────────────┐
+                 │       CandidateDossierService (SSOT)         │
+                 │                                              │
+                 │ • Tenant Scoping (company_id enforcement)    │
+                 │ • RBAC & Candidate/Job Authorization Check   │
+                 │ • Canonical Skill Match (GeneralMethod)      │
+                 │ • 7 Canonical Validation Badges              │
+                 │ • Prescreen Evaluation Answers               │
+                 │ • Composite dossier_revision Calculation     │
+                 └──────────────────────┬───────────────────────┘
+                                        │
+                                        ▼
+                 ┌──────────────────────────────────────────────┐
+                 │          Canonical Dossier Contract          │
+                 │   schema_version: "4.1"                      │
+                 │   dossier_revision: "c:101:j:789:rev_52"     │
+                 │   algorithm_version: "2.3.0"                 │
+                 └──────────────────────┬───────────────────────┘
+                                        │
+         ┌──────────────────────────────┼──────────────────────────────┐
+         │                              │                              │
+         ▼                              ▼                              ▼
+┌──────────────────┐          ┌──────────────────┐           ┌──────────────────┐
+│ Candidate Drawer │          │  Forward Resume  │           │  Client Portal   │
+│ (showdetail DOM) │          │  Modal (Preview) │           │  (Shared View)   │
+└────────┬─────────┘          └────────┬─────────┘           └──────────────────┘
+         │                             │
+         ▼                             ▼
+┌────────────────────────────────────────────────┐
+│   Browser Memory Cache (Accelerator Only)      │
+│   Key: `${candidate_id}:${job_id}`             │
+│   LRU: 500 max, session-only, clear on logout  │
+└────────────────────────────────────────────────┘
+```
+
+---
+
+## 3. The Preview vs Final Send Security Wall
 
 ```mermaid
-flowchart TD
-    subgraph Browser Client Memory
-        CD[Candidate Drawer Opened] -->|Parses #rsData| CC[(window.__candidateDossierCache)]
-        MUT[Recruiter Updates Candidate in Drawer] -->|AJAX Save Success| INV[Invalidate & Overwrite Cache]
-        INV --> CC
-        INV -->|Dispatches Event| EVT[window.dispatchEvent: jero:candidate-dossier-updated]
+sequenceDiagram
+    autonumber
+    actor Recruiter
+    participant Browser as Browser UI (Cache Accelerator)
+    participant Controller as CvTrackerController
+    participant Service as CandidateDossierService (SSOT)
+    participant DB as MySQL DB
+    participant Dispatcher as Email / Queue / Storage
+
+    Note over Recruiter,Browser: Phase 1: Instant Preview
+    Recruiter->>Browser: Selects Candidate #101 for Job #789 & Clicks Forward
+    alt Cache Hit (Candidate:Job in memory & Valid)
+        Browser-->>Recruiter: Render Instant UI Preview (< 10ms P95)
+    else Cache Miss
+        Browser->>Controller: GET /service-company/candidate-dossier?c=101&j=789
+        Controller->>Service: buildDossier(101, 789, tenantId)
+        Service->>DB: Bounded query with company_id scope
+        DB-->>Service: Authoritative Entities
+        Service-->>Controller: Canonical Dossier
+        Controller-->>Browser: Signed Dossier Payload
+        Browser->>Browser: Store in Cache Accelerator
+        Browser-->>Recruiter: Render Preview
     end
 
-    subgraph Forward Resume Action
-        SEL[Recruiter Selects Candidates & Clicks 'Forward Resume'] --> CHECK{Are candidates in __candidateDossierCache?}
-        CHECK -- YES (In Cache & Fresh) --> FAST[0ms Direct Read from Cache]
-        CHECK -- NO (Selected from Table, Drawer Unopened) --> FETCH[Fetch Canonical Dossier Batch API]
-    end
-
-    subgraph Backend Canonical Resolver (SSOT)
-        FETCH --> RESOLVER[CandidateDossierService::buildDossier(candidateId, jobId)]
-        RESOLVER -->|Reads ES / MySQL Writes| ES[(Elasticsearch / Read Cache)]
-        RESOLVER --> PARSER[Canonical calculateSkillMatch & 7 Validation Badges]
-        PARSER --> PAYLOAD[Canonical Dossier JSON Payload]
-    end
-
-    PAYLOAD --> CC
-    FAST --> ENGINE[AgyForwardResumeEngine.js]
-    PAYLOAD --> ENGINE
-    EVT -->|Live Listener| ENGINE
-
-    ENGINE --> PDF[100% Identical Prescreen Report & PDF Output]
+    Note over Recruiter,Dispatcher: Phase 2: Authoritative Final Send
+    Recruiter->>Browser: Enters Recipient Email & Clicks "Send Forwarded Resume"
+    Browser->>Controller: POST /service-company/cvtracker/send-forward (candidate_id, job_id, email, options)
+    Note over Browser,Controller: BROWSER DOSSIER PAYLOAD IS NOT SENT OR TRUSTED
+    Controller->>Service: buildAuthoritativeDossier(101, 789, tenantId)
+    Service->>DB: Verify Tenant, Ownership & Latest Data
+    DB-->>Service: Fresh Authoritative State
+    Service-->>Controller: Authoritative Dossier
+    Controller->>Dispatcher: Generate Signed Prescreen PDF & Dispatch Email
+    Dispatcher-->>Recruiter: Success Confirmation
 ```
 
 ---
 
-## 3. The Core Challenge & Resolution: Cache Freshness vs Stale Data
+## 4. Cache Key, Revision & Identity Architecture
 
-### 3.1 The Question
-> *"If we add the client-side cache bridge, what happens if data on the candidate drawer gets updated? Will the prescreen report show current data, updated data, or stale cached data?"*
-
-### 3.2 The 3-Tier Reactive Cache-Buster Architecture
-
-To ensure the Prescreen Report **never displays stale cached data**, we deploy three reactive safeguards:
-
-#### Tier 1: Write-Through Cache Mutation
-Whenever any drawer mutation succeeds (Candidate details edit, skills edit, prescreen questions update, CTC change), the AJAX success handler immediately writes through to `window.__candidateDossierCache`:
+### 4.1 Composite Cache Key
+A candidate's match percentage, experience thresholds, and validation badges depend directly on the specific Job applied for.
 ```javascript
-/**
- * Global Dossier Cache Manager
- */
-window.CandidateDossierBridge = {
-    cache: {},
-
-    set: function(candidateId, dossier, revision) {
-        this.cache[candidateId] = {
-            dossier: dossier,
-            revision: revision || Date.now(),
-            cachedAt: Date.now()
-        };
-    },
-
-    get: function(candidateId) {
-        return this.cache[candidateId] ? this.cache[candidateId].dossier : null;
-    },
-
-    invalidate: function(candidateId) {
-        if (candidateId) {
-            delete this.cache[candidateId];
-        } else {
-            this.cache = {};
-        }
-    },
-
-    // Broadcast mutation to any active prescreen components
-    broadcastUpdate: function(candidateId, updatedDossier) {
-        this.set(candidateId, updatedDossier);
-        window.dispatchEvent(new CustomEvent('jero:candidate-dossier-updated', {
-            detail: { candidateId: candidateId, dossier: updatedDossier }
-        }));
-    }
-};
+// Strict Composite Key
+const cacheKey = `${candidateId}:${jobId}`;
+window.CandidateDossierBridge.get(candidateId, jobId);
 ```
 
-#### Tier 2: Revision Timestamp Verification (`updated_at`)
-Each dossier object contains an entity timestamp `revision: candidate.updated_at`.
-When Forward Resume renders or refreshes:
-- It verifies `cache.revision >= drawer.revision`.
-- If the candidate was modified in another tab or drawer, the timestamp mismatch triggers a background re-sync.
+### 4.2 Composite `dossier_revision` Token
+A dossier can change even if `candidate.updated_at` does not change (e.g. job requirements change, job budget changes, prescreen answers updated).
+The backend computes a deterministic composite revision token:
+$$\text{dossier\_revision} = \text{hash}(C_{\text{ver}} + CS_{\text{ver}} + J_{\text{ver}} + JS_{\text{ver}} + E_{\text{ver}})$$
+Where:
+- $C_{\text{ver}}$ = `candidates.updated_at`
+- $CS_{\text{ver}}$ = `candidate_job_skill_exp.max(updated_at)`
+- $J_{\text{ver}}$ = `jobs.updated_at`
+- $JS_{\text{ver}}$ = `job_skills.max(updated_at)`
+- $E_{\text{ver}}$ = `candidate_evaluations.max(updated_at)`
 
-#### Tier 3: Reactive Event Dispatching (`jero:candidate-dossier-updated`)
-When `showdetail.blade.php` saves an edit:
+### 4.3 Validation on Read
 ```javascript
-// Example in Drawer basic info / skills update callback:
-$.ajax({
-    url: '/service-company/job-applications/update_candidate',
-    method: 'POST',
-    data: formData,
-    success: function(res) {
-        // 1. Update DOM and Drawer UI
-        // ...
-        // 2. Refresh the Canonical #rsData payload in DOM
-        // ...
-        // 3. Notify the Dossier Bridge
-        const freshDossier = readData(); // Reads updated #rsData
-        window.CandidateDossierBridge.broadcastUpdate(candidateId, freshDossier);
-    }
-});
-```
-If the Forward Resume preview modal is open, it listens for `jero:candidate-dossier-updated` and automatically re-generates the Prescreen Report preview in real-time with **zero page refresh**.
-
----
-
-## 4. Architectural Components to Build
-
-### Component 1: Canonical Backend Dossier Service (`App\Services\Candidate\CandidateDossierService`)
-Create a single service that acts as the Single Source of Truth for candidate dossier data:
-- **Location:** `app/Services/Candidate/CandidateDossierService.php`
-- **Responsibilities:**
-  1. Assembles Candidate Info, Job Skills vs Candidate Skills.
-  2. Executes `GeneralMethod::calculateSkillMatch()` (preserves exact matching logic).
-  3. Evaluates the 7 Validation Badges:
-     - Notice Period alignment (Immediate, <15 days, 30 days, etc.).
-     - Location & Relocation willingness.
-     - Budget / CTC match.
-     - Experience requirements (Min/Max).
-     - Skill experience thresholds.
-     - Education qualifications.
-     - Candidate availability status.
-  4. Returns the exact JSON schema that `#rsData` in `showdetail.blade.php` and `AgyForwardResumeEngine.js` consume.
-
-### Component 2: Unified Schema Contract
-The schema returned by the backend and stored in DOM `#rsData` must be identical:
-```json
-{
-  "candidate": {
-    "id": 12345,
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "phone": "+91 9876543210",
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "country": "India",
-    "current_company": "Acme Corp",
-    "current_designation": "Senior Full Stack Engineer",
-    "total_experience_months": 84,
-    "current_ctc": 2400000,
-    "expected_ctc": 3000000,
-    "notice_period_days": 15,
-    "photo_url": "/uploads/...",
-    "updated_at": "2026-09-18T11:20:00Z"
-  },
-  "job": {
-    "id": 789,
-    "title": "Lead Laravel & Vue Architect",
-    "company_name": "Tech Corp"
-  },
-  "metrics": {
-    "match_percentage": 94,
-    "match_level": "Strong Match",
-    "match_badge_color": "#10b981",
-    "experience_match": true,
-    "ctc_match": true,
-    "notice_period_match": true,
-    "location_match": true
-  },
-  "skills": [
-    { "name": "PHP / Laravel", "candidate_exp_months": 72, "rating": 5, "is_mandatory": true, "is_matched": true },
-    { "name": "Elasticsearch", "candidate_exp_months": 48, "rating": 4, "is_mandatory": true, "is_matched": true },
-    { "name": "Vue.js / React", "candidate_exp_months": 36, "rating": 4, "is_mandatory": false, "is_matched": true }
-  ],
-  "validation_badges": [
-    { "key": "notice_period", "label": "15 Days Notice", "status": "success", "icon": "fa-calendar-check" },
-    { "key": "location", "label": "Bengaluru (Immediate)", "status": "success", "icon": "fa-map-marker-alt" },
-    { "key": "budget", "label": "Within Budget", "status": "success", "icon": "fa-wallet" },
-    { "key": "experience", "label": "7 Years Total Exp", "status": "success", "icon": "fa-briefcase" }
-  ],
-  "evaluation_answers": [
-    { "question": "Are you comfortable working in hybrid mode?", "answer": "Yes, completely comfortable." }
-  ]
+function validateCacheEntry(entry, candidateId, jobId) {
+    if (!entry || !entry.dossier) return false;
+    const d = entry.dossier;
+    if (d.schema_version !== '4.1') return false;
+    if (String(d.candidate.id) !== String(candidateId)) return false;
+    if (String(d.job.id) !== String(jobId)) return false;
+    if (!d.meta || !d.meta.dossier_revision) return false;
+    if (Date.now() - entry.cachedAt > 1800000) return false; // 30 min max session TTL
+    return true;
 }
 ```
 
-### Component 3: Client-Side Dossier Bridge (`AgyCandidateDossierBridge.js`)
-- **Location:** `public/js/opendoc/AgyCandidateDossierBridge.js`
-- Integrated into `showdetail.blade.php` and `_forward_resume_engine.blade.php`.
-- Bridges DOM `#rsData` into `window.CandidateDossierBridge`.
-- Provides 0ms instant payload retrieval for opened drawers.
-- Automatically handles cache-invalidation on drawer saves.
+---
 
-### Component 4: Controller Modernization (`ServiceCompanyCvTrackerController.php`)
-- Modernize `fwd_resume()` and `test_fwd_resume()`:
-  - Replace the 11 ad-hoc queries per candidate with calls to `CandidateDossierService::getBatchDossiers($candidateIds, $jobId)`.
-  - Check whether candidate dossier JSON was passed directly from browser bridge (if sent, zero backend query is required!).
-  - If not passed from browser, batch load candidates in 1 single optimized query, computing canonical `GeneralMethod::calculateSkillMatch()`.
+## 5. Specification of the 7 Canonical Validation Badges
 
-### Component 5: Unified PDF/Dossier Generator (`AgyForwardResumeEngine.js`)
-- `buildDefinition(dossier)` in `AgyForwardResumeEngine.js` becomes the universal builder for:
-  1. Drawer "Download Prescreen PDF".
-  2. Forward Resume Email Attachment PDF.
-  3. Client Forward Portal View.
-- Guarantees identical typography, enlarged readable fonts (11pt+), matching badges, and color tokens across the entire platform.
+Every validation badge is formally typed with clear thresholds:
+
+```json
+"validation_badges": [
+  {
+    "key": "notice_period",
+    "label": "15 Days Notice",
+    "status": "success",
+    "value": 15,
+    "required": 30,
+    "unit": "days",
+    "icon": "fa-calendar-check"
+  },
+  {
+    "key": "location",
+    "label": "Bengaluru (Current Location)",
+    "status": "success",
+    "value": "Bengaluru",
+    "required": "Bengaluru",
+    "unit": "text",
+    "icon": "fa-map-marker-alt"
+  },
+  {
+    "key": "relocation",
+    "label": "Willing to Relocate",
+    "status": "success",
+    "value": true,
+    "required": true,
+    "unit": "boolean",
+    "icon": "fa-plane-departure"
+  },
+  {
+    "key": "budget",
+    "label": "Expected CTC Within Budget",
+    "status": "success",
+    "value": 2400000,
+    "required": 3000000,
+    "unit": "currency_inr",
+    "icon": "fa-wallet"
+  },
+  {
+    "key": "experience",
+    "label": "7 Years Total Exp (Min 5 Required)",
+    "status": "success",
+    "value": 84,
+    "required": 60,
+    "unit": "months",
+    "icon": "fa-briefcase"
+  },
+  {
+    "key": "skill_threshold",
+    "label": "Mandatory Skills Threshold Met",
+    "status": "success",
+    "value": 100,
+    "required": 80,
+    "unit": "percentage",
+    "icon": "fa-award"
+  },
+  {
+    "key": "education",
+    "label": "B.Tech Computer Science (Matches Criteria)",
+    "status": "success",
+    "value": "B.Tech Computer Science",
+    "required": "Degree in Engineering / CS",
+    "unit": "text",
+    "icon": "fa-graduation-cap"
+  }
+]
+```
 
 ---
 
-## 5. Step-by-Step Implementation Roadmap
+## 6. Multi-Tenant Scoping & Security Hardening
 
-| Phase | Action Item | Target Files | Parity & Load Impact |
-| :---: | :--- | :--- | :--- |
-| **Phase 1** | Extract Single Source of Truth `CandidateDossierService` | `app/Services/Candidate/CandidateDossierService.php` | Eliminates disparate algorithms; unifies match % calculation |
-| **Phase 2** | Implement Client-Side Dossier Bridge & Cache Manager | `public/js/opendoc/AgyCandidateDossierBridge.js` | Enables 0ms drawer copy + real-time cache invalidation on save |
-| **Phase 3** | Integrate Bridge into Candidate Drawer (`showdetail.blade.php`) | `resources/views/service_company/job-applications/showdetail.blade.php` | Caches `#rsData` on open; invalidates on update |
-| **Phase 4** | Connect Forward Resume to Bridge & Canonical Service | `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php`, `fwd_resume.blade.php` | Replaces 11 queries; falls back to single batch resolver |
-| **Phase 5** | Unify `AgyForwardResumeEngine.js` Rendering Definition | `public/js/opendoc/AgyForwardResumeEngine.js` | 100% visual styling and badge parity between Drawer & PDF |
-| **Phase 6** | Quality Verification & Cache-Busting Regression Tests | Automated tests, PHP syntax check, view cache clear | Verified against staging branch |
+### 6.1 Strict Tenancy Rule
+The `CandidateDossierService` must **never** execute un-scoped queries like `Candidate::find($id)` or `Job::find($jobId)`. Every query must enforce the active tenant:
+```php
+$companyId = auth()->user()->company_id;
+
+$candidate = Candidate::where('company_id', $companyId)
+    ->where('id', $candidateId)
+    ->firstOrFail();
+
+$job = Job::where('company_id', $companyId)
+    ->where('id', $jobId)
+    ->firstOrFail();
+```
+
+### 6.2 Safe Bounded Batch Queries (Zero N+1)
+For table selections where candidates have not been cached, the batch resolver uses exactly 4 bounded queries:
+1. `Candidate::whereIn('id', $candidateIds)->where('company_id', $companyId)`
+2. `Job::where('id', $jobId)->where('company_id', $companyId)->with('skills')`
+3. `CandidateSkillExp::whereIn('candidate_id', $candidateIds)->where('company_id', $companyId)`
+4. `CandidateEvaluation::whereIn('candidate_id', $candidateIds)->where('job_id', $jobId)`
+
+**Result:** Maximum 4 optimized SQL queries for up to 50 candidates, zero N+1 queries, full tenant isolation.
 
 ---
 
-## 6. Verification & Quality Assurance Plan
+## 7. Real-Time Mutation Invalidation (Reverb WebSockets + Domain Events)
 
-### 6.1 Test Scenarios for Zero Discrepancy & Zero Stale Reads
-1. **Scenario A (Direct Cache Copy)**:
-   - Recruiter opens candidate drawer for Candidate #101.
-   - Recruiter opens Forward Resume modal and selects Candidate #101.
-   - **Verification:** Network tab shows **0 network calls** for candidate #101. Load time is **< 10ms**. Match % and badges are 100% identical to drawer.
-2. **Scenario B (Drawer Update & Reactive Cache-Busting)**:
-   - Candidate #101 has Notice Period changed from 60 days to 15 days in Drawer and saved.
-   - Forward Resume modal is opened (or already open).
-   - **Verification:** Forward Resume Prescreen Report displays "15 Days Notice" immediately without showing the old "60 Days" stale cache.
-3. **Scenario C (Unopened Candidate Selection from Table)**:
-   - Recruiter selects Candidate #102 directly on CV Tracker table without opening their drawer.
-   - Recruiter clicks "Forward Resume".
-   - **Verification:** Batch API fetches canonical dossier in 1 query. Recruiter opens drawer for #102 in another tab — both match % scores and badges are 100% identical.
+```mermaid
+flowchart TD
+    M[Recruiter Updates Candidate / Skills / Job / Questions] --> T[DB Transaction in Controller]
+    T --> S[CandidateDossierService::rebuildDossier(candidateId, jobId)]
+    S --> E[Dispatch Laravel Event: CandidateDossierUpdated]
+    
+    E --> R[Laravel Reverb / WebSockets Broadcast]
+    E --> HTTP[HTTP Response contains Fresh Canonical Dossier]
+    
+    HTTP --> LOCAL[Active Tab updates Local Cache Accelerator immediately]
+    R --> TABS[Other Open Tabs & Other Teammates' Browsers receive Invalidation]
+    TABS --> INVALIDATE[Evict key from window.CandidateDossierBridge]
+    INVALIDATE --> REFRESH[If Forward Resume Modal is Open -> Silent Re-fetch]
+```
 
-### 6.2 Strict Branch & Deployment Protocols
-- **Git Branch Rule:** Strict commit and push to `origin/staging`. No commits to `main`.
-- **PHP Linting:** `php -l` executed on all modified PHP classes.
-- **Cache Invalidation:** `php artisan view:clear` and `php artisan route:clear`.
+This guarantees:
+- **Same Tab**: Updated within `< 5ms` from the AJAX response payload.
+- **Other Tabs / Other Recruiters**: Invalidated within `< 100ms` via Reverb WebSocket broadcast.
+- **Zero Stale Reads**: Stale cache cannot survive a mutation.
+
+---
+
+## 8. Client Cache Governance & PII Protection
+
+1. **Session Scope**: All cached dossiers live strictly in volatile JavaScript heap memory (`window.__candidateDossierCache`).
+2. **Zero Persistent Storage**: Dossiers are **never written to `localStorage` or `IndexedDB`** to prevent PII retention on shared machines.
+3. **Capacity Limit & LRU Eviction**: Maximum 500 dossiers per session. Oldest entries evicted automatically using LRU algorithm.
+4. **Lifecycle Cleansing**:
+   - Immediate cache flush on `window.beforeunload` or user logout.
+   - Cache flush on tenant / company switch.
+
+---
+
+## 9. Failure Modes & Graceful Degradation Matrix
+
+| Failure State | Root Cause | Client Handling | Server Handling |
+| :--- | :--- | :--- | :--- |
+| `CACHE_HIT_VALID` | Entity in memory, revision matches | Instant render (< 10ms) | No request required |
+| `CACHE_MISS` | Candidate drawer not opened | Show skeleton loader; trigger fetch | Resolve via canonical batch API (< 500ms) |
+| `REVISION_MISMATCH` | Job or candidate updated since cache | Invalidate key; show loader; fetch fresh | Return canonical dossier + new revision token |
+| `UNAUTHORIZED` | Candidate belongs to different tenant | Display error alert; purge cache key | Return 403 Forbidden + log security event |
+| `JOB_NOT_FOUND` | Job deleted or unassigned | Show "Job not available" state | Return 404 with structured error JSON |
+| `NETWORK_FAILURE` | Connection lost during batch fetch | Display "Offline - retry" toast | Graceful timeout (3s max) |
+
+---
+
+## 10. Verification & Implementation Roadmap
+
+| Phase | Milestone | Deliverable |
+| :---: | :--- | :--- |
+| **Phase 1** | SSOT Canonical Service | Create `app/Services/Candidate/CandidateDossierService.php` with tenant scoping, canonical `calculateSkillMatch`, and 7 validation badges. |
+| **Phase 2** | Upgraded Client Bridge | Build `public/js/opendoc/AgyCandidateDossierBridge.js` with composite keys `${candidate_id}:${job_id}`, LRU eviction, and revision validation. |
+| **Phase 3** | Candidate Drawer Integration | Connect `showdetail.blade.php` to consume the canonical dossier contract and feed the bridge. |
+| **Phase 4** | Forward Resume Preview & Final Send Wall | Refactor `ServiceCompanyCvTrackerController.php` — use cache for UI preview; force authoritative backend generation on final send. |
+| **Phase 5** | Reverb WebSocket Broadcast | Wire `CandidateDossierUpdated` event to Reverb for real-time cross-tab invalidation. |
+| **Phase 6** | Automated Tests & Verification | Verify against `php -l`, verify tenant scoping tests, verify zero N+1 queries. Commit strictly to `origin/staging`. |
