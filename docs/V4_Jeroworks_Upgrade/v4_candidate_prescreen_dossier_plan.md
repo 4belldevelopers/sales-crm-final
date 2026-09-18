@@ -1,23 +1,27 @@
 # V4 Architecture Plan — Unified Canonical Candidate Dossier & Prescreen Engine
 
-**Document Version:** 4.2.0 (Production-Grade Gold Standard)  
+**Document Version:** 4.3.0 (Production-Grade Final Implementation Baseline)  
 **Target Environment:** JERO ATS & Talent Marketplace (`testing.jero.works`)  
 **Scope:** Candidate Drawer (`showdetail.blade.php`), Forward Resume (`fwd_resume`), AgyForwardResumeEngine, Prescreen PDF Generator, Client Portal  
-**Architectural Patterns:** CQRS + Backend SSOT + Bounded Cache Accelerator + Secure Preview/Final Send Split + Monotonic Versioning & Revision Handshake + Multi-Tenant Scoping  
+**Architectural Patterns:** CQRS + Backend SSOT + Bounded Cache Accelerator + Secure Preview/Final Send Split + Atomic Monotonic Revisioning & Revision Handshake + Multi-Tenant Scoping  
 
 ---
 
-## 1. Executive Summary & Core Architectural Goals
+## 1. Executive Summary & Core Architectural Axioms
 
 ### 1.1 Fundamental Axioms
-1. **Database + Canonical Service = Sole Single Source of Truth (SSOT)**: The browser cache is strictly a **client-side read accelerator** for instant UI preview; it must **never** be treated as authoritative for data mutation, permissions, billing, or final dispatch.
-2. **Authoritative Security Wall (Preview vs. Final Send)**:
-   - **Preview Mode**: Accelerated by in-memory browser cache for instantaneous UI rendering (`< 10ms P95`).
-   - **Final Send / Forward / Email / Audit Mode**: Must **ALWAYS** be generated, validated, and signed authoritatively on the backend by `CandidateDossierService`. Browser-supplied payloads are **never trusted**.
-3. **Final Send Revision Handshake**: When the recruiter clicks "Send", the client submits the `preview_revision`. If server state has changed (`current_revision !== preview_revision`), the backend aborts dispatch, returns `409 Conflict`, refreshes the preview, and alerts the recruiter.
-4. **Monotonic Versioning over Timestamp Hashing**: Deletions (e.g. deleting a candidate skill or evaluation answer) can leave `MAX(updated_at)` unchanged. Therefore, every candidate-job dossier pair is tracked by an **authoritative monotonic integer revision counter** (`dossier_revision`) incremented on any relevant mutation, supplemented by a content `dossier_fingerprint` (SHA-256).
-5. **Reverb as Invalidation Accelerator, Not Freshness Authority**: Laravel Reverb provides fast broadcast invalidation (< 100ms) across browser tabs. In cases of connection dropouts or network partitions, the **Authoritative Revision Handshake** guarantees zero stale data leaks.
-6. **Multi-Tenant Scope Enforcement**: All dossier resolutions enforce strict multi-tenant scoping (`company_id` and authorized tenant hierarchy) using JERO's central authorization layer.
+1. **Canonical Identity Axiom (`candidate_id = job_applications.id`)**: In this architecture, all references to `candidate_id` refer strictly to `job_applications.id` (matching JERO's ATS database schema truth in `database/schema/mysql-schema.sql`).
+2. **Database + Canonical Service = Sole Single Source of Truth (SSOT)**: The browser cache is strictly a **client-side read accelerator** for instant UI preview; it must **never** be treated as authoritative for mutations, permissions, billing, or final dispatch.
+3. **Authoritative Security Wall (Preview vs. Final Send)**:
+   - **Preview Mode**: Accelerated by in-memory browser cache for instantaneous UI rendering (`< 10ms P95` target).
+   - **Final Send / Forward / Email / Audit Mode**: Must **ALWAYS** be generated, validated, and dispatched authoritatively on the backend by `CandidateDossierService`. Browser-supplied payloads are **never trusted**.
+4. **Final Send Revision Handshake & Recipient Validation**: When the recruiter clicks "Send", the client submits the `preview_revision` and recipient details. The server verifies:
+   - Tenant & candidate/job access authorization.
+   - Recipient email matches allowed client contacts/domains for the job.
+   - `preview_revision === current_server_revision`. If mismatched, the server returns `409 Conflict`, aborts dispatch, refreshes the preview, and prompts the recruiter.
+5. **Atomic Monotonic Versioning**: Deletions (e.g. deleting a candidate skill or evaluation answer) can leave `MAX(updated_at)` unchanged. Therefore, every candidate-job dossier pair is tracked by an **authoritative monotonic integer revision counter** (`dossier_revision`) in `candidate_dossier_revisions`, incremented atomically inside the exact database transaction of the mutation.
+6. **Deterministic Content Fingerprint**: `dossier_fingerprint` is the SHA-256 of the normalized canonical dossier representation using deterministic key sorting (recursive `ksort`) and normalized primitive types.
+7. **Reverb as Invalidation Accelerator (P95 Target: < 100ms)**: Laravel Reverb broadcasts carry `{ candidate_id, job_id, dossier_revision }`. Incoming events with `dossier_revision <= local_revision` are safely ignored (preventing out-of-order regressions). In the event of WebSocket dropouts, the **Authoritative Revision Handshake** guarantees zero stale data leaks.
 
 ### 1.2 The 5 Stated Goals & Measurable SLAs
 
@@ -25,19 +29,19 @@
 | :--- | :--- | :--- |
 | **Goal 1: Canonical Data Parity** | Candidate Drawer, Forward Resume, Prescreen PDF, and Client Portal consume the exact same versioned `CandidateDossier` contract. | 100% semantic and calculation parity across all consumer views. |
 | **Goal 2: Instant Cached Experience** | An already-authorized, same-session cached dossier opens without additional HTTP, MySQL, or Elasticsearch requests. | **< 10ms P95** retrieval; 0 additional network/DB queries. |
-| **Goal 3: Revision-Safe Freshness** | Cached data is only considered valid when its `candidate_id`, `job_id`, `schema_version`, `algorithm_version`, and `dossier_revision` match authoritative server state. | Zero stale dispatches; auto-invalidation across tabs via Reverb. |
-| **Goal 4: Secure Finalization** | Browser cache accelerates preview UI but is prohibited from authoritative persistence or forwarding. | 100% backend-verified generation on final dispatch with revision handshake. |
+| **Goal 3: Revision-Safe Freshness** | Cached data is only considered valid when `candidate_id`, `job_id`, `schema_version`, `algorithm_version`, and `dossier_revision` match authoritative server state. | Zero stale dispatches; auto-invalidation across tabs via Reverb (< 100ms P95). |
+| **Goal 4: Secure Finalization** | Browser cache accelerates preview UI but is prohibited from authoritative persistence or forwarding. | 100% backend-verified generation on final dispatch with revision handshake and recipient ACL check. |
 | **Goal 5: Batch Efficiency** | Uncached candidate selections from tables are resolved through a single batch request with bounded database access and zero N+1 queries. | **< 500ms P95** for 50 candidates; bounded query budget of 4–6 optimized SQL queries. |
 
 ---
 
 ## 2. Authoritative Data Dependency Map (MySQL Schema Truth)
 
-Every field in the Canonical Dossier is mapped to its authoritative database source in `database/schema/mysql-schema.sql`:
+Every field in the Canonical Dossier maps to its authoritative database source in `database/schema/mysql-schema.sql`:
 
 | Canonical Dossier Field | Authoritative Source Table | Source Column / Expression | Multi-Tenancy Scope |
 | :--- | :--- | :--- | :--- |
-| **Candidate Core Identity** | `job_applications` | `id`, `full_name`, `email`, `secondrary_email`, `phone`, `secondary_mobile`, `linkedin` | `job_applications.company_id` / `thirdparty_company_id` |
+| **Candidate Core Identity** | `job_applications` | `id` (as `candidate_id`), `full_name`, `email`, `secondrary_email`, `phone`, `secondary_mobile`, `linkedin` | `job_applications.company_id` / `thirdparty_company_id` |
 | **Professional Details** | `job_applications` | `current_designation`, `current_company`, `cur_company_name`, `wm` (work mode) | Scoped to active company |
 | **Total & Relevant Exp** | `job_applications` | `total_exp`, `rel_exp` | Scoped to active company |
 | **Notice Period & Availability** | `job_applications` | `np_id`, `serving_notice_period_mode` | Scoped to active company |
@@ -53,54 +57,101 @@ Every field in the Canonical Dossier is mapped to its authoritative database sou
 
 ---
 
-## 3. Target System Architecture
+## 3. Dossier Mutation Registry
 
+The following table explicitly defines all mutations that affect the candidate-job dossier. Every registered mutation **must execute the atomic revision increment inside its database transaction**:
+
+| Mutation Event | Controller / Service Endpoint | Affects | Triggers Atomic Revision Increment? | Scope |
+| :--- | :--- | :---: | :---: | :--- |
+| **Candidate Basic Details Update** | `ServiceCompanyJobApplicationController::update_candidate` | Basic info, location, contact | ✅ Yes | Candidate + all assigned jobs |
+| **Notice Period / Availability Change** | `ServiceCompanyJobApplicationController::update_candidate` | Notice period validation badge | ✅ Yes | Candidate + all assigned jobs |
+| **Candidate CTC / ECTC Update** | `ServiceCompanyJobApplicationController::update_candidate` | Budget validation badge | ✅ Yes | Candidate + all assigned jobs |
+| **Candidate Skill Added / Updated** | `ServiceCompanyJobApplicationController::update_candidate_skills` | Match %, skill stars | ✅ Yes | Candidate + all assigned jobs |
+| **Candidate Skill Deleted** | `ServiceCompanyJobApplicationController::delete_candidate_skill` | Match %, skill stars | ✅ Yes | Candidate + all assigned jobs |
+| **Job Required Skills Updated** | `ServiceCompanyJobController::update_skills` | Match % calculation | ✅ Yes | Job + all candidates on job |
+| **Job Budget / Experience Changed** | `ServiceCompanyJobController::update` | Budget / Exp validation badges | ✅ Yes | Job + all candidates on job |
+| **Prescreen Evaluation Answer Saved** | `ServiceCompanyJobApplicationController::save_evaluation` | Prescreen Q&A section | ✅ Yes | Candidate:Job pair |
+| **Resume Uploaded / Replaced** | `ServiceCompanyJobApplicationController::upload_resume` | Resume badge & filename | ✅ Yes | Candidate + all assigned jobs |
+| **Recruiter Note / Summary Edited** | `ServiceCompanyJobApplicationController::update_notes` | Recruiter remarks card | ✅ Yes | Candidate:Job pair |
+| **Candidate Relocation Willingness** | `ServiceCompanyJobApplicationController::update_candidate` | Relocation badge | ✅ Yes | Candidate + all assigned jobs |
+
+---
+
+## 4. Revision Table Schema & Atomic Increment
+
+### 4.1 Schema Definition: `candidate_dossier_revisions`
+```sql
+CREATE TABLE `candidate_dossier_revisions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `candidate_id` int(11) NOT NULL, -- references job_applications.id
+  `job_id` int(11) NOT NULL,        -- references jobs.id
+  `revision` int(11) unsigned NOT NULL DEFAULT 1,
+  `fingerprint` varchar(64) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_cdr_company_cand_job` (`company_id`, `candidate_id`, `job_id`),
+  KEY `idx_cdr_cand_job` (`candidate_id`, `job_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
-                    ┌────────────────────────────────────────┐
-                    │               MySQL DB                 │
-                    │   Authoritative State & Transactions   │
-                    └───────────────────┬────────────────────┘
-                                        │
-                                        ▼
-                 ┌──────────────────────────────────────────────┐
-                 │       CandidateDossierService (SSOT)         │
-                 │                                              │
-                 │ • Multi-Tenant Scope & RBAC Authorization    │
-                 │ • Canonical Skill Match (GeneralMethod)      │
-                 │ • 7 Canonical Validation Badges              │
-                 │ • Prescreen Evaluation Answers               │
-                 │ • Monotonic dossier_revision Tracking        │
-                 │ • Deterministic Content Fingerprinting       │
-                 └──────────────────────┬───────────────────────┘
-                                        │
-                                        ▼
-                 ┌──────────────────────────────────────────────┐
-                 │          Canonical Dossier Contract          │
-                 │   schema_version: "4.2"                      │
-                 │   algorithm_version: "2.3.0"                 │
-                 │   dossier_revision: 53                       │
-                 │   fingerprint: "sha256:8f4c2..."             │
-                 └──────────────────────┬───────────────────────┘
-                                        │
-         ┌──────────────────────────────┼──────────────────────────────┐
-         │                              │                              │
-         ▼                              ▼                              ▼
-┌──────────────────┐          ┌──────────────────┐           ┌──────────────────┐
-│ Candidate Drawer │          │  Forward Resume  │           │  Client Portal   │
-│ (showdetail DOM) │          │  Modal (Preview) │           │  (Shared View)   │
-└────────┬─────────┘          └────────┬─────────┘           └──────────────────┘
-         │                             │
-         ▼                             ▼
-┌────────────────────────────────────────────────────────┐
-│   Browser Memory Cache (Read Accelerator Only)         │
-│   Key: `${candidate_id}:${job_id}`                     │
-│   LRU: 500 max, session-only, clear on logout/tenant   │
-└────────────────────────────────────────────────────────┘
+
+### 4.2 Atomic Transaction Pattern
+```php
+namespace App\Services\Candidate;
+
+use Illuminate\Support\Facades\DB;
+use App\Events\CandidateDossierUpdated;
+
+class CandidateDossierRevisionService
+{
+    /**
+     * Atomically increments revision inside an existing or new DB transaction.
+     */
+    public static function incrementRevision(int $companyId, int $candidateId, int $jobId): int
+    {
+        $revision = DB::transaction(function () use ($companyId, $candidateId, $jobId) {
+            $record = DB::table('candidate_dossier_revisions')
+                ->where('company_id', $companyId)
+                ->where('candidate_id', $candidateId)
+                ->where('job_id', $jobId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $record) {
+                DB::table('candidate_dossier_revisions')->insert([
+                    'company_id'   => $companyId,
+                    'candidate_id' => $candidateId,
+                    'job_id'       => $jobId,
+                    'revision'     => 1,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]);
+                return 1;
+            }
+
+            $newRev = $record->revision + 1;
+            DB::table('candidate_dossier_revisions')
+                ->where('id', $record->id)
+                ->update([
+                    'revision'   => $newRev,
+                    'updated_at' => now(),
+                ]);
+
+            return $newRev;
+        });
+
+        // Broadcast to Reverb outside transaction commit
+        broadcast(new CandidateDossierUpdated($companyId, $candidateId, $jobId, $revision))->toOthers();
+
+        return $revision;
+    }
+}
 ```
 
 ---
 
-## 4. The Preview vs Final Send Security Wall & Revision Handshake
+## 5. End-to-End Flow & Preview vs Final Send Security Wall
 
 ```mermaid
 sequenceDiagram
@@ -114,16 +165,16 @@ sequenceDiagram
 
     Note over Recruiter,Browser: Phase 1: Instant Preview Rendering
     Recruiter->>Browser: Selects Candidate #101 for Job #789 & Clicks Forward
-    alt Cache Hit (Candidate:Job in memory & Valid)
-        Browser-->>Recruiter: Render Instant UI Preview (< 10ms P95)
-    else Cache Miss
+    alt Cache Hit (Candidate:Job in memory & Valid against known authoritative revision)
+        Browser-->>Recruiter: Render Instant UI Preview (< 10ms P95 target)
+    else Cache Miss / Unknown Revision
         Browser->>Controller: GET /service-company/candidate-dossier?candidate_id=101&job_id=789
         Controller->>Service: buildDossier(101, 789, tenantScope)
         Service->>DB: Bounded query with company_id scope (4-6 queries max)
         DB-->>Service: Authoritative Entities
-        Service-->>Controller: Canonical Dossier (revision=53)
-        Controller-->>Browser: Signed Dossier Payload
-        Browser->>Browser: Store in Cache Accelerator (Key: 101:789)
+        Service-->>Controller: Canonical Dossier (revision=53, fingerprint="sha256:...")
+        Controller-->>Browser: Canonical Dossier Payload
+        Browser->>Browser: Store in Cache Accelerator (Key: 101:789, rev: 53)
         Browser-->>Recruiter: Render Preview
     end
 
@@ -131,8 +182,9 @@ sequenceDiagram
     Recruiter->>Browser: Enters Recipient Email & Clicks "Send Forwarded Resume"
     Browser->>Controller: POST /service-company/cvtracker/send-forward { candidate_id: 101, job_id: 789, preview_revision: 53, email: "client@acme.com" }
     Note over Browser,Controller: BROWSER DOSSIER PAYLOAD IS NEVER SENT OR TRUSTED
-    Controller->>Service: verifyAndBuildAuthoritativeDossier(101, 789, expectedRevision: 53)
-    Service->>DB: Fetch current dossier_revision & fresh state
+    Controller->>Service: verifyRecipientAndBuildDossier(101, 789, "client@acme.com", expectedRevision: 53)
+    Service->>DB: Verify Tenant, Allowed Client Recipient ACL & Current Revision
+    DB-->>Service: Current Revision = 53
     
     alt Revision Match (Current = 53)
         Service-->>Controller: Verified Authoritative Dossier
@@ -148,15 +200,16 @@ sequenceDiagram
 
 ---
 
-## 5. Cache Key, Revision & Identity Architecture
-
-### 5.1 Strictly Composite Client Bridge API
-To eliminate developer error and prevent accidental cross-job cache collisions, every API method on `CandidateDossierBridge` requires composite `(candidateId, jobId)` identity:
+## 6. Client-Side Cache Governance & Reverb Monotonic Guard
 
 ```javascript
+/**
+ * Global Candidate Dossier Bridge (Client Accelerator)
+ */
 window.CandidateDossierBridge = {
-    cache: new Map(), // Preserves insertion order for LRU
+    cache: new Map(), // LRU cache
     MAX_SIZE: 500,
+    authoritativeRevisions: new Map(), // key => latest known revision
 
     key: function(candidateId, jobId) {
         if (!candidateId || !jobId) throw new Error('CandidateDossierBridge requires candidateId and jobId');
@@ -166,17 +219,16 @@ window.CandidateDossierBridge = {
     set: function(candidateId, jobId, dossier) {
         const k = this.key(candidateId, jobId);
         if (this.cache.size >= this.MAX_SIZE) {
-            // Evict oldest entry (LRU)
             const oldestKey = this.cache.keys().next().value;
             this.cache.delete(oldestKey);
         }
+        const rev = Number(dossier.meta && dossier.meta.dossier_revision);
         this.cache.set(k, {
             dossier: dossier,
-            revision: dossier.meta.dossier_revision,
-            algorithmVersion: dossier.meta.algorithm_version,
-            schemaVersion: dossier.meta.schema_version,
+            revision: rev,
             cachedAt: Date.now()
         });
+        this.authoritativeRevisions.set(k, rev);
     },
 
     get: function(candidateId, jobId) {
@@ -188,7 +240,7 @@ window.CandidateDossierBridge = {
         this.cache.delete(k);
         this.cache.set(k, entry);
 
-        // Strict Structural & Expiration Validation
+        // Strict Structural & Revision Validation
         if (!this.isValid(entry, candidateId, jobId)) {
             this.cache.delete(k);
             return null;
@@ -199,13 +251,38 @@ window.CandidateDossierBridge = {
     isValid: function(entry, candidateId, jobId) {
         if (!entry || !entry.dossier) return false;
         const d = entry.dossier;
-        if (d.schema_version !== '4.2') return false;
+        if (d.schema_version !== '4.3') return false;
         if (d.meta.algorithm_version !== '2.3.0') return false;
         if (String(d.candidate.id) !== String(candidateId)) return false;
         if (String(d.job.id) !== String(jobId)) return false;
         if (typeof entry.revision !== 'number') return false;
-        if (Date.now() - entry.cachedAt > 1800000) return false; // 30 min session TTL
+
+        // Authority Check: Compare against latest known authoritative revision
+        const knownRev = this.authoritativeRevisions.get(this.key(candidateId, jobId));
+        if (typeof knownRev === 'number' && entry.revision !== knownRev) {
+            return false; // Stale!
+        }
+
+        if (Date.now() - entry.cachedAt > 1800000) return false; // 30 min TTL
         return true;
+    },
+
+    handleReverbEvent: function(event) {
+        const k = this.key(event.candidate_id, event.job_id);
+        const currentRev = this.authoritativeRevisions.get(k) || 0;
+        const incomingRev = Number(event.dossier_revision);
+
+        // Monotonic guard: Ignore out-of-order or stale events
+        if (incomingRev <= currentRev) return;
+
+        // Update known authoritative revision and invalidate local cache
+        this.authoritativeRevisions.set(k, incomingRev);
+        this.cache.delete(k);
+
+        // Notify active UI preview components if open
+        window.dispatchEvent(new CustomEvent('jero:dossier-invalidated', {
+            detail: { candidateId: event.candidate_id, jobId: event.job_id, newRevision: incomingRev }
+        }));
     },
 
     invalidate: function(candidateId, jobId) {
@@ -226,13 +303,14 @@ window.CandidateDossierBridge = {
 
     invalidateAll: function() {
         this.cache.clear();
+        this.authoritativeRevisions.clear();
     }
 };
 ```
 
 ---
 
-## 6. Specification of the 7 Canonical Validation Badges
+## 7. Specification of the 7 Canonical Validation Badges
 
 All 7 validation badges are strictly typed and computed canonically by `CandidateDossierService`:
 
@@ -306,7 +384,7 @@ All 7 validation badges are strictly typed and computed canonically by `Candidat
 
 ---
 
-## 7. Bounded Batch Query Budget (Zero N+1)
+## 8. Bounded Batch Query Budget (Zero N+1)
 
 When a recruiter selects up to 50 candidates from the CV Tracker table without opening their drawers, `CandidateDossierService::getBatchDossiers($candidateIds, $jobId)` executes within a **strictly bounded budget of 4 to 6 SQL queries**:
 
@@ -327,32 +405,12 @@ When a recruiter selects up to 50 candidates from the CV Tracker table without o
 
 ---
 
-## 8. Real-Time Mutation Invalidation & Optimistic Concurrency
+## 9. Comprehensive 34-Point Test & Verification Matrix
 
-```mermaid
-flowchart TD
-    M[Recruiter Updates Candidate / Skills / Job / Questions] --> T[DB Transaction in Controller]
-    T --> VER[Increment dossier_revision in candidate_dossier_revisions table]
-    T --> S[CandidateDossierService::buildDossier(candidateId, jobId)]
-    T --> E[Dispatch Laravel Event: CandidateDossierUpdated]
-    
-    E --> R[Laravel Reverb / WebSockets Broadcast]
-    E --> HTTP[HTTP Response returns Fresh Canonical Dossier with new revision]
-    
-    HTTP --> LOCAL[Active Tab updates Local Cache Accelerator immediately]
-    R --> TABS[Other Open Tabs & Other Teammates' Browsers receive Invalidation]
-    TABS --> INVALIDATE[Call CandidateDossierBridge.invalidate(candidateId, jobId)]
-    INVALIDATE --> REFRESH[If Forward Resume Modal is Open -> Silent Re-fetch]
-```
-
----
-
-## 9. Comprehensive 32-Point Test & Verification Matrix
-
-To ensure production-grade robustness before any code release, the implementation must pass all 32 dedicated test cases in `tests/Feature/CandidateDossierServiceTest.php`:
+The implementation must pass all 34 dedicated test cases in `tests/Feature/CandidateDossierServiceTest.php`:
 
 ### Category A: Identity, Caching & Context (Tests 1–6)
-- [ ] **Test 1:** Same candidate + same job produces cache hit (`< 10ms`).
+- [ ] **Test 1:** Same candidate + same job produces cache hit (`< 10ms P95`).
 - [ ] **Test 2:** Same candidate + different job produces separate cache entry with distinct match %.
 - [ ] **Test 3:** Cache entry rejected if `candidate_id` or `job_id` does not match.
 - [ ] **Test 4:** Cache eviction works properly when reaching 500-item LRU boundary.
@@ -368,26 +426,29 @@ To ensure production-grade robustness before any code release, the implementatio
 - [ ] **Test 12:** Deleting a prescreen evaluation answer increments revision.
 - [ ] **Test 13:** Updating qualification master updates `education` badge.
 
-### Category C: Versioning, Schema & Concurrency (Tests 14–19)
-- [ ] **Test 14:** Cache rejected if `schema_version !== '4.2'`.
+### Category C: Versioning, Schema & Concurrency (Tests 14–19C)
+- [ ] **Test 14:** Cache rejected if `schema_version !== '4.3'`.
 - [ ] **Test 15:** Cache rejected if `algorithm_version !== '2.3.0'`.
 - [ ] **Test 16:** Final Send succeeds when `preview_revision === current_revision`.
 - [ ] **Test 17:** Final Send rejected with `409 Conflict` when `preview_revision !== current_revision`.
-- [ ] **Test 18:** Concurrent mutations by Recruiter A and Recruiter B resolved via optimistic locking without silent overwrites.
-- [ ] **Test 19:** Tampered client payload (`match_percentage: 100` injected into browser) is ignored on Final Send; server recalculates canonical score.
+- [ ] **Test 18:** Concurrent mutations by Recruiter A and Recruiter B resolved via atomic row-locking without lost updates.
+- [ ] **Test 19A:** Tampered client payload (`match_percentage: 100` injected into browser) is ignored on Final Send; server recalculates canonical score.
+- [ ] **Test 19B:** Tampered revision (`preview_revision: 999999`) is rejected by server revision handshake.
+- [ ] **Test 19C:** Tampered candidate/job IDs in final send are independently authorized against tenant ACL.
 
 ### Category D: Real-Time & Network Edge Cases (Tests 20–24)
 - [ ] **Test 20:** Active browser tab updates in `< 5ms` from AJAX save response.
-- [ ] **Test 21:** Secondary browser tab receives Reverb WebSocket event and invalidates cache in `< 100ms`.
+- [ ] **Test 21:** Secondary browser tab receives Reverb WebSocket event and invalidates cache in `< 100ms P95`.
 - [ ] **Test 22:** Reverb disconnected / offline mode triggers fallback revision handshake on next user action without stale send.
 - [ ] **Test 23:** Out-of-order Reverb events do not downgrade revision counter.
 - [ ] **Test 24:** Network timeout on batch fetch degrades gracefully to user alert without crash.
 
-### Category E: Multi-Tenancy & Authorization (Tests 25–28)
+### Category E: Multi-Tenancy & Authorization (Tests 25–28B)
 - [ ] **Test 25:** Cross-tenant candidate ID lookup throws `ModelNotFoundException` / 403 Forbidden.
 - [ ] **Test 26:** Cross-tenant job ID lookup throws `ModelNotFoundException` / 403 Forbidden.
 - [ ] **Test 27:** Batch API with mixed valid and cross-tenant candidate IDs rejects unauthorized candidates.
-- [ ] **Test 28:** Third-party / agency candidate permissions strictly enforced according to company assignment.
+- [ ] **Test 28A:** Third-party / agency candidate permissions strictly enforced according to company assignment.
+- [ ] **Test 28B:** Final Send recipient validation: dispatches only to verified client contact emails belonging to the job's client organization.
 
 ### Category F: Performance, Bounded Queries & Parity (Tests 29–32)
 - [ ] **Test 29:** Batch query count assertion: loading 1 candidate executes $\le 6$ SQL queries.
@@ -397,7 +458,7 @@ To ensure production-grade robustness before any code release, the implementatio
 
 ---
 
-## 10. Strict Branch & Verification Rules
+## 10. Strict Branch & Verification Protocols
 - **Branch Rule:** Strict commit and push to `origin/staging`. No commits to `main`.
 - **PHP Linting:** `php -l` executed on all modified PHP classes.
 - **Cache Clearing:** `php artisan view:clear` and `php artisan route:clear`.
