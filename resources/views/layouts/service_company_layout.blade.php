@@ -2956,112 +2956,255 @@ $( document ).ready(function() {
 
         })
 
-  $(document).on('click','.show-application-detail', async function(e){
- 		    // table.on('click', '.show-application-detail', function (){
-          e.preventDefault();
-          const connectedCandidateShowCustom = await isInternetAvailable();
-              if (!connectedCandidateShowCustom) {
-                  Swal.fire({
-                      title: "No Internet",
-                      text: "You are currently offline or the server is unreachable.",
-                      icon: "warning",
-                      confirmButtonText: "Ok, got it!",
-                      customClass: {
-                          confirmButton: "btn btn-warning"
-                      }
-                  });
-                  return; // ⛔ STOP EXECUTION
-            }
+  // GOD-Level Candidate Drawer Opening Engine
+  function openMetronicDrawer(drawerId, toggleId) {
+      drawerId = drawerId || 'kt_activitiesApplication';
+      toggleId = toggleId || ('#' + drawerId + '_toggle');
+      var drawerEl = document.getElementById(drawerId);
+      if (!drawerEl) return;
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
-  
-				$('#kt_activitiesApplication_toggle').trigger('click');
-				var id    		=	$(this).data('row-id');
-				var url 		=	"{{ route('service_company.job-applications.show',':id') }}?slug={{ $currentSlug }}&currentPage="+currentPage;
-				url     		=	url.replace(':id', id);		
-				var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-				$.ajax({
-								type  		:	'GET',
-								url   		:	url,
-								beforeSend	:	function() {
-											  				$('#application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
-											    },
-								success 	:	function (response) {
-																		$('#application_show_right_bar').html(response.view);
-												}
-						});
- 		}); 
+      // 1. Official Metronic 8 KTDrawer instance show()
+      var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
+      if (drawer) {
+          drawer.show();
+          return;
+      }
 
-    $(document).on('click','.website-show-application-detail', async function(e){
- 		    // table.on('click', '.show-application-detail', function (){
-          e.preventDefault();
-          const connectedCandidateShowCustom = await isInternetAvailable();
-              if (!connectedCandidateShowCustom) {
-                  Swal.fire({
-                      title: "No Internet",
-                      text: "You are currently offline or the server is unreachable.",
-                      icon: "warning",
-                      confirmButtonText: "Ok, got it!",
-                      customClass: {
-                          confirmButton: "btn btn-warning"
-                      }
-                  });
-                  return; // ⛔ STOP EXECUTION
-            }
+      // 2. Trigger toggle if registered in DOM
+      var $toggle = $(toggleId);
+      if ($toggle.length) {
+          $toggle.trigger('click');
+      }
 
-        var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
-  
-				$('#kt_activitiesApplication_toggle').trigger('click');
-				var id    		=	$(this).data('row-id');
-				var url 		=	"{{ route('service_company.job-applications.websiteshow',':id') }}?slug={{ $currentSlug }}&currentPage="+currentPage;
-				url     		=	url.replace(':id', id);		
-				var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-				$.ajax({
-								type  		:	'GET',
-								url   		:	url,
-								beforeSend	:	function() {
-											  				$('#application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
-											    },
-								success 	:	function (response) {
-																		$('#application_show_right_bar').html(response.view);
-												}
-						});
- 		}); 
+      // 3. Guaranteed DOM fallback: ensure Metronic drawer classes and visibility are applied
+      if (!drawerEl.classList.contains('drawer')) {
+          drawerEl.classList.add('drawer', 'drawer-end');
+      }
+      drawerEl.classList.add('drawer-on');
+      drawerEl.style.transform = 'none';
+      drawerEl.style.zIndex = '999999';
 
-     $(document).on('click','.client-show-application-detail', async function(e){		 
-		// table.on('click', '.client-show-application-detail', function (){
+      // 4. Ensure overlay backdrop is present
+      if (!document.querySelector('.drawer-overlay')) {
+          var overlay = document.createElement('div');
+          overlay.className = 'drawer-overlay custom-cand-drawer-overlay';
+          overlay.style.zIndex = '999998';
+          overlay.onclick = function() {
+              closeMetronicDrawer(drawerId);
+          };
+          document.body.appendChild(overlay);
+      }
+  }
 
-          e.preventDefault();
-          const connectedCandidateShowdirect = await isInternetAvailable();
-              if (!connectedCandidateShowdirect) {
-                  Swal.fire({
-                      title: "No Internet",
-                      text: "You are currently offline or the server is unreachable.",
-                      icon: "warning",
-                      confirmButtonText: "Ok, got it!",
-                      customClass: {
-                          confirmButton: "btn btn-warning"
-                      }
-                  });
-                  return; // ⛔ STOP EXECUTION
-            }
-       var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
-				$('#kt_client_activitiesApplication_toggle').trigger('click');
-				var id    		=	$(this).data('row-id');
-				var url 		=	"{{ route('service_company.job-applications.clientshow',':id') }}?currentPage="+currentPage;
-				url     		=	url.replace(':id', id);		
-				var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-				$.ajax({
-								type  		:	'GET',
-								url   		:	url,
-								beforeSend	:	function() {
-											  				$('#client_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
-												},
-								success 	:	function (response) {
-																		$('#client_application_show_right_bar').html(response.view);
-												}
-						});
-		 });   
+  function closeMetronicDrawer(drawerId) {
+      drawerId = drawerId || 'kt_activitiesApplication';
+      var drawerEl = document.getElementById(drawerId);
+      if (drawerEl) {
+          var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
+          if (drawer) {
+              drawer.hide();
+          } else {
+              drawerEl.classList.remove('drawer-on');
+          }
+      }
+      $('.custom-cand-drawer-overlay').remove();
+  }
+
+  $(document).on('click', '#kt_activitiesApplication_close, #kt_client_activitiesApplication_close', function() {
+      closeMetronicDrawer('kt_activitiesApplication');
+      closeMetronicDrawer('kt_client_activitiesApplication');
+  });
+
+  function getCandidateDrawerLoader() {
+      return '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
+             '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
+             '  <div class="text-gray-800 fw-bold fs-5 mb-1">Loading Candidate Profile…</div>' +
+             '  <div class="text-muted fs-7">Retrieving verified application details</div>' +
+             '</div>';
+  }
+
+  $(document).on('click', '.show-application-detail, .custom-show-application-detail', async function(e){
+      e.preventDefault();
+      const connected = await isInternetAvailable();
+      if (!connected) {
+          Swal.fire({
+              title: "No Internet",
+              text: "You are currently offline. Please check your network connection.",
+              icon: "warning",
+              confirmButtonText: "Ok, got it!",
+              customClass: { confirmButton: "btn btn-warning" }
+          });
+          return;
+      }
+
+      var id = $(this).attr('data-row-id') || $(this).data('row-id') ||
+               $(this).attr('data-wise-id') || $(this).data('wise-id') ||
+               $(this).attr('data-id') || $(this).data('id') ||
+               $(this).closest('[data-row-id]').attr('data-row-id') ||
+               $(this).closest('[data-wise-id]').attr('data-wise-id') ||
+               $(this).attr('rel');
+
+      if (!id) {
+          console.warn('Candidate drawer: Unable to determine candidate ID from element', this);
+          return;
+      }
+
+      openMetronicDrawer('kt_activitiesApplication');
+
+      var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+      var url = "{{ route('service_company.job-applications.show',':id') }}?slug={{ $currentSlug }}&currentPage=" + currentPage;
+      url = url.replace(':id', id);
+
+      $.ajax({
+          type: 'GET',
+          url: url,
+          beforeSend: function() {
+              $('#application_show_right_bar').html(getCandidateDrawerLoader());
+          },
+          success: function(response) {
+              if (response && response.view) {
+                  $('#application_show_right_bar').html(response.view);
+                  if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+              } else if (response && response.status === 'error') {
+                  $('#application_show_right_bar').html(
+                      '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                      '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+                      '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
+                      '</div>'
+                  );
+              } else if (typeof response === 'string' && response.trim() !== '') {
+                  $('#application_show_right_bar').html(response);
+              }
+          },
+          error: function(xhr) {
+              var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
+              $('#application_show_right_bar').html(
+                  '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                  '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                  '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+                  '</div>'
+              );
+          }
+      });
+  });
+
+  $(document).on('click', '.website-show-application-detail', async function(e){
+      e.preventDefault();
+      const connected = await isInternetAvailable();
+      if (!connected) {
+          Swal.fire({
+              title: "No Internet",
+              text: "You are currently offline. Please check your network connection.",
+              icon: "warning",
+              confirmButtonText: "Ok, got it!",
+              customClass: { confirmButton: "btn btn-warning" }
+          });
+          return;
+      }
+
+      var id = $(this).attr('data-row-id') || $(this).data('row-id') ||
+               $(this).attr('data-wise-id') || $(this).data('wise-id') ||
+               $(this).attr('data-id') || $(this).data('id') ||
+               $(this).closest('[data-row-id]').attr('data-row-id') ||
+               $(this).attr('rel');
+
+      if (!id) return;
+
+      openMetronicDrawer('kt_activitiesApplication');
+
+      var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+      var url = "{{ route('service_company.job-applications.websiteshow',':id') }}?slug={{ $currentSlug }}&currentPage=" + currentPage;
+      url = url.replace(':id', id);
+
+      $.ajax({
+          type: 'GET',
+          url: url,
+          beforeSend: function() {
+              $('#application_show_right_bar').html(getCandidateDrawerLoader());
+          },
+          success: function(response) {
+              if (response && response.view) {
+                  $('#application_show_right_bar').html(response.view);
+                  if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+              } else if (response && response.status === 'error') {
+                  $('#application_show_right_bar').html(
+                      '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                      '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+                      '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
+                      '</div>'
+                  );
+              }
+          },
+          error: function(xhr) {
+              var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please try again.';
+              $('#application_show_right_bar').html(
+                  '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                  '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                  '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+                  '</div>'
+              );
+          }
+      });
+  });
+
+  $(document).on('click', '.client-show-application-detail', async function(e){
+      e.preventDefault();
+      const connected = await isInternetAvailable();
+      if (!connected) {
+          Swal.fire({
+              title: "No Internet",
+              text: "You are currently offline. Please check your network connection.",
+              icon: "warning",
+              confirmButtonText: "Ok, got it!",
+              customClass: { confirmButton: "btn btn-warning" }
+          });
+          return;
+      }
+
+      var id = $(this).attr('data-row-id') || $(this).data('row-id') ||
+               $(this).attr('data-wise-id') || $(this).data('wise-id') ||
+               $(this).attr('data-id') || $(this).data('id') ||
+               $(this).closest('[data-row-id]').attr('data-row-id') ||
+               $(this).attr('rel');
+
+      if (!id) return;
+
+      openMetronicDrawer('kt_client_activitiesApplication');
+
+      var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+      var url = "{{ route('service_company.job-applications.clientshow',':id') }}?currentPage=" + currentPage;
+      url = url.replace(':id', id);
+
+      $.ajax({
+          type: 'GET',
+          url: url,
+          beforeSend: function() {
+              $('#client_application_show_right_bar').html(getCandidateDrawerLoader());
+          },
+          success: function(response) {
+              if (response && response.view) {
+                  $('#client_application_show_right_bar').html(response.view);
+                  if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+              } else if (response && response.status === 'error') {
+                  $('#client_application_show_right_bar').html(
+                      '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                      '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+                      '  <div class="text-gray-700 fs-6">' + (response.message || 'Client candidate details could not be loaded.') + '</div>' +
+                      '</div>'
+                  );
+              }
+          },
+          error: function(xhr) {
+              var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please try again.';
+              $('#client_application_show_right_bar').html(
+                  '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+                  '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+                  '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+                  '</div>'
+              );
+          }
+      });
+  });   
         $('body').on('click', '#app_interview_schedule', function(){
          			var id    		=	$(this).attr('rel');
          			var url 		=	"{{ route('service_company.job-applications.create-schedule',':id') }}";
@@ -3189,18 +3332,11 @@ $( document ).ready(function() {
                 
     
     async function isInternetAvailable() {
-      
-            try {
-                await fetch("https://www.gstatic.com/generate_204", {
-                    method: "GET",
-                    cache: "no-cache",
-                    mode: "no-cors"
-                });
-                return true;
-            } catch (error) {
-                return false;
-            }
+        if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+            return navigator.onLine;
         }
+        return true;
+    }
 
 
 

@@ -83,34 +83,19 @@
                     // GeneralMethod::matchedSkillsList(). No mandatory/starred
                     // tier — this page has no user-driven skill filter to
                     // star against.
-                    $jobRequiredSkills = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray();
+                    $jobRequiredSkills = array_values(array_unique(array_filter(array_map('trim', DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->toArray()))));
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
-
                     foreach ($matchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
                     }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
-                    }
 
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
 
                     if ($flag == 1) {

@@ -63,9 +63,12 @@
                         $skilltag = '';
                         $skilltagclass = '';
                         $percentage = '';
+                        $matchBadge = '';
                         $skillArr = explode(',', $row->skills);
                         if(@$row->wiseId){
                             $percentage =  GeneralMethod::skill_percentage($row->jobId,$skillArr);
+                            $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                            $matchBadge = '<span class="badge my-1" style="background:'.$matchStyle['bg'].';color:'.$matchStyle['color'].';font-weight:600;">Match '.$percentage.'</span>';
                         }
                         if (count($skillArr) > 0) {
                                 foreach ($skillArr as $key => $sval) {
@@ -116,7 +119,7 @@
                             <div class="' .
                                 $skilltagclass .
                                 '" style="position: absolute; bottom: 0; white-space: nowrap; width: 94%; overflow: hidden;">
-                                    <span class="badge badge-light my-1"> '.$percentage.'</span>
+                                    ' . $matchBadge . '
                                  
                                   ' .
                                 $skilltag .

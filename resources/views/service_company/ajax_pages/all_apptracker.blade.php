@@ -107,40 +107,25 @@
                     $skillArr = explode(',', $row->skills);
 
                     // BUG-04 fix N+1 #2 & #3: use pre-fetched skill map instead of per-row DB queries
-                    $preSkillRows = $rowMaps['skills'][$row->job_id] ?? [];
+                    $rowJobId = $row->job_id ?: ($row->jobId ?? 0);
+                    $preSkillRows = $rowMaps['skills'][$rowJobId] ?? [];
                     $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
 
                     $percentage = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);
 
-                    // Match % badge — color reflects the numeric match score, same
-                    // thresholds/colors as the CV Tracker page: >90 green, 50-90 orange,
-                    // 0<50 red, exactly 0 neutral grey.
-                    $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                    if ($matchNum == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
 
                     foreach ($matchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {

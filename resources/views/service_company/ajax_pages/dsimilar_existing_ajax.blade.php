@@ -69,33 +69,31 @@
                     }
                     $skilltag = '';
                     $skilltagclass = '';
-                    $skillArr = $row->matched_skills;//explode(',', $row->skills);
+                    $skillArr = is_array($row->matched_skills ?? null) ? $row->matched_skills : [];
+                    $candidateAllSkills = is_array($row->all_skills ?? null) ? $row->all_skills : (explode(',', (string) @$row->skills) ?: $skillArr);
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkills);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
+                    $percentageString = GeneralMethod::skill_percentage(
+                        $row->job_id ?? $jobid,
+                        $candidateAllSkills
+                    );
+                    $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
 
-                    // Match % badge — color reflects the numeric match score, same
-                    // thresholds/colors used across the other apptracker tabs: >90
-                    // green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
-                    if ($percentage == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($percentage < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($percentage <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                    } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                    }
-                    // Tooltip breaking down WHY this candidate scored this
-                    // percentage — matched vs missing skills — so the badge
-                    // isn't just an unexplained number. Uses a plain native
-                    // title attribute since this partial is AJAX-injected.
-                    $missingSkills = array_values(array_filter($requiredSkills, function ($required) use ($skillArr) {
-                        foreach ($skillArr as $matched) {
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
+
+                    $jobSkillsForDisplay = \Illuminate\Support\Facades\DB::table('job_metronics_skills')
+                        ->where('job_id', $row->job_id ?? $jobid)
+                        ->pluck('skill_name')
+                        ->map(fn($s) => strtolower(trim($s)))
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    // Tooltip breaking down WHY this candidate scored this percentage
+                    $missingSkills = array_values(array_filter($jobSkillsForDisplay, function ($required) use ($candidateAllSkills) {
+                        foreach ($candidateAllSkills as $matched) {
                             if (GeneralMethod::skillMatchesPhrasePrefix($required, $matched)) return false;
                         }
                         return true;
@@ -107,7 +105,7 @@
                     if (!empty($missingSkills)) {
                         $matchTooltipParts[] = 'Missing: ' . implode(', ', array_map('ucfirst', $missingSkills));
                     }
-                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No skills specified in filter';
+                    $matchTooltipText = !empty($matchTooltipParts) ? implode(' — ', $matchTooltipParts) : 'No required skills configured for this job';
 
                     $matchBadge = '<span class="badge my-1" title="'.htmlspecialchars($matchTooltipText, ENT_QUOTES).'" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;cursor:help;">Match ' . $percentage . '%</span>';
 
@@ -117,22 +115,14 @@
                     $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
                     $allSkillsList = $row->all_skills ?? $skillArr;
                     $unmatchedSkills = array_values(array_udiff($allSkillsList, $skillArr, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkills, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkills) - count($unmatchedShown), 0);
-
                     foreach ($mandatoryMatched as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
                     }
                     foreach ($optionalMatched as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkills as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkills, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     if ($flag == 1) {

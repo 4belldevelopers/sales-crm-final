@@ -118,8 +118,9 @@
         }
 
         $matchPct   = ($totalJobSkills > 0) ? (!empty($candSkills) ? round(($matchedCount / $totalJobSkills) * 100) : 0) : null;
-        $matchColor = ($matchPct !== null && $matchPct >= 70) ? '#15803d' : (($matchPct !== null && $matchPct >= 40) ? '#b45309' : '#dc2626');
-        $matchBg    = ($matchPct !== null && $matchPct >= 70) ? '#dcfce7' : (($matchPct !== null && $matchPct >= 40) ? '#fef3c7' : '#fee2e2');
+        $matchStyle = $matchPct !== null ? GeneralMethod::getSkillMatchBadgeStyle($matchPct) : ['bg' => '#fee2e2', 'color' => '#dc2626'];
+        $matchColor = $matchStyle['color'];
+        $matchBg    = $matchStyle['bg'];
 
         /* ── Department ── */
         $departmentRow = DB::table('job_categories')->where('id', $row->category_id ?? 0)->first();

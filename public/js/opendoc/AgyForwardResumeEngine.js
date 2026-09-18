@@ -294,12 +294,15 @@
 
   function cityOnly(value) {
     value = clean(value, '--');
-    if (isGap(value)) return '--';
+    if (isGap(value) || /^\d+$/.test(String(value).trim())) return '--';
     var commaParts = value.split(',').map(function (part) { return clean(part, ''); }).filter(Boolean);
-    if (commaParts.length > 1) return commaParts[0];
+    var candidateCity = commaParts.length > 0 ? commaParts[0] : value;
+    if (/^\d+$/.test(String(candidateCity).trim())) return '--';
+    if (commaParts.length > 1) return candidateCity;
     var states = 'andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
     var pattern = new RegExp('\\s+(' + states + ')$', 'i');
-    return clean(value.replace(pattern, ''), '--');
+    var res = clean(value.replace(pattern, ''), '--');
+    return /^\d+$/.test(String(res).trim()) ? '--' : res;
   }
 
   function matchTone(score, completeness) {
@@ -1686,11 +1689,11 @@
       var exp = Number(skill.exp || 0);
       var expText = clean(skill.expText, '');
       var stars = [];
-      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 6.4, margin: [0, 0.5, 1.2, 0] });
+      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 7.7, margin: [0, 0.5, 1.2, 0] });
       rows.push([
         { text: clean(skill.name).toUpperCase(), style: 'tableCellBold', alignment: 'left' },
         { text: expText !== '' && expText !== '--' ? expText : (exp > 0 ? exp + ' Year' + (exp > 1 ? 's' : '') : '--'), style: 'tableCell', color: '#334155' },
-        { columns: stars, columnGap: 0, alignment: 'center', margin: [20, 5, 0, 5] }
+        { columns: stars, columnGap: 0, alignment: 'center', margin: [17, 5, 0, 5] }
       ]);
     });
     return rows;
@@ -1710,8 +1713,11 @@
       { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
     ];
     var cells = slots.map(function (row) {
-      var status = map[row.key] || map[row.fallbackKey] || '--';
-      var verified = /verified|confirmed|completed|discussed|shared/i.test(status);
+      var status = map[row.key] || map[row.fallbackKey] || '-';
+      if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+      var verified = /verified|confirmed|completed|shared/i.test(status);
+      var isBlank = (status === '-' || status === '--' || !status);
+      var textColor = verified ? '#16a34a' : (isBlank ? '#94a3b8' : '#b45309');
       return {
         stack: [
           {
@@ -1725,7 +1731,7 @@
             columnGap: 0,
             margin: [0, 0, 0, 7]
           },
-          { text: status, fontSize: 6.5, bold: true, color: verified ? '#16a34a' : '#b45309', alignment: 'center', margin: [0, 0, 0, 0] }
+          { text: status, fontSize: 6.5, bold: true, color: textColor, alignment: 'center', margin: [0, 0, 0, 0] }
         ],
         margin: [2, 7, 2, 7]
       };
@@ -1763,9 +1769,9 @@
         small: { fontSize: 7.4, color: '#64748b' },
         sectionTitle: { fontSize: 8.2, bold: true, color: '#1d4ed8' },
         sectionTitleMuted: { fontSize: 8, bold: true, color: '#334155' },
-        tableHead: { fontSize: 7, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
-        tableCell: { fontSize: 7.2, color: '#334155', margin: [0, 6, 0, 6] },
-        tableCellBold: { fontSize: 7.2, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
+        tableHead: { fontSize: 8.4, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
+        tableCell: { fontSize: 8.6, color: '#334155', margin: [0, 6, 0, 6] },
+        tableCellBold: { fontSize: 8.6, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
         metricLabel: { fontSize: 6, color: '#64748b' },
         metricValue: { fontSize: 7.2, bold: true, color: '#0f172a' },
         muted: { fontSize: 7, color: '#64748b' },
@@ -2299,10 +2305,22 @@
     candidate = candidate || {};
     companyData = companyData || {};
 
-    var locParts = [candidate.city, candidate.state, candidate.country].filter(function (p) {
-      return p && String(p).trim() !== '' && String(p).trim() !== '--';
+    var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
+      || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
+      || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
+
+    var stateName = (!/^\d+$/.test(String(candidate.state_name || '').trim()) && candidate.state_name)
+      || (!/^\d+$/.test(String(candidate.state || '').trim()) && candidate.state) || '';
+
+    var countryName = (!/^\d+$/.test(String(candidate.country_name || '').trim()) && candidate.country_name)
+      || (!/^\d+$/.test(String(candidate.country || '').trim()) && candidate.country) || '';
+
+    var locParts = [cityName, stateName, countryName].filter(function (p) {
+      return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
     });
-    var formattedLocation = candidate.location || (locParts.length ? locParts.join(', ') : '--');
+    var rawLoc = candidate.location ? String(candidate.location).trim() : '';
+    if (/^\d+$/.test(rawLoc)) rawLoc = '';
+    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : '--');
 
     var exp = candidate.experience;
     if (!exp && candidate.total_exp) {
@@ -2339,13 +2357,44 @@
       if (candidate.resume) validation.push({ label: 'RESUME', status: 'Verified' });
       if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
       if (candidate.phone || candidate.secondary_mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
-      if (candidate.linkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
-      else validation.push({ label: 'LINKEDIN ID', status: 'Discussed' });
+      var hasLinkedin = !!(candidate.linkedin && !/^(--|-|na|n\/a|null|none)$/i.test(String(candidate.linkedin).trim()));
+      if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
+      else validation.push({ label: 'LINKEDIN ID', status: '-' });
       if (candidate.current_designation || candidate.current_company) validation.push({ label: 'JOB DESCRIPTION', status: 'Shared with candidate' });
     }
 
     var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
+
+    var isBench = (candidate.condidate_type === 'bench_condidate');
+    var rawNotice = candidate.notice;
+    if (!rawNotice && candidate.np_id) {
+      var npRaw = String(candidate.np_id).trim();
+      var npMode = parseInt(candidate.serving_notice_period_mode, 10);
+      var npTs = Date.parse(npRaw);
+      if (npMode === 2 || npRaw.toLowerCase() === 'immediate') {
+        rawNotice = 'Immediate';
+      } else if (npMode === 0 && parseInt(npRaw, 10) > 0) {
+        rawNotice = parseInt(npRaw, 10) + ' Days';
+      } else if (npMode === 1 && !isNaN(npTs) && (new Date(npTs)).getFullYear() > 1970) {
+        var dObj = new Date(npTs);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dObj < today) {
+          rawNotice = 'Immediate';
+        } else {
+          var dStr = dObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          rawNotice = isBench ? ('Available ' + dStr) : ('SNP LWD ' + dStr);
+        }
+      } else {
+        rawNotice = npRaw;
+      }
+    } else if (!rawNotice) {
+      rawNotice = '--';
+    }
+    if (/01\s*jan\s*1970/i.test(rawNotice)) {
+      rawNotice = candidate.is_immediate ? 'Immediate' : '--';
+    }
 
     return {
       id: candidate.id,
@@ -2361,7 +2410,7 @@
       company: candidate.current_company || candidate.company || '',
       location: formattedLocation,
       experience: exp,
-      notice: candidate.notice || candidate.np_id || '--',
+      notice: rawNotice,
       education: candidate.qualification_name || candidate.education || 'Graduate',
       workMode: candidate.work_mode || candidate.wm || 'Hybrid',
       reportId: reportId,

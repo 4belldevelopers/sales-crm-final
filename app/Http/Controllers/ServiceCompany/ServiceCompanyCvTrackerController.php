@@ -2797,8 +2797,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.secondrary_email',
                 'job_applications.linkedin',
                 'job_applications.city',
+                'job_applications.city_id',
                 'job_applications.state',
                 'job_applications.country',
+                'city_list.city as city_name',
+                'state_list.state as state_name',
+                'countries.country_name as country_name',
                 'job_applications.wm',
                 'job_applications.total_exp',
                 'job_applications.rel_exp',
@@ -2828,6 +2832,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftJoin('jobs', 'jobs.id', 'add_job_wise_condidates.job_id')
             ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->leftJoin('city_list', function ($join) {
+                $join->on('city_list.city_id', '=', 'job_applications.city_id')
+                    ->orWhere(function ($q) {
+                        $q->where(function ($sub) {
+                            $sub->whereNull('job_applications.city_id')
+                                ->orWhere('job_applications.city_id', 0);
+                        })->whereColumn('city_list.city_id', 'job_applications.city');
+                    });
+            })
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
             ->whereIn('job_applications.id', $this->arr)
             ->where(function ($q) use ($companyId) {
                 $q->where('job_applications.company_id', $companyId)
@@ -2905,29 +2920,51 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         foreach ($this->applicationData as $cand) {
-            // Notice Period formatting (matching showdetail logic)
+            // Notice Period formatting (matching showdetail & bench rules)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
             $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
+            $isBench = (@$cand->condidate_type === 'bench_condidate');
+
             if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
             } elseif ($npMode === 0 && (int) $npRaw > 0) {
-                $cand->notice = (int) $npRaw.' Days';
+                $cand->notice = (int) $npRaw . ' Days';
                 $cand->is_immediate = false;
             } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available '.date('d M Y', $npTs);
-                $cand->is_immediate = false;
+                if (date('Y-m-d', $npTs) < date('Y-m-d')) {
+                    $cand->notice = 'Immediate';
+                    $cand->is_immediate = true;
+                } else {
+                    $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                    $cand->is_immediate = false;
+                }
             } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available '.date('d M Y', $npTs);
+                $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
                 $cand->is_immediate = false;
             }
 
-            // Location
-            $locParts = array_filter([trim((string) @$cand->city), trim((string) @$cand->state), trim((string) @$cand->country)]);
+            // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
+            $cityName = (!empty($cand->city_name) && !preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+            if (!$cityName && !empty($cand->city) && !preg_match('/^\d+$/', trim((string) $cand->city))) {
+                $cityName = trim((string) $cand->city);
+            }
+
+            $stateName = (!empty($cand->state_name) && !preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
+            if (!$stateName && !empty($cand->state) && !preg_match('/^\d+$/', trim((string) $cand->state))) {
+                $stateName = trim((string) $cand->state);
+            }
+
+            $countryName = (!empty($cand->country_name) && !preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
+            if (!$countryName && !empty($cand->country) && !preg_match('/^\d+$/', trim((string) $cand->country))) {
+                $countryName = trim((string) $cand->country);
+            }
+
+            $locParts = array_filter([$cityName, $stateName, $countryName]);
             $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
 
             // Work Mode
@@ -3123,10 +3160,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
                 $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             }
-            if (! empty($cand->linkedin)) {
+            $hasLinkedin = ! empty($cand->linkedin) && ! in_array(strtolower(trim((string) $cand->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+            if ($hasLinkedin) {
                 $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
             } else {
-                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => '-'];
             }
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
                 $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];
@@ -3250,8 +3288,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'job_applications.secondrary_email',
                 'job_applications.linkedin',
                 'job_applications.city',
+                'job_applications.city_id',
                 'job_applications.state',
                 'job_applications.country',
+                'city_list.city as city_name',
+                'state_list.state as state_name',
+                'countries.country_name as country_name',
                 'job_applications.wm',
                 'job_applications.total_exp',
                 'job_applications.rel_exp',
@@ -3281,6 +3323,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             ->leftJoin('jobs', 'jobs.id', 'add_job_wise_condidates.job_id')
             ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->leftJoin('city_list', function ($join) {
+                $join->on('city_list.city_id', '=', 'job_applications.city_id')
+                    ->orWhere(function ($q) {
+                        $q->where(function ($sub) {
+                            $sub->whereNull('job_applications.city_id')
+                                ->orWhere('job_applications.city_id', 0);
+                        })->whereColumn('city_list.city_id', 'job_applications.city');
+                    });
+            })
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
             ->whereIn('job_applications.id', $this->arr)
             ->where(function ($q) use ($companyId) {
                 $q->where('job_applications.company_id', $companyId)
@@ -3374,29 +3427,51 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         $recruiterName = auth()->user()->name ? ucwords((string) auth()->user()->name) : 'Hiring Team';
 
         foreach ($this->applicationData as $cand) {
-            // Notice Period formatting (matching showdetail logic)
+            // Notice Period formatting (matching showdetail & bench rules)
             $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
             $npRaw = trim((string) @$cand->np_id);
             $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
+            $isBench = (@$cand->condidate_type === 'bench_condidate');
+
             if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
                 $cand->notice = 'Immediate';
                 $cand->is_immediate = true;
             } elseif ($npMode === 0 && (int) $npRaw > 0) {
-                $cand->notice = (int) $npRaw.' Days';
+                $cand->notice = (int) $npRaw . ' Days';
                 $cand->is_immediate = false;
             } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available '.date('d M Y', $npTs);
-                $cand->is_immediate = false;
+                if (date('Y-m-d', $npTs) < date('Y-m-d')) {
+                    $cand->notice = 'Immediate';
+                    $cand->is_immediate = true;
+                } else {
+                    $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
+                    $cand->is_immediate = false;
+                }
             } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
-                $cand->notice = 'Available '.date('d M Y', $npTs);
+                $cand->notice = $isBench ? ('Available ' . date('d M Y', $npTs)) : ('SNP LWD ' . date('d M Y', $npTs));
                 $cand->is_immediate = false;
             } else {
                 $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
                 $cand->is_immediate = false;
             }
 
-            // Location
-            $locParts = array_filter([trim((string) @$cand->city), trim((string) @$cand->state), trim((string) @$cand->country)]);
+            // Location: resolve human-readable city, state, country names — NEVER output numeric database IDs
+            $cityName = (!empty($cand->city_name) && !preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+            if (!$cityName && !empty($cand->city) && !preg_match('/^\d+$/', trim((string) $cand->city))) {
+                $cityName = trim((string) $cand->city);
+            }
+
+            $stateName = (!empty($cand->state_name) && !preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
+            if (!$stateName && !empty($cand->state) && !preg_match('/^\d+$/', trim((string) $cand->state))) {
+                $stateName = trim((string) $cand->state);
+            }
+
+            $countryName = (!empty($cand->country_name) && !preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
+            if (!$countryName && !empty($cand->country) && !preg_match('/^\d+$/', trim((string) $cand->country))) {
+                $countryName = trim((string) $cand->country);
+            }
+
+            $locParts = array_filter([$cityName, $stateName, $countryName]);
             $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
 
             // Work Mode
@@ -3591,10 +3666,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (! empty($cand->phone) || ! empty($cand->secondary_mobile)) {
                 $valArr[] = ['label' => 'PHONE NUMBER', 'status' => 'Verified'];
             }
-            if (! empty($cand->linkedin)) {
+            $hasLinkedin = ! empty($cand->linkedin) && ! in_array(strtolower(trim((string) $cand->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+            if ($hasLinkedin) {
                 $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Verified'];
             } else {
-                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => 'Discussed'];
+                $valArr[] = ['label' => 'LINKEDIN ID', 'status' => '-'];
             }
             if (! empty($cand->current_designation) || ! empty($cand->current_company)) {
                 $valArr[] = ['label' => 'JOB DESCRIPTION', 'status' => 'Shared with candidate'];

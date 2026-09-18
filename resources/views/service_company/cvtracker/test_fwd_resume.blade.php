@@ -32,7 +32,14 @@ function initTestFwdCkEditor() {
         CKEDITOR.config.width = '100%';
         CKEDITOR.replace('test_editor1', {
             height: 300,
-            width: '100%'
+            width: '100%',
+            on: {
+                instanceReady: function() {
+                    if (window.syncFirstRecipientSalutation) {
+                        window.syncFirstRecipientSalutation();
+                    }
+                }
+            }
         });
     } catch(err) {
         console.warn('CKEditor test init error:', err);
@@ -325,7 +332,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
     </div>
     <div class="mm-header-actions">
-      <button type="button" class="mm-header-btn-cancel" onclick="closeTestFwdResumeDrawer()">Cancel</button>
+      <button type="button" class="mm-header-btn-cancel" onclick="closeTestFwdResumeDrawer()">Close</button>
       <button type="button" class="mm-header-btn-send" name="btnTestSubmit" id="btnTestSubmit" value="btnTestSubmit" onclick="if(window.onTestFwdSubmitClick) window.onTestFwdSubmitClick(event);">
         <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -458,29 +465,29 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <select name="attached_cv_format" id="test_fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.onTestFwdFormatChange) window.onTestFwdFormatChange(this);">
             <option value="" selected disabled>Select Resume Format...</option>
             <optgroup label="1. Standard Resume Options">
-              <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
-              <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
+              <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1.a Original Resume (Default)</option>
+              <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">1.b Resume + Company Branding</option>
             </optgroup>
             <optgroup label="2. Pre-Screened Report">
-              <option value="5" data-label="Pre-Screened Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">5. Pre-Screened Report PDF</option>
+              <option value="5" data-label="Pre-Screened Candidate Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">2.a Pre-Screened Candidate Report</option>
             </optgroup>
             <optgroup label="3. Recruiter Packages (Report + Resume)">
-              <option value="42" data-label="Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.">42. Pre-Screened Report + Resume + Company Branding</option>
-              <option value="43" data-label="Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">43. Pre-Screened Report + Resume without Company Branding</option>
+              <option value="42" data-label="Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.">3.a Pre-Screened Report + Resume + Company Branding</option>
+              <option value="43" data-label="Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">3.b Pre-Screened Report + Resume without Company Branding</option>
             </optgroup>
             <optgroup label="4. Highlighted Skills">
-              <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">44. Resume + Highlighted Keywords</option>
-              <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">45. Resume + Highlighted Keywords + Company Branding</option>
-              <option value="46" data-label="Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.">46. Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</option>
-              <option value="47" data-label="Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">47. Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</option>
+              <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">4.a Resume + Highlighted Keywords</option>
+              <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">4.b Resume + Highlighted Keywords + Company Branding</option>
+              <option value="46" data-label="Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.">4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</option>
+              <option value="47" data-label="Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</option>
             </optgroup>
             <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
-              <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">48. Hide Contact Details</option>
-              <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">49. Hide Candidate Name & Contacts Details</option>
-              <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">50. Hide Contact Details + Company Branding</option>
-              <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">51. Hide Contact Details + Pre-Screened Report (Branded)</option>
-              <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + Pre-Screened Report without Company Branding</option>
-              <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">53. Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
+              <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">5.a Hide Contact Details</option>
+              <option value="49" data-label="Hide Candidate Name & Contact Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">5.b Hide Candidate Name &amp; Contact Details</option>
+              <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">5.c Hide Contact Details + Company Branding</option>
+              <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">5.d Hide Contact Details + Pre-Screened Report (Branded)</option>
+              <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">5.e Hide Contact Details + Pre-Screened Report without Company Branding</option>
+              <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
             </optgroup>
           </select>
 
@@ -532,9 +539,6 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                         <span id="test_fwd_cand_avatar_{{ $cand->id }}" style="width:30px;height:30px;border-radius:7px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
                           {{ $idx + 1 }}
                         </span>
-                        <span id="test_fwd_cand_check_{{ $cand->id }}" style="position:absolute;bottom:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:{{ $hasResume ? '#10B981' : '#F59E0B' }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);">
-                          {{ $hasResume ? '✓' : '!' }}
-                        </span>
                       </div>
 
                       {{-- Candidate Name & Dynamic Filename --}}
@@ -556,7 +560,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     {{-- Candidate Status Pill & Inline Upload Action --}}
                     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                       <div id="test_fwd_cand_status_{{ $cand->id }}" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
-                        {{ $hasResume ? '✓ Attached (100%)' : '⚠ No Resume' }}
+                        {{ $hasResume ? 'Attached (100%)' : 'No Resume' }}
                       </div>
 
                       <div id="test_fwd_quick_upload_wrap_{{ $cand->id }}" style="{{ $hasResume ? 'display:none;' : 'display:inline-flex;' }}">
@@ -679,7 +683,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       <div id="test_rcp_section_internal">
         @if(!empty($internal_team_data) && count($internal_team_data) > 0)
           @foreach($internal_team_data as $itUser)
-            <div class="rcp-contact-item" data-name="{{ strtolower($itUser->name ?? '') }}" data-email="{{ strtolower($itUser->email ?? '') }}" data-role="{{ strtolower($itUser->display_name ?? ($itUser->role_name ?? '')) }}">
+            <div class="rcp-contact-item" data-name="{{ strtolower($itUser->name ?? '') }}" data-display-name="{{ $itUser->name ?? '' }}" data-email="{{ strtolower($itUser->email ?? '') }}" data-role="{{ strtolower($itUser->display_name ?? ($itUser->role_name ?? '')) }}">
               <div style="display:flex;align-items:center;min-width:0;flex:1;">
                 <div style="position:relative;margin-right:10px;flex-shrink:0;">
                   <div class="rcp-avatar" style="background:#EFF6FF;color:#2563EB;margin-right:0;">{{ strtoupper(substr($itUser->name ?? 'U', 0, 1)) }}</div>
@@ -707,7 +711,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       <div id="test_rcp_section_client" style="display:none;">
         @if(!empty($client_contacts_data))
           @foreach($client_contacts_data as $ccUser)
-            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? '') }}">
+            <div class="rcp-contact-item" data-name="{{ strtolower($ccUser->name ?? '') }}" data-display-name="{{ $ccUser->name ?? '' }}" data-email="{{ strtolower($ccUser->email ?? '') }}" data-role="{{ strtolower($ccUser->display_name ?? '') }}">
               <div style="display:flex;align-items:center;min-width:0;flex:1;">
                 <div class="rcp-avatar" style="background:#DCFCE7;color:#15803D;">{{ strtoupper(substr($ccUser->name ?? 'C', 0, 1)) }}</div>
                 <div class="rcp-info">
@@ -729,7 +733,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     <div class="rcp-footer">
       <span id="test_rcp_footer_count_text" style="font-size:12px;color:#6B7280;">0 recipients selected</span>
       <div style="display:flex;gap:8px;">
-        <button type="button" class="rcp-btn-cancel" onclick="closeTestEmailRecipientDrawer()">Cancel</button>
+        <button type="button" class="rcp-btn-cancel" onclick="closeTestEmailRecipientDrawer()">Close</button>
         <button type="button" class="rcp-btn-done" onclick="closeTestEmailRecipientDrawer()">Done</button>
       </div>
     </div>
@@ -1247,10 +1251,15 @@ window.onTestTemplateChange = function(selectEl) {
                     $('#test_subject').val(response.subject || '');
                     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                         try {
-                            CKEDITOR.instances['test_editor1'].setData(desc);
+                            CKEDITOR.instances['test_editor1'].setData(desc, function() {
+                                if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+                            });
                         } catch(e) {}
                     }
                     $('#test_editor1').val(desc);
+                    setTimeout(function() {
+                        if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+                    }, 100);
                 } else if (response.message) {
                     console.warn('Template load warning:', response.message);
                 }
@@ -1644,6 +1653,79 @@ window._testEmailTags = {
     cc: []
 };
 
+window._testRecipientNameMap = window._testRecipientNameMap || {};
+
+window.refreshTestRecipientNameMap = function() {
+    $('.rcp-contact-item').each(function() {
+        var email = ($(this).attr('data-email') || '').trim().toLowerCase();
+        var name = ($(this).attr('data-display-name') || $(this).find('.rcp-name').text() || '').trim();
+        if (email && name && name.toLowerCase() !== 'team member' && name.toLowerCase() !== 'client contact') {
+            window._testRecipientNameMap[email] = name;
+        }
+    });
+};
+
+window.syncFirstRecipientSalutation = function() {
+    window.refreshTestRecipientNameMap();
+    var toList = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to : [];
+
+    if (!toList || toList.length === 0) {
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+            var editor = CKEDITOR.instances['test_editor1'];
+            var data = editor.getData() || '';
+            var quotedGreeting = /((?:<p[^>]*>)?\s*Dear\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*")([,:]?\s*(?:<\/p>)?)/i;
+            if (quotedGreeting.test(data)) {
+                editor.setData(data.replace(quotedGreeting, function(m, p1, p2) {
+                    return p1 + 'Client' + p2;
+                }));
+            }
+        }
+        return;
+    }
+
+    var firstEmail = (toList[0] || '').trim().toLowerCase();
+    if (!firstEmail) return;
+
+    var personName = window._testRecipientNameMap[firstEmail];
+    if (!personName) return;
+
+    // Format requested by user: Dear "Shobha"
+    var targetGreeting = 'Dear "' + personName + '",';
+
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        var editor = CKEDITOR.instances['test_editor1'];
+        var data = editor.getData() || '';
+
+        var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
+
+        if (greetingPattern.test(data)) {
+            var updated = data.replace(greetingPattern, function(match, prefix, suffix) {
+                var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
+                var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
+                return pOpen + targetGreeting + pClose;
+            });
+            if (updated !== data) {
+                editor.setData(updated);
+            }
+        } else if (data.trim() !== '') {
+            editor.setData('<p>' + targetGreeting + '</p>' + data);
+        } else {
+            editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
+        }
+    } else {
+        var $ta = $('#test_editor1');
+        var val = $ta.val() || '';
+        var rawPattern = /(^(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Client|[A-Za-z0-9\s.'-]+?)([,:]?)/im;
+        if (rawPattern.test(val)) {
+            $ta.val(val.replace(rawPattern, targetGreeting));
+        } else if (val.trim()) {
+            $ta.val(targetGreeting + '\n\n' + val);
+        } else {
+            $ta.val(targetGreeting + '\n\n');
+        }
+    }
+};
+
 var emailTagRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 window.renderTestTags = function(target) {
@@ -1673,6 +1755,9 @@ window.renderTestTags = function(target) {
     }
 
     syncTestRecipientDrawerState();
+    if (target === 'to') {
+        window.syncFirstRecipientSalutation();
+    }
 };
 
 window.addTestEmailTag = function(target, email) {
@@ -1847,6 +1932,12 @@ $(document).off('click', '.test-rcp-toggle-btn').on('click', '.test-rcp-toggle-b
     e.preventDefault();
     var email = ($(this).attr('data-email') || '').trim();
     if (!email) return;
+
+    var name = ($(this).closest('.rcp-contact-item').attr('data-display-name') || $(this).closest('.rcp-contact-item').find('.rcp-name').text() || '').trim();
+    if (email && name) {
+        window._testRecipientNameMap = window._testRecipientNameMap || {};
+        window._testRecipientNameMap[email.toLowerCase()] = name;
+    }
 
     var existing = getTestExistingEmails();
     var lower = email.toLowerCase();

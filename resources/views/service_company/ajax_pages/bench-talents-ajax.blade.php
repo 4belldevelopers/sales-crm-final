@@ -89,15 +89,10 @@
                     }
                     $skilltag = implode(' ', array_merge($matchedChips, $otherChips));
 
-                    /* Match % badge: >=90% green, 75%-89% blue, <75% red */
+                    /* Match % badge: standardized >=85 green, 50-84 orange, <50 red */
                     $matchPercentVal = (float) ($row->skill_match_percent ?? 0);
-                    if ($matchPercentVal >= 90) {
-                        $matchBadge = '<span class="badge my-1 me-1" style="background:#dcfce7;color:#15803d;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
-                    } elseif ($matchPercentVal >= 75) {
-                        $matchBadge = '<span class="badge my-1 me-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
-                    } else {
-                        $matchBadge = '<span class="badge my-1 me-1" style="background:#fee2e2;color:#dc2626;font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
-                    }
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($matchPercentVal);
+                    $matchBadge = '<span class="badge my-1 me-1" style="background:' . $matchStyle['bg'] . ';color:' . $matchStyle['color'] . ';font-weight:600;">Match ' . (int)$matchPercentVal . '%</span> ';
 
                     /* Ads switch tag */
                     $adsBadge = (isset($row->ads_switch_order) && $row->ads_switch_order == 0)

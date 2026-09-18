@@ -54,23 +54,21 @@
                     $skillArr = $row->matched_skills;
                     $allCandidateSkills = array_filter(array_map('trim', explode(',', (string) @$row->skills)));
 
-                    $percentage=0;
-                    $matches = $row->matched_skill_count;
-                    $totalElements = count($requiredSkillsForDisplay ?? []);
-                    $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
-                    $matchPercentage = min($matchPercentage, 100);
-                    $percentage = round($matchPercentage, 1);
-
-                    $matchNum = (float) $percentage;
-                    if ($matchNum == 0) {
-                        $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                    } elseif ($matchNum < 50) {
-                        $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                    } elseif ($matchNum <= 90) {
-                        $matchBg = '#fef3c7'; $matchColor = '#d97706';
+                    $targetJobId = $row->job_id ?? ($jobid ?? 0);
+                    if ($targetJobId > 0) {
+                        $percentageString = GeneralMethod::skill_percentage($targetJobId, $allCandidateSkills);
+                        $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
                     } else {
-                        $matchBg = '#dcfce7'; $matchColor = '#16a34a';
+                        $matches = $row->matched_skill_count ?? 0;
+                        $totalElements = count($requiredSkillsForDisplay ?? []);
+                        $matchPercentage = $totalElements > 0 ? ($matches / $totalElements) * 100 : 0;
+                        $percentage = (int) round(min($matchPercentage, 100));
                     }
+
+                    // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                    $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                    $matchBg = $matchStyle['bg'];
+                    $matchColor = $matchStyle['color'];
                     $matchBadge = '<span class="badge my-1" style="background-color:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . $percentage . '%</span>';
 
                     // Matched skill highlighting, three tiers — mirrors
@@ -83,22 +81,14 @@
                     $mandatoryMatched = $row->matched_mandatory_skills ?? [];
                     $optionalMatched = array_values(array_udiff($skillArr, $mandatoryMatched, 'strcasecmp'));
                     $unmatchedSkillsArr = array_values(array_udiff($allCandidateSkills, $skillArr, 'strcasecmp'));
-                    $maxUnmatchedShown = 6;
-                    $unmatchedShown = array_slice($unmatchedSkillsArr, 0, $maxUnmatchedShown);
-                    $unmatchedRemaining = max(count($unmatchedSkillsArr) - count($unmatchedShown), 0);
-
                     foreach ($mandatoryMatched as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dbeafe;color:#1d4ed8;font-weight:600;border:1px solid #bfdbfe;" title="Matches a mandatory (starred) skill"><span style="color:#eab308;">★</span> ' . ucfirst($sval) . '</span>  ';
                     }
                     foreach ($optionalMatched as $sval) {
                         $skilltag .= '<span class="badge my-1" style="background:#dcfce7;color:#15803d;font-weight:600;border:1px solid #bbf7d0;" title="Matches a required skill">' . ucfirst($sval) . '</span>  ';
                     }
-                    foreach ($unmatchedShown as $sval) {
+                    foreach ($unmatchedSkillsArr as $sval) {
                         $skilltag .= '<span class="badge badge-light my-1" style="font-weight: 300;">' . ucfirst($sval) . '</span>  ';
-                    }
-                    if ($unmatchedRemaining > 0) {
-                        $moreTitle = implode(', ', array_map('ucfirst', array_slice($unmatchedSkillsArr, $maxUnmatchedShown)));
-                        $skilltag .= '<span class="badge badge-light my-1" style="font-weight:500;color:#7e8299;" title="'.htmlspecialchars($moreTitle, ENT_QUOTES).'">+' . $unmatchedRemaining . ' more</span>';
                     }
 
                     echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">

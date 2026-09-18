@@ -114,10 +114,22 @@
     companyData = companyData || {};
 
     // Parse location parts
-    var locParts = [candidate.city, candidate.state, candidate.country].filter(function (p) {
-      return p && String(p).trim() !== '' && String(p).trim() !== '--';
+    var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
+      || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
+      || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
+
+    var stateName = (!/^\d+$/.test(String(candidate.state_name || '').trim()) && candidate.state_name)
+      || (!/^\d+$/.test(String(candidate.state || '').trim()) && candidate.state) || '';
+
+    var countryName = (!/^\d+$/.test(String(candidate.country_name || '').trim()) && candidate.country_name)
+      || (!/^\d+$/.test(String(candidate.country || '').trim()) && candidate.country) || '';
+
+    var locParts = [cityName, stateName, countryName].filter(function (p) {
+      return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
     });
-    var formattedLocation = candidate.location || (locParts.length ? locParts.join(', ') : '--');
+    var rawLoc = candidate.location ? String(candidate.location).trim() : '';
+    if (/^\d+$/.test(rawLoc)) rawLoc = '';
+    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : '--');
 
     // Experience string
     var exp = candidate.experience;
@@ -157,8 +169,9 @@
       if (candidate.resume) validation.push({ label: 'RESUME', status: 'Verified' });
       if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
       if (candidate.phone || candidate.secondary_mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
-      if (candidate.linkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
-      else validation.push({ label: 'LINKEDIN ID', status: 'Discussed' });
+      var hasLinkedin = !!(candidate.linkedin && !/^(--|-|na|n\/a|null|none)$/i.test(String(candidate.linkedin).trim()));
+      if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
+      else validation.push({ label: 'LINKEDIN ID', status: '-' });
       if (candidate.current_designation || candidate.current_company) validation.push({ label: 'JOB DESCRIPTION', status: 'Shared with candidate' });
     }
 
