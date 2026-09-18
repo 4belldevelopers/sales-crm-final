@@ -1256,17 +1256,25 @@
         #resume_cv .rcv-kw-actions { display:flex; gap:8px; }
         #resume_cv .rcv-btn { padding:7px 14px; border:1px solid #e2e8f0; background:#fff; border-radius:7px; font-size:11px; font-weight:600; color:#475569; cursor:pointer; white-space:nowrap; }
         #resume_cv .rcv-btn:hover { background:#f1f5f9; }
-        #resume_cv .rcv-kw-cols { display:flex; flex-direction:column; gap:6px; margin-top:0; }
-        #resume_cv .rcv-kw-group { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:0; }
-        #resume_cv .rcv-kw-title { font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-bottom:0; flex-shrink:0; white-space:nowrap; }
-        #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:6px; }
-        #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:default; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
+        #resume_cv .rcv-kw-cols { display:flex; flex-direction:column; gap:8px; margin-top:0; }
+        #resume_cv .rcv-kw-group { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-top:0; }
+        #resume_cv .rcv-kw-title { font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-top:4px; margin-bottom:0; flex-shrink:0; white-space:nowrap; }
+        #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+        #resume_cv .rcv-chip-wrap { display:inline-flex; flex-direction:column; gap:4px; align-items:flex-start; }
+        #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
         #resume_cv .rcv-chip .rcv-cnt { font-size:10px; background:#e2e8f0; color:#475569; border-radius:10px; padding:0 5px; min-width:15px; text-align:center; }
         #resume_cv .rcv-chip.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
         #resume_cv .rcv-chip.found .rcv-cnt { background:#bbf7d0; color:#15803d; }
-        #resume_cv .rcv-chip.missing { opacity:.6; }
+        #resume_cv .rcv-chip.missing { opacity:.55; }
         #resume_cv .rcv-chip.active { background:#fef3c7; border-color:#fcd34d; color:#92400e; box-shadow:0 0 0 2px rgba(251,191,36,.25); }
         #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
+        #resume_cv .rcv-sub-pills { display:inline-flex; flex-wrap:wrap; gap:3px; padding-left:4px; }
+        #resume_cv .rcv-sub-pill { display:inline-flex; align-items:center; gap:3px; padding:1px 6px; border-radius:10px; font-size:9.5px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f1f5f9; color:#64748b; user-select:none; transition:all .12s; }
+        #resume_cv .rcv-sub-pill:hover { background:#e2e8f0; color:#334155; }
+        #resume_cv .rcv-sub-pill.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
+        #resume_cv .rcv-sub-pill.found.active { background:#e0e7ff; border-color:#c7d2fe; color:#4338ca; box-shadow:0 0 0 1px rgba(99,102,241,.25); }
+        #resume_cv .rcv-sub-pill.missing { opacity:.5; }
+        #resume_cv .rcv-sub-pill .rcv-sub-cnt { font-size:9px; background:rgba(0,0,0,0.06); border-radius:6px; padding:0 3px; }
         #resume_cv .rcv-chip-x { margin-left:3px; cursor:pointer; font-weight:700; color:#92400e; opacity:.6; font-size:13px; line-height:1; }
         #resume_cv .rcv-chip-x:hover { opacity:1; }
         #resume_cv .rcv-kw-add-row { display:flex; gap:8px; margin:0; }
@@ -1304,7 +1312,9 @@
         #resume_cv .rcv-textlayer { position:absolute; left:0; top:0; right:0; bottom:0; overflow:hidden; line-height:1; opacity:1; }
         #resume_cv .rcv-textlayer span { position:absolute; white-space:pre; color:transparent; transform-origin:0% 0%; }
         #resume_cv .rcv-textlayer mark.rcv-hit { background:rgba(251,191,36,.45); color:transparent; border-radius:2px; }
-        #resume_cv .rcv-textlayer mark.rcv-hit-active { background:rgba(249,115,22,.6); box-shadow:0 0 0 2px rgba(249,115,22,.5); }
+        #resume_cv .rcv-textlayer mark.rcv-hit-exact { background:rgba(245,158,11,.6); }
+        #resume_cv .rcv-textlayer mark.rcv-hit-token { background:rgba(56,189,248,.45); }
+        #resume_cv .rcv-textlayer mark.rcv-hit-active { background:rgba(249,115,22,.8) !important; box-shadow:0 0 0 2px rgba(249,115,22,.6); }
         #resume_cv .rcv-textlayer span.rcv-wasm-hit-span { display:block; pointer-events:auto; }
         #resume_cv .rcv-textlayer span.rcv-wasm-hit-span mark.rcv-hit { display:block; width:100%; height:100%; line-height:inherit; }
         #resume_cv .rcv-loading { color:#e2e8f0; font-size:13px; padding:40px; }
@@ -1320,7 +1330,9 @@
         #resume_cv .rcv-textlayer mark.rcv-redact { background:#111827; color:transparent !important; border-radius:2px; user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; pointer-events:none; }
         #resume_cv .rcv-html mark.rcv-redact { background:#111827; color:#111827; border-radius:2px; user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; }
         #resume_cv .rcv-html mark.rcv-hit { background:rgba(251,191,36,.5); color:inherit; border-radius:2px; padding:0 1px; }
-        #resume_cv .rcv-html mark.rcv-hit-active { background:rgba(249,115,22,.65); box-shadow:0 0 0 2px rgba(249,115,22,.4); }
+        #resume_cv .rcv-html mark.rcv-hit-exact { background:rgba(245,158,11,.65); font-weight:600; }
+        #resume_cv .rcv-html mark.rcv-hit-token { background:rgba(56,189,248,.5); }
+        #resume_cv .rcv-html mark.rcv-hit-active { background:rgba(249,115,22,.75) !important; box-shadow:0 0 0 2px rgba(249,115,22,.4); }
         #resume_cv .rcv-note { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:12px; padding:10px 14px; border-radius:8px; margin:12px; }
         @media (max-width:640px){ #resume_cv .rcv-summary { width:100%; } #resume_cv .rcv-sumitem { flex:1; } }
       </style>
@@ -1443,72 +1455,237 @@
 
         function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
 
-        /**
-         * Intent: Parse compound skill into individual alternative sub-phrases (e.g. "Postman / Rest Assured" -> ["Postman", "Rest Assured"]).
-         */
-        function parseSkillSubTerms(raw){
-          if(!raw) return [];
-          var parts = String(raw).split(/[\/,|]|\bor\b/i).map(function(s){ return s.trim(); }).filter(Boolean);
-          return parts.length > 0 ? parts : [String(raw).trim()];
+        var ATOMIC_TECH_MAP = {
+          'ci/cd': 'CI/CD',
+          'pl/sql': 'PL/SQL',
+          'tcp/ip': 'TCP/IP',
+          'ui/ux': 'UI/UX',
+          'c/c++': 'C/C++',
+          'i/o': 'I/O',
+          'os/2': 'OS/2',
+          'client/server': 'Client/Server'
+        };
+        var STOP_WORDS = { 'and':1, 'or':1, 'in':1, 'of':1, 'for':1, 'with':1, 'the':1, 'to':1, 'on':1, 'at':1, 'a':1, 'an':1, '&':1 };
+
+        function createKeywordEntry(rawName, type){
+          var trimmed = String(rawName||'').trim();
+          if(!trimmed) return null;
+          var lower = trimmed.toLowerCase();
+
+          var isAtomic = !!ATOMIC_TECH_MAP[lower];
+          var subterms = [];
+          if(isAtomic){
+            subterms = [ATOMIC_TECH_MAP[lower]];
+          } else {
+            subterms = trimmed.split(/[\/,|]|\bor\b/i).map(function(s){ return s.trim(); }).filter(Boolean);
+            if(!subterms.length) subterms = [trimmed];
+          }
+
+          var tokens = [];
+          // 1. If split into multiple subterms (e.g. "Postman / Rest Assured")
+          if(subterms.length > 1){
+            subterms.forEach(function(st){
+              if(tokens.indexOf(st) === -1) tokens.push(st);
+            });
+          }
+          // 2. Multi-word phrases: extract individual meaningful words (e.g. "Automation", "Testing")
+          subterms.forEach(function(st){
+            var words = st.split(/[\s\-_\/]+/).map(function(w){ return w.trim(); }).filter(function(w){
+              return w.length >= 2 && !STOP_WORDS[w.toLowerCase()];
+            });
+            if(words.length > 1 || (subterms.length === 1 && words.length > 1)){
+              words.forEach(function(w){
+                if(tokens.indexOf(w) === -1 && w.toLowerCase() !== trimmed.toLowerCase()) tokens.push(w);
+              });
+            }
+          });
+
+          // 3. Special atomic acronyms like CI/CD, C/C++ -> also expose sub-tokens CI, CD, C, C++
+          if(lower === 'ci/cd' || lower === 'c/c++' || lower === 'tcp/ip' || lower === 'ui/ux' || lower === 'pl/sql'){
+            var slashParts = trimmed.split(/[\/]/).map(function(p){ return p.trim(); }).filter(Boolean);
+            slashParts.forEach(function(p){
+              if(tokens.indexOf(p) === -1 && p.toLowerCase() !== trimmed.toLowerCase()) tokens.push(p);
+            });
+          }
+
+          var tokenStates = {};
+          tokens.forEach(function(tok){
+            tokenStates[tok] = { active: true, count: 0 };
+          });
+
+          return {
+            name: trimmed,
+            type: type || 'job',
+            active: false,
+            subterms: subterms,
+            tokens: tokens,
+            tokenStates: tokenStates,
+            phraseCount: 0,
+            count: 0
+          };
+        }
+
+        function seedKeywords(){
+          jobSkills.forEach(function(s){
+            var entry = createKeywordEntry(s, 'job');
+            if(entry && !keywords[entry.name]) keywords[entry.name] = entry;
+          });
         }
 
         /**
-         * Intent: Build strict regex pattern for a single phrase ensuring contiguous matching, word boundaries, and plural flex.
+         * Intent: Build strict regex pattern for a phrase or word ensuring word boundaries and zero-consumption assertions.
          */
         function skillTermToRegexPattern(term){
-          var words = String(term).trim().split(/[\s\-]+/).filter(Boolean);
-          if(!words.length) return escRe(term);
+          var trimmed = String(term).trim();
+          if(!trimmed) return '';
+          var words = trimmed.split(/[\s\-]+/).filter(Boolean);
+          if(!words.length) return escRe(trimmed);
+
           var wp = words.map(function(w){
             var cw = escRe(w);
-            if(cw.length > 3 && cw.toLowerCase().endsWith('s') && !cw.toLowerCase().endsWith('ss')){
-              cw = cw.slice(0, -1) + 's?';
-            } else if(cw.length > 2 && !/[0-9+#.]/.test(cw)){
-              cw = cw + 's?';
+            if(/^[a-zA-Z]+$/.test(w)){
+              if(w.length > 3 && w.toLowerCase().endsWith('s') && !w.toLowerCase().endsWith('ss')){
+                cw = escRe(w.slice(0, -1)) + 's?';
+              } else if(w.length > 2 && !/^(k8s|redis|express|cypress|canvas|pandas|devops|spring|jboss)$/i.test(w)){
+                cw = cw + 's?';
+              }
             }
             return cw;
           });
+
           var phrase = wp.join('[\\s\\-]+');
-          var startB = /^\w/.test(term) ? '\\b' : '(?:^|[\\s,;!?()\\[\\]\\/\\-])';
-          var endB = /\w$/.test(term) ? '\\b' : '(?=[\\s,;!?()\\[\\]\\/\\-]|$)';
+          phrase = phrase.replace(/\\\/|\//g, '[\\s\\-_/]*');
+
+          var startB;
+          if(/^[a-zA-Z0-9]/.test(trimmed)){
+            startB = '(?<=^|[^a-zA-Z0-9_])';
+          } else {
+            startB = '(?<=^|[^a-zA-Z0-9_\\.])';
+          }
+
+          var endB;
+          if(/[+#]$/.test(trimmed)){
+            endB = '(?=$|[^a-zA-Z0-9+#])';
+          } else if(/[a-zA-Z0-9]$/.test(trimmed)){
+            endB = '(?=$|[^a-zA-Z0-9_])';
+          } else {
+            endB = '(?=$|[\\s,;:.!?()\\[\\]\\/\\-—•"\'`])';
+          }
+
           return startB + phrase + endB;
         }
 
-        /**
-         * Intent: Build RegExp for a keyword that may contain slash/comma alternatives.
-         */
         function buildSkillRegex(skillName){
-          var subterms = parseSkillSubTerms(skillName);
-          var patterns = subterms.map(skillTermToRegexPattern);
-          return new RegExp('(' + patterns.join('|') + ')', 'gi');
+          var entry = keywords[skillName] || createKeywordEntry(skillName, 'custom');
+          var patterns = [];
+          entry.subterms.forEach(function(st){
+            var p = skillTermToRegexPattern(st);
+            if(p) patterns.push(p);
+          });
+          entry.tokens.forEach(function(tok){
+            var tp = skillTermToRegexPattern(tok);
+            if(tp && patterns.indexOf(tp) === -1) patterns.push(tp);
+          });
+          return patterns.length ? new RegExp('(' + patterns.join('|') + ')', 'gi') : null;
         }
 
-        function buildRegex(){
-          var act = activeList();
-          if(!act.length) return null;
-          var allPatterns = [];
-          act.forEach(function(k){
-            var subterms = parseSkillSubTerms(k);
-            subterms.forEach(function(st){
-              allPatterns.push(skillTermToRegexPattern(st));
+        function buildRegexBundle(){
+          var exactPatterns = [];
+          var tokenPatterns = [];
+          var exactLookup = {};
+
+          Object.keys(keywords).forEach(function(k){
+            var entry = keywords[k];
+            if(!entry.active) return;
+
+            // Main phrase patterns
+            entry.subterms.forEach(function(st){
+              var p = skillTermToRegexPattern(st);
+              if(p){
+                exactPatterns.push(p);
+                exactLookup[st.toLowerCase()] = true;
+              }
+            });
+
+            // Active sub-tokens
+            entry.tokens.forEach(function(tok){
+              if(entry.tokenStates[tok] && entry.tokenStates[tok].active){
+                var tp = skillTermToRegexPattern(tok);
+                if(tp && exactPatterns.indexOf(tp) === -1 && tokenPatterns.indexOf(tp) === -1){
+                  tokenPatterns.push(tp);
+                }
+              }
             });
           });
-          allPatterns.sort(function(a,b){ return b.length - a.length; });
-          return new RegExp('(' + allPatterns.join('|') + ')', 'gi');
+
+          exactPatterns.sort(function(a,b){ return b.length - a.length; });
+          tokenPatterns.sort(function(a,b){ return b.length - a.length; });
+
+          var allPatterns = [].concat(exactPatterns, tokenPatterns);
+          if(!allPatterns.length) return null;
+
+          return {
+            allRe: new RegExp('(' + allPatterns.join('|') + ')', 'gi'),
+            exactLookup: exactLookup
+          };
         }
 
         function countOccurrences(){
           Object.keys(keywords).forEach(function(k){
-            var re = buildSkillRegex(k);
-            var m = resumeText.match(re);
-            keywords[k].count = m ? m.length : 0;
+            var entry = keywords[k];
+            var totalCount = 0;
+
+            // 1. Check exact phrase / subterms
+            var subtermPatterns = entry.subterms.map(skillTermToRegexPattern).filter(Boolean);
+            if(subtermPatterns.length){
+              var phraseRe = new RegExp('(' + subtermPatterns.join('|') + ')', 'gi');
+              var mPhrase = resumeText ? resumeText.match(phraseRe) : null;
+              entry.phraseCount = mPhrase ? mPhrase.length : 0;
+              totalCount += entry.phraseCount;
+            } else {
+              entry.phraseCount = 0;
+            }
+
+            // 2. Check each token individually
+            entry.tokens.forEach(function(tok){
+              var tokPat = skillTermToRegexPattern(tok);
+              if(tokPat){
+                var tokRe = new RegExp(tokPat, 'gi');
+                var mTok = resumeText ? resumeText.match(tokRe) : null;
+                var tCnt = mTok ? mTok.length : 0;
+                if(!entry.tokenStates[tok]) entry.tokenStates[tok] = { active: true, count: 0 };
+                entry.tokenStates[tok].count = tCnt;
+                if(entry.phraseCount === 0){
+                  totalCount += tCnt;
+                }
+              }
+            });
+
+            entry.count = totalCount;
           });
         }
 
         function chipHtml(name){
           var k = keywords[name];
-          var cls = 'rcv-chip' + (k.count>0 ? ' found' : ' missing') + (k.active ? ' active' : '');
+          var hasHits = k.count > 0 || k.phraseCount > 0;
+          var cls = 'rcv-chip' + (hasHits ? ' found' : ' missing') + (k.active ? ' active' : '');
           var rm = (k.type==='custom') ? '<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>' : '';
-          return '<span class="'+cls+'" data-kw="'+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>';
+          
+          var displayCount = k.phraseCount > 0 ? k.phraseCount : k.count;
+          var mainChip = '<span class="'+cls+'" data-kw="'+esc(name)+'" title="Toggle '+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+displayCount+'</span>'+rm+'</span>';
+
+          var subHtml = '';
+          if(k.tokens && k.tokens.length > 0){
+            var pills = [];
+            k.tokens.forEach(function(tok){
+              var ts = k.tokenStates[tok] || { active: true, count: 0 };
+              var pCls = 'rcv-sub-pill' + (ts.count > 0 ? ' found' : ' missing') + (ts.active ? ' active' : '');
+              pills.push('<span class="'+pCls+'" data-parent-kw="'+esc(name)+'" data-token="'+esc(tok)+'" title="Toggle '+esc(tok)+' individually">'+esc(tok)+' <span class="rcv-sub-cnt">'+ts.count+'</span></span>');
+            });
+            subHtml = '<div class="rcv-sub-pills">' + pills.join('') + '</div>';
+          }
+
+          return '<div class="rcv-chip-wrap" data-kw="'+esc(name)+'">' + mainChip + subHtml + '</div>';
         }
 
         function renderChips(){
@@ -1522,7 +1699,9 @@
           var cg = $id('rcvCustomGroup');
           if(cg){ if(xc){ cg.style.display='block'; $id('rcvCustomChips').innerHTML = xc; } else { cg.style.display='none'; $id('rcvCustomChips').innerHTML=''; } }
           var matched=0, missing=0;
-          Object.keys(keywords).forEach(function(k){ if(keywords[k].count>0) matched++; else missing++; });
+          Object.keys(keywords).forEach(function(k){
+            if(keywords[k].count > 0 || keywords[k].phraseCount > 0) matched++; else missing++;
+          });
           $id('rcvMatched').textContent = matched;
           $id('rcvMissing').textContent = missing;
         }
@@ -1550,8 +1729,11 @@
             Array.prototype.slice.call(node.childNodes).forEach(function(k){ highlightInNode(k, re, cls); });
           }
         }
+
         function applyHighlights(){
-          var re = (hlOn ? buildRegex() : null);
+          var reObj = hlOn ? buildRegexBundle() : null;
+          var re = reObj ? reObj.allRe : null;
+
           if(rcvMode === 'html'){
             var cont = $id('rcvHtml');
             if(cont){
@@ -1564,7 +1746,17 @@
             // Dynamic text layer coordinate resolution for WASM-converted DOCX resumes
             var collector = window.agyCollectWasmDocxWordHits || (typeof agyCollectWasmDocxWordHits === 'function' ? agyCollectWasmDocxWordHits : null);
             if(window.__rcvActiveWasmDoc && window.__rcvDocxWasmHitsSearched && typeof collector === 'function'){
-              var activeKws = activeList();
+              var activeKws = [];
+              Object.keys(keywords).forEach(function(k){
+                if(keywords[k].active){
+                  activeKws.push(k);
+                  if(keywords[k].tokens){
+                    keywords[k].tokens.forEach(function(t){
+                      if(keywords[k].tokenStates[t] && keywords[k].tokenStates[t].active && activeKws.indexOf(t) === -1) activeKws.push(t);
+                    });
+                  }
+                }
+              });
               var missingKws = activeKws.filter(function(k){
                 return !window.__rcvDocxWasmHitsSearched[k.toLowerCase()];
               });
@@ -1619,10 +1811,23 @@
             spans.forEach(function(sp){
               if(sp.dataset.orig === undefined) sp.dataset.orig = sp.textContent;
               var t = sp.dataset.orig;
+              if(!t) return;
               if(!re && !hideContact){ sp.textContent = t; return; }
+
               var html = esc(t);
-              if(re){ re.lastIndex = 0; html = html.replace(re, '<mark class="rcv-hit">$1</mark>'); }
-              if(hideContact){ html = redactHtml(html); }
+              // Redact contact information first
+              if(hideContact){
+                html = redactHtml(html);
+              }
+              // Highlight active keywords with exact vs token visual distinction
+              if(re){
+                re.lastIndex = 0;
+                html = html.replace(re, function(match){
+                  var isExact = reObj.exactLookup && reObj.exactLookup[match.toLowerCase().trim()];
+                  var cls = isExact ? 'rcv-hit rcv-hit-exact' : 'rcv-hit rcv-hit-token';
+                  return '<mark class="' + cls + '">' + match + '</mark>';
+                });
+              }
               sp.innerHTML = html;
             });
             hits = Array.prototype.slice.call(document.querySelectorAll('#rcvPages mark.rcv-hit'));
@@ -1645,19 +1850,52 @@
         function toggleKw(name){
           if(!keywords[name]) return;
           keywords[name].active = !keywords[name].active;
+          if(keywords[name].tokens){
+            keywords[name].tokens.forEach(function(tok){
+              if(keywords[name].tokenStates[tok]){
+                keywords[name].tokenStates[tok].active = keywords[name].active;
+              }
+            });
+          }
+          renderChips(); applyHighlights();
+        }
+
+        function toggleToken(parentName, tokenName){
+          if(!keywords[parentName] || !keywords[parentName].tokenStates[tokenName]) return;
+          var ts = keywords[parentName].tokenStates[tokenName];
+          ts.active = !ts.active;
+          var anyActive = false;
+          keywords[parentName].tokens.forEach(function(t){
+            if(keywords[parentName].tokenStates[t] && keywords[parentName].tokenStates[t].active) anyActive = true;
+          });
+          keywords[parentName].active = anyActive;
           renderChips(); applyHighlights();
         }
 
         function addKeyword(name, type){
           name = (name||'').trim();
           if(!name) return;
-          var key = Object.keys(keywords).filter(function(k){ return k.toLowerCase()===name.toLowerCase(); })[0];
-          if(key){ keywords[key].active = true; }
-          else {
-            var re = buildSkillRegex(name); var m = resumeText.match(re);
-            keywords[name] = { type: type||'custom', active:true, count: m?m.length:0 };
-          }
-          renderChips(); applyHighlights();
+          var inputParts = name.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+          inputParts.forEach(function(part){
+            var key = Object.keys(keywords).filter(function(k){ return k.toLowerCase()===part.toLowerCase(); })[0];
+            if(key){
+              keywords[key].active = true;
+              if(keywords[key].tokens){
+                keywords[key].tokens.forEach(function(t){
+                  if(keywords[key].tokenStates[t]) keywords[key].tokenStates[t].active = true;
+                });
+              }
+            } else {
+              var entry = createKeywordEntry(part, type||'custom');
+              if(entry){
+                entry.active = true;
+                keywords[entry.name] = entry;
+              }
+            }
+          });
+          countOccurrences();
+          renderChips();
+          applyHighlights();
         }
 
         function loadScript(src){
@@ -1896,9 +2134,22 @@
             var x = e.target.closest && e.target.closest('#resume_cv .rcv-chip-x');
             if(x){ e.preventDefault(); var nm = x.getAttribute('data-rm'); if(keywords[nm]){ delete keywords[nm]; renderChips(); applyHighlights(); } }
           });
-          // chip click toggles highlight on/off
+          // sub-pill click toggles individual keyword
           document.addEventListener('click', function(e){
-            if(e.target.closest && e.target.closest('#resume_cv .rcv-chip-x')) return;
+            var pill = e.target.closest && e.target.closest('#resume_cv .rcv-sub-pill');
+            if(pill){
+              e.preventDefault();
+              e.stopPropagation();
+              var parentKw = pill.getAttribute('data-parent-kw');
+              var token = pill.getAttribute('data-token');
+              if(parentKw && token){
+                toggleToken(parentKw, token);
+              }
+            }
+          });
+          // chip click toggles highlight on/off (only if not clicking sub-pill or remove button)
+          document.addEventListener('click', function(e){
+            if(e.target.closest && (e.target.closest('#resume_cv .rcv-chip-x') || e.target.closest('#resume_cv .rcv-sub-pill'))) return;
             var chip = e.target.closest && e.target.closest('#resume_cv .rcv-chip[data-kw]');
             if(chip){ toggleKw(chip.getAttribute('data-kw')); }
           });
@@ -2167,7 +2418,16 @@
           }
           countOccurrences();
           // default: highlight job skills that are present
-          Object.keys(keywords).forEach(function(k){ keywords[k].active = (keywords[k].type==='job' && keywords[k].count>0); });
+          Object.keys(keywords).forEach(function(k){
+            var hasHits = (keywords[k].count > 0 || keywords[k].phraseCount > 0);
+            keywords[k].active = (keywords[k].type==='job' && hasHits);
+            if(keywords[k].tokens){
+              keywords[k].tokens.forEach(function(tok){
+                var ts = keywords[k].tokenStates[tok];
+                if(ts) ts.active = (keywords[k].active && ts.count > 0);
+              });
+            }
+          });
           renderChips();
           applyHighlights();
 
@@ -2215,7 +2475,16 @@
           resumeText = cont.innerText || cont.textContent || '';
           window.__rcvResumeText = resumeText;
           countOccurrences();
-          Object.keys(keywords).forEach(function(k){ keywords[k].active = (keywords[k].type==='job' && keywords[k].count>0); });
+          Object.keys(keywords).forEach(function(k){
+            var hasHits = (keywords[k].count > 0 || keywords[k].phraseCount > 0);
+            keywords[k].active = (keywords[k].type==='job' && hasHits);
+            if(keywords[k].tokens){
+              keywords[k].tokens.forEach(function(tok){
+                var ts = keywords[k].tokenStates[tok];
+                if(ts) ts.active = (keywords[k].active && ts.count > 0);
+              });
+            }
+          });
           renderChips();
           applyHighlights();
         }
@@ -2240,10 +2509,6 @@
           }
           // keep keyword chips usable (counts will be 0 without extractable text)
           countOccurrences(); renderChips();
-        }
-
-        function seedKeywords(){
-          jobSkills.forEach(function(s){ if(s) keywords[s] = { type:'job', active:false, count:0 }; });
         }
 
         async function init(){
@@ -2950,7 +3215,7 @@
                   <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
               </div>
-              <h3 class="card-title">Recruiter Notes</h3>
+              <h3 class="card-title">Recruiter Comments</h3>
               @if($editComman)
               <button type="button" class="jw-card-edit-btn editRecruiterNote">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -2961,7 +3226,7 @@
             @if(!empty($application->recruiter_note))
               <div class="po-recruiter-note-text">{!! $application->recruiter_note !!}</div>
             @else
-              <p class="po-no-notes">No recruiter notes added yet.</p>
+              <p class="po-no-notes">No recruiter comments added yet.</p>
             @endif
           </section>
 
@@ -3791,8 +4056,8 @@
               </svg>
             </div>
             <div class="jw-drawer-title-group">
-              <div class="jw-drawer-title">Edit Recruiter Notes</div>
-              <div class="jw-drawer-subtitle">Update internal notes for this candidate</div>
+              <div class="jw-drawer-title">Edit Recruiter Comments</div>
+              <div class="jw-drawer-subtitle">Update internal comments for this candidate</div>
             </div>
             <button type="button" class="jw-drawer-close editRecruiterNoteCancel" aria-label="Close">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -3805,10 +4070,10 @@
             <div class="rn-section" id="rn-template-wrap" style="display:none;">
               <label class="rn-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Select Template <span>(Optional — loads content into the note below)</span>
+                Select Template <span>(Optional — loads content into the comments below)</span>
               </label>
               <select class="rn-select" id="rn_template_select">
-                <option value="">Select Note Template...</option>
+                <option value="">Select Comment Template...</option>
               </select>
             </div>
 
@@ -3816,9 +4081,9 @@
             <div class="rn-section">
               <label class="rn-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                Internal Note
+                Internal Comments
               </label>
-              <div class="rn-editor" id="jw_recruiter_note_editor" contenteditable="true" data-placeholder="Add internal recruiter notes about this candidate...">{!! @$application->recruiter_note !!}</div>
+              <div class="rn-editor" id="jw_recruiter_note_editor" contenteditable="true" data-placeholder="Add internal recruiter comments about this candidate...">{!! @$application->recruiter_note !!}</div>
             </div>
           </div>
           <div class="jw-drawer-footer">
@@ -4639,7 +4904,7 @@ setTimeout(() => {
         if (!rnTemplatesLoaded) {
             $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
                 if (res.status === 'success' && res.data && res.data.length > 0) {
-                    var opts = '<option value="">Select Note Template...</option>';
+                    var opts = '<option value="">Select Comment Template...</option>';
                     $.each(res.data, function(i, tpl) {
                         rnTemplates[tpl.id] = tpl;
                         opts += '<option value="' + tpl.id + '">' + $('<div>').text(tpl.title).html() + '</option>';
@@ -4691,7 +4956,7 @@ setTimeout(() => {
                     } else {
                         $('.po-recruiter-note-text').hide();
                         if ($('.po-no-notes').length === 0) {
-                            $('.po-recruiter-note-text').after('<p class="po-no-notes" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter notes added yet.</p>');
+                            $('.po-recruiter-note-text').after('<p class="po-no-notes" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter comments added yet.</p>');
                         }
                         $('.po-no-notes').show();
                     }
@@ -4705,7 +4970,7 @@ setTimeout(() => {
                     setTimeout(function() {
                         $btn.html('Save Changes');
                         $btn.prop('disabled', false);
-                        Swal.fire('Success', 'Recruiter notes updated successfully!', 'success');
+                        Swal.fire('Success', 'Recruiter comments updated successfully!', 'success');
                     }, 350);
                 } else {
                     $btn.html('Save Changes');
