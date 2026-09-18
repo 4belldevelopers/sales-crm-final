@@ -35,19 +35,24 @@ class ForwardResumeUploadService
         $endpoint = $disk['endpoint'] ?? (config('resumes.r2.endpoint') ?: ($s3Disk['endpoint'] ?? null));
         $region = $disk['region'] ?? (config('resumes.r2.region') ?: 'auto');
 
-        if (! empty($key) && ! empty($secret) && ! empty($endpoint)) {
+        if (! empty($key) && ! empty($secret)) {
             try {
-                $this->client = new S3Client([
+                $clientConfig = [
                     'version' => 'latest',
-                    'region' => $region,
-                    'endpoint' => $endpoint,
-                    'use_path_style_endpoint' => true,
+                    'region' => $region ?: 'ap-south-1',
                     'credentials' => [
                         'key' => $key,
                         'secret' => $secret,
                     ],
                     'signature_version' => 'v4',
-                ]);
+                ];
+
+                if (! empty($endpoint)) {
+                    $clientConfig['endpoint'] = $endpoint;
+                    $clientConfig['use_path_style_endpoint'] = true;
+                }
+
+                $this->client = new S3Client($clientConfig);
             } catch (\Throwable $e) {
                 \Log::warning('[ForwardResumeUploadService] S3Client initialization skipped: '.$e->getMessage());
                 $this->client = null;
@@ -219,4 +224,3 @@ class ForwardResumeUploadService
         }
     }
 }
-
