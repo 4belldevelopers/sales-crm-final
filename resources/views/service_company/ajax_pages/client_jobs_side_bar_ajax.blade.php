@@ -71,8 +71,21 @@
         // ── Internal / client tag ──
         $parentCompName = $row->company_name ?? ($row->clients_name ?? '');
         $isDirectClientJob = ($row->comId != $company_id);
-        $recommendation_text = $isDirectClientJob ? 'Direct Client' : __('messages.internal_tag');
+        $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
+        if ($isDirectClientJob) {
+            $recommendation_text = 'Direct Client';
+        } elseif ($isSelfCompany) {
+            $recommendation_text = __('messages.internal_tag');
+        } else {
+            $recommendation_text = 'Internal Client';
+        }
         $tagCls = $isDirectClientJob ? 'badge-client' : 'badge-internal';
+
+        $deptName = !empty(@$row->department_name)
+            ? @$row->department_name
+            : (!empty(@$row->category_name)
+                ? @$row->category_name
+                : (\DB::table('job_categories')->where('id', @$row->category_id)->value('name') ?? ''));
 
         // ── Experience ──
         $minExp = @$row->min_exp ?? '0';
@@ -84,6 +97,8 @@
         $max_salary_currency = $currencySymbole[@$row->max_salary_currency] ?? $min_salary_currency;
         $max_salary = GeneralMethod::thousandsCurrencyFormat($row->max_salary);
         $min_salary = GeneralMethod::thousandsCurrencyFormat($row->min_salary);
+        $min_salary_abbr = GeneralMethod::formatAmount($min_salary);
+        $max_salary_abbr = GeneralMethod::formatAmount($max_salary);
 
         // ── Employment type ──
         $employment_type = ($row->employment_type == 1) ? 'Contract' : 'Full-time';
@@ -140,7 +155,8 @@
             $teamListClass = 'hm-listing';
         }
 
-        // ── Agency column: add-agency link + matching count ──
+        // ── Agency column: add-agency link + matching count / own company name ──
+        $ownCompanyName = \DB::table('companies')->where('id', $company_id)->value('company_name') ?? '';
         $agencyMatchCnt = 0;
         $agencyAssigned = 0;
         $recRel = collect($row->recommendation_relation ?? []);
@@ -215,15 +231,8 @@
                         {{ ucwords(mb_substr(@$row->title, 0, 28)) }}
                     </a>
                 </div>
-                @if(!empty(@$row->department_name))
-                    <div class="job-dept">{{ ucwords(mb_substr(@$row->department_name, 0, 26)) }}</div>
-                @endif
+                <div class="job-dept">{{ ucwords(mb_substr($deptName ?: 'IT (Information Technology)', 0, 30)) }}</div>
                 <div class="job-client">{{ $company_name }}</div>
-                <div class="job-meta-line">
-                    <span class="it-job-id">#{{ $row->id }}</span>
-                    <span class="it-dot-separator"></span>
-                    <span class="badge-type {{ $tagCls }}">{{ $recommendation_text }}</span>
-                </div>
             </div>
         </div>
 
@@ -235,7 +244,7 @@
             </div>
             <div class="sal-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                {!! $min_salary_currency !!}{{ $min_salary }} – {{ $max_salary }} {{ $min_sal_mode }}
+                {!! $min_salary_currency !!}{{ $min_salary_abbr }} – {{ $max_salary_abbr }} {{ $min_sal_mode }}
             </div>
             <span class="badge-type badge-direct" style="margin-top:4px; width:fit-content;">{{ $employment_type }}</span>
         </div>
@@ -256,8 +265,8 @@
         {{-- ── Col 4: Hiring Manager ── --}}
         <div class="col-hm">
             <div class="hm-name">{{ $hiringManager }}</div>
-            @if($hmRole)<div class="hm-title">{{ $hmRole }}</div>@endif
-            <div class="hm-company">{{ $employment_type }}</div>
+            <div class="hm-title">{{ !empty($hmRole) ? $hmRole : 'Account Owner' }}</div>
+            <div class="hm-company hm-client-type"><span class="it-job-type {{ $tagCls }}">{{ $recommendation_text }}</span> &bull; <a href="javascript:void(0);" class="it-job-id">{{ $row->id }}</a></div>
         </div>
 
         {{-- ── Col 5: Team ── --}}
@@ -269,9 +278,14 @@
         </div>
 
         {{-- ── Col 6: Agency ── --}}
-        <div class="col-action spartner-listing" data-row-id="{{ $row->id }}">
-            @if($agencyMatchCnt > 0)
-                <div style="font-size:11px; color:#a1a5b7; margin-top:4px;">{{ $agencyMatchCnt }} Matching</div>
+        <div class="col-action">
+            @if($isDirectClientJob)
+                <div class="hm-name" style="font-size:12.5px; font-weight:700; color:#181c32;">{{ ucwords(mb_substr($ownCompanyName, 0, 24)) }}</div>
+            @else
+                <div class="action-more spartner-listing" data-row-id="{{ $row->id }}">+ Add Agency</div>
+                @if($agencyMatchCnt > 0)
+                    <div style="font-size:11px; color:#a1a5b7; margin-top:2px;">{{ $agencyMatchCnt }} Matching</div>
+                @endif
             @endif
         </div>
 

@@ -25,12 +25,7 @@
 
 	#send_email .modal-dialog{margin: .3rem auto!important;}
 
-@media  only screen and (min-width: 900px) and (max-width: 2560px){
-  	.table td, .table th, .table tr{width: max-content!important;}
-  	.table > :not(caption) > * > *{padding: 0rem;}
-  	td:nth-child(n+2),
-  	th:nth-child(n+2){width: revert!important;}
-}
+
 @media  only screen and (min-width: 1024px) and (max-width: 1440px){
   	#kt_activitiesApplication{
       width: 1025px;
@@ -848,6 +843,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                 <input class="form-check-input" type="checkbox" id="aptk_selection_master_chk" checked title="Clear selection" />
             </div>
             <span class="aptk-selection-count"><span id="aptk_selected_count">0</span> candidates selected</span>
+            <div class="aptk-selection-actions">
                 <a href="javascript:void(0);" type="button" class="btn btn-sm btn-light-success test_fwd_resume" id="kt_test_fwd_resume_drawer_toggle_clientapp">
                     <span class="svg-icon svg-icon-success svg-icon-1x">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
