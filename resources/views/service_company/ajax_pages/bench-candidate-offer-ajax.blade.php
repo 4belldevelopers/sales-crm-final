@@ -84,7 +84,8 @@
                 $jobStatusPill = 'bo-pill-amber';
             }
             $isInternalClient = (($row->recommendation_id > 0 && @$row->client_comapny_id == auth()->user()->company_id) || @$row->client_comapny_id == auth()->user()->company_id);
-            $clientTypeLabel = $isInternalClient ? 'Internal Client' : 'Direct Client';
+            $parentCompName = $row->company_name ?? ($row->client_name ?? '');
+            $clientTypeLabel = $isInternalClient ? 'Internal' : 'Direct Client';
 
             // ---- Compensation column ----
             $ofOfferAmount = $row->of_offer_amount;

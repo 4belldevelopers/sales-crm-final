@@ -77,9 +77,10 @@
                     $client_title_name = $row->client_title_name_enriched ?? $row->client_name ?? $row->company_name ?? '';
                     $client_name = ucwords(mb_substr($client_title_name, 0, 15));
 
-                    $jobTypeLabel = 'Internal Client';
+                    $jobTypeLabel = 'Internal';
                     $jobTypeClass = 'it-job-type-internal';
                     if (($row->recommendation_id ?? 0) > 0 && (@$row->to_company_id == auth()->user()->company_id)) {
+                        $parentCompName = $row->company_name ?? ($row->client_title_name_enriched ?? '');
                         $jobTypeLabel = 'Direct Client';
                         $jobTypeClass = 'it-job-type-direct';
                     }

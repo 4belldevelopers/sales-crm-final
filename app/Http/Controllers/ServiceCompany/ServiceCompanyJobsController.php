@@ -2889,9 +2889,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ? DB::table('users_profile')->whereIn('user_id', $spokUserIds)->pluck('designation', 'user_id')->toArray()
                 : [];
 
-            $agencyCompanyIds = collect($data)->pluck('companyidcount')->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
-            $companiesMap = ! empty($agencyCompanyIds)
-                ? DB::table('companies')->whereIn('id', $agencyCompanyIds)->pluck('company_name', 'id')->toArray()
+            // INTENT: Batch pre-fetch parent/owning company names for direct client jobs to eliminate N+1 DB lookups. Tenancy: company IDs in jobs & recommendation_relation.
+            $parentCompanyIds = collect($data)->pluck('comId')
+                ->merge(collect($relationMap)->pluck('from_company_id'))
+                ->merge(collect($data)->pluck('companyidcount'))
+                ->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
+            $companiesMap = ! empty($parentCompanyIds)
+                ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('company_name', 'id')->toArray()
                 : [];
 
             $batchCandidateCounts = [];
@@ -3055,6 +3059,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                 $isDirectClientJob = ($recommendation_id > 0 && @$row->to_company_id == $company_id);
 
+                // INTENT: Resolve Parent/Main Company Name dynamically for Direct Client Jobs. Tenancy: scoped to owning company (from_company_id or comId).
+                $parentCompanyName = '';
+                if ($isDirectClientJob) {
+                    $parentCompId = $from_company_id ?: ($row->comId ?? null);
+                    $parentCompanyName = $companiesMap[$parentCompId] ?? ($row->company_name ?? ($row->client_name ?? ''));
+                }
+
                 $logo_path = GeneralMethod::companyDetails($row->id);
                 $department = $categoriesMap[$row->category_id] ?? '';
 
@@ -3063,8 +3074,14 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->max_salary ?? 0));
                 $min_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($row->min_salary ?? 0));
 
-                $clientTypeJob = $isDirectClientJob ? 'Direct' : 'Client';
-                $recommendation_text = $isDirectClientJob ? ($clientTypeJob.' '.__('messages.clinet_tag')) : (__('messages.internal_tag').' '.$clientTypeJob);
+                $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
+                if ($isDirectClientJob) {
+                    $recommendation_text = 'Direct Client';
+                } elseif ($isSelfCompany) {
+                    $recommendation_text = __('messages.internal_tag');
+                } else {
+                    $recommendation_text = 'Internal Client';
+                }
                 $badge = $isDirectClientJob ? 'badge-client' : 'badge-internal';
 
                 $status = ucwords($row->status ?? 'active');
@@ -3220,6 +3237,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     'clients_name' => $row->clients_name,
                     'company_name' => $row->company_name ?? '',
                     'is_direct_client' => $isDirectClientJob,
+                    'parent_company_name' => $parentCompanyName,
                     'logo_path' => $logo_path ? str_replace('index.php', '', $logo_path) : '',
                     'initial_letter' => strtoupper($strVal),
                     'bg_text_decore' => $bgTextDecore,
@@ -4343,15 +4361,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         } else {
             $custom_search_location = json_decode($searchTermsLocation, true);
-
-            $currentJobLocation = array_column($custom_search_location, 'value');
-            //    dd( $currentJobLocation[0]);
-            $job_country_id = DB::table('countries')
-                ->select('countries.id')
-                ->where('countries.country_name', '=', $currentJobLocation[0])
-                ->first();
-            // dd($job_country_id);
-            $country_id_job = $job_country_id->id;
+            $country_id_job = null;
+            if (is_array($custom_search_location)) {
+                $currentJobLocation = array_column($custom_search_location, 'value');
+                if (! empty($currentJobLocation[0])) {
+                    $job_country_id = DB::table('countries')
+                        ->select('countries.id')
+                        ->where('countries.country_name', '=', $currentJobLocation[0])
+                        ->first();
+                    $country_id_job = $job_country_id->id ?? null;
+                }
+            }
+            if (! $country_id_job) {
+                $country_id_job = GeneralMethod::companyMainAddress($to_company_id);
+            }
         }
 
         $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
@@ -8482,33 +8505,27 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
      * Fallback: If zero skill matches exist (or job has no skills), returns top 20 eligible agencies ordered by lowest lead count.
      * Tenancy: Excludes current auth company ($company_id) and enforces status, coins, and location filters.
      */
+    /**
+     * Intent: Recommended agency listing and ranking.
+     * Ranks eligible partner agencies based on skill match count (skill_match_count DESC),
+     * current lead count (leadCount ASC), and agency ID (id ASC) as tie-breaker.
+     * Implements zero skill match fallback by returning eligible agencies in a randomized order
+     * when no skill matches are found among eligible agencies.
+     * Tenancy: Excludes current user's company_id and Super Admin company IDs.
+     */
     public function recommendedData(Request $request)
     {
-
         $searchTerms = request('cus_search');
-        // dd($searchTerms);
         $custom_search = json_decode($searchTerms, true);
-        // dd($custom_search);
 
-        $searchTermsLocation = request('kt_tagify_location');
-        // dd($searchTerms);
-        // $custom_search_location = json_decode($searchTermsLocation, true);
-
-        // abort_if(Gate::denies('view_jobs'), 403);	employment_type    0:Fulltime    1:Contract
-
-        $employment_type = '';
         $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        $job_status = GeneralMethod::job_status();
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-
         $company_id = auth()->user()->company_id;
-        $employmentType = GeneralMethod::employmentType();
 
         $jobId = $request->jobid;
-        // JOB DETAIL
+
+        // Retrieve Job Details
         $currentRowJob = Job::select(
+            'id',
             'title',
             'min_exp',
             'max_exp',
@@ -8517,11 +8534,11 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             'min_salary_currency',
             'max_salary_currency',
             'min_sal_mode',
-            'max_sal_mode',
             'work_type',
-            'employment_type'
+            'employment_type',
+            'company_id'
         )
-            ->where('id', $request->jobid)
+            ->where('id', $jobId)
             ->first();
 
         if (! $currentRowJob) {
@@ -8531,169 +8548,51 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ]);
         }
 
-        if (\request('app_int_outsource') != '') {
-            $parent_employment_type = request('app_int_outsource');
-        } else {
-            $parent_employment_type = $currentRowJob->employment_type;
-        }
+        $parent_employment_type = request('app_int_outsource', $currentRowJob->employment_type);
 
-        $commtype = request('app_int_outsource');
-
-        // JOB SKILLS
-
-        $currentJobSkill = DB::table('job_metronics_skills')
-            ->where('job_metronics_skills.job_id', $request->jobid)
-            ->pluck('job_metronics_skills.skill_name')
+        // 1. EXTRACT AND NORMALIZE JOB SKILLS
+        $jobSkillsFromDb = DB::table('job_metronics_skills')
+            ->where('job_id', $jobId)
+            ->pluck('skill_name')
             ->toArray();
 
-        if (is_array($custom_search) && ! empty($searchTerms)) {
-            $currentJobSkill = array_column($custom_search, 'value');
-            //  dd($currentJobSkill);
-        } else {
-            $jobTitle = $currentRowJob->title;
-            array_push($currentJobSkill, $jobTitle);
+        $searchSkills = [];
+
+        // If custom search tags provided via Tagify / input
+        if (is_array($custom_search) && ! empty($custom_search)) {
+            $extracted = array_column($custom_search, 'value');
+            $searchSkills = array_merge($searchSkills, $extracted);
+        } elseif (! empty($searchTerms) && is_string($searchTerms)) {
+            $searchSkills = array_merge($searchSkills, explode(',', $searchTerms));
         }
 
-        $skillCaseStatements = '';
-        foreach ($currentJobSkill as $skill) {
-            $skillCaseStatements .= "CASE WHEN job_metronics_skills.skill_name LIKE '%{$skill}%' THEN 20 ELSE 0 END + ";
-            $skillCaseStatements .= "CASE WHEN jobs.title LIKE '%{$skill}%' THEN 20 ELSE 0 END + ";
-        }
-        // Remove the trailing ' + '
-        $skillCaseStatements = rtrim($skillCaseStatements, ' + ');
-        $totalSkills = count($currentJobSkill);
+        // Include DB job skills
+        $searchSkills = array_merge($searchSkills, $jobSkillsFromDb);
 
-        // JOB LOCATION QUERY
-        $currentJobLocation = DB::table('client_location_jobs')
-            ->select('client_location.id', 'client_location.city', 'client_location.city_id', 'client_location.country_id')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('client_location_jobs.job_id', $request->jobid)
-            ->where('client_location.country_id', $request->country)
-            ->get();
+        // Clean & Normalize skills (lowercase, trimmed, deduplicated, exclude 'skill')
+        $searchSkills = array_values(array_unique(array_filter(array_map(function ($s) {
+            return strtolower(trim((string) $s));
+        }, $searchSkills), fn ($s) => ! empty($s) && $s !== 'skill')));
 
-        $currentJobLocationArray = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('client_location_jobs.job_id', $request->jobid)
-            ->where('client_location.country_id', $request->country)
-            ->pluck('client_location.country_id')->toArray();
-
-        if (! empty($searchTermsLocation)) {
-            $country_id_job = 101;
-            // $currentJobLocation = array_column($custom_search_location, 'value');
-            $job_country_id = DB::table('client_city_jobs')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('countries.id')
-                ->where('countries.country_name', '=', $searchTermsLocation)
-                ->where('client_city_jobs.job_id', '=', $request->jobid)
-                ->first();
-            if ($job_country_id) {
-                $country_id_job = $job_country_id->id;
-            } else {
-                $job_country_id = DB::table('countries')
-                    ->select('countries.id')
-                    ->where('countries.country_name', '=', $searchTermsLocation)
-                    ->first();
-                $country_id_job = $job_country_id->id;
-            }
-            //    dd($country_id_job);
-        } else {
-            $country_id_job = 101;
-            $job_country_id = DB::table('client_city_jobs')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->leftJoin('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('countries.id')
-                ->where('countries.id', '=', $country_id_job)
-                ->first();
-            if ($job_country_id) {
-                $country_id_job = $job_country_id->id;
-            } else {
-                if (! empty($searchTermsLocation)) {
-                    $job_country_id = DB::table('countries')
-                        ->select('countries.id')
-                        ->where('countries.country_name', '=', $searchTermsLocation)
-                        ->first();
-                    $country_id_job = $job_country_id->id;
-                }
-            }
-        }
-
-        //    dd($country_id_job);
-
-        $clientMainLocation = GeneralMethod::companyMainAddress($company_id);
-
-        // dd($currentJobLocationArray,$request->country);
-
-        // dd($currentRowJob->title,$currentJobSkill,$currentJobLocation,$currentJobLocationArray);
-
-        $jobMinExp = $currentRowJob->min_exp;
-        $jobMaxExp = $currentRowJob->max_exp;
-        $jobMinSalary = $currentRowJob->min_salary;
-        $jobMaxSalary = $currentRowJob->max_salary;
-        $jobSalaryCurrency = $currentRowJob->max_salary_currency;
-        $jobSalaryMode = $currentRowJob->max_sal_mode;
-
-        if (\request('min_exp') != '' && \request('max_exp')) {
-            $jobMinExp = request('min_exp');
-            $jobMaxExp = request('max_exp');
-        }
-        if (\request('min_sal') != '' && \request('max_sal')) {
-            $jobMinSalary = request('min_sal');
-            $jobMaxSalary = request('max_sal');
-        }
-        if (\request('min_salary_currency') != '' && \request('sal_mode') != '') {
-            $jobSalaryCurrency = request('min_salary_currency');
-            // dd($jobSalaryCurrency);
-            $jobSalaryMode = request('sal_mode');
-        }
-        // dd($currentJobSkill);
-
-        $boostkeywordcheck = '';
-        foreach ($currentJobSkill as $skill) {
-            $boostkeywordcheck .= "CASE WHEN package_active.boostkeywords_text LIKE '%{$skill}%' THEN 1 ELSE 0 END + ";
-        }
-        // Remove the trailing ' + '
-        $boostkeywordcheck = rtrim($boostkeywordcheck, ' + ');
-
-        $skillCaseStatements = implode(' + ', array_map(function ($skill) {
-            return "CASE WHEN jobs.title LIKE '%".$skill."%' OR job_metronics_skills.skill_name LIKE '%".$skill."%' THEN 10 ELSE 0 END";
-        }, $currentJobSkill));
-        $skillCaseStatements = rtrim($skillCaseStatements, ' + ');
-        // dd($skillCaseStatements);
-        $skillsCount = count($currentJobSkill);
-        $topRecordsCount = 20;
-        $boostKeywordTopCount = 3;
-
-        // Create other dynamic parts of the query
-        $boostkeywordcheck = implode(' + ', array_map(function ($skill) {
-            return "CASE WHEN package_active.boostkeywords_text LIKE '%".$skill."%' THEN 1 ELSE 0 END";
-        }, $currentJobSkill));
-
-        // dd($skillsList);
-
-        $company_id = $this->user->company_id;
-
-        $skillsList = array_filter($currentJobSkill, fn ($s) => $s !== 'skill');
-        $skillsList = array_map('strtolower', $skillsList);
-        $searchQuery = $request->input('q');
+        // 2. PAGINATION & CACHING PARAMS
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) $request->input('size', 20);
         $from = ($page - 1) * $size;
 
+        $countryFilterParam = request('country');
+        if ($countryFilterParam === 'Show All') {
+            $countryFilterParam = null;
+        }
+
         $cachePayload = [
             'page' => $page,
             'size' => $size,
-            'q' => $searchQuery,
             'company' => $company_id,
-            'jobid' => $request->jobid,
-            'cus_search' => $skillsList,
-            'kt_tagify_location' => $country_id_job ?? null,
-            'min_sal' => $jobMinSalary,
-            'max_sal' => $jobMaxSalary,
-            'min_salary_currency' => $jobSalaryCurrency,
-            'sal_mode' => $jobSalaryMode,
+            'jobid' => $jobId,
+            'search_skills' => $searchSkills,
+            'country' => $countryFilterParam,
+            'experience' => request('experience'),
+            'industry' => request('industry'),
             'user_id' => $this->user->id,
             'app_int_outsource' => $parent_employment_type,
         ];
@@ -8701,7 +8600,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $versionKey = 'allrecommendedagency_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allrecommendedagency:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
-        $etag = '"v3:recom:'.md5($cacheKeySet).'"';
+        $etag = '"v4:recom:'.md5($cacheKeySet).'"';
         if (request()->header('If-None-Match') === $etag) {
             return response(null, 304)->header('ETag', $etag);
         }
@@ -8712,447 +8611,238 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->header('Cache-Control', 'private, max-age=0, must-revalidate');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | CLEAN SKILLS
-        |--------------------------------------------------------------------------
-        */
-
-        $skills = array_map(function ($skill) {
-            return strtolower(trim($skill));
-        }, $currentJobSkill);
-        $skills = array_values(array_unique(array_filter($skills, fn ($s) => ! empty($s) && strtolower($s) !== 'skill')));
-        $searchSkills = $skills;
-
-        /*
-        |--------------------------------------------------------------------------
-        | STEP 1
-        |--------------------------------------------------------------------------
-        | Find other companies having same skills
-        |--------------------------------------------------------------------------
-        */
-
-        $companySkillMatchCount = [];
-        $companyMatchedSkills = [];
-
-        if (! empty($skills)) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | SKILL MATCH QUERY
-            |--------------------------------------------------------------------------
-            */
-
-            $skillQueries = [];
-
-            foreach ($skills as $skill) {
-
-                $skill = strtolower(trim($skill));
-
-                if (! empty($skill)) {
-
-                    $skillQueries[] = [
-                        'match_phrase_prefix' => [
-                            'skill_name' => $skill,
-                        ],
-                    ];
-                }
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | ELASTIC SEARCH
-            |--------------------------------------------------------------------------
-            */
-
-            $skillSearchParams = [
-
-                'index' => ELASTIC_COMPANY_SKILLS,
-
-                'body' => [
-
-                    'size' => 1000,
-
-                    '_source' => [
-                        'company_id',
-                        'skill_name',
-                    ],
-
-                    'query' => [
-
-                        'bool' => [
-
-                            'must' => [
-
-                                [
-                                    'bool' => [
-
-                                        'should' => $skillQueries,
-
-                                        'minimum_should_match' => 1,
-                                    ],
-                                ],
-                            ],
-
-                            'must_not' => array_merge(
-                                [
-                                    [
-                                        'term' => [
-                                            'company_id' => $company_id,
-                                        ],
-                                    ],
-                                ],
-                                array_map(fn ($saId) => ['term' => ['company_id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
-                            ),
-                        ],
-                    ],
-                ],
-            ];
-
-            $skillResponse = $this->elasticService->getClient()->search($skillSearchParams);
-
-            $hits = $skillResponse['hits']['hits'] ?? [];
-
-            // dd($hits);
-            $SkillArrCheck = [];
-
-            foreach ($hits as $hit) {
-
-                $source = $hit['_source'];
-
-                $matchedCompanyId = $source['company_id'];
-
-                $skillName = strtolower(trim($source['skill_name']));
-                if (! in_array($skillName, $SkillArrCheck)) {
-                    $SkillArrCheck[] = $skillName;
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | MATCH COUNT
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (! isset($companySkillMatchCount[$matchedCompanyId])) {
-
-                        $companySkillMatchCount[$matchedCompanyId] = 0;
-                    }
-
-                    $companySkillMatchCount[$matchedCompanyId]++;
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | STORE MATCHED SKILLS
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $companyMatchedSkills[$matchedCompanyId][] = $skillName;
-
-                }
-
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | REMOVE DUPLICATE SKILLS
-            |--------------------------------------------------------------------------
-            */
-
-            foreach ($companyMatchedSkills as $companyId => $skillList) {
-
-                $companyMatchedSkills[$companyId] = array_values(array_unique($skillList));
-            }
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | STEP 2
-        |--------------------------------------------------------------------------
-        | Dynamic score boost
-        |--------------------------------------------------------------------------
-        */
-
-        // dd($companySkillMatchCount);
-
-        $functions = [];
-
-        foreach ($companySkillMatchCount as $matchedCompanyId => $matchedSkillCount) {
-            //   dd($matchedCompanyId);
-            $functions[] = [
-
-                'filter' => [
-
-                    'term' => [
-                        'id' => $matchedCompanyId,
-                    ],
-                ],
-
-                'weight' => ($matchedSkillCount * 100),
-            ];
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | STEP 3
-        |--------------------------------------------------------------------------
-        | Fetch companies
-        |--------------------------------------------------------------------------
-        */
-
+        // 3. BUILD ELIGIBILITY QUERY FOR ELASTICSEARCH / MYSQL
         $experience = request('experience');
         $industry = request('industry');
 
         $experienceFilter = [];
         $industryFilter = [];
-
         $currentYear = date('Y');
 
         if (! empty($experience)) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Calculate experience from founded year
-            |--------------------------------------------------------------------------
-            */
-
             if ($experience == '0–2 years') {
-
                 $minFoundedYear = $currentYear - 2;
-
-                $experienceFilter[] = [
-                    'range' => [
-                        'founded' => [
-                            'gte' => $minFoundedYear,
-                        ],
-                    ],
-                ];
+                $experienceFilter[] = ['range' => ['founded' => ['gte' => $minFoundedYear]]];
             } elseif ($experience == '3–5 years') {
-
                 $maxFoundedYear = $currentYear - 3;
                 $minFoundedYear = $currentYear - 5;
-
-                $experienceFilter[] = [
-                    'range' => [
-                        'founded' => [
-                            'gte' => $minFoundedYear,
-                            'lte' => $maxFoundedYear,
-                        ],
-                    ],
-                ];
+                $experienceFilter[] = ['range' => ['founded' => ['gte' => $minFoundedYear, 'lte' => $maxFoundedYear]]];
             } elseif ($experience == '5–10 years') {
-
                 $maxFoundedYear = $currentYear - 5;
                 $minFoundedYear = $currentYear - 10;
-
-                $experienceFilter[] = [
-                    'range' => [
-                        'founded' => [
-                            'gte' => $minFoundedYear,
-                            'lte' => $maxFoundedYear,
-                        ],
-                    ],
-                ];
+                $experienceFilter[] = ['range' => ['founded' => ['gte' => $minFoundedYear, 'lte' => $maxFoundedYear]]];
             } elseif ($experience == '10+ years') {
-
                 $maxFoundedYear = $currentYear - 10;
-
-                $experienceFilter[] = [
-                    'range' => [
-                        'founded' => [
-                            'lte' => $maxFoundedYear,
-                        ],
-                    ],
-                ];
+                $experienceFilter[] = ['range' => ['founded' => ['lte' => $maxFoundedYear]]];
             }
         }
+
         if (! empty($industry)) {
-
-            $industryFilter[] = [
-
-                'terms' => [
-                    'industry.ind_id' => (array) $industry,
-                ],
-            ];
+            $industryFilter[] = ['terms' => ['industry.ind_id' => (array) $industry]];
         }
 
         $commtype = request('app_int_outsource');
         $commercialFilter = [];
-
         if (! empty($commtype)) {
-            // Intent: Filter agencies by commericials.commtype and status on local_companies_elastic index.
-            $commercialFilter[] = [
-                'term' => [
-                    'commericials.commtype' => (int) $commtype,
-                ],
-            ];
-            $commercialFilter[] = [
-                'term' => [
-                    'commericials.status' => 1,
-                ],
-            ];
+            $commercialFilter[] = ['term' => ['commericials.commtype' => (int) $commtype]];
+            $commercialFilter[] = ['term' => ['commericials.status' => 1]];
         }
 
-        $globalSearchFilter = [];
-        $baseBoolQuery = [
-            'bool' => [
-                'must' => array_merge(
-                    [
-                        [
-                            'term' => [
-                                'status' => 'active',
-                            ],
-                        ],
-                        [
-                            'terms' => [
-                                'company_type' => [1, 2],
-                            ],
-                        ],
-                        [
-                            'term' => [
-                                'commericial_countries.country_id' => $country_id_job,
-                            ],
-                        ],
-                        [
-                            'nested' => [
-                                'path' => 'company_coins',
-                                'query' => [
-                                    'bool' => [
-                                        'must' => [
-                                            [
-                                                'term' => [
-                                                    'company_coins.event_type' => 'sales',
-                                                ],
-                                            ],
-                                            [
-                                                'range' => [
-                                                    'company_coins.coins' => [
-                                                        'gt' => 0,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
+        $countryFilter = [];
+        if (! empty($countryFilterParam)) {
+            $countryFilter[] = ['term' => ['commericial_countries.country_id' => (int) $countryFilterParam]];
+        }
+
+        $baseMustConditions = array_merge(
+            [
+                ['term' => ['status' => 'active']],
+                ['terms' => ['company_type' => [1, 2]]],
+                [
+                    'nested' => [
+                        'path' => 'company_coins',
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_coins.event_type' => 'sales']],
+                                    ['range' => ['company_coins.coins' => ['gt' => 0]]],
                                 ],
                             ],
                         ],
                     ],
-                    $commercialFilter,
-                    $experienceFilter,
-                    $industryFilter,
-                    $globalSearchFilter
-                ),
-                'must_not' => array_merge(
-                    [
-                        [
-                            'term' => [
-                                'id' => $company_id,
-                            ],
-                        ],
-                    ],
-                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
-                ),
-            ],
-        ];
-
-        // Intent: Apply skill score weighting if skill matches exist; otherwise fallback to base bool query
-        // Tenancy: Filtered by active status, company_type [1, 2], coins > 0, country, and excluding current company
-        $finalQuery = ! empty($functions) ? [
-            'function_score' => [
-                'query' => $baseBoolQuery,
-                'functions' => $functions,
-                'score_mode' => 'sum',
-                'boost_mode' => 'sum',
-            ],
-        ] : $baseBoolQuery;
-
-        $companySearchParams = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'body' => [
-                'from' => $from,
-                'size' => $size,
-                'track_total_hits' => true,
-                'track_scores' => true,
-                'query' => $finalQuery,
-                'sort' => [
-                    ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
-                    ['_score' => ['order' => 'desc']],
-                    ['id' => ['order' => 'desc']],
                 ],
             ],
+            $commercialFilter,
+            $experienceFilter,
+            $industryFilter,
+            $countryFilter
+        );
+
+        $superAdminIds = \App\Helper\GeneralMethod::superAdminCompanyIds();
+        $mustNotConditions = array_merge(
+            [['term' => ['id' => $company_id]]],
+            array_map(fn ($saId) => ['term' => ['id' => $saId]], $superAdminIds)
+        );
+
+        $baseBoolQuery = [
+            'bool' => [
+                'must' => $baseMustConditions,
+                'must_not' => $mustNotConditions,
+            ],
         ];
 
-        /*
-        |--------------------------------------------------------------------------
-        | EXECUTE SEARCH
-        |--------------------------------------------------------------------------
-        */
+        // Fetch all eligible companies from Elasticsearch (capped scan up to 1000 for server-side ranking)
+        $eligibleScanParams = [
+            'index' => ELASTIC_COMPANIES_INDEX,
+            'body' => [
+                'from' => 0,
+                'size' => 1000,
+                'track_total_hits' => true,
+                'query' => $baseBoolQuery,
+            ],
+        ];
 
-        $companyResponse = $this->elasticService->getClient()->search($companySearchParams);
+        $rawHits = [];
+        if ($this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
+            $esResp = $this->elasticService->getClient()->search($eligibleScanParams);
+            $rawHits = $esResp['hits']['hits'] ?? [];
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | RESPONSE DATA
-        |--------------------------------------------------------------------------
-        */
+        // Process agencies & compute exact skill_match_count
+        $processedAgencies = [];
+        $hasAnySkillMatch = false;
 
-        $total = $companyResponse['hits']['total']['value'] ?? 0;
-
-        $data = [];
-
-        foreach ($companyResponse['hits']['hits'] as $hit) {
-
+        foreach ($rawHits as $hit) {
             $source = $hit['_source'];
+            $agencyId = $source['id'];
 
-            $matchedCompanyId = $source['id'];
-
+            // Extract agency skills from ES source
             $agencySkills = [];
-            if (!empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+            if (! empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
                 foreach ($source['job_metronics_skills'] as $jms) {
-                    if (!empty($jms['skill_name'])) {
-                        $agencySkills[] = strtolower(trim($jms['skill_name']));
+                    if (! empty($jms['skill_name'])) {
+                        $agencySkills[] = strtolower(trim((string) $jms['skill_name']));
                     }
                 }
             }
-            if (!empty($source['boostkeywords_skills']) && is_array($source['boostkeywords_skills'])) {
+            if (! empty($source['boostkeywords_skills']) && is_array($source['boostkeywords_skills'])) {
                 foreach ($source['boostkeywords_skills'] as $bks) {
-                    if (!empty($bks)) {
-                        $agencySkills[] = strtolower(trim(is_array($bks) ? ($bks['skill_name'] ?? '') : $bks));
+                    $sName = is_array($bks) ? ($bks['skill_name'] ?? '') : $bks;
+                    if (! empty($sName)) {
+                        $agencySkills[] = strtolower(trim((string) $sName));
                     }
-                }
-            }
-            if (!empty($companyMatchedSkills[$matchedCompanyId])) {
-                foreach ($companyMatchedSkills[$matchedCompanyId] as $cms) {
-                    $agencySkills[] = strtolower(trim($cms));
                 }
             }
             $agencySkills = array_values(array_unique(array_filter($agencySkills)));
 
-            $commonSkills = array_values(array_intersect(
-                array_map('strtolower', $searchSkills),
-                $agencySkills
-            ));
+            // Compute exact token match count
+            $matchedSkills = array_values(array_intersect($searchSkills, $agencySkills));
+            $matchedSkillCount = count($matchedSkills);
 
-            $source['matched_skills'] = $commonSkills;
+            if ($matchedSkillCount > 0) {
+                $hasAnySkillMatch = true;
+            }
+
+            $source['matched_skills'] = $matchedSkills;
             $source['search_skills'] = $searchSkills;
+            $source['matched_skill_count'] = $matchedSkillCount;
+            $source['leadCount'] = (int) ($source['leadCount'] ?? 0);
 
-            $source['match_score'] = $hit['_score'];
-            $source['matched_skill_count'] = count($commonSkills);
-
-            $data[] = $source;
+            $processedAgencies[] = $source;
         }
 
+        // If ES returns 0 results or is unavailable, fallback to MySQL query for eligible agencies
+        if (empty($processedAgencies)) {
+            $dbAgenciesQuery = DB::table('companies')
+                ->where('status', 'active')
+                ->whereIn('company_type', [1, 2])
+                ->where('id', '!=', $company_id)
+                ->whereNotIn('id', $superAdminIds);
+
+            if (! empty($countryFilterParam)) {
+                $dbAgenciesQuery->whereExists(function ($q) use ($countryFilterParam) {
+                    $q->select(DB::raw(1))
+                        ->from('commericial_countries')
+                        ->whereColumn('commericial_countries.company_id', 'companies.id')
+                        ->where('commericial_countries.country_id', (int) $countryFilterParam);
+                });
+            }
+
+            $dbAgencies = $dbAgenciesQuery->get();
+
+            foreach ($dbAgencies as $comp) {
+                // Fetch skills from job_metronics_skills for this agency company_id
+                $agencySkills = DB::table('job_metronics_skills')
+                    ->where('company_id', $comp->id)
+                    ->pluck('skill_name')
+                    ->map(fn ($s) => strtolower(trim($s)))
+                    ->filter()
+                    ->toArray();
+
+                $matchedSkills = array_values(array_intersect($searchSkills, $agencySkills));
+                $matchedSkillCount = count($matchedSkills);
+
+                if ($matchedSkillCount > 0) {
+                    $hasAnySkillMatch = true;
+                }
+
+                $processedAgencies[] = [
+                    'id' => $comp->id,
+                    'company_name' => $comp->company_name,
+                    'logo' => $comp->logo,
+                    'website' => $comp->website,
+                    'industry' => null,
+                    'leadCount' => (int) ($comp->leadCount ?? 0),
+                    'matched_skills' => $matchedSkills,
+                    'search_skills' => $searchSkills,
+                    'matched_skill_count' => $matchedSkillCount,
+                ];
+            }
+        }
+
+        // 4. RANKING & ZERO SKILL MATCH FALLBACK
+        $totalEligible = count($processedAgencies);
+
+        if ($totalEligible > 0) {
+            if ($hasAnySkillMatch) {
+                // RULE 1: Skill Match DESC
+                // RULE 2: Lead Count ASC
+                // Rule 3: Agency ID ASC (deterministic tie-breaker)
+                usort($processedAgencies, function ($a, $b) {
+                    if ($a['matched_skill_count'] !== $b['matched_skill_count']) {
+                        return $b['matched_skill_count'] <=> $a['matched_skill_count'];
+                    }
+                    if ($a['leadCount'] !== $b['leadCount']) {
+                        return $a['leadCount'] <=> $b['leadCount'];
+                    }
+
+                    return $a['id'] <=> $b['id'];
+                });
+            } else {
+                // ZERO SKILL MATCH FALLBACK:
+                // If NO eligible agency matches any required job skill, return eligible agencies in randomized order.
+                // Seed random by job_id so pagination stays stable across pages for the same request
+                mt_srand((int) $jobId + 2026);
+                usort($processedAgencies, function ($a, $b) {
+                    return mt_rand(-1000, 1000);
+                });
+            }
+        }
+
+        // 5. SERVER-SIDE PAGINATION (Slice max 20 records per page)
+        $data = array_slice($processedAgencies, $from, $size);
+
+        // 6. BATCH LOOKUPS TO ELIMINATE N+1 IN BLADE
         if (! empty($data)) {
             $agencyIds = collect($data)->pluck('id')->filter()->unique()->values()->toArray();
 
             if (! empty($agencyIds)) {
-                // Batch 1: Fetch self-company client info for all recommended agencies
                 $clientsMap = GeneralMethod::batchGetClientIdCompany($agencyIds);
-
-                // Batch 2: Fetch relation data between employer company and recommended agencies
                 $relationsMap = GeneralMethod::batchGetAgencyRelationData($company_id, $agencyIds);
 
-                // Batch 3: User size counts via single SQL query
-                // Intent: Single query counting users per agency company
-                // Tenancy: Filtered by company_id in $agencyIds
+                /**
+                 * Intent: Single batch query to count users per agency company to avoid N+1 queries.
+                 * Tenancy: Scope filtered by company_id in $agencyIds.
+                 */
                 $userSizeCounts = DB::table('users')
                     ->select('company_id', DB::raw('count(*) as total'))
                     ->whereIn('company_id', $agencyIds)
@@ -9160,18 +8850,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     ->pluck('total', 'company_id')
                     ->toArray();
 
-                // Batch 4 & 5: Active jobs and candidates counts per agency
                 $agencyJobsMap = GeneralMethod::batchAgencyJobsCount($agencyIds);
                 $agencyCandidatesMap = GeneralMethod::batchAgencyJobsCandidatesCount($agencyIds);
-
-                // Batch 6: Match found status on staffing_company_relation
                 $matchFoundMap = GeneralMethod::batchGetMatchFoundMap($company_id, $agencyIds);
 
-                // Batch 7: Commercial minimum rate and rate type per agency
                 $commtypeParam = (request('app_int_outsource', $currentRowJob->employment_type ?? 0) == 1) ? 1 : 2;
                 $commercialsMap = GeneralMethod::batchGetCommercialsData($agencyIds, $commtypeParam);
 
-                // Pre-bind batch properties onto $data array objects to eliminate Blade N+1
                 foreach ($data as &$source) {
                     $cId = $source['id'] ?? null;
                     $source['_client_info'] = $clientsMap[$cId] ?? null;
@@ -9189,23 +8874,22 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $pagination = [
-            'total' => $total,
+            'total' => $totalEligible,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => ceil($totalEligible / $size),
             'listType' => 'allcandidate',
         ];
 
         $page_view = 'find_agency_recom_ajax';
-
         $userPermissions = $this->userPermissions;
         $app_int_outsource = request('app_int_outsource');
         $parent_employment_type = request('app_int_outsource');
         $hiringtype = $app_int_outsource;
-        $jobid = $request->jobid;
+        $jobid = $jobId;
 
         $responseData = [
-            'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'app_int_outsource', 'jobid', 'currentJobSkill', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
-            'total' => count($data),
+            'html' => view('service_company.ajax_pages.'.$page_view, compact('data', 'userPermissions', 'app_int_outsource', 'jobid', 'searchSkills', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
+            'total' => $totalEligible,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
 
@@ -9214,377 +8898,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         return response()->json($responseData)
             ->header('ETag', $etag)
             ->header('Cache-Control', 'private, max-age=0, must-revalidate');
-
-        $commtypeArr = [1, 2];
-        if (! empty($commtype)) {
-
-            if ((int) $commtype == 0) {
-                $commtypeArr = [2];
-            } elseif ((int) $commtype == 1) {
-                $commtypeArr = [1];
-            } else {
-                $commtypeArr = [1, 2];
-            }
-        }
-
-        // dd("slsl"); // Send Invitation to {{__('messages.Agency')}}
-
-        $params = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'body' => [
-                'from' => $from,
-                'size' => $size, // usually 20
-                'sort' => [
-                    ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
-                    ['_score' => ['order' => 'desc']],
-                    ['id' => ['order' => 'desc']],
-                ],
-                'query' => [
-                    'function_score' => [
-                        'query' => [
-                            'bool' => [
-                                'filter' => [
-                                    [
-                                        'nested' => [
-                                            'path' => 'company_coins',
-                                            'query' => [
-                                                'bool' => [
-                                                    'must' => [
-                                                        ['term' => ['company_coins.event_type' => 'sales']],
-                                                        ['range' => ['company_coins.coins' => ['gt' => 0]]],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                    [
-                                        'term' => [
-                                            'commericials.status' => 1,
-                                        ],
-                                    ],
-                                    [
-                                        'terms' => [
-                                            'commericials.commtype' => $commtypeArr,
-                                        ],
-                                    ],
-                                    ['terms' => ['company_type' => [1, 2]]],
-                                    ['term' => ['status' => 'active']],
-                                    ['term' => ['commericial_countries.country_id' => $country_id_job]],
-                                ],
-
-                                'must_not' => array_merge(
-                                    [['term' => ['id' => $company_id]]],
-                                    array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
-                                ),
-                                'should' => [
-                                    [
-                                        'nested' => [
-                                            'path' => 'job_metronics_skills',
-                                            'score_mode' => 'sum',
-                                            'query' => [
-                                                'function_score' => [
-                                                    'query' => [
-                                                        'terms' => [
-                                                            'job_metronics_skills.skill_name.keyword' => $skillsList,
-                                                        ],
-                                                    ],
-                                                    'boost_mode' => 'sum',
-                                                    'score_mode' => 'sum',
-                                                    'functions' => [
-                                                        ['weight' => 10],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                                // 🚫 Don't set minimum_should_match
-                            ],
-                        ],
-                        'score_mode' => 'sum',
-                        'boost_mode' => 'sum',
-                    ],
-                ],
-                'aggs' => [
-                    'job_skill_match_count' => [
-                        'nested' => ['path' => 'job_metronics_skills'],
-                        'aggs' => [
-                            'matched_jobs' => [
-                                'filter' => [
-                                    'terms' => [
-                                        'job_metronics_skills.skill_name.keyword' => $skillsList,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'candidate_skill_match_count' => [
-                        'nested' => ['path' => 'candidates'],
-                        'aggs' => [
-                            'matched_candidates' => [
-                                'filter' => [
-                                    'terms' => [
-                                        'candidates.skills.keyword' => $skillsList,
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'bench_candidates' => [
-                        'nested' => ['path' => 'candidates'],
-                        'aggs' => [
-                            'bench' => [
-                                'filter' => [
-                                    'term' => ['candidates.type.keyword' => 'bench_condidate'],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'other_candidates' => [
-                        'nested' => ['path' => 'candidates'],
-                        'aggs' => [
-                            'other' => [
-                                'filter' => [
-                                    'term' => ['candidates.type.keyword' => 'other'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists(ELASTIC_COMPANIES_INDEX)) {
-            $total = 0;
-            $data = [];
-        } else {
-            // Execute search
-
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-
-            if ($currentRowJob->work_type == 'yes' && $total == 0) {
-
-                $params = [
-                    'index' => ELASTIC_COMPANIES_INDEX,
-                    'body' => [
-                        'from' => $from,
-                        'size' => $size, // usually 20
-                        'sort' => [
-                            ['leadCount' => ['order' => 'asc', 'missing' => '_last']],
-                            ['_score' => ['order' => 'desc']],
-                            ['id' => ['order' => 'desc']],
-                        ],
-                        'query' => [
-                            'function_score' => [
-                                'query' => [
-                                    'bool' => [
-                                        'filter' => [
-                                            [
-                                                'nested' => [
-                                                    'path' => 'company_coins',
-                                                    'query' => [
-                                                        'bool' => [
-                                                            'must' => [
-                                                                ['term' => ['company_coins.event_type' => 'sales']],
-                                                                ['range' => ['company_coins.coins' => ['gt' => 0]]],
-                                                            ],
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                            [
-                                                'term' => [
-                                                    'commericials.status' => 1,
-                                                ],
-                                            ],
-                                            [
-                                                'terms' => [
-                                                    'commericials.commtype' => $commtypeArr,
-                                                ],
-                                            ],
-                                            ['terms' => ['company_type' => [1, 2]]],
-                                            ['term' => ['status' => 'active']],
-                                        ],
-                                        'must_not' => array_merge(
-                                            [['term' => ['id' => $company_id]]],
-                                            array_map(fn ($saId) => ['term' => ['id' => $saId]], \App\Helper\GeneralMethod::superAdminCompanyIds())
-                                        ),
-                                        'should' => [
-                                            [
-                                                'nested' => [
-                                                    'path' => 'job_metronics_skills',
-                                                    'score_mode' => 'sum',
-                                                    'query' => [
-                                                        'function_score' => [
-                                                            'query' => [
-                                                                'terms' => [
-                                                                    'job_metronics_skills.skill_name.keyword' => $skillsList,
-                                                                ],
-                                                            ],
-                                                            'boost_mode' => 'sum',
-                                                            'score_mode' => 'sum',
-                                                            'functions' => [
-                                                                ['weight' => 10],
-                                                            ],
-                                                        ],
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                        // 🚫 Don't set minimum_should_match
-                                    ],
-                                ],
-                                'score_mode' => 'sum',
-                                'boost_mode' => 'sum',
-                            ],
-                        ],
-                        'aggs' => [
-                            'job_skill_match_count' => [
-                                'nested' => ['path' => 'job_metronics_skills'],
-                                'aggs' => [
-                                    'matched_jobs' => [
-                                        'filter' => [
-                                            'terms' => [
-                                                'job_metronics_skills.skill_name.keyword' => $skillsList,
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'candidate_skill_match_count' => [
-                                'nested' => ['path' => 'candidates'],
-                                'aggs' => [
-                                    'matched_candidates' => [
-                                        'filter' => [
-                                            'terms' => [
-                                                'candidates.skills.keyword' => $skillsList,
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'bench_candidates' => [
-                                'nested' => ['path' => 'candidates'],
-                                'aggs' => [
-                                    'bench' => [
-                                        'filter' => [
-                                            'term' => ['candidates.type.keyword' => 'bench_condidate'],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                            'other_candidates' => [
-                                'nested' => ['path' => 'candidates'],
-                                'aggs' => [
-                                    'other' => [
-                                        'filter' => [
-                                            'term' => ['candidates.type.keyword' => 'other'],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ];
-
-                $response = $this->elasticService->getClient()->search($params);
-                $total = $response['hits']['total']['value'] ?? 0;
-
-            }
-
-            // Extract and attach matched skills to result
-            $data = array_map(function ($hit) use ($skillsList) {
-                $source = $hit['_source'];
-
-                $jobSkills = collect(data_get($source, 'job_metronics_skills', []))
-                    ->pluck('skill_name')
-                    ->filter()
-                    ->unique()
-                    ->toArray();
-
-                $matchedSkills = array_values(array_intersect($jobSkills, $skillsList));
-                $matchCount = count($matchedSkills);
-                $totalSkills = count($skillsList);
-
-                $matchPercent = $totalSkills > 0 ? round(($matchCount / $totalSkills) * 100, 1) : 0;
-
-                // dd($matchCount);
-
-                return array_merge($source, [
-                    'matched_skill_count' => $matchCount,
-                    'matched_skills' => $matchedSkills,
-                    'skill_match_percentage' => $matchPercent, // Add numeric field
-                ]);
-            }, $response['hits']['hits']);
-
-            // ✅ Sort the final result by percentage descending
-            usort($data, function ($a, $b) {
-                return $b['skill_match_percentage'] <=> $a['skill_match_percentage'];
-            });
-
-            //    dd($cacheKey,$data,$cacheTTL);
-            // Cache::put($cacheKey, ['data' => $data,'total' => $total], $cacheTTL);
-            // Cache::put($cacheKey, $data, $cacheTTL);
-        }
-
-        // }
-
-        $pagination = [
-            'total' => $total,
-            'current_page' => $page,
-            'last_page' => ceil($total / $size),
-            'listType' => 'allcandidate',
-        ];
-
-        $page_view = 'find_agency_recom_ajax';
-
-        $userPermissions = $this->userPermissions;
-        $app_int_outsource = request('app_int_outsource');
-        $parent_employment_type = request('app_int_outsource');
-        $hiringtype = $app_int_outsource;
-        $jobid = $request->jobid;
-
-        $responseData = [
-            'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'app_int_outsource', 'jobid', 'currentJobSkill', 'hiringtype', 'parent_employment_type', 'company_id'))->render(),
-            'total' => count($data),
-            'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-        ];
-
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_RECOMMENDED_AGENCY_TIME));
-
-        return response()->json($responseData);
-
-        // Fetch vendors eligible for ranking
-        // $vendorIds = DB::table('companies')
-        // 	->where('company_type', '!=', 3)
-        // 	->where('package_id', '>', 0)
-        // 	->where('id', '!=', $company_id)
-        // 	->pluck('id');
-
-        // dd($skillsList);
-        // 1. Cached vendor IDs
-        $vendorIds = Cache::remember("vendor_ids_for_company_{$company_id}", 300, function () use ($company_id) {
-            return DB::table('companies')
-                ->where('company_type', '!=', 3)
-                ->where('package_id', '>', 0)
-                ->where('id', '!=', $company_id)
-                ->pluck('id');
-        });
-
-        // 2. Precompute: SimilarReq jobs count
-        $similarReqSub = DB::table('jobs as j')
-            ->select(DB::raw('COUNT(DISTINCT j.id) as SimilarReq'), DB::raw('COALESCE(j.company_id, rr.to_company_id) as vendor_id'))
-            ->leftJoin('job_metronics_skills as jms', 'jms.job_id', '=', 'j.id')
-            ->leftJoin('recommendation_relation as rr', 'rr.job_id', '=', 'j.id')
-            ->where('j.status', 'active');
-        if (count($skillsList) > 0) {
-            $similarReqSub = $similarReqSub->whereIn('jms.skill_name', $skillsList);
-        }
-        $similarReqSub = $similarReqSub->when($parent_employment_type === '1' || $parent_employment_type === '0', function ($q) use ($parent_employment_type) {
-            $q->where('j.employment_type', $parent_employment_type);
-        })
-            ->groupBy('vendor_id');
 
         // 3. Precompute: Bench profiles count
         $benchProfilesSub = DB::table('job_applications')
@@ -11831,22 +11144,33 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't invite job work because the job status is hold. Please change the job status to active."]);
         }
 
-        $searchTermsLocation = request('kt_tagify_location');
-        $custom_search_location = json_decode($searchTermsLocation, true);
-        $currentJobLocation = array_column($custom_search_location, 'value');
-        $job_country_id = DB::table('countries')
-            ->select('countries.id')
-            ->where('countries.country_name', '=', $currentJobLocation[0])
-            ->first();
-        $country_id_job = $job_country_id->id;
-        $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
-        // dd($clientMainLocation==$country_id_job);
-
-        $jobid = $_REQUEST['current_jobid'];
+        $jobid = $jobidGet;
         $clientRow = DB::table('clients')->select('clients.id')->where('clients.company_id', '=', $from_company_id)->first();
-        // dd($clientRow);
-        // $jobRow = DB::table('jobs')->select('jobs.id', 'jobs.employment_type')->where('jobs.id', '=', $jobid)->first();
-        $jobRow = DB::table('jobs')->join('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+        $jobRow = DB::table('jobs')->leftJoin('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+
+        $country_id_job = null;
+        $searchTermsLocation = request('kt_tagify_location');
+        if (! empty($searchTermsLocation)) {
+            $custom_search_location = json_decode($searchTermsLocation, true);
+            if (is_array($custom_search_location)) {
+                $currentJobLocation = array_column($custom_search_location, 'value');
+                if (! empty($currentJobLocation[0])) {
+                    $job_country_id = DB::table('countries')
+                        ->select('countries.id')
+                        ->where('countries.country_name', '=', $currentJobLocation[0])
+                        ->first();
+                    if ($job_country_id) {
+                        $country_id_job = $job_country_id->id;
+                    }
+                }
+            }
+        }
+
+        if (! $country_id_job) {
+            $country_id_job = $jobRow->country_id ?? 101;
+        }
+
+        $clientMainLocation = GeneralMethod::companyMainAddress($from_company_id);
 
         // $boostKeyWork_Auth = DB::table('package_active')
         // 	->select('package_active.id')
@@ -12744,14 +12068,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     {
 
         // dd($request->all());
-        $jobId = '';
         $jobId = $request->jobId;
-
         $rec_relation_id = (int) request()->rec_relation_id;
+        if (empty($jobId) && ! empty($rec_relation_id)) {
+            $recRowTmp = DB::table('recommendation_relation')->where('id', $rec_relation_id)->first();
+            if ($recRowTmp) {
+                $jobId = $recRowTmp->job_id;
+            }
+        }
         $id = auth()->user()->company_id;
-        $jobTerms = Job::withoutGlobalScopes()->find($jobId);
-        $companyTerms = Company::withoutGlobalScope('company')->findOrFail($jobTerms->company_id);
-        // dd($companyTerms,$jobTerms->company_id);
+        $jobTerms = $jobId ? Job::withoutGlobalScopes()->find($jobId) : null;
+        $companyTerms = ($jobTerms && $jobTerms->company_id) ? Company::withoutGlobalScope('company')->find($jobTerms->company_id) : null;
         $global_settings = DB::table('global_settings')->first();
         $companiesDetails = DB::table('recommendation_relation')
             ->select('vendor_company.company_name as vendor_company_name', 'client_company.company_name as client_company_name', 'vendor_company.address as vendor_company_address', 'client_company.address as client_company_address')
@@ -12768,7 +12095,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
 
         $terms .= '<p>&nbsp;</p>';
-        $terms .= ($companyTerms->terms) ? $companyTerms->terms : $global_settings->terms;
+        $terms .= ($companyTerms && $companyTerms->terms) ? $companyTerms->terms : ($global_settings->terms ?? '');
 
         $termsfinal = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[AGENCY_ADDRESS]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]'], [date('d M, Y h:i:s'), $companiesDetails[0]->vendor_company_name, $companiesDetails[0]->vendor_company_address, $companiesDetails[0]->client_company_name, $companiesDetails[0]->client_company_address], $terms);
 
@@ -13494,11 +12821,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     }
                 }
 
-                $jobAdditional = Job::Select('clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
-                    ->join('clients', 'clients.id', '=', 'jobs.client_id')
+                $jobAdditional = Job::withoutGlobalScopes()
+                    ->select('clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
+                    ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                     ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
                     ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                    ->findOrFail(@$jobId);
+                    ->where('jobs.id', '=', $jobId)
+                    ->first();
 
                 $recruiter = DB::table('users')
                     ->join('job_assign', 'job_assign.user_id', '=', 'users.id')
@@ -13524,9 +12853,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $mailTypeSubject = GeneralMethod::mailTypeSubject(10, 1);
                     $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
 
-                    if ($job->status == 'active') {
+                    if (@$job->status == 'active') {
                         $status_job = "<strong><span style='color:#27ae60'>Hiring</span></strong>";
-                    } elseif ($job->status == 'inactive') {
+                    } elseif (@$job->status == 'inactive') {
                         $status_job = "<strong><span style='color:#ff0202'>Closed</span></strong>";
                     } else {
                         $status_job = "<strong><span style='color:#ffab00'>Hold</span></strong>";
@@ -13534,7 +12863,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                     $subject = str_replace(['[{JOB_TITLE}]', '[{ClientCompany}]', '[{Location}]', '[{JobID}]'], [@$job->title, @$contact_person_name, @$location, @$job->id], $mailTypeSubject->subject);
 
-                    $template_description = str_replace(['[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]', '[{salaryrange}]', '[{NoofOpenings}]', '[{location}]', '[{remote}]', '[{JobType}]', '[{Department}]', '[{Qualification}]', '[{hiringManager}]', '[{recruiter}]', '[{addedby}]', '[{JobDescriptions}]'], [@$status_job, @$contact_person_name, @$job->id, @$job->title, @$job->min_exp.'-'.@$job->max_exp.' Years', $currencyGet[@$job->min_salary_currency].' '.@$job->min_salary.' to '.@$job->max_salary.' '.$sal_mode,  @$job->total_positions, @$location, @$work_type, @$employment_type, $jobAdditional->cat_name, $jobAdditional->qualification_name, @$hiring_namagerdata, $recruiterdata, @$request->user()->name, @$job->job_description], $mailTypeSubject->body_description);
+                    $template_description = str_replace(['[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]', '[{salaryrange}]', '[{NoofOpenings}]', '[{location}]', '[{remote}]', '[{JobType}]', '[{Department}]', '[{Qualification}]', '[{hiringManager}]', '[{recruiter}]', '[{addedby}]', '[{JobDescriptions}]'], [@$status_job, @$contact_person_name, @$job->id, @$job->title, @$job->min_exp.'-'.@$job->max_exp.' Years', @$currencyGet[@$job->min_salary_currency].' '.@$job->min_salary.' to '.@$job->max_salary.' '.@$sal_mode,  @$job->total_positions, @$location, @$work_type, @$employment_type, @$jobAdditional->cat_name, @$jobAdditional->qualification_name, @$hiring_namagerdata, $recruiterdata, @$request->user()->name, @$job->job_description], $mailTypeSubject->body_description);
 
                     $data = [
                         'message' => $template_description,

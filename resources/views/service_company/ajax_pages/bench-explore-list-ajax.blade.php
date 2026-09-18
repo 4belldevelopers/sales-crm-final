@@ -172,12 +172,13 @@
        in the EXPERIENCE column (under exp + salary) for visual
        hierarchy: profile-anchored text first, classification last. ── */
     if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+        $parentCompName   = $row->company_name ?? ($row->clients_name ?? '');
         $clientBadgeKey   = 'direct';
         $clientBadgeLabel = 'Direct Client';
         $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
     } else {
         $clientBadgeKey   = 'internal';
-        $clientBadgeLabel = 'Internal Client';
+        $clientBadgeLabel = 'Internal';
         $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-7h6v7"/></svg>';
     }
 

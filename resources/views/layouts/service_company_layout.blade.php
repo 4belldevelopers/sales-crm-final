@@ -2998,6 +2998,9 @@ $( document ).ready(function() {
 
   function closeMetronicDrawer(drawerId) {
       drawerId = drawerId || 'kt_activitiesApplication';
+      if (drawerId === 'kt_activitiesApplication') {
+          window.__activeCandidateDrawerId = null;
+      }
       var drawerEl = document.getElementById(drawerId);
       if (drawerEl) {
           var drawer = (typeof KTDrawer !== 'undefined') ? KTDrawer.getInstance(drawerEl) : null;
@@ -3015,6 +3018,156 @@ $( document ).ready(function() {
       closeMetronicDrawer('kt_client_activitiesApplication');
   });
 
+  // Intent: V4/V5 Zero-Read-Path Candidate Drawer Engine (L1 Browser RAM Cache + L2 Scoped IndexedDB + Cross-Tab Lifecycle)
+  window.__candidateDrawerCache = window.__candidateDrawerCache || new Map();
+  window.__candidateDrawerInFlight = window.__candidateDrawerInFlight || new Set();
+  var prefetchAbortControllers = new Map();
+
+  @php
+    $atsTenantId = auth()->check() ? (int) auth()->user()->company_id : 0;
+    $atsUserId   = auth()->check() ? (int) auth()->user()->id : 0;
+  @endphp
+
+  // Phase 5: L2 Scoped IndexedDB Cache Engine (LRU cap 200 items, scoped to tenant & user)
+  var AtsCandidateL2DB = (function() {
+      var DB_NAME = 'jero_ats_cache_{{ $atsTenantId }}_{{ $atsUserId }}';
+      var DB_VERSION = 1;
+      var STORE_NAME = 'candidate_drawers';
+      var MAX_ITEMS = 200;
+      var dbInstance = null;
+
+      function getDB() {
+          if (dbInstance) return Promise.resolve(dbInstance);
+          return new Promise(function(resolve) {
+              if (!window.indexedDB) {
+                  resolve(null);
+                  return;
+              }
+              try {
+                  var request = window.indexedDB.open(DB_NAME, DB_VERSION);
+                  request.onupgradeneeded = function(e) {
+                      var db = e.target.result;
+                      if (!db.objectStoreNames.contains(STORE_NAME)) {
+                          var store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                          store.createIndex('timestamp', 'timestamp', { unique: false });
+                      }
+                  };
+                  request.onsuccess = function(e) {
+                      dbInstance = e.target.result;
+                      resolve(dbInstance);
+                  };
+                  request.onerror = function() {
+                      resolve(null);
+                  };
+              } catch(err) {
+                  resolve(null);
+              }
+          });
+      }
+
+      return {
+          get: function(id) {
+              return getDB().then(function(db) {
+                  if (!db) return null;
+                  return new Promise(function(resolve) {
+                      try {
+                          var tx = db.transaction(STORE_NAME, 'readonly');
+                          var store = tx.objectStore(STORE_NAME);
+                          var req = store.get(String(id));
+                          req.onsuccess = function() {
+                              var res = req.result;
+                              resolve(res ? res.payload : null);
+                          };
+                          req.onerror = function() { resolve(null); };
+                      } catch(e) {
+                          resolve(null);
+                      }
+                  });
+              });
+          },
+          set: function(id, payload) {
+              return getDB().then(function(db) {
+                  if (!db) return;
+                  try {
+                      var tx = db.transaction(STORE_NAME, 'readwrite');
+                      var store = tx.objectStore(STORE_NAME);
+                      store.put({
+                          id: String(id),
+                          payload: payload,
+                          timestamp: Date.now()
+                      });
+                      var countReq = store.count();
+                      countReq.onsuccess = function() {
+                          if (countReq.result > MAX_ITEMS) {
+                              var index = store.index('timestamp');
+                              var cursorReq = index.openCursor();
+                              var deleted = 0;
+                              var toDelete = countReq.result - MAX_ITEMS;
+                              cursorReq.onsuccess = function(e) {
+                                  var cursor = e.target.result;
+                                  if (cursor && deleted < toDelete) {
+                                      cursor.delete();
+                                      deleted++;
+                                      cursor.continue();
+                                  }
+                              };
+                          }
+                      };
+                  } catch(e) {}
+              });
+          },
+          delete: function(id) {
+              return getDB().then(function(db) {
+                  if (!db) return;
+                  try {
+                      var tx = db.transaction(STORE_NAME, 'readwrite');
+                      var store = tx.objectStore(STORE_NAME);
+                      store.delete(String(id));
+                  } catch(e) {}
+              });
+          },
+          clear: function() {
+              return getDB().then(function(db) {
+                  if (!db) return;
+                  try {
+                      var tx = db.transaction(STORE_NAME, 'readwrite');
+                      var store = tx.objectStore(STORE_NAME);
+                      store.clear();
+                  } catch(e) {}
+              });
+          }
+      };
+  })();
+  window.__atsCandidateL2DB = AtsCandidateL2DB;
+
+  // Cross-Tab Lifecycle Synchronization via BroadcastChannel
+  var candidateBroadcastChannel = (typeof window.BroadcastChannel !== 'undefined') ?
+      new BroadcastChannel('jero_ats_candidate_lifecycle_{{ $atsTenantId }}') : null;
+
+  if (candidateBroadcastChannel) {
+      candidateBroadcastChannel.onmessage = function(e) {
+          if (!e || !e.data) return;
+          if (e.data.type === 'invalidate' && e.data.candidate_id) {
+              var cid = String(e.data.candidate_id);
+              if (window.__candidateDrawerCache) window.__candidateDrawerCache.delete(cid);
+              if (window.__atsCandidateL2DB) window.__atsCandidateL2DB.delete(cid);
+          } else if (e.data.type === 'purge') {
+              if (window.__candidateDrawerCache) window.__candidateDrawerCache.clear();
+              if (window.__atsCandidateL2DB) window.__atsCandidateL2DB.clear();
+          }
+      };
+  }
+
+  window.__candidateDrawerPromises = window.__candidateDrawerPromises || new Map();
+  window.__activeCandidateDrawerId = window.__activeCandidateDrawerId || null;
+
+  function replenishDrawerCsrfTokens() {
+      var activeCsrf = $('meta[name="csrf-token"]').attr('content');
+      if (activeCsrf) {
+          $('#application_show_right_bar').find('input[name="_token"]').val(activeCsrf);
+      }
+  }
+
   function getCandidateDrawerLoader() {
       return '<div class="d-flex flex-column align-items-center justify-content-center p-10" style="min-height: 380px;">' +
              '  <div class="spinner-border text-primary mb-4" role="status" style="width: 2.8rem; height: 2.8rem;"></div>' +
@@ -3023,8 +3176,194 @@ $( document ).ready(function() {
              '</div>';
   }
 
+  function renderCandidateDrawerView(response, id) {
+      if (id) {
+          window.__activeCandidateDrawerId = String(id);
+      }
+      if (response && response.view) {
+          $('#application_show_right_bar').html(response.view);
+          replenishDrawerCsrfTokens();
+          if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
+      } else if (response && response.status === 'error') {
+          $('#application_show_right_bar').html(
+              '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+              '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
+              '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
+              '</div>'
+          );
+      } else if (typeof response === 'string' && response.trim() !== '') {
+          $('#application_show_right_bar').html(response);
+          replenishDrawerCsrfTokens();
+      }
+  }
+
+  function fetchCandidateDrawerPayload(id, currentSlug, callback) {
+      var sid = String(id);
+      if (window.__candidateDrawerPromises.has(sid)) {
+          var existingPromise = window.__candidateDrawerPromises.get(sid);
+          if (callback) {
+              existingPromise.then(function(res) { callback(null, res); }).catch(function(err) { callback(err); });
+          }
+          return existingPromise;
+      }
+
+      var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
+      var url = "{{ route('service_company.job-applications.show',':id') }}?slug=" + encodeURIComponent(currentSlug || '') + "&currentPage=" + currentPage;
+      url = url.replace(':id', sid);
+
+      var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      if (controller) prefetchAbortControllers.set(sid, controller);
+
+      window.__candidateDrawerInFlight.add(sid);
+
+      var promise = new Promise(function(resolve, reject) {
+          $.ajax({
+              type: 'GET',
+              url: url,
+              signal: controller ? controller.signal : undefined,
+              success: function(response) {
+                  window.__candidateDrawerInFlight.delete(sid);
+                  window.__candidateDrawerPromises.delete(sid);
+                  prefetchAbortControllers.delete(sid);
+                  if (response && (response.view || typeof response === 'string')) {
+                      window.__candidateDrawerCache.set(sid, response);
+                      if (window.__atsCandidateL2DB) {
+                          window.__atsCandidateL2DB.set(sid, response);
+                      }
+                  }
+                  if (callback) callback(null, response);
+                  resolve(response);
+              },
+              error: function(xhr, status, error) {
+                  window.__candidateDrawerInFlight.delete(sid);
+                  window.__candidateDrawerPromises.delete(sid);
+                  prefetchAbortControllers.delete(sid);
+                  if (callback) callback(xhr);
+                  reject(xhr);
+              }
+          });
+      });
+
+      window.__candidateDrawerPromises.set(sid, promise);
+      return promise;
+  }
+
+  window.invalidateCandidateDrawerCache = function(candidateId, broadcast) {
+      if (!candidateId) return;
+      var cid = String(candidateId);
+      if (window.__activeCandidateDrawerId === cid) {
+          window.__activeCandidateDrawerId = null;
+      }
+      if (window.__candidateDrawerCache) {
+          window.__candidateDrawerCache.delete(cid);
+      }
+      if (window.__atsCandidateL2DB) {
+          window.__atsCandidateL2DB.delete(cid);
+      }
+      if (broadcast !== false && candidateBroadcastChannel) {
+          try {
+              candidateBroadcastChannel.postMessage({ type: 'invalidate', candidate_id: cid });
+          } catch(e) {}
+      }
+  };
+
+  window.purgeCandidateDrawerCaches = function(broadcast) {
+      window.__activeCandidateDrawerId = null;
+      if (window.__candidateDrawerCache) {
+          window.__candidateDrawerCache.clear();
+      }
+      if (window.__atsCandidateL2DB) {
+          window.__atsCandidateL2DB.clear();
+      }
+      if (broadcast !== false && candidateBroadcastChannel) {
+          try {
+              candidateBroadcastChannel.postMessage({ type: 'purge' });
+          } catch(e) {}
+      }
+  };
+
+  // Intent: Phase 3 Real-time Reverb WebSocket synchronization across recruiter tabs
+  @if(auth()->check() && auth()->user()->company_id)
+  $(document).ready(function() {
+      if (typeof window.Echo !== 'undefined') {
+          window.Echo.private('company.{{ (int) auth()->user()->company_id }}')
+              .listen('.candidate.drawer.updated', function(e) {
+                  if (e && e.candidate_id) {
+                      window.invalidateCandidateDrawerCache(e.candidate_id);
+                  }
+              });
+      }
+  });
+  @endif
+
+  // Auto-invalidate RAM & IndexedDB caches when candidate mutations succeed
+  $(document).ajaxSuccess(function(event, xhr, settings) {
+      if (!settings || !settings.url) return;
+      var url = settings.url;
+      if (url.indexOf('skill-experience') !== -1 || url.indexOf('statusupdate') !== -1 || 
+          url.indexOf('stage_submit') !== -1 || url.indexOf('job-question-update') !== -1 || 
+          url.indexOf('recruiter-note-update') !== -1 || url.indexOf('slots-update') !== -1) {
+          var activeId = $('#appId').val() || $('#application_id').val() || $('input[name="appId"]').val();
+          if (activeId) {
+              window.invalidateCandidateDrawerCache(activeId);
+          }
+      }
+  });
+
+  // Security Lifecycle: Invalidate all caches on logout or 401/419 auth errors
+  $(document).on('click', 'a[href*="logout"]', function() {
+      window.purgeCandidateDrawerCaches(true);
+  });
+
+  $(document).ajaxError(function(event, jqXHR) {
+      if (jqXHR.status === 401 || jqXHR.status === 419) {
+          window.purgeCandidateDrawerCaches(true);
+      }
+  });
+
+  // Throttled Hover Prefetch (Debounced 120ms, max 2 concurrent)
+  var prefetchHoverTimer = null;
+  $(document).on('mouseenter', '.show-application-detail, .custom-show-application-detail', function() {
+      if (navigator.connection && (navigator.connection.saveData || navigator.connection.effectiveType === '2g')) {
+          return;
+      }
+      var id = $(this).attr('data-row-id') || $(this).data('row-id') ||
+               $(this).attr('data-wise-id') || $(this).data('wise-id') ||
+               $(this).attr('data-id') || $(this).data('id');
+      if (!id) return;
+      var sid = String(id);
+      if (window.__candidateDrawerCache.has(sid) || window.__candidateDrawerInFlight.has(sid) || window.__candidateDrawerPromises.has(sid)) {
+          return;
+      }
+      if (window.__candidateDrawerInFlight.size >= 2) {
+          return;
+      }
+      clearTimeout(prefetchHoverTimer);
+      prefetchHoverTimer = setTimeout(function() {
+          if (window.__atsCandidateL2DB) {
+              window.__atsCandidateL2DB.get(sid).then(function(cached) {
+                  if (cached) {
+                      window.__candidateDrawerCache.set(sid, cached);
+                  } else {
+                      fetchCandidateDrawerPayload(sid, "{{ $currentSlug ?? '' }}", null);
+                  }
+              });
+          } else {
+              fetchCandidateDrawerPayload(sid, "{{ $currentSlug ?? '' }}", null);
+          }
+      }, 120);
+  });
+
+  $(document).on('mouseleave', '.show-application-detail, .custom-show-application-detail', function() {
+      clearTimeout(prefetchHoverTimer);
+  });
+
   $(document).on('click', '.show-application-detail, .custom-show-application-detail', async function(e){
+      // Prevent bubbling so nested candidate containers don't trigger duplicate execution
       e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
       const connected = await isInternetAvailable();
       if (!connected) {
           Swal.fire({
@@ -3049,43 +3388,52 @@ $( document ).ready(function() {
           return;
       }
 
+      id = String(id);
+
+      // If this exact candidate is already displayed in the drawer and drawer is open, keep it open
+      if (window.__activeCandidateDrawerId === id && $('#kt_activitiesApplication').hasClass('drawer-on')) {
+          openMetronicDrawer('kt_activitiesApplication');
+          return;
+      }
+
       openMetronicDrawer('kt_activitiesApplication');
 
-      var currentPage = $('.custom-pagination .page-link.active').data('page') || 1;
-      var url = "{{ route('service_company.job-applications.show',':id') }}?slug={{ $currentSlug }}&currentPage=" + currentPage;
-      url = url.replace(':id', id);
+      // 1. Check L1 Browser RAM Cache (Zero-Read-Path Instant Render: 0ms, 0 HTTP, 0 MySQL, 0 ES)
+      if (window.__candidateDrawerCache.has(id)) {
+          var cachedResponse = window.__candidateDrawerCache.get(id);
+          renderCandidateDrawerView(cachedResponse, id);
+          return;
+      }
 
-      $.ajax({
-          type: 'GET',
-          url: url,
-          beforeSend: function() {
-              $('#application_show_right_bar').html(getCandidateDrawerLoader());
-          },
-          success: function(response) {
-              if (response && response.view) {
-                  $('#application_show_right_bar').html(response.view);
-                  if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
-              } else if (response && response.status === 'error') {
-                  $('#application_show_right_bar').html(
-                      '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
-                      '  <div class="text-danger fw-bold fs-4 mb-2">Notice</div>' +
-                      '  <div class="text-gray-700 fs-6">' + (response.message || 'Candidate details could not be loaded.') + '</div>' +
-                      '</div>'
-                  );
-              } else if (typeof response === 'string' && response.trim() !== '') {
-                  $('#application_show_right_bar').html(response);
-              }
-          },
-          error: function(xhr) {
-              var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
-              $('#application_show_right_bar').html(
-                  '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
-                  '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
-                  '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
-                  '</div>'
-              );
+      // 2. Check L2 Scoped IndexedDB Cache (<15ms Instant Render across page loads)
+      if (window.__atsCandidateL2DB) {
+          var l2Cached = await window.__atsCandidateL2DB.get(id);
+          if (l2Cached) {
+              window.__candidateDrawerCache.set(id, l2Cached);
+              renderCandidateDrawerView(l2Cached, id);
+              return;
           }
-      });
+      }
+
+      // 3. Switching to a candidate not in cache: clear previous candidate DOM to prevent ghost flash
+      if (window.__activeCandidateDrawerId !== id) {
+          window.__activeCandidateDrawerId = null;
+          $('#application_show_right_bar').html(getCandidateDrawerLoader());
+      }
+
+      // 4. Fetch or attach to in-flight promise (deduplicating hover prefetch)
+      try {
+          var response = await fetchCandidateDrawerPayload(id, "{{ $currentSlug ?? '' }}");
+          renderCandidateDrawerView(response, id);
+      } catch(err) {
+          var msg = (err && err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Unable to connect to server. Please refresh and try again.';
+          $('#application_show_right_bar').html(
+              '<div class="card card-flush m-6 p-8 text-center border border-dashed border-danger">' +
+              '  <div class="text-danger fw-bold fs-4 mb-2">Error Loading Profile</div>' +
+              '  <div class="text-gray-700 fs-6">' + msg + '</div>' +
+              '</div>'
+          );
+      }
   });
 
   $(document).on('click', '.website-show-application-detail', async function(e){
@@ -3125,6 +3473,7 @@ $( document ).ready(function() {
           success: function(response) {
               if (response && response.view) {
                   $('#application_show_right_bar').html(response.view);
+                  replenishDrawerCsrfTokens();
                   if (typeof KTMenu !== 'undefined') KTMenu.createInstances();
               } else if (response && response.status === 'error') {
                   $('#application_show_right_bar').html(

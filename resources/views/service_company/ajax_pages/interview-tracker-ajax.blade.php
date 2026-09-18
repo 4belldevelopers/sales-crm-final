@@ -158,9 +158,11 @@
 
                     // Job type / recommendation
                     $recommendation_text = __('messages.internal_tag');
-                    $jobTypeLabel = 'Internal Client';
+                    $jobTypeLabel = 'Internal';
                     $jobTypeClass = 'it-job-type-internal';
                     if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+                        // INTENT: Resolve Parent/Main Company Name for Direct Client jobs. Tenancy: scoped to row company_name/client_name.
+                        $parentCompName = !empty($row->company_name) ? $row->company_name : ($client_title_name ?? '');
                         $recommendation_text = __('messages.clinet_tag');
                         $jobTypeLabel = 'Direct Client';
                         $jobTypeClass = 'it-job-type-direct';

@@ -79,7 +79,8 @@
 
         /* ── Client type (Direct vs Internal) — internal = the company's own job ── */
         $isOwnJob        = ($row->client_comapny_id ?? 0) == $company_id;
-        $clientType      = $isOwnJob ? 'Internal Client' : 'Direct Client';
+        $parentCompName  = !empty($row->company_name) ? $row->company_name : ($row->clients_name ?? '');
+        $clientType      = $isOwnJob ? 'Internal' : 'Direct Client';
         $clientTypeColor = $isOwnJob ? '#2563eb' : '#16a34a'; // internal = blue, direct = green
 
         /* ── Compensation ── */

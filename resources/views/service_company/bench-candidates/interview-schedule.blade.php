@@ -442,7 +442,7 @@ function renderBenchInterviewRows(data, companyId) {
         var jobTitle = (row.job_title || '').trim();
         var shortJobTitle = jobTitle.length > 18 ? jobTitle.substring(0, 18) : jobTitle;
 
-        var jobTypeLabel = 'Internal Client';
+        var jobTypeLabel = 'Internal';
         var jobTypeClass = 'it-job-type-internal';
         if ((row.recommendation_id || 0) > 0 && (row.to_company_id == companyId)) {
             jobTypeLabel = 'Direct Client';

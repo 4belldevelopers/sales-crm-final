@@ -69,12 +69,23 @@
                     $created_at 		=	"";
                     $created_at 		=	@$job->created_at;
                     $created_at 		=	date("d M, Y", strtotime($created_at));
-					 $tagsType =  __('messages.internal_tag');
-                    if($company_id==$job->company_id){
-                       $tagsType =  __('messages.internal_tag');
-					}else{
-					  $tagsType =  __('messages.clinet_tag');
-					}
+                    $jobClientInfo = \DB::table('jobs')
+                        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                        ->select('jobs.company_id', 'clients.self_company')
+                        ->where('jobs.id', $id)
+                        ->first();
+
+                    $jobCompId = (int) ($jobClientInfo->company_id ?? @$job->company_id ?? 0);
+                    $selfCompVal = (int) ($jobClientInfo->self_company ?? @$job->self_company ?? 0);
+
+                    $isDirectClientJob = ($company_id > 0 && $jobCompId > 0 && $company_id !== $jobCompId);
+                    if ($isDirectClientJob) {
+                        $tagsType = 'Direct Client';
+                    } elseif ($selfCompVal === 1) {
+                        $tagsType = __('messages.internal_tag');
+                    } else {
+                        $tagsType = 'Internal Client';
+                    }
 					
 
                 @endphp
@@ -107,13 +118,13 @@
                         <a href="javascript:void(0);"
                             class="text-dark fw-bolder text-hover-primary fs-6">{{ strtoupper(substr(@$jobtitle, 0, 27)) }}</a>
                         <a href="javascript:void(0);"
-                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$account->company_name, 0, 27)) }}</a>
+                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$company_or_client ?? @$account->company_name, 0, 50)) }}</a>
                     </div>
                     <!--begin::User details-->
                     <div class="d-flex flex-column ml-2 show-detail-open" data-id="{{$id}}">
                         <a href="javascript:void(0);">
                         <span class="badge {{ @$statusClass }} fw-bolder fs-6  px-2 py-1">{{ @$statusName }}</span>
-                        <span class="text-muted fw-bold text-muted d-block fs-7">R{{ @$id }}-{{$tagsType}}</span>
+                        <span class="text-muted fw-bold text-muted d-block fs-7">{{ $tagsType }} • R{{ @$id }}</span>
                         </a>
                     </div>
                     {{-- <div class="nac"></div>

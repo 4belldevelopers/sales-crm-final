@@ -3077,23 +3077,18 @@ END:VCALENDAR";
             ->where('jobs.id', '>', '0');
         $row = $logos->where('jobs.id', $jobid)->first();
 
-        //  dd($row);
-        $recommendation_id = '';
-        $recommendation_id = $row->recommendation_id;
-        $client_name = @$row->clients_name;
-        if (@$row->company_id != $company_id) {
-            $client_name = @$row->company_name;
-            $client_name = ucwords(substr(@$client_name, 0, 30));
-            if (@$row->company_id != $company_id) {
-                $client_name = @$row->company_name;
-                $client_name = ucwords(substr(@$client_name, 0, 30));
-            }
+        $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
+        $is_direct_client = ($row->company_id != $company_id);
 
+        if ($is_direct_client) {
+            $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
+        } elseif ($is_self_company) {
+            $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
+        } else {
+            $displayName = ! empty($row->clients_name) ? $row->clients_name : @$row->company_name;
         }
 
-        // 			dd($client_name);
-
-        return @$client_name;
+        return ucwords(substr((string) $displayName, 0, 50));
     }
 
     public static function openJobcities($cityID, $company_id)
@@ -3350,25 +3345,80 @@ END:VCALENDAR";
         }
 
         /**
-         * Tenancy / Intent Note: Format client/company name for job headers.
+         * Tenancy / Intent Note: Format client/company name for job headers and drawers.
+         * - If direct client job (recommendation_id > 0 & to_company_id == company_id): display Parent/Main Company Name (company_name).
          * - If internal client job (self_company == 1): display client name and main company (e.g. "Client Name / Main Company").
-         * - If direct client job (self_company != 1): display direct client company name (clients_name).
+         * - If standard agency client job: display client name.
          */
         $client_name = trim((string) ($row->clients_name ?? ''));
         $company_name = trim((string) ($row->company_name ?? ''));
         $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
+        $recommendation_id = (int) ($row->recommendation_id ?? 0);
+        $to_company_id = (int) ($row->to_company_id ?? 0);
+        $from_company_id = (int) ($row->from_company_id ?? 0);
 
-        if ($is_self_company) {
-            if (! empty($client_name) && ! empty($company_name) && strcasecmp($client_name, $company_name) !== 0) {
-                $displayName = $client_name.' / '.$company_name;
-            } else {
-                $displayName = ! empty($company_name) ? $company_name : $client_name;
+        $job_company_id = (int) ($row->company_id ?? 0);
+        $is_direct_client = ($recommendation_id > 0 && ($to_company_id === (int) $company_id || $from_company_id > 0)) || ((int)$company_id > 0 && $job_company_id > 0 && (int)$company_id !== $job_company_id);
+
+        if ($is_direct_client) {
+            if (empty($company_name) && $from_company_id > 0) {
+                $company_name = (string) DB::table('companies')->where('id', $from_company_id)->value('company_name');
             }
+            $displayName = ! empty($company_name) ? $company_name : $client_name;
+        } elseif ($is_self_company) {
+            $displayName = ! empty($company_name) ? $company_name : $client_name;
         } else {
             $displayName = ! empty($client_name) ? $client_name : $company_name;
         }
 
         return ucwords(substr((string) $displayName, 0, 50));
+    }
+
+    /**
+     * INTENT: Project-Wide Centralized Job Display Company Resolver.
+     * Resolves Parent/Main Company Name and job classification for Direct Client vs Internal jobs.
+     * TENANCY: Scoped by $viewerCompanyId (defaults to logged-in user's company_id).
+     *
+     * @param  object|array  $job
+     * @param  int|null  $viewerCompanyId
+     * @return array
+     */
+    public static function resolveJobDisplayCompany($job, $viewerCompanyId = null, array $companiesMap = [])
+    {
+        $viewerCompanyId = (int) ($viewerCompanyId ?: (auth()->user()->company_id ?? 0));
+        $row = (object) $job;
+
+        $recommendation_id = (int) ($row->recommendation_id ?? $row->to_company_id ?? 0);
+        $to_company_id = (int) ($row->to_company_id ?? 0);
+        $from_company_id = (int) ($row->from_company_id ?? $row->comId ?? $row->company_id ?? 0);
+
+        $isDirectClientJob = ($recommendation_id > 0 && $to_company_id === $viewerCompanyId);
+
+        $parentCompanyName = '';
+        if ($isDirectClientJob) {
+            $parentCompanyName = $companiesMap[$from_company_id]
+                ?? ($row->company_name ?? ($row->clients_name ?? ($row->client_name ?? '')));
+        }
+
+        $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
+
+        if ($isDirectClientJob) {
+            $tagText = 'Direct Client';
+        } elseif ($isSelfCompany) {
+            $tagText = __('messages.internal_tag');
+        } else {
+            $tagText = 'Internal Client';
+        }
+
+        $badgeClass = $isDirectClientJob ? 'badge-client' : 'badge-internal';
+
+        return [
+            'is_direct_client' => $isDirectClientJob,
+            'display_name' => $parentCompanyName,
+            'tag_text' => $tagText,
+            'badge_class' => $badgeClass,
+            'from_company_id' => $from_company_id,
+        ];
     }
 
     public static function companyOrClientDetails($jobid = '')
@@ -6281,8 +6331,8 @@ END:VCALENDAR";
      * Guaranteed identical percentage between candidate drawer and all candidate lists.
      * Tenancy note: When querying job_metronics_skills by job_id, deduplicates distinct skill names.
      *
-     * @param int|array|\Illuminate\Support\Collection $jobSkillsOrId
-     * @param string|array|\Illuminate\Support\Collection $candidateSkills
+     * @param  int|array|\Illuminate\Support\Collection  $jobSkillsOrId
+     * @param  string|array|\Illuminate\Support\Collection  $candidateSkills
      * @return array ['percentage' => int, 'percentage_str' => string, 'percentage_float' => float, 'matched_count' => int, 'total' => int, 'matched_skills' => array]
      */
     public static function calculateSkillMatch($jobSkillsOrId, $candidateSkills): array
@@ -6380,7 +6430,7 @@ END:VCALENDAR";
 
         return [
             'percentage' => $roundedInt,
-            'percentage_str' => $roundedInt . '%',
+            'percentage_str' => $roundedInt.'%',
             'percentage_float' => round($pctFloat, 1),
             'matched_count' => $matches,
             'total' => $totalJobSkills,
@@ -6414,7 +6464,7 @@ END:VCALENDAR";
      * 50%-84% -> Orange (#fef3c7 / #d97706)
      * < 50%   -> Red    (#fee2e2 / #dc2626)
      *
-     * @param int|float|string $percentage
+     * @param  int|float|string  $percentage
      * @return array ['bg' => string, 'color' => string, 'class' => string, 'name' => string]
      */
     public static function getSkillMatchBadgeStyle($percentage): array
@@ -11707,7 +11757,8 @@ END:VCALENDAR";
                 $results[] = $clean;
             }
         }
-        return !empty($results) ? array_values(array_unique($results)) : [trim($skill)];
+
+        return ! empty($results) ? array_values(array_unique($results)) : [trim($skill)];
     }
 
     /**
@@ -11720,11 +11771,12 @@ END:VCALENDAR";
             return $w;
         }
         if (strlen($w) > 3 && str_ends_with($w, 'ies')) {
-            return substr($w, 0, -3) . 'y';
+            return substr($w, 0, -3).'y';
         }
-        if (strlen($w) > 3 && str_ends_with($w, 's') && !str_ends_with($w, 'ss')) {
+        if (strlen($w) > 3 && str_ends_with($w, 's') && ! str_ends_with($w, 'ss')) {
             return substr($w, 0, -1);
         }
+
         return $w;
     }
 
@@ -11740,25 +11792,34 @@ END:VCALENDAR";
         $req = strtolower(trim($requiredTerm));
         $cand = strtolower(trim($candidateTerm));
 
-        if ($req === '' || $cand === '') return false;
-        if ($req === $cand) return true;
+        if ($req === '' || $cand === '') {
+            return false;
+        }
+        if ($req === $cand) {
+            return true;
+        }
 
         // Direct clean match (e.g. "rest-assured" vs "rest assured")
         $cleanReq = preg_replace('/[.\-_\s]+/', '', $req);
         $cleanCand = preg_replace('/[.\-_\s]+/', '', $cand);
-        if ($cleanReq === $cleanCand && strlen($cleanReq) > 1) return true;
+        if ($cleanReq === $cleanCand && strlen($cleanReq) > 1) {
+            return true;
+        }
 
         // Tokenize into words
         $reqWords = array_values(array_filter(preg_split('/[\s\-_.\\/]+/', $req), 'strlen'));
         $candWords = array_values(array_filter(preg_split('/[\s\-_.\\/]+/', $cand), 'strlen'));
 
-        if (empty($reqWords) || empty($candWords)) return false;
+        if (empty($reqWords) || empty($candWords)) {
+            return false;
+        }
 
-        $normalizeTech = function(string $w): string {
+        $normalizeTech = function (string $w): string {
             $w = self::normalizeSkillWord($w);
             if (strlen($w) > 4 && str_ends_with($w, 'js') && in_array(substr($w, 0, -2), ['react', 'node', 'vue', 'angular', 'next', 'nuxt'])) {
                 return substr($w, 0, -2);
             }
+
             return $w;
         };
 
@@ -11766,14 +11827,15 @@ END:VCALENDAR";
         $normCandWords = array_map($normalizeTech, $candWords);
 
         // Filter out standalone 'js' token if preceded by framework name
-        $cleanTokens = function(array $tokens): array {
+        $cleanTokens = function (array $tokens): array {
             $res = [];
             foreach ($tokens as $t) {
-                if ($t === 'js' && !empty($res) && in_array(end($res), ['react', 'node', 'vue', 'angular', 'next', 'nuxt'])) {
+                if ($t === 'js' && ! empty($res) && in_array(end($res), ['react', 'node', 'vue', 'angular', 'next', 'nuxt'])) {
                     continue;
                 }
                 $res[] = $t;
             }
+
             return $res;
         };
 

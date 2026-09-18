@@ -121,9 +121,9 @@
 .cm-btn.cm-go:hover { background: #1481cf; border-color: #1481cf; }
 
 /* Drawer fit */
-#kt_activitiesRecruiter.drawer, #kt_activitiesRecruiter { width: min(1160px, 96vw) !important; max-width: 96vw !important; }
-#kt_activities_body { max-width: 1180px; margin: 0 auto; }
-@media only screen and (max-width: 1199.98px){ #kt_activitiesRecruiter, #kt_activitiesClient { width: min(960px, 96vw) !important; } }
+#kt_activitiesRecruiter.drawer, #kt_activitiesRecruiter { width: min(1320px, 96vw) !important; max-width: 96vw !important; }
+#kt_activities_body { max-width: 1320px; margin: 0 auto; }
+@media only screen and (max-width: 1199.98px){ #kt_activitiesRecruiter, #kt_activitiesClient { width: min(1056px, 96vw) !important; } }
 @media (max-width: 767.98px){ .filter-bar { flex-direction: column; width: 100%; } .captain-empty-state { flex-direction: column; text-align: center; gap: .75rem; } .captain-empty-state .captain-icon { margin-right: 0; } }
 @media (max-width: 575.98px){ .assigned-grid { grid-template-columns: 1fr; } .ac-actions { flex-wrap: wrap; } }
 </style>

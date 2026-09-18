@@ -104,13 +104,14 @@
     $max_salary = GeneralMethod::formatAmount($max_salary);
     $min_salary = GeneralMethod::formatAmount($min_salary);
 
-    $recommendation_text = __('messages.internal_tag').' '.$clientTypeJob;
+    $isSelfCompany = ((int) ($row->self_company ?? 0)) === 1;
+    $recommendation_text = $isSelfCompany ? __('messages.internal_tag') : 'Internal Client';
     $badge = "badge-internal";
     // Internal Client: building icon, blue — sized/boxed to match the .exp-row /
     // .sal-row icons above it (.badge-type i/svg CSS) for clean alignment.
     $svg = '<i class="fas fa-building" style="color:#3e97ff;"></i>';
     if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-        $recommendation_text = $clientTypeJob.' '.__('messages.clinet_tag');
+        $recommendation_text = 'Direct Client';
         $badge = "badge-client";
         // Direct Client only: handshake icon, same green as .badge-client's own text
         // colour (#09b760) — same icon/colour used on the bench "Placed" listing for

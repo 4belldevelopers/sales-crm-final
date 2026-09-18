@@ -69,9 +69,10 @@
         elseif ($status == 'Hold') $statusCls = 'hold-bg';
 
         // ── Internal / client tag ──
-        $recommendation_text = __('messages.clinet_tag');
-        if ($row->comId == $company_id) $recommendation_text = __('messages.internal_tag');
-        $tagCls = ($row->comId == $company_id) ? 'badge-internal' : 'badge-client';
+        $parentCompName = $row->company_name ?? ($row->clients_name ?? '');
+        $isDirectClientJob = ($row->comId != $company_id);
+        $recommendation_text = $isDirectClientJob ? 'Direct Client' : __('messages.internal_tag');
+        $tagCls = $isDirectClientJob ? 'badge-client' : 'badge-internal';
 
         // ── Experience ──
         $minExp = @$row->min_exp ?? '0';

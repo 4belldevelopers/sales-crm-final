@@ -32,6 +32,12 @@
     max-width: 100vw !important;
   }
 }
+@media only screen and (min-width: 992px){
+  #kt_activitiesRecruiter {
+    width: min(1320px, 96vw) !important;
+    max-width: 96vw !important;
+  }
+}
 @media only screen and (min-width: 1024px) and (max-width: 1440px){
   #kt_activitiesTerms {width: 1025px;}
 }
@@ -309,7 +315,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
   </div>
 </div>
 <div id="kt_activitiesRecruiter_toggle"></div>
-<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1200px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
+<div id="kt_activitiesRecruiter" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'500px', 'lg': '1320px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesRecruiter_toggle" data-kt-drawer-close="#kt_activitiesRecruiter_close">
   <div class="card shadow-none rounded-0 w-100">
     <div class="card-header px-5 py-0" id="kt_activities_header">
       <div class="d-flex align-items-center py-1">
@@ -1090,7 +1096,7 @@ $(document).on('click', '.client-hm-listing', function ()
                 var profileDetailClass = job.is_direct_client ? 'client-show-detail' : 'show-detail';
                 var directClientAttr = job.is_direct_client ? '1' : '0';
                 var displayTitle = formatJobPositionName(job.title);
-                var displayClientName = formatCompanyName(job.clients_name);
+                var displayClientName = (job.is_direct_client && job.parent_company_name) ? formatCompanyName(job.parent_company_name) : formatCompanyName(job.clients_name);
                 var displayAgencyName = formatCompanyName(job.agency_company_name);
                 var displayCity = formatJobPositionName(job.city);
                 var displayHiringManager = formatJobPositionName(job.hiring_manager);
@@ -1179,6 +1185,8 @@ $(document).on('click', '.client-hm-listing', function ()
                 });
                 pipelineHtml += '</div>';
 
+                var directClientLabelText = job.recommendation_text || (job.is_direct_client ? 'Direct Client' : ((job.self_company == 1) ? 'Internal' : 'Internal Client'));
+
                 html += '<div class="job-row" data-job-id="' + job.id + '" style="position: relative; min-height: 96px; cursor: pointer;">' +
                     '<div class="col-job ' + profileDetailClass + '" data-row-id="' + job.id + '">' +
                         '<div class="job-logo ' + job.bg_text_decore + '" style="min-height: 48px; align-self: flex-start;">' + logoHtml + '</div>' +
@@ -1203,7 +1211,7 @@ $(document).on('click', '.client-hm-listing', function ()
                     '<div class="col-hm">' +
                       '<div class="hm-name">' + (displayHiringManager ? displayHiringManager.substring(0, 10) : '') + '</div>' +
                       '<div class="hm-title">' + (job.hiring_manager_designation || '') + '</div>' +
-                      '<div class="hm-company hm-client-type"><span class="it-job-type ' + job.badge + '">' + job.recommendation_text + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
+                      '<div class="hm-company hm-client-type"><span class="it-job-type ' + job.badge + '">' + directClientLabelText + '</span><span class="it-dot-separator"></span><a href="javascript:void(0);" class="it-job-id">' + job.id + '</a></div>' +
                     '</div>' +
 
                     '<div class="col-action">' + teamHtml + '</div>' +
