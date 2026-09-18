@@ -183,77 +183,114 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     {
 
         // dd($request->all());
-        $appId = $request->appId;
-        $job_id = $request->job_id;
+        $appId = (int) $request->appId;
+        $job_id = (int) $request->job_id;
+        $companyId = (int) auth()->user()->company_id;
 
         if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
             $YearskillId = $request->input('YearskillId');
             $MonthskillId = $request->input('MonthskillId');
             $ratingId = $request->input('rating');
-            // dd($YearskillId,$MonthskillId);
-            // TENANCY NOTE: Verify candidate application belongs to current tenant before deleting skill exp
-            $appCheck = DB::table('job_applications')->where('id', $appId);
-            if (auth()->check() && ! auth()->user()->is_superadmin && auth()->user()->company_id) {
-                $appCheck->where('company_id', auth()->user()->company_id);
-            }
-            if (! $appCheck->exists()) {
+
+            // TENANCY NOTE: Verify candidate application belongs to current tenant, thirdparty company, or active pipeline
+            $app = DB::table('job_applications')->where('id', $appId)->first();
+            if (! $app) {
                 return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
             }
-            DB::table('candidate_job_skill_exp')->where('candidate_id', $appId)->where('job_id', $job_id)->delete();
-            $this->elasticService->getClient()->deleteByQuery([
-                'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                'body' => [
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['candidate_id' => $appId]],
-                                ['term' => ['job_id' => $job_id]],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-            foreach ($YearskillId as $skillId => $value) {
-                // if (!empty($value)) {
-                $ss = 'Year';
-                if ($value >= 1) {
-                    $ss = 'Years';
-                }
-                if (! empty($MonthskillId[$skillId])) {
-                    $valMonth = $MonthskillId[$skillId];
-                } else {
-                    $valMonth = $MonthskillId[$skillId];
-                }
-                $skill_value = $value.'.'.$valMonth.' '.$ss;
-                $rating = $ratingId[$skillId];
 
-                $values = [
-                    'job_skill_id' => $skillId,
-                    'skill_value' => $skill_value,
-                    'job_id' => $job_id,
-                    'rating' => (int) $rating,
-                    'candidate_id' => $appId,
-                ];
-                DB::table('candidate_job_skill_exp')->insert($values);
-                $expId = DB::getPdo()->lastInsertId();
+            $isAuthorized = auth()->user()->hasRole('admin')
+                || (int) $app->company_id === $companyId
+                || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+                || DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $appId)
+                    ->where(function ($q) use ($companyId) {
+                        $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                    })->exists();
 
-                $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
-                $this->elasticService->getClient()->index([
-                    'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                    'id' => $expId,   // store as ES _id
-                    'body' => [
-                        'skill_name' => $skills->skill_name ?? '',
-                        'job_skill_id' => $skillId,
+            if (! $isAuthorized) {
+                return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
+            }
+
+            // 1. Transactional MySQL Write (SSOT)
+            $insertedSkills = [];
+            DB::beginTransaction();
+            try {
+                DB::table('candidate_job_skill_exp')->where('candidate_id', $appId)->where('job_id', $job_id)->delete();
+
+                foreach ($YearskillId as $skillId => $value) {
+                    $ss = 'Year';
+                    if ($value >= 1) {
+                        $ss = 'Years';
+                    }
+                    $valMonth = ! empty($MonthskillId[$skillId]) ? $MonthskillId[$skillId] : 0;
+                    $skill_value = $value.'.'.$valMonth.' '.$ss;
+                    $rating = (int) ($ratingId[$skillId] ?? 0);
+
+                    $values = [
+                        'job_skill_id' => (int) $skillId,
                         'skill_value' => $skill_value,
                         'job_id' => $job_id,
-                        'rating' => (int) $rating,
+                        'rating' => $rating,
                         'candidate_id' => $appId,
-                        'created_at' => now()->toIso8601String(),
-                        'updated_at' => now()->toIso8601String(),
-                    ],
-                ]);
-                // }
+                    ];
+                    DB::table('candidate_job_skill_exp')->insert($values);
+                    $expId = DB::getPdo()->lastInsertId();
+
+                    $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
+                    $insertedSkills[] = [
+                        'expId' => $expId,
+                        'skill_name' => $skills->skill_name ?? '',
+                        'skillId' => (int) $skillId,
+                        'skill_value' => $skill_value,
+                        'rating' => $rating,
+                    ];
+                }
+
+                DB::commit();
+            } catch (\Throwable $ex) {
+                DB::rollBack();
+                \Log::error('skillExperienceUpdate MySQL transaction failed: '.$ex->getMessage());
+
+                return response()->json(['status' => false, 'message' => 'Database error while saving skill experience.'], 500);
+            }
+
+            // 2. Synchronize Elasticsearch read store in protected try-catch
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_CANDIDATE_SKILLS_EXP)) {
+                    $this->elasticService->getClient()->deleteByQuery([
+                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                        'conflicts' => 'proceed',
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['candidate_id' => (int) $appId]],
+                                        ['term' => ['job_id' => (int) $job_id]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]);
+
+                    foreach ($insertedSkills as $is) {
+                        $this->elasticService->getClient()->index([
+                            'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
+                            'id' => $is['expId'],
+                            'body' => [
+                                'skill_name' => $is['skill_name'],
+                                'job_skill_id' => $is['skillId'],
+                                'skill_value' => $is['skill_value'],
+                                'job_id' => $job_id,
+                                'rating' => $is['rating'],
+                                'candidate_id' => $appId,
+                                'created_at' => now()->toIso8601String(),
+                                'updated_at' => now()->toIso8601String(),
+                            ],
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('skillExperienceUpdate ES sync failed: '.$e->getMessage());
             }
 
             $html = '';
@@ -343,11 +380,30 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
+        // Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([$appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
         $cachekeys = [
             'candidateDetails_version_user_'.$this->user->id,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Phase 3 Reverb broadcast to invalidate client RAM cache in all connected recruiter tabs
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'skills_updated');
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
         return response()->json(['status' => true, 'html' => $html]);
@@ -478,11 +534,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
+        // Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', (int) $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([(int) $appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+        $companyId = (int) auth()->user()->company_id;
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
         $cachekeys = [
             'candidateDetails_version_user_'.$this->user->id,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Phase 3 Reverb broadcast to invalidate client RAM cache in all connected recruiter tabs
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'questions_updated');
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
         return response()->json(['status' => true, 'html' => $html]);
@@ -644,42 +720,104 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     }
 
-    /** Updates recruiter_note in both Elasticsearch (read store) and MySQL (write store). */
+    /** Updates recruiter_note (Recruiter Comments) in both MySQL (write store) and Elasticsearch (read store). */
     public function recruiterNoteUpdate(Request $request)
     {
-        $appId = $request->appId;
+        $appId = (int) $request->appId;
         $recruiterNote = $request->recruiter_note ?? '';
+        $companyId = (int) auth()->user()->company_id;
 
-        $exists = $this->elasticService->getClient()->exists([
-            'index' => ELASTIC_CANDIDATES,
-            'id' => $appId,
-        ]);
-
-        if ($exists) {
-            $this->elasticService->getClient()->update([
-                'index' => ELASTIC_CANDIDATES,
-                'id' => $appId,
-                'body' => [
-                    'doc' => ['recruiter_note' => $recruiterNote],
-                    'doc_as_upsert' => false,
-                ],
-                'refresh' => false,
-            ]);
-
-            // Keep MySQL write-store in sync (tenant-scoped via company_id)
-            JobApplication::where('id', $appId)
-                ->where('company_id', auth()->user()->company_id)
-                ->update(['recruiter_note' => $recruiterNote]);
-
-            $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
-            return response()->json(['status' => true]);
+        // Verify candidate exists
+        $app = DB::table('job_applications')->where('id', $appId)->first();
+        if (! $app) {
+            return response()->json(['status' => false, 'message' => 'Candidate application not found.'], 404);
         }
 
-        return response()->json(['status' => false], 422);
+        // Authorize: candidate belongs to tenant, or tenant is thirdparty, or has active pipeline record, or admin
+        $isAuthorized = auth()->user()->hasRole('admin')
+            || (int) $app->company_id === $companyId
+            || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+            || DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                })->exists();
+
+        if (! $isAuthorized) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized candidate update.'], 403);
+        }
+
+        // 1. Single Source of Truth: Update MySQL transactional write store
+        DB::table('job_applications')
+            ->where('id', $appId)
+            ->update([
+                'recruiter_note' => $recruiterNote,
+                'updated_at' => now(),
+            ]);
+
+        // 2. Synchronize Elasticsearch read store (ELASTIC_CANDIDATES via updateByQuery)
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $this->elasticService->getClient()->updateByQuery([
+                    'index' => ELASTIC_CANDIDATES,
+                    'conflicts' => 'proceed',
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'should' => [
+                                    ['term' => ['candidate_id' => (int) $appId]],
+                                    ['term' => ['id' => (int) $appId]],
+                                ],
+                                'minimum_should_match' => 1,
+                            ],
+                        ],
+                        'script' => [
+                            'source' => 'ctx._source.recruiter_note = params.note',
+                            'lang' => 'painless',
+                            'params' => ['note' => $recruiterNote],
+                        ],
+                    ],
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('recruiterNoteUpdate ELASTIC_CANDIDATES update failed: '.$e->getMessage());
+        }
+
+        // Also synchronize ELASTIC_CANDIDATES_BENCH if present
+        try {
+            if (defined('ELASTIC_CANDIDATES_BENCH') && $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CANDIDATES_BENCH, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CANDIDATES_BENCH,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['recruiter_note' => $recruiterNote],
+                        ],
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('recruiterNoteUpdate ELASTIC_CANDIDATES_BENCH update failed: '.$e->getMessage());
+        }
+
+        // 3. Bust candidate drawer cache across all slugs and associated job-wise IDs
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        $targetIds = array_unique(array_merge([$appId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+
+        $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+        }
+
+        return response()->json(['status' => true]);
     }
 
     public function clientCandidateList(Request $request)
@@ -3388,123 +3526,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $response = $this->elasticService->getClient()->get($params);
         $this->job = (object) $response['_source'];
 
-        $skills = DB::table('job_metronics_skills')
-            ->select('id', 'skill_name')
-            ->where('job_id', $jobId)
-            ->where('company_id', $this->job->comId)
-            ->get();
-        //  dd($skills);
-
-        $existingSkillIds = DB::table('candidate_job_skill_exp')
-            ->where('job_id', $jobId)
-            ->where('candidate_id', $this->application->id)
-            ->pluck('job_skill_id')
-            ->toArray();
-        if ($skills) {
-            foreach ($skills as $skill) {
-                if (! in_array($skill->id, $existingSkillIds)) {
-                    $values = [
-                        'job_skill_id' => $skill->id,
-                        'skill_value' => 0,
-                        'job_id' => (int) $jobId,
-                        'rating' => (int) @$skill->rating,
-                        'candidate_id' => $this->application->id,
-                    ];
-                    DB::table('candidate_job_skill_exp')->insert($values);
-                    $expId = DB::getPdo()->lastInsertId();
-
-                    $this->elasticService->getClient()->deleteByQuery([
-                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                        'conflicts' => 'proceed',   // important for production queues
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['candidate_id' => (int) $this->application->id]],
-                                        ['term' => ['job_id' => (int) $jobId]],
-                                        ['term' => ['job_skill_id' => (int) $skill->id]],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-
-                    $this->elasticService->getClient()->index([
-                        'index' => ELASTIC_CANDIDATE_SKILLS_EXP,
-                        'id' => $expId,
-                        'body' => [
-                            'candidate_id' => (int) $this->application->id,
-                            'job_id' => (int) $jobId,
-                            'job_skill_id' => (int) $skill->id,
-                            'skill_name' => $skill->skill_name,
-                            'rating' => null,
-                            'skill_value' => null,   // default exp
-                            'created_at' => now()->toIso8601String(),
-                            'updated_at' => now()->toIso8601String(),
-                        ],
-                    ]);
-                }
-            }
-        }
-
-        $params = [
-            'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['application_id' => $this->application->id]],
-                            ['term' => ['job_id' => (int) $jobId]],
-                        ],
-                    ],
-                ],
-                'size' => 1,   // we only need to know if one exists
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        $exists = ! empty($response['hits']['hits']);
-
-        if (! $exists) {
-            $job_additional_detail_count = DB::table('job_additional_detail')->select('*')->where('job_id', $jobId)->orderBy('job_additional_detail.id', 'ASC')->count();
-            $job_additional_detail = DB::table('job_additional_detail')->select('*')->where('job_id', $jobId)->orderBy('job_additional_detail.id', 'ASC')->get();
-            if ($job_additional_detail_count > 0) {
-                $inc = 0;
-                foreach ($job_additional_detail as $jd) {
-
-                    if (! empty(@$jd->detail_value)) {
-                        $values = [
-                            'job_id' => $jobId,
-                            'question_id' => @$jd->id,
-                            'application_id' => $this->application->id,
-                            'job_detail_value' => @$jd->detail_value,
-                            'application_detail_value' => 0,
-                        ];
-                        DB::table('application_additional_detail')->insert($values);
-                        $expId = DB::getPdo()->lastInsertId();
-                        $this->elasticService->getClient()->update([
-                            'index' => ELASTIC_CANDIDATE_JOB_QUESTION,
-                            'id' => $expId,   // store as ES _id
-                            'body' => [
-                                'doc' => [
-                                    'job_id' => $jobId,
-                                    'question_id' => @$jd->id,
-                                    'application_id' => $this->application->id,
-                                    'job_detail_value' => @$jd->detail_value,
-                                    'application_detail_value' => null,
-                                    'created_at' => now()->toIso8601String(),
-                                    'updated_at' => now()->toIso8601String(),
-                                ],
-                                'doc_as_upsert' => true, // 🔥 key to avoiding conflicts
-                            ],
-                        ]);
-                    }
-
-                    $inc++;
-
-                }
-            }
-        }
+        // Intent: V4 CQRS Read Optimization - Eradicate legacy write-on-read loops during candidate drawer GET request.
+        // Un-scored skills and un-answered questions are handled as virtual in-memory projections on the read path.
+        // Database mutations are strictly deferred until a recruiter explicitly scores skills or submits answers.
 
         $this->client_contuser_arr = ($this->job->client_contact_info_jobs);
         $this->clientjobAssignListCaptain = '';
@@ -3587,6 +3611,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
             ->where('job_metronics_skills.job_id', '=', $this->job_id)
             ->get();
+
+        // Intent: V4 CQRS - Virtual in-memory defaults for non-evaluated skills to preserve exact UI parity without SQL writes.
+        if ($this->jobSkill) {
+            foreach ($this->jobSkill as $sk) {
+                if ($sk->rating === null) {
+                    $sk->rating = 0;
+                }
+                if ($sk->skill_value === null) {
+                    $sk->skill_value = 0;
+                }
+            }
+        }
         // dd($this->jobSkill);
 
         $this->skillShow = true;
@@ -3617,8 +3653,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ];
 
         $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->job_additional_detail = empty($response['hits']['hits']) ? null : array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+        if (! empty($response['hits']['hits'])) {
+            $this->job_additional_detail = array_map(fn ($hit) => $hit['_source'], $response['hits']['hits']);
+        } else {
+            // Intent: V4 CQRS - Virtual in-memory projection for screening questions; prevents SQL insert on GET.
+            $jobAdditionalDetail = DB::table('job_additional_detail')->where('job_id', $this->job_id)->orderBy('id', 'ASC')->get();
+            $this->job_additional_detail = $jobAdditionalDetail->map(function ($jd) {
+                return (object) [
+                    'job_id' => (int) $this->job_id,
+                    'question_id' => (int) $jd->id,
+                    'application_id' => (int) $this->application->id,
+                    'job_detail_value' => $jd->detail_value,
+                    'application_detail_value' => null,
+                ];
+            })->all();
+        }
 
         // dd($this->job_id,$this->application->id,$this->job_additional_detail);
 
@@ -3841,6 +3890,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'id' => $id,
                 'error' => $e->getMessage(),
             ]);
+
             return Reply::dataOnly(['status' => 'error', 'message' => 'Unable to render candidate details. Please try again.']);
         }
 

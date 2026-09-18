@@ -1,360 +1,351 @@
-# V4 Candidate Drawer Architecture: 0% Server Load, 0% MySQL, 0% Elasticsearch
+# V4 Candidate Drawer Architecture: Zero-Read-Path Enterprise Specification
 
-> **Document Version:** 4.0.0  
-> **Status:** Architecture Blueprint & Upgrade Specification  
-> **Target System:** JERO ATS — Service Company / Product Company / Staffing Company Candidate Drawer (`showdetail`)  
+> **Document Version:** 5.0.0 (Phase-Wise Enterprise Implementation Blueprint)  
+> **Status:** Approved Phased Execution Specification & Feature Preservation Charter  
+> **Target System:** JERO ATS — Service Company only (`showdetail`)  
 > **Module Path:** `resources/views/service_company/job-applications/showdetail.blade.php`, `app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php`
 
 ---
 
-## 1. Architectural Cross-Check: MySQL Writes vs. Elasticsearch Reads
+## 1. Executive Mandate & Feature Preservation Charter
 
-### 1.1 The User's Mental Model Validation
-> **User Statement:**  
-> *"For any view data we normally use Elasticsearch and for add, edit, delete we use MySQL for real-time update. Kindly cross check, I can be wrong."*
+### 1.1 Non-Negotiable Core Principle: Zero Business Logic Disruption
+**This architecture upgrade is strictly a performance, CQRS, and zero-read-path caching transformation.**
 
-### 1.2 The Verdict: 100% CORRECT (The Gold-Standard CQRS Architecture)
-Your architectural concept is **completely right**. In fact, it is the industry-standard **CQRS (Command Query Responsibility Segregation)** pattern used by top-tier enterprise SaaS systems (LinkedIn, Stripe, GitHub):
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           JERO ATS CQRS ARCHITECTURE                    │
-└─────────────────────────────────────────────────────────────────────────┘
-
-  [COMMANDS / MUTATIONS: Add, Edit, Delete, Status Change]
-           │
-           ▼
-     ┌───────────┐
-     │   MySQL   │ ◄─── Single Source of Truth (ACID, Row-level Locking,
-     └─────┬─────┘      Foreign Keys, Referential Integrity, Transactions)
-           │
-           │ Domain Events / DB Listeners / Horizon Queue
-           ▼
-  [EVENT SYNCHRONIZATION: SyncToElasticsearchJob]
-           │
-           ▼
-     ┌───────────┐
-     │ Elastic-  │ ◄─── Read-Optimized Document Store (Denormalized,
-     │  search   │      Zero Table Joins, Full-Text Search, Sub-10ms Lookup)
-     └─────┬─────┘
-           │
-           ▼
-  [QUERIES / PROJECTIONS: Views, Listing Tables, Candidate Drawer, Search]
-```
-
-### 1.3 Why This Division is Non-Negotiable
-
-| Operation Type | Target Store | Why? | Anti-Pattern to Avoid |
-| :--- | :--- | :--- | :--- |
-| **Write Operations**<br>(Add candidate, Edit skills, Change status, Add note, Delete profile) | **MySQL** (`dbmaster`) | - **ACID Transactions**: Atomic commits across applications, candidate skills, notes, and audit logs.<br>- **Data Integrity**: Unique constraints (preventing duplicate email/phone), foreign keys.<br>- **Strict Consistency**: No lost updates or write skew. | **Writing directly to Elasticsearch first** or treating Elasticsearch as the primary store without MySQL backing. |
-| **Read Operations**<br>(Candidate Drawer, CV Tracker, App Tracker, Search filters, Facets) | **Elasticsearch** (7.17) | - **Zero Table Joins**: All related candidate data (skills, experience, job questions, status) pre-indexed in one document.<br>- **High Read Throughput**: Prevents reading locks on MySQL transactional tables.<br>- **Speed**: Sub-millisecond inverted index lookups. | **Falling back to raw MySQL queries on read paths** or executing 15+ table joins inside controllers. |
-| **The Write-on-Read Anti-Pattern** | **NEVER ALLOWED** | In legacy code, opening a candidate drawer executed 10+ SQL `INSERT` statements to create empty skill rows. **A read request (`GET /show`) must NEVER perform database writes.** | Executing SQL `insert` or ES `index` operations during a drawer read request. |
-
----
-
-## 2. The Core Challenge: How to Achieve TRUE 0% Load Across All Three Tiers
-
-To achieve:
-- **0% Server Load** (0% PHP execution, 0% FrankenPHP worker threads, 0% CPU cycles)
-- **0% MySQL Queries** (0 database hits)
-- **0% Elasticsearch Load** (0 cluster query roundtrips, 0 node CPU)
-
-We must understand an immutable engineering law:
-
-> **The fastest, lowest-load server request is the request that NEVER reaches the server.**
-
-If an HTTP request reaches PHP, even an optimal Elasticsearch query consumes:
-1. Web server thread & connection pool slot.
-2. PHP execution environment & memory allocation.
-3. Elasticsearch network I/O and query execution.
-4. Blade view compilation / string rendering.
-5. Network bandwidth to transmit 300KB–600KB of HTML.
-
-Therefore, **true 0% load on read** is achieved by shifting the query response resolution to the **Client Tier (Browser RAM, CacheStorage, Service Worker)** and the **Edge Tier (Cloudflare/Redis)**, paired with **real-time event-driven cache eviction**.
-
----
-
-## 3. All Possible Scenarios to Achieve 0% Server, 0% MySQL, 0% ES Load
-
-Here are all the viable architectural scenarios to deliver the candidate drawer with zero server, zero database, and zero search engine load:
+Under no circumstances will any existing feature, user workflow, modal, form input, Metronic UI style, or business calculation be altered, degraded, or removed.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                   V4 CANDIDATE DRAWER MULTI-TIER ZERO-LOAD PIPELINE                   │
+│                        JERO ATS FEATURE PRESERVATION CHARTER                           │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 
- [User Clicks Candidate Row]
-              │
-              ▼
-   ┌──────────────────────┐
-   │ SCENARIO 1 & 2:      │   HIT (0ms)
-   │ Browser RAM Map      ├─────────────► [RENDER INSTANTLY IN 0ms]
-   │ + Optimistic Shell   │               (0% Server | 0% MySQL | 0% ES)
-   └──────────┬───────────┘
-              │ MISS
-              ▼
-   ┌──────────────────────┐
-   │ SCENARIO 4:          │   HIT (2-5ms)
-   │ IndexedDB /          ├─────────────► [HYDRATE FROM PERSISTENT STORAGE]
-   │ CacheStorage         │               (0% Server | 0% MySQL | 0% ES)
-   └──────────┬───────────┘
-              │ MISS
-              ▼
-   ┌──────────────────────┐
-   │ SCENARIO 5:          │   304 NOT MODIFIED (10ms)
-   │ HTTP Conditional GET ├─────────────► [SERVE FROM BROWSER HTTP CACHE]
-   │ (ETag / If-None-Match│               (0% MySQL | 0% ES | ~0% Server CPU)
-   └──────────┬───────────┘
-              │ MISS / STALE
-              ▼
-   ┌──────────────────────┐
-   │ SCENARIO 6:          │   HIT (1-3ms)
-   │ Redis Tenant Cache   ├─────────────► [RETURN PRE-RENDERED PAYLOAD]
-   │ (Pre-rendered JSON)  │               (0% MySQL | 0% ES | ~1% Server CPU)
-   └──────────┬───────────┘
-              │ MISS
-              ▼
-   ┌──────────────────────┐
-   │ CQRS READ PATH:      │
-   │ Pure Elasticsearch   ├─────────────► [RESOLVE FROM ELASTICSEARCH]
-   │ Multi-Get Pipeline   │               (0% MySQL | Background Warm Redis & Client RAM)
-   └──────────────────────┘
+  [EXISTING SERVICE COMPANY CANDIDATE DRAWER SCENARIOS — 100% PRESERVED]
+  ├─ 1. Hero Profile Card:        Avatar, Full Name, Candidate ID, Status Badge, Share Profile
+  ├─ 2. Action Controls:          Shortlist, Reject, Change Stage, Add to Bench, Schedule
+  ├─ 3. 6 Pipeline Stat Cards:    Exp, Notice Period, Current CTC, Expected CTC, Match %, Status
+  ├─ 4. Profile Overview Tab:     Candidate dossier, summary, parsed experience & education
+  ├─ 5. Skill Rating Drawer:      #jw-skill-drawer interactive star rating & experience update
+  ├─ 6. Resume Download Center:   .rdc-drawer 6 download format cards, coin balance, download
+  ├─ 7. Notes & Feedback Tab:     Public notes, private notes, team comments, interview feedback
+  ├─ 8. Timeline Tab:             Candidate stage transitions, audit history, timestamped logs
+  ├─ 9. Interview Tab:            Slot selection, interviewer booking, timezone-aware schedules
+  ├─ 10. Screening Questions:     Custom job-wise questionnaire answers and evaluator scores
+  └─ 11. Resume Viewer:           Embedded direct PDF viewer & candidate CV download triggers
+```
+
+### 1.2 Target System Scope
+This specification applies **strictly to `JERO ATS — Service Company only`**. It targets the candidate drawer invoked from **CV Tracker**, **App Tracker**, and **Job Applications** (`service_company.job-applications.showdetail`).
+
+---
+
+## 2. Architectural Foundation: CQRS & Zero-Read-Path Guarantee
+
+### 2.1 CQRS Principle: MySQL Writes vs. Elasticsearch Reads
+JERO ATS enforces strict **Command Query Responsibility Segregation (CQRS)**:
+- **MySQL (Single Source of Truth):** ACID transactions, row locks, foreign keys, and audit integrity for all mutations (scoring, status change, adding notes).
+- **Elasticsearch 8.12.x (Read Projections):** Pre-joined, denormalized indices (`ELASTIC_CANDIDATES`, `ELASTIC_JOBS`) for lightning-fast, zero-join read queries.
+
+### 2.2 The Zero-Read-Path Guarantee
+> **Explicit Architectural Guarantee:**  
+> **For an authorized, non-expired, schema-compatible, hydrated candidate projection present in L1 browser RAM, drawer opening performs zero HTTP requests and zero server-side data-store reads.**
+
+```text
+====================================================================
+WARM / HYDRATED CANDIDATE DRAWER OPEN METRICS
+====================================================================
+Application HTTP Requests:          0
+MySQL Read Queries:                 0
+MySQL Write Operations:             0
+Elasticsearch Read Queries:         0
+Server-Side Blade Compilation:      0
+Network Payload Transferred:        0 bytes
+Network Round-Trip Latency:         0ms
+Client-Side Cache Lookup:           <1ms (Browser RAM Map)
+Model Hydration to DOM:             <5ms
+First Visual Paint Target:          <16ms (Next Animation Frame, 60fps)
+====================================================================
 ```
 
 ---
 
-### Scenario 1: Client-Side In-Memory RAM Cache (`window.__candidateDrawerCache`)
-- **How It Works**:
-  - The browser maintains a client-side JavaScript memory cache: `window.__candidateDrawerCache = new Map()`.
-  - When Candidate #1042 is retrieved for the first time, the rendered HTML payload is stored: `window.__candidateDrawerCache.set(1042, response.view)`.
-  - When the recruiter closes the drawer and clicks on Candidate #1042 again, or flips back and forth between candidates during evaluation:
-    - The click handler intercepts the event before network dispatch.
-    - Resolves the drawer HTML directly from JavaScript RAM.
-    - Immediately calls `KTDrawer.getInstance().show()`.
-- **Performance Impact**:
-  - **Latency:** **0ms** (Instantaneous).
-  - **Server Load:** **0%** (Zero network requests sent).
-  - **MySQL Load:** **0%**.
-  - **Elasticsearch Load:** **0%**.
+## 3. Phase-Wise Execution Blueprint (Zero-Risk Phased Delivery)
+
+To guarantee that no existing features or business logic break during development, the upgrade is broken into **five sequential, independently testable phases**. Each phase delivers immediate performance gains while preserving 100% backward compatibility.
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        PHASE-WISE UPGRADE IMPLEMENTATION ROADMAP                       │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+
+  [PHASE 1: Backend CQRS & Write-on-Read Eradication]
+     │ (Zero UI touch — fixes legacy controller queries & loops)
+     ▼
+  [PHASE 2: Client L1 RAM Engine & Throttled Prefetching]
+     │ (Zero Blade changes — caches existing rendered responses in browser memory)
+     ▼
+  [PHASE 3: Real-Time Reverb Proactive Push & Outbox]
+     │ (Background real-time sync — pushes updated state to active browser tabs)
+     ▼
+  [PHASE 4: Modular Sub-Tab Decomposition]
+     │ (Splits 10,978-line showdetail into identical partials — reduces initial load 90%)
+     ▼
+  [PHASE 5: L2 Persistent Storage, Cross-Tab Purge & Direct R2 Storage]
+       (Enterprise durability — IndexedDB, cross-tab BroadcastChannel, direct R2 resumes)
+```
 
 ---
 
-### Scenario 2: Optimistic Shell Hydration from Active Table Row (Visual 0ms Pop)
-- **How It Works**:
-  - In CV Tracker and App Tracker, the active candidate table row **already contains 80% of the drawer's header data** in DOM `data-*` attributes:
-    - Candidate Name (`data-full-name`)
-    - Current Designation & Company (`data-designation`, `data-company`)
-    - Years of Experience (`data-total-exp`)
-    - Location (`data-city`, `data-state`)
-    - Match Percentage (`data-match-pct`)
-    - Notice Period (`data-np`)
-    - Salary (`data-salary`)
-    - Candidate Status (`data-status`)
-    - Candidate Photo / Avatar URL (`data-photo`)
-  - The instant the user clicks the row:
-    - The drawer transitions from closed to open in **0ms visual response time**.
-    - The header card, candidate avatar, status badge, and key metrics render immediately from the row's attributes into a pre-compiled skeleton.
-    - The user never stares at a blank drawer or spinning loading screen.
-- **Performance Impact**:
-  - **Visual Response:** **0ms** perceptual latency.
-  - **Perceived Load:** Zero UI stall or layout shift.
+### Phase 1: Backend CQRS & Write-on-Read Eradication
+- **Primary Goal:** Eliminate all MySQL writes and redundant queries during drawer read requests (`GET /show`), keeping the returned HTML and business logic 100% identical.
+- **Risk Level:** **Zero (Backend only; zero UI/DOM changes)**
+
+#### Key Implementation Actions:
+1. **Eradicate Write-on-Read Loops:**
+   - In `ServiceCompanyJobApplicationController::show()` (lines 3515–3550), remove the loops executing `DB::table('candidate_job_skill_exp')->insert()` and Elasticsearch `deleteByQuery`/`index` calls during HTTP GET.
+   - For skills not yet scored by recruiters, generate **virtual in-memory PHP read objects**:
+     ```php
+     $virtualSkill = (object) [
+         'id'           => null,
+         'job_skill_id' => $skill->id,
+         'skill_name'   => $skill->skill_name,
+         'rating'       => 0,
+         'skill_value'  => 0,
+         'is_evaluated' => false,
+     ];
+     ```
+   - When a recruiter clicks to score a skill, the existing `JobSkillUpdate` POST endpoint commits to MySQL as normal.
+2. **Pure Elasticsearch Candidate & Job Resolution:**
+   - Resolve candidate dossier purely from `ELASTIC_CANDIDATES` and job metadata from `ELASTIC_JOBS`.
+   - Remove redundant table joins (`job_metronics_skills`, `application_additional_detail`) from the read path.
+3. **Verification & Parity Check:**
+   - Compare the HTML output of legacy `show()` vs. Phase 1 `show()` using automated diffing tools. The rendered DOM structure, CSS classes, attributes, and values must be **100% byte-for-byte identical**.
 
 ---
 
-### Scenario 3: Hover-Triggered Intent Prefetching (Predictive Background Warming)
-- **How It Works**:
-  - Behavioral telemetry shows that human users spend **150ms to 400ms** hovering over a table row or candidate name link before their finger completes the physical mouse click.
-  - We attach a lightweight, debounced (120ms) `mouseenter` event to candidate links:
-    ```javascript
-    $(document).on('mouseenter', '.show-application-detail', function() {
-        const id = $(this).data('row-id');
-        if (id && !window.__candidateDrawerCache.has(id)) {
-            prefetchCandidateDrawer(id); // Background silent fetch into RAM Map
-        }
-    });
-    ```
-  - During the natural hover-to-click transition, the drawer payload is silently retrieved and saved in `window.__candidateDrawerCache`.
-  - When the user actually clicks, the payload is already sitting in browser memory.
-- **Performance Impact**:
-  - **Click-to-Open Latency:** **0ms** (drawer opens from RAM on the very first click).
-  - **Server Impact at Click Time:** **0%** load.
+### Phase 2: Client L1 RAM Engine & Throttled Prefetching
+- **Primary Goal:** Deliver instant (<16ms) drawer re-opens and 0ms network latency on hover without modifying the existing `showdetail.blade.php` view.
+- **Risk Level:** **Very Low (Additive JavaScript layer in master layout)**
+
+#### Key Implementation Actions:
+1. **Global Browser RAM Map:**
+   - In `service_company_layout.blade.php`, initialize:
+     ```javascript
+     window.__candidateDrawerCache = new Map();
+     ```
+   - When any candidate drawer is retrieved, cache the response keyed by `candidate_id`.
+   - When a recruiter clicks a candidate row:
+     - Check `window.__candidateDrawerCache.has(id)`.
+     - If present: hydrate the existing Metronic drawer container (`#kt_activitiesApplication`) immediately from RAM in **0ms network time**.
+     - If absent: dispatch AJAX, render, and store in RAM.
+2. **Optimistic Visual Shell Pop:**
+   - Table rows in CV Tracker & App Tracker already contain `data-*` attributes (`data-full-name`, `data-status`, `data-designation`, `data-salary`, `data-avatar`).
+   - Populate the drawer's header card and pipeline stat cards synchronously from DOM attributes on `click` before background operations complete.
+3. **Throttled Hover Prefetching:**
+   - Attach a debounced (120ms) `mouseenter` listener to candidate links:
+     - Limits maximum concurrent prefetches to **2**.
+     - Cancels via `AbortController` if the cursor leaves the link before 120ms.
+     - Bypasses prefetching if `navigator.connection.saveData === true` or on slow cellular networks (`2g`).
+4. **Dynamic CSRF Token Replenishment:**
+   - Whenever a drawer is mounted from cache, inject the active session CSRF token into all forms:
+     ```javascript
+     const activeCsrf = $('meta[name="csrf-token"]').attr('content');
+     $('#kt_activitiesApplication').find('input[name="_token"]').val(activeCsrf);
+     ```
+   - Completely prevents `HTTP 419 Page Expired` errors when submitting notes, ratings, or interview bookings.
 
 ---
 
-### Scenario 4: Persistent Offline/Cross-Session Storage via IndexedDB
-- **How It Works**:
-  - In-memory `Map()` caches are cleared on hard page reloads (`F5`).
-  - By integrating a lightweight `IndexedDB` key-value store (using `idb-keyval` or native IndexedDB):
-    - Rendered candidate drawers and structured resume metadata are persisted in the browser's local disk storage.
-    - Set with a Maximum Cache Capacity (e.g., 200 candidates per tenant) using an LRU (Least Recently Used) eviction policy.
-    - Survives page navigation, browser restarts, and tab closures.
-- **Performance Impact**:
-  - Even after logging in the next morning or refreshing the table, opening any previously viewed candidate takes **0 HTTP calls, 0% server load, 0% MySQL load, 0% ES load**.
+### Phase 3: Real-Time Reverb Proactive Push & Transactional Outbox
+- **Primary Goal:** When candidate data is updated by any recruiter, proactively push the updated state to all connected browser tabs so subsequent drawer opens require zero network reads.
+- **Risk Level:** **Low (Background event pipeline; does not block user transactions)**
 
----
+#### Key Implementation Actions:
+1. **Transactional Outbox in MySQL Master:**
+   - When a recruiter scores a skill, adds a note, or changes candidate status, insert an event record into `outbox_events` in the **same atomic database transaction** as the business update:
+     ```php
+     DB::transaction(function () use ($candidateId, $mutationData) {
+         // 1. Execute existing business update logic (100% preserved)
+         DB::table('add_job_wise_condidates')->where('id', $candidateId)->update($mutationData);
 
-### Scenario 5: HTTP Conditional Requests (`ETag` / `If-None-Match` & HTTP 304)
-- **How It Works**:
-  - Every candidate profile has a deterministic version token based on its Elasticsearch timestamp:
-    `ETag: W/"cand-{id}-v{updated_at_timestamp}-{view_filemtime}"`.
-  - When the browser sends an AJAX request for a candidate, it includes `If-None-Match: W/"..."`.
-  - The server/proxy compares the header:
-    - If the candidate record has not been modified in MySQL/ES, the server immediately halts processing and returns an empty **HTTP 304 Not Modified**.
-    - The controller does not compile Blade, does not query Elasticsearch, and does not transmit a 500KB payload.
-- **Performance Impact**:
-  - **Bandwidth:** 0 bytes payload (reduced from ~500 KB to ~300 bytes headers).
-  - **MySQL Load:** **0%**.
-  - **Elasticsearch Load:** **0%**.
-  - **Server CPU:** Reduced by 95%.
-
----
-
-### Scenario 6: Edge / Redis Warm Cache with Tenant Isolation
-- **How It Works**:
-  - When an Elasticsearch read query is executed for a candidate drawer, the rendered JSON payload is cached in Redis:
-    `Key: tenant:{company_id}:candidate_drawer:{candidate_id}:v{blade_version}`
-    `TTL: 60 minutes`
-  - Subsequent requests from any user within that company/tenant hit Redis directly in **1ms**.
-  - The request bypasses MySQL completely and bypasses Elasticsearch completely.
-- **Performance Impact**:
-  - **MySQL Load:** **0%**.
-  - **Elasticsearch Load:** **0%**.
-  - **Server Processing:** 1–2ms raw Redis read.
-
----
-
-### Scenario 7: Real-Time Cache Invalidation via WebSockets (Laravel Reverb / SSE)
-> **The Classic Problem:**  
-> *"If we cache candidate data in browser memory or Redis for 0% load, what happens when a recruiter edits candidate experience, changes status, or adds a screening note?"*
-
-- **The God-Level Solution: Event-Driven Push Eviction**:
-  1. Recruiter updates candidate details (MySQL transaction commits).
-  2. Laravel Model Observer / Event fires `CandidateUpdatedEvent`.
-  3. `CandidateUpdatedEvent` updates the Elasticsearch document asynchronously in queue.
-  4. Laravel **Reverb** (built-in WebSockets) broadcasts a lightweight message to the tenant's private channel:
+         // 2. Insert durable outbox event for async processing
+         DB::table('outbox_events')->insert([
+             'outbox_event_id'   => (string) Str::uuid(),
+             'aggregate_type'    => 'candidate',
+             'aggregate_id'      => $candidateId,
+             'event_type'        => 'candidate.updated',
+             'payload'           => json_encode($mutationData),
+             'created_at'        => now(),
+         ]);
+     });
+     ```
+2. **Idempotent Horizon Queue Worker:**
+   - Horizon worker consumes outbox events, updates Elasticsearch 8.12.x read projection, and generates the candidate JSON delta.
+3. **Monotonic Tri-Version Envelope Broadcast:**
+   - Broadcast `CandidateHydratedEvent` over Laravel Reverb private channel `company.{companyId}`:
      ```json
      {
-       "event": "candidate.invalidated",
-       "company_id": 142,
-       "candidate_id": 1042
+       "candidate_id": 1042,
+       "entity_version": 102,
+       "projection_version": 102,
+       "schema_version": 5,
+       "authorization_version": 18,
+       "updated_at": "2026-09-18T12:45:00Z",
+       "mutation_type": "status_updated",
+       "payload": { ... }
      }
      ```
-  5. The client-side browser listener receives the event:
+4. **Client Ingestion Validation:**
+   - The client listener checks all 3 version constraints before patching L1 RAM:
      ```javascript
-     window.Echo.private(`company.${companyId}`)
-         .listen('.candidate.invalidated', (e) => {
-             window.__candidateDrawerCache.delete(e.candidate_id);
-             // If the drawer for this candidate is currently open, silently re-render
-         });
+     const isNewer = !cached || event.entity_version > (cached.entity_version || 0);
+     const isSchemaCompatible = event.schema_version === CURRENT_DRAWER_SCHEMA_VERSION;
+     const isAuthorizationCompatible = event.authorization_version === CURRENT_AUTHORIZATION_VERSION;
+
+     if (isNewer && isSchemaCompatible && isAuthorizationCompatible) {
+         window.__candidateDrawerCache.set(event.candidate_id, event);
+         updateActiveTableRowDom(event.candidate_id, event.payload);
+     }
      ```
-  6. Redis cache tag `candidate:{id}` is simultaneously flushed.
-- **Performance Impact**:
-  - **100% Data Freshness**: The drawer is NEVER stale.
-  - **0% Server / DB Load on Reads**: Cache remains warm 99.9% of the time, invalidated ONLY upon actual MySQL writes.
+5. **Batched Bulk Actions:**
+   - Bulk mutations (e.g. rejecting 100 candidates) are automatically chunked into batches of 100 IDs per WebSocket message to prevent tab freezes.
 
 ---
 
-### Scenario 8: CQRS Virtual Read Models (Complete Elimination of Write-on-Read)
-- **How It Works**:
-  - Legacy `show($id)` contained synchronous loops:
-    - If `candidate_job_skill_exp` rows were missing for a job skill, it executed `DB::table('candidate_job_skill_exp')->insert()` in a loop, followed by Elasticsearch `deleteByQuery` and `index`.
-    - If `application_additional_detail` was missing, it executed another SQL insert loop.
-  - **V4 Rule**:
-    - If a candidate has not yet been evaluated for a required job skill, **do not write empty rows to MySQL**.
-    - Instead, instantiate a **virtual in-memory read object** in PHP:
-      ```php
-      $virtualSkill = (object) [
-          'id' => null,
-          'job_skill_id' => $skill->id,
-          'skill_name' => $skill->skill_name,
-          'rating' => 0,
-          'skill_value' => 0,
-          'is_evaluated' => false
-      ];
-      ```
-    - The template renders the empty stars and placeholder inputs identically.
-    - MySQL writes are strictly deferred until a recruiter physically inputs a rating or note and clicks "Save".
-- **Performance Impact**:
-  - Eliminates 10 to 30 MySQL write queries and 10 to 30 ES indexing calls per drawer open.
-  - MySQL Write Load on Read Path: **0%**.
+### Phase 4: Modular Sub-Tab Decomposition
+- **Primary Goal:** Decompose the 10,978-line monolithic `showdetail.blade.php` into modular Blade partials, reducing initial download payload by $\ge \mathbf{90\%}$ while preserving every line of HTML, modal, and script.
+- **Risk Level:** **Low (Strict 1-to-1 extraction; zero styling or logic changes)**
+
+#### Key Implementation Actions:
+1. **Deconstruct `showdetail.blade.php` into 9 Dedicated Partials:**
+   The master view becomes a clean coordinator including sub-partials:
+   - `partials/_drawer_hero_header.blade.php`: Candidate avatar, status badge, action buttons (Shortlist, Reject, Change Status).
+   - `partials/_drawer_pipeline_stats.blade.php`: 6 pipeline stat cards (Exp, Notice Period, Current CTC, Expected CTC, Match %, Status).
+   - `partials/_drawer_tab_overview.blade.php`: Primary dossier (loaded immediately on initial drawer open).
+   - `partials/_drawer_tab_timeline.blade.php`: Application activity log and history (loaded lazily on tab click).
+   - `partials/_drawer_tab_notes.blade.php`: Team notes, private notes, comments (loaded lazily on tab click).
+   - `partials/_drawer_tab_interviews.blade.php`: Interview rounds, slot booking, feedback (loaded lazily on tab click).
+   - `partials/_drawer_tab_questions.blade.php`: Screening questions & responses (loaded lazily on tab click).
+   - `partials/_drawer_side_skills.blade.php`: Interactive `#jw-skill-drawer` for scoring skills.
+   - `partials/_drawer_side_rdc.blade.php`: Resume Download Center `.rdc-drawer` and coin balance.
+2. **Lazy Sub-Tab Hydration:**
+   - Secondary tabs render a lightweight placeholder skeleton (`<div id="tab_timeline" data-loaded="false"></div>`).
+   - When a recruiter clicks a secondary tab, its partial is fetched via AJAX or populated from client cache.
+   - Initial drawer payload drops from **~580KB to ~60KB**.
+3. **Zero Pixel Shift Guarantee:**
+   - All Metronic CSS styles, responsive breakpoints (900px, 1100px, 1400px, 2560px), and layout classes are preserved exactly as currently written.
 
 ---
 
-### Scenario 9: Micro-Frontend / Sub-Tab Lazy Loading Architecture
-- **How It Works**:
-  - Currently, `showdetail.blade.php` is a massive template (10,700+ lines, ~570KB rendered HTML) because it renders all 6 tabs simultaneously:
-    1. Overview / Dossier / Resume Viewer *(Primary)*
-    2. Candidate Timeline *(Secondary)*
-    3. Applicant Notes *(Secondary)*
-    4. Interview Feedback History *(Secondary)*
-    5. Offer Tracker *(Secondary)*
-    6. Screening Questions *(Secondary)*
-  - Over 85% of recruiters opening a candidate drawer only inspect the **Overview & Resume Viewer**.
-  - **V4 Decomposition**:
-    - Initial drawer request loads **ONLY the Overview & Resume Viewer tab** (~60KB HTML instead of ~570KB).
-    - Secondary tabs contain lightweight placeholders (`<div id="tab_timeline" data-loaded="false"></div>`).
-    - When (and only when) a recruiter clicks the "Timeline" tab header:
-      - A lightweight sub-endpoint `/service_company/job-applications/timeline/{id}` is fetched via AJAX.
-      - Cached independently in client RAM.
-- **Performance Impact**:
-  - Initial drawer HTML payload reduced by **90%** (from 570KB to ~60KB).
-  - In-memory caching uses 10x less browser RAM.
-  - Initial render speed accelerates from 400ms to **15ms**.
+### Phase 5: L2 Persistent Storage, Cross-Tab Lifecycle & Direct R2 Storage
+- **Primary Goal:** Enterprise-grade session resilience across browser restarts, multi-tab logout security, and offloading resume bandwidth from application servers.
+- **Risk Level:** **Low (Infrastructure & storage optimizations)**
+
+#### Key Implementation Actions:
+1. **Scoped IndexedDB Storage with LRU Cap:**
+   - Stores up to 200 candidate models locally on disk under namespaced keys:
+     `jero_ats_{tenant_id}_{user_id}_{auth_version}`.
+   - Survives browser restarts and page refreshes (`F5`).
+2. **Cross-Tab BroadcastChannel & Deterministic Purge:**
+   - Coordinates multi-tab logout and session expiration across active ATS tabs:
+     ```javascript
+     const authChannel = new BroadcastChannel('jero_ats_auth_lifecycle');
+
+     function purgeLocalAtsStorage() {
+         window.__candidateDrawerCache.clear();
+         indexedDB.deleteDatabase(currentAtsDbName);
+         authChannel.postMessage({ action: 'PURGE_STORAGE' });
+     }
+
+     authChannel.onmessage = (msg) => {
+         if (msg.data.action === 'PURGE_STORAGE') {
+             window.__candidateDrawerCache.clear();
+             window.location.reload();
+         }
+     };
+
+     $(document).on('click', '#logout_button', purgeLocalAtsStorage);
+     $(document).ajaxError((event, jqXHR) => {
+         if (jqXHR.status === 401 || jqXHR.status === 419) {
+             purgeAllLocalAtsStorage();
+         }
+     });
+     ```
+3. **Direct Cloudflare R2 / AWS S3 Resumes with Authorized Presigning:**
+   - Resume metadata stores immutable object keys: `{ "resume_key": "resumes/cand_1042_hash.pdf" }`.
+   - Never persist pre-signed URLs in client cache.
+   - When the user opens the "Resume" tab, the browser requests a fresh 5-minute pre-signed URL via an authorized API:
+     `POST /service_company/candidate/{id}/resume-auth-token`.
+   - Resume streams directly from Cloudflare R2, keeping FrankenPHP server bandwidth and worker threads at **0% load**.
+4. **Multi-Factor Drift Detection & State Machine Fallback:**
+   - Scheduled job compares `entity_version`, `projection_version`, and SHA-256 document checksums between MySQL and Elasticsearch 8.12.x.
+   - Finite-state recovery machine ensures graceful degradation during ES, Redis, or network outages.
 
 ---
 
-## 4. Architectural Comparison: Legacy vs. Optimized vs. V4 God-Level
+## 4. Current Scenario Preservation Matrix
 
-| Metric | Legacy Monolithic (`show()`) | Optimized Pure ES Read | V4 God-Level 0-Load Architecture |
+This matrix maps every existing candidate drawer scenario in `showdetail.blade.php` to its V4 implementation, proving **100% behavioral parity**:
+
+| Current ATS Scenario / Feature | Existing Implementation | V4 Upgraded Implementation | Business Logic Change? |
 | :--- | :--- | :--- | :--- |
-| **MySQL Read Queries** | 15–22 queries per open | 0 queries | **0 queries (0% load)** |
-| **MySQL Write Operations** | 5–15 inserts per open (Write-on-Read) | 0 writes | **0 writes (0% load)** |
-| **Elasticsearch Read Queries** | 4–6 searches per open | 1–2 batched searches | **0 searches on repeated/pre-warmed opens** |
-| **Initial Drawer Latency** | 1,800ms – 3,500ms | 150ms – 300ms | **0ms (Visual Pop) / <50ms (Full Shell)** |
-| **Repeated Drawer Latency** | 1,800ms – 3,500ms | 150ms – 300ms | **0ms (from browser RAM Map)** |
-| **Server CPU / Worker Utilization** | 100% per request (blocking worker) | 20% (lean controller) | **0% (resolved client-side)** |
-| **Network Payload Size** | ~570 KB | ~570 KB | **~60 KB (Lazy Sub-Tabs)** |
-| **Offline / Airplane Mode Resilience** | Fails completely | Fails completely | **Fully functional from IndexedDB** |
-| **Data Freshness Guarantee** | High (direct DB) | Eventual consistency (~1s) | **Real-Time Push (Reverb WebSockets)** |
+| **Candidate Hero Header** | Renders candidate avatar, name, current designation, status dropdown, action buttons. | Populated in 0ms from active table row `data-*` attributes; cached in RAM. | **NONE (100% Identical)** |
+| **Candidate Status Update** | AJAX POST to `changeStatusApplication`; updates MySQL & UI badge. | Same endpoint; commits MySQL + writes Outbox event; updates RAM cache. | **NONE (100% Identical)** |
+| **6 Pipeline Stat Cards** | Displays Experience, Notice Period, Current CTC, Expected CTC, Match %, Status. | Rendered in `_drawer_pipeline_stats.blade.php`; identical Poppins styling. | **NONE (100% Identical)** |
+| **Profile Overview Dossier** | Overview tab displaying summary, parsed CV details, experience list, education. | Rendered immediately in `_drawer_tab_overview.blade.php` (~60KB initial shell). | **NONE (100% Identical)** |
+| **Interactive Skill Rating Drawer** | Clicks "Rate Skills" $\to$ `#jw-skill-drawer` slides in from right; star clicks update rating. | Identical side drawer markup; POST `JobSkillUpdate` commits to MySQL & invalidates cache. | **NONE (100% Identical)** |
+| **Resume Download Center (RDC)** | Clicks "Download CV" $\to$ `.rdc-drawer` slides in from right; 6 format cards + coins. | Identical markup in `_drawer_side_rdc.blade.php`; coin deduction & triggers preserved. | **NONE (100% Identical)** |
+| **Notes & Team Feedback** | Tab displays timeline comments, private notes form, and team evaluation notes. | Rendered in `_drawer_tab_notes.blade.php`; loaded lazily on tab header click. | **NONE (100% Identical)** |
+| **Candidate Timeline** | Vertical Metronic `timeline-3` component showing all historical audit events. | Rendered in `_drawer_tab_timeline.blade.php`; loaded lazily on tab click. | **NONE (100% Identical)** |
+| **Interview Booking & Slots** | Slot card grid, date picker, interviewer selection, timezone converter. | Rendered in `_drawer_tab_interviews.blade.php`; booking API calls 100% preserved. | **NONE (100% Identical)** |
+| **Screening Questions** | Displays question titles, recruiter answers, and evaluation scores. | Rendered in `_drawer_tab_questions.blade.php`; virtual read objects prevent GET inserts. | **NONE (100% Identical)** |
+| **Resume PDF Viewer** | PDF iframe viewer embedded in dossier or tab. | Displays PDF directly from authorized Cloudflare R2 presigned URL (0% server load). | **NONE (100% Identical)** |
 
 ---
 
-## 5. V4 Implementation Roadmap & Action Plan
+## 5. Architectural Comparison: Legacy vs. V4 Phased Delivery
 
-To implement the V4 Candidate Drawer with 0% server, 0% MySQL, and 0% ES load safely without breaking existing ATS business logic, follow this four-phase sequence:
-
-### Phase 1: Client-Side Zero-Load Engine (Immediate UI Win)
-1. Initialize global cache `window.__candidateDrawerCache = new Map()` in `service_company_layout.blade.php`.
-2. Update drawer opener to check `__candidateDrawerCache.get(id)` before dispatching AJAX.
-3. Add optimistic skeleton hydration from active table row `data-*` attributes for visual 0ms pop.
-4. Add debounced (120ms) `mouseenter` hover listener to prefetch candidate drawers silently in background.
-
-### Phase 2: Controller CQRS Hardening (Zero MySQL Reads)
-1. Eliminate `AddJobWiseCondidate::withoutGlobalScopes()->find($id)` from read path; resolve strictly via `ELASTIC_CANDIDATES`.
-2. Extract job skills, salary currency, and job spokesperson directly from `ELASTIC_JOBS` document.
-3. Eradicate write-on-read loops: replace SQL inserts with virtual in-memory PHP read objects for non-evaluated skills and questions.
-4. Resolve candidate status, company logo, and submitting user details from Elasticsearch indices (`ELASTIC_COMPANIES_INDEX`, `ELASTIC_USERS_LIST`).
-
-### Phase 3: Real-Time Invalidation & Multi-Tier Caching
-1. Bind Laravel Reverb WebSocket event (`candidate.mutated`) to client layout.
-2. Evict `window.__candidateDrawerCache` entry when a mutation broadcast is received for that candidate ID.
-3. Configure HTTP `ETag` and conditional `304 Not Modified` headers on candidate drawer JSON responses.
-4. Add Redis warm caching for tenant-level candidate drawer responses.
-
-### Phase 4: Sub-Tab Lazy Loading & IndexedDB Persistence
-1. Decompose `showdetail.blade.php` into modular sub-views:
-   - `partials/_drawer_overview_dossier.blade.php` (Loaded immediately)
-   - `partials/_drawer_timeline.blade.php` (Loaded on tab click)
-   - `partials/_drawer_notes.blade.php` (Loaded on tab click)
-   - `partials/_drawer_feedback.blade.php` (Loaded on tab click)
-2. Implement IndexedDB persistent client storage to retain viewed candidate dossiers across page reloads and browser sessions.
+| Architectural Metric | Legacy Monolithic (`show()`) | Phase 1 & 2 (Quick Wins) | Phase 3, 4 & 5 (Full V4 Architecture) |
+| :--- | :--- | :--- | :--- |
+| **MySQL Read Queries** | 15–22 queries per open | 0 queries | **0 queries on warm open** |
+| **MySQL Write Operations** | 5–15 inserts per open (Write-on-Read) | **0 writes** | **0 writes (Write-on-Read eliminated)** |
+| **Elasticsearch Reads** | 4–6 searches per open | 1 search | **0 searches on hydrated client open** |
+| **Warm Drawer Open Network**| 1 full HTTP request (~580KB) | 0 HTTP requests (from RAM) | **0 HTTP requests (0 network latency)** |
+| **Initial Drawer Latency** | 1,800ms – 3,500ms | 150ms – 300ms | **<16ms target (0ms network round trips)** |
+| **Read Path on Updated Data** | 100% DB / PHP hit | 100% ES / PHP hit | **Zero-Read-Path (via Reverb Push)** |
+| **Template Size** | 10,978 lines (monolith) | 10,978 lines | **Modular partials (~60KB initial shell)** |
+| **Client Memory Footprint** | ~580 KB per candidate | ~580 KB per candidate | **~8 KB Normalized Model (98.6% drop)** |
+| **Multi-Tab Logout Security**| None | None | **BroadcastChannel deterministic purge** |
+| **Resume Transport** | Local file link | Local file link | **Authorized Direct Cloudflare R2 Stream** |
+| **CSRF Form Reliability** | Fails on stale pages (419) | Dynamic Token Injection | **Zero 419 Page Expired errors** |
+| **Elasticsearch Version** | Legacy / Mixed | Elasticsearch 8.12.x | **Elasticsearch 8.12.x Cluster** |
 
 ---
 
-## 6. Summary Checklist for Engineering Teams
+## 6. Engineering Acceptance Criteria & Phase Verification Plan
 
-- [x] **CQRS Validated**: MySQL is strictly for Writes/Mutations; Elasticsearch is strictly for Reads/Queries.
-- [x] **Write-on-Read Eradicated**: `GET` routes never execute SQL `insert` or ES `index` calls.
-- [x] **Zero Server / DB Load Achieved**: Repeat candidate views, tab switches, and hover-prefetched candidates resolve in 0ms from client-side RAM with zero network requests.
-- [x] **Real-Time Accuracy Guaranteed**: WebSocket invalidation ensures cached candidate data is evicted immediately upon MySQL data updates.
-- [x] **Defensive Error Handling**: Null-coalescing on all computed banner attributes prevents HTTP 500 Blade rendering failures.
+Each phase must satisfy its corresponding acceptance criteria before the next phase is merged:
+
+### Phase 1 Acceptance Criteria (Backend CQRS)
+- [ ] **AC-01 (CQRS Read Cleanliness):** Automated integration test verifies the `show()` candidate-resolution path executes **zero MySQL queries** and **zero Elasticsearch mutations** (unrelated authentication/session middleware queries excluded from the measurement boundary).
+- [ ] **AC-02 (Write-on-Read Eradication):** Database query listener asserts that zero records are inserted into `candidate_job_skill_exp` during drawer read operations.
+- [ ] **AC-03 (DOM Byte-Parity):** Automated HTML comparison confirms that the rendered HTML of Phase 1 matches legacy HTML with zero missing tags, classes, or attributes.
+
+### Phase 2 Acceptance Criteria (Client L1 Engine)
+- [ ] **AC-04 (Zero-Read-Path Warm Drawer):** Chrome DevTools Network Tab verifies **zero HTTP requests** dispatched when re-opening an already-viewed candidate drawer under the same authorization context, same schema version, and non-expired cache.
+- [ ] **AC-05 (Dynamic CSRF Ingestion):** Action form submissions inside a drawer opened from cached storage successfully submit with a valid CSRF token without throwing `HTTP 419`.
+- [ ] **AC-06 (Hover Prefetch Throttling):** Hovering rapidly over 20 candidate rows triggers a maximum of 2 concurrent network requests and cancels aborted requests immediately.
+
+### Phase 3 Acceptance Criteria (Real-Time Push)
+- [ ] **AC-07 (Monotonic Version Ingestion):** Unit test verifies that an incoming WebSocket event with `entity_version: 101` is rejected if the local cache already holds `entity_version: 102`.
+- [ ] **AC-08 (Effective Permission Isolation):** Automated security test confirms User A (Junior Recruiter) cannot view salary fields cached by User B (Admin) within the same company.
+- [ ] **AC-09 (Bulk Event Throttling):** Bulk mutation of 150 candidates dispatches batched payloads without triggering browser layout thrashing or WebSocket disconnection.
+
+### Phase 4 Acceptance Criteria (Sub-Tab Modularization)
+- [ ] **AC-10 (Payload Reduction Target):** Initial drawer payload is verified at $\le \mathbf{70KB}$ (a $\ge 88\%$ reduction from 580KB).
+- [ ] **AC-11 (Side Drawer Parity):** Rating skills via `#jw-skill-drawer` and downloading CVs via `.rdc-drawer` function identically without CSS or JavaScript errors.
+
+### Phase 5 Acceptance Criteria (Enterprise Durability)
+- [ ] **AC-12 (Cross-Tab Logout Purge):** Browser test confirms that logging out in Tab A broadcasts across `BroadcastChannel`, instantly clearing RAM and deleting IndexedDB candidate stores in Tabs B and C.
+- [ ] **AC-13 (Authorized Direct Resume Fetching):** Automated test asserts that the resume-presign endpoint denies unauthorized requests, and authorized downloads stream directly from Cloudflare R2 / S3 without proxying data through FrankenPHP worker threads.
+- [ ] **AC-14 (Multi-Factor Projection Reconciliation):** Automated test simulates an Elasticsearch cluster restart; the Drift Detector job identifies and reconciles all diverged candidate projections via checksum verification within 5 minutes.
+- [ ] **AC-15 (Mid-Session Security Revocation):** When a user's effective authorization version changes during an active session (e.g. admin revokes salary view permission), all affected cached candidate projections are invalidated and inaccessible fields are purged in real time without requiring a full browser restart.
