@@ -404,7 +404,7 @@
                         $jobId = $row->id;
                         // dd( $jobAssign);
 
-                        $company_name_agency = DB::table('companies')->where('id', $row->to_company_id)->first()->company_name;
+                        $company_name_agency = DB::table('companies')->where('id', auth()->user()->company_id)->first()->company_name ?? '';
                        
 
                         $partnersCount = $jobAssign->where('company_id', $row->to_company_id)->where('job_id', $jobId)->count();

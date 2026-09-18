@@ -322,7 +322,7 @@
             $html = '';
             if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
                 $jobId = $row->id;
-                $company_name_agency = optional(DB::table('companies')->where('id', $row->to_company_id)->first())->company_name;
+                $company_name_agency = optional(DB::table('companies')->where('id', auth()->user()->company_id)->first())->company_name;
                 $html .= '<div class="hm-name">'.ucwords(mb_substr(@$company_name_agency, 0, 30)).'</div>';
             } else {
                 $jobId = $row->id;

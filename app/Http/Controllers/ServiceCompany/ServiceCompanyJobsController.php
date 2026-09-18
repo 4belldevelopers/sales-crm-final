@@ -2893,6 +2893,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $parentCompanyIds = collect($data)->pluck('comId')
                 ->merge(collect($relationMap)->pluck('from_company_id'))
                 ->merge(collect($data)->pluck('companyidcount'))
+                ->merge([$company_id])
                 ->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
             $companiesMap = ! empty($parentCompanyIds)
                 ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('company_name', 'id')->toArray()
@@ -3223,7 +3224,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $agencyCompanyName = '';
                 $agencyCount = 0;
                 if ($isDirectClientJob) {
-                    $agencyCompanyName = $companiesMap[$row->companyidcount] ?? '';
+                    $agencyCompanyName = $companiesMap[$company_id] ?? (DB::table('companies')->where('id', $company_id)->value('company_name') ?? '');
                 } else {
                     $agencies = GeneralMethod::agencyCount($company_id, $row->id, 1);
                     $agencyCount = is_array($agencies) || $agencies instanceof \Countable ? count($agencies) : 0;
