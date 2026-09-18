@@ -48,8 +48,7 @@ jobs:
             php artisan view:cache
             echo ">> Ensuring storage and cache permissions"
             chown -R www:www storage bootstrap/cache || true
-            chmod -R 775 storage bootstrap/cache || true
-            chmod -R 777 storage/logs || true
+            chmod -R 777 storage bootstrap/cache || true
             echo ">> Restarting queue workers & Horizon"
             php artisan queue:restart || true
             php artisan horizon:terminate || true
