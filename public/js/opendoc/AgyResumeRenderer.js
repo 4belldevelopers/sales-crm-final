@@ -308,12 +308,15 @@
 
   function cityOnly(value) {
     value = clean(value, '--');
-    if (isGap(value)) return '--';
+    if (isGap(value) || /^\d+$/.test(String(value).trim())) return '--';
     var commaParts = value.split(',').map(function (part) { return clean(part, ''); }).filter(Boolean);
-    if (commaParts.length > 1) return commaParts[0];
+    var candidateCity = commaParts.length > 0 ? commaParts[0] : value;
+    if (/^\d+$/.test(String(candidateCity).trim())) return '--';
+    if (commaParts.length > 1) return candidateCity;
     var states = 'andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
     var pattern = new RegExp('\\s+(' + states + ')$', 'i');
-    return clean(value.replace(pattern, ''), '--');
+    var res = clean(value.replace(pattern, ''), '--');
+    return /^\d+$/.test(String(res).trim()) ? '--' : res;
   }
 
   function matchTone(score, completeness) {
@@ -1700,11 +1703,11 @@
       var exp = Number(skill.exp || 0);
       var expText = clean(skill.expText, '');
       var stars = [];
-      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 6.4, margin: [0, 0.5, 1.2, 0] });
+      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 7.7, margin: [0, 0.5, 1.2, 0] });
       rows.push([
         { text: clean(skill.name).toUpperCase(), style: 'tableCellBold', alignment: 'left' },
         { text: expText !== '' && expText !== '--' ? expText : (exp > 0 ? exp + ' Year' + (exp > 1 ? 's' : '') : '--'), style: 'tableCell', color: '#334155' },
-        { columns: stars, columnGap: 0, alignment: 'center', margin: [20, 5, 0, 5] }
+        { columns: stars, columnGap: 0, alignment: 'center', margin: [17, 5, 0, 5] }
       ]);
     });
     return rows;
@@ -1724,8 +1727,11 @@
       { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
     ];
     var cells = slots.map(function (row) {
-      var status = map[row.key] || map[row.fallbackKey] || '--';
-      var verified = /verified|confirmed|completed|discussed|shared/i.test(status);
+      var status = map[row.key] || map[row.fallbackKey] || '-';
+      if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+      var verified = /verified|confirmed|completed|shared/i.test(status);
+      var isBlank = (status === '-' || status === '--' || !status);
+      var textColor = verified ? '#16a34a' : (isBlank ? '#94a3b8' : '#b45309');
       return {
         stack: [
           {
@@ -1739,7 +1745,7 @@
             columnGap: 0,
             margin: [0, 0, 0, 7]
           },
-          { text: status, fontSize: 6.5, bold: true, color: verified ? '#16a34a' : '#b45309', alignment: 'center', margin: [0, 0, 0, 0] }
+          { text: status, fontSize: 6.5, bold: true, color: textColor, alignment: 'center', margin: [0, 0, 0, 0] }
         ],
         margin: [2, 7, 2, 7]
       };
@@ -1777,9 +1783,9 @@
         small: { fontSize: 7.4, color: '#64748b' },
         sectionTitle: { fontSize: 8.2, bold: true, color: '#1d4ed8' },
         sectionTitleMuted: { fontSize: 8, bold: true, color: '#334155' },
-        tableHead: { fontSize: 7, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
-        tableCell: { fontSize: 7.2, color: '#334155', margin: [0, 6, 0, 6] },
-        tableCellBold: { fontSize: 7.2, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
+        tableHead: { fontSize: 8.4, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
+        tableCell: { fontSize: 8.6, color: '#334155', margin: [0, 6, 0, 6] },
+        tableCellBold: { fontSize: 8.6, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
         metricLabel: { fontSize: 6, color: '#64748b' },
         metricValue: { fontSize: 7.2, bold: true, color: '#0f172a' },
         muted: { fontSize: 7, color: '#64748b' },

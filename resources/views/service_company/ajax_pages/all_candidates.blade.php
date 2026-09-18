@@ -62,18 +62,16 @@
                     }
                     $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
                     $percentage = '0%';
-                    if (@$row->wiseId) {
-                        if (!$hasFilterSkills) {
-                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
-                        } elseif (!empty($percentBasis)) {
-                            $matches = 0;
-                            foreach ($percentBasis as $req) {
-                                foreach ($candidateSkillsLower as $cand) {
-                                    if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
-                                }
+                    if (!empty($row->jobId)) {
+                        $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                    } elseif (!empty($percentBasis)) {
+                        $matches = 0;
+                        foreach ($percentBasis as $req) {
+                            foreach ($candidateSkillsLower as $cand) {
+                                if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
                             }
-                            $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
                         }
+                        $percentage = ((int) round(min(($matches / count($percentBasis)) * 100, 100))) . '%';
                     }
                     $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -185,34 +183,24 @@
                         // Match % — against the same basis driving the highlighting
                         // above, rather than always the row's own job.
                         $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
-                        if (@$row->wiseId) {
-                            if (!$hasFilterSkills) {
-                                $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
-                            } elseif (!empty($percentBasis)) {
-                                $matches = 0;
-                                foreach ($percentBasis as $req) {
-                                    foreach ($candidateSkillsLower as $cand) {
-                                        if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
-                                    }
+                        if (!empty($row->jobId)) {
+                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                        } elseif (!empty($percentBasis)) {
+                            $matches = 0;
+                            foreach ($percentBasis as $req) {
+                                foreach ($candidateSkillsLower as $cand) {
+                                    if (GeneralMethod::skillMatchesPhrasePrefix($req, $cand)) { $matches++; break; }
                                 }
-                                $percentage = round(min(($matches / count($percentBasis)) * 100, 100), 1) . '%';
-                            } else {
-                                $percentage = '0%';
                             }
+                            $percentage = ((int) round(min(($matches / count($percentBasis)) * 100, 100))) . '%';
+                        } else {
+                            $percentage = '0%';
                         }
 
-                        // Match % badge — color reflects the numeric match score:
-                        // >90 green, 50-90 orange, 0<50 red, exactly 0 neutral grey.
-                        $matchNum = (float) rtrim(@$percentage ?: '0%', '%');
-                        if ($matchNum == 0) {
-                            $matchBg = '#f1f5f9'; $matchColor = '#64748b';
-                        } elseif ($matchNum < 50) {
-                            $matchBg = '#fee2e2'; $matchColor = '#dc2626';
-                        } elseif ($matchNum <= 90) {
-                            $matchBg = '#fef3c7'; $matchColor = '#d97706';
-                        } else {
-                            $matchBg = '#dcfce7'; $matchColor = '#16a34a';
-                        }
+                        // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
+                        $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
+                        $matchBg = $matchStyle['bg'];
+                        $matchColor = $matchStyle['color'];
                         $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
 
                         if (empty($limit)) {
@@ -230,9 +218,6 @@
                         }
 
                         $hasResume = !empty($row->resume);
-                        $cvBadge = $hasResume
-                            ? '<span class="badge badge-light-success py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="Resume Document Uploaded">✓ CV</span>'
-                            : '<span class="badge badge-light-warning py-0 px-2 ms-2" style="font-size:10px;font-weight:600;" title="No Resume Uploaded">⚠ No CV</span>';
 
                         if ($flag == 1) {
                             echo '<div class="symbol symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" style="float:left">
@@ -261,7 +246,7 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>' . $cvBadge . '
+                                '</sup></a>
 																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .
@@ -310,7 +295,7 @@
                                 '<sup style="color: #0865dd !important;
 																				font-weight: bold;">' .
                                 $tredmark .
-                                '</sup></a>' . $cvBadge . '
+                                '</sup></a>
 																				</div>
 																				<a href="javascript:void(0);"  data-row-id="' .
                                 @$row->wiseId .

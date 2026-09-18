@@ -3700,48 +3700,58 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // $this->bench_assign_count = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation', 'users.working_status')->join('users', 'users.id', '=', 'bench_assign.user_id')->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->count();
 
-        $params = [
-            'index' => ELASTIC_BENCH_ASSIGN,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['bench_applications_id' => (int) $this->application->id]],
+        $this->bench_assign_count = 0;
+        $this->bench_assign_row = collect([]);
+        try {
+            $params = [
+                'index' => ELASTIC_BENCH_ASSIGN,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['bench_applications_id' => (int) $this->application->id]],
+                            ],
                         ],
                     ],
+                    'sort' => [
+                        ['id' => ['order' => 'desc']],
+                    ],
+                    'size' => 100, // optimized size limit
                 ],
-                'sort' => [
-                    ['id' => ['order' => 'desc']],
-                ],
-                'size' => 100, // optimized size limit
-            ],
-        ];
+            ];
 
-        $response = $this->elasticService->getClient()->search($params);
-        // return users
-        $this->bench_assign_count = $response['hits']['total']['value'] ?? 0;
-        $this->bench_assign_row = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+            $response = $this->elasticService->getClient()->search($params);
+            $this->bench_assign_count = $response['hits']['total']['value'] ?? 0;
+            $this->bench_assign_row = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+        } catch (\Throwable $e) {
+            $this->bench_assign_count = 0;
+            $this->bench_assign_row = collect([]);
+        }
 
-        $params = [
-            'index' => ELASTIC_BENCH_ADDITIONAL_DETAIL,
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['bench_id' => (int) $this->application->id]],
+        $this->bench_additional_detail = collect([]);
+        try {
+            $params = [
+                'index' => ELASTIC_BENCH_ADDITIONAL_DETAIL,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['bench_id' => (int) $this->application->id]],
+                            ],
                         ],
                     ],
+                    'sort' => [
+                        ['id' => ['order' => 'asc']],
+                    ],
+                    'size' => 100, // optimized size limit
                 ],
-                'sort' => [
-                    ['id' => ['order' => 'asc']],
-                ],
-                'size' => 100, // optimized size limit
-            ],
-        ];
+            ];
 
-        $response = $this->elasticService->getClient()->search($params);
-
-        $this->bench_additional_detail = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+            $response = $this->elasticService->getClient()->search($params);
+            $this->bench_additional_detail = collect($response['hits']['hits'] ?? [])->map(fn ($hit) => (object) $hit['_source']);
+        } catch (\Throwable $e) {
+            $this->bench_additional_detail = collect([]);
+        }
 
         $this->skillExperiencesCount = 0;
         $this->skillExperiences = [];
@@ -3809,23 +3819,30 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->submittedByCompany = ! empty($submittedBy) ? DB::table('companies')->select('companies.company_name')->join('users', 'users.company_id', '=', 'companies.id')->where('users.id', $submittedBy)->first() : null;
 
         // $view = view('service_company.job-applications.show', $this->data)->render();
-        // dd("jd");
-        $view = view('service_company.job-applications.showdetail', $this->data)->render();
-        $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
-        cache()->put($cacheKeySet, $responseData, now()->addMinutes(CANDIDATE_DETAILS_TIME));
+        try {
+            $view = view('service_company.job-applications.showdetail', $this->data)->render();
+            $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
+            cache()->put($cacheKeySet, $responseData, now()->addMinutes(CANDIDATE_DETAILS_TIME));
 
-        // Phase 0 Telemetry: Log candidate drawer rendering metrics
-        $durationMs = round((microtime(true) - $startTime) * 1000, 2);
-        $payloadBytes = strlen(json_encode($responseData));
-        \Log::info('candidate_details_shell_rendered', [
-            'company_id' => $company_id,
-            'user_id' => $userId,
-            'candidate_id' => $id,
-            'duration_ms' => $durationMs,
-            'payload_bytes' => $payloadBytes,
-        ]);
+            // Phase 0 Telemetry: Log candidate drawer rendering metrics
+            $durationMs = round((microtime(true) - $startTime) * 1000, 2);
+            $payloadBytes = strlen(json_encode($responseData));
+            \Log::info('candidate_details_shell_rendered', [
+                'company_id' => $company_id,
+                'user_id' => $userId,
+                'candidate_id' => $id,
+                'duration_ms' => $durationMs,
+                'payload_bytes' => $payloadBytes,
+            ]);
 
-        return $responseData;
+            return $responseData;
+        } catch (\Throwable $e) {
+            \Log::error('Candidate details view rendering failed in show()', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Unable to render candidate details. Please try again.']);
+        }
 
     }
 

@@ -207,8 +207,51 @@
     function clip(s,n){ s=String(s==null?'':s); return s.length>n ? s.slice(0,n-1)+'…' : s; }
     function $id(id){ return document.getElementById(id); }
     function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
-    function buildRegex(){ var a=activeList(); if(!a.length) return null; return new RegExp('('+a.map(escRe).sort(function(x,y){return y.length-x.length;}).join('|')+')','gi'); }
-    function countOccurrences(){ Object.keys(keywords).forEach(function(k){ var m=resumeText.match(new RegExp(escRe(k),'gi')); keywords[k].count=m?m.length:0; }); }
+    function parseSkillSubTerms(raw){
+      if(!raw) return [];
+      var parts = String(raw).split(/[\/,|]|\bor\b/i).map(function(s){ return s.trim(); }).filter(Boolean);
+      return parts.length > 0 ? parts : [String(raw).trim()];
+    }
+    function skillTermToRegexPattern(term){
+      var words = String(term).trim().split(/[\s\-]+/).filter(Boolean);
+      if(!words.length) return escRe(term);
+      var wp = words.map(function(w){
+        var cw = escRe(w);
+        if(cw.length > 3 && cw.toLowerCase().endsWith('s') && !cw.toLowerCase().endsWith('ss')){
+          cw = cw.slice(0, -1) + 's?';
+        } else if(cw.length > 2 && !/[0-9+#.]/.test(cw)){
+          cw = cw + 's?';
+        }
+        return cw;
+      });
+      var phrase = wp.join('[\\s\\-]+');
+      var startB = /^\w/.test(term) ? '\\b' : '(?:^|[\\s,;!?()\\[\\]\\/\\-])';
+      var endB = /\w$/.test(term) ? '\\b' : '(?=[\\s,;!?()\\[\\]\\/\\-]|$)';
+      return startB + phrase + endB;
+    }
+    function buildSkillRegex(skillName){
+      var subterms = parseSkillSubTerms(skillName);
+      var patterns = subterms.map(skillTermToRegexPattern);
+      return new RegExp('(' + patterns.join('|') + ')', 'gi');
+    }
+    function buildRegex(){
+      var a = activeList();
+      if(!a.length) return null;
+      var allPatterns = [];
+      a.forEach(function(k){
+        parseSkillSubTerms(k).forEach(function(st){
+          allPatterns.push(skillTermToRegexPattern(st));
+        });
+      });
+      allPatterns.sort(function(x,y){ return y.length - x.length; });
+      return new RegExp('(' + allPatterns.join('|') + ')', 'gi');
+    }
+    function countOccurrences(){
+      Object.keys(keywords).forEach(function(k){
+        var m = resumeText.match(buildSkillRegex(k));
+        keywords[k].count = m ? m.length : 0;
+      });
+    }
     function chipHtml(name){ var k=keywords[name]; var cls='rcv-chip'+(k.count>0?' found':' missing')+(k.active?' active':''); var rm=(k.type==='custom')?'<span class="rcv-chip-x" data-rm="'+esc(name)+'" title="Remove">&times;</span>':''; return '<span class="'+cls+'" data-kw="'+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+k.count+'</span>'+rm+'</span>'; }
     function renderChips(){
       var jc='', xc='';
@@ -223,7 +266,7 @@
       name=(name||'').trim(); if(!name) return;
       var k=Object.keys(keywords).filter(function(x){ return x.toLowerCase()===name.toLowerCase(); })[0];
       if(k){ keywords[k].active=true; }
-      else { var m=resumeText.match(new RegExp(escRe(name),'gi')); keywords[name]={type:'custom',active:true,count:m?m.length:0}; }
+      else { var m=resumeText.match(buildSkillRegex(name)); keywords[name]={type:'custom',active:true,count:m?m.length:0}; }
       renderChips(); applyHighlights();
     }
     function applyHighlights(){

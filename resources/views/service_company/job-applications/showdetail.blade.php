@@ -555,9 +555,20 @@
   //  if(@$country_id > 0)
   //  {
   
-     $city_name	= @$application->city_name ? ucwords(@$application->city_name).',' : '';
-     $state_name	= @$application->state_name ? ucwords(@$application->state_name).',' : ''; 
-     $country_name	= ucwords(@$application->country_name);	
+      $candRawCity = (!empty(@$application->city_name) && !preg_match('/^\d+$/', trim((string) @$application->city_name)))
+          ? @$application->city_name
+          : ((!empty(@$application->city) && !preg_match('/^\d+$/', trim((string) @$application->city))) ? @$application->city : '');
+      $city_name	= $candRawCity ? ucwords($candRawCity).',' : '';
+
+      $candRawState = (!empty(@$application->state_name) && !preg_match('/^\d+$/', trim((string) @$application->state_name)))
+          ? @$application->state_name
+          : ((!empty(@$application->state) && !preg_match('/^\d+$/', trim((string) @$application->state))) ? @$application->state : '');
+      $state_name	= $candRawState ? ucwords($candRawState).',' : '';
+
+      $candRawCountry = (!empty(@$application->country_name) && !preg_match('/^\d+$/', trim((string) @$application->country_name)))
+          ? @$application->country_name
+          : ((!empty(@$application->country) && !preg_match('/^\d+$/', trim((string) @$application->country))) ? @$application->country : '');
+      $country_name	= ucwords($candRawCountry);	
    		$currencySymbole 	=	GeneralMethod::currencySymbole(); 
       // dd($currencySymbole);
    		$current_ctc_cur	=	$current_ectc_cur	=	"";
@@ -633,8 +644,8 @@
          no new route data, no scoring change. */
       $__hdrSkillsRaw = trim((string) @$application->skills);
       $__hdrSkillsArr = $__hdrSkillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $__hdrSkillsRaw)), 'strlen')) : [];
-      $__hdrSkillsShown = array_slice($__hdrSkillsArr, 0, 8);
-      $__hdrSkillsMore  = max(0, count($__hdrSkillsArr) - count($__hdrSkillsShown));
+      $__hdrSkillsShown = $__hdrSkillsArr;
+      $__hdrSkillsMore  = 0;
 
       // Initials for avatar (up to 2 letters).
       $__hdrFullName = trim((string) @$application->full_name);
@@ -647,21 +658,37 @@
 
       $__hdrIsVerified = (bool) preg_match('/verified|active|success/i', (string) @$application->css_style);
 
-      // Availability — same NP mode rules used in Profile Overview card.
+      // Availability — same NP mode rules used across candidate lists & profile.
       $__hdrAvailability = '';
+      $__isBenchCand = (@$application->condidate_type == 'bench_condidate');
       if ((@$application->serving_notice_period_mode == 0) && (int) @$application->np_id > 0) {
           $__hdrAvailability = $application->np_id . ' Days';
       } elseif (@$application->serving_notice_period_mode == 1 && !empty($application->np_id)) {
-          $__hdrAvailability = 'Available ' . date('d M Y', strtotime($application->np_id));
+          $__npDateTs = strtotime($application->np_id);
+          if ($__npDateTs !== false && date('Y-m-d', $__npDateTs) < date('Y-m-d')) {
+              $__hdrAvailability = 'Immediate Joiner';
+          } elseif ($__npDateTs !== false) {
+              $__dateFmt = date('d M Y', $__npDateTs);
+              $__hdrAvailability = $__isBenchCand ? ('Available ' . $__dateFmt) : ('SNP LWD ' . $__dateFmt);
+          } else {
+              $__hdrAvailability = trim((string) @$application->np_id);
+          }
       } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
           $__hdrAvailability = 'Immediate Joiner';
       } else {
           $__hdrAvailability = trim((string) @$application->np_id);
       }
       if ($__hdrAvailability === '') { $__hdrAvailability = '—'; }
-      $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false || stripos($__hdrAvailability, 'Available') === 0);
+      $__hdrIsImmediate = (stripos($__hdrAvailability, 'Immediate') !== false);
 
-      // Skill match — purely a presentation count; job skill list already in $jobSkill.
+      // Skill match — unified canonical matching engine (identical to candidate lists).
+      $__hdrMatchCalc = GeneralMethod::calculateSkillMatch($jobSkill ?? [], $__hdrSkillsArr);
+      $__hdrJobTotal   = $__hdrMatchCalc['total'];
+      $__hdrMatchedCount = $__hdrMatchCalc['matched_count'];
+      $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
+      $__hdrOverallPct = $__hdrMatchCalc['percentage'];
+      $__hdrMatchedSkillNames = $__hdrMatchCalc['matched_skills'];
+
       $__hdrJobSkills = [];
       if (!empty($jobSkill)) {
           foreach ($jobSkill as $__js) {
@@ -670,17 +697,6 @@
               if ($__sn !== '') { $__hdrJobSkills[mb_strtolower($__sn)] = $__sn; }
           }
       }
-      $__hdrMatchedCount = 0;
-      $__hdrMatchedSkillNames = [];
-      foreach ($__hdrSkillsArr as $__cs) {
-          if (isset($__hdrJobSkills[mb_strtolower($__cs)])) {
-              $__hdrMatchedCount++;
-              $__hdrMatchedSkillNames[] = $__cs;
-          }
-      }
-      $__hdrJobTotal   = count($__hdrJobSkills);
-      $__hdrNotMatched = max(0, $__hdrJobTotal - $__hdrMatchedCount);
-      $__hdrOverallPct = $__hdrJobTotal > 0 ? (int) round(($__hdrMatchedCount / $__hdrJobTotal) * 100) : 0;
 
       // Location match — uses the same formatted strings already prepared above.
       $__hdrJobLocs = [];
@@ -882,7 +898,7 @@
         <div class="cdr-avatar-wrap">
           <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
           @if($__hdrJobTotal > 0)
-            @php $__mpbClass = $__hdrOverallPct >= 70 ? 'cdr-mpb-green' : ($__hdrOverallPct >= 40 ? 'cdr-mpb-amber' : 'cdr-mpb-red'); @endphp
+            @php $__mpbClass = \App\Helper\GeneralMethod::getSkillMatchBadgeStyle($__hdrOverallPct)['class']; @endphp
             <span class="cdr-match-pct-badge {{ $__mpbClass }}">{{ $__hdrOverallPct }}% Match</span>
           @endif
         </div>
@@ -939,12 +955,20 @@
       @if(!empty($__hdrSkillsShown))
         <div class="cdr-skills-bar">
           @foreach($__hdrSkillsShown as $__s)
-            @php $__isMatch = isset($__hdrJobSkills[mb_strtolower($__s)]); @endphp
+            @php
+              $__sNorm = mb_strtolower(trim($__s));
+              $__isMatch = false;
+              if (!empty($__hdrJobSkills)) {
+                  foreach ($__hdrJobSkills as $__jsNorm => $__jsOriginal) {
+                      if (\App\Helper\GeneralMethod::skillMatchesPhrasePrefix($__jsOriginal, $__s)) {
+                          $__isMatch = true;
+                          break;
+                      }
+                  }
+              }
+            @endphp
             <span class="cdr-skill-tag {{ $__isMatch ? 'cdr-skill-match' : 'cdr-skill-plain' }}">{{ ucwords(strtolower($__s)) }}</span>
           @endforeach
-          @if($__hdrSkillsMore > 0)
-            <span class="cdr-skill-tag cdr-skill-more">+{{ $__hdrSkillsMore }} More</span>
-          @endif
         </div>
       @endif
 
@@ -1174,9 +1198,22 @@
         }
         // candidate summary for the submission banner
         $__te = trim((string) @$application->total_exp);
-        $rcvBExp = ($__te !== '') ? ($__te . ' Years') : '--';
-        if((@$application->serving_notice_period_mode == 0) || (@$application->serving_notice_period_mode == 1)){
-            $rcvBNotice = 'Available ' . date('d M Y', strtotime(@$application->np_id));
+        $rcvBExp = ($__te !== '' && $__te !== '0') ? ($__te . ' Yrs') : '--';
+        $__isBenchCand = (@$application->condidate_type == 'bench_condidate');
+        if (@$application->serving_notice_period_mode == 0) {
+            $rcvBNotice = !empty(@$application->np_id) ? (@$application->np_id . ' Days') : '--';
+        } elseif (@$application->serving_notice_period_mode == 1) {
+            $__npDateTs = !empty(@$application->np_id) ? strtotime(@$application->np_id) : false;
+            if ($__npDateTs !== false && date('Y-m-d', $__npDateTs) < date('Y-m-d')) {
+                $rcvBNotice = 'Immediate';
+            } elseif ($__npDateTs !== false) {
+                $__dateFmt = date('d M Y', $__npDateTs);
+                $rcvBNotice = $__isBenchCand ? ('Available ' . $__dateFmt) : ('SNP LWD ' . $__dateFmt);
+            } else {
+                $rcvBNotice = trim((string) @$application->np_id);
+            }
+        } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
+            $rcvBNotice = 'Immediate';
         } else {
             $rcvBNotice = trim((string) @$application->np_id);
         }
@@ -1289,21 +1326,21 @@
       </style>
 
       <div class="rcv-wrap"
-           data-url="{{ $rcvFetchUrl }}"
-           data-public="{{ $rcvPublicUrl }}"
-           data-ext="{{ $rcvExt }}"
-           data-logo="{{ $rcvCompanyLogo }}"
-           data-company="{{ $rcvCompanyName }}"
-           data-pdfconv="{{ $rcvConvertUrl }}"
-           data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
-           data-mask="{{ $rcvMaskContact ? '1' : '0' }}"
-           data-b-exp="{{ $rcvBExp }}"
-           data-b-cctc="{{ $rcvBCctc }}"
-           data-b-ectc="{{ $rcvBEctc }}"
-           data-b-notice="{{ $rcvBNotice }}"
-           data-b-loc="{{ $rcvBLoc }}"
-           data-b-presented="{{ $rcvBPresented }}"
-           data-ispdf="{{ $rcvIsPdf ? '1' : '0' }}">
+            data-url="{{ $rcvFetchUrl ?? '' }}"
+            data-public="{{ $rcvPublicUrl ?? '' }}"
+            data-ext="{{ $rcvExt ?? '' }}"
+            data-logo="{{ $rcvCompanyLogo ?? '' }}"
+            data-company="{{ $rcvCompanyName ?? '' }}"
+            data-pdfconv="{{ $rcvConvertUrl ?? '' }}"
+            data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
+            data-mask="{{ !empty($rcvMaskContact) ? '1' : '0' }}"
+            data-b-exp="{{ $rcvBExp ?? '--' }}"
+            data-b-cctc="{{ $rcvBCctc ?? '--' }}"
+            data-b-ectc="{{ $rcvBEctc ?? '--' }}"
+            data-b-notice="{{ $rcvBNotice ?? '--' }}"
+            data-b-loc="{{ $rcvBLoc ?? '--' }}"
+            data-b-presented="{{ $rcvBPresented ?? '--' }}"
+            data-ispdf="{{ !empty($rcvIsPdf) ? '1' : '0' }}">
         <!-- Keyword panel -->
         <aside class="rcv-side">
           <div class="rcv-side-head">
@@ -1406,16 +1443,62 @@
 
         function activeList(){ return Object.keys(keywords).filter(function(k){ return keywords[k].active; }); }
 
+        /**
+         * Intent: Parse compound skill into individual alternative sub-phrases (e.g. "Postman / Rest Assured" -> ["Postman", "Rest Assured"]).
+         */
+        function parseSkillSubTerms(raw){
+          if(!raw) return [];
+          var parts = String(raw).split(/[\/,|]|\bor\b/i).map(function(s){ return s.trim(); }).filter(Boolean);
+          return parts.length > 0 ? parts : [String(raw).trim()];
+        }
+
+        /**
+         * Intent: Build strict regex pattern for a single phrase ensuring contiguous matching, word boundaries, and plural flex.
+         */
+        function skillTermToRegexPattern(term){
+          var words = String(term).trim().split(/[\s\-]+/).filter(Boolean);
+          if(!words.length) return escRe(term);
+          var wp = words.map(function(w){
+            var cw = escRe(w);
+            if(cw.length > 3 && cw.toLowerCase().endsWith('s') && !cw.toLowerCase().endsWith('ss')){
+              cw = cw.slice(0, -1) + 's?';
+            } else if(cw.length > 2 && !/[0-9+#.]/.test(cw)){
+              cw = cw + 's?';
+            }
+            return cw;
+          });
+          var phrase = wp.join('[\\s\\-]+');
+          var startB = /^\w/.test(term) ? '\\b' : '(?:^|[\\s,;!?()\\[\\]\\/\\-])';
+          var endB = /\w$/.test(term) ? '\\b' : '(?=[\\s,;!?()\\[\\]\\/\\-]|$)';
+          return startB + phrase + endB;
+        }
+
+        /**
+         * Intent: Build RegExp for a keyword that may contain slash/comma alternatives.
+         */
+        function buildSkillRegex(skillName){
+          var subterms = parseSkillSubTerms(skillName);
+          var patterns = subterms.map(skillTermToRegexPattern);
+          return new RegExp('(' + patterns.join('|') + ')', 'gi');
+        }
+
         function buildRegex(){
           var act = activeList();
           if(!act.length) return null;
-          var pat = act.map(escRe).sort(function(a,b){ return b.length-a.length; }).join('|');
-          return new RegExp('('+pat+')','gi');
+          var allPatterns = [];
+          act.forEach(function(k){
+            var subterms = parseSkillSubTerms(k);
+            subterms.forEach(function(st){
+              allPatterns.push(skillTermToRegexPattern(st));
+            });
+          });
+          allPatterns.sort(function(a,b){ return b.length - a.length; });
+          return new RegExp('(' + allPatterns.join('|') + ')', 'gi');
         }
 
         function countOccurrences(){
           Object.keys(keywords).forEach(function(k){
-            var re = new RegExp(escRe(k),'gi');
+            var re = buildSkillRegex(k);
             var m = resumeText.match(re);
             keywords[k].count = m ? m.length : 0;
           });
@@ -1571,7 +1654,7 @@
           var key = Object.keys(keywords).filter(function(k){ return k.toLowerCase()===name.toLowerCase(); })[0];
           if(key){ keywords[key].active = true; }
           else {
-            var re = new RegExp(escRe(name),'gi'); var m = resumeText.match(re);
+            var re = buildSkillRegex(name); var m = resumeText.match(re);
             keywords[name] = { type: type||'custom', active:true, count: m?m.length:0 };
           }
           renderChips(); applyHighlights();
@@ -4924,13 +5007,22 @@ setTimeout(() => {
   $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
   $rsNpRaw=trim((string)@$application->np_id);
   $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
+  $rsIsBench = (@$application->condidate_type === 'bench_condidate');
   if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
   elseif($rsNpMode===0&&(int)$rsNpRaw>0){ $rsNotice=$rsNpRaw.' Days'; }
-  elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
-  elseif($rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){ $rsNotice='Available '.date('d M Y',$rsNpTs); }
+  elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){
+      if (date('Y-m-d', $rsNpTs) < date('Y-m-d')) {
+          $rsNotice = 'Immediate';
+      } else {
+          $rsNotice = $rsIsBench ? ('Available '.date('d M Y',$rsNpTs)) : ('SNP LWD '.date('d M Y',$rsNpTs));
+      }
+  }
+  elseif($rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){
+      $rsNotice = $rsIsBench ? ('Available '.date('d M Y',$rsNpTs)) : ('SNP LWD '.date('d M Y',$rsNpTs));
+  }
   else { $rsNotice=$rsNpRaw; }
-  if($rsNotice===''||$rsNotice==='Available '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
-  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate');
+  if($rsNotice===''||$rsNotice==='Available '||$rsNotice==='SNP LWD '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
+  $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate'||stripos($rsNotice,'Immediate')!==false);
   $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
   if($rsLoc==='') $rsLoc=trim($country_name??'');
   if($rsLoc==='') $rsLoc='--';
@@ -4940,8 +5032,9 @@ setTimeout(() => {
   $rsValidation=[];
   if(!empty($application->resume))   $rsValidation[]=['label'=>'RESUME','status'=>'Verified'];
   if(!empty($application->email)||!empty($application->secondrary_email)) $rsValidation[]=['label'=>'EMAIL ID','status'=>'Verified'];
-  if(!empty($application->phone)||!empty($application->secondary_mobile)) $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'Verified'];
-  if(!empty($application->linkedin)) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
+  $hasLinkedin = !empty($application->linkedin) && !in_array(strtolower(trim((string) $application->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
+  if($hasLinkedin) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
+  else $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'-'];
   if(!empty($application->recruiter_note)) $rsValidation[]=['label'=>'Recruiter Screened','status'=>'Completed'];
   if(!empty($application->current_designation)||!empty($application->current_company)) $rsValidation[]=['label'=>'JOB DESCRIPTION','status'=>'Shared with candidate'];
   if((float)(@$application->ctc_yearly??0)>0||(float)(@$application->ectc_yearly??0)>0||(float)(@$application->percentage_hike??0)>0) $rsValidation[]=['label'=>'Compensation Discussed','status'=>'Discussed'];
@@ -6228,11 +6321,11 @@ function buildSkillRows(skills){
     var exp=Number(skill.exp||0);
     var expText=clean(skill.expText,'');
     var stars=[];
-    for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:6.4,margin:[0,0.5,1.2,0]});
+    for(var i=1;i<=5;i++) stars.push({svg:i<=rating?rsStarGold:rsStarMuted,width:7.7,margin:[0,0.5,1.2,0]});
     rows.push([
       {text:clean(skill.name).toUpperCase(),style:'tableCellBold',alignment:'left'},
       {text:expText!=='' && expText!=='--' ? expText : (exp>0 ? exp+' Year'+(exp>1?'s':'') : '--'),style:'tableCell',color:'#334155'},
-      {columns:stars,columnGap:0,alignment:'center',margin:[20,5,0,5]}
+      {columns:stars,columnGap:0,alignment:'center',margin:[17,5,0,5]}
     ]);
   });
   return rows;
@@ -6251,8 +6344,11 @@ function buildValidationRows(validation){
     {label:'JOB DESCRIPTION',key:'job description',fallbackKey:'job description acknowledged',icon:rsIconJobDescription}
   ];
   var cells=slots.map(function(row){
-    var status=map[row.key] || map[row.fallbackKey] || '--';
-    var verified=/verified|confirmed|completed|discussed|shared/i.test(status);
+    var status=map[row.key] || map[row.fallbackKey] || '-';
+    if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+    var verified=/verified|confirmed|completed|shared/i.test(status);
+    var isBlank=(status === '-' || status === '--' || !status);
+    var textColor=verified?'#16a34a':(isBlank?'#94a3b8':'#b45309');
     return {stack:[
       {columns:[
         {text:'',width:'*'},
@@ -6261,7 +6357,7 @@ function buildValidationRows(validation){
         {text:row.label.toUpperCase(),fontSize:6.6,bold:true,color:'#0f172a',width:'auto',margin:[0,1.7,0,0]},
         {text:'',width:'*'}
       ],columnGap:0,margin:[0,0,0,7]},
-      {text:status,fontSize:6.5,bold:true,color:verified?'#16a34a':'#b45309',alignment:'center',margin:[0,0,0,0]}
+      {text:status,fontSize:6.5,bold:true,color:textColor,alignment:'center',margin:[0,0,0,0]}
     ],margin:[2,7,2,7]};
   });
   return [cells];
@@ -6297,9 +6393,9 @@ function buildDefinition(data,logoUri,options){
       small:{fontSize:7.4,color:'#64748b'},
       sectionTitle:{fontSize:8.2,bold:true,color:'#1d4ed8'},
       sectionTitleMuted:{fontSize:8,bold:true,color:'#334155'},
-      tableHead:{fontSize:7,bold:true,color:'#334155',fillColor:'#f8fafc',margin:[0,6,0,6]},
-      tableCell:{fontSize:7.2,color:'#334155',margin:[0,6,0,6]},
-      tableCellBold:{fontSize:7.2,bold:true,color:'#0f172a',margin:[0,6,0,6]},
+      tableHead:{fontSize:8.4,bold:true,color:'#334155',fillColor:'#f8fafc',margin:[0,6,0,6]},
+      tableCell:{fontSize:8.6,color:'#334155',margin:[0,6,0,6]},
+      tableCellBold:{fontSize:8.6,bold:true,color:'#0f172a',margin:[0,6,0,6]},
       metricLabel:{fontSize:6,color:'#64748b'},
       metricValue:{fontSize:7.2,bold:true,color:'#0f172a'},
       muted:{fontSize:7,color:'#64748b'},
