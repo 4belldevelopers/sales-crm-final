@@ -109,20 +109,29 @@ if($snp_mode== 1){
 <!--begin::Toolbar-->
 <div class="toolbar talent-top-toolbar" id="kt_toolbar">
   <div id="kt_toolbar_container" class="container-fluid">
-    <div class="talent-topbar">
+    <div class="talent-topbar{{ @$page_event == 'EDIT' ? ' talent-topbar--edit' : '' }}">
       <div class="talent-topbar-copy">
         <div class="talent-topbar-title-row">
           <h1>Add In-House Talent</h1>
-          <span class="talent-topbar-badge"><i class="fa-solid fa-briefcase"></i> In-House Talent</span>
+          <span class="talent-topbar-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
         </div>
-        <p>Add internal talent to the marketplace and make them discoverable for client opportunities.</p>
+        <p>Add internal talent to your organization and optionally make them discoverable to clients through the Talent Marketplace.</p>
       </div>
+      @if(@$page_event != 'EDIT')
+      <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
+        <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-globe" aria-hidden="true"></i></span>
+        <span class="talent-topbar-marketplace-copy">
+          <strong>Marketplace: <span id="talent-marketplace-status">Will be publish</span></strong>
+          <small id="talent-marketplace-message">This talent will be publish on talent marketplace and discover for client.</small>
+        </span>
+      </div>
+      @endif
       <div class="talent-topbar-actions">
         @php 
             if(@$page_event == 'EDIT'){ 
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
             }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Publish to Talent Marketplace</span></button>';
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small>';
             }
         @endphp
       </div>
@@ -153,37 +162,41 @@ if($snp_mode== 1){
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
               <div class="talent-stage-heading">
-                <strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong>
-                <small>Select this talent's current stage to reflect their availability.</small>
+                <div class="talent-stage-heading-copy">
+                  <span class="talent-stage-heading-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span><strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong><small>Select where this talent currently stands in your internal talent lifecycle.</small></span>
+                </div>
+                <div class="talent-stage-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Each stage has a default marketplace status. You can publish talent to the marketplace only when the stage is set to Bench.</span></div>
               </div>
               <div class="talent-stage-options">
                 <label class="talent-stage-option talent-stage-option--pool">
                   <input type="radio" name="talent_stage" value="1">
                   <span class="talent-stage-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not yet available.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not currently available.</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--bench is-selected">
                   <input type="radio" name="talent_stage" value="2" checked>
-                  <span class="talent-stage-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for client opportunities.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for deployment. Can be considered for client opportunities.</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--hold">
                   <input type="radio" name="talent_stage" value="4">
                   <span class="talent-stage-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable for opportunities.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable. Not currently available for client opportunities.</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <button type="button" class="talent-stage-option talent-stage-option--placed" id="talent-stage-placed" aria-label="Placed: requires a client placement">
                   <span class="talent-stage-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client through placement.</small></span>
+                  <span class="talent-stage-copy"><strong>Placed</strong><small>Currently placed. Assigned to a client through placement.</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </button>
                 <label class="talent-stage-option talent-stage-option--exited">
                   <input type="radio" name="talent_stage" value="5">
-                  <span class="talent-stage-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer in your talent inventory.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-xmark" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer available. No longer part of your active talent inventory.</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
               </div>
             </section>
@@ -1430,12 +1443,32 @@ if($snp_mode== 1){
 
 <script>
 $(document).ready(function () {
-    // Keep the create action aligned with the submitted bench stage.
+    // Keep the create action and marketplace notice aligned with the submitted stage.
     var talentStageActions = {
-        '1': { label: 'Add to Talent Pool', icon: 'fa-users', theme: 'pool' },
-        '2': { label: 'Publish to Talent Marketplace', icon: 'fa-arrow-up', theme: 'bench' },
-        '4': { label: 'Save Talent on Hold', icon: 'fa-clock', theme: 'hold' },
-        '5': { label: 'Save Exited Talent', icon: 'fa-right-from-bracket', theme: 'exited' }
+        '1': {
+            label: 'Save to Pool Stage', icon: 'fa-users', theme: 'pool',
+            marketplace: 'Not published',
+            message: 'This talent will remain in your internal pool and will not be visible to clients in the Talent Marketplace.',
+            hint: 'Save talent internally without publishing'
+        },
+        '2': {
+            label: 'Save to Bench Stage', icon: 'fa-arrow-up', theme: 'bench',
+            marketplace: 'Will be publish',
+            message: 'This talent will be publish on talent marketplace and discover for client.',
+            hint: 'Save talent and publish to marketplace'
+        },
+        '4': {
+            label: 'Save to Hold Stage', icon: 'fa-clock', theme: 'hold',
+            marketplace: 'Not published',
+            message: 'This talent is temporarily unavailable and will not be visible to clients in the Talent Marketplace.',
+            hint: 'Save talent on hold without publishing'
+        },
+        '5': {
+            label: 'Save to Exited Stage', icon: 'fa-xmark', theme: 'exited',
+            marketplace: 'Not published',
+            message: 'This talent is no longer active and will not be visible to clients in the Talent Marketplace.',
+            hint: 'Save exited talent without publishing'
+        }
     };
     window.syncTalentStageAction = function () {
         var selected = $('input[name="talent_stage"]:checked');
@@ -1447,12 +1480,16 @@ $(document).ready(function () {
             .removeClass('talent-stage-action--pool talent-stage-action--bench talent-stage-action--hold talent-stage-action--exited')
             .addClass('talent-stage-action--' + action.theme)
             .html('<i class="fa-solid ' + action.icon + '" aria-hidden="true"></i> <span class="talent-stage-action-label">' + action.label + '</span>');
+        $('.talent-topbar-marketplace').attr('data-stage', action.theme);
+        $('#talent-marketplace-status').text(action.marketplace);
+        $('#talent-marketplace-message').text(action.message);
+        $('#talent-stage-action-hint').text(action.hint);
     };
     $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
     $('#talent-stage-placed').on('click', function () {
         Swal.fire({
             title: 'Talent already placed',
-            text: 'Placed talent is assigned to a client. To offer this talent for new opportunities, select Bench and publish to the Talent Marketplace.',
+            text: 'Placed talent is already assigned to a client and cannot be published from this form. Select Bench only when the talent is available for new client opportunities.',
             icon: 'info',
             confirmButtonText: 'Got it'
         });
