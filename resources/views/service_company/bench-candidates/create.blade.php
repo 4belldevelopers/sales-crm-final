@@ -114,14 +114,14 @@ if($snp_mode== 1){
         <div class="talent-topbar-title-row">
           <h1>Add In-House Talent</h1>
         </div>
-        <p>Add internal talent to your organization.</p>
+        <p>Add your in-house talent and keep your best people ready for the right opportunities.</p>
       </div>
       @if(@$page_event != 'EDIT')
       <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
         <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-globe" aria-hidden="true"></i></span>
         <span class="talent-topbar-marketplace-copy">
-          <strong>Marketplace: <span id="talent-marketplace-status">Will be publish</span></strong>
-          <small id="talent-marketplace-message">This talent will be publish on talent marketplace and discover for client.</small>
+          <strong>Marketplace: <span id="talent-marketplace-status">Will be published</span></strong>
+          <small id="talent-marketplace-message">Visible to clients.</small>
         </span>
       </div>
       @endif
@@ -1450,25 +1450,25 @@ $(document).ready(function () {
         '1': {
             label: 'Save to Pool Stage', icon: 'fa-users', theme: 'pool',
             marketplace: 'Not published',
-            message: 'This talent will remain in your internal pool and will not be visible to clients in the Talent Marketplace.',
+            message: 'Internal only.',
             hint: 'Save talent internally without publishing'
         },
         '2': {
             label: 'Save to Bench Stage', icon: 'fa-arrow-up', theme: 'bench',
-            marketplace: 'Will be publish',
-            message: 'This talent will be publish on talent marketplace and discover for client.',
+            marketplace: 'Will be published',
+            message: 'Visible to clients.',
             hint: 'Save talent and publish to marketplace'
         },
         '4': {
             label: 'Save to Hold Stage', icon: 'fa-clock', theme: 'hold',
             marketplace: 'Not published',
-            message: 'This talent is temporarily unavailable and will not be visible to clients in the Talent Marketplace.',
+            message: 'Unavailable to clients.',
             hint: 'Save talent on hold without publishing'
         },
         '5': {
             label: 'Save to Exited Stage', icon: 'fa-xmark', theme: 'exited',
             marketplace: 'Not published',
-            message: 'This talent is no longer active and will not be visible to clients in the Talent Marketplace.',
+            message: 'Not visible to clients.',
             hint: 'Save exited talent without publishing'
         }
     };

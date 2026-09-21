@@ -5324,15 +5324,16 @@ select option,
     .se-popular-list { flex-basis: 100%; }
 }
 
-/* This page's taller header must flow below Metronic's fixed global navigation. */
+/* Keep the taller page header visible below Metronic's fixed global navigation. */
 #kt_body:has(.talent-top-toolbar) .talent-top-toolbar {
-    position: relative !important;
-    top: auto !important;
+    position: sticky !important;
+    top: 65px !important;
     right: auto !important;
     left: auto !important;
-    z-index: auto !important;
+    z-index: 99 !important;
     width: 100%;
     height: auto !important;
+    padding: 0 !important;
     border: 0 !important;
     border-bottom: 1px solid #e3eaf5 !important;
     background: #fff !important;
@@ -5343,16 +5344,17 @@ select option,
 }
 @media (max-width: 991.98px) {
     #kt_body:has(.talent-top-toolbar) #kt_wrapper { padding-top: 55px !important; }
+    #kt_body:has(.talent-top-toolbar) .talent-top-toolbar { top: 55px !important; }
 }
 .talent-top-toolbar + #kt_content { padding-top: 16px !important; }
 .talent-topbar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(265px, .55fr) minmax(220px, .43fr);
+    grid-template-columns: minmax(0, 1fr) minmax(360px, auto) minmax(200px, auto);
     align-items: center;
     gap: 16px;
     min-height: 0 !important;
     margin: 0;
-    padding: 14px 0 !important;
+    padding: 10px 0 !important;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -5367,10 +5369,10 @@ select option,
 .talent-topbar-marketplace {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 8px;
     min-width: 0;
-    min-height: 70px;
-    padding: 11px 12px;
+    min-height: 44px;
+    padding: 7px 10px;
     border: 1px solid #e1e5ff;
     border-radius: 7px;
     background: #f7f8ff;
@@ -5379,18 +5381,18 @@ select option,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
     border-radius: 50%;
     color: #069b68;
     background: #dbf8ec;
-    font-size: 17px;
+    font-size: 14px;
 }
-.talent-topbar-marketplace-copy { display: block; min-width: 0; }
-.talent-topbar-marketplace-copy strong { display: block; color: #102044; font-size: 12px; line-height: 1.3; font-weight: 600; }
+.talent-topbar-marketplace-copy { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.talent-topbar-marketplace-copy strong { flex: 0 0 auto; color: #102044; font-size: 12px; line-height: 1.3; font-weight: 600; white-space: nowrap; }
 .talent-topbar-marketplace-copy strong span { color: #08965c; }
-.talent-topbar-marketplace-copy small { display: block; margin-top: 3px; color: #576587; font-size: 11px; line-height: 1.4; }
+.talent-topbar-marketplace-copy small { color: #576587; font-size: 11px; line-height: 1.3; white-space: nowrap; }
 .talent-topbar-marketplace[data-stage="pool"] .talent-topbar-marketplace-icon { color: #2463e5; background: #e8f2ff; }
 .talent-topbar-marketplace[data-stage="hold"] .talent-topbar-marketplace-icon { color: #bd8100; background: #fff4d8; }
 .talent-topbar-marketplace[data-stage="exited"] .talent-topbar-marketplace-icon { color: #dc3152; background: #ffe9ef; }
@@ -5403,7 +5405,7 @@ select option,
 .talent-topbar-primary.talent-stage-action--hold { border-color: #e9a900 !important; background: #e9a900 !important; }
 .talent-topbar-primary.talent-stage-action--exited { border-color: #e43e57 !important; background: #e43e57 !important; }
 
-.talent-stage-card { padding: 18px 20px 20px; border-color: #dbe4f5; }
+.talent-stage-card { padding: 14px 16px 16px; border-color: #dbe4f5; }
 .talent-stage-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .talent-stage-heading-copy { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .talent-stage-heading-copy > span:last-child { min-width: 0; }
@@ -5435,10 +5437,10 @@ select option,
     line-height: 1.4;
 }
 .talent-stage-guidance i { flex: 0 0 auto; color: #7256e7; font-size: 15px; }
-.talent-stage-options { gap: 11px; margin-top: 16px; }
+.talent-stage-options { gap: 10px; margin-top: 12px; }
 .talent-stage-card .talent-stage-option {
-    min-height: 126px;
-    padding: 13px 11px;
+    min-height: 82px;
+    padding: 10px;
     border-color: #d7e2f5;
     border-radius: 7px;
     background: #fff;
@@ -5453,15 +5455,17 @@ select option,
 .talent-stage-heading-icon i { color: #fff !important; }
 .talent-topbar-primary.talent-stage-action--hold,
 .talent-topbar-primary.talent-stage-action--hold i { color: #fff !important; }
-.talent-stage-card .talent-stage-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 7px; }
-.talent-stage-card .talent-stage-option--bench .talent-stage-icon { color: #079b6e; background: #def9ee; }
+.talent-stage-card .talent-stage-icon { width: 36px; height: 36px; flex-basis: 36px; border-radius: 6px; color: #253553; }
+.talent-stage-card .talent-stage-icon i { color: inherit !important; font-size: 16px; font-weight: 900 !important; opacity: 1 !important; }
+.talent-stage-card .talent-stage-option--bench .talent-stage-icon { background: #def9ee; }
+.talent-stage-card .talent-stage-option.is-selected .talent-stage-icon { color: #fff; background: var(--stage-color); }
 .talent-stage-card .talent-stage-copy { padding-right: 10px; }
-.talent-stage-card .talent-stage-copy strong { margin: 8px 0 0; font-size: 13px; }
-.talent-stage-card .talent-stage-copy small { margin-top: 13px; color: #58658f; font-size: 11px; line-height: 1.4; }
+.talent-stage-card .talent-stage-copy strong { margin: 0; font-size: 13px; }
+.talent-stage-card .talent-stage-copy small { margin-top: 5px; color: #58658f; font-size: 11px; line-height: 1.35; }
 .talent-stage-indicator {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 10px;
+    right: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -5478,6 +5482,9 @@ select option,
     .talent-topbar-copy { grid-column: 1 / -1; }
     .talent-topbar--edit { grid-template-columns: minmax(0, 1fr) auto; }
     .talent-topbar--edit .talent-topbar-copy { grid-column: auto; }
+}
+@media (max-width: 1250px) {
+    .talent-topbar-marketplace-copy { flex-wrap: wrap; gap: 2px 8px; }
 }
 @media (max-width: 800px) {
     .talent-topbar { grid-template-columns: minmax(0, 1fr); }
