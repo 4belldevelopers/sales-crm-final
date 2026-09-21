@@ -39,10 +39,13 @@
                 @php
 
                     $bgTextDecore = $strVal = '';
-                    if (!empty(@$row->full_name)) {
-                        $str = trim(@$row->full_name);
-                        $str = $strVal = strtolower($str[0]);
-                        $str = ord($str);
+                    $fullName = !empty($row->full_name) ? $row->full_name : (!empty($row->name) ? $row->name : (!empty($row->candidate_name) ? $row->candidate_name : trim((@$row->first_name ?? '') . ' ' . (@$row->last_name ?? ''))));
+                    $designationName = !empty($row->current_designation) ? $row->current_designation : (!empty($row->designation_name) ? $row->designation_name : (@$row->designation ?? ''));
+
+                    if (!empty($fullName)) {
+                        $str = trim($fullName);
+                        $strVal = strtolower($str[0] ?? 'a');
+                        $str = ord($strVal);
                         if ($str >= 97 && $str <= 101) {
                             $bgTextDecore = 'fs-3 bg-light-danger text-danger';
                         } elseif ($str >= 102 && $str <= 106) {
@@ -100,9 +103,9 @@
                             $profile_sidebar_css .
                             '"
                                     data-toggle="tooltip" title="' .
-                            ucwords(@$row->full_name) .
+                            htmlspecialchars(ucwords($fullName), ENT_QUOTES, 'UTF-8') .
                             '">' .
-                            ucwords(mb_substr(@$row->full_name, 0, 30)) .
+                            htmlspecialchars(ucwords(mb_substr($fullName, 0, 30)), ENT_QUOTES, 'UTF-8') .
                             '</a>
                                 <a href="javascript:void(0);" data-row-id="' .
                             @$row->wiseId .
@@ -111,9 +114,9 @@
                             $profile_sidebar_css .
                             '"
                                     data-toggle="tooltip" title="' .
-                            ucwords(@$row->current_designation) .
+                            htmlspecialchars(ucwords($designationName), ENT_QUOTES, 'UTF-8') .
                             '">' .
-                            ucwords(mb_substr(@$row->current_designation, 0, 20)) .
+                            htmlspecialchars(ucwords(mb_substr($designationName, 0, 20)), ENT_QUOTES, 'UTF-8') .
                             '</a>
                             </div>
                             <div class="' .
@@ -274,29 +277,15 @@
                     } else {
                         $np = $row->np_id;
                     }
-                    // $row->current_company = (@$row->current_company) ? @$row->apl_company_name : @$row->apl_company_name;
+                    $currentCompany = !empty($row->current_company) ? $row->current_company : (!empty($row->apl_company_name) ? $row->apl_company_name : (!empty($row->company_name) ? $row->company_name : ''));
                     echo '<div class="d-flex flex-column">
 						<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">' .
                         @$np .
                         '</a>
-						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords(@$row->current_company), ENT_QUOTES, 'UTF-8') .
-                        '">' . htmlspecialchars(ucwords(mb_substr(@$row->current_company, 0, 10)), ENT_QUOTES, 'UTF-8') .
+						<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .htmlspecialchars(ucwords($currentCompany), ENT_QUOTES, 'UTF-8') .
+                        '">' . htmlspecialchars(ucwords(mb_substr($currentCompany, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</span>
 					  </div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        strtoupper(@$row->skills) .
-                        '"></span> 
-                  </div>';
 
                 @endphp
             </td>
@@ -315,6 +304,8 @@
                                 foreach ($country_name_Arr as $cval) {
                                     $row_country_name = ucwords($cval['name']);
                                 }
+                            } else {
+                                $row_country_name = @$row->country;
                             }
                         }
                     }
@@ -322,7 +313,7 @@
                     $state = '';
                     $row_state_name = '';
                     if (empty($row->state)) {
-                        $row_state_name = '----';
+                        $row_state_name = '';
                     } else {
                         if (@$row->country == 101) {
                             $row_state_name = @$row->state_name;
@@ -335,6 +326,8 @@
                                         $row_state_name = ucwords($sval['name']);
                                     }
                                 }
+                            } else {
+                                $row_state_name = @$row->state;
                             }
                         }
                     }
@@ -348,21 +341,32 @@
                     } else {
                         $row_city_name = @$row->city;
                     }
+                    if (empty($row_city_name) && !empty($row->city_name)) {
+                        $row_city_name = $row->city_name;
+                    }
+
+                    $countryCode = '';
+                    if (!empty($row_country_name) && $row_country_name != '----') {
+                        $countryCode = strtoupper(mb_substr($row_country_name, 0, 2));
+                    }
+
+                    $locationTitle = trim(ucwords($row_city_name) . ($countryCode ? ', ' . $countryCode : ''), ', ');
+                    if (empty($locationTitle)) {
+                        $locationTitle = '----';
+                    }
+
+                    $locationSub = !empty($row->qualification_name) ? strtoupper($row->qualification_name) : (!empty($row_state_name) ? ucwords($row_state_name) : '');
 
                     echo '<div class="d-flex flex-column">
                         <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
                         '</a>
                         <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        htmlspecialchars($locationSub, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 10)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        htmlspecialchars(mb_substr($locationSub, 0, 15), ENT_QUOTES, 'UTF-8') .
                         '</span>
                     </div>';
 
@@ -376,35 +380,23 @@
                     }else{
                         $rowpostedby = $row->posted_by;
                     }
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$rowpostedby);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                    if (empty($rowpostedby) && !empty($row->spokperson_name)) {
+                        $rowpostedby = $row->spokperson_name;
                     }
 
+                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: ''))));
+
                     echo ' <div class="d-flex flex-column">
-                  				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$rowpostedby .
+                  				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
+                        htmlspecialchars(@$rowpostedby, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucfirst(mb_substr($rowpostedby, 0, 10)) .
+                        htmlspecialchars(ucfirst(mb_substr($rowpostedby, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</a>
                   			</div>
 							<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->uc_company_name.
+                        htmlspecialchars(@$post_company_name, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr(@$row->uc_company_name, 0, 10)) .
+                        htmlspecialchars(ucwords(mb_substr(@$post_company_name, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</span>';
 
                 @endphp
