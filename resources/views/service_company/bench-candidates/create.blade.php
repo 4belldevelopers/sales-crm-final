@@ -109,20 +109,28 @@ if($snp_mode== 1){
 <!--begin::Toolbar-->
 <div class="toolbar talent-top-toolbar" id="kt_toolbar">
   <div id="kt_toolbar_container" class="container-fluid">
-    <div class="talent-topbar">
+    <div class="talent-topbar{{ @$page_event == 'EDIT' ? ' talent-topbar--edit' : '' }}">
       <div class="talent-topbar-copy">
         <div class="talent-topbar-title-row">
           <h1>Add In-House Talent</h1>
-          <span class="talent-topbar-badge"><i class="fa-solid fa-briefcase"></i> In-House Talent</span>
         </div>
-        <p>Add internal talent to the marketplace and make them discoverable for client opportunities.</p>
+        <p>Add your in-house talent and keep your best people ready for the right opportunities.</p>
       </div>
+      @if(@$page_event != 'EDIT')
+      <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
+        <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-globe" aria-hidden="true"></i></span>
+        <span class="talent-topbar-marketplace-copy">
+          <strong>Marketplace: <span id="talent-marketplace-status">Will be published</span></strong>
+          <small id="talent-marketplace-message">Visible to clients.</small>
+        </span>
+      </div>
+      @endif
       <div class="talent-topbar-actions">
         @php 
             if(@$page_event == 'EDIT'){ 
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
             }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Publish to Talent Marketplace</span></button>';
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small>';
             }
         @endphp
       </div>
@@ -153,37 +161,41 @@ if($snp_mode== 1){
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
               <div class="talent-stage-heading">
-                <strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong>
-                <small>Select this talent's current stage to reflect their availability.</small>
+                <div class="talent-stage-heading-copy">
+                  <span class="talent-stage-heading-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span><strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong><small>Select where this talent currently stands in your internal talent lifecycle.</small></span>
+                </div>
+                <div class="talent-stage-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Each stage has a default marketplace status. You can publish talent to the marketplace only when the stage is set to Bench.</span></div>
               </div>
               <div class="talent-stage-options">
                 <label class="talent-stage-option talent-stage-option--pool">
                   <input type="radio" name="talent_stage" value="1">
                   <span class="talent-stage-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not yet available.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-copy"><strong>Pool</strong><small>Newly added to talent pool</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--bench is-selected">
                   <input type="radio" name="talent_stage" value="2" checked>
-                  <span class="talent-stage-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for client opportunities.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for opportunities</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--hold">
                   <input type="radio" name="talent_stage" value="4">
                   <span class="talent-stage-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable for opportunities.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <button type="button" class="talent-stage-option talent-stage-option--placed" id="talent-stage-placed" aria-label="Placed: requires a client placement">
                   <span class="talent-stage-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client through placement.</small></span>
+                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </button>
                 <label class="talent-stage-option talent-stage-option--exited">
                   <input type="radio" name="talent_stage" value="5">
-                  <span class="talent-stage-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer in your talent inventory.</small></span>
-                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-xmark" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer with the company</small></span>
+                  <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
               </div>
             </section>
@@ -341,7 +353,7 @@ if($snp_mode== 1){
                       <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                       <span class="resume-card-title">
                         <strong>Professional Summary <span class="rq">*</span></strong>
-                        <small>A concise summary of this talent's expertise, experience and value to clients.</small>
+                        <small>A concise summary of this talent's expertise and experience.</small>
                       </span>
                     </div>
                   </div>
@@ -420,14 +432,14 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Professional Email <span class="rq">*</span></label>
+                    <label>Professional Email (Confidential to Client) <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-envelope"></i>
                       <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Mobile Number <span class="rq">*</span></label>
+                    <label>Mobile Number (Confidential to Client) <span class="rq">*</span></label>
                     <div class="bd-phone-control">
                       <i class="fa-solid fa-mobile-screen-button"></i>
                       <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
@@ -1134,12 +1146,15 @@ if($snp_mode== 1){
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
                       <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
-                      <div class="fg fv-row">
-                        <label>Comments (Optional)</label>
-                        <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                        <div class="cc" id="br_comment_count">0 / 500</div>
-                      </div>
                     </div>
+                  </div>
+                  <div class="br-comments-card">
+                    <div class="br-comments-head">
+                      <span class="br-comments-icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></span>
+                      <span><strong>Comments (Optional)</strong><small>Add any commercial notes for internal reference.</small></span>
+                    </div>
+                    <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="3">{{ @$application->comment }}</textarea>
+                    <div class="cc" id="br_comment_count">0 / 500</div>
                   </div>
                 </div>
               </div>
@@ -1430,12 +1445,32 @@ if($snp_mode== 1){
 
 <script>
 $(document).ready(function () {
-    // Keep the create action aligned with the submitted bench stage.
+    // Keep the create action and marketplace notice aligned with the submitted stage.
     var talentStageActions = {
-        '1': { label: 'Add to Talent Pool', icon: 'fa-users', theme: 'pool' },
-        '2': { label: 'Publish to Talent Marketplace', icon: 'fa-arrow-up', theme: 'bench' },
-        '4': { label: 'Save Talent on Hold', icon: 'fa-clock', theme: 'hold' },
-        '5': { label: 'Save Exited Talent', icon: 'fa-right-from-bracket', theme: 'exited' }
+        '1': {
+            label: 'Save to Pool Stage', icon: 'fa-users', theme: 'pool',
+            marketplace: 'Not published',
+            message: 'Internal only.',
+            hint: 'Save talent internally without publishing'
+        },
+        '2': {
+            label: 'Save to Bench Stage', icon: 'fa-arrow-up', theme: 'bench',
+            marketplace: 'Will be published',
+            message: 'Visible to clients.',
+            hint: 'Save talent and publish to marketplace'
+        },
+        '4': {
+            label: 'Save to Hold Stage', icon: 'fa-clock', theme: 'hold',
+            marketplace: 'Not published',
+            message: 'Unavailable to clients.',
+            hint: 'Save talent on hold without publishing'
+        },
+        '5': {
+            label: 'Save to Exited Stage', icon: 'fa-xmark', theme: 'exited',
+            marketplace: 'Not published',
+            message: 'Not visible to clients.',
+            hint: 'Save exited talent without publishing'
+        }
     };
     window.syncTalentStageAction = function () {
         var selected = $('input[name="talent_stage"]:checked');
@@ -1447,12 +1482,16 @@ $(document).ready(function () {
             .removeClass('talent-stage-action--pool talent-stage-action--bench talent-stage-action--hold talent-stage-action--exited')
             .addClass('talent-stage-action--' + action.theme)
             .html('<i class="fa-solid ' + action.icon + '" aria-hidden="true"></i> <span class="talent-stage-action-label">' + action.label + '</span>');
+        $('.talent-topbar-marketplace').attr('data-stage', action.theme);
+        $('#talent-marketplace-status').text(action.marketplace);
+        $('#talent-marketplace-message').text(action.message);
+        $('#talent-stage-action-hint').text(action.hint);
     };
     $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
     $('#talent-stage-placed').on('click', function () {
         Swal.fire({
-            title: 'Talent already placed',
-            text: 'Placed talent is assigned to a client. To offer this talent for new opportunities, select Bench and publish to the Talent Marketplace.',
+            title: 'Talent Already Placed',
+            html: 'No client has selected this talent yet. Change the stage to <strong>Bench</strong> to make the talent available for new client opportunities.',
             icon: 'info',
             confirmButtonText: 'Got it'
         });
@@ -2455,9 +2494,9 @@ $(document).ready(function () {
                 </label>
                 <small class="se-skill-hint">Start typing to see suggestions</small>
             </td>
-            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select name="years[]" aria-label="Experience years"></select></label></td>
-            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select name="months[]" aria-label="Experience months"></select></label></td>
-            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select name="ratings[]" aria-label="Proficiency rating"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select class="se-enterprise-native" name="years[]" aria-label="Experience years"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select class="se-enterprise-native" name="months[]" aria-label="Experience months"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select class="se-enterprise-native" name="ratings[]" aria-label="Proficiency rating"></select></label></td>
             <td><button class="ab" type="button" aria-label="Delete skill" title="Delete skill"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></td>`;
         const input = row.querySelector('[name="skills[]"]');
         input.value = name;
@@ -2508,11 +2547,23 @@ $(document).ready(function () {
             }, 250);
         });
         row.querySelector('.ab').addEventListener('click', () => {
+            if ($.fn.select2) $(row).find('.se-field--select select').select2('destroy');
             row.remove();
             updatePopularSkills();
         });
 
         experienceWrapper.appendChild(row);
+        // Enhance only attached rows; the native selects remain usable if Select2 is unavailable.
+        if ($.fn.select2) {
+            $(row).find('.se-field--select select').each(function () {
+                $(this).select2({
+                    width: '100%',
+                    dropdownParent: $(document.body),
+                    dropdownCssClass: 'se-enterprise-dropdown',
+                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity
+                });
+            });
+        }
         updatePopularSkills();
         return row;
     }

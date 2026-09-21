@@ -27,6 +27,7 @@ use App\Models\NoticePeriod;
 use App\Models\ResumeUpload;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
+use App\Services\BenchTalentHeroAnalytics;
 use App\Services\ElasticService;
 use App\Services\MailService;
 use App\Services\ShortlistBenchCandidateListingService;
@@ -62,79 +63,28 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // dd($this->global);
     }
 
-    public function index()
+    public function index(Request $request, BenchTalentHeroAnalytics $hero)
     {
-        // dd("dlkfk");
         $this->pageTitle = __('Bench Listing');
-        $this->allBenchApplication = JobApplication::count();
+        $month = $request->query('hero_month', '');
+        $window = $request->query('performance_window', 'monthly');
+        $heroData = $hero->forCompany(
+            (int) auth()->user()->company_id,
+            is_string($month) ? $month : '',
+            is_string($window) ? $window : 'monthly'
+        );
+        $this->counts = $heroData['counts'];
+        $this->heroStages = $heroData['stages'];
+        $this->heroMonth = $heroData['month'];
+        $this->performanceWindow = $heroData['window'];
+        $this->heroMonths = array_map(function (int $offset) {
+            $date = Carbon::now()->subMonthsNoOverflow($offset);
 
-        $params = [
-            'index' => ELASTIC_CANDIDATES_BENCH,
-            'size' => 0,   // no documents, only counts
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['term' => ['company_id' => auth()->user()->company_id]],
-                            ['term' => ['condidate_type.keyword' => 'bench_condidate']],
-                        ],
-                    ],
-                ],
-                'aggs' => [
-                    'all_records' => [
-                        'value_count' => [
-                            'field' => 'id',
-                        ],
-                    ],
-                    'bench' => [
-                        'filter' => [
-                            'term' => ['status' => 2],
-                        ],
-                    ],
-                    'pool' => [
-                        'filter' => [
-                            'term' => ['status' => 1],
-                        ],
-                    ],
-                    'placed' => [
-                        'filter' => [
-                            'term' => ['status' => 3],
-                        ],
-                    ],
-                    'paused' => [
-                        'filter' => [
-                            'term' => ['status' => 4],
-                        ],
-                    ],
-                    'exited' => [
-                        'filter' => [
-                            'term' => ['status' => 5],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        $this->counts = (object) [
-            'all_records' => $response['hits']['total']['value'] ?? 0,
-            'bench' => $response['aggregations']['bench']['doc_count'] ?? 0,
-            'pool' => $response['aggregations']['pool']['doc_count'] ?? 0,
-            'placed' => $response['aggregations']['placed']['doc_count'] ?? 0,
-            'paused' => $response['aggregations']['paused']['doc_count'] ?? 0,
-            'exited' => $response['aggregations']['exited']['doc_count'] ?? 0,
-        ];
-
-        $this->companies = DB::table('companies')->select('id', 'company_name')->where('id', auth()->user()->company_id)->first();
-        // dd($this->counts);
-
-        // Inhouse Talents page keeps only its hero KPI chips (counts + MoM deltas + Bench Cost);
-        // the Bench-Aging / Loss / Profit charts now live on the Staffing Dashboard.
-        $companyId = auth()->user()->company_id;
-        $analytics = $this->benchStaffingAnalytics($companyId);
-        $this->currencyCode = $analytics->currencyCode;
-        $this->deltas = $analytics->deltas;
-        $this->benchCost = $analytics->benchCost;
+            return [
+                'value' => $date->format('Y-m'),
+                'label' => $offset === 0 ? 'This Month' : ($offset === 1 ? 'Last Month' : $date->format('M Y')),
+            ];
+        }, range(0, 11));
 
         return view('service_company.bench-candidates.index', $this->data);
 
