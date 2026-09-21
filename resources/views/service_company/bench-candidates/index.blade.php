@@ -76,8 +76,9 @@
         .bench-dash .pipeline-heading-icon { color: #1680ee; font-size: 18px !important; width: 31px; text-align: center; }
         .bench-dash .pipeline-heading-title { margin: 0; color: #15254a; font-size: 13px !important; font-weight: 700; }
         .bench-dash .pipeline-heading-note { margin: 0; color: #54698f; font-size: 10.5px !important; }
-        .bench-dash .pipeline-detail-link { flex-shrink: 0; border: 1px solid #d7e6ff; border-radius: 5px; color: #0958d3; background: #f7fbff; padding: 6px 9px; font-size: 10px !important; font-weight: 600; text-decoration: none; }
-        .bench-dash .pipeline-detail-link:hover { background: #edf5ff; }
+        .bench-dash .pipeline-performance { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 30px; border: 1px solid #d7e6ff; border-radius: 5px; color: #0958d3; background: #f7fbff; padding: 4px 8px; }
+        .bench-dash .pipeline-performance:hover, .bench-dash .pipeline-performance:focus-within { background: #edf5ff; border-color: #a9caff; }
+        .bench-dash .pipeline-performance select { border: 0; outline: 0; background: transparent; color: inherit; font-size: 10px !important; font-weight: 600; cursor: pointer; }
         .bench-dash .pipeline-scroller { overflow-x: auto; scrollbar-width: thin; }
         .bench-dash .pipeline-stages { display: grid; grid-template-columns: repeat(8, minmax(122px, 1fr)); min-width: 976px; padding-top: 12px; }
         .bench-dash .pipeline-stage { position: relative; min-width: 0; text-align: center; color: #142044; padding: 0 3px 2px; border: 0; background: transparent; }
@@ -93,10 +94,13 @@
         .bench-dash .pipeline-stage.green .pipeline-stage-icon { background: #e5f8f1; color: #11a781; }
         .bench-dash .pipeline-stage.red .pipeline-stage-icon { background: #ffecef; color: #f42642; }
         .bench-dash .pipeline-stage.violet .pipeline-stage-icon { background: #f2ebff; color: #7634e9; }
-        .bench-dash .pipeline-stage:not(:last-child)::after { content: '\203A'; position: absolute; z-index: 3; top: 27px; right: -5px; color: #1267e9; font-size: 25px; line-height: 1; }
-        .bench-dash .pipeline-stage:not(:last-child)::before { content: ''; position: absolute; top: 40px; left: calc(50% + 23px); right: -2px; border-top: 1px solid #d7e7ff; }
+        .bench-dash .pipeline-connector { position: absolute; z-index: 3; top: 32px; left: calc(50% + 22px); right: calc(-50% + 22px); height: 16px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .bench-dash .pipeline-connector::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #d7e7ff; }
+        .bench-dash .pipeline-motion { position: relative; display: grid; place-items: center; width: 20px; height: 16px; background: #fbfdff; color: #1267e9; animation: pipeline-flow 2.6s ease-in-out infinite; animation-delay: var(--flow-delay, 0s); }
+        .bench-dash .pipeline-motion i { font-size: 11px !important; }
+        @keyframes pipeline-flow { 0%, 58%, 100% { transform: translateX(0); opacity: .78; } 72% { transform: translateX(3px); opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .bench-dash .pipeline-motion { animation: none; } }
         .bench-dash .pipeline-stage-value { display: block; font-size: 18px !important; line-height: 1.12; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .bench-dash .pipeline-stage-share { display: block; font-size: 10.5px !important; line-height: 1.35; }
         .bench-dash .pipeline-stage-delta { display: block; color: #00a66b; font-size: 10.5px !important; line-height: 1.35; font-weight: 600; }
         .bench-dash .pipeline-stage-delta.negative { color: #f42642; }
         .bench-dash .pipeline-stage-delta.neutral { color: #7e8ca6; }
@@ -105,7 +109,7 @@
             .bench-dash .talent-hero-actions { width: 100%; }
             .bench-dash .pipeline-heading { align-items: flex-start; flex-direction: column; }
             .bench-dash .pipeline-heading-note { line-height: 1.4; }
-            .bench-dash .pipeline-detail-link { white-space: nowrap; }
+            .bench-dash .pipeline-performance { white-space: nowrap; }
         }
 
         /* Ghost buttons (Export) */
@@ -387,13 +391,12 @@
                     <div class="talent-hero-actions">
                         <input type="hidden" id="inputSearch" name="inputSearch" />
                         @if (in_array('view_bench', $userPermissions))
-                            <form method="get" action="{{ route('service_company.bench-candidates.index') }}" class="d-inline-flex align-items-center gap-1 hero-period">
+                            <form method="get" action="{{ route('service_company.bench-candidates.index') }}" id="heroAnalyticsForm" class="d-inline-flex align-items-center gap-1 hero-period">
                                 <i class="fa fa-calendar ms-2" aria-hidden="true"></i>
-                                <select name="hero_period" class="border-0 bg-transparent pe-2" aria-label="Analytics period" onchange="this.form.submit()">
-                                    <option value="this_month" @selected($heroPeriod === 'this_month')>This Month</option>
-                                    <option value="last_month" @selected($heroPeriod === 'last_month')>Last Month</option>
-                                    <option value="last_90_days" @selected($heroPeriod === 'last_90_days')>Last 90 Days</option>
-                                    <option value="all_time" @selected($heroPeriod === 'all_time')>All Time</option>
+                                <select name="hero_month" class="border-0 bg-transparent pe-2" aria-label="Performance ending month" onchange="this.form.submit()">
+                                    @foreach ($heroMonths as $monthOption)
+                                        <option value="{{ $monthOption['value'] }}" @selected($heroMonth === $monthOption['value'])>{{ $monthOption['label'] }}</option>
+                                    @endforeach
                                 </select>
                             </form>
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
@@ -406,8 +409,8 @@
                         <details class="hero-more">
                             <summary aria-label="More actions"><i class="fa fa-ellipsis"></i></summary>
                             <div class="hero-more-menu">
-                                <a href="{{ route('service_company.bench-candidates.staffingDashboard') }}">Detailed analytics</a>
-                                <a href="{{ route('service_company.bench-candidates.index', ['hero_period' => $heroPeriod]) }}">Refresh</a>
+                                <a href="{{ route('service_company.bench-candidates.index', ['hero_month' => $heroMonth, 'performance_window' => $performanceWindow]) }}">Refresh performance</a>
+                                <a href="{{ route('service_company.bench-candidates.index') }}">Reset period</a>
                             </div>
                         </details>
                     </div>
@@ -425,7 +428,15 @@
                                     <p class="pipeline-heading-note">Track your in-house talent journey from bench to placement and measure marketplace engagement.</p>
                                 </div>
                             </div>
-                            <a class="pipeline-detail-link" href="{{ route('service_company.bench-candidates.staffingDashboard') }}">View Detailed Analytics <i class="fa fa-arrow-right ms-1"></i></a>
+                            <div class="pipeline-performance">
+                                <i class="fa fa-chart-line" aria-hidden="true"></i>
+                                <select name="performance_window" form="heroAnalyticsForm" aria-label="Performance window" onchange="this.form.submit()">
+                                    <option value="monthly" @selected($performanceWindow === 'monthly')>Monthly Performance</option>
+                                    <option value="quarterly" @selected($performanceWindow === 'quarterly')>3-Month Performance</option>
+                                    <option value="half_yearly" @selected($performanceWindow === 'half_yearly')>6-Month Performance</option>
+                                    <option value="yearly" @selected($performanceWindow === 'yearly')>Yearly Performance</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="pipeline-scroller">
                             <div class="pipeline-stages">
@@ -438,8 +449,10 @@
                                     @endif
                                         <span class="pipeline-stage-label" @if ($item['key'] === 'views') title="All-time indexed profile views" @endif>{{ $item['label'] }}</span>
                                         <span class="pipeline-stage-icon"><i class="fa {{ $item['icon'] }}" aria-hidden="true"></i></span>
-                                        <span class="pipeline-stage-value" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
-                                        <span class="pipeline-stage-share">{{ $metric['available'] ? rtrim(rtrim(number_format($metric['share'], 1), '0'), '.') . '%' : 'Unavailable' }}</span>
+                                        @unless ($loop->last)
+                                            <span class="pipeline-connector" aria-hidden="true"><span class="pipeline-motion" style="--flow-delay: {{ $loop->index * 0.12 }}s"><i class="fa fa-chevron-right"></i></span></span>
+                                        @endunless
+                                        <span class="pipeline-stage-value" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif @unless ($metric['available']) title="Analytics source unavailable" @endunless>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
                                         @if ($metric['delta'] !== null)
                                             <span class="pipeline-stage-delta {{ $metric['delta'] < 0 ? 'negative' : '' }}" @if ($item['key'] === 'talent') title="New talents added versus the preceding period" @endif><i class="fa fa-arrow-{{ $metric['delta'] < 0 ? 'down' : 'up' }}"></i> {{ $metric['delta'] > 0 ? '+' : '' }}{{ $metric['delta'] }}%</span>
                                         @else

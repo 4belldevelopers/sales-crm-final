@@ -18,11 +18,9 @@ class BenchTalentHeroAnalytics
      * Build the eight hero stages without reading MySQL. Every query is restricted
      * to the candidate-owning company or the source company of a placement.
      */
-    public function forCompany(int $companyId, string $period): array
+    public function forCompany(int $companyId, string $month, string $window): array
     {
-        $period = in_array($period, ['this_month', 'last_month', 'last_90_days', 'all_time'], true)
-            ? $period : 'this_month';
-        [$current, $previous] = $this->periods($period);
+        [$month, $window, $current, $previous] = $this->periods($month, $window);
 
         $body = [];
         $this->addSearch($body, ELASTIC_CANDIDATES_BENCH, [
@@ -91,18 +89,19 @@ class BenchTalentHeroAnalytics
         $placed = (int) ($placements['aggregations']['current']['doc_count'] ?? 0);
 
         $stages = [
-            'talent' => $this->stage($total, $total > 0 ? 100 : 0, $bench['aggregations']['added_current']['doc_count'] ?? 0, $bench['aggregations']['added_previous']['doc_count'] ?? 0, $previous),
-            'bench' => $this->stage($benchCount, $this->percent($benchCount, $total), 0, 0, null),
-            'sent' => $this->stage($sent, $this->percent($sent, $total), $sent, $requests['aggregations']['previous']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'accepted' => $this->stage($accepted, $this->percent($accepted, $sent), $accepted, $requests['aggregations']['previous']['accepted']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'expired' => $this->stage($expired, $this->percent($expired, $sent), $expired, $requests['aggregations']['previous']['expired']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'views' => $this->stage($views, $this->percent($views, $total), 0, 0, null),
-            'interviews' => $this->stage($interviewCount, $this->percent($interviewCount, $sent), $interviewCount, $interviews['aggregations']['previous']['doc_count'] ?? 0, $previous, $interviewsAvailable),
-            'placed' => $this->stage($placed, $this->percent($placed, $sent), $placed, $placements['aggregations']['previous']['doc_count'] ?? 0, $previous, $placementsAvailable),
+            'talent' => $this->stage($total, $bench['aggregations']['added_current']['doc_count'] ?? 0, $bench['aggregations']['added_previous']['doc_count'] ?? 0, $previous),
+            'bench' => $this->stage($benchCount, 0, 0, null),
+            'sent' => $this->stage($sent, $sent, $requests['aggregations']['previous']['doc_count'] ?? 0, $previous, $requestsAvailable),
+            'accepted' => $this->stage($accepted, $accepted, $requests['aggregations']['previous']['accepted']['doc_count'] ?? 0, $previous, $requestsAvailable),
+            'expired' => $this->stage($expired, $expired, $requests['aggregations']['previous']['expired']['doc_count'] ?? 0, $previous, $requestsAvailable),
+            'views' => $this->stage($views, 0, 0, null),
+            'interviews' => $this->stage($interviewCount, $interviewCount, $interviews['aggregations']['previous']['doc_count'] ?? 0, $previous, $interviewsAvailable),
+            'placed' => $this->stage($placed, $placed, $placements['aggregations']['previous']['doc_count'] ?? 0, $previous, $placementsAvailable),
         ];
 
         return [
-            'period' => $period,
+            'month' => $month,
+            'window' => $window,
             'counts' => (object) [
                 'all_records' => $total,
                 'pool' => (int) ($bench['aggregations']['pool']['doc_count'] ?? 0),
@@ -140,44 +139,42 @@ class BenchTalentHeroAnalytics
         return $bucket;
     }
 
-    /** Pair a selected window with the immediately preceding comparable window. */
-    private function periods(string $period): array
+    /** Anchor a 1/3/6/12-month window to the selected month and compare prior months. */
+    private function periods(string $month, string $window): array
     {
         $now = CarbonImmutable::now();
+        $allowedMonths = array_map(
+            fn (int $offset) => $now->subMonthsNoOverflow($offset)->format('Y-m'),
+            range(0, 11)
+        );
+        $month = in_array($month, $allowedMonths, true) ? $month : $allowedMonths[0];
+        $monthCounts = ['monthly' => 1, 'quarterly' => 3, 'half_yearly' => 6, 'yearly' => 12];
+        $window = array_key_exists($window, $monthCounts) ? $window : 'monthly';
+        $months = $monthCounts[$window];
 
-        return match ($period) {
-            'last_month' => [
-                [$now->subMonthNoOverflow()->startOfMonth()->toIso8601String(), $now->startOfMonth()->toIso8601String()],
-                [$now->subMonthsNoOverflow(2)->startOfMonth()->toIso8601String(), $now->subMonthNoOverflow()->startOfMonth()->toIso8601String()],
-            ],
-            'last_90_days' => [
-                [$now->subDays(90)->toIso8601String(), $now->toIso8601String()],
-                [$now->subDays(180)->toIso8601String(), $now->subDays(90)->toIso8601String()],
-            ],
-            'all_time' => [null, null],
-            default => [
-                [$now->startOfMonth()->toIso8601String(), $now->toIso8601String()],
-                [$now->subMonthNoOverflow()->startOfMonth()->toIso8601String(), $now->subMonthNoOverflow()->toIso8601String()],
-            ],
-        };
+        $anchor = $now->setDate((int) substr($month, 0, 4), (int) substr($month, 5, 2), 1)->startOfDay();
+        $currentStart = $anchor->subMonthsNoOverflow($months - 1)->startOfMonth();
+        $currentEnd = $month === $allowedMonths[0] ? $now : $anchor->addMonth();
+        $previousStart = $currentStart->subMonthsNoOverflow($months)->startOfMonth();
+        $previousEnd = $currentEnd->subMonthsNoOverflow($months);
+
+        return [
+            $month,
+            $window,
+            [$currentStart->toIso8601String(), $currentEnd->toIso8601String()],
+            [$previousStart->toIso8601String(), $previousEnd->toIso8601String()],
+        ];
     }
 
-    /** Return a displayed count, share and signed comparison percentage. */
-    private function stage(int $value, float|int $share, int $current, int $previousCount, ?array $previous, bool $available = true): array
+    /** Return a displayed count and its signed change from the preceding window. */
+    private function stage(int $value, int $current, int $previousCount, ?array $previous, bool $available = true): array
     {
         return [
             'value' => $value,
-            'share' => $share,
             'available' => $available,
             'delta' => ! $available || $previous === null ? null : ($previousCount > 0
                 ? round((($current - $previousCount) / $previousCount) * 100, 1)
                 : ($current > 0 ? 100.0 : 0.0)),
         ];
-    }
-
-    /** Express one stage as a share of its meaningful predecessor. */
-    private function percent(int $part, int $whole): float
-    {
-        return $whole > 0 ? round($part / $whole * 100, 1) : 0;
     }
 }
