@@ -3,6 +3,7 @@
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
+    $company_id = $company_id ?? auth()->user()->company_id ?? null;
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $feedback_status = GeneralMethod::feedback_status();

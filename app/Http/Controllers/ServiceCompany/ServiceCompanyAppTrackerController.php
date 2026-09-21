@@ -3001,7 +3001,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
         $responseData = [
-            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid'))->render(),
+            'html' => view('service_company.ajax_pages.clientappdata_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'company_id'))->render(),
             'total' => $total,
             'allCandidateCounter' => $allCandidateCounter,
             'SourcingCounter' => $SourcingCounter,

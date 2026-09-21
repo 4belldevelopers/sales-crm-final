@@ -246,22 +246,6 @@
             <td>
                 @php
 
-                    echo ' <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder fs-6" style="text-transform: uppercase;!important">' .
-                        ucwords(mb_substr(@$row->qualification_name, 0, 10)) .
-                        '</a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        strtoupper(@$row->skills) .
-                        '">' .
-                        strtoupper(mb_substr(@$row->skills, 0, 15)) .
-                        '</span> 
-                  </div>';
-
-                @endphp
-            </td>
-            <td>
-                @php
-
                     $country = '';
                     $row_country_name = '';
 
@@ -274,6 +258,8 @@
                                 foreach ($country_name_Arr as $cval) {
                                     $row_country_name = ucwords($cval['name']);
                                 }
+                            } else {
+                                $row_country_name = @$row->country;
                             }
                         }
                     }
@@ -281,7 +267,7 @@
                     $state = '';
                     $row_state_name = '';
                     if (empty($row->state)) {
-                        $row_state_name = '----';
+                        $row_state_name = '';
                     } else {
                         if (@$row->country == 101) {
                             $row_state_name = @$row->state_name;
@@ -294,6 +280,8 @@
                                         $row_state_name = ucwords($sval['name']);
                                     }
                                 }
+                            } else {
+                                $row_state_name = @$row->state;
                             }
                         }
                     }
@@ -307,21 +295,32 @@
                     } else {
                         $row_city_name = @$row->city;
                     }
+                    if (empty($row_city_name) && !empty($row->city_name)) {
+                        $row_city_name = $row->city_name;
+                    }
+
+                    $countryCode = '';
+                    if (!empty($row_country_name) && $row_country_name != '----') {
+                        $countryCode = strtoupper(mb_substr($row_country_name, 0, 2));
+                    }
+
+                    $locationTitle = trim(ucwords($row_city_name) . ($countryCode ? ', ' . $countryCode : ''), ', ');
+                    if (empty($locationTitle)) {
+                        $locationTitle = '----';
+                    }
+
+                    $locationSub = !empty($row->qualification_name) ? strtoupper($row->qualification_name) : (!empty($row_state_name) ? ucwords($row_state_name) : '');
 
                     echo '<div class="d-flex flex-column">
                         <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
-                        ucwords($row_city_name) .
+                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr($row_city_name, 0, 10)) .
+                        htmlspecialchars($locationTitle, ENT_QUOTES, 'UTF-8') .
                         '</a>
                         <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords($row_state_name) .
-                        ' | ' .
-                        strtoupper($row_country_name) .
+                        htmlspecialchars($locationSub, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucfirst(mb_substr($row_state_name, 0, 10)) .
-                        ' | ' .
-                        strtoupper(mb_substr($row_country_name, 0, 2)) .
+                        htmlspecialchars(mb_substr($locationSub, 0, 15), ENT_QUOTES, 'UTF-8') .
                         '</span>
                     </div>';
 

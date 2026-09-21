@@ -673,7 +673,6 @@ use Carbon\Carbon;
                                         <th class="min-w-15px">Exp.</th>
                                         <th class="min-w-15px">Salary</th>
                                         <th class="min-w-15px">Notice</th>
-                                        <th class="min-w-15px">Qualification</th>
                                         <th class="min-w-15px">Location</th>
                                         <th class="min-w-15px"> Source</th>
                                         <th class="min-w-15px">Upload</th>
@@ -753,7 +752,6 @@ use Carbon\Carbon;
                                         <th class="min-w-15px">Exp.</th>
                                         <th class="min-w-15px">Salary</th>
                                         <th class="min-w-15px">Notice</th>
-                                        <th class="min-w-15px">Qualification</th>
                                         <th class="min-w-15px">Location</th>
                                         <th class="min-w-15px"> Source</th>
                                         <th class="min-w-15px">Upload</th>
