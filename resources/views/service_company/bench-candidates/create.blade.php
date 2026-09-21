@@ -113,9 +113,8 @@ if($snp_mode== 1){
       <div class="talent-topbar-copy">
         <div class="talent-topbar-title-row">
           <h1>Add In-House Talent</h1>
-          <span class="talent-topbar-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
         </div>
-        <p>Add internal talent to your organization and optionally make them discoverable to clients through the Talent Marketplace.</p>
+        <p>Add internal talent to your organization.</p>
       </div>
       @if(@$page_event != 'EDIT')
       <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
@@ -172,30 +171,30 @@ if($snp_mode== 1){
                 <label class="talent-stage-option talent-stage-option--pool">
                   <input type="radio" name="talent_stage" value="1">
                   <span class="talent-stage-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not currently available.</small></span>
+                  <span class="talent-stage-copy"><strong>Pool</strong><small>Newly added to talent pool</small></span>
                   <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--bench is-selected">
                   <input type="radio" name="talent_stage" value="2" checked>
                   <span class="talent-stage-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for deployment. Can be considered for client opportunities.</small></span>
+                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for opportunities</small></span>
                   <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <label class="talent-stage-option talent-stage-option--hold">
                   <input type="radio" name="talent_stage" value="4">
                   <span class="talent-stage-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable. Not currently available for client opportunities.</small></span>
+                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable</small></span>
                   <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
                 <button type="button" class="talent-stage-option talent-stage-option--placed" id="talent-stage-placed" aria-label="Placed: requires a client placement">
                   <span class="talent-stage-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Placed</strong><small>Currently placed. Assigned to a client through placement.</small></span>
+                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client</small></span>
                   <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </button>
                 <label class="talent-stage-option talent-stage-option--exited">
                   <input type="radio" name="talent_stage" value="5">
                   <span class="talent-stage-icon"><i class="fa-solid fa-xmark" aria-hidden="true"></i></span>
-                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer available. No longer part of your active talent inventory.</small></span>
+                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer with the company</small></span>
                   <span class="talent-stage-indicator" aria-hidden="true"></span>
                 </label>
               </div>
@@ -354,7 +353,7 @@ if($snp_mode== 1){
                       <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                       <span class="resume-card-title">
                         <strong>Professional Summary <span class="rq">*</span></strong>
-                        <small>A concise summary of this talent's expertise, experience and value to clients.</small>
+                        <small>A concise summary of this talent's expertise and experience.</small>
                       </span>
                     </div>
                   </div>
@@ -433,14 +432,14 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Professional Email <span class="rq">*</span></label>
+                    <label>Professional Email (Confidential to Client) <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-envelope"></i>
                       <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Mobile Number <span class="rq">*</span></label>
+                    <label>Mobile Number (Confidential to Client) <span class="rq">*</span></label>
                     <div class="bd-phone-control">
                       <i class="fa-solid fa-mobile-screen-button"></i>
                       <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
@@ -1491,8 +1490,8 @@ $(document).ready(function () {
     $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
     $('#talent-stage-placed').on('click', function () {
         Swal.fire({
-            title: 'Talent already placed',
-            text: 'Placed talent is already assigned to a client and cannot be published from this form. Select Bench only when the talent is available for new client opportunities.',
+            title: 'Talent Already Placed',
+            html: 'No client has selected this talent yet. Change the stage to <strong>Bench</strong> to make the talent available for new client opportunities.',
             icon: 'info',
             confirmButtonText: 'Got it'
         });
@@ -2495,9 +2494,9 @@ $(document).ready(function () {
                 </label>
                 <small class="se-skill-hint">Start typing to see suggestions</small>
             </td>
-            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select name="years[]" aria-label="Experience years"></select></label></td>
-            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select name="months[]" aria-label="Experience months"></select></label></td>
-            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select name="ratings[]" aria-label="Proficiency rating"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select class="se-enterprise-native" name="years[]" aria-label="Experience years"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select class="se-enterprise-native" name="months[]" aria-label="Experience months"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select class="se-enterprise-native" name="ratings[]" aria-label="Proficiency rating"></select></label></td>
             <td><button class="ab" type="button" aria-label="Delete skill" title="Delete skill"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></td>`;
         const input = row.querySelector('[name="skills[]"]');
         input.value = name;
@@ -2548,11 +2547,23 @@ $(document).ready(function () {
             }, 250);
         });
         row.querySelector('.ab').addEventListener('click', () => {
+            if ($.fn.select2) $(row).find('.se-field--select select').select2('destroy');
             row.remove();
             updatePopularSkills();
         });
 
         experienceWrapper.appendChild(row);
+        // Enhance only attached rows; the native selects remain usable if Select2 is unavailable.
+        if ($.fn.select2) {
+            $(row).find('.se-field--select select').each(function () {
+                $(this).select2({
+                    width: '100%',
+                    dropdownParent: $(document.body),
+                    dropdownCssClass: 'se-enterprise-dropdown',
+                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity
+                });
+            });
+        }
         updatePopularSkills();
         return row;
     }
