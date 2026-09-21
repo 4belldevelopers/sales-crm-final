@@ -1147,12 +1147,15 @@ if($snp_mode== 1){
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
                       <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
-                      <div class="fg fv-row">
-                        <label>Comments (Optional)</label>
-                        <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                        <div class="cc" id="br_comment_count">0 / 500</div>
-                      </div>
                     </div>
+                  </div>
+                  <div class="br-comments-card">
+                    <div class="br-comments-head">
+                      <span class="br-comments-icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></span>
+                      <span><strong>Comments (Optional)</strong><small>Add any commercial notes for internal reference.</small></span>
+                    </div>
+                    <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="3">{{ @$application->comment }}</textarea>
+                    <div class="cc" id="br_comment_count">0 / 500</div>
                   </div>
                 </div>
               </div>
