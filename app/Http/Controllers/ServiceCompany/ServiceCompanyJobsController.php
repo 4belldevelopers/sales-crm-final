@@ -1277,6 +1277,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function index()
     {
+
+        // $mapping = $this->elasticService->getClient()->indices()->getMapping([
+        //     'index' => ELASTIC_JOBS
+        // ]);
+        // dd($mapping);
+
         // Step 9b: ETag derived from user+company+permissions. Unchanged page load → 304, zero DB hit.
         $etagSource = $this->user->id.':'.$this->user->company_id.':'.implode(',', $this->userPermissions ?? []);
         $etag = '"'.hash('sha256', $etagSource).'"';
@@ -2589,37 +2595,46 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return $this->recommandedrequest_ajax($request);
         }
 
-        $final_status = [1, 2, 3];
-        if ($custom_status === 'removed') {
-            $final_status = [2, 3];
-        } elseif (in_array($custom_status, ['active', 'hold', 'inactive'])) {
-            $final_status = [1];
-        }
-
-        $rcommendationIds = $this->elasticService->getClient()->search([
-            'index' => ELASTIC_JOB_REQUEST,
-            'body' => [
-                'size' => 10000,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['to_company_id' => $company_id]],
-                            ['terms' => ['final_status' => $final_status]],
+        // INTENT: Fetch & cache recommendation job IDs for company once to eliminate duplicate size:10000 ES queries. Tenancy: scoped to to_company_id.
+        $recCacheKey = 'ats:job_recommendation_ids:'.$company_id;
+        $allRecHits = cache()->remember($recCacheKey, 300, function () use ($company_id) {
+            if (! $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                return [];
+            }
+            try {
+                $res = $this->elasticService->getClient()->search([
+                    'index' => ELASTIC_JOB_REQUEST,
+                    'body' => [
+                        'size' => 10000,
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['to_company_id' => $company_id]],
+                                    ['terms' => ['final_status' => [1, 2, 3]]],
+                                ],
+                            ],
                         ],
+                        '_source' => ['job_id', 'final_status'],
                     ],
-                ],
-                '_source' => ['job_id'],
-            ],
-        ]);
+                ]);
 
-        // Extract company IDs
-        $jobIds = collect($rcommendationIds['hits']['hits'])
-            ->pluck('_source.job_id')
-            ->unique()
-            ->values()
-            ->toArray();
+                return collect($res['hits']['hits'] ?? [])->map(fn ($h) => $h['_source'] ?? [])->toArray();
+            } catch (\Throwable $e) {
+                return [];
+            }
+        });
 
-        // dd($jobIds);
+        $allDirectIds = collect($allRecHits)->pluck('job_id')->unique()->filter()->values()->toArray();
+        $removedDirectIds = collect($allRecHits)->filter(fn ($r) => in_array((int) ($r['final_status'] ?? 0), [2, 3]))->pluck('job_id')->unique()->filter()->values()->toArray();
+        $activeRecJobIds = collect($allRecHits)->filter(fn ($r) => (int) ($r['final_status'] ?? 0) === 1)->pluck('job_id')->unique()->filter()->values()->toArray();
+
+        if ($custom_status === 'removed') {
+            $jobIds = $removedDirectIds;
+        } elseif (in_array($custom_status, ['active', 'hold', 'inactive'])) {
+            $jobIds = $activeRecJobIds;
+        } else {
+            $jobIds = $allDirectIds;
+        }
 
         $statusArr = [];
         $must = [];
@@ -2738,10 +2753,10 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         // Prefix-anchored wildcard for company/client name
                         ['wildcard' => ['client_name' => $lowerSearch.'*']],
                         ['wildcard' => ['company_name' => $lowerSearch.'*']],
-                        ['wildcard' => ['job_assign.user_name' => '*'.$lowerSearch.'*']],
-                        ['wildcard' => ['client_contact_info_jobs.contact_person_name' => '*'.$lowerSearch.'*']],
-                        ['wildcard' => ['client_city_jobs.city_name' => '*'.$lowerSearch.'*']],
-                        ['wildcard' => ['client_city_jobs.country_name' => '*'.$lowerSearch.'*']],
+                        ['wildcard' => ['job_assign.user_name' => $lowerSearch.'*']],
+                        ['wildcard' => ['client_contact_info_jobs.contact_person_name' => $lowerSearch.'*']],
+                        ['wildcard' => ['client_city_jobs.city_name' => $lowerSearch.'*']],
+                        ['wildcard' => ['client_city_jobs.country_name' => $lowerSearch.'*']],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -2898,6 +2913,47 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $companiesMap = ! empty($parentCompanyIds)
                 ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('company_name', 'id')->toArray()
                 : [];
+
+            // INTENT: Bulk pre-fetch company logo paths & client details to eliminate N+1 companyDetails ES calls.
+            $companiesLogoMap = ! empty($parentCompanyIds)
+                ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('logo', 'id')->toArray()
+                : [];
+
+            $allClientIds = collect($data)->pluck('client_id')->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
+            $clientsDetailsMap = ! empty($allClientIds)
+                ? DB::table('clients')->whereIn('id', $allClientIds)->get(['id', 'logo_logical_path', 'self_company'])->keyBy('id')->toArray()
+                : [];
+
+            // INTENT: Bulk aggregate agency counts from ELASTIC_JOB_REQUEST to eliminate 1 ES query/job N+1. Tenancy: from_company_id.
+            $bulkAgencyCounts = [];
+            if (! empty($allJobIds) && $this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                try {
+                    $agencyAggs = $this->elasticService->getClient()->search([
+                        'index' => ELASTIC_JOB_REQUEST,
+                        'size' => 0,
+                        'body' => [
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['from_company_id' => $company_id]],
+                                        ['terms' => ['job_id' => array_map('intval', $allJobIds)]],
+                                        ['term' => ['to_status' => 1]],
+                                    ],
+                                ],
+                            ],
+                            'aggs' => [
+                                'by_job' => [
+                                    'terms' => ['field' => 'job_id', 'size' => count($allJobIds)],
+                                ],
+                            ],
+                        ],
+                    ]);
+                    foreach ($agencyAggs['aggregations']['by_job']['buckets'] ?? [] as $bucket) {
+                        $bulkAgencyCounts[(int) $bucket['key']] = (int) $bucket['doc_count'];
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
 
             $batchCandidateCounts = [];
             if (! empty($allJobIds) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
@@ -3067,7 +3123,19 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     $parentCompanyName = $companiesMap[$parentCompId] ?? ($row->company_name ?? ($row->client_name ?? ''));
                 }
 
-                $logo_path = GeneralMethod::companyDetails($row->id);
+                // INTENT: Bulk-resolve company/client logo in memory without N+1 ES calls.
+                $logo_path = '';
+                $jobComId = (int) ($row->comId ?? 0);
+                $jobClientId = (int) ($row->client_id ?? 0);
+                if ($jobComId === (int) $company_id) {
+                    $clientDetails = $clientsDetailsMap[$jobClientId] ?? null;
+                    $logo_path = $clientDetails->logo_logical_path ?? '';
+                    if (($clientDetails->self_company ?? 0) == 1) {
+                        $logo_path = $companiesLogoMap[$jobComId] ?? $logo_path;
+                    }
+                } else {
+                    $logo_path = $companiesLogoMap[$jobComId] ?? '';
+                }
                 $department = $categoriesMap[$row->category_id] ?? '';
 
                 $min_sal_mode = ['/Annum', '/Month', '/Hour'][$row->min_sal_mode ?? 0] ?? '';
@@ -3226,8 +3294,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 if ($isDirectClientJob) {
                     $agencyCompanyName = $companiesMap[$company_id] ?? (DB::table('companies')->where('id', $company_id)->value('company_name') ?? '');
                 } else {
-                    $agencies = GeneralMethod::agencyCount($company_id, $row->id, 1);
-                    $agencyCount = is_array($agencies) || $agencies instanceof \Countable ? count($agencies) : 0;
+                    $agencyCount = $bulkAgencyCounts[$targetJobId] ?? 0;
                 }
 
                 $formattedJobs[] = [
@@ -3288,43 +3355,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                         ->toArray();
                 }
 
-                // Query ELASTIC_JOB_REQUEST for exact recommendation job IDs by status
-                $allRecJobIds = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => [
-                        'size' => 10000,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['to_company_id' => $company_id]],
-                                    ['terms' => ['final_status' => [1, 2, 3]]],
-                                ],
-                            ],
-                        ],
-                        '_source' => ['job_id'],
-                    ],
-                ]);
-                $allDirectIds = collect($allRecJobIds['hits']['hits'] ?? [])->pluck('_source.job_id')->unique()->values()->toArray();
-
-                $removedRecJobIds = $this->elasticService->getClient()->search([
-                    'index' => ELASTIC_JOB_REQUEST,
-                    'body' => [
-                        'size' => 10000,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['to_company_id' => $company_id]],
-                                    ['terms' => ['final_status' => [2, 3]]],
-                                ],
-                            ],
-                        ],
-                        '_source' => ['job_id'],
-                    ],
-                ]);
-                $removedDirectIds = collect($removedRecJobIds['hits']['hits'] ?? [])->pluck('_source.job_id')->unique()->values()->toArray();
-
-                $activeRecJobIds = array_values(array_diff($allDirectIds, $removedDirectIds));
-
+                // INTENT: Re-use pre-calculated direct client job IDs ($removedDirectIds & $activeRecJobIds) to eliminate 2 duplicate size:10000 ES queries.
                 if ($isNonAdmin) {
                     $removedDirectIds = array_values(array_intersect($removedDirectIds, $userAssignedJobIds));
                     $activeRecJobIds = array_values(array_intersect($activeRecJobIds, $userAssignedJobIds));
