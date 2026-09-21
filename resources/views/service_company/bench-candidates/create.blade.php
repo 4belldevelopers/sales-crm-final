@@ -785,36 +785,38 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <div class="fs aw-card">
+            <div class="fs aw-card {{ ($snp_mode===1) ? 'is-date-availability' : 'is-immediate-availability' }}">
               <div class="aw-hero">
                 <div class="aw-hero-title">
-                  <span class="aw-hero-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                  <span class="aw-hero-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                   <span>
                     <strong>Availability &amp; Work Preferences</strong>
                     <small>Define the availability and work preferences for this talent.</small>
                   </span>
                 </div>
-                <span class="aw-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+                <span class="aw-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
               </div>
               <div class="fsc aw-body">
                 <div class="aw-grid">
                   <div class="fg fv-row aw-field aw-field--wide">
                     <label>Availability <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select when this talent can start.</small>
                     <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
                       <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
                       <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
                       <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                     <div class="aw-option-grid" data-aw-options>
-                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
+                      <button type="button" class="aw-option aw-option--now {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2" aria-pressed="{{ ($snp_mode===2) ? 'true' : 'false' }}">
                         <span class="aw-radio"></span>
                         <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
                           <strong>Immediate Joiner</strong>
                           <small>This talent can start immediately.</small>
                         </span>
+                        <span class="aw-recommended">Recommended</span>
                       </button>
-                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
+                      <button type="button" class="aw-option aw-option--date {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1" aria-pressed="{{ ($snp_mode===1) ? 'true' : 'false' }}">
                         <span class="aw-radio"></span>
                         <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
@@ -826,12 +828,14 @@ if($snp_mode== 1){
                   </div>
 
                   <div class="fg fv-row aw-field">
-                    <label class="aw-date-label">Enter the date from which this talent will be available. <span class="rq">*</span></label>
+                    <label class="aw-date-label" for="np_id_display">Available From Date <span class="rq">*</span></label>
+                    <small class="aw-field-help">Enter the date from which this talent will be available.</small>
                     <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
                       <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
+                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show the talent's availability to clients in the marketplace.</span></div>
                     <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
                       <option value="">Select Notice Period</option>
                       @php
@@ -852,28 +856,31 @@ if($snp_mode== 1){
                 <div class="aw-grid aw-grid--work">
                   <div class="fg fv-row aw-field aw-field--wide">
                     <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
                     <div class="aw-work-grid">
                       <label class="aw-work-option aw-work-option--remote" for="wr">
                         <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-wifi" aria-hidden="true"></i>
-                        <strong>Remote</strong>
+                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
+                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                        <strong>Hybrid</strong>
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--office" for="wo">
                         <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <strong>Work From Office</strong>
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Work From Office</strong><small>Office location based work.</small></span>
                       </label>
                     </div>
                   </div>
                 </div>
+
+                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
 
               </div>
             </div>
@@ -906,7 +913,7 @@ if($snp_mode== 1){
                   <div class="br-model-grid">
                     <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1" role="radio" aria-checked="{{ (@$application->comission_type == 1) ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
-                      <span class="br-option-icon"><i class="fa-regular fa-gift"></i></span>
+                      <span class="br-option-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></span>
                       <span class="br-option-copy">
                         <strong>Free Service</strong>
                         <em>No charge to client</em>
@@ -915,7 +922,7 @@ if($snp_mode== 1){
                     </button>
                     <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2" role="radio" aria-checked="{{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
-                      <span class="br-option-icon"><i class="fa fa-rupee-sign"></i></span>
+                      <span class="br-option-icon"><i class="fa-solid fa-credit-card" aria-hidden="true"></i></span>
                       <span class="br-option-copy">
                         <strong>Paid Service</strong>
                         <em>Client will be billed</em>
@@ -1016,7 +1023,7 @@ if($snp_mode== 1){
                   <div class="br-rate-grid">
                     <div class="br-rate-panel br-pay-panel">
                       <div class="br-panel-head">
-                        <span class="br-panel-icon"><i class="fa-regular fa-user"></i></span>
+                        <span class="br-panel-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
                         <span>
                           <strong>Candidate Cost (Pay Rate)</strong>
                           <small>What you pay to the candidate</small>
@@ -1058,12 +1065,12 @@ if($snp_mode== 1){
                           <span><em id="br_pay_auto_label_two">Hourly Cost</em><b id="br_pay_hourly_display">0</b></span>
                         </div>
                       </div>
-                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
+                      <div class="br-formula"><i class="fa-solid fa-calculator" aria-hidden="true"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
                     </div>
 
                     <div class="br-rate-panel br-bill-panel">
                       <div class="br-panel-head">
-                        <span class="br-panel-icon"><i class="fa-solid fa-coins"></i></span>
+                        <span class="br-panel-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                         <span>
                           <strong>Client Bill Rate</strong>
                           <small>What you charge to the client</small>
@@ -1105,7 +1112,7 @@ if($snp_mode== 1){
                           <span><em id="br_bill_auto_label_two">Hourly Bill Rate</em><b id="br_bill_hourly_display">0</b></span>
                         </div>
                       </div>
-                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
+                      <div class="br-formula"><i class="fa-solid fa-calculator" aria-hidden="true"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
                     </div>
 
                     <div class="br-margin-panel">
@@ -1123,7 +1130,7 @@ if($snp_mode== 1){
                         <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
                       </div>
                       <div class="br-margin-state">
-                        <i class="fa-solid fa-check"></i>
+                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
                       <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
@@ -2093,6 +2100,7 @@ $(document).ready(function () {
         let profitValue = $('#percentage_hike').val();
         let displayedPercent = profitValue !== '' ? commercialNumber(profitValue) : computedPercent;
         let isFree = isFreeCommercialMode();
+        let needsMarginReview = modeConfig.basePay > 0 && modeConfig.baseBill > 0 && (margin < 0 || displayedPercent < 10);
 
         $('#br_pay_auto_label_one').text(modeConfig.payAutoOneLabel);
         $('#br_pay_auto_label_two').text(modeConfig.payAutoTwoLabel);
@@ -2111,23 +2119,23 @@ $(document).ready(function () {
             $('#br_summary_percent_label').text('Selected Model');
             $('#br_summary_bill_annual').text('Disabled');
             $('#br_summary_margin').text('Not billed');
-            $('#br_summary_percent').text('Free');
+            $('#br_summary_percent').text('Free Service');
             $('.br-margin-state').removeClass('is-low').addClass('is-free');
             $('#br_margin_status').text('Free Service Selected');
-            $('#br_margin_note').text('Client bill rate is locked because this talent will be offered without commercial billing.');
+            $('#br_margin_note').text('This talent will be offered to clients without commercial billing. Client bill rate is not required.');
         } else {
             $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
             $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
             $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text(modeConfig.billLabel);
-            $('#br_summary_margin_label').text(modeConfig.marginLabel);
-            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_bill_label').text('Client Billing');
+            $('#br_summary_margin_label').text('Commercial Margin');
+            $('#br_summary_percent_label').text('Selected Model');
             $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
-            $('#br_summary_margin').text(commercialFormat(margin));
-            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
-            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', margin < 0 || displayedPercent < 10);
-            $('#br_margin_status').text((margin < 0 || displayedPercent < 10) ? 'Review Margin' : 'Healthy Margin');
-            $('#br_margin_note').text((margin < 0 || displayedPercent < 10) ? 'Please review the configured bill rate.' : 'This margin looks good.');
+            $('#br_summary_margin').text(commercialFormat(margin) + ' (' + commercialFormat(displayedPercent, '%') + ')');
+            $('#br_summary_percent').text('Paid Service');
+            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', needsMarginReview);
+            $('#br_margin_status').text(needsMarginReview ? 'Review Margin' : 'Paid Service Selected');
+            $('#br_margin_note').text(needsMarginReview ? 'Please review the configured bill rate.' : 'Client will be billed. Set pay rate, bill rate and manage margin.');
         }
 
         $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
@@ -2853,6 +2861,7 @@ function isAvailableFromDateMode() {
 
 function syncAvailableFromDateControl() {
     var editable = isAvailableFromDateMode();
+    $('.aw-card').toggleClass('is-date-availability', editable).toggleClass('is-immediate-availability', !editable);
     $('#np_id').prop('disabled', !editable);
     $('#snp-immediate').css('display', 'flex');
     $('#np_id_display')
@@ -2886,8 +2895,8 @@ function openAvailableFromDatePicker() {
 
 $(document).on('change','#serving_notice_period',function(){
     var cvalue = $('#serving_notice_period').val();
-    $('.aw-option').removeClass('is-selected');
-    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected');
+    $('.aw-option').removeClass('is-selected').attr('aria-pressed', 'false');
+    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected').attr('aria-pressed', 'true');
 		$('#np_id').val('');
 		$('#np_id_display').val('');
 		$('#ddl_np_id').val('');
@@ -2933,8 +2942,8 @@ $(function(){
         selectedAvailability = '2';
         $('#serving_notice_period').val('2');
     }
-    $('.aw-option').removeClass('is-selected');
-    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
+    $('.aw-option').removeClass('is-selected').attr('aria-pressed', 'false');
+    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected').attr('aria-pressed', 'true');
     syncAvailableFromDateControl();
 });
 
