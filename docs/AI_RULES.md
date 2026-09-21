@@ -1,65 +1,79 @@
-# AI Coding Rules
+# AI Coding Rules — GOD-Level Architectural Mandates
 
-Rules for any AI agent (Claude Code, Cursor, Windsurf, etc.) working in this repo.
-These exist because this codebase is **huge** (controllers up to ~800 KB, ~2,240
-routes, 86 models) and partly **non-standard** (schema not in migrations, ES as a
-read store). Following these saves tokens and prevents breakage.
+> **Mandatory rules for all AI coding agents (Claude Code, Cursor, Windsurf, Copilot, Antigravity) and human engineers working on JERO.**
+> These rules are non-negotiable. Violations lead to production downtime, server collapse under 10K concurrency, data corruption, or cross-tenant data leaks.
 
-## Context / token discipline
-1. **Read the docs first**, not the code: `ARCHITECTURE.md` → `MODULE_MAP.md` →
-   the relevant `.ai/tasks/*.md` → `.ai/summaries/*`. Only then open source.
-2. **Never read a large controller whole.** `HomeController`,
-   `ServiceCompany*Controller`, `SuperAdminCompanyController`, `SaasFrontController`
-   etc. are hundreds of KB. Use `Grep` for the method/route name and read only that
-   region (with a small line window).
-3. **Never read route files whole.** Use `php artisan route:list --path=<x>` or grep
-   the `->name()`.
-4. **Don't scan `resources/views/` broadly** — it's enormous (see memory
-   [[agency-marketplace-views]] for where key views live). Target by feature.
-5. **Ignore dead code:** anything matching `OLD_`, `old_`, `OLD_2_`, files under
-   `oldBackUp/`, stray `*.blade.php` / `error_log` inside `app/`, and the root-level
-   `ServiceCompanyJobApplicationController.php`. See `BAD_PATTERNS.md`.
+---
 
-## Make changes that fit
-6. **Match the existing pattern.** This app has no repository layer and fat
-   controllers/services. Don't introduce new architectural layers unprompted.
-7. **Reuse, don't duplicate.** Before writing logic, check `app/Services/`,
-   `app/Http/Requests/` (55 form requests), `app/Traits/`, and `app/Helper/`.
-8. **Preserve existing spellings/typos** (`condidate`, `ElasticCaompany`,
-   `commericial`, `coin_transection_logs`) — they map to real tables/ES indices.
-   Renaming breaks things.
-9. **Respect the route group nesting** (`auth` → persona `prefix/name` →
-   `EnsureOneDeviceLogin` → `package` middleware). Add routes in the right group.
+## 🏛️ THE 8 GOD-LEVEL ARCHITECTURAL DIRECTIVES (V4 MANDATE)
 
-## Data & tenancy
-10. **Tenancy:** Eloquent is auto-scoped by `company_id` (`TenantScope` / `BelongsToTenant`). **Raw
-    `DB::table()` queries must use `tenant_table('<name>')` or append `company_id` explicitly.** Legitimate cross-tenant or global queries require a `// TENANCY-EXEMPT: <reason>` comment.
-11. **Ask before any schema change.** Schema lives in the **live remote DB**, not
-    migrations. Do not invent migrations or assume columns — confirm against the DB.
-12. **Keep MySQL ↔ Elasticsearch in sync.** When adding a model write path, check
-    whether an Observer should re-index ES (or you'll create drift). When changing
-    indexed fields, update the matching `Elastic*Index` service.
+### 1. MySQL is ONLY for Add / Edit / Delete (Strict CQRS Command Store)
+- **Role:** MySQL (`dbmaster`, 217 tables) is the authoritative System of Record (SoR) strictly dedicated to transactional writes: `INSERT`, `UPDATE`, and `DELETE`.
+- **Zero MySQL Reads on Request Paths:** Web requests, drawer activations, list rendering, search queries, filter operations, and dashboard loads must **NEVER** execute `SELECT` queries, multi-table joins, or table scans against MySQL.
+- **Transactional Discipline:** Wrap write mutations in `DB::transaction()`, commit quickly, and immediately trigger the synchronization pipeline to Elasticsearch and atomic Redis cache invalidation.
 
-## Performance
-13. **Queue heavy work.** Resume parse/upload, mail, mass mail, bulk import, ES bulk
-    re-index → dispatch a Job (Redis/Horizon). Never do them inline in a request.
-14. **Watch N+1.** Eager-load relations; don't loop queries. Confirm indexed columns
-    before adding WHERE/ORDER on big tables (`job_applications`, `jobs`).
-15. **Octane safety:** workers are long-lived — don't store request state in static
-    properties/singletons; don't leak resources.
+### 2. Elasticsearch is ONLY for Read (Strict CQRS Query Store)
+- **Role:** Elasticsearch 7.17 serves **100% of all read operations**: candidate lists, search queries, multi-attribute filters, counts, coin checks, aggregations, and profile lookups (`ELASTIC_CANDIDATES`, `ELASTIC_COMPANY_COINS`, `ELASTIC_EMAIL_COUNT`, `ELASTIC_USERS_LIST`, etc.).
+- **Zero Direct UI Writes:** Web requests must never write directly to Elasticsearch. All state changes enter via MySQL first and synchronize to Elasticsearch via Observers or queued Horizon jobs (`Elastic*Index`).
+- **Sub-15ms Read Budget:** Denormalized indices must be structured so that query responses complete within 5ms–15ms.
 
-## Documentation (mandatory)
-20. **State the purpose of every new code.** Every new file/class/method needs a short
-    intent comment or docblock explaining the *why*; complex/raw queries need an intent +
-    `company_id` tenancy note; business logic and ES-sync points must be explained. Keep
-    comments truthful and current; leave no commented-out/debug code. Undocumented new
-    code is an incomplete change. Templates: [CODE_DOCUMENTATION_STANDARD.md](CODE_DOCUMENTATION_STANDARD.md).
+### 3. Dedicated Hardware Specification: 32 GB RAM per Tier
+The platform infrastructure is provisioned with high-performance dedicated resources:
+- **Application / Web Tier:** **32 GB RAM dedicated** to Laravel 11 Octane + FrankenPHP workers + Redis (`CACHE_STORE=redis`, `SESSION_DRIVER=redis`, `QUEUE_CONNECTION=redis`).
+- **MySQL Database Tier:** **32 GB RAM dedicated** to MySQL with InnoDB buffer pool sized at ~24 GB (75% rule) dedicated exclusively to transaction logging, indexing, and write throughput.
+- **Elasticsearch Cluster Tier:** **32 GB RAM dedicated** with JVM heap locked at 16 GB (50% rule) and 16 GB reserved for OS filesystem cache / Lucene mmap.
 
-## Process
-16. **Plan before editing** (see `AI_BOOTSTRAP.md`). State which files you'll touch.
-17. **Don't change business logic** (ranking/matching, billing, status pipelines)
-    unless explicitly asked. Flag uncertainty instead of guessing.
-18. **Verify after editing** using `docs/VERIFY.md`.
-19. **All work goes in `testing.jero.works`**, never `hire.jero.works` (per project
-    convention).
-21. **OpenDoc WASM Engine Isolation Mandate:** The three document engines — Download Resume Center (`AgyResumeRenderer.js` / `showdetail.blade.php`), Forward Resume (`AgyForwardResumeEngine.js` / `fwd_resume.blade.php`), and Group 6 Online Editor (`AgyEditorWasmEngine.js` / `resume-studio.blade.php`) — are **strictly isolated into three separate, independent engines**. Never merge them, never cross-import them, and never break their separation under the guise of "DRY". See [Resume Converter_Online Editor_Forward Resume/AI_OPENDOC_ENGINE_ISOLATION_MANDATE.md](Resume%20Converter_Online%20Editor_Forward%20Resume/AI_OPENDOC_ENGINE_ISOLATION_MANDATE.md).
+### 4. 10,000 Concurrent Users Per Page Scalability Target
+- Every module, view, table, drawer, modal, and action must be engineered to sustain **10,000 active concurrent recruiters/users** per page simultaneously without:
+  - Page freezes or browser crashes (main thread long tasks > 50ms strictly forbidden).
+  - PHP-FPM / Octane worker pool starvation.
+  - MySQL connection pool exhaustion.
+  - Elasticsearch 429 queue rejections.
+- Design every vertical slice under the assumption that 10K recruiters are clicking buttons at the exact same second.
+
+### 5. Target 0% Server Strain (Server / MySQL / Elasticsearch)
+- **Relentless Server Load Elimination:**
+  - 0% MySQL read load on user visits.
+  - 0% Elasticsearch load for repeated page actions through multi-tenant Redis and client-side caching.
+  - 0% Server CPU spent on heavy document assembly (PDFs, watermarking, vector generation, formatting).
+  - 0% Server bandwidth wasted streaming massive pre-rendered Blade HTML (payloads must be micro-JSON < 5 KB).
+
+### 6. Client-First / Browser Execution (User RAM & Browser CPU First)
+- **Client Compute Mandate:** Offload heavy computing from cloud servers to the user's local machine (leveraging user RAM, GPU, and multi-core CPU).
+  - Document formatting, vector PDF compilation, redaction, skill keyword highlighting, and client dossier creation must execute client-side via **WebAssembly (WASM), Web Workers, and `pdf-lib`**.
+  - Static drawer shells and engines must be cached in browser memory / `CacheStorage` and pre-warmed via `requestIdleCallback` without bloating host pages.
+  - Documents and assets must be uploaded **directly to Cloudflare R2 / S3 via presigned PUT URLs**, bypassing the Laravel application server.
+- **Graceful Server Fallback:** The server / Elasticsearch is strictly a **resilience fallback**. If browser RAM exhausts, WASM fails, or an unsupported browser API is detected, the system gracefully degrades to server-side generation via circuit breaker.
+
+### 7. Fastest Response with 100% Authoritative, Fresh ATS Data
+- **Zero Stale Data Tolerance:** Because JERO is a mission-critical Applicant Tracking System and talent marketplace, recruiters cannot make hiring decisions on stale data. Candidate hiring stages, interview times, coin balances, lock statuses, and recruiter notes must be authoritative.
+- Fast response (< 16ms UI interaction, < 50ms drawer activation) must **NEVER** compromise data correctness. Never serve stale candidate data in the name of caching.
+
+### 8. Multi-Tenant Cache Invalidation & Organization-Wide Real-Time Synchronization
+- **Strict Tenant Partitioning:** Every cache key in Redis, client memory, or browser storage **MUST** be scoped by tenant (`company_id`).
+- **Instant Atomic Invalidation:** The exact millisecond any candidate, job, application, or company detail is added or edited, the corresponding tenant cache keys **MUST BE INSTANTLY DESTROYED / PURGED** across Redis and the organization.
+- **Real-Time Consistency:** All users and recruiters within that organization/company must immediately receive the authoritative updated state without ghost reads, stale views, or delay.
+
+---
+
+## 🔒 CONTEXT & TOKEN DISCIPLINE
+1. **Read docs first, not the code:** `ARCHITECTURE.md` → `MODULE_MAP.md` → `.ai/tasks/*.md` → `.ai/summaries/*`.
+2. **Never read large controllers whole:** `HomeController`, `ServiceCompany*Controller`, `SuperAdminCompanyController`, etc. are 500 KB–800 KB. Use `Grep` for the method/action and view only that specific line window.
+3. **Never read route files whole:** Use `php artisan route:list --path=<x>` or grep the `->name()`.
+4. **Don't scan `resources/views/` broadly:** Target views by exact feature.
+5. **Ignore dead code:** Anything matching `OLD_`, `old_`, `OLD_2_`, `oldBackUp/`, stray `*.blade.php` / `error_log` inside `app/`, and root-level legacy controllers. See `BAD_PATTERNS.md`.
+
+---
+
+## 🛠️ ARCHITECTURAL FIT & CODING STANDARDS
+6. **Match existing patterns:** No unprompted architectural layers (no repository pattern). Stick to tested vertical slices: Route + FormRequest + Action/Service + ES read sync + Observer + Blade/JS module.
+7. **Reuse existing helpers:** Check `app/Services/`, `app/Http/Requests/` (55 form requests), `app/Traits/`, and `app/Helper/`.
+8. **Preserve baked-in typos:** Names like `condidate`, `ElasticCaompany`, `commericial`, `coin_transection_logs` map to real remote MySQL tables and ES indices. Renaming them breaks production.
+9. **Respect route middleware hierarchy:** `auth` → persona `prefix/name` → `EnsureOneDeviceLogin` → `package` middleware.
+10. **Tenancy enforcement:** Eloquent is tenant-scoped by `company_id` (`TenantScope` / `BelongsToTenant`). **Raw `DB::table()` queries must use `tenant_table('<name>')` or append `company_id` explicitly.** Any legitimate cross-tenant query requires a `// TENANCY-EXEMPT: <reason>` comment.
+11. **Database schema truth:** The remote live database schema in `database/schema/mysql-schema.sql` (217 tables) is the sole truth. Schema is NOT in migrations; do not invent migrations.
+12. **Queue heavy work:** Resume parsing, bulk imports, mass mail, background re-indexing → dispatch to Redis/Horizon. Never run inline.
+13. **Octane safety:** FrankenPHP / Octane workers are long-lived. Never store request state in static class properties or singletons; avoid memory leaks.
+14. **Document every change:** Every new file, class, or method requires a clear intent docblock explaining the *why*. Undocumented code is considered incomplete.
+15. **UI & UX Standard:** Metronic theme, **Poppins font**, **maximum font 14px**, clean icon-based design (NO 3D), responsive from 1366×768 to 4K ([UI_UX_STANDARDS.md](UI_UX_STANDARDS.md)).
+16. **OpenDoc WASM Engine Isolation Mandate:** The three document engines — Download Resume Center (`AgyResumeRenderer.js` / `showdetail.blade.php`), Forward Resume (`AgyForwardResumeEngine.js` / `ForwardResumeManager.js`), and Online Editor (`AgyEditorWasmEngine.js` / `resume-studio.blade.php`) — are **strictly isolated into three separate, independent engines**. Never merge them, cross-import them, or break their separation under the guise of "DRY".
