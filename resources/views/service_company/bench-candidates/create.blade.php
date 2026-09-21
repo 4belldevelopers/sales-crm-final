@@ -540,8 +540,8 @@ if($snp_mode== 1){
             <div class="fs fv-row d-none">
               <div class="fsh"><h3>Primary Skills *</h3></div>
               <div class="fsc">
-              <div id="skillTags" class="skill-tags"></div>
-               <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="skills" name="skills" />
+               <div id="skillTags" class="skill-tags"></div>
+                <input type="hidden" value="{{ @$application->skills }}" id="skills" />
               </div>
             </div>
 
@@ -1156,28 +1156,35 @@ if($snp_mode== 1){
                   </span>
                 </div>
                 <div class="se-actions">
-                  <span class="se-badge"><i class="fa-solid fa-building"></i> In-House Talent</span>
-                  <i class="fa-solid fa-chevron-up"></i>
+                   <span class="se-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
                 </div>
               </div>
               <div class="fsc">
-                <table class="sk">
+                <div class="se-table-scroll">
+                 <table class="sk">
                   <thead>
                     <tr>
                       <th>Skill <span class="rq">*</span></th>
                       <th>Experience (Years) <span class="rq">*</span></th>
                       <th>Experience (Months)</th>
                       <th>Proficiency Rating <span class="rq">*</span></th>
-                      <th>Actions <span class="rq">*</span></th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="skillExperienceWrapper">
                   </tbody>
-                </table>
-                
-                <div style="display:flex;gap:6px">
-                <button class="asb" type="button">+ Add Skill</button>
-                <button class="bab d-none" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Bulk Add Skills</button>
+                 </table>
+                </div>
+                <datalist id="skillSuggestions"></datalist>
+                <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Skill</button>
+                <div class="se-popular">
+                  <span class="se-popular-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <div class="se-popular-copy"><strong>Popular Skills</strong><small>Click to quickly add common skills</small></div>
+                  <div class="se-popular-list">
+                    @foreach (['Java', 'Python', 'React', 'Node.js', 'AWS', 'Azure', 'SQL', 'DevOps', 'Salesforce'] as $popularSkill)
+                      <button type="button" class="se-popular-skill" data-skill="{{ $popularSkill }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{ $popularSkill }}</button>
+                    @endforeach
+                  </div>
                 </div>
               </div>
             </div>
@@ -1607,7 +1614,12 @@ $(document).ready(function () {
                     if (r.status === 'Completed' || r.status === 'Failed') {
                         clearInterval(_parseStatusInterval); _parseStatusInterval = null;
                         if (r.status === 'Failed') { $('#upDetailParserStatus').css('color','#f44336'); $('#upRetryWrap').show(); }
-                        else { $('#upRetryWrap').hide(); }
+                        else {
+                            $('#upRetryWrap').hide();
+                            if (r.parsed_data && r.parsed_data.skills && window.addParsedBenchSkills) {
+                                window.addParsedBenchSkills(r.parsed_data.skills);
+                            }
+                        }
                     }
                 });
         }, 4000);
@@ -1822,34 +1834,6 @@ $(document).ready(function () {
                 });
             });
         });
-        // add skill
-        document.querySelector('.asb').addEventListener('click', () => {
-            const tb = document.querySelector('.sk tbody');
-            const tr = document.createElement('tr');
-            tr.innerHTML =
-                '<td><input type="text" name="skills[]" placeholder="Enter skill"></td><td><select class="form-select form-select-solid" name="years[]"> <option value="">Select Year</option> <option value="1"> 1 Year </option><option value="2"> 2 Years </option><option value="3"> 3 Years </option><option value="4"> 4 Years </option><option value="5"> 5 Years </option><option value="6"> 6 Years </option><option value="7"> 7 Years </option><option value="8"> 8 Years </option><option value="9"> 9 Years </option><option value="10"> 10 Years </option><option value="11"> 11 Years </option><option value="12"> 12 Years </option><option value="13"> 13 Years </option><option value="14"> 14 Years </option><option value="15"> 15 Years </option><option value="16"> 16 Years </option><option value="17"> 17 Years </option><option value="18"> 18 Years </option><option value="19"> 19 Years </option><option value="20"> 20 Years </option><option value="21"> 21 Years </option><option value="22"> 22 Years </option><option value="23"> 23 Years </option><option value="24"> 24 Years </option><option value="25"> 25 Years </option><option value="26"> 26 Years </option><option value="27"> 27 Years </option><option value="28"> 28 Years </option><option value="29"> 29 Years </option><option value="30"> 30 Years </option><option value="31"> 31 Years </option><option value="32"> 32 Years </option><option value="33"> 33 Years </option><option value="34"> 34 Years </option><option value="35"> 35 Years </option><option value="36"> 36 Years </option><option value="37"> 37 Years </option><option value="38"> 38 Years </option><option value="39"> 39 Years </option><option value="40"> 40 Years </option><option value="41"> 41 Years </option><option value="42"> 42 Years </option><option value="43"> 43 Years </option><option value="44"> 44 Years </option><option value="45"> 45 Years </option><option value="46"> 46 Years </option><option value="47"> 47 Years </option><option value="48"> 48 Years </option><option value="49"> 49 Years </option><option value="50"> 50 Years </option><option value="51"> 51 Years </option><option value="52"> 52 Years </option><option value="53"> 53 Years </option><option value="54"> 54 Years </option><option value="55"> 55 Years </option><option value="56"> 56 Years </option><option value="57"> 57 Years </option><option value="58"> 58 Years </option><option value="59"> 59 Years </option><option value="60"> 60 Years </option> </select></td><td><select class="form-select form-select-solid" name="months[]"> <option value="">Select Month</option> <option value="0"> 0 Months </option><option value="1"> 1 Month </option><option value="2"> 2 Months </option><option value="3"> 3 Months </option><option value="4"> 4 Months </option><option value="5"> 5 Months </option><option value="6"> 6 Months </option><option value="7"> 7 Months </option><option value="8"> 8 Months </option><option value="9"> 9 Months </option><option value="10"> 10 Months </option><option value="11"> 11 Months </option> </select></td><td><select class="form-select form-select-solid" name="ratings[]"> <option value="">Select Rating</option> <option value="1"> 1 Rating </option><option value="2"> 2 Rating </option><option value="3"> 3 Rating </option><option value="4"> 4 Rating </option><option value="5"> 5 Rating </option> </select></td><td><button class="ab" type="button">🗑️</button></td>';
-            tb.appendChild(tr);
-            tr.querySelectorAll('.sr').forEach((r) => {
-                const s = r.querySelectorAll('.st');
-                s.forEach((x, i) => {
-                    x.addEventListener('click', () => {
-                        s.forEach((y, j) => {
-                            if (j <= i) y.classList.remove('e');
-                            else y.classList.add('e');
-                        });
-                    });
-                });
-            });
-            tr.querySelector('.ab').addEventListener('click', () => tr.remove());
-        });
-        // delete existing
-        $(document).on('click','.ab',function(){
-          var ele = $(this);
-           ele.closest('tr').remove();
-        })
-        // document.querySelectorAll('.ab').forEach((b) => {
-        //     b.addEventListener('click', () => b.closest('tr').remove());
-        // });
 </script>
 
 
@@ -2421,165 +2405,143 @@ $(document).ready(function () {
 <script>
 
     window.existingSkillExperience = @json($skillExperiences);
-		var skills = document.querySelector("#skills");
-    var experienceWrapper = document.getElementById("skillExperienceWrapper");
+    const experienceWrapper = document.getElementById('skillExperienceWrapper');
+    const skillSuggestions = document.getElementById('skillSuggestions');
+    const popularSkillButtons = document.querySelectorAll('.se-popular-skill');
+    let skillSuggestionTimer;
 
-    var tagifyskills =  new Tagify(skills, {
-        whitelist: [],
-        maxTags: 10,
-        transformTag: function(tagData) {
-        // Remove special characters, allow only letters, numbers, and spaces
-        tagData.value = tagData.value.replace(/[^a-zA-Z0-9 +#\/.]/g, '');
-        return tagData;
-        },
-        validate: function(tagData) {
-            // Prevent empty tags after cleaning
-            return tagData.value.trim().length > 0 ? true : false;
-        },
-        dropdown: {
-            maxItems: 10,           // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true    // <- do not hide the suggestions dropdown once an item has been selected
-        }
-    });
-
-    /**
- * Create Experience Row
- */
-
-/**
- * Add Experience Block (Edit safe)
- */
-function addSkillExperience(skill, data = {}) {
-
-    let skillKey = skill.toLowerCase();
-
-    if (document.getElementById('skill-exp-' + skillKey)) return;
-
-    let html = `<tr id="skill-exp-${skillKey}">
-      <td><input type="text" value="${skill}" name="skills[]" placeholder="Enter skill" /></td>
-      <td>
-                <select class="form-select form-select-solid"
-                        name="years[]">
-                    <option value="">Select Year</option>
-                    ${generateYears(data.year)}
-                </select>
-      </td>
-      <td>
-                <select class="form-select form-select-solid"
-                        name="months[]">
-                    <option value="">Select Month</option>
-                    ${generateMonths(data.month)}
-                </select>
-      </td>
-      <td>
-            <select class="form-select form-select-solid"
-                    name="ratings[]">
-                <option value="">Select Rating</option>
-                ${generateRating(data.rating)}
-            </select>
-
-      </td>
-      <td><button class="ab" type="button">🗑️</button></td>
-    </tr>`;
-
-    experienceWrapper.insertAdjacentHTML('beforeend', html);
-}
-
-/**
- * Helpers (preselect values)
- */
-function generateYears(selected = null) {
-    let html = '';
-    for (let i = 1; i <= 60; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Year${i > 1 ? 's' : ''}
-                 </option>`;
+    function skillKey(value) {
+        return String(value || '').trim().toLocaleLowerCase();
     }
-    return html;
-}
 
-function generateMonths(selected = null) {
-    let html = '';
-    for (let i = 0; i <= 11; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Month${i !== 1 ? 's' : ''}
-                 </option>`;
+    function findSkillRow(value, except = null) {
+        return Array.from(experienceWrapper.querySelectorAll('tr')).find(row =>
+            row !== except && skillKey(row.querySelector('[name="skills[]"]').value) === skillKey(value)
+        );
     }
-    return html;
-}
-function generateRating(selected = null) {
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Rating${i !== 1 ? 's' : ''}
-                 </option>`;
-    }
-    return html;
-}
 
-/**
- * Load Existing Skills + Experience
- */
-Object.keys(window.existingSkillExperience).forEach(skillKey => {
-    let row = window.existingSkillExperience[skillKey];
-    addSkillExperience(skillKey.toUpperCase(), {
-        year: row.year,
-        month: row.month,
-        rating: row.rating
-    });
-});
-
-/**
- * Sync add/remove
- */
-tagifyskills.on('add', e => {
-    addSkillExperience(e.detail.data.value);
-});
-
-tagifyskills.on('remove', e => {
-    let key = e.detail.data.value.toLowerCase();
-    document.getElementById('skill-exp-' + key)?.remove();
-});
-
-tagifyskills.value.forEach(tag => {
-    addSkillExperience(tag.value);
-});
-
-
-
-
-
-    const fetchSuggestionsSkills = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Skill: ", data);
-
-                if (Array.isArray(data)) {
-                    tagifyskills.settings.whitelist = data; // Update whitelist
-                    // tagifyskill.dropdown.show(query); // Show suggestions
-                    tagifyskills.dropdown.show.call(tagifyskills);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching Skill:", err);
-            }
+    function updatePopularSkills() {
+        popularSkillButtons.forEach(button => {
+            const selected = !!findSkillRow(button.dataset.skill);
+            button.classList.toggle('is-added', selected);
+            button.setAttribute('aria-pressed', String(selected));
         });
-    }, 5); 
+    }
 
-    // Listen for user input to trigger API call
-    tagifyskills.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 1) return;
-        fetchSuggestionsSkills(query);
+    // Keep skills and their experience fields in the same submitted row.
+    function addSkillExperience(skill = '', data = {}) {
+        const name = String(skill || '').trim();
+        const existing = name ? findSkillRow(name) : null;
+        if (existing) return existing;
+
+        const emptyRow = name && Array.from(experienceWrapper.querySelectorAll('tr')).find(row =>
+            !row.querySelector('[name="skills[]"]').value.trim() &&
+            Array.from(row.querySelectorAll('select')).every(select => !select.value)
+        );
+        if (emptyRow) {
+            const input = emptyRow.querySelector('[name="skills[]"]');
+            input.value = name;
+            input.dataset.previousSkill = name;
+            updatePopularSkills();
+            return emptyRow;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <label class="se-field se-field--skill">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" name="skills[]" list="skillSuggestions" autocomplete="off" placeholder="Search or type skill (e.g. Java)" aria-label="Skill" />
+                </label>
+                <small class="se-skill-hint">Start typing to see suggestions</small>
+            </td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select name="years[]" aria-label="Experience years"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select name="months[]" aria-label="Experience months"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select name="ratings[]" aria-label="Proficiency rating"></select></label></td>
+            <td><button class="ab" type="button" aria-label="Delete skill" title="Delete skill"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></td>`;
+        const input = row.querySelector('[name="skills[]"]');
+        input.value = name;
+        input.dataset.previousSkill = name;
+
+        function fillOptions(select, label, start, end, selected, suffix) {
+            select.add(new Option(label, ''));
+            for (let value = start; value <= end; value++) {
+                select.add(new Option(value + ' ' + suffix(value), String(value)));
+            }
+            if (selected !== null && selected !== undefined && selected !== '') {
+                select.value = String(selected);
+            }
+        }
+
+        fillOptions(row.querySelector('[name="years[]"]'), 'Select Year', 1, 60, data.year, n => n === 1 ? 'Year' : 'Years');
+        fillOptions(row.querySelector('[name="months[]"]'), 'Select Month', 0, 11, data.month, n => n === 1 ? 'Month' : 'Months');
+        fillOptions(row.querySelector('[name="ratings[]"]'), 'Select Rating', 1, 5, data.rating, n => n === 1 ? 'Rating' : 'Ratings');
+
+        input.addEventListener('change', () => {
+            input.value = input.value.trim();
+            const duplicate = input.value ? findSkillRow(input.value, row) : null;
+            if (duplicate) {
+                input.value = input.dataset.previousSkill || '';
+                duplicate.querySelector('[name="skills[]"]').focus();
+            } else {
+                input.dataset.previousSkill = input.value;
+            }
+            updatePopularSkills();
+        });
+        input.addEventListener('input', () => {
+            updatePopularSkills();
+            clearTimeout(skillSuggestionTimer);
+            const query = input.value.trim();
+            if (query.length < 2) return;
+            skillSuggestionTimer = setTimeout(() => {
+                $.get('{{ url('/') }}/skill-suggestions', { q: query }).done(results => {
+                    if (document.activeElement !== input || input.value.trim() !== query || !Array.isArray(results)) return;
+                    skillSuggestions.replaceChildren();
+                    results.forEach(result => {
+                        const value = typeof result === 'string' ? result : (result.value || result.name || '');
+                        if (!value) return;
+                        const option = document.createElement('option');
+                        option.value = value;
+                        skillSuggestions.appendChild(option);
+                    });
+                });
+            }, 250);
+        });
+        row.querySelector('.ab').addEventListener('click', () => {
+            row.remove();
+            updatePopularSkills();
+        });
+
+        experienceWrapper.appendChild(row);
+        updatePopularSkills();
+        return row;
+    }
+
+    function addParsedBenchSkills(values) {
+        if (typeof values === 'string') {
+            try { values = JSON.parse(values); } catch (_) { values = values.split(','); }
+        }
+        if (!Array.isArray(values)) return;
+        values.forEach(value => {
+            const skill = typeof value === 'string' ? value : (value && (value.value || value.name));
+            if (skill && String(skill).trim()) addSkillExperience(skill);
+        });
+    }
+    window.addParsedBenchSkills = addParsedBenchSkills;
+
+    Object.entries(window.existingSkillExperience || {}).forEach(([skill, data]) => {
+        addSkillExperience(skill, data || {});
     });
-    
-		new Tagify(skills);
+    const storedSkills = document.getElementById('skills').value;
+    if (storedSkills) addParsedBenchSkills(storedSkills);
+    if (!experienceWrapper.children.length) addSkillExperience();
+
+    document.querySelector('.se-card .asb').addEventListener('click', () => {
+        addSkillExperience().querySelector('[name="skills[]"]').focus();
+    });
+    popularSkillButtons.forEach(button => button.addEventListener('click', () => {
+        addSkillExperience(button.dataset.skill).querySelector('[name="skills[]"]').focus();
+    }));
 
 
     var inputloc = document.querySelector("#kt_tagify_work_location");
@@ -3361,6 +3323,7 @@ $.ajax({
                        $('#behance').val(response.behance);
                     }                      
                     $('#careersummary').val(response.careerSummary);
+                    if (window.addParsedBenchSkills) window.addParsedBenchSkills(response.skills);
                     if(page_event_check != 'EDIT'){
                     $('#full_name').val(response.name);
                     $('#phone').val(response.number);
@@ -3379,9 +3342,6 @@ $.ajax({
 
                       });
 
-
-                    tagifyskill.removeAllTags(); // Clear existing tags first
-                    tagifyskill.addTags(response.skills); // Add new tags
 
                     setSingleLocationTag(response.country); // Keep current location to one selected value
 
