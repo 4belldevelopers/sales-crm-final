@@ -138,12 +138,13 @@ class AttemptLoginAction
             (int) $request->companyid, 1, $request->userId, $request->companyid, '', ''
         );
 
+        // Nullify email_verification_code (not '') so users_email_verification_code_unique UNIQUE index allows multiple verified users.
         DB::table('users')
             ->where('users.company_id', $request->companyid)
             ->where('users.id', $request->userId)
             ->limit(1)
             ->update([
-                'email_verification_code' => '',
+                'email_verification_code' => null,
                 'password' => $newPassword,
                 'remember_token' => $request->userId,
                 'status' => 'active',

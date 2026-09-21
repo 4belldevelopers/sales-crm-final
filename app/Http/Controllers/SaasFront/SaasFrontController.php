@@ -1078,7 +1078,7 @@ class SaasFrontController extends SaasFrontBaseController
             $user->working_status = 1;
             $user->root_user = 1;
             $companyRow = DB::table('users')->first();
-            if (!$companyRow) {
+            if (! $companyRow) {
                 $user->is_superadmin = 1;
             }
             $user->save();
@@ -1102,12 +1102,11 @@ class SaasFrontController extends SaasFrontBaseController
                         ->where('model_type', User::class)
                         ->exists();
 
-                    if (!$alreadyAssigned) {
+                    if (! $alreadyAssigned) {
                         $admin->assignRole($adminRole->id);
                     }
                 }
             }
-
 
             // assign admin role to default user
             $role = CustomRole::where('company_id', $company->id)->first();
@@ -1854,8 +1853,8 @@ class SaasFrontController extends SaasFrontBaseController
             $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
             $attachments = [];
             $cc = [];
-            
-            $trtr =  QueueMailService::dispatch(
+
+            $trtr = QueueMailService::dispatch(
                 $to,
                 $subject,
                 'email.company-profile.email-confirmation',
@@ -1920,7 +1919,7 @@ class SaasFrontController extends SaasFrontBaseController
             // $user->email_verification_code 	=	str_random(40);
             // $user->status 					=	'inactive';
 
-            $user->email_verification_code = '';
+            $user->email_verification_code = null;
             $user->status = 'active';
 
             $user->save();
@@ -2985,7 +2984,7 @@ class SaasFrontController extends SaasFrontBaseController
                 $user->status = 'inactive';
                 $user->working_status = 1;
             } else {
-                $user->email_verification_code = '';
+                $user->email_verification_code = null;
                 $user->status = 'active';
             }
 
@@ -3506,7 +3505,7 @@ class SaasFrontController extends SaasFrontBaseController
                 ->limit(1)
                 ->update(
                     [
-                        'email_verification_code' => '',
+                        'email_verification_code' => null,
                         'status' => 'active',
                         'password' => bcrypt($password),
                         'super_admin_login_code' => @$companyid.rand(1111, 9999),

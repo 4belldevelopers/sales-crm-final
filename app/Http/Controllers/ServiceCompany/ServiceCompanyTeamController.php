@@ -98,6 +98,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $this->usersCount = $this->teamCounts['total'];
 
+        //  GeneralMethod::userIndexingupload((int) 6);
         // V2 Phase 1: Removed dead query `$this->users = User::with('company')->company()->get();`
         // because row data is fetched asynchronously via data_ajax().
         return view('service_company.team.index', $this->data);
@@ -1321,7 +1322,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'url' => $Url,
             'company_name' => $Companies->company_name,
         ];
-
+        // dd($data);
         $basecompany = GeneralMethod::baseCompany();
         $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
         $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
@@ -1329,6 +1330,17 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $subject = 'Account Credential';
         $cc = [];
 
+        // QueueMailService::dispatch(
+        //     $user->email,
+        //     $subject,
+        //     'email.team.create-account',
+        //     (object) $data,
+        //     $attachments,
+        //     $fromAddress,
+        //     $senderName,
+        //     $cc,
+        //     $company_id
+        // )->onConnection('emails');
         QueueMailService::dispatch(
             $user->email,
             $subject,
@@ -1339,7 +1351,9 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $senderName,
             $cc,
             $company_id
-        )->onConnection('emails');
+        )
+            ->onConnection('emails')
+            ->onQueue('email');
 
         // $result = $this->mailService->sendEmail($user->email, $subject,'email.team.create-account', (object) $data, $attachments, $fromAddress, $senderName,$cc);
         $message = 'Team member created successfully. set password link has been sent to team member email';
@@ -1445,12 +1459,13 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                             $senderName,
                             $cc,
                             auth()->user()->company_id
-                        )->onConnection('emails');
+                        )->onConnection('emails')->onQueue('email');
 
                         $message = 'Team member created successfully. set password link has been sent to team member email';
                         $type = 'success';
 
-                        // Phase 1 Optimization: Defer Elasticsearch indexing to async Horizon queue job post-commit
+                        // Update Elasticsearch document synchronously post-commit and dispatch queue job as fallback
+                        GeneralMethod::userIndexingupload((int) $user->id);
                         SyncUserToElasticJob::dispatch((int) $user->id)->afterCommit();
                         $this->clearTeamCache($company_id);
                     } catch (\Throwable $e) {
@@ -1522,7 +1537,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
             DB::commit();
 
-            // Phase 1 Optimization: Offload Elasticsearch re-indexing to Horizon queue job post-commit
+            // Update Elasticsearch document synchronously post-commit and dispatch queue job as fallback
+            GeneralMethod::userIndexingupload((int) $id);
             SyncUserToElasticJob::dispatch((int) $id)->afterCommit();
             $this->clearTeamCache($company_id);
 
@@ -1623,7 +1639,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     GeneralMethod::cacheClean($key);
                 }
 
-                // Phase 1 Optimization: Centralized tenant cache invalidation and async ES indexing post-commit
+                // Update Elasticsearch document synchronously post-commit and dispatch queue job as fallback
+                GeneralMethod::userIndexingupload((int) $cuser_id);
                 SyncUserToElasticJob::dispatch((int) $cuser_id)->afterCommit();
                 $this->clearTeamCache($company_id);
 
@@ -2011,7 +2028,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                     'notice_period', 'np_id', 'created_at', 'jobId', 'title', 'client_name', 'posted_by',
                     'company_name', 'job_master_status_id', 'name', 'master_status_name', 'child_status_id',
                     'css_style', 'country', 'state', 'city', 'city_id', 'thirdparty_company_id',
-                    'client_comapny_id', 'duplicate','is_duplicate', 'qualification_name', 'skills', 'total_exp', 'rel_exp',
+                    'client_comapny_id', 'duplicate', 'is_duplicate', 'qualification_name', 'skills', 'total_exp', 'rel_exp',
                     'condidate_type', 'ctc_yearly', 'ectc_yearly', 'serving_notice_period_mode',
                     'current_company', 'current_ctc_mode', 'current_ctc_cur',
                 ],
