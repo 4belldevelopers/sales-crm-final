@@ -5185,3 +5185,141 @@ select option,
     .aw-card .aw-option--now .aw-option-copy { padding-right: 0; }
     .aw-card .aw-recommended { position: static; margin-left: auto; }
 }
+
+/* Skills rows share one quiet, searchable surface for manual and parsed entries. */
+.se-card .se-hero {
+    min-height: 70px;
+    padding: 14px 20px;
+    background: #fff !important;
+}
+.se-card .se-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    color: #fff;
+    background: #7438dd;
+    font-size: 18px;
+}
+.se-card .se-title strong { font-size: 14px; }
+.se-card .se-title small { font-size: 12px; color: #566381; }
+.se-card .se-badge { border-radius: 6px; }
+.se-card .fsc { padding: 16px 20px 20px; }
+.se-table-scroll { width: 100%; overflow-x: auto; }
+.se-card .sk { min-width: 760px; table-layout: fixed; }
+.se-card .sk th:nth-child(1) { width: 29%; }
+.se-card .sk th:nth-child(2) { width: 20%; }
+.se-card .sk th:nth-child(3) { width: 20%; }
+.se-card .sk th:nth-child(4) { width: 23%; }
+.se-card .sk th:nth-child(5) { width: 8%; text-align: center; }
+.se-card .sk th {
+    padding: 4px 10px 9px;
+    border-bottom: 0;
+    color: #172449;
+    font-size: 13px;
+    font-weight: 600;
+}
+.se-card .sk td { padding: 0 10px 12px; border-bottom: 0; vertical-align: top; }
+.se-card .sk td:last-child { text-align: center; }
+.se-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    margin: 0;
+    border: 1px solid #d5def0;
+    border-radius: 6px;
+    background: #fff;
+    color: #607092;
+}
+.se-field:focus-within { border-color: #4c57ef; box-shadow: 0 0 0 2px #e9eaff; }
+.se-field > i { flex: 0 0 38px; text-align: center; font-size: 14px; }
+.se-card .sk .se-field input,
+.se-card .sk .se-field select {
+    width: 100%;
+    min-width: 0;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 8px 0 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: #172449 !important;
+    font-size: 12px !important;
+}
+.se-card .sk .se-field input::placeholder { color: #72809d; }
+.se-card .sk .se-field select { cursor: pointer; }
+.se-skill-hint { display: block; margin: 4px 2px 0; color: #65718f; font-size: 11px; }
+.se-card .sk .ab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #d5def0;
+    border-radius: 6px;
+    background: #f9fbff;
+    color: #596788;
+    font-size: 15px;
+}
+.se-card .sk .ab:hover,
+.se-card .sk .ab:focus-visible { color: #cf334d; border-color: #efabb6; background: #fff4f6; }
+.se-card .asb {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 38px;
+    margin: 2px 0 14px;
+    padding: 7px 16px;
+    border: 1px dashed #5855ef;
+    border-radius: 6px;
+    background: #fff;
+    color: #4544d8;
+    font-size: 13px;
+}
+.se-card .asb:hover { background: #f5f4ff; }
+.se-popular {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px;
+    border-radius: 7px;
+    background: #f4f3ff;
+}
+.se-popular-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 6px;
+    color: #4944ed;
+    background: #eae9ff;
+    font-size: 15px;
+}
+.se-popular-copy { min-width: 195px; }
+.se-popular-copy strong { display: block; color: #172449; font-size: 13px; }
+.se-popular-copy small { display: block; color: #65718f; font-size: 11px; }
+.se-popular-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.se-popular-skill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 5px 9px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: #eae9ff;
+    color: #24336d;
+    font: 500 12px 'Poppins', sans-serif;
+    cursor: pointer;
+}
+.se-popular-skill i { color: #4b4aeb; }
+.se-popular-skill:hover,
+.se-popular-skill.is-added { border-color: #abaaff; background: #dedcff; }
+@media (max-width: 1000px) {
+    .se-popular { align-items: flex-start; flex-wrap: wrap; }
+    .se-popular-list { flex-basis: 100%; }
+}
