@@ -1044,20 +1044,50 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $size = (int) $request->input('size', 10); // Default 10 results per page
         $from = ($page - 1) * $size;
 
-        $sort[] = ['schedule_date' => ['order' => 'desc']];
-        $sort[] = ['id' => ['order' => 'desc']];
-        $boolQuery = [
-            'bool' => [
-                'should' => [
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['client_id' => $request->clientid]],
-                            ]),
+        $client_id = (int) $request->clientid;
+        $sort = [
+            ['schedule_date' => ['order' => 'desc']],
+            ['id' => ['order' => 'desc']],
+        ];
+
+        $must = [
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['job_company_id' => $company_id]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['ClientComID' => $company_id]],
+                                    ['term' => ['candidate_type' => 'other']],
+                                ],
+                            ],
                         ],
                     ],
+                    'minimum_should_match' => 1,
                 ],
-                'minimum_should_match' => 1,
+            ],
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['client_id' => $client_id]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $client_id]],
+                                    ['term' => ['to_company_id' => $company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+        ];
+
+        $boolQuery = [
+            'bool' => [
+                'must' => $must,
                 'filter' => [],
             ],
         ];
@@ -1286,34 +1316,72 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function directclientCandidateInterviewTracker(Request $request)
     {
-        // $candidates = JobApplication::query();
-        $from_company_id = $request->clientid;
-        $to_company_id = (int) auth()->user()->company_id;
+        $startTime = microtime(true);
+        $client_id = (int) $request->clientid;
         $company_id = (int) auth()->user()->company_id;
 
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
-        $must[] = [
-            'nested' => [
-                'path' => 'recommendation_relation',
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['recommendation_relation.from_company_id' => $from_company_id]],
-                            ['term' => ['recommendation_relation.to_company_id' => $to_company_id]],
+
+        $sort = [
+            ['schedule_date' => ['order' => 'desc']],
+            ['id' => ['order' => 'desc']],
+        ];
+
+        // Scoped by company_id tenancy AND client_id (direct client's jobs)
+        $must = [
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['job_company_id' => $company_id]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['ClientComID' => $company_id]],
+                                    ['term' => ['candidate_type' => 'other']],
+                                ],
+                            ],
                         ],
                     ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['client_id' => $client_id]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $client_id]],
+                                    ['term' => ['to_company_id' => $company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
                 ],
             ],
         ];
+
+        $sourceFields = [
+            'id', 'full_name', 'current_designation', 'candidate_id', 'jobId', 'job_id', 'job_title', 'client_id', 'comId',
+            'company_id', 'job_company_id', 'company_name', 'client_name', 'recommendation_id', 'to_company_id', 'from_company_id',
+            'schedule_date', 'schedule_time', 'schedule_to_time', 'timezone_abbreviation', 'end_time', 'interviewer_name',
+            'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
+            'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
+            'average_star_rating', 'created_at',
+        ];
+
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
             'request_cache' => true,
             'body' => [
+                '_source' => $sourceFields,
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
+                'sort' => $sort,
                 'query' => [
                     'bool' => [
                         'must' => $must,
@@ -1323,7 +1391,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ],
         ];
 
-        $response = $this->elasticService->getClient()->search($params);
         if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $total = 0;
             $data = [];
@@ -1334,18 +1401,26 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 return $hit['_source'];
             }, $response['hits']['hits']);
         }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => (int) ceil($total / $size),
             'listType' => 'allcandidate',
         ];
+
+        \Log::info('CLIENT_DETAILS_APM: directclientCandidateInterviewTracker completed', [
+            'client_id' => $client_id,
+            'company_id' => $company_id,
+            'page' => $page,
+            'item_count' => count($data),
+            'latency_ms' => round((microtime(true) - $startTime) * 1000, 2),
+        ]);
 
         return response()->json([
             'html' => view('service_company.ajax_pages.custom_client_candidates_interview_tracker', compact('data', 'company_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     public function staffingclientCandidateList(Request $request)

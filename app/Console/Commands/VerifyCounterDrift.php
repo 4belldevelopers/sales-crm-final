@@ -84,7 +84,7 @@ class VerifyCounterDrift extends Command
             WHEN 6 THEN 'joined'
             WHEN 7 THEN 'rejected'
             WHEN 9 THEN 'rejected'
-            ELSE 'sourcing'
+            ELSE NULL
         END";
 
         $live = DB::table('job_applications')

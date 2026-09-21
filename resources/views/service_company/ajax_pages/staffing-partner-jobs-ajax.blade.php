@@ -278,6 +278,7 @@
                         $url_path = url('/service_company/apptracker/' . GeneralMethod::value_encrypt($row->id) . '/all');
                         $applicationCounter = GeneralMethod::allStatusCountStaffingPartner($toCompanyId, $row->id);
                         $inreview_counter = GeneralMethod::statusCountStaffingPartner($toCompanyId, $row->id, 0);
+                        $applicationCounter = $applicationCounter + $inreview_counter;
                         $applicationCounter = number_format($applicationCounter);
                         $inreview_counter = number_format($inreview_counter);
                         echo '<div class="stage-badge s-inw"><a href="' . $url_path . '" class="s-inw fw-bolder fs-6">' . $inreview_counter . '</a></div>';

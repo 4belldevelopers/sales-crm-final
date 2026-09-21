@@ -382,7 +382,7 @@ use Carbon\Carbon;
                 <div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-calendar-alt"></i></div>
                 <span class="kpi-label">Interviews Scheduled</span>
               </div>
-              <div class="kpi-number">{{ $kpiInterviews }}</div>
+              <div class="kpi-number" id="kpiInterviewsScheduledCountShow">{{ $kpiInterviews }}</div>
               <div class="kpi-number-sub">Scheduled rounds</div>
             </div>
             <div class="kpi-box">
@@ -525,7 +525,7 @@ use Carbon\Carbon;
                             <a class="nav-link" data-toggle="tab" href="#interview_tracker">
                                 <span class="nav-text">
                                     <i class="fas fa-calendar-alt" style="font-size:11px;opacity:.7;"></i>Interview Tracker
-                                    @if($kpiInterviews > 0)<span class="cd-tab-badge">{{ $kpiInterviews }}</span>@endif
+                                    <span class="cd-tab-badge" id="tabBadgeInterviewTrackerShow" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                                 </span>
                             </a>
                         </li>
@@ -2498,6 +2498,14 @@ use Carbon\Carbon;
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListinterviewtracker').html(response.html);
                 $('#paginationcandidateinterviewtracker').html(response.pagination);
+                if (response.pagination && typeof response.pagination.total !== 'undefined') {
+                    $('#kpiInterviewsScheduledCountShow').text(response.pagination.total);
+                    var $badge = $('#tabBadgeInterviewTrackerShow');
+                    if ($badge.length) {
+                        $badge.text(response.pagination.total);
+                        if (response.pagination.total > 0) { $badge.show(); } else { $badge.hide(); }
+                    }
+                }
             }
         });
     }

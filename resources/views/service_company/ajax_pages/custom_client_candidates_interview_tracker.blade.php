@@ -158,10 +158,19 @@
 
             {{-- Source badge (view-only) --}}
             <td>
-                @php $src = trim(@$row->source ?? ''); @endphp
-                <span class="cit-source-badge" data-toggle="tooltip" title="{{ $src }}">
-                    {{ mb_strlen($src) ? mb_substr($src, 0, 14) : '—' }}
-                </span>
+                @php
+                    $rowpostedby = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: ''))));
+                    
+                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->from_company_name) ? $row->from_company_name : '')));
+                @endphp
+                <div class="d-flex flex-column">
+                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="{{ $rowpostedby }}">
+                        {{ ucfirst(mb_substr($rowpostedby, 0, 20)) }}
+                    </a>
+                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ $post_company_name }}">
+                        {{ ucwords(mb_substr($post_company_name, 0, 20)) }}
+                    </span>
+                </div>
             </td>
 
             {{-- Interview date + time (view-only) --}}

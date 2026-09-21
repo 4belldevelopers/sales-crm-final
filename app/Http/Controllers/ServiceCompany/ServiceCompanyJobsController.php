@@ -3242,7 +3242,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             $appSum += $cntVal;
                         }
                     }
-                    $applicationCounter = $appSum;
+                    $applicationCounter = $appSum + $inreview_counter;
 
                     $stageCounts = [];
                     for ($stageId = 1; $stageId <= 7; $stageId++) {

@@ -14057,7 +14057,7 @@ END:VCALENDAR";
                     ],
                 ];
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['aggregations']['all_candidates']['value'] ?? 0;
+                $allCandidates = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
@@ -14083,7 +14083,7 @@ END:VCALENDAR";
                     ],
                 ];
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['aggregations']['all_interview']['value'] ?? 0;
+                $allInterview = $responseInterview['hits']['total']['value'] ?? ($responseInterview['aggregations']['all_interview']['value'] ?? 0);
             }
 
             return (object) [
@@ -14206,7 +14206,7 @@ END:VCALENDAR";
                 ];
 
                 $response = $elasticService->getClient()->search($params);
-                $allCandidates = $response['aggregations']['all_candidates']['value'] ?? 0;
+                $allCandidates = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
                 $joined = $response['aggregations']['joined']['doc_count'] ?? 0;
                 $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
                 $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
@@ -14222,8 +14222,8 @@ END:VCALENDAR";
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['from_company_id' => $from_company_id]],
-                                    ['term' => ['to_company_id' => $to_company_id]],
+                                    ['term' => ['job_company_id' => $to_company_id]],
+                                    ['term' => ['client_id' => $from_company_id]],
                                 ],
                             ],
                         ],
@@ -14234,7 +14234,7 @@ END:VCALENDAR";
                 ];
 
                 $responseInterview = $elasticService->getClient()->search($paramsInterview);
-                $allInterview = $responseInterview['aggregations']['all_interview']['value'] ?? 0;
+                $allInterview = $responseInterview['hits']['total']['value'] ?? ($responseInterview['aggregations']['all_interview']['value'] ?? 0);
             }
 
             return (object) [
@@ -14590,7 +14590,7 @@ END:VCALENDAR";
         ];
 
         $response = $elasticService->getClient()->search($params);
-        $allInterview = $response['aggregations']['all_interview']['value'] ?? 0;
+        $allInterview = $response['hits']['total']['value'] ?? ($response['aggregations']['all_interview']['value'] ?? 0);
 
         $recommendedDataListArr = (object) [
             'all_interview' => $allInterview,
@@ -14931,50 +14931,64 @@ END:VCALENDAR";
         ];
 
         $response = $elasticService->getClient()->search($params);
-        $allCandidate = $response['aggregations']['all_candidates']['value'] ?? 0;
+        $allCandidate = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
         $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
         $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
         $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
         $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
 
-        $must = [
-            'bool' => [
-                'must' => [
-                    // First condition
-                    [
+        $allInterview = 0;
+        if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
+            $mustInterview = [
+                'bool' => [
+                    'should' => [
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $from_company_id]],
+                                    ['term' => ['to_company_id' => $to_company_id]],
+                                ],
+                            ],
+                        ],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['from_company_id' => $from_company_id]],
+                                    ['term' => ['ClientComID' => $to_company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+
+            $paramsInterview = [
+                'index' => ELASTIC_INERTVIEW_TRACKER,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
                         'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['from_company_id' => $from_company_id]],
-                                ['term' => ['ClientComID' => $to_company_id]],
-                            ]),
+                            'must' => $mustInterview,
+                        ],
+                    ],
+                    'aggs' => [
+                        'all_interview' => [
+                            'value_count' => [
+                                'field' => 'id',
+                            ],
                         ],
                     ],
                 ],
-                'filter' => [], // We'll add all filters here
-            ],
-        ];
+            ];
 
-        $params = [
-            'index' => ELASTIC_INERTVIEW_TRACKER,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => $must,
-                    ],
-                ],
-                'aggs' => [
-                    'all_interview' => [
-                        'value_count' => [
-                            'field' => 'id',
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $response = $elasticService->getClient()->search($params);
-        $allInterview = $response['aggregations']['all_interview']['value'] ?? 0;
+            try {
+                $responseInterview = $elasticService->getClient()->search($paramsInterview);
+                $allInterview = $responseInterview['hits']['total']['value'] ?? ($responseInterview['aggregations']['all_interview']['value'] ?? 0);
+            } catch (\Exception $e) {
+                $allInterview = 0;
+            }
+        }
 
         $recommendedDataListArr = (object) [
             'all_candidates' => $allCandidate,

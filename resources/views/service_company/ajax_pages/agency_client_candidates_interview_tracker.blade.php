@@ -146,40 +146,31 @@
             </td>
             <td>
                 @php
-
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->source);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
+                    if ($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0) {
+                        if (isset($spokpersonMap)) {
+                            $spokName = $spokpersonMap->get($row->jobId . '_' . $row->ClientComID) ?? null;
+                            $rowpostedby = $spokName ? $spokName : $row->posted_by;
+                        } else {
+                            $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                            $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                        }
+                        $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
                     } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                        $rowpostedby = $row->posted_by;
                     }
-
-                    echo ' <div class="d-flex flex-column">
-				 			 <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$row->source .
-                        '">' .
-                        mb_substr($row->source, 0, 10) .
-                        '</a>
-				  
-                  			</div>
-                    		<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        ucwords(@$row->company_name) .
-                        '">' .
-                        ucwords(mb_substr(@$row->company_name, 0, 25)) .
-                        '</span>';
-
+                    if (empty($rowpostedby)) {
+                        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+                    }
+                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->from_company_name) ? $row->from_company_name : ''))));
                 @endphp
+                <div class="it-person-cell">
+                    <div class="it-person-name" data-toggle="tooltip" title="{{ @$rowpostedby }}">
+                        {{ ucwords(mb_substr($rowpostedby, 0, 15)) }}
+                    </div>
+                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$post_company_name }}">
+                        {{ ucwords(mb_substr(@$post_company_name, 0, 15)) }}
+                    </div>
+                </div>
             </td>
             <td>
                 @php
