@@ -5,7 +5,7 @@
 
 ---
 
-## 🏛️ THE 8 GOD-LEVEL ARCHITECTURAL DIRECTIVES (V4 MANDATE)
+## 🏛️ THE 11 GOD-LEVEL ARCHITECTURAL DIRECTIVES (V4 MANDATE)
 
 ### 1. MySQL is ONLY for Add / Edit / Delete (Strict CQRS Command Store)
 - **Role:** MySQL (`dbmaster`, 217 tables) is the authoritative System of Record (SoR) strictly dedicated to transactional writes: `INSERT`, `UPDATE`, and `DELETE`.
@@ -69,6 +69,21 @@ The platform infrastructure is provisioned with high-performance dedicated resou
   - Modifying filters must never break sorting, pagination, or drawer interactions.
 - **Guaranteed Backward Compatibility:** All upgrades must run as isolated vertical slices behind feature flags with 100% functional fallback paths, guaranteeing that existing systems and workflows continue operating with zero disruption.
 
+### 10. Complete Page & Blade Isolation (Strict Anti-Entanglement Mandate)
+- **Absolute Page/Blade Isolation:** Every page, Blade view, drawer, and modal designed, developed, updated, or edited must be **completely isolated** to its own page scope.
+- **Never Entangle Pages:** **DO NOT** reuse or share stateful JavaScript controllers, global window objects, shared DOM element IDs, or tightly coupled Blade templates across different pages or sections (e.g. CV Tracker, Application Tracker, Client Application, Bench Candidates, Job Requisitions).
+- **Zero Cross-Module Ripple Effects:** When upgrading, fixing, or adding features to Page A, never use shared concepts or direct code hooks that bind Page A to Page B. A change or upgrade on one page must **NEVER** produce side-effects, syntax collisions, state corruption, or regressions on other pages, blades, drawers, or modules.
+- **Isolated Component Architecture:** Each page owns its dedicated, isolated JavaScript module/class namespace (e.g. `window.CvTrackerManager`, `window.AppTrackerManager`), scoped DOM selectors, page-specific lifecycle hooks, and self-contained styling.
+
+### 11. 15.6-Inch Screen Fit & Small-Screen Responsiveness Mandate
+- **Primary Design Baseline:** Every UI/UX design, table, drawer, modal, card, filter bar, and dashboard layout must **perfectly fit on a standard 15.6-inch laptop screen** (primary recruiter resolutions: **1366×768** and **1920×1080** at 125% OS scaling) **and smaller screens**, with 100% responsiveness.
+- **Zero Horizontal Page Explosion:** The main page layout must never generate an unwanted horizontal scrollbar. Content must fluidly reflow or utilize clean inner container scrolling.
+- **Strict Typography & Metronic Cap:** Adhere strictly to the Metronic theme and **Poppins font**. Maximum font size is **14px** across all data tables, form inputs, labels, toolbars, and buttons (secondary captions at 11px–12px; section headers max 14px bold). Never use fonts larger than 14px on data pages.
+- **Viewport Height & Drawer Constraints:**
+  - Standard 768px screen height leaves only ~600px usable viewport after browser tabs and address bars. All modals and drawers must scroll internally (`overflow-y: auto`) without cutting off footers or primary action buttons.
+  - Drawer widths must be strictly responsive (e.g., `w-100 w-lg-650px` or max 80vw–85vw on 1366px screens) so context is never lost.
+  - Sticky bottom action bars (selection bars, bulk action trays) must anchor reliably within the visible viewport without overlapping table pagination.
+
 ---
 
 ## 🔒 CONTEXT & TOKEN DISCIPLINE
@@ -90,5 +105,6 @@ The platform infrastructure is provisioned with high-performance dedicated resou
 12. **Queue heavy work:** Resume parsing, bulk imports, mass mail, background re-indexing → dispatch to Redis/Horizon. Never run inline.
 13. **Octane safety:** FrankenPHP / Octane workers are long-lived. Never store request state in static class properties or singletons; avoid memory leaks.
 14. **Document every change:** Every new file, class, or method requires a clear intent docblock explaining the *why*. Undocumented code is considered incomplete.
-15. **UI & UX Standard:** Metronic theme, **Poppins font**, **maximum font 14px**, clean icon-based design (NO 3D), responsive from 1366×768 to 4K ([UI_UX_STANDARDS.md](UI_UX_STANDARDS.md)).
+15. **UI & UX Standard:** Metronic theme, **Poppins font**, **maximum font 14px**, clean icon-based design (NO 3D). **Must perfectly fit 15.6-inch laptop screens (1366×768 & 1920×1080) and smaller screens** with 100% responsiveness, zero page-level horizontal overflow, and internal drawer scrolling ([UI_UX_STANDARDS.md](UI_UX_STANDARDS.md)).
 16. **OpenDoc WASM Engine Isolation Mandate:** The three document engines — Download Resume Center (`AgyResumeRenderer.js` / `showdetail.blade.php`), Forward Resume (`AgyForwardResumeEngine.js` / `ForwardResumeManager.js`), and Online Editor (`AgyEditorWasmEngine.js` / `resume-studio.blade.php`) — are **strictly isolated into three separate, independent engines**. Never merge them, cross-import them, or break their separation under the guise of "DRY".
+17. **Complete Page/Blade Isolation Mandate:** Every page, Blade view, drawer, and modal must be completely isolated to that page. Do NOT reuse, share, or bind stateful JS controllers, global variables, or coupled Blade templates across different pages/sections (e.g. CV Tracker, App Tracker, Client App). Changes to one page must NEVER affect or break another.

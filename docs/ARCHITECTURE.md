@@ -89,6 +89,18 @@ The platform is engineered around an uncompromising high-concurrency standard de
 - **No Unprompted Business Logic Mutations:** For any upgrade, refactor, or performance optimization, existing domain business logic (matching algorithms, hiring pipeline rules, stage transitions, coin deduction rates, permissions) must remain 100% untouched unless explicitly commanded by the user.
 - **Strict Blast Radius Isolation:** Upgrading or modifying one page, drawer, tab, or feature must NEVER affect, break, degrade, or mutate any other feature, table, or module across the system. Upgrades run as isolated vertical slices with feature flag protection and complete backward compatibility.
 
+### 7. Complete Page & Blade Isolation (Strict Anti-Entanglement Architecture)
+- **Zero Cross-Page Coupling:** Every page, Blade template, drawer, and modal must be completely isolated within its page scope. Stateful JavaScript managers (e.g. `window.CvTrackerManager`, `window.AppTrackerManager`) must never be shared across different pages (e.g. CV Tracker vs App Tracker vs Client App vs Bench Candidates).
+- **Independent Lifecycles & Namespaces:** Upgrading or editing a feature on one page must NEVER use shared selectors or hooks that leak into or alter another page. Each page maintains its own isolated lifecycle, DOM selectors, event bindings, and controllers.
+
+### 8. 15.6-Inch Screen & Fully Responsive UI/UX Architecture
+- **Recruiter Screen Standard:** Primary design baseline is a standard 15.6-inch laptop screen (**1366×768** and **1920×1080** at 125% scaling) and smaller screens.
+- **Strict Constraints:**
+  - Zero page-level horizontal overflow.
+  - Short viewport (~600px usable height) architecture: modals and drawers must scroll internally (`overflow-y: auto`) with sticky headers and sticky action footers.
+  - Drawer width constrained to 80vw–85vw (e.g., `w-100 w-lg-650px`) on 1366px screens.
+  - Maximum font size strictly capped at **14px** with Poppins font family.
+
 ---
 
 ## 3. Major Modules
