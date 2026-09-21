@@ -105,6 +105,15 @@ Last updated: 2026-09-04 (Team View More V2 Performance & Concurrency Optimizati
 - *2026-06-27* — Recorded 6 retroactive ADRs for existing architecture
   ([docs/adr/](../docs/adr/)). These document decisions *as observed*, not as originally
   designed.
+- *2026-09-21* — **Established The 8 GOD-Level Architectural Directives (V4 Mandate):**
+  1. MySQL is ONLY for Add/Edit/Delete (0% MySQL reads on web/API request cycles).
+  2. Elasticsearch is ONLY for Read (100% search/queries/filters; zero direct UI writes).
+  3. Hardware dimensioning: Dedicated 32 GB RAM each for Web/App Server, MySQL, and Elasticsearch.
+  4. Concurrency target: 10,000 concurrent users per page with 0% server/DB read strain.
+  5. 0% Server Strain Target: Offload document assembly and static rendering away from cloud servers.
+  6. Client-First Architecture: Execute heavy assembly in user RAM (WASM, Web Workers, `pdf-lib`) with cloud server as resilience fallback.
+  7. Zero Stale ATS Data: 100% authoritative and fresh pipeline, coin, and candidate records.
+  8. Multi-Tenant Atomic Cache Purging: All cache keys scoped by `company_id`; all mutations instantly purge tenant cache across Redis and client memory so all organization users receive real-time updates.
 - _(add new decisions here: what was decided, why, by whom, link to ADR/PR)_
 
 ## 3. Open questions / needs human confirmation
