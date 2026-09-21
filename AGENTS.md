@@ -19,15 +19,16 @@
 4. **10K Concurrency / 0% Server Strain Target:** Architect every page to handle 10,000 concurrent users without server collapse or UI freezes.
 5. **Zero Stale Data in ATS:** Recruitment pipeline data must be 100% fresh, correct, and authoritative. Latency optimization must never serve stale candidate data.
 6. **Multi-Tenant Atomic Cache Invalidation:** When candidate/job/stage details are updated, tenant cache keys (`company_id`) in Redis and client memory are instantly destroyed so all organization users see updated data in real time.
-7. Database truth = `database/schema/mysql-schema.sql` (217 tables) — read it before any DB work. Not in migrations; don't invent migrations.
-8. Eloquent is tenant-scoped by `company_id`; raw `DB::table()` is not — filter it.
-9. Keep MySQL ↔ Elasticsearch in sync on writes to indexed entities.
-10. Use `config()`, never `env()` outside `config/`.
-11. Queue heavy work; match existing patterns; no unprompted refactors or business-logic changes.
-12. Preserve baked-in name typos (they map to real tables/indices) — rename only via NAMING_CONVENTIONS.
-13. UI = Metronic, Poppins font, max font 14px, clean icon-based design (NO 3D), fits 1366×768 → 4K ([docs/UI_UX_STANDARDS.md](docs/UI_UX_STANDARDS.md)).
-14. OpenDoc WASM Engine Isolation: Download Resume Center, Forward Resume, and Online Editor are strictly 3 separate engines. Never merge them.
-15. **Document the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries. See [docs/CODE_DOCUMENTATION_STANDARD.md](docs/CODE_DOCUMENTATION_STANDARD.md).
+7. **Zero Business Logic Mutations & Zero Module Regressions:** For any change or upgrade on any page/feature, existing core business logic must remain 100% untouched, and NO other feature, drawer, modal, or module across the system may be affected.
+8. Database truth = `database/schema/mysql-schema.sql` (217 tables) — read it before any DB work. Not in migrations; don't invent migrations.
+9. Eloquent is tenant-scoped by `company_id`; raw `DB::table()` is not — filter it.
+10. Keep MySQL ↔ Elasticsearch in sync on writes to indexed entities.
+11. Use `config()`, never `env()` outside `config/`.
+12. Queue heavy work; match existing patterns; no unprompted refactors or business-logic changes.
+13. Preserve baked-in name typos (they map to real tables/indices) — rename only via NAMING_CONVENTIONS.
+14. UI = Metronic, Poppins font, max font 14px, clean icon-based design (NO 3D), fits 1366×768 → 4K ([docs/UI_UX_STANDARDS.md](docs/UI_UX_STANDARDS.md)).
+15. OpenDoc WASM Engine Isolation: Download Resume Center, Forward Resume, and Online Editor are strictly 3 separate engines. Never merge them.
+16. **Document the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries. See [docs/CODE_DOCUMENTATION_STANDARD.md](docs/CODE_DOCUMENTATION_STANDARD.md).
 
 ## Build/run/verify
 See [docs/VERIFY.md](docs/VERIFY.md). Key: `php -l`, `./vendor/bin/pint`,

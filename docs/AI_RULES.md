@@ -62,6 +62,13 @@ The platform infrastructure is provisioned with high-performance dedicated resou
 - **Instant Atomic Invalidation:** The exact millisecond any candidate, job, application, or company detail is added or edited, the corresponding tenant cache keys **MUST BE INSTANTLY DESTROYED / PURGED** across Redis and the organization.
 - **Real-Time Consistency:** All users and recruiters within that organization/company must immediately receive the authoritative updated state without ghost reads, stale views, or delay.
 
+### 9. Zero Business Logic Alteration & Strict Blast Radius Isolation (Zero Regressions)
+- **Zero Business Logic Mutations:** For any new change, performance optimization, refactor, or upgrade on ANY page or feature, the existing core business logic **MUST REMAIN 100% UNTOUCHED AND UNALTERED** unless explicitly commanded by the user. This includes: candidate matching & fit scoring algorithms, hiring stage transition rules, coin billing rates, credit deductions, permission checks, and ATS status workflows. Never invent, alter, or "improve" business logic unprompted.
+- **Strict Blast Radius Isolation (Zero Cross-Module Impact):** Upgrading or modifying one page, drawer, tab, or feature must **NEVER affect, break, degrade, or mutate any other feature or module across the system**. Changes must be self-contained:
+  - Modifying Forward Resume must never impact Mass Email, Send Email, Candidate Export, Copy, Quick Upload, Selection Bar, Application Tracker, Bench Candidates, or Marketplace.
+  - Modifying filters must never break sorting, pagination, or drawer interactions.
+- **Guaranteed Backward Compatibility:** All upgrades must run as isolated vertical slices behind feature flags with 100% functional fallback paths, guaranteeing that existing systems and workflows continue operating with zero disruption.
+
 ---
 
 ## 🔒 CONTEXT & TOKEN DISCIPLINE

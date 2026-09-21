@@ -122,7 +122,7 @@ if($snp_mode== 1){
             if(@$page_event == 'EDIT'){ 
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
             }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-arrow-up"></i> Publish to Talent Marketplace</button>';
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Publish to Talent Marketplace</span></button>';
             }
         @endphp
       </div>
@@ -149,6 +149,45 @@ if($snp_mode== 1){
             <input type="hidden" name="resumeCheck" value="{{ @$resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
           <div class="fc">
+            @if(@$page_event != 'EDIT')
+            {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
+            <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
+              <div class="talent-stage-heading">
+                <strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong>
+                <small>Select this talent's current stage to reflect their availability.</small>
+              </div>
+              <div class="talent-stage-options">
+                <label class="talent-stage-option talent-stage-option--pool">
+                  <input type="radio" name="talent_stage" value="1">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not yet available.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <label class="talent-stage-option talent-stage-option--bench is-selected">
+                  <input type="radio" name="talent_stage" value="2" checked>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for client opportunities.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <label class="talent-stage-option talent-stage-option--hold">
+                  <input type="radio" name="talent_stage" value="4">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable for opportunities.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <button type="button" class="talent-stage-option talent-stage-option--placed" id="talent-stage-placed" aria-label="Placed: requires a client placement">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client through placement.</small></span>
+                </button>
+                <label class="talent-stage-option talent-stage-option--exited">
+                  <input type="radio" name="talent_stage" value="5">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer in your talent inventory.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+              </div>
+            </section>
+            @endif
             <!-- Upload + Career Summary -->
             <div class="g2 resume-summary-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
@@ -224,9 +263,18 @@ if($snp_mode== 1){
                             </div>
 
                         </div>
-                        <div class="resume-note">
-                            <span class="resume-note-icon"><i class="fa-solid fa-circle-info"></i></span>
-                            <span>Please remove <strong>contact details (phone number, email address)</strong> and <strong>current company name or logo</strong> from the resume before uploading. Resumes containing these details cannot be published to the Talent Marketplace.</span>
+                        <div class="resume-note marketplace-privacy">
+                            <span class="resume-note-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                            <div class="marketplace-privacy-content">
+                                <strong>Marketplace Privacy Check</strong>
+                                <small>Before uploading, remove sensitive details from the resume. Resumes with these details cannot be published.</small>
+                                <ul class="marketplace-privacy-list" aria-label="Details to remove">
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Phone numbers</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Email addresses</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Current company name</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Company logos</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <!-- After-upload Resume Information card -->
@@ -492,8 +540,8 @@ if($snp_mode== 1){
             <div class="fs fv-row d-none">
               <div class="fsh"><h3>Primary Skills *</h3></div>
               <div class="fsc">
-              <div id="skillTags" class="skill-tags"></div>
-               <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="skills" name="skills" />
+               <div id="skillTags" class="skill-tags"></div>
+                <input type="hidden" value="{{ @$application->skills }}" id="skills" />
               </div>
             </div>
 
@@ -737,36 +785,38 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <div class="fs aw-card">
+            <div class="fs aw-card {{ ($snp_mode===1) ? 'is-date-availability' : 'is-immediate-availability' }}">
               <div class="aw-hero">
                 <div class="aw-hero-title">
-                  <span class="aw-hero-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                  <span class="aw-hero-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                   <span>
                     <strong>Availability &amp; Work Preferences</strong>
                     <small>Define the availability and work preferences for this talent.</small>
                   </span>
                 </div>
-                <span class="aw-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
+                <span class="aw-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
               </div>
               <div class="fsc aw-body">
                 <div class="aw-grid">
                   <div class="fg fv-row aw-field aw-field--wide">
                     <label>Availability <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select when this talent can start.</small>
                     <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
                       <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
                       <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
                       <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                     <div class="aw-option-grid" data-aw-options>
-                      <button type="button" class="aw-option {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2">
+                      <button type="button" class="aw-option aw-option--now {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2" aria-pressed="{{ ($snp_mode===2) ? 'true' : 'false' }}">
                         <span class="aw-radio"></span>
                         <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
                           <strong>Immediate Joiner</strong>
                           <small>This talent can start immediately.</small>
                         </span>
+                        <span class="aw-recommended">Recommended</span>
                       </button>
-                      <button type="button" class="aw-option {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1">
+                      <button type="button" class="aw-option aw-option--date {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1" aria-pressed="{{ ($snp_mode===1) ? 'true' : 'false' }}">
                         <span class="aw-radio"></span>
                         <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                         <span class="aw-option-copy">
@@ -778,12 +828,14 @@ if($snp_mode== 1){
                   </div>
 
                   <div class="fg fv-row aw-field">
-                    <label class="aw-date-label">Enter the date from which this talent will be available. <span class="rq">*</span></label>
+                    <label class="aw-date-label" for="np_id_display">Available From Date <span class="rq">*</span></label>
+                    <small class="aw-field-help">Enter the date from which this talent will be available.</small>
                     <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
                       <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
+                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show the talent's availability to clients in the marketplace.</span></div>
                     <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
                       <option value="">Select Notice Period</option>
                       @php
@@ -804,34 +856,37 @@ if($snp_mode== 1){
                 <div class="aw-grid aw-grid--work">
                   <div class="fg fv-row aw-field aw-field--wide">
                     <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
                     <div class="aw-work-grid">
                       <label class="aw-work-option aw-work-option--remote" for="wr">
                         <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-wifi" aria-hidden="true"></i>
-                        <strong>Remote</strong>
+                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
+                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                        <strong>Hybrid</strong>
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--office" for="wo">
                         <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
                         <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <strong>Work From Office</strong>
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Work From Office</strong><small>Office location based work.</small></span>
                       </label>
                     </div>
                   </div>
                 </div>
 
+                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
+
               </div>
             </div>
 
             <!-- Salary Details -->
-            <div class="fs br-card">
+            <div class="fs br-card {{ (@$application->comission_type == 1) ? 'is-free-service' : 'is-paid-service' }}">
               <div class="br-hero">
                 <div class="br-hero-title">
                   <span class="br-hero-icon"><i class="fa-solid fa-coins"></i></span>
@@ -856,18 +911,18 @@ if($snp_mode== 1){
                     </span>
                   </div>
                   <div class="br-model-grid">
-                    <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1" role="radio" aria-checked="{{ (@$application->comission_type == 1) ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
-                      <span class="br-option-icon"><i class="fa-regular fa-gift"></i></span>
+                      <span class="br-option-icon"><i class="fa-solid fa-gift" aria-hidden="true"></i></span>
                       <span class="br-option-copy">
                         <strong>Free Service</strong>
                         <em>No charge to client</em>
                         <small>This talent will be provided to clients at no commercial charge.</small>
                       </span>
                     </button>
-                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2" role="radio" aria-checked="{{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
-                      <span class="br-option-icon"><i class="fa fa-rupee-sign"></i></span>
+                      <span class="br-option-icon"><i class="fa-solid fa-credit-card" aria-hidden="true"></i></span>
                       <span class="br-option-copy">
                         <strong>Paid Service</strong>
                         <em>Client will be billed</em>
@@ -968,7 +1023,7 @@ if($snp_mode== 1){
                   <div class="br-rate-grid">
                     <div class="br-rate-panel br-pay-panel">
                       <div class="br-panel-head">
-                        <span class="br-panel-icon"><i class="fa-regular fa-user"></i></span>
+                        <span class="br-panel-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
                         <span>
                           <strong>Candidate Cost (Pay Rate)</strong>
                           <small>What you pay to the candidate</small>
@@ -1010,12 +1065,12 @@ if($snp_mode== 1){
                           <span><em id="br_pay_auto_label_two">Hourly Cost</em><b id="br_pay_hourly_display">0</b></span>
                         </div>
                       </div>
-                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
+                      <div class="br-formula"><i class="fa-solid fa-calculator" aria-hidden="true"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
                     </div>
 
                     <div class="br-rate-panel br-bill-panel">
                       <div class="br-panel-head">
-                        <span class="br-panel-icon"><i class="fa-solid fa-coins"></i></span>
+                        <span class="br-panel-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                         <span>
                           <strong>Client Bill Rate</strong>
                           <small>What you charge to the client</small>
@@ -1057,7 +1112,7 @@ if($snp_mode== 1){
                           <span><em id="br_bill_auto_label_two">Hourly Bill Rate</em><b id="br_bill_hourly_display">0</b></span>
                         </div>
                       </div>
-                      <div class="br-formula"><i class="fa-regular fa-circle-info"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
+                      <div class="br-formula"><i class="fa-solid fa-calculator" aria-hidden="true"></i> Monthly = Annual / 12 <span>|</span> Hourly = Annual / 2080 hours</div>
                     </div>
 
                     <div class="br-margin-panel">
@@ -1075,7 +1130,7 @@ if($snp_mode== 1){
                         <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
                       </div>
                       <div class="br-margin-state">
-                        <i class="fa-solid fa-check"></i>
+                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
                       <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
@@ -1101,28 +1156,35 @@ if($snp_mode== 1){
                   </span>
                 </div>
                 <div class="se-actions">
-                  <span class="se-badge"><i class="fa-solid fa-building"></i> In-House Talent</span>
-                  <i class="fa-solid fa-chevron-up"></i>
+                   <span class="se-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
                 </div>
               </div>
               <div class="fsc">
-                <table class="sk">
+                <div class="se-table-scroll">
+                 <table class="sk">
                   <thead>
                     <tr>
                       <th>Skill <span class="rq">*</span></th>
                       <th>Experience (Years) <span class="rq">*</span></th>
                       <th>Experience (Months)</th>
                       <th>Proficiency Rating <span class="rq">*</span></th>
-                      <th>Actions <span class="rq">*</span></th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="skillExperienceWrapper">
                   </tbody>
-                </table>
-                
-                <div style="display:flex;gap:6px">
-                <button class="asb" type="button">+ Add Skill</button>
-                <button class="bab d-none" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Bulk Add Skills</button>
+                 </table>
+                </div>
+                <datalist id="skillSuggestions"></datalist>
+                <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Skill</button>
+                <div class="se-popular">
+                  <span class="se-popular-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <div class="se-popular-copy"><strong>Popular Skills</strong><small>Click to quickly add common skills</small></div>
+                  <div class="se-popular-list">
+                    @foreach (['Java', 'Python', 'React', 'Node.js', 'AWS', 'Azure', 'SQL', 'DevOps', 'Salesforce'] as $popularSkill)
+                      <button type="button" class="se-popular-skill" data-skill="{{ $popularSkill }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{ $popularSkill }}</button>
+                    @endforeach
+                  </div>
                 </div>
               </div>
             </div>
@@ -1368,6 +1430,34 @@ if($snp_mode== 1){
 
 <script>
 $(document).ready(function () {
+    // Keep the create action aligned with the submitted bench stage.
+    var talentStageActions = {
+        '1': { label: 'Add to Talent Pool', icon: 'fa-users', theme: 'pool' },
+        '2': { label: 'Publish to Talent Marketplace', icon: 'fa-arrow-up', theme: 'bench' },
+        '4': { label: 'Save Talent on Hold', icon: 'fa-clock', theme: 'hold' },
+        '5': { label: 'Save Exited Talent', icon: 'fa-right-from-bracket', theme: 'exited' }
+    };
+    window.syncTalentStageAction = function () {
+        var selected = $('input[name="talent_stage"]:checked');
+        if (!selected.length) return;
+        var action = talentStageActions[selected.val()] || talentStageActions['2'];
+        $('.talent-stage-option').removeClass('is-selected');
+        selected.closest('.talent-stage-option').addClass('is-selected');
+        $('#save-form')
+            .removeClass('talent-stage-action--pool talent-stage-action--bench talent-stage-action--hold talent-stage-action--exited')
+            .addClass('talent-stage-action--' + action.theme)
+            .html('<i class="fa-solid ' + action.icon + '" aria-hidden="true"></i> <span class="talent-stage-action-label">' + action.label + '</span>');
+    };
+    $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
+    $('#talent-stage-placed').on('click', function () {
+        Swal.fire({
+            title: 'Talent already placed',
+            text: 'Placed talent is assigned to a client. To offer this talent for new opportunities, select Bench and publish to the Talent Marketplace.',
+            icon: 'info',
+            confirmButtonText: 'Got it'
+        });
+    });
+    window.syncTalentStageAction();
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
@@ -1524,7 +1614,12 @@ $(document).ready(function () {
                     if (r.status === 'Completed' || r.status === 'Failed') {
                         clearInterval(_parseStatusInterval); _parseStatusInterval = null;
                         if (r.status === 'Failed') { $('#upDetailParserStatus').css('color','#f44336'); $('#upRetryWrap').show(); }
-                        else { $('#upRetryWrap').hide(); }
+                        else {
+                            $('#upRetryWrap').hide();
+                            if (r.parsed_data && r.parsed_data.skills && window.addParsedBenchSkills) {
+                                window.addParsedBenchSkills(r.parsed_data.skills);
+                            }
+                        }
                     }
                 });
         }, 4000);
@@ -1739,34 +1834,6 @@ $(document).ready(function () {
                 });
             });
         });
-        // add skill
-        document.querySelector('.asb').addEventListener('click', () => {
-            const tb = document.querySelector('.sk tbody');
-            const tr = document.createElement('tr');
-            tr.innerHTML =
-                '<td><input type="text" name="skills[]" placeholder="Enter skill"></td><td><select class="form-select form-select-solid" name="years[]"> <option value="">Select Year</option> <option value="1"> 1 Year </option><option value="2"> 2 Years </option><option value="3"> 3 Years </option><option value="4"> 4 Years </option><option value="5"> 5 Years </option><option value="6"> 6 Years </option><option value="7"> 7 Years </option><option value="8"> 8 Years </option><option value="9"> 9 Years </option><option value="10"> 10 Years </option><option value="11"> 11 Years </option><option value="12"> 12 Years </option><option value="13"> 13 Years </option><option value="14"> 14 Years </option><option value="15"> 15 Years </option><option value="16"> 16 Years </option><option value="17"> 17 Years </option><option value="18"> 18 Years </option><option value="19"> 19 Years </option><option value="20"> 20 Years </option><option value="21"> 21 Years </option><option value="22"> 22 Years </option><option value="23"> 23 Years </option><option value="24"> 24 Years </option><option value="25"> 25 Years </option><option value="26"> 26 Years </option><option value="27"> 27 Years </option><option value="28"> 28 Years </option><option value="29"> 29 Years </option><option value="30"> 30 Years </option><option value="31"> 31 Years </option><option value="32"> 32 Years </option><option value="33"> 33 Years </option><option value="34"> 34 Years </option><option value="35"> 35 Years </option><option value="36"> 36 Years </option><option value="37"> 37 Years </option><option value="38"> 38 Years </option><option value="39"> 39 Years </option><option value="40"> 40 Years </option><option value="41"> 41 Years </option><option value="42"> 42 Years </option><option value="43"> 43 Years </option><option value="44"> 44 Years </option><option value="45"> 45 Years </option><option value="46"> 46 Years </option><option value="47"> 47 Years </option><option value="48"> 48 Years </option><option value="49"> 49 Years </option><option value="50"> 50 Years </option><option value="51"> 51 Years </option><option value="52"> 52 Years </option><option value="53"> 53 Years </option><option value="54"> 54 Years </option><option value="55"> 55 Years </option><option value="56"> 56 Years </option><option value="57"> 57 Years </option><option value="58"> 58 Years </option><option value="59"> 59 Years </option><option value="60"> 60 Years </option> </select></td><td><select class="form-select form-select-solid" name="months[]"> <option value="">Select Month</option> <option value="0"> 0 Months </option><option value="1"> 1 Month </option><option value="2"> 2 Months </option><option value="3"> 3 Months </option><option value="4"> 4 Months </option><option value="5"> 5 Months </option><option value="6"> 6 Months </option><option value="7"> 7 Months </option><option value="8"> 8 Months </option><option value="9"> 9 Months </option><option value="10"> 10 Months </option><option value="11"> 11 Months </option> </select></td><td><select class="form-select form-select-solid" name="ratings[]"> <option value="">Select Rating</option> <option value="1"> 1 Rating </option><option value="2"> 2 Rating </option><option value="3"> 3 Rating </option><option value="4"> 4 Rating </option><option value="5"> 5 Rating </option> </select></td><td><button class="ab" type="button">🗑️</button></td>';
-            tb.appendChild(tr);
-            tr.querySelectorAll('.sr').forEach((r) => {
-                const s = r.querySelectorAll('.st');
-                s.forEach((x, i) => {
-                    x.addEventListener('click', () => {
-                        s.forEach((y, j) => {
-                            if (j <= i) y.classList.remove('e');
-                            else y.classList.add('e');
-                        });
-                    });
-                });
-            });
-            tr.querySelector('.ab').addEventListener('click', () => tr.remove());
-        });
-        // delete existing
-        $(document).on('click','.ab',function(){
-          var ele = $(this);
-           ele.closest('tr').remove();
-        })
-        // document.querySelectorAll('.ab').forEach((b) => {
-        //     b.addEventListener('click', () => b.closest('tr').remove());
-        // });
 </script>
 
 
@@ -2017,6 +2084,7 @@ $(document).ready(function () {
         let profitValue = $('#percentage_hike').val();
         let displayedPercent = profitValue !== '' ? commercialNumber(profitValue) : computedPercent;
         let isFree = isFreeCommercialMode();
+        let needsMarginReview = modeConfig.basePay > 0 && modeConfig.baseBill > 0 && (margin < 0 || displayedPercent < 10);
 
         $('#br_pay_auto_label_one').text(modeConfig.payAutoOneLabel);
         $('#br_pay_auto_label_two').text(modeConfig.payAutoTwoLabel);
@@ -2035,23 +2103,23 @@ $(document).ready(function () {
             $('#br_summary_percent_label').text('Selected Model');
             $('#br_summary_bill_annual').text('Disabled');
             $('#br_summary_margin').text('Not billed');
-            $('#br_summary_percent').text('Free');
+            $('#br_summary_percent').text('Free Service');
             $('.br-margin-state').removeClass('is-low').addClass('is-free');
             $('#br_margin_status').text('Free Service Selected');
-            $('#br_margin_note').text('Client bill rate is locked because this talent will be offered without commercial billing.');
+            $('#br_margin_note').text('This talent will be offered to clients without commercial billing. Client bill rate is not required.');
         } else {
             $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
             $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
             $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text(modeConfig.billLabel);
-            $('#br_summary_margin_label').text(modeConfig.marginLabel);
-            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_bill_label').text('Client Billing');
+            $('#br_summary_margin_label').text('Commercial Margin');
+            $('#br_summary_percent_label').text('Selected Model');
             $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
-            $('#br_summary_margin').text(commercialFormat(margin));
-            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
-            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', margin < 0 || displayedPercent < 10);
-            $('#br_margin_status').text((margin < 0 || displayedPercent < 10) ? 'Review Margin' : 'Healthy Margin');
-            $('#br_margin_note').text((margin < 0 || displayedPercent < 10) ? 'Please review the configured bill rate.' : 'This margin looks good.');
+            $('#br_summary_margin').text(commercialFormat(margin) + ' (' + commercialFormat(displayedPercent, '%') + ')');
+            $('#br_summary_percent').text('Paid Service');
+            $('.br-margin-state').removeClass('is-free').toggleClass('is-low', needsMarginReview);
+            $('#br_margin_status').text(needsMarginReview ? 'Review Margin' : 'Paid Service Selected');
+            $('#br_margin_note').text(needsMarginReview ? 'Please review the configured bill rate.' : 'Client will be billed. Set pay rate, bill rate and manage margin.');
         }
 
         $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
@@ -2059,8 +2127,8 @@ $(document).ready(function () {
 
     function syncCommercialCards() {
         let currentValue = ($('#comission_type').val() || '2').toString();
-        $('.br-model-option').removeClass('is-selected');
-        $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected');
+        $('.br-model-option').removeClass('is-selected').attr('aria-checked', 'false');
+        $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected').attr('aria-checked', 'true');
     }
 
     function applyCommercialMode() {
@@ -2087,7 +2155,7 @@ $(document).ready(function () {
         }
 
         billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
-        $('.br-card').toggleClass('is-free-service', isFree);
+        $('.br-card').toggleClass('is-free-service', isFree).toggleClass('is-paid-service', !isFree);
         $('.br-bill-panel').toggleClass('is-locked', isFree);
         syncCommercialCards();
         refreshCommercialSummary();
@@ -2337,165 +2405,143 @@ $(document).ready(function () {
 <script>
 
     window.existingSkillExperience = @json($skillExperiences);
-		var skills = document.querySelector("#skills");
-    var experienceWrapper = document.getElementById("skillExperienceWrapper");
+    const experienceWrapper = document.getElementById('skillExperienceWrapper');
+    const skillSuggestions = document.getElementById('skillSuggestions');
+    const popularSkillButtons = document.querySelectorAll('.se-popular-skill');
+    let skillSuggestionTimer;
 
-    var tagifyskills =  new Tagify(skills, {
-        whitelist: [],
-        maxTags: 10,
-        transformTag: function(tagData) {
-        // Remove special characters, allow only letters, numbers, and spaces
-        tagData.value = tagData.value.replace(/[^a-zA-Z0-9 +#\/.]/g, '');
-        return tagData;
-        },
-        validate: function(tagData) {
-            // Prevent empty tags after cleaning
-            return tagData.value.trim().length > 0 ? true : false;
-        },
-        dropdown: {
-            maxItems: 10,           // <- mixumum allowed rendered suggestions
-            classname: "", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true    // <- do not hide the suggestions dropdown once an item has been selected
-        }
-    });
-
-    /**
- * Create Experience Row
- */
-
-/**
- * Add Experience Block (Edit safe)
- */
-function addSkillExperience(skill, data = {}) {
-
-    let skillKey = skill.toLowerCase();
-
-    if (document.getElementById('skill-exp-' + skillKey)) return;
-
-    let html = `<tr id="skill-exp-${skillKey}">
-      <td><input type="text" value="${skill}" name="skills[]" placeholder="Enter skill" /></td>
-      <td>
-                <select class="form-select form-select-solid"
-                        name="years[]">
-                    <option value="">Select Year</option>
-                    ${generateYears(data.year)}
-                </select>
-      </td>
-      <td>
-                <select class="form-select form-select-solid"
-                        name="months[]">
-                    <option value="">Select Month</option>
-                    ${generateMonths(data.month)}
-                </select>
-      </td>
-      <td>
-            <select class="form-select form-select-solid"
-                    name="ratings[]">
-                <option value="">Select Rating</option>
-                ${generateRating(data.rating)}
-            </select>
-
-      </td>
-      <td><button class="ab" type="button">🗑️</button></td>
-    </tr>`;
-
-    experienceWrapper.insertAdjacentHTML('beforeend', html);
-}
-
-/**
- * Helpers (preselect values)
- */
-function generateYears(selected = null) {
-    let html = '';
-    for (let i = 1; i <= 60; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Year${i > 1 ? 's' : ''}
-                 </option>`;
+    function skillKey(value) {
+        return String(value || '').trim().toLocaleLowerCase();
     }
-    return html;
-}
 
-function generateMonths(selected = null) {
-    let html = '';
-    for (let i = 0; i <= 11; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Month${i !== 1 ? 's' : ''}
-                 </option>`;
+    function findSkillRow(value, except = null) {
+        return Array.from(experienceWrapper.querySelectorAll('tr')).find(row =>
+            row !== except && skillKey(row.querySelector('[name="skills[]"]').value) === skillKey(value)
+        );
     }
-    return html;
-}
-function generateRating(selected = null) {
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-        html += `<option value="${i}" ${i == selected ? 'selected' : ''}>
-                    ${i} Rating${i !== 1 ? 's' : ''}
-                 </option>`;
-    }
-    return html;
-}
 
-/**
- * Load Existing Skills + Experience
- */
-Object.keys(window.existingSkillExperience).forEach(skillKey => {
-    let row = window.existingSkillExperience[skillKey];
-    addSkillExperience(skillKey.toUpperCase(), {
-        year: row.year,
-        month: row.month,
-        rating: row.rating
-    });
-});
-
-/**
- * Sync add/remove
- */
-tagifyskills.on('add', e => {
-    addSkillExperience(e.detail.data.value);
-});
-
-tagifyskills.on('remove', e => {
-    let key = e.detail.data.value.toLowerCase();
-    document.getElementById('skill-exp-' + key)?.remove();
-});
-
-tagifyskills.value.forEach(tag => {
-    addSkillExperience(tag.value);
-});
-
-
-
-
-
-    const fetchSuggestionsSkills = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Skill: ", data);
-
-                if (Array.isArray(data)) {
-                    tagifyskills.settings.whitelist = data; // Update whitelist
-                    // tagifyskill.dropdown.show(query); // Show suggestions
-                    tagifyskills.dropdown.show.call(tagifyskills);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching Skill:", err);
-            }
+    function updatePopularSkills() {
+        popularSkillButtons.forEach(button => {
+            const selected = !!findSkillRow(button.dataset.skill);
+            button.classList.toggle('is-added', selected);
+            button.setAttribute('aria-pressed', String(selected));
         });
-    }, 5); 
+    }
 
-    // Listen for user input to trigger API call
-    tagifyskills.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 1) return;
-        fetchSuggestionsSkills(query);
+    // Keep skills and their experience fields in the same submitted row.
+    function addSkillExperience(skill = '', data = {}) {
+        const name = String(skill || '').trim();
+        const existing = name ? findSkillRow(name) : null;
+        if (existing) return existing;
+
+        const emptyRow = name && Array.from(experienceWrapper.querySelectorAll('tr')).find(row =>
+            !row.querySelector('[name="skills[]"]').value.trim() &&
+            Array.from(row.querySelectorAll('select')).every(select => !select.value)
+        );
+        if (emptyRow) {
+            const input = emptyRow.querySelector('[name="skills[]"]');
+            input.value = name;
+            input.dataset.previousSkill = name;
+            updatePopularSkills();
+            return emptyRow;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <label class="se-field se-field--skill">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" name="skills[]" list="skillSuggestions" autocomplete="off" placeholder="Search or type skill (e.g. Java)" aria-label="Skill" />
+                </label>
+                <small class="se-skill-hint">Start typing to see suggestions</small>
+            </td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select name="years[]" aria-label="Experience years"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select name="months[]" aria-label="Experience months"></select></label></td>
+            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select name="ratings[]" aria-label="Proficiency rating"></select></label></td>
+            <td><button class="ab" type="button" aria-label="Delete skill" title="Delete skill"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></td>`;
+        const input = row.querySelector('[name="skills[]"]');
+        input.value = name;
+        input.dataset.previousSkill = name;
+
+        function fillOptions(select, label, start, end, selected, suffix) {
+            select.add(new Option(label, ''));
+            for (let value = start; value <= end; value++) {
+                select.add(new Option(value + ' ' + suffix(value), String(value)));
+            }
+            if (selected !== null && selected !== undefined && selected !== '') {
+                select.value = String(selected);
+            }
+        }
+
+        fillOptions(row.querySelector('[name="years[]"]'), 'Select Year', 1, 60, data.year, n => n === 1 ? 'Year' : 'Years');
+        fillOptions(row.querySelector('[name="months[]"]'), 'Select Month', 0, 11, data.month, n => n === 1 ? 'Month' : 'Months');
+        fillOptions(row.querySelector('[name="ratings[]"]'), 'Select Rating', 1, 5, data.rating, n => n === 1 ? 'Rating' : 'Ratings');
+
+        input.addEventListener('change', () => {
+            input.value = input.value.trim();
+            const duplicate = input.value ? findSkillRow(input.value, row) : null;
+            if (duplicate) {
+                input.value = input.dataset.previousSkill || '';
+                duplicate.querySelector('[name="skills[]"]').focus();
+            } else {
+                input.dataset.previousSkill = input.value;
+            }
+            updatePopularSkills();
+        });
+        input.addEventListener('input', () => {
+            updatePopularSkills();
+            clearTimeout(skillSuggestionTimer);
+            const query = input.value.trim();
+            if (query.length < 2) return;
+            skillSuggestionTimer = setTimeout(() => {
+                $.get('{{ url('/') }}/skill-suggestions', { q: query }).done(results => {
+                    if (document.activeElement !== input || input.value.trim() !== query || !Array.isArray(results)) return;
+                    skillSuggestions.replaceChildren();
+                    results.forEach(result => {
+                        const value = typeof result === 'string' ? result : (result.value || result.name || '');
+                        if (!value) return;
+                        const option = document.createElement('option');
+                        option.value = value;
+                        skillSuggestions.appendChild(option);
+                    });
+                });
+            }, 250);
+        });
+        row.querySelector('.ab').addEventListener('click', () => {
+            row.remove();
+            updatePopularSkills();
+        });
+
+        experienceWrapper.appendChild(row);
+        updatePopularSkills();
+        return row;
+    }
+
+    function addParsedBenchSkills(values) {
+        if (typeof values === 'string') {
+            try { values = JSON.parse(values); } catch (_) { values = values.split(','); }
+        }
+        if (!Array.isArray(values)) return;
+        values.forEach(value => {
+            const skill = typeof value === 'string' ? value : (value && (value.value || value.name));
+            if (skill && String(skill).trim()) addSkillExperience(skill);
+        });
+    }
+    window.addParsedBenchSkills = addParsedBenchSkills;
+
+    Object.entries(window.existingSkillExperience || {}).forEach(([skill, data]) => {
+        addSkillExperience(skill, data || {});
     });
-    
-		new Tagify(skills);
+    const storedSkills = document.getElementById('skills').value;
+    if (storedSkills) addParsedBenchSkills(storedSkills);
+    if (!experienceWrapper.children.length) addSkillExperience();
+
+    document.querySelector('.se-card .asb').addEventListener('click', () => {
+        addSkillExperience().querySelector('[name="skills[]"]').focus();
+    });
+    popularSkillButtons.forEach(button => button.addEventListener('click', () => {
+        addSkillExperience(button.dataset.skill).querySelector('[name="skills[]"]').focus();
+    }));
 
 
     var inputloc = document.querySelector("#kt_tagify_work_location");
@@ -2777,6 +2823,7 @@ function isAvailableFromDateMode() {
 
 function syncAvailableFromDateControl() {
     var editable = isAvailableFromDateMode();
+    $('.aw-card').toggleClass('is-date-availability', editable).toggleClass('is-immediate-availability', !editable);
     $('#np_id').prop('disabled', !editable);
     $('#snp-immediate').css('display', 'flex');
     $('#np_id_display')
@@ -2810,8 +2857,8 @@ function openAvailableFromDatePicker() {
 
 $(document).on('change','#serving_notice_period',function(){
     var cvalue = $('#serving_notice_period').val();
-    $('.aw-option').removeClass('is-selected');
-    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected');
+    $('.aw-option').removeClass('is-selected').attr('aria-pressed', 'false');
+    $('.aw-option[data-snp-value="' + cvalue + '"]').addClass('is-selected').attr('aria-pressed', 'true');
 		$('#np_id').val('');
 		$('#np_id_display').val('');
 		$('#ddl_np_id').val('');
@@ -2857,8 +2904,8 @@ $(function(){
         selectedAvailability = '2';
         $('#serving_notice_period').val('2');
     }
-    $('.aw-option').removeClass('is-selected');
-    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected');
+    $('.aw-option').removeClass('is-selected').attr('aria-pressed', 'false');
+    $('.aw-option[data-snp-value="' + selectedAvailability + '"]').addClass('is-selected').attr('aria-pressed', 'true');
     syncAvailableFromDateControl();
 });
 
@@ -3021,7 +3068,8 @@ var KTAddCandidate = function () {
                         submitButton.disabled = true;
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false).html("Submit");
+                            $("#save-form").prop("disabled", false);
+                            window.syncTalentStageAction();
                             submitButton.disabled = false;
                             return;
                         }
@@ -3039,6 +3087,7 @@ var KTAddCandidate = function () {
 																success			: function (response) {
                                   $("#save-form").prop("disabled", false);
                                   if(response.status == 'coinCheck'){
+                                    window.syncTalentStageAction();
    																	Swal.fire("Warning",` ${response.message}` , "warning");	
                                     return false;
    																}
@@ -3047,11 +3096,12 @@ var KTAddCandidate = function () {
                                 if(response.status == 'mailcheck'){
                                   if (!navigator.onLine) {
                                       Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                      $("#save-form").prop("disabled", false).html("Submit");
+                                      $("#save-form").prop("disabled", false);
+                                      window.syncTalentStageAction();
                                       submitButton.disabled = false;
                                       return;
                                   }
-                                   $("#save-form").html(`Submit`);
+                                   window.syncTalentStageAction();
    																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
                                    return false;
@@ -3076,7 +3126,8 @@ var KTAddCandidate = function () {
 																					window.location = response.url;
 																				},
 																error			: function (xhr) {
-                                    $("#save-form").prop("disabled", false).html("Submit");
+                                    $("#save-form").prop("disabled", false);
+                                    window.syncTalentStageAction();
                                     submitButton.disabled = false;
                                     if (xhr.status === 0 || !navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
@@ -3272,6 +3323,7 @@ $.ajax({
                        $('#behance').val(response.behance);
                     }                      
                     $('#careersummary').val(response.careerSummary);
+                    if (window.addParsedBenchSkills) window.addParsedBenchSkills(response.skills);
                     if(page_event_check != 'EDIT'){
                     $('#full_name').val(response.name);
                     $('#phone').val(response.number);
@@ -3290,9 +3342,6 @@ $.ajax({
 
                       });
 
-
-                    tagifyskill.removeAllTags(); // Clear existing tags first
-                    tagifyskill.addTags(response.skills); // Add new tags
 
                     setSingleLocationTag(response.country); // Keep current location to one selected value
 

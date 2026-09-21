@@ -85,6 +85,10 @@ The platform is engineered around an uncompromising high-concurrency standard de
 - **Authoritative Real-Time ATS:** Recruiters must never see stale candidate statuses, interview stages, or coin balances.
 - **Atomic Tenant Purge:** All cache keys are strictly scoped by `company_id`. Any `INSERT` or `UPDATE` mutation to candidates, jobs, or company details instantly destroys the tenant cache in Redis and client memory, guaranteeing immediate organization-wide consistency.
 
+### 6. Zero Business Logic Alteration & Strict Blast Radius Isolation
+- **No Unprompted Business Logic Mutations:** For any upgrade, refactor, or performance optimization, existing domain business logic (matching algorithms, hiring pipeline rules, stage transitions, coin deduction rates, permissions) must remain 100% untouched unless explicitly commanded by the user.
+- **Strict Blast Radius Isolation:** Upgrading or modifying one page, drawer, tab, or feature must NEVER affect, break, degrade, or mutate any other feature, table, or module across the system. Upgrades run as isolated vertical slices with feature flag protection and complete backward compatibility.
+
 ---
 
 ## 3. Major Modules
