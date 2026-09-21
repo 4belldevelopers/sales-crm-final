@@ -4759,3 +4759,169 @@ select option,
     background: linear-gradient(135deg, #16A34A, #22C55E) !important;
     box-shadow: 0 7px 16px rgba(22, 163, 74, .20) !important;
 }
+
+/* Create Talent stage selector and privacy guidance use the existing bench status palette. */
+.talent-stage-card {
+    padding: 14px 16px 16px;
+    border-color: #D9E1EE;
+    background: #FFFFFF;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .05);
+}
+.talent-stage-heading strong,
+.marketplace-privacy-content > strong {
+    display: block;
+    color: #0B1545 !important;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 700 !important;
+}
+.talent-stage-heading small,
+.marketplace-privacy-content > small {
+    display: block;
+    margin-top: 2px;
+    color: #58658F;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 400;
+}
+.talent-stage-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+.talent-stage-option {
+    --stage-color: #3e97ff;
+    --stage-soft: #eef3ff;
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    min-height: 76px;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid #DCE4F2;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #0B1545;
+    font-family: 'Poppins', sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+}
+.talent-stage-option--pool { --stage-color: #7239ea; --stage-soft: #f3effe; }
+.talent-stage-option--bench { --stage-color: #3e97ff; --stage-soft: #eef3ff; }
+.talent-stage-option--hold { --stage-color: #f6a609; --stage-soft: #fff4de; }
+.talent-stage-option--placed { --stage-color: #17c653; --stage-soft: #e8fff3; }
+.talent-stage-option--exited { --stage-color: #f8285a; --stage-soft: #ffeef1; }
+.talent-stage-option:hover,
+.talent-stage-option:focus-within,
+.talent-stage-option:focus-visible {
+    border-color: var(--stage-color);
+    box-shadow: 0 0 0 2px var(--stage-soft);
+    outline: none;
+}
+.talent-stage-option.is-selected {
+    border-color: var(--stage-color);
+    background: var(--stage-soft);
+    box-shadow: inset 0 0 0 1px var(--stage-color);
+}
+.talent-stage-option input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+.talent-stage-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 7px;
+    color: var(--stage-color);
+    background: var(--stage-soft);
+    font-size: 16px;
+}
+.talent-stage-copy { display: block; min-width: 0; padding-right: 10px; }
+.talent-stage-copy strong {
+    display: block;
+    color: #0B1545;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+.talent-stage-copy small {
+    display: block;
+    margin-top: 3px;
+    color: #58658F;
+    font-size: 10px;
+    line-height: 1.4;
+    font-weight: 400;
+}
+.talent-stage-check {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    display: none;
+    color: var(--stage-color);
+    font-size: 14px;
+}
+.talent-stage-option.is-selected .talent-stage-check { display: block; }
+.talent-topbar-primary.talent-stage-action--pool { border-color: #7239ea !important; background: #7239ea !important; box-shadow: 0 6px 14px rgba(114, 57, 234, .18) !important; }
+.talent-topbar-primary.talent-stage-action--bench { border-color: #3e97ff !important; background: #3e97ff !important; box-shadow: 0 6px 14px rgba(62, 151, 255, .18) !important; }
+.talent-topbar-primary.talent-stage-action--hold { border-color: #f6a609 !important; background: #f6a609 !important; color: #1F2937 !important; box-shadow: 0 6px 14px rgba(246, 166, 9, .18) !important; }
+.talent-topbar-primary.talent-stage-action--hold i { color: #1F2937 !important; }
+.talent-topbar-primary.talent-stage-action--exited { border-color: #f8285a !important; background: #f8285a !important; box-shadow: 0 6px 14px rgba(248, 40, 90, .18) !important; }
+.resume-card .marketplace-privacy {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #D9E5FA !important;
+    border-radius: 6px;
+    background: #F5F8FF !important;
+    color: #0B1545 !important;
+}
+.resume-card .marketplace-privacy-content > strong { font-weight: 700 !important; }
+.marketplace-privacy .resume-note-icon {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    border: 0;
+    border-radius: 6px;
+    background: #E8EEFF;
+    color: #3154FF;
+    font-size: 14px;
+}
+.marketplace-privacy-content { min-width: 0; flex: 1; }
+.marketplace-privacy-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.marketplace-privacy-list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #45567D;
+    font-size: 10px;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+.marketplace-privacy-list i { color: #EA580C; font-size: 10px; }
+@media (max-width: 1200px) {
+    .talent-stage-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+    .talent-stage-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 460px) {
+    .talent-stage-options { grid-template-columns: 1fr; }
+}

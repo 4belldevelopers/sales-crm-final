@@ -122,7 +122,7 @@ if($snp_mode== 1){
             if(@$page_event == 'EDIT'){ 
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
             }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-arrow-up"></i> Publish to Talent Marketplace</button>';
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Publish to Talent Marketplace</span></button>';
             }
         @endphp
       </div>
@@ -149,6 +149,45 @@ if($snp_mode== 1){
             <input type="hidden" name="resumeCheck" value="{{ @$resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
           <div class="fc">
+            @if(@$page_event != 'EDIT')
+            {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
+            <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
+              <div class="talent-stage-heading">
+                <strong id="talent-stage-title">Talent Stage <span class="rq">*</span></strong>
+                <small>Select this talent's current stage to reflect their availability.</small>
+              </div>
+              <div class="talent-stage-options">
+                <label class="talent-stage-option talent-stage-option--pool">
+                  <input type="radio" name="talent_stage" value="1">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Pool</strong><small>In your internal talent pool, not yet available.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <label class="talent-stage-option talent-stage-option--bench is-selected">
+                  <input type="radio" name="talent_stage" value="2" checked>
+                  <span class="talent-stage-icon"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Bench</strong><small>Available for client opportunities.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <label class="talent-stage-option talent-stage-option--hold">
+                  <input type="radio" name="talent_stage" value="4">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Hold</strong><small>Temporarily unavailable for opportunities.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+                <button type="button" class="talent-stage-option talent-stage-option--placed" id="talent-stage-placed" aria-label="Placed: requires a client placement">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Placed</strong><small>Assigned to a client through placement.</small></span>
+                </button>
+                <label class="talent-stage-option talent-stage-option--exited">
+                  <input type="radio" name="talent_stage" value="5">
+                  <span class="talent-stage-icon"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></span>
+                  <span class="talent-stage-copy"><strong>Exited</strong><small>No longer in your talent inventory.</small></span>
+                  <i class="fa-solid fa-circle-check talent-stage-check" aria-hidden="true"></i>
+                </label>
+              </div>
+            </section>
+            @endif
             <!-- Upload + Career Summary -->
             <div class="g2 resume-summary-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
@@ -224,9 +263,18 @@ if($snp_mode== 1){
                             </div>
 
                         </div>
-                        <div class="resume-note">
-                            <span class="resume-note-icon"><i class="fa-solid fa-circle-info"></i></span>
-                            <span>Please remove <strong>contact details (phone number, email address)</strong> and <strong>current company name or logo</strong> from the resume before uploading. Resumes containing these details cannot be published to the Talent Marketplace.</span>
+                        <div class="resume-note marketplace-privacy">
+                            <span class="resume-note-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                            <div class="marketplace-privacy-content">
+                                <strong>Marketplace Privacy Check</strong>
+                                <small>Before uploading, remove sensitive details from the resume. Resumes with these details cannot be published.</small>
+                                <ul class="marketplace-privacy-list" aria-label="Details to remove">
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Phone numbers</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Email addresses</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Current company name</li>
+                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Company logos</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <!-- After-upload Resume Information card -->
@@ -1368,6 +1416,34 @@ if($snp_mode== 1){
 
 <script>
 $(document).ready(function () {
+    // Keep the create action aligned with the submitted bench stage.
+    var talentStageActions = {
+        '1': { label: 'Add to Talent Pool', icon: 'fa-users', theme: 'pool' },
+        '2': { label: 'Publish to Talent Marketplace', icon: 'fa-arrow-up', theme: 'bench' },
+        '4': { label: 'Save Talent on Hold', icon: 'fa-clock', theme: 'hold' },
+        '5': { label: 'Save Exited Talent', icon: 'fa-right-from-bracket', theme: 'exited' }
+    };
+    window.syncTalentStageAction = function () {
+        var selected = $('input[name="talent_stage"]:checked');
+        if (!selected.length) return;
+        var action = talentStageActions[selected.val()] || talentStageActions['2'];
+        $('.talent-stage-option').removeClass('is-selected');
+        selected.closest('.talent-stage-option').addClass('is-selected');
+        $('#save-form')
+            .removeClass('talent-stage-action--pool talent-stage-action--bench talent-stage-action--hold talent-stage-action--exited')
+            .addClass('talent-stage-action--' + action.theme)
+            .html('<i class="fa-solid ' + action.icon + '" aria-hidden="true"></i> <span class="talent-stage-action-label">' + action.label + '</span>');
+    };
+    $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
+    $('#talent-stage-placed').on('click', function () {
+        Swal.fire({
+            title: 'Talent already placed',
+            text: 'Placed talent is assigned to a client. To offer this talent for new opportunities, select Bench and publish to the Talent Marketplace.',
+            icon: 'info',
+            confirmButtonText: 'Got it'
+        });
+    });
+    window.syncTalentStageAction();
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
@@ -3021,7 +3097,8 @@ var KTAddCandidate = function () {
                         submitButton.disabled = true;
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false).html("Submit");
+                            $("#save-form").prop("disabled", false);
+                            window.syncTalentStageAction();
                             submitButton.disabled = false;
                             return;
                         }
@@ -3039,6 +3116,7 @@ var KTAddCandidate = function () {
 																success			: function (response) {
                                   $("#save-form").prop("disabled", false);
                                   if(response.status == 'coinCheck'){
+                                    window.syncTalentStageAction();
    																	Swal.fire("Warning",` ${response.message}` , "warning");	
                                     return false;
    																}
@@ -3047,11 +3125,12 @@ var KTAddCandidate = function () {
                                 if(response.status == 'mailcheck'){
                                   if (!navigator.onLine) {
                                       Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                      $("#save-form").prop("disabled", false).html("Submit");
+                                      $("#save-form").prop("disabled", false);
+                                      window.syncTalentStageAction();
                                       submitButton.disabled = false;
                                       return;
                                   }
-                                   $("#save-form").html(`Submit`);
+                                   window.syncTalentStageAction();
    																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});	
                                    return false;
@@ -3076,7 +3155,8 @@ var KTAddCandidate = function () {
 																					window.location = response.url;
 																				},
 																error			: function (xhr) {
-                                    $("#save-form").prop("disabled", false).html("Submit");
+                                    $("#save-form").prop("disabled", false);
+                                    window.syncTalentStageAction();
                                     submitButton.disabled = false;
                                     if (xhr.status === 0 || !navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });

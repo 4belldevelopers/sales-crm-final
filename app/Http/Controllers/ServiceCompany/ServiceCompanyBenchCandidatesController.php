@@ -1275,6 +1275,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
 
         $validator = Validator::make($request->all(), [
+            'talent_stage' => ['nullable', 'in:1,2,4,5'],
             'email' => [
                 'required',
                 'email:rfc,dns',
@@ -1284,6 +1285,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'talent_stage.in' => 'Select a valid talent stage.',
         ]);
 
         if ($validator->fails()) {
@@ -1297,8 +1299,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $added = false;
         } else {
             $benchApplication = new JobApplication;
-            // New marketplace publishes should enter Bench directly, not Pool.
-            $benchApplication->status = 2;
+            // Create-form stage selection uses the existing bench status IDs; older clients default to Bench.
+            $benchApplication->status = $request->filled('talent_stage') ? (int) $request->input('talent_stage') : 2;
             $added = true;
             $eventId = 5;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
