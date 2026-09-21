@@ -70,7 +70,7 @@ The platform is engineered around an uncompromising high-concurrency standard de
 
 ### 2. Strict CQRS Separation (Command vs. Query)
 - **MySQL is ONLY for Add / Edit / Delete (Writes):** Zero MySQL reads (`SELECT`) on web and API request paths. Transactional integrity is guaranteed via `DB::transaction()` with immediate synchronization to Elasticsearch and atomic Redis cache purging.
-- **Elasticsearch is ONLY for Read (Queries):** Serves 100% of candidate profiles, pipeline cards, multi-attribute searches, filters, counts, and coin balances (`ELASTIC_CANDIDATES`, `ELASTIC_COMPANY_COINS`, `ELASTIC_EMAIL_COUNT`, etc.). Zero direct UI writes.
+- **Elasticsearch is ONLY for Read (Universal Query Store across 60+ Indices):** Serves 100% of read operations across all data domains: candidates, active/closed jobs, requisitions, client jobs, application pipelines, coin balances, company relations, and user rosters (`ELASTIC_CANDIDATES`, `ats_jobs_elastic`, `ats_requisitions_elastic`, `ELASTIC_COMPANY_COINS`, `ELASTIC_EMAIL_COUNT`, `ats_users_list`, `ats_client_list`, etc.). Zero direct UI writes.
 
 ### 3. 10,000 Concurrent Users Scalability & 0% Server Strain
 - **Concurrency Target:** Every page, drawer, and action is designed to sustain **10,000 active concurrent recruiters** without UI freezing (long tasks > 50ms banned), worker pool collapse, or database connection exhaustion.

@@ -12,8 +12,16 @@
 - **Zero MySQL Reads on Request Paths:** Web requests, drawer activations, list rendering, search queries, filter operations, and dashboard loads must **NEVER** execute `SELECT` queries, multi-table joins, or table scans against MySQL.
 - **Transactional Discipline:** Wrap write mutations in `DB::transaction()`, commit quickly, and immediately trigger the synchronization pipeline to Elasticsearch and atomic Redis cache invalidation.
 
-### 2. Elasticsearch is ONLY for Read (Strict CQRS Query Store)
-- **Role:** Elasticsearch 7.17 serves **100% of all read operations**: candidate lists, search queries, multi-attribute filters, counts, coin checks, aggregations, and profile lookups (`ELASTIC_CANDIDATES`, `ELASTIC_COMPANY_COINS`, `ELASTIC_EMAIL_COUNT`, `ELASTIC_USERS_LIST`, etc.).
+### 2. Elasticsearch is ONLY for Read (Universal CQRS Query Store)
+- **Universal Read Scope (All Data Domains across 60+ Indices):** Elasticsearch 7.17 is the **exclusive read store for ALL platform data and entities** — it is **strictly NOT limited to candidates**. It serves 100% of queries, searches, filters, counts, lookups, and aggregations across all data domains:
+  - **Candidates & Bench:** Profiles, resumes, skills, dossiers, matching scores (`ats_candidates_elastic`, `ats_candidates_bench_elastic`).
+  - **Jobs & Requisitions:** Active/closed jobs, requisitions, client jobs, skills requirements, applicant counters (`ats_jobs_elastic`, `ats_requisitions_elastic`, `ats_job_metronics_skills`).
+  - **Applications & Pipeline Stages:** Application pipelines, hiring stages, status tracking, candidate requests (`ats_job_applications_elastic`, `ats_application_stages`).
+  - **Companies & Agency Marketplace:** Company profiles, agency/client relations, marketplace trades, recommendations (`ats_companies_elastic`, `ats_client_and_agency_relation_index`).
+  - **Coins, Billing & Transactions:** Wallet balances, coin deductions, packages, transaction logs, email quotas (`ats_company_coins`, `ats_coin_transection_logs`, `ats_email_count`).
+  - **Users, Teams & Client Contacts:** Recruiter directories, internal team rosters, client stakeholders (`ats_users_list`, `ats_client_list`).
+  - **Audit Trails & Timelines:** Recruiter comments, interview feedback, timelines, dispatch logs.
+- **Zero MySQL Reads Across ALL Entities:** If data is being queried, searched, filtered, counted, aggregated, or displayed on ANY page or drawer, it **MUST be read from Elasticsearch (or Redis cache)**, NEVER from MySQL.
 - **Zero Direct UI Writes:** Web requests must never write directly to Elasticsearch. All state changes enter via MySQL first and synchronize to Elasticsearch via Observers or queued Horizon jobs (`Elastic*Index`).
 - **Sub-15ms Read Budget:** Denormalized indices must be structured so that query responses complete within 5ms–15ms.
 
