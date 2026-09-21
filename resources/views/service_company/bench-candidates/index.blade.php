@@ -70,18 +70,24 @@
         .bench-dash .hero-more-menu { position: absolute; z-index: 15; right: 0; top: 40px; min-width: 155px; border: 1px solid #dce6f5; border-radius: 6px; background: #fff; box-shadow: 0 10px 25px rgba(24, 39, 75, .12); padding: 5px; }
         .bench-dash .hero-more-menu a { display: block; padding: 8px; color: #263b67; font-size: 11px !important; text-decoration: none; }
         .bench-dash .hero-more-menu a:hover { background: #f4f8ff; }
-        .bench-dash .pipeline-panel { border: 1px solid #dceaff; border-radius: 6px; background: #fbfdff; padding: 10px 13px 8px; margin-bottom: 10px; }
+        .bench-dash .pipeline-panel { border: 1px solid #dceaff; border-radius: 6px; background: #fbfdff; padding: 10px 13px 12px; margin-bottom: 10px; }
         .bench-dash .pipeline-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .bench-dash .pipeline-heading-copy { display: flex; align-items: center; min-width: 0; gap: 9px; }
-        .bench-dash .pipeline-heading-icon { color: #1680ee; font-size: 18px !important; width: 31px; text-align: center; }
+        .bench-dash .pipeline-heading-icon { display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border: 1px solid #d8e9ff; border-radius: 5px; background: #edf6ff; color: #1267e9; }
+        .bench-dash .pipeline-heading-icon i { font-size: 15px !important; }
         .bench-dash .pipeline-heading-title { margin: 0; color: #15254a; font-size: 13px !important; font-weight: 700; }
         .bench-dash .pipeline-heading-note { margin: 0; color: #54698f; font-size: 10.5px !important; }
-        .bench-dash .pipeline-performance { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; min-height: 30px; border: 1px solid #d7e6ff; border-radius: 5px; color: #0958d3; background: #f7fbff; padding: 4px 8px; }
-        .bench-dash .pipeline-performance:hover, .bench-dash .pipeline-performance:focus-within { background: #edf5ff; border-color: #a9caff; }
-        .bench-dash .pipeline-performance select { border: 0; outline: 0; background: transparent; color: inherit; font-size: 10px !important; font-weight: 600; cursor: pointer; }
+        .bench-dash .pipeline-performance { position: relative; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 34px; border: 1px solid #d6e2f5; border-radius: 5px; color: #1f3765; background: #fff; box-shadow: 0 1px 2px rgba(24, 39, 75, .05); padding: 0 10px; }
+        .bench-dash .pipeline-performance:hover { border-color: #9ebef0; }
+        .bench-dash .pipeline-performance:focus-within { border-color: #1267e9; box-shadow: 0 0 0 3px rgba(18, 103, 233, .12); }
+        .bench-dash .pipeline-performance select { appearance: none; min-width: 174px; height: 32px; border: 0; outline: 0; background: transparent; color: inherit; font-size: 11px !important; font-weight: 600; cursor: pointer; }
+        .bench-dash .pipeline-performance > i { color: #4775b3; font-size: 12px !important; pointer-events: none; }
+        .bench-dash .pipeline-performance > i:last-child { color: #637897; font-size: 10px !important; }
+        .bench-dash .pipeline-status:not(:empty) { margin: 4px 0 0; color: #b42336; font-size: 10px !important; text-align: right; }
+        .bench-dash .pipeline-panel.is-loading .pipeline-stages { opacity: .55; }
         .bench-dash .pipeline-scroller { overflow-x: auto; scrollbar-width: thin; }
-        .bench-dash .pipeline-stages { display: grid; grid-template-columns: repeat(8, minmax(122px, 1fr)); min-width: 976px; padding-top: 12px; }
-        .bench-dash .pipeline-stage { position: relative; min-width: 0; text-align: center; color: #142044; padding: 0 3px 2px; border: 0; background: transparent; }
+        .bench-dash .pipeline-stages { display: grid; grid-template-columns: repeat(8, minmax(122px, 1fr)); min-width: 976px; padding-top: 11px; transition: opacity .15s; }
+        .bench-dash .pipeline-stage { position: relative; min-width: 0; text-align: center; color: #142044; padding: 0 3px; border: 0; background: transparent; }
         .bench-dash button.pipeline-stage { cursor: pointer; }
         .bench-dash button.pipeline-stage:hover .pipeline-stage-label { color: #1267e9; }
         .bench-dash button.pipeline-stage.active .pipeline-stage-icon { outline: 2px solid #1267e9; outline-offset: 2px; }
@@ -101,9 +107,6 @@
         @keyframes pipeline-flow { 0%, 58%, 100% { transform: translateX(0); opacity: .78; } 72% { transform: translateX(3px); opacity: 1; } }
         @media (prefers-reduced-motion: reduce) { .bench-dash .pipeline-motion { animation: none; } }
         .bench-dash .pipeline-stage-value { display: block; font-size: 18px !important; line-height: 1.12; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .bench-dash .pipeline-stage-delta { display: block; color: #00a66b; font-size: 10.5px !important; line-height: 1.35; font-weight: 600; }
-        .bench-dash .pipeline-stage-delta.negative { color: #f42642; }
-        .bench-dash .pipeline-stage-delta.neutral { color: #7e8ca6; }
         @media (max-width: 800px) {
             .bench-dash .talent-hero-header { align-items: flex-start; flex-direction: column; }
             .bench-dash .talent-hero-actions { width: 100%; }
@@ -393,11 +396,12 @@
                         @if (in_array('view_bench', $userPermissions))
                             <form method="get" action="{{ route('service_company.bench-candidates.index') }}" id="heroAnalyticsForm" class="d-inline-flex align-items-center gap-1 hero-period">
                                 <i class="fa fa-calendar ms-2" aria-hidden="true"></i>
-                                <select name="hero_month" class="border-0 bg-transparent pe-2" aria-label="Performance ending month" onchange="this.form.submit()">
+                                <select name="hero_month" class="border-0 bg-transparent pe-2" aria-label="Performance ending month">
                                     @foreach ($heroMonths as $monthOption)
                                         <option value="{{ $monthOption['value'] }}" @selected($heroMonth === $monthOption['value'])>{{ $monthOption['label'] }}</option>
                                     @endforeach
                                 </select>
+                                <noscript><button type="submit">Apply</button></noscript>
                             </form>
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
                                 <i class="fa fa-plus"></i> Add Talent
@@ -420,7 +424,7 @@
                     <section class="pipeline-panel" aria-labelledby="talentPipelineTitle">
                         <div class="pipeline-heading">
                             <div class="pipeline-heading-copy">
-                                <i class="fa fa-chart-simple pipeline-heading-icon" aria-hidden="true"></i>
+                                <span class="pipeline-heading-icon" aria-hidden="true"><i class="fa fa-route"></i></span>
                                 <div>
                                     <h2 class="pipeline-heading-title" id="talentPipelineTitle">Talent Pipeline &amp; Marketplace Engagement
                                         <i class="fa fa-circle-info ms-1 text-muted" title="Inventory and indexed profile views are current totals; requests, interviews and placements follow the selected period."></i>
@@ -428,14 +432,18 @@
                                     <p class="pipeline-heading-note">Track your in-house talent journey from bench to placement and measure marketplace engagement.</p>
                                 </div>
                             </div>
-                            <div class="pipeline-performance">
-                                <i class="fa fa-chart-line" aria-hidden="true"></i>
-                                <select name="performance_window" form="heroAnalyticsForm" aria-label="Performance window" onchange="this.form.submit()">
-                                    <option value="monthly" @selected($performanceWindow === 'monthly')>Monthly Performance</option>
-                                    <option value="quarterly" @selected($performanceWindow === 'quarterly')>3-Month Performance</option>
-                                    <option value="half_yearly" @selected($performanceWindow === 'half_yearly')>6-Month Performance</option>
-                                    <option value="yearly" @selected($performanceWindow === 'yearly')>Yearly Performance</option>
-                                </select>
+                            <div>
+                                <label class="pipeline-performance" for="performanceWindow">
+                                    <i class="fa fa-calendar-days" aria-hidden="true"></i>
+                                    <select id="performanceWindow" name="performance_window" form="heroAnalyticsForm" aria-label="Pipeline performance period">
+                                        <option value="monthly" @selected($performanceWindow === 'monthly')>Current Month ({{ \Carbon\Carbon::createFromFormat('!Y-m', $heroMonth)->format('M y') }})</option>
+                                        <option value="quarterly" @selected($performanceWindow === 'quarterly')>Last 3 Months</option>
+                                        <option value="half_yearly" @selected($performanceWindow === 'half_yearly')>Last 6 Months</option>
+                                        <option value="yearly" @selected($performanceWindow === 'yearly')>Yearly</option>
+                                    </select>
+                                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                                </label>
+                                <p class="pipeline-status" id="pipelineStatus" role="status" aria-live="polite"></p>
                             </div>
                         </div>
                         <div class="pipeline-scroller">
@@ -452,12 +460,7 @@
                                         @unless ($loop->last)
                                             <span class="pipeline-connector" aria-hidden="true"><span class="pipeline-motion" style="--flow-delay: {{ $loop->index * 0.12 }}s"><i class="fa fa-chevron-right"></i></span></span>
                                         @endunless
-                                        <span class="pipeline-stage-value" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif @unless ($metric['available']) title="Analytics source unavailable" @endunless>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
-                                        @if ($metric['delta'] !== null)
-                                            <span class="pipeline-stage-delta {{ $metric['delta'] < 0 ? 'negative' : '' }}" @if ($item['key'] === 'talent') title="New talents added versus the preceding period" @endif><i class="fa fa-arrow-{{ $metric['delta'] < 0 ? 'down' : 'up' }}"></i> {{ $metric['delta'] > 0 ? '+' : '' }}{{ $metric['delta'] }}%</span>
-                                        @else
-                                            <span class="pipeline-stage-delta neutral" title="Historical period comparison is unavailable">&mdash;</span>
-                                        @endif
+                                        <span class="pipeline-stage-value" data-pipeline-stage="{{ $item['key'] }}" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif @unless ($metric['available']) title="Analytics source unavailable" @endunless>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
                                     @if ($item['rel'] !== null)
                                         </button>
                                     @else
@@ -635,6 +638,79 @@
         @if (session('packageStatus'))
             Swal.fire("Failed", "{{ session('packageStatus') }}", "warning");
         @endif
+
+        // Keep period changes isolated to the tenant-scoped pipeline card.
+        (function() {
+            var form = document.getElementById('heroAnalyticsForm');
+            var panel = document.querySelector('.pipeline-panel');
+            var windowSelect = document.getElementById('performanceWindow');
+            if (!form || !panel || !windowSelect) return;
+
+            var monthSelect = form.querySelector('[name="hero_month"]');
+            var status = document.getElementById('pipelineStatus');
+            var selectedMonth = monthSelect.value;
+            var selectedWindow = windowSelect.value;
+            var request = null;
+            var revision = 0;
+
+            function refreshPipeline() {
+                var activeRevision = ++revision;
+                if (request) request.abort();
+                panel.classList.add('is-loading');
+                panel.setAttribute('aria-busy', 'true');
+                status.textContent = '';
+
+                request = $.ajax({
+                    url: form.action,
+                    method: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    data: {
+                        pipeline_only: '1',
+                        hero_month: monthSelect.value,
+                        performance_window: windowSelect.value
+                    },
+                    success: function(response) {
+                        var keys = ['talent', 'bench', 'sent', 'accepted', 'expired', 'views', 'interviews', 'placed'];
+                        if (!response || !response.stages || !keys.every(function(key) { return response.stages[key]; })) {
+                            status.textContent = 'Performance data is unavailable. Please try again.';
+                            monthSelect.value = selectedMonth;
+                            windowSelect.value = selectedWindow;
+                            return;
+                        }
+
+                        keys.forEach(function(key) {
+                            var stage = response.stages[key];
+                            var value = panel.querySelector('[data-pipeline-stage="' + key + '"]');
+                            value.textContent = stage.available ? Number(stage.value).toLocaleString() : '\u2014';
+                            if (stage.available) value.removeAttribute('title');
+                            else value.title = 'Analytics source unavailable';
+                        });
+                        selectedMonth = response.month;
+                        selectedWindow = response.window;
+                        monthSelect.value = selectedMonth;
+                        windowSelect.value = selectedWindow;
+                        var monthLabel = new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                        windowSelect.options[0].text = (monthSelect.selectedIndex === 0 ? 'Current' : 'Selected') + ' Month (' + monthLabel + ')';
+                    },
+                    error: function(xhr, textStatus) {
+                        if (textStatus === 'abort') return;
+                        status.textContent = 'Performance data could not be refreshed. Please try again.';
+                        monthSelect.value = selectedMonth;
+                        windowSelect.value = selectedWindow;
+                    },
+                    complete: function() {
+                        if (activeRevision !== revision) return;
+                        panel.classList.remove('is-loading');
+                        panel.removeAttribute('aria-busy');
+                        request = null;
+                    }
+                });
+            }
+
+            monthSelect.addEventListener('change', refreshPipeline);
+            windowSelect.addEventListener('change', refreshPipeline);
+        })();
 
         // ---- Status tab / KPI filter (drives existing fetch pipeline) ----
         $(document).on('click', '.application_sttus_nav', function() {

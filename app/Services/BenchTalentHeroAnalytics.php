@@ -20,7 +20,7 @@ class BenchTalentHeroAnalytics
      */
     public function forCompany(int $companyId, string $month, string $window): array
     {
-        [$month, $window, $current, $previous] = $this->periods($month, $window);
+        [$month, $window, $current] = $this->periods($month, $window);
 
         $body = [];
         $this->addSearch($body, ELASTIC_CANDIDATES_BENCH, [
@@ -33,8 +33,6 @@ class BenchTalentHeroAnalytics
             'paused' => ['filter' => ['term' => ['status' => 4]]],
             'exited' => ['filter' => ['term' => ['status' => 5]]],
             'views' => ['sum' => ['field' => 'viewCount']],
-            'added_current' => $this->dateBucket('created_at', $current),
-            'added_previous' => $this->dateBucket('created_at', $previous),
         ]);
 
         $this->addSearch($body, ELASTIC_CANDIDATES_REQUEST, [
@@ -45,10 +43,6 @@ class BenchTalentHeroAnalytics
                 'accepted' => ['filter' => ['term' => ['ac_status' => 1]]],
                 'expired' => ['filter' => ['term' => ['ac_status' => 2]]],
             ]),
-            'previous' => $this->dateBucket('created_at', $previous, [
-                'accepted' => ['filter' => ['term' => ['ac_status' => 1]]],
-                'expired' => ['filter' => ['term' => ['ac_status' => 2]]],
-            ]),
         ]);
 
         $this->addSearch($body, ELASTIC_INERTVIEW_TRACKER, [
@@ -56,14 +50,12 @@ class BenchTalentHeroAnalytics
             ['term' => ['candidate_type.keyword' => 'bench_condidate']],
         ], [
             'current' => $this->dateBucket('schedule_date', $current),
-            'previous' => $this->dateBucket('schedule_date', $previous),
         ]);
 
         $this->addSearch($body, ELASTIC_BENCH_PLACED, [
             ['term' => ['source_comapny_id' => $companyId]],
         ], [
             'current' => $this->dateBucket('created_at', $current),
-            'previous' => $this->dateBucket('created_at', $previous),
         ]);
 
         $responses = $this->elasticService->msearch($body)['responses'] ?? [];
@@ -89,14 +81,14 @@ class BenchTalentHeroAnalytics
         $placed = (int) ($placements['aggregations']['current']['doc_count'] ?? 0);
 
         $stages = [
-            'talent' => $this->stage($total, $bench['aggregations']['added_current']['doc_count'] ?? 0, $bench['aggregations']['added_previous']['doc_count'] ?? 0, $previous),
-            'bench' => $this->stage($benchCount, 0, 0, null),
-            'sent' => $this->stage($sent, $sent, $requests['aggregations']['previous']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'accepted' => $this->stage($accepted, $accepted, $requests['aggregations']['previous']['accepted']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'expired' => $this->stage($expired, $expired, $requests['aggregations']['previous']['expired']['doc_count'] ?? 0, $previous, $requestsAvailable),
-            'views' => $this->stage($views, 0, 0, null),
-            'interviews' => $this->stage($interviewCount, $interviewCount, $interviews['aggregations']['previous']['doc_count'] ?? 0, $previous, $interviewsAvailable),
-            'placed' => $this->stage($placed, $placed, $placements['aggregations']['previous']['doc_count'] ?? 0, $previous, $placementsAvailable),
+            'talent' => $this->stage($total),
+            'bench' => $this->stage($benchCount),
+            'sent' => $this->stage($sent, $requestsAvailable),
+            'accepted' => $this->stage($accepted, $requestsAvailable),
+            'expired' => $this->stage($expired, $requestsAvailable),
+            'views' => $this->stage($views),
+            'interviews' => $this->stage($interviewCount, $interviewsAvailable),
+            'placed' => $this->stage($placed, $placementsAvailable),
         ];
 
         return [
@@ -139,7 +131,7 @@ class BenchTalentHeroAnalytics
         return $bucket;
     }
 
-    /** Anchor a 1/3/6/12-month window to the selected month and compare prior months. */
+    /** Anchor a 1/3/6/12-month window to the selected ending month. */
     private function periods(string $month, string $window): array
     {
         $now = CarbonImmutable::now();
@@ -155,26 +147,19 @@ class BenchTalentHeroAnalytics
         $anchor = $now->setDate((int) substr($month, 0, 4), (int) substr($month, 5, 2), 1)->startOfDay();
         $currentStart = $anchor->subMonthsNoOverflow($months - 1)->startOfMonth();
         $currentEnd = $month === $allowedMonths[0] ? $now : $anchor->addMonth();
-        $previousStart = $currentStart->subMonthsNoOverflow($months)->startOfMonth();
-        $previousEnd = $currentEnd->subMonthsNoOverflow($months);
-
         return [
             $month,
             $window,
             [$currentStart->toIso8601String(), $currentEnd->toIso8601String()],
-            [$previousStart->toIso8601String(), $previousEnd->toIso8601String()],
         ];
     }
 
-    /** Return a displayed count and its signed change from the preceding window. */
-    private function stage(int $value, int $current, int $previousCount, ?array $previous, bool $available = true): array
+    /** Preserve source availability separately from a measured zero. */
+    private function stage(int $value, bool $available = true): array
     {
         return [
             'value' => $value,
             'available' => $available,
-            'delta' => ! $available || $previous === null ? null : ($previousCount > 0
-                ? round((($current - $previousCount) / $previousCount) * 100, 1)
-                : ($current > 0 ? 100.0 : 0.0)),
         ];
     }
 }
