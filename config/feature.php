@@ -64,4 +64,16 @@ return [
     */
     'team_viewmore_v2_enabled' => (bool) env('FEATURE_TEAM_VIEWMORE_V2_ENABLED', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Forward Resume V4.1 Engine
+    |
+    | Intent: Master feature flag for V4.1 Client-First, Zero-Synchronous Read
+    | Forward Resume engine. Controls micro-JSON hydration, CKEditor singleton,
+    | decoupled static assets, and direct Cloudflare R2 uploads.
+    | Defaults to true.
+    |--------------------------------------------------------------------------
+    */
+    'fwd_resume_v4_enabled' => (bool) env('FEATURE_FWD_RESUME_V4_ENABLED', true),
+
 ];
