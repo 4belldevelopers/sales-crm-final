@@ -32,7 +32,7 @@ be made inside this folder.
 
 ---
 
-## 🏛️ The 9 God-Level Architectural Directives (V4 Mandate)
+## 🏛️ The 11 God-Level Architectural Directives (V4 Mandate)
 1. **MySQL is ONLY for Add / Edit / Delete:** 0% MySQL reads on web/API request paths. No `SELECT` or table joins on user page loads.
 2. **Elasticsearch is ONLY for Read (Universal Scope):** Serves 100% of queries, filters, counts, and search results across ALL data domains (candidates, jobs, requisitions, applications, companies, coins, teams) across all 60+ indices. Zero direct UI writes.
 3. **Hardware Profile (32 GB RAM per Tier):** 32 GB RAM dedicated to App Server (Octane/FrankenPHP + Redis), 32 GB RAM dedicated to MySQL (~24 GB InnoDB buffer pool for writes), 32 GB RAM dedicated to Elasticsearch (16 GB JVM heap + 16 GB OS page cache).
@@ -42,6 +42,8 @@ be made inside this folder.
 7. **Zero Stale Data in ATS:** Recruitment pipeline data must be 100% fresh, correct, and authoritative. Latency optimization must never compromise data integrity.
 8. **Multi-Tenant Atomic Cache Invalidation:** All cache keys are strictly scoped by `company_id`. Any update to candidate/job/stage details immediately purges the tenant cache across Redis and the organization so all users see real-time updated data.
 9. **Zero Business Logic Alteration & Strict Blast Radius Isolation (Zero Regressions):** For any change or upgrade on any page/feature, existing core business logic (scoring, pipelines, billing, status workflows) must remain 100% untouched, and NO other page, modal, drawer, or module must be affected or broken.
+10. **Complete Page/Blade Isolation (Strict Anti-Entanglement Mandate):** Every page/blade designed, developed, or updated must be completely isolated to that page. Never reuse or share stateful JS/drawers/scripts across pages (e.g. CV Tracker vs App Tracker vs Client App); changes to one page must NEVER touch, affect, or break another page or module.
+11. **15.6-Inch Screen Sizing & Small-Screen Responsiveness:** All UI/UX designs, tables, modals, cards, and drawers must perfectly fit a standard 15.6-inch laptop screen (1366×768 & 1920×1080) and smaller screens with zero horizontal page scroll, internal drawer scroll, and max 14px Poppins font.
 
 ---
 
@@ -76,11 +78,12 @@ be made inside this folder.
 7. **Preserve baked-in typos** (`condidate`, `commericial`, `Caompany`, `transection`) — they map to real tables/indices.
 8. **No business-logic changes** (ranking/matching, billing, status pipelines) without sign-off.
 9. **Match existing patterns** — no repository layer; fat controllers + services. Don't add layers unprompted.
-10. **UI:** follow Metronic, **Poppins font**, **max font 14px**, **clean icon-based design (NO 3D)**, must fit 1366×768 → 4K (see UI_UX_STANDARDS).
+10. **UI:** follow Metronic, **Poppins font**, **max font 14px**, **clean icon-based design (NO 3D)**, must perfectly fit **15.6-inch laptop screens (1366×768 & 1920×1080) and smaller screens** with complete responsiveness (see UI_UX_STANDARDS).
 11. **Build features as vertical slices** (Route + FormRequest + Action + ES sync + Observer + Reverb event + Blade component + **test**).
 12. **Measure & verify** (before/after numbers; run [docs/VERIFY.md](docs/VERIFY.md)); mark uncertainty explicitly.
 13. **State the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries.
 14. **Engine Isolation Mandate:** Download Resume Center (`AgyResumeRenderer.js`), Forward Resume (`AgyForwardResumeEngine.js`), and Online Editor (`AgyEditorWasmEngine.js`) are **strictly 3 separate engines**. Never merge or cross-import them.
+15. **Complete Page/Blade Isolation:** Every page/blade designed, developed, or updated must be completely isolated. Never reuse or share stateful JS controllers, drawers, or coupled scripts across different pages or modules. Changes to one page must NEVER touch or affect another page.
 
 ---
 

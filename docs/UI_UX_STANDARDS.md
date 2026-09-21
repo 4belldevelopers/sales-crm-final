@@ -1,8 +1,8 @@
 # UI/UX Standards
 
 > Mandatory rules for every screen. Goal: **clean, professional, data-dense** screens that
-> **fit a 15.6" laptop without scrolling** and **cover every resolution** from 1366x768 to 4K.
-> Font: **Poppins**. Max pixel size: **14-16px**. Theme: **Metronic**. Server load: **near zero**.
+> **perfectly fit a standard 15.6" laptop screen (1366×768 & 1920×1080) and smaller screens** without page-level horizontal scrolling.
+> Font: **Poppins**. Max font size: **14px** (strictly enforced). Theme: **Metronic**. Server load: **near zero**.
 
 ---
 
@@ -13,11 +13,11 @@ Reuse Metronic cards, tables, forms, modals, buttons, toolbars, tabs, drawers, b
 
 ---
 
-## 2. Font: Poppins everywhere
+## 2. Font: Poppins everywhere (Strict 14px Cap)
 
 | Element | Size | Weight |
 |---|---|---|
-| Page title / primary heading | **16px** (the max) | 700 |
+| Page title / primary heading | **14px** (the max cap) | 700 |
 | Section / card header | 14px | 600 |
 | Body text, table cells, form values | 13px | 400 |
 | Field labels, table headers, secondary text | 12px | 500 |
@@ -25,30 +25,41 @@ Reuse Metronic cards, tables, forms, modals, buttons, toolbars, tabs, drawers, b
 | Dense badges / counters (sparingly) | 10.5px | 600 |
 
 Rules:
-- **Nothing renders above 16px** — including h1-h6.
-- Visual hierarchy comes from **font-weight and colour**, not size jumps.
+- **Nothing renders above 14px** — including h1-h6, table headers, badges, and inputs.
+- Visual hierarchy comes from **font-weight and colour**, never size jumps.
 - Poppins weights **400 / 500 / 600 / 700** only.
 - Numeric columns: `font-variant-numeric: tabular-nums` for aligned figures.
 - Line-height: 1.35-1.45 body, 1.25 table rows.
 
 ---
 
-## 3. Fit on 15.6" + every laptop (responsive)
+## 3. Fit on 15.6" Screen & Smaller Screens (Mandatory Responsive Standard)
+
+Recruiters predominantly work on 15.6-inch laptops with OS display scaling (125%–150%), reducing usable viewport to **1366×768** or **1280×720**. Every layout, table, modal, and drawer must fit seamlessly without broken layouts or clipped controls.
 
 ### Target resolutions (all must fit, no data loss)
-| Class | Resolution | Notes |
-|---|---|---|
-| 15.6" budget / older | **1366 x 768** | design to THIS first |
-| 15.6" FHD | 1920 x 1080 | most common today |
-| 14"/13" scaled | 1280-1536 wide (125-150% OS scaling) | OS scaling shrinks usable px |
-| 16" / 4K scaled | 2560-3840 (scaled to ~1536-1920) | don't let content sprawl |
+| Class | Resolution | Usable Viewport | Notes |
+|---|---|---|---|
+| **15.6" budget / older (Primary)** | **1366 x 768** | **~1366 x 600** (after browser chrome) | **Primary baseline — design to THIS first** |
+| 15.6" FHD (100% scaling) | 1920 x 1080 | ~1920 x 900 | High density |
+| 15.6" FHD (125% scaling) | 1536 x 864 | ~1536 x 700 | Standard Windows default |
+| 14"/13" compact laptops | 1280 x 720 / 1280 x 800 | ~1280 x 580 | Must reflow cleanly |
+| 4K displays | 2560–3840 (scaled) | ~1920 x 1080 equivalent | Guard against excessive sprawl |
 
-### How to make it fit
-1. **Fluid layout** — CSS Grid / flex, `%` / `fr` / `minmax()`, no fixed-px page widths.
-2. **Sticky header + scroll the data** — fixed top toolbar, sticky table header, sticky first column. Table body scrolls within remaining viewport height (`height: calc(100vh - header - toolbar)`).
-3. **No horizontal page scroll** — only *tables* may scroll horizontally, with frozen key columns.
-4. **Container queries** for cards/widgets so they reflow by their own width.
-5. **Cover the screen** — tables and data grids should expand to fill available width/height, no wasted whitespace margins.
+### Core Layout Constraints for 15.6" Screens:
+1. **Zero Page-Level Horizontal Scroll:** The `<body>` and `#kt_content` container must **NEVER** scroll horizontally. Only the inner table wrapper (`table-responsive`) may scroll horizontally.
+2. **Short Vertical Height Budget (~600px usable):**
+   - Modals and Drawers must define `max-height: calc(100vh - 80px)` and use internal scrolling (`overflow-y: auto`).
+   - Drawers must feature a sticky header and sticky footer (`position: sticky; bottom: 0; background: #fff`) so save/action buttons are always immediately visible and clickable on short 768px screens without requiring infinite scrolling.
+   - Drawer width on 1366px screens must be responsive: e.g. `w-100 w-lg-650px` or `max-width: 85vw` so the background context remains visible.
+3. **Sticky Action / Floating Selection Bars:**
+   - Multi-select action trays (e.g. CV selection toolbar, bulk action bar) must float cleanly at `bottom: 20px; z-index: 105;` and never hide table pagination or trigger viewport overflows.
+4. **Fluid Grid / Flexbox Architecture:**
+   - Use `%` / `fr` / `minmax()` and Metronic responsive grid classes (`col-12 col-md-6 col-lg-4`). Never use hardcoded pixel widths (`width: 1400px;`) on containers.
+5. **Data Tables on 15.6" Screens:**
+   - Sticky first column (Candidate/Job name) and sticky last column (Actions).
+   - Low-priority columns collapse or use compact widths.
+   - Row heights locked to 32px–36px for high data density.
 
 ---
 
@@ -551,4 +562,16 @@ Before shipping any new candidate-listing page, confirm:
 - [ ] Currency symbol uses `&#8377;` — never raw Unicode `₹`
 - [ ] "Add to Job" button follows the three-state machine from §11.6
 - [ ] `simfLocallyAdded[]` pattern implemented for added-row persistence (§11.7)
+
+---
+
+## 12. Complete Page & Blade Isolation Mandate (Strict Anti-Entanglement)
+
+A critical failure pattern in SaaS applications is cross-module entanglement, where modifying code on one page inadvertently breaks another page. Moving forward, **strict page-level isolation is mandatory**:
+
+1. **Dedicated Namespaces:** Every page must encapsulate its JavaScript state, handlers, and event listeners within a dedicated, page-scoped object or class (e.g., `window.CvTrackerManager`, `window.TeamViewMoreManager`, `window.ForwardResumeManager`). Never pollute global `window` scope with generic variables like `var table`, `var candidates`, or `var drawer`.
+2. **Dedicated Blade Components & Drawers:** Do NOT couple or share interactive drawers or complex Blade views across disparate modules (e.g., CV Tracker, Application Tracker, Client Application, Bench Candidates). If a drawer or modal is needed on multiple pages, keep each page's implementation or controller completely isolated or interact via explicit, self-contained component APIs.
+3. **No Cross-Page DOM Selectors:** Never query or bind listeners to generic DOM IDs across pages (e.g., `#kt_modal_1`, `#submit_btn`). Use namespaced IDs and classes (e.g., `#cv_tracker_submit_btn`, `#app_tracker_filter_drawer`).
+4. **Zero Cross-Module Regressions:** Modifying, refactoring, or styling Page A must **NEVER** alter, break, or mutate the behavior, layout, or data flow of Page B. Before submitting any page-level changes, verify that neighboring modules remain 100% unaffected.
+
 

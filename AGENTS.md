@@ -26,9 +26,10 @@
 11. Use `config()`, never `env()` outside `config/`.
 12. Queue heavy work; match existing patterns; no unprompted refactors or business-logic changes.
 13. Preserve baked-in name typos (they map to real tables/indices) — rename only via NAMING_CONVENTIONS.
-14. UI = Metronic, Poppins font, max font 14px, clean icon-based design (NO 3D), fits 1366×768 → 4K ([docs/UI_UX_STANDARDS.md](docs/UI_UX_STANDARDS.md)).
+14. UI = Metronic, Poppins font, max font 14px, clean icon-based design (NO 3D). **Must perfectly fit 15.6-inch screens (1366×768 & 1920×1080) and smaller screens** with complete responsiveness and internal scrolling ([docs/UI_UX_STANDARDS.md](docs/UI_UX_STANDARDS.md)).
 15. OpenDoc WASM Engine Isolation: Download Resume Center, Forward Resume, and Online Editor are strictly 3 separate engines. Never merge them.
 16. **Document the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries. See [docs/CODE_DOCUMENTATION_STANDARD.md](docs/CODE_DOCUMENTATION_STANDARD.md).
+17. **Complete Page/Blade Isolation:** Every page/blade designed, developed, or updated must be completely isolated to that page. Do NOT reuse or share stateful JS/drawers/scripts across pages; changes to one page must never touch or affect another page.
 
 ## Build/run/verify
 See [docs/VERIFY.md](docs/VERIFY.md). Key: `php -l`, `./vendor/bin/pint`,
