@@ -831,7 +831,7 @@ if($snp_mode== 1){
             </div>
 
             <!-- Salary Details -->
-            <div class="fs br-card">
+            <div class="fs br-card {{ (@$application->comission_type == 1) ? 'is-free-service' : 'is-paid-service' }}">
               <div class="br-hero">
                 <div class="br-hero-title">
                   <span class="br-hero-icon"><i class="fa-solid fa-coins"></i></span>
@@ -856,7 +856,7 @@ if($snp_mode== 1){
                     </span>
                   </div>
                   <div class="br-model-grid">
-                    <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 1) ? 'is-selected' : '' }}" data-commercial-value="1" role="radio" aria-checked="{{ (@$application->comission_type == 1) ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
                       <span class="br-option-icon"><i class="fa-regular fa-gift"></i></span>
                       <span class="br-option-copy">
@@ -865,7 +865,7 @@ if($snp_mode== 1){
                         <small>This talent will be provided to clients at no commercial charge.</small>
                       </span>
                     </button>
-                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2">
+                    <button type="button" class="br-model-option {{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'is-selected' : '' }}" data-commercial-value="2" role="radio" aria-checked="{{ (@$application->comission_type == 2 || @$application->comission_type == '') ? 'true' : 'false' }}">
                       <span class="br-radio"></span>
                       <span class="br-option-icon"><i class="fa fa-rupee-sign"></i></span>
                       <span class="br-option-copy">
@@ -2059,8 +2059,8 @@ $(document).ready(function () {
 
     function syncCommercialCards() {
         let currentValue = ($('#comission_type').val() || '2').toString();
-        $('.br-model-option').removeClass('is-selected');
-        $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected');
+        $('.br-model-option').removeClass('is-selected').attr('aria-checked', 'false');
+        $('.br-model-option[data-commercial-value="' + currentValue + '"]').addClass('is-selected').attr('aria-checked', 'true');
     }
 
     function applyCommercialMode() {
@@ -2087,7 +2087,7 @@ $(document).ready(function () {
         }
 
         billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
-        $('.br-card').toggleClass('is-free-service', isFree);
+        $('.br-card').toggleClass('is-free-service', isFree).toggleClass('is-paid-service', !isFree);
         $('.br-bill-panel').toggleClass('is-locked', isFree);
         syncCommercialCards();
         refreshCommercialSummary();
