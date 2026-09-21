@@ -66,11 +66,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     public function index(Request $request, BenchTalentHeroAnalytics $hero)
     {
         $this->pageTitle = __('Bench Listing');
-        $period = $request->query('hero_period', 'this_month');
-        $heroData = $hero->forCompany((int) auth()->user()->company_id, is_string($period) ? $period : 'this_month');
+        $month = $request->query('hero_month', '');
+        $window = $request->query('performance_window', 'monthly');
+        $heroData = $hero->forCompany(
+            (int) auth()->user()->company_id,
+            is_string($month) ? $month : '',
+            is_string($window) ? $window : 'monthly'
+        );
         $this->counts = $heroData['counts'];
         $this->heroStages = $heroData['stages'];
-        $this->heroPeriod = $heroData['period'];
+        $this->heroMonth = $heroData['month'];
+        $this->performanceWindow = $heroData['window'];
+        $this->heroMonths = array_map(function (int $offset) {
+            $date = Carbon::now()->subMonthsNoOverflow($offset);
+
+            return [
+                'value' => $date->format('Y-m'),
+                'label' => $offset === 0 ? 'This Month' : ($offset === 1 ? 'Last Month' : $date->format('M Y')),
+            ];
+        }, range(0, 11));
 
         return view('service_company.bench-candidates.index', $this->data);
 
