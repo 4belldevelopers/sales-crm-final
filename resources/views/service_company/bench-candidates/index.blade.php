@@ -1,24 +1,20 @@
 @extends('layouts.service_company_layout')
 @php
-    // Inline display helpers for the redesigned Inhouse Talents dashboard.
-    // Why: keep number/currency formatting close to the view without touching global helpers.
-    $curSym = ['INR' => '₹', 'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥'][$currencyCode ?? 'INR'] ?? '₹';
-    $fmtMoney = function ($n) {
-        $n = (float) $n;
-        $neg = $n < 0 ? '-' : '';
-        $a = abs($n);
-        if ($a >= 10000000) return $neg . round($a / 10000000, 2) . 'Cr';
-        if ($a >= 100000) return $neg . round($a / 100000, 2) . 'L';
-        if ($a >= 1000) return $neg . round($a / 1000, 1) . 'K';
-        return $neg . round($a);
-    };
+    $heroItems = [
+        ['key' => 'talent', 'label' => 'Total Talent', 'icon' => 'fa-users', 'tone' => 'blue', 'rel' => 'all'],
+        ['key' => 'bench', 'label' => 'Bench & Marketplace', 'icon' => 'fa-couch', 'tone' => 'amber', 'rel' => '2'],
+        ['key' => 'sent', 'label' => 'Requests Sent', 'icon' => 'fa-paper-plane', 'tone' => 'blue', 'rel' => null],
+        ['key' => 'accepted', 'label' => 'Requests Accepted', 'icon' => 'fa-circle-check', 'tone' => 'green', 'rel' => null],
+        ['key' => 'expired', 'label' => 'Requests Expired', 'icon' => 'fa-clock', 'tone' => 'red', 'rel' => null],
+        ['key' => 'views', 'label' => 'Profile Views', 'icon' => 'fa-eye', 'tone' => 'violet', 'rel' => null],
+        ['key' => 'interviews', 'label' => 'Interviews', 'icon' => 'fa-user-tie', 'tone' => 'violet', 'rel' => null],
+        ['key' => 'placed', 'label' => 'Placed', 'icon' => 'fa-trophy', 'tone' => 'amber', 'rel' => '3'],
+    ];
 @endphp
 
 @push('head-script')
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
-    {{-- ApexCharts (not bundled in Metronic global plugins) — drives the aging donut + loss/profit charts --}}
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
     <style>
         /* ===== Inhouse Talents — redesigned dashboard (white / Poppins / max 13px body) ===== */
         /* +10% pass applied to every size below; page-title/.num/.money were already at/above the
@@ -53,6 +49,64 @@
         .bench-dash .up { color: #17c653; } .bench-dash .down { color: #f8285a; }
         .bench-dash .kpi-delta i { font-size: 9px !important; }
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
+
+        /* In-House Talent hero: one compact connected journey, scoped to this page. */
+        .bench-dash .talent-hero-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 2px 12px; }
+        .bench-dash .talent-hero-heading { min-width: 0; }
+        .bench-dash .talent-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .bench-dash .talent-title { margin: 0; color: #142044; font-size: 22px !important; font-weight: 700; line-height: 1.2; }
+        .bench-dash .talent-info { color: #64769b; font-size: 12px !important; }
+        .bench-dash .talent-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 4px; color: #008d68; background: #e7faf4; font-size: 10px !important; font-weight: 600; }
+        .bench-dash .talent-subtitle { margin: 2px 0 0; color: #52658b; font-size: 12px !important; }
+        .bench-dash .talent-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .bench-dash .talent-hero-actions .btn-add,
+        .bench-dash .talent-hero-actions .btn-ghost,
+        .bench-dash .hero-period { min-height: 36px; border-radius: 6px; }
+        .bench-dash .talent-hero-actions .btn-add { background: #1267e9; padding-inline: 15px; }
+        .bench-dash .hero-period { border: 1px solid #dce6f5; background: #fff; color: #16254b; padding: 5px 10px; font-weight: 600; cursor: pointer; }
+        .bench-dash .hero-more { position: relative; }
+        .bench-dash .hero-more summary { list-style: none; cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #dce6f5; border-radius: 6px; background: #fff; color: #142044; }
+        .bench-dash .hero-more summary::-webkit-details-marker { display: none; }
+        .bench-dash .hero-more-menu { position: absolute; z-index: 15; right: 0; top: 40px; min-width: 155px; border: 1px solid #dce6f5; border-radius: 6px; background: #fff; box-shadow: 0 10px 25px rgba(24, 39, 75, .12); padding: 5px; }
+        .bench-dash .hero-more-menu a { display: block; padding: 8px; color: #263b67; font-size: 11px !important; text-decoration: none; }
+        .bench-dash .hero-more-menu a:hover { background: #f4f8ff; }
+        .bench-dash .pipeline-panel { border: 1px solid #dceaff; border-radius: 6px; background: #fbfdff; padding: 10px 13px 8px; margin-bottom: 10px; }
+        .bench-dash .pipeline-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .bench-dash .pipeline-heading-copy { display: flex; align-items: center; min-width: 0; gap: 9px; }
+        .bench-dash .pipeline-heading-icon { color: #1680ee; font-size: 18px !important; width: 31px; text-align: center; }
+        .bench-dash .pipeline-heading-title { margin: 0; color: #15254a; font-size: 13px !important; font-weight: 700; }
+        .bench-dash .pipeline-heading-note { margin: 0; color: #54698f; font-size: 10.5px !important; }
+        .bench-dash .pipeline-detail-link { flex-shrink: 0; border: 1px solid #d7e6ff; border-radius: 5px; color: #0958d3; background: #f7fbff; padding: 6px 9px; font-size: 10px !important; font-weight: 600; text-decoration: none; }
+        .bench-dash .pipeline-detail-link:hover { background: #edf5ff; }
+        .bench-dash .pipeline-scroller { overflow-x: auto; scrollbar-width: thin; }
+        .bench-dash .pipeline-stages { display: grid; grid-template-columns: repeat(8, minmax(122px, 1fr)); min-width: 976px; padding-top: 12px; }
+        .bench-dash .pipeline-stage { position: relative; min-width: 0; text-align: center; color: #142044; padding: 0 3px 2px; border: 0; background: transparent; }
+        .bench-dash button.pipeline-stage { cursor: pointer; }
+        .bench-dash button.pipeline-stage:hover .pipeline-stage-label { color: #1267e9; }
+        .bench-dash button.pipeline-stage.active .pipeline-stage-icon { outline: 2px solid #1267e9; outline-offset: 2px; }
+        .bench-dash button.pipeline-stage:focus-visible { outline: 2px solid #1267e9; outline-offset: 2px; }
+        .bench-dash .pipeline-stage-label { display: block; min-height: 16px; color: #16254b; font-size: 10px !important; font-weight: 600; white-space: nowrap; }
+        .bench-dash .pipeline-stage-icon { position: relative; z-index: 2; display: grid; place-items: center; width: 42px; height: 42px; margin: 2px auto 3px; border-radius: 50%; }
+        .bench-dash .pipeline-stage-icon i { font-size: 19px !important; }
+        .bench-dash .pipeline-stage.blue .pipeline-stage-icon { background: #e8f3ff; color: #1676e9; }
+        .bench-dash .pipeline-stage.amber .pipeline-stage-icon { background: #fff5df; color: #ee9b00; }
+        .bench-dash .pipeline-stage.green .pipeline-stage-icon { background: #e5f8f1; color: #11a781; }
+        .bench-dash .pipeline-stage.red .pipeline-stage-icon { background: #ffecef; color: #f42642; }
+        .bench-dash .pipeline-stage.violet .pipeline-stage-icon { background: #f2ebff; color: #7634e9; }
+        .bench-dash .pipeline-stage:not(:last-child)::after { content: '\203A'; position: absolute; z-index: 3; top: 27px; right: -5px; color: #1267e9; font-size: 25px; line-height: 1; }
+        .bench-dash .pipeline-stage:not(:last-child)::before { content: ''; position: absolute; top: 40px; left: calc(50% + 23px); right: -2px; border-top: 1px solid #d7e7ff; }
+        .bench-dash .pipeline-stage-value { display: block; font-size: 18px !important; line-height: 1.12; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .bench-dash .pipeline-stage-share { display: block; font-size: 10.5px !important; line-height: 1.35; }
+        .bench-dash .pipeline-stage-delta { display: block; color: #00a66b; font-size: 10.5px !important; line-height: 1.35; font-weight: 600; }
+        .bench-dash .pipeline-stage-delta.negative { color: #f42642; }
+        .bench-dash .pipeline-stage-delta.neutral { color: #7e8ca6; }
+        @media (max-width: 800px) {
+            .bench-dash .talent-hero-header { align-items: flex-start; flex-direction: column; }
+            .bench-dash .talent-hero-actions { width: 100%; }
+            .bench-dash .pipeline-heading { align-items: flex-start; flex-direction: column; }
+            .bench-dash .pipeline-heading-note { line-height: 1.4; }
+            .bench-dash .pipeline-detail-link { white-space: nowrap; }
+        }
 
         /* Ghost buttons (Export) */
         .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 12px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
@@ -320,19 +374,28 @@
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-5">
 
-                <!-- Header -->
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-2 py-3" style="background:#fff;padding: 6px;">
-                    <div class="d-flex flex-column">
-                        <h5 class="page-title text-dark fw-bolder my-0 d-flex align-items-center gap-2">
-                            Inhouse Talents
-                            <i class="fa fa-circle-info text-muted" style="font-size:13px !important;" data-toggle="tooltip"
-                                title="Track bench, pipeline and revenue in one place."></i>
-                        </h5>
-                        <span class="tiny text-muted">Track bench, pipeline and revenue in one place.</span>
+                <!-- In-House Talent hero -->
+                <div class="talent-hero-header">
+                    <div class="talent-hero-heading">
+                        <div class="talent-title-row">
+                            <h1 class="talent-title">In-House Talent</h1>
+                            <i class="fa fa-circle-info talent-info" title="Your in-house talent pool and marketplace activity."></i>
+                            <span class="talent-badge"><i class="fa fa-house"></i> In-House Talent</span>
+                        </div>
+                        <p class="talent-subtitle">Manage your talent pool, bench availability, placements and marketplace readiness.</p>
                     </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="talent-hero-actions">
                         <input type="hidden" id="inputSearch" name="inputSearch" />
                         @if (in_array('view_bench', $userPermissions))
+                            <form method="get" action="{{ route('service_company.bench-candidates.index') }}" class="d-inline-flex align-items-center gap-1 hero-period">
+                                <i class="fa fa-calendar ms-2" aria-hidden="true"></i>
+                                <select name="hero_period" class="border-0 bg-transparent pe-2" aria-label="Analytics period" onchange="this.form.submit()">
+                                    <option value="this_month" @selected($heroPeriod === 'this_month')>This Month</option>
+                                    <option value="last_month" @selected($heroPeriod === 'last_month')>Last Month</option>
+                                    <option value="last_90_days" @selected($heroPeriod === 'last_90_days')>Last 90 Days</option>
+                                    <option value="all_time" @selected($heroPeriod === 'all_time')>All Time</option>
+                                </select>
+                            </form>
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
                                 <i class="fa fa-plus"></i> Add Talent
                             </a>
@@ -340,47 +403,57 @@
                         <button type="button" class="btn-ghost" id="exportTalents">
                             <i class="fa fa-file-export"></i> Export
                         </button>
+                        <details class="hero-more">
+                            <summary aria-label="More actions"><i class="fa fa-ellipsis"></i></summary>
+                            <div class="hero-more-menu">
+                                <a href="{{ route('service_company.bench-candidates.staffingDashboard') }}">Detailed analytics</a>
+                                <a href="{{ route('service_company.bench-candidates.index', ['hero_period' => $heroPeriod]) }}">Refresh</a>
+                            </div>
+                        </details>
                     </div>
                 </div>
 
                 @if (in_array('view_bench', $userPermissions))
-                    <!-- KPI cards -->
-                    <div class="row g-2 mb-2">
-                        @php
-                            $kpis = [
-                                ['rel' => 'all', 'label' => 'Total Talents', 'val' => (int) ($counts->all_records ?? 0), 'ico' => 'fa-users', 'sc' => 'sc-primary', 'spark' => 'sp1', 'color' => '#3e97ff'],
-                                ['rel' => '1',   'label' => 'Talent On Pool', 'val' => (int) ($counts->pool ?? 0), 'ico' => 'fa-user-friends', 'sc' => 'sc-success', 'spark' => 'sp2', 'color' => '#17c653'],
-                                ['rel' => '2',   'label' => 'Talents on Bench', 'val' => (int) ($counts->bench ?? 0), 'ico' => 'fa-couch', 'sc' => 'sc-warning', 'spark' => 'sp3', 'color' => '#f6a609'],
-                                ['rel' => '4',   'label' => 'Talent On Hold', 'val' => (int) ($counts->paused ?? 0), 'ico' => 'fa-pause-circle', 'sc' => 'sc-info', 'spark' => 'sp4', 'color' => '#7239ea'],
-                                ['rel' => '3',   'label' => 'Talent Placed', 'val' => (int) ($counts->placed ?? 0), 'ico' => 'fa-calendar-check', 'sc' => 'sc-primary', 'spark' => 'sp5', 'color' => '#3e97ff'],
-                            ];
-                        @endphp
-                        @foreach ($kpis as $k)
-                            <div class="col">
-                                <div class="jw-card kpi kpi-filter" data-rel="{{ $k['rel'] }}" id="kpi_{{ $k['rel'] }}">
-                                    <span class="kpi-ico {{ $k['sc'] }}"><i class="fa {{ $k['ico'] }}"></i></span>
-                                    <div class="kpi-text">
-                                        <span class="kpi-label">{{ $k['label'] }}</span>
-                                        <span class="kpi-value-row">
-                                            <span class="num" id="kpival_{{ $k['rel'] }}">{{ $k['val'] }}</span>
-                                            <span class="kpi-action">View Candidate</span>
-                                        </span>
-                                    </div>
+                    <section class="pipeline-panel" aria-labelledby="talentPipelineTitle">
+                        <div class="pipeline-heading">
+                            <div class="pipeline-heading-copy">
+                                <i class="fa fa-chart-simple pipeline-heading-icon" aria-hidden="true"></i>
+                                <div>
+                                    <h2 class="pipeline-heading-title" id="talentPipelineTitle">Talent Pipeline &amp; Marketplace Engagement
+                                        <i class="fa fa-circle-info ms-1 text-muted" title="Inventory and indexed profile views are current totals; requests, interviews and placements follow the selected period."></i>
+                                    </h2>
+                                    <p class="pipeline-heading-note">Track your in-house talent journey from bench to placement and measure marketplace engagement.</p>
                                 </div>
                             </div>
-                        @endforeach
-
-                        <!-- Bench Cost (Loss) -->
-                        <div class="col">
-                            <div class="jw-card kpi">
-                                <span class="kpi-ico sc-danger"><i class="fa fa-rupee-sign"></i></span>
-                                <div class="kpi-text">
-                                    <span class="kpi-label">Bench Cost (Loss)</span>
-                                    <span class="money text-danger">{{ $curSym }}{{ $fmtMoney($benchCost ?? 0) }}</span>
-                                </div>
+                            <a class="pipeline-detail-link" href="{{ route('service_company.bench-candidates.staffingDashboard') }}">View Detailed Analytics <i class="fa fa-arrow-right ms-1"></i></a>
+                        </div>
+                        <div class="pipeline-scroller">
+                            <div class="pipeline-stages">
+                                @foreach ($heroItems as $item)
+                                    @php $metric = $heroStages[$item['key']]; @endphp
+                                    @if ($item['rel'] !== null)
+                                        <button type="button" class="pipeline-stage {{ $item['tone'] }} kpi-filter" data-rel="{{ $item['rel'] }}" id="kpi_{{ $item['rel'] }}" title="Filter the talent list">
+                                    @else
+                                        <div class="pipeline-stage {{ $item['tone'] }}">
+                                    @endif
+                                        <span class="pipeline-stage-label" @if ($item['key'] === 'views') title="All-time indexed profile views" @endif>{{ $item['label'] }}</span>
+                                        <span class="pipeline-stage-icon"><i class="fa {{ $item['icon'] }}" aria-hidden="true"></i></span>
+                                        <span class="pipeline-stage-value" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
+                                        <span class="pipeline-stage-share">{{ $metric['available'] ? rtrim(rtrim(number_format($metric['share'], 1), '0'), '.') . '%' : 'Unavailable' }}</span>
+                                        @if ($metric['delta'] !== null)
+                                            <span class="pipeline-stage-delta {{ $metric['delta'] < 0 ? 'negative' : '' }}" @if ($item['key'] === 'talent') title="New talents added versus the preceding period" @endif><i class="fa fa-arrow-{{ $metric['delta'] < 0 ? 'down' : 'up' }}"></i> {{ $metric['delta'] > 0 ? '+' : '' }}{{ $metric['delta'] }}%</span>
+                                        @else
+                                            <span class="pipeline-stage-delta neutral" title="Historical period comparison is unavailable">&mdash;</span>
+                                        @endif
+                                    @if ($item['rel'] !== null)
+                                        </button>
+                                    @else
+                                        </div>
+                                    @endif
+                                @endforeach
                             </div>
                         </div>
-                    </div>
+                    </section>
 
                     <!-- Search + Sort row -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
@@ -993,11 +1066,8 @@
                     $('#bg_4').text(response.paused);
                     $('#bg_3').text(response.placed);
                     $('#bg_5').text(response.exited);
-                    $('#kpival_all').text(response.all_records);
-                    $('#kpival_1').text(response.pool);
-                    $('#kpival_2').text(response.bench);
-                    $('#kpival_4').text(response.paused);
-                    $('#kpival_3').text(response.placed);
+                    $('#kpival_all').text(Number(response.all_records || 0).toLocaleString());
+                    $('#kpival_2').text(Number(response.bench || 0).toLocaleString());
                 }
             });
         }
