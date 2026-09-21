@@ -5385,22 +5385,26 @@ select option,
     height: 30px;
     flex: 0 0 30px;
     border-radius: 50%;
-    color: #069b68;
-    background: #dbf8ec;
-    font-size: 14px;
+    color: #26395e;
+    background: #e8edf7;
+    font-size: 16px;
 }
+.talent-topbar-marketplace-icon i { color: inherit !important; font-size: 16px; }
+.talent-topbar-marketplace[data-stage="bench"] { border-color: #a9c6ff; background: #eef4ff; }
+.talent-topbar-marketplace[data-stage="bench"] .talent-topbar-marketplace-icon { color: #153f9d; background: #dce9ff; }
+.talent-topbar-marketplace[data-stage="bench"] .talent-topbar-marketplace-copy strong span { color: #155eef; }
 .talent-topbar-marketplace-copy { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .talent-topbar-marketplace-copy strong { flex: 0 0 auto; color: #102044; font-size: 12px; line-height: 1.3; font-weight: 600; white-space: nowrap; }
 .talent-topbar-marketplace-copy strong span { color: #08965c; }
 .talent-topbar-marketplace-copy small { color: #576587; font-size: 11px; line-height: 1.3; white-space: nowrap; }
-.talent-topbar-marketplace[data-stage="pool"] .talent-topbar-marketplace-icon { color: #2463e5; background: #e8f2ff; }
+.talent-topbar-marketplace[data-stage="pool"] .talent-topbar-marketplace-icon { color: #5923ba; background: #f0e9ff; }
 .talent-topbar-marketplace[data-stage="hold"] .talent-topbar-marketplace-icon { color: #bd8100; background: #fff4d8; }
 .talent-topbar-marketplace[data-stage="exited"] .talent-topbar-marketplace-icon { color: #dc3152; background: #ffe9ef; }
 .talent-topbar-marketplace:not([data-stage="bench"]) .talent-topbar-marketplace-copy strong span { color: #596789; }
 .talent-topbar-actions { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; }
 .talent-topbar-primary { width: 100%; min-height: 40px; padding: 9px 11px; white-space: normal; }
 .talent-topbar-action-hint { display: block; color: #65718e; font-size: 11px; line-height: 1.35; text-align: center; }
-.talent-topbar-primary.talent-stage-action--pool { border-color: #2463e5 !important; background: #2463e5 !important; }
+.talent-topbar-primary.talent-stage-action--pool { border-color: #7239ea !important; background: #7239ea !important; }
 .talent-topbar-primary.talent-stage-action--bench { border-color: #155eef !important; background: #155eef !important; }
 .talent-topbar-primary.talent-stage-action--hold { border-color: #e9a900 !important; background: #e9a900 !important; }
 .talent-topbar-primary.talent-stage-action--exited { border-color: #e43e57 !important; background: #e43e57 !important; }
@@ -5446,8 +5450,8 @@ select option,
     background: #fff;
     box-shadow: 0 1px 3px rgba(26, 58, 113, .03);
 }
-.talent-stage-card .talent-stage-option--pool { --stage-color: #2463e5; --stage-soft: #e8f2ff; }
-.talent-stage-card .talent-stage-option--bench { --stage-color: #079b6e; --stage-soft: #e8faf2; }
+.talent-stage-card .talent-stage-option--pool { --stage-color: #7239ea; --stage-soft: #f3effe; }
+.talent-stage-card .talent-stage-option--bench { --stage-color: #2463e5; --stage-soft: #e8f2ff; }
 .talent-stage-card .talent-stage-option--hold { --stage-color: #e7a400; --stage-soft: #fff6dc; }
 .talent-stage-card .talent-stage-option--placed { --stage-color: #1768dd; --stage-soft: #e7f1ff; }
 .talent-stage-card .talent-stage-option--exited { --stage-color: #e62c4f; --stage-soft: #ffebf0; }
@@ -5457,7 +5461,7 @@ select option,
 .talent-topbar-primary.talent-stage-action--hold i { color: #fff !important; }
 .talent-stage-card .talent-stage-icon { width: 36px; height: 36px; flex-basis: 36px; border-radius: 6px; color: #253553; }
 .talent-stage-card .talent-stage-icon i { color: inherit !important; font-size: 16px; font-weight: 900 !important; opacity: 1 !important; }
-.talent-stage-card .talent-stage-option--bench .talent-stage-icon { background: #def9ee; }
+.talent-stage-card .talent-stage-option--bench .talent-stage-icon { background: #e8f2ff; }
 .talent-stage-card .talent-stage-option.is-selected .talent-stage-icon { color: #fff; background: var(--stage-color); }
 .talent-stage-card .talent-stage-copy { padding-right: 10px; }
 .talent-stage-card .talent-stage-copy strong { margin: 0; font-size: 13px; }
@@ -5655,3 +5659,30 @@ select option,
 :is(#createForm, .talent-topbar) .fa-trash-can::before { content: "\f2ed" !important; }
 :is(#createForm, .talent-topbar) .fa-wand-magic-sparkles::before { content: "\f0d0" !important; }
 :is(#createForm, .talent-topbar) .fa-xmark::before { content: "\f00d" !important; }
+:is(#createForm, .talent-topbar) .fa-store::before { content: "\f54e" !important; }
+
+/* The form's FA alias rule must not displace glyphs inside fixed-size icon tiles. */
+#createForm .se-card .sk .se-field > i,
+#createForm .addl-card .addl-wide-field label > i:first-child,
+#createForm .br-card .br-margin-state > i {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+}
+#createForm .se-card .sk .se-field > i { align-self: stretch; }
+#createForm .addl-card .addl-wide-field label > i:first-child {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    color: #3f2fb5;
+    background: #eeebff;
+    font-size: 14px;
+}
+#createForm .addl-card .addl-wide-field label > i.addl-label-info {
+    display: inline-flex !important;
+    align-items: center;
+    color: #53658e;
+}
+#createForm .br-card .br-margin-state > i { flex: 0 0 26px; }
+#createForm .summary-tip-icon i { color: #253553 !important; font-size: 16px; }

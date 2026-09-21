@@ -118,7 +118,7 @@ if($snp_mode== 1){
       </div>
       @if(@$page_event != 'EDIT')
       <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
-        <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-globe" aria-hidden="true"></i></span>
+        <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
         <span class="talent-topbar-marketplace-copy">
           <strong>Marketplace: <span id="talent-marketplace-status">Will be published</span></strong>
           <small id="talent-marketplace-message">Visible to clients.</small>
@@ -432,14 +432,14 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Professional Email (Confidential to Client) <span class="rq">*</span></label>
+                    <label>Professional Email (Not Disclosed to Client) <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-envelope"></i>
                       <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Mobile Number (Confidential to Client) <span class="rq">*</span></label>
+                    <label>Mobile Number (Not Disclosed to Client) <span class="rq">*</span></label>
                     <div class="bd-phone-control">
                       <i class="fa-solid fa-mobile-screen-button"></i>
                       <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
@@ -601,7 +601,7 @@ if($snp_mode== 1){
                       <select name="employmentType" id="EmploymentType">
                         <option value="">Select employment type</option>
                         <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                        <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
+                        <option {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract</option>
                         <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
                         <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
                       </select>
@@ -847,7 +847,7 @@ if($snp_mode== 1){
                       <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
-                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show the talent's availability to clients in the marketplace.</span></div>
+                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show to clients in the talents marketplace.</span></div>
                     <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
                       <option value="">Select Notice Period</option>
                       @php
@@ -877,13 +877,13 @@ if($snp_mode== 1){
                         <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" />
+                        <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
                         <span class="aw-radio"></span>
                         <i class="fa-solid fa-building" aria-hidden="true"></i>
                         <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
                       </label>
                       <label class="aw-work-option aw-work-option--office" for="wo">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
+                        <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
                         <span class="aw-radio"></span>
                         <i class="fa-solid fa-users" aria-hidden="true"></i>
                         <span class="aw-work-copy"><strong>Work From Office</strong><small>Office location based work.</small></span>
