@@ -59,6 +59,34 @@ Eloquent model queries by `company_id`. Raw database queries across the 93 tenan
 
 ---
 
+## 2.1 GOD-Level CQRS & Zero-Load Infrastructure Specification (V4 Architecture)
+
+The platform is engineered around an uncompromising high-concurrency standard designed to eliminate database bottlenecks and server collapse:
+
+### 1. Hardware Infrastructure Sizing (32 GB RAM per Tier)
+- **Web / Application Server:** **32 GB RAM dedicated** to Laravel 11 Octane + FrankenPHP worker pool + Redis cache/session/queue.
+- **MySQL Database Tier:** **32 GB RAM dedicated** to MySQL with InnoDB buffer pool configured at ~24 GB (75% allocation) strictly dedicated to write throughput, transaction logs, and indexing.
+- **Elasticsearch Cluster Tier:** **32 GB RAM dedicated** with JVM heap locked at 16 GB (50% rule) and 16 GB reserved for Linux OS page cache / Lucene memory-mapped I/O.
+
+### 2. Strict CQRS Separation (Command vs. Query)
+- **MySQL is ONLY for Add / Edit / Delete (Writes):** Zero MySQL reads (`SELECT`) on web and API request paths. Transactional integrity is guaranteed via `DB::transaction()` with immediate synchronization to Elasticsearch and atomic Redis cache purging.
+- **Elasticsearch is ONLY for Read (Universal Query Store across 60+ Indices):** Serves 100% of read operations across all data domains: candidates, active/closed jobs, requisitions, client jobs, application pipelines, coin balances, company relations, and user rosters (`ELASTIC_CANDIDATES`, `ats_jobs_elastic`, `ats_requisitions_elastic`, `ELASTIC_COMPANY_COINS`, `ELASTIC_EMAIL_COUNT`, `ats_users_list`, `ats_client_list`, etc.). Zero direct UI writes.
+
+### 3. 10,000 Concurrent Users Scalability & 0% Server Strain
+- **Concurrency Target:** Every page, drawer, and action is designed to sustain **10,000 active concurrent recruiters** without UI freezing (long tasks > 50ms banned), worker pool collapse, or database connection exhaustion.
+- **0% Server Strain Target:** Offload server compute by eliminating server-side HTML streaming, server-side document rendering, and repeated query execution.
+
+### 4. Client-First Architecture (User RAM & Browser CPU First)
+- Heavy document formatting, vector PDF compilation (Options 1, 5, 41–53), redaction, and watermark assembly execute in **user RAM via WebAssembly (WASM), Web Workers, and `pdf-lib`**.
+- Generated binary blobs upload **directly to Cloudflare R2 / S3 via presigned PUT URLs**, bypassing the application server entirely.
+- **Server Fallback:** Cloud server and Elasticsearch act strictly as a resilience fallback tier if user browser RAM exhausts or WASM is unsupported.
+
+### 5. Zero Stale Data & Multi-Tenant Atomic Cache Invalidation
+- **Authoritative Real-Time ATS:** Recruiters must never see stale candidate statuses, interview stages, or coin balances.
+- **Atomic Tenant Purge:** All cache keys are strictly scoped by `company_id`. Any `INSERT` or `UPDATE` mutation to candidates, jobs, or company details instantly destroys the tenant cache in Redis and client memory, guaranteeing immediate organization-wide consistency.
+
+---
+
 ## 3. Major Modules
 
 See [MODULE_MAP.md](MODULE_MAP.md) for file-level detail. High level:

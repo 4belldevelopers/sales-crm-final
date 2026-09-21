@@ -1696,7 +1696,9 @@
                 $('.custom_hide').removeClass("d-none");
             }
         });
-    </script>
+    @if(config('feature.fwd_resume_v4_enabled', true))
+        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
+    @endif
 
     <script>
         $(document).ready(function() {
@@ -1784,6 +1786,24 @@
                     });
                     return;
                 }
+
+                @if(config('feature.fwd_resume_v4_enabled', true))
+                if (window.ForwardResumeManager) {
+                    window.ForwardResumeManager.initRoutes({
+                        shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}",
+                        engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}",
+                        data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
+                        recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
+                        intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+                        send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+                        quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+                        emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
+                        legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
+                    });
+                    window.ForwardResumeManager.open(arr, jobIdArr, matchMap);
+                    return;
+                }
+                @endif
 
                 // Open the Forward Resume drawer
                 var drawerEl = document.getElementById('kt_test_fwd_resume_drawer');
