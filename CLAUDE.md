@@ -32,7 +32,7 @@ be made inside this folder.
 
 ---
 
-## 🏛️ The 8 God-Level Architectural Directives (V4 Mandate)
+## 🏛️ The 9 God-Level Architectural Directives (V4 Mandate)
 1. **MySQL is ONLY for Add / Edit / Delete:** 0% MySQL reads on web/API request paths. No `SELECT` or table joins on user page loads.
 2. **Elasticsearch is ONLY for Read (Universal Scope):** Serves 100% of queries, filters, counts, and search results across ALL data domains (candidates, jobs, requisitions, applications, companies, coins, teams) across all 60+ indices. Zero direct UI writes.
 3. **Hardware Profile (32 GB RAM per Tier):** 32 GB RAM dedicated to App Server (Octane/FrankenPHP + Redis), 32 GB RAM dedicated to MySQL (~24 GB InnoDB buffer pool for writes), 32 GB RAM dedicated to Elasticsearch (16 GB JVM heap + 16 GB OS page cache).
@@ -41,6 +41,7 @@ be made inside this folder.
 6. **Client-First / Browser Execution (User RAM First):** Execute assembly, compilation, and rendering on the user's browser (User RAM, WASM, Web Workers, `pdf-lib`). Server/ES is strictly a circuit-breaker fallback.
 7. **Zero Stale Data in ATS:** Recruitment pipeline data must be 100% fresh, correct, and authoritative. Latency optimization must never compromise data integrity.
 8. **Multi-Tenant Atomic Cache Invalidation:** All cache keys are strictly scoped by `company_id`. Any update to candidate/job/stage details immediately purges the tenant cache across Redis and the organization so all users see real-time updated data.
+9. **Zero Business Logic Alteration & Strict Blast Radius Isolation (Zero Regressions):** For any change or upgrade on any page/feature, existing core business logic (scoring, pipelines, billing, status workflows) must remain 100% untouched, and NO other page, modal, drawer, or module must be affected or broken.
 
 ---
 
