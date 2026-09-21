@@ -107,7 +107,7 @@ Last updated: 2026-09-04 (Team View More V2 Performance & Concurrency Optimizati
   designed.
 - *2026-09-21* — **Established The 8 GOD-Level Architectural Directives (V4 Mandate):**
   1. MySQL is ONLY for Add/Edit/Delete (0% MySQL reads on web/API request cycles).
-  2. Elasticsearch is ONLY for Read (100% search/queries/filters; zero direct UI writes).
+  2. Elasticsearch is ONLY for Read (Universal Scope: 100% queries/filters for candidates, jobs, requisitions, applications, companies, coins, teams; zero direct UI writes).
   3. Hardware dimensioning: Dedicated 32 GB RAM each for Web/App Server, MySQL, and Elasticsearch.
   4. Concurrency target: 10,000 concurrent users per page with 0% server/DB read strain.
   5. 0% Server Strain Target: Offload document assembly and static rendering away from cloud servers.

@@ -34,7 +34,7 @@ be made inside this folder.
 
 ## 🏛️ The 8 God-Level Architectural Directives (V4 Mandate)
 1. **MySQL is ONLY for Add / Edit / Delete:** 0% MySQL reads on web/API request paths. No `SELECT` or table joins on user page loads.
-2. **Elasticsearch is ONLY for Read:** Serves 100% of candidate/job queries, filters, counts, and search results. Zero direct UI writes.
+2. **Elasticsearch is ONLY for Read (Universal Scope):** Serves 100% of queries, filters, counts, and search results across ALL data domains (candidates, jobs, requisitions, applications, companies, coins, teams) across all 60+ indices. Zero direct UI writes.
 3. **Hardware Profile (32 GB RAM per Tier):** 32 GB RAM dedicated to App Server (Octane/FrankenPHP + Redis), 32 GB RAM dedicated to MySQL (~24 GB InnoDB buffer pool for writes), 32 GB RAM dedicated to Elasticsearch (16 GB JVM heap + 16 GB OS page cache).
 4. **10,000 Concurrent Users Per Page Scalability Target:** Every page/action must handle 10K concurrent users without server collapse, worker starvation, or UI freezes (long tasks > 50ms banned).
 5. **Target 0% Server Strain:** Eliminate cloud server load for document formatting, vector PDF assembly, and static rendering by running on the edge.

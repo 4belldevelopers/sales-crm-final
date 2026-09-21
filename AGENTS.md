@@ -14,7 +14,7 @@
 
 ## Non-negotiable Rules (Full list: [docs/AI_RULES.md](docs/AI_RULES.md))
 1. **MySQL is ONLY for Add / Edit / Delete:** 0% MySQL reads on web/API request paths. No `SELECT` or joins on user page loads.
-2. **Elasticsearch is ONLY for Read:** Serves 100% of candidate/job queries, filters, counts, and search results. Zero direct UI writes.
+2. **Elasticsearch is ONLY for Read (Universal Scope):** Serves 100% of queries, filters, counts, and search results across ALL data domains (candidates, jobs, requisitions, applications, companies, coins, teams) across all 60+ indices. Zero direct UI writes.
 3. **Client-First Execution (User RAM & Browser CPU First):** Heavy assembly (PDFs, WASM, formatting, previews) executes in user RAM. Server/ES is strictly a circuit-breaker fallback.
 4. **10K Concurrency / 0% Server Strain Target:** Architect every page to handle 10,000 concurrent users without server collapse or UI freezes.
 5. **Zero Stale Data in ATS:** Recruitment pipeline data must be 100% fresh, correct, and authoritative. Latency optimization must never serve stale candidate data.
