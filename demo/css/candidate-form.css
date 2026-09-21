@@ -5324,20 +5324,39 @@ select option,
     .se-popular-list { flex-basis: 100%; }
 }
 
-/* Create Talent header and stage guidance mirror the stage's marketplace outcome. */
-.talent-top-toolbar { border-bottom: 0 !important; background: transparent !important; }
+/* This page's taller header must flow below Metronic's fixed global navigation. */
+#kt_body:has(.talent-top-toolbar) .talent-top-toolbar {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+    width: 100%;
+    height: auto !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e3eaf5 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+}
+@media (min-width: 992px) {
+    #kt_body:has(.talent-top-toolbar) #kt_wrapper { padding-top: 65px !important; }
+}
+@media (max-width: 991.98px) {
+    #kt_body:has(.talent-top-toolbar) #kt_wrapper { padding-top: 55px !important; }
+}
+.talent-top-toolbar + #kt_content { padding-top: 16px !important; }
 .talent-topbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(265px, .55fr) minmax(220px, .43fr);
     align-items: center;
     gap: 16px;
-    min-height: 100px !important;
-    margin: 8px 0 0;
-    padding: 15px 18px !important;
-    border: 1px solid #dbe4f5;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 5px 18px rgba(29, 58, 110, .04);
+    min-height: 0 !important;
+    margin: 0;
+    padding: 14px 0 !important;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
 }
 .talent-topbar-title-row { flex-wrap: wrap; gap: 7px 12px; }
 .talent-topbar--edit { grid-template-columns: minmax(0, 1fr) auto; }
@@ -5465,8 +5484,8 @@ select option,
     .talent-stage-guidance { max-width: none; width: 100%; }
 }
 
-/* Keep the first form card clear of the toolbar and align option icons with their copy. */
-.talent-stage-card { margin-top: 12px; }
+/* Keep option icons aligned with their copy. */
+.talent-stage-card { margin-top: 0; }
 .talent-stage-heading { min-height: 48px; }
 .aw-card .aw-field label.aw-work-option {
     display: flex !important;
