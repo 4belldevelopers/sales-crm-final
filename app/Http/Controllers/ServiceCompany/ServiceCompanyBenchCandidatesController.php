@@ -66,6 +66,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     public function index(Request $request, BenchTalentHeroAnalytics $hero)
     {
         $this->pageTitle = __('Bench Listing');
+        if ($request->query('pipeline_only') === '1') {
+            abort_if(Gate::denies('view_bench'), 403);
+        }
         $month = $request->query('hero_month', '');
         $window = $request->query('performance_window', 'monthly');
         $heroData = $hero->forCompany(
@@ -73,6 +76,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             is_string($month) ? $month : '',
             is_string($window) ? $window : 'monthly'
         );
+        if ($request->query('pipeline_only') === '1') {
+            return response()->json([
+                'month' => $heroData['month'],
+                'window' => $heroData['window'],
+                'stages' => $heroData['stages'],
+            ]);
+        }
         $this->counts = $heroData['counts'];
         $this->heroStages = $heroData['stages'];
         $this->heroMonth = $heroData['month'];
