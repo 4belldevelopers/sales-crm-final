@@ -80,11 +80,18 @@ V4.1 formally separates concerns into five decoupled execution planes:
 4. **Storage & State Plane:**
    - **Cloudflare R2:** Ephemeral private object storage for compiled PDF attachments with automatic lifecycle expiration.
    - **Redis:** Caching tenant email template metadata, company recipient directories (15-min TTL), and idempotency locks.
-   - **MySQL (SSOT):** Transactional ledger for coin debiting (`coin_ledgers`), forward requests (`forward_requests`), delivery attempts (`forward_delivery_attempts`), and audit trails (`email_count_companies`).
+   - **Elasticsearch Read Models:**
+     - `ELASTIC_CANDIDATES` (`local_candidates_elastic`): Candidate profile and parsed skill dossiers.
+     - `ELASTIC_COMPANY_COINS` (`local_company_coins`): Real-time coin balance and package entitlement validation.
+     - `ELASTIC_EMAIL_COUNT` (`local_email_count`): Email forwarding audit log and delivery history tracking.
+     - `ELASTIC_EMAIL_TEMPLATE` (`local_email_template`): Email templates.
+     - `ELASTIC_USERS_LIST` & `ELASTIC_CLIENT_LIST`: Internal team and client contact directories.
+   - **MySQL (SSOT for Transactional Writes Only):** Transactional write ledger for coin debiting (`coin_ledgers`), forward requests (`forward_requests`), and delivery attempt barriers (`forward_delivery_attempts`). Zero MySQL reads on the forward resume path.
 5. **Processing & Outbox Plane:**
    - Dispatches email payloads via Laravel Horizon on the dedicated Redis `emails` queue.
    - Worker streams PDF attachments directly from Cloudflare R2 into RAM for SMTP/SES dispatch (0 web server disk I/O).
    - Enforces the delivery barrier and coordinates two-phase cleanup of temporary R2 objects.
+   - Dispatches asynchronous synchronization jobs to update `ELASTIC_COMPANY_COINS` and `ELASTIC_EMAIL_COUNT`.
 
 ---
 
@@ -117,15 +124,29 @@ V4.1 formally separates concerns into five decoupled execution planes:
               throw new UnauthorizedException('User lacks forward resume permission.');
           }
 
-          // Strict tenant verification with zero IDOR leakage
-          $validCandidates = DB::table('job_applications')
-              ->whereIn('id', $candidateIds)
-              ->where(function ($q) use ($companyId) {
-                  $q->where('company_id', $companyId)
-                    ->orWhere('thirdparty_company_id', $companyId);
-              })
-              ->pluck('id')
-              ->toArray();
+          // Strict tenant verification with zero IDOR leakage via ELASTIC_CANDIDATES
+          $params = [
+              'index' => config('constants.ELASTIC_CANDIDATES'),
+              'body'  => [
+                  '_source' => ['id', 'company_id', 'thirdparty_company_id'],
+                  'query'   => [
+                      'bool' => [
+                          'must'   => [['ids' => ['values' => $candidateIds]]],
+                          'filter' => [
+                              ['bool' => [
+                                  'should' => [
+                                      ['term' => ['company_id' => $companyId]],
+                                      ['term' => ['thirdparty_company_id' => $companyId]],
+                                  ],
+                                  'minimum_should_match' => 1,
+                              ]],
+                          ],
+                      ],
+                  ],
+              ],
+          ];
+          $response = app(\App\Services\ElasticService::class)->getClient()->search($params);
+          $validCandidates = collect($response['hits']['hits'] ?? [])->pluck('_id')->map(fn($id) => (int)$id)->toArray();
 
           if (count($validCandidates) !== count($candidateIds)) {
               throw new SecurityBreachException('Unauthorized candidate access attempt detected.');
@@ -158,6 +179,21 @@ V4.1 formally separates concerns into five decoupled execution planes:
   - Strict Object Key Scope: `temp-forward/{company_id}/{uuid}.pdf`.
   - Strict Content-Type: `application/pdf`, `application/msword`, or `application/vnd.openxmlformats-officedocument.wordprocessingml.document`.
   - Strict Size Ceiling: Max 6,000,000 bytes (6 MB) per candidate resume.
+
+### 3.5 Strict CQRS Read Plane: 100% Elasticsearch + Redis (0% MySQL Reads)
+In strict compliance with JERO's CQRS architecture, **MySQL is never read during the Forward Resume drawer lifecycle**. All reads are routed through Elasticsearch and Redis models:
+1. **Candidate Dossier Read (`ELASTIC_CANDIDATES`):**
+   - Query: Elasticsearch `ids` query with `filter.term.company_id`.
+   - Latency: Sub-3ms. Returns denormalized candidate details (name, designation, skills, experience, notice period, location, and resume pointer) with zero table joins.
+2. **Coin Validation & Entitlements (`ELASTIC_COMPANY_COINS` & `ELASTIC_COIN_EVENTS`):**
+   - Current company coin balance and package validity are verified against `local_company_coins`.
+   - Event costs (e.g. forward resume coin fee) are evaluated against `local_coin_events` in < 2ms without querying `company_coins` or `coin_packages` in MySQL.
+3. **Email Delivery History & Quotas (`ELASTIC_EMAIL_COUNT`):**
+   - Historical forward activity, daily limits, and recipient delivery counts are queried against `local_email_count`.
+4. **Internal Team & Client Directories (`ELASTIC_USERS_LIST` & `ELASTIC_CLIENT_LIST`):**
+   - Populates the secondary recipient selection drawer from cached Elasticsearch user and client indices.
+5. **Transactional MySQL Role:**
+   - Reserved strictly for atomic state commits via `DB::transaction` when `SendForwardResumeBatchMailJob` commits coin deductions and forward records upon send.
 
 ---
 

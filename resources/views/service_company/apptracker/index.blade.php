@@ -1218,6 +1218,9 @@
     <!-- end::Job Status Drawer -->
 @endsection
 @push('footer-script')
+    @if(config('feature.fwd_resume_v4_enabled', true))
+        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
+    @endif
     {{-- AppTracker resilience layer: connection monitor, visibility handler, resilient fetch --}}
     <script src="{{ asset('js/apptracker/_conn.js') }}{{ TM_VERSION }}"></script>
     <script src="{{ asset('js/apptracker/_visibility.js') }}{{ TM_VERSION }}"></script>
@@ -1928,6 +1931,24 @@
                 });
                 return;
             }
+
+            @if(config('feature.fwd_resume_v4_enabled', true))
+            if (window.ForwardResumeManager) {
+                window.ForwardResumeManager.initRoutes({
+                    shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}",
+                    engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}",
+                    data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
+                    recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
+                    intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",
+                    send: "{{ route('service_company.cvtracker.test_fwd_resume_send') }}",
+                    quickUpload: "{{ route('service_company.cvtracker.quick_upload_resume') }}",
+                    emailTemplate: "{{ url('service_company/cvtracker/email_template') }}",
+                    legacyFallback: "{{ url('service_company/cvtracker/test_fwd_resume') }}"
+                });
+                window.ForwardResumeManager.open(arr, jobIdArr, {});
+                return;
+            }
+            @endif
 
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer_aptk');
             if (drawerEl && typeof KTDrawer !== 'undefined') {

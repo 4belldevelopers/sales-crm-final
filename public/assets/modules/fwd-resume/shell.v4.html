@@ -1,0 +1,551 @@
+<style>
+/* mm-* form design — V4.1 Client-First Forward Resume Drawer */
+.mm-wrap { font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; display: flex; flex-direction: column; height: 100%; min-height: 100%; }
+#test_form1 { display: flex; flex-direction: column; height: 100%; flex: 1; min-height: 0; }
+.mm-form-body { flex: 1; overflow-y: auto; }
+.mm-row { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; gap: 16px; }
+.mm-label-col { width: 150px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-top: 9px; font-size: 12.5px; font-weight: 600; color: #374151; }
+.mm-label-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mm-label-icon svg { width: 14px; height: 14px; }
+.mm-ic-blue   { background: #EFF6FF; color: #2563EB; }
+.mm-ic-green  { background: #DCFCE7; color: #16A34A; }
+.mm-ic-purple { background: #F5F3FF; color: #7C3AED; }
+.mm-ic-teal   { background: #F0FDF4; color: #0D9488; }
+.mm-ic-orange { background: #FFF7ED; color: #EA580C; }
+.mm-req { color: #EF4444; margin-left: 1px; }
+.mm-field-col { flex: 1; min-width: 0; position: relative; }
+.mm-input { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB; outline: none; transition: border-color 0.15s; }
+.mm-input:focus { border-color: #93C5FD; background: #fff; }
+.mm-input[readonly] { color: #6B7280; cursor: default; background: #F3F4F6; }
+.mm-hint { font-size: 11.5px; color: #9CA3AF; margin-top: 5px; line-height: 1.4; }
+.mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
+.mm-select:focus { border-color: #93C5FD; background-color: #fff; }
+
+.mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
+.mm-editor-wrap .cke { width: 100% !important; border: none !important; }
+#test_editor1 { width: 100% !important; min-height: 250px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
+.mm-row-body { align-items: flex-start; }
+.mm-add-email-btn { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #2563EB; background: none; border: none; cursor: pointer; padding: 9px 14px; z-index: 10; }
+.mm-add-email-btn:hover { color: #1d4ed8; }
+.mm-input-with-btn { padding-right: 110px; }
+
+/* Tag / Chip input container for To and CC email addresses */
+.mm-tag-box {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 5px 105px 5px 8px;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  background: #F9FAFB;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  cursor: text;
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+.mm-tag-box.is-focused {
+  border-color: #93C5FD;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+}
+.mm-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.mm-email-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 1.35;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.mm-email-tag.is-invalid {
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
+}
+.mm-email-tag-text {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mm-email-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: #6B7280;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s;
+  margin-left: 2px;
+}
+.mm-email-tag-remove:hover {
+  background: #DBEAFE;
+  color: #1E3A8A;
+}
+.mm-email-tag.is-invalid .mm-email-tag-remove:hover {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.mm-tag-input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px 6px !important;
+  font-size: 13px !important;
+  font-family: 'Poppins', sans-serif !important;
+  color: #374151 !important;
+  min-width: 140px;
+  flex: 1;
+}
+
+/* Header & Top Bar */
+.mm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
+  gap: 16px;
+}
+.mm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.mm-header-icon-box {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 9px;
+  background: #EEF2FF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mm-header-text { min-width: 0; }
+.mm-header-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+.mm-header-subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+  line-height: 1.3;
+}
+.mm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mm-header-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 7px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-cancel:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+.mm-header-btn-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border-radius: 7px;
+  border: none;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mm-header-btn-send:hover {
+  background: #1D4ED8;
+}
+.mm-header-btn-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Recipient Drawer Styles */
+.rcp-container { display: flex; flex-direction: column; height: 100%; font-family: 'Poppins', sans-serif; }
+.rcp-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; }
+.rcp-header-title { font-size: 16px; font-weight: 700; color: #111827; margin: 0; }
+.rcp-header-subtitle { font-size: 12px; color: #6B7280; margin: 2px 0 0; }
+.rcp-close-btn { background: none; border: none; cursor: pointer; color: #9CA3AF; padding: 4px; border-radius: 6px; }
+.rcp-close-btn:hover { color: #374151; background: #F3F4F6; }
+.rcp-tabs-wrap { display: flex; gap: 10px; padding: 12px 20px; background: #F9FAFB; border-bottom: 1px solid #E5E7EB; flex-shrink: 0; }
+.rcp-tab-card { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.rcp-tab-card.active { border-color: #2563EB; background: #EFF6FF; }
+.rcp-tab-icon { color: #6B7280; }
+.rcp-tab-card.active .rcp-tab-icon { color: #2563EB; }
+.rcp-tab-title { font-size: 13px; font-weight: 600; color: #111827; }
+.rcp-tab-card.active .rcp-tab-title { color: #1D4ED8; }
+.rcp-tab-sub { font-size: 11px; color: #6B7280; }
+.rcp-search-wrap { padding: 12px 20px; border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0; display: flex; gap: 8px; }
+.rcp-search-box { flex: 1; position: relative; }
+.rcp-search-box input { width: 100%; padding: 8px 30px 8px 34px; font-size: 12.5px; border: 1px solid #E5E7EB; border-radius: 7px; background: #F9FAFB; outline: none; }
+.rcp-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9CA3AF; display: flex; align-items: center; }
+.rcp-body-list { flex: 1; overflow-y: auto; padding: 10px 20px; }
+.rcp-contact-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #F3F4F6; gap: 12px; transition: background 0.1s; border-radius: 8px; }
+.rcp-contact-item:hover { background: #F9FAFB; }
+.rcp-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.rcp-info { margin-left: 10px; min-width: 0; flex: 1; }
+.rcp-name { font-size: 13px; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-email { font-size: 11.5px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcp-role { font-size: 11px; color: #9CA3AF; }
+.rcp-toggle-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #DBEAFE; background: #EFF6FF; color: #2563EB; transition: all 0.15s; }
+.rcp-toggle-btn.is-added { border-color: #DCFCE7; background: #DCFCE7; color: #16A34A; }
+.rcp-toggle-btn:hover { opacity: 0.85; }
+.rcp-footer { padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #fff; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.rcp-btn-cancel { padding: 8px 16px; border: 1px solid #E5E7EB; background: #fff; border-radius: 7px; font-size: 13px; font-weight: 600; color: #374151; cursor: pointer; }
+.rcp-btn-done { padding: 8px 20px; border: none; background: #2563EB; border-radius: 7px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; }
+</style>
+
+<div class="mm-wrap">
+<form id="test_form1">
+  {{-- Top Action Bar --}}
+  <div class="mm-header">
+    <div class="mm-header-left">
+      <div class="mm-header-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+        </svg>
+      </div>
+      <div class="mm-header-text">
+        <h3 class="mm-header-title">Forward Candidate Resumes</h3>
+        <p class="mm-header-subtitle">Send selected candidate profiles to a client or hiring stakeholder.</p>
+      </div>
+    </div>
+    <div class="mm-header-actions">
+      <button type="button" class="mm-header-btn-cancel" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.close();">Close</button>
+      <button type="button" class="mm-header-btn-send" name="btnTestSubmit" id="btnTestSubmit" value="btnTestSubmit" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.submit(event);">
+        <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send Email
+        </span>
+        <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
+          <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
+          <span id="test_fwd_btn_progress_text">Sending...</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mm-form-body">
+    {{-- From + Reply To --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        </span>
+        From
+      </div>
+      <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
+        <select class="mm-select" name="from_email" id="test_from_email" style="flex:1;min-width:0;">
+          <option value="notify@jeroworks.com">notify@jeroworks.com</option>
+        </select>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;font-size:12.5px;font-weight:600;color:#374151;">
+          <span class="mm-label-icon mm-ic-purple" style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          </span>
+          Reply To
+        </div>
+        <select class="mm-select" name="reply_to_email" id="test_reply_to_email" style="flex:1;min-width:0;">
+          <option value="">Default Recruiter Email</option>
+        </select>
+      </div>
+    </div>
+
+    {{-- To Email --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </span>
+        To <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-tag-box" id="test_to_email_tag_box" onclick="$('#test_to_email_input').focus();">
+          <div class="mm-tag-list" id="test_to_email_tag_list"></div>
+          <input type="text" id="test_to_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="off" />
+          <button type="button" class="mm-add-email-btn" id="test_btn_add_to_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('to');">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Recipient
+          </button>
+        </div>
+        <input type="hidden" name="to_email" id="test_to_email" value="" />
+        <div class="mm-hint">Press Enter or comma to add multiple email addresses.</div>
+      </div>
+    </div>
+
+    {{-- CC Email --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        CC
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-tag-box" id="test_cc_email_tag_box" onclick="$('#test_cc_email_input').focus();">
+          <div class="mm-tag-list" id="test_cc_email_tag_list"></div>
+          <input type="text" id="test_cc_email_input" class="mm-tag-input" placeholder="Type email and press Enter..." autocomplete="off" />
+          <button type="button" class="mm-add-email-btn" id="test_btn_add_cc_email" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.openRecipientDrawer('cc');">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Recipient
+          </button>
+        </div>
+        <input type="hidden" name="cc_email" id="test_cc_email" value="" />
+        <div class="mm-hint">Optional. Carbon-copy team members or client contacts.</div>
+      </div>
+    </div>
+
+    {{-- Subject --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+        </span>
+        Subject <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <input type="text" class="mm-input" name="subject" id="test_subject" value="" placeholder="e.g., Shortlisted Candidate Profiles for Your Review" />
+      </div>
+    </div>
+
+    {{-- Resume Format Selection --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        Resume Format <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <select name="attached_cv_format" id="test_fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.ForwardResumeManager) window.ForwardResumeManager.onFormatChange(this.value);">
+          <option value="0">-- Select Resume Format (Required) --</option>
+          <optgroup label="Original Document">
+            <option value="1">Option 1: Original Candidate Resume (As Uploaded)</option>
+          </optgroup>
+          <optgroup label="Executive Reports">
+            <option value="5">Option 5: Executive Pre-Screened Candidate Dossier (A4)</option>
+          </optgroup>
+          <optgroup label="Branded ATS Formats">
+            <option value="41">Option 41: Candidate Resume with Company Header (PDF)</option>
+            <option value="42">Option 42: Company Header + Highlighted Skill Keywords (PDF)</option>
+            <option value="43">Option 43: Highlight Skill Keywords Only (PDF)</option>
+            <option value="44">Option 44: Hide Contact Details + Company Header (PDF)</option>
+            <option value="45">Option 45: Hide Contact Details Only (PDF)</option>
+            <option value="46">Option 46: Hide Contacts + Highlight Keywords + Company Header (PDF)</option>
+            <option value="47">Option 47: Hide Contacts + Highlight Keywords (PDF)</option>
+            <option value="48">Option 48: Hide Current Company Name + Company Header (PDF)</option>
+            <option value="49">Option 49: Redacted Profile (Hide Contacts, Company & Details) (PDF)</option>
+            <option value="50">Option 50: Pre-Screened Dossier + Candidate Resume (Merged)</option>
+            <option value="51">Option 51: Pre-Screened Dossier + Highlighted Keywords Resume</option>
+            <option value="52">Option 52: Unbranded Pre-Screened Dossier + Redacted Resume</option>
+            <option value="53">Option 53: Redacted Dossier + Anonymized Highlighted Resume</option>
+          </optgroup>
+        </select>
+        <input type="hidden" name="attached_cv" id="test_attached_cv" value="1" />
+
+        {{-- Dynamic Resume Preview Card & Candidate Roster Container --}}
+        <div id="test_fwd_format_preview_card" style="display:none;margin-top:12px;">
+          <div style="padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <div id="test_fwd_preview_format_icon" style="width:36px;height:36px;border-radius:8px;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+                  📄
+                </div>
+                <div style="min-width:0;">
+                  <div id="test_fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    Select Resume Format
+                  </div>
+                  <div id="test_fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
+                    Choose a resume format above to attach candidate resumes.
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <span id="test_fwd_batch_count_badge" style="font-size:11px;font-weight:600;color:#15803D;background:#DCFCE7;padding:3px 9px;border-radius:12px;white-space:nowrap;">
+                  📎 0 / 5 Max Resumes
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div id="test_fwd_missing_resume_banner" style="display:none;margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;align-items:center;gap:10px;">
+            <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
+            <div id="test_fwd_missing_resume_text" style="font-size:12px;color:#92400E;line-height:1.4;"></div>
+          </div>
+
+          <!-- Multi-Profile Attached Resumes Roster -->
+          <div id="test_fwd_candidate_roster" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+
+          <!-- Live Compilation Progress Bar Container -->
+          <div id="test_fwd_compile_progress_container" style="display:none;margin-top:10px;padding:10px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span id="test_fwd_compile_spinner" class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;color:#0D9488;"></span>
+                <span id="test_fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#134E4A;">Preparing custom format in browser memory...</span>
+              </div>
+              <span id="test_fwd_compile_pct_badge" style="font-size:11px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 7px;border-radius:10px;border:1px solid #99F6E4;">
+                0%
+              </span>
+            </div>
+            <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
+              <div id="test_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
+            </div>
+            <div id="test_fwd_compile_hint" style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
+              <span id="test_fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
+              <span id="test_fwd_compile_count">0 / 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Email Template Selector --}}
+    <div class="mm-row">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </span>
+        Template
+      </div>
+      <div class="mm-field-col">
+        <select class="mm-select" id="test_fwd_template_select" onchange="if(window.ForwardResumeManager) window.ForwardResumeManager.onTemplateChange(this.value);">
+          <option value="">-- Select Email Template (Optional) --</option>
+        </select>
+      </div>
+    </div>
+
+    {{-- Body --}}
+    <div class="mm-row mm-row-body">
+      <div class="mm-label-col">
+        <span class="mm-label-icon mm-ic-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </span>
+        Email Body <span class="mm-req">*</span>
+      </div>
+      <div class="mm-field-col">
+        <div class="mm-editor-wrap">
+          <textarea id="test_editor1" name="editor1" rows="10"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</form>
+</div>
+
+{{-- Enterprise Add Email Recipient Drawer --}}
+<div id="kt_test_recipient_drawer_toggle" style="display:none;"></div>
+<div id="kt_test_recipient_drawer" class="bg-white shadow" data-kt-drawer="true" data-kt-drawer-name="recipient-drawer-test" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="{default:'100%', 'sm': '480px', 'lg': '490px'}" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_test_recipient_drawer_toggle" data-kt-drawer-close="#kt_test_recipient_drawer_close">
+  <div class="rcp-container">
+    <div class="rcp-header">
+      <div class="rcp-header-left">
+        <h3 class="rcp-header-title">Add Email Recipient</h3>
+        <p class="rcp-header-subtitle">Choose a contact from your internal team or client company.</p>
+      </div>
+      <button type="button" class="rcp-close-btn" id="kt_test_recipient_drawer_close" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();" title="Close drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="rcp-tabs-wrap">
+      <div class="rcp-tab-card active" id="test_rcp_tab_internal" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.switchRecipientTab('internal');">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Internal Team</div>
+          <div class="rcp-tab-sub" id="test_rcp_internal_count">Active members</div>
+        </div>
+      </div>
+      <div class="rcp-tab-card" id="test_rcp_tab_client" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.switchRecipientTab('client');">
+        <div class="rcp-tab-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M8 10h.01"></path><path d="M16 10h.01"></path><path d="M8 14h.01"></path><path d="M16 14h.01"></path></svg>
+        </div>
+        <div class="rcp-tab-info">
+          <div class="rcp-tab-title">Client Contacts</div>
+          <div class="rcp-tab-sub" id="test_rcp_client_count">Available contacts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rcp-search-wrap">
+      <div class="rcp-search-box">
+        <span class="rcp-search-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="test_rcp_search_input" placeholder="Search by name, email, or role..." onkeyup="if(window.ForwardResumeManager) window.ForwardResumeManager.filterRecipients(this.value);" />
+      </div>
+    </div>
+
+    <div class="rcp-body-list">
+      <div id="test_rcp_section_internal">
+        <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">Loading internal team contacts...</div>
+      </div>
+      <div id="test_rcp_section_client" style="display:none;">
+        <div style="text-align:center;padding:36px 20px;color:#9CA3AF;font-size:13px;">Loading client contacts...</div>
+      </div>
+    </div>
+
+    <div class="rcp-footer">
+      <span id="test_rcp_footer_count_text" style="font-size:12px;color:#6B7280;">0 recipients selected</span>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="rcp-btn-cancel" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();">Close</button>
+        <button type="button" class="rcp-btn-done" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.closeRecipientDrawer();">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
