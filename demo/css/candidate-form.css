@@ -5445,11 +5445,14 @@ select option,
     box-shadow: 0 1px 3px rgba(26, 58, 113, .03);
 }
 .talent-stage-card .talent-stage-option--pool { --stage-color: #2463e5; --stage-soft: #e8f2ff; }
-.talent-stage-card .talent-stage-option--bench { --stage-color: #2463e5; --stage-soft: #edf4ff; }
+.talent-stage-card .talent-stage-option--bench { --stage-color: #079b6e; --stage-soft: #e8faf2; }
 .talent-stage-card .talent-stage-option--hold { --stage-color: #e7a400; --stage-soft: #fff6dc; }
 .talent-stage-card .talent-stage-option--placed { --stage-color: #1768dd; --stage-soft: #e7f1ff; }
 .talent-stage-card .talent-stage-option--exited { --stage-color: #e62c4f; --stage-soft: #ffebf0; }
-.talent-stage-card .talent-stage-option.is-selected { border-color: var(--stage-color); background: #fff; box-shadow: inset 0 0 0 1px var(--stage-color); }
+.talent-stage-card .talent-stage-option.is-selected { border-color: var(--stage-color); background: var(--stage-soft); box-shadow: inset 0 0 0 1px var(--stage-color); }
+.talent-stage-heading-icon i { color: #fff !important; }
+.talent-topbar-primary.talent-stage-action--hold,
+.talent-topbar-primary.talent-stage-action--hold i { color: #fff !important; }
 .talent-stage-card .talent-stage-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 7px; }
 .talent-stage-card .talent-stage-option--bench .talent-stage-icon { color: #079b6e; background: #def9ee; }
 .talent-stage-card .talent-stage-copy { padding-right: 10px; }
@@ -5497,6 +5500,84 @@ select option,
 .aw-card .aw-work-option .aw-work-copy { flex: 1 1 auto; }
 .aw-card .aw-work-option .aw-radio,
 .aw-card .aw-work-option > i { flex-shrink: 0; }
+
+/* Keep the native skill values while giving their Select2 menus a compact, scannable surface. */
+.se-card .sk .se-field--select {
+    height: 44px;
+    border-color: #cdd8eb;
+    background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.se-card .sk .se-field--select:hover { border-color: #7e91c2; }
+.se-card .sk .se-field--select:focus-within {
+    border-color: #4c57ef;
+    box-shadow: 0 0 0 3px rgba(76, 87, 239, .12);
+}
+.se-card .sk .se-field--select > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 42px;
+    flex: 0 0 40px;
+    border-right: 1px solid #e6ebf5;
+    color: #5367a2;
+    background: #f5f7ff;
+}
+.se-card .sk .se-field--select > select:not(.select2-hidden-accessible) {
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 24px 0 11px !important;
+    appearance: none;
+    background: transparent !important;
+}
+.se-field--select:not(:has(.select2-container))::after {
+    content: '\f078';
+    position: absolute;
+    right: 10px;
+    color: #607092;
+    font-family: 'Jero Font Awesome 6 Free', 'Font Awesome 6 Free', FontAwesome;
+    font-size: 11px;
+    font-weight: 900;
+    pointer-events: none;
+}
+.se-card .sk .se-field--select .select2-container {
+    flex: 1 1 auto;
+    width: auto !important;
+    min-width: 0;
+}
+.se-card .sk .se-field--select .select2-selection--single {
+    height: 42px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.se-card .sk .se-field--select .select2-selection__rendered {
+    padding: 0 30px 0 11px;
+    color: #172449;
+    font-size: 12px;
+    line-height: 42px;
+}
+.se-card .sk .se-field--select .select2-selection__arrow { top: 8px; right: 7px; }
+.se-enterprise-dropdown {
+    overflow: hidden;
+    border: 1px solid #cdd8eb !important;
+    border-radius: 6px !important;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(23, 36, 73, .16);
+}
+.se-enterprise-dropdown .select2-search--dropdown { padding: 8px; }
+.se-enterprise-dropdown .select2-search__field {
+    min-height: 34px;
+    border: 1px solid #cdd8eb !important;
+    border-radius: 5px;
+    color: #172449;
+    font-size: 12px;
+}
+.se-enterprise-dropdown .select2-results__options { max-height: 240px !important; }
+.se-enterprise-dropdown .select2-results__option { padding: 8px 12px; font-size: 12px; }
+.se-enterprise-dropdown .select2-results__option--highlighted[aria-selected] { background: #eef0ff !important; color: #2436a0 !important; }
 
 /* Rate-panel icons use a light surface, so their glyphs follow the panel accent. */
 .br-card .br-option-icon i,
