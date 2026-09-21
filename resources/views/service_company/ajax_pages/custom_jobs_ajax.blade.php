@@ -482,6 +482,7 @@
 
                                 
                             }
+                            $applicationCounter = $applicationCounter + $inreview_counter;
                             $applicationCounter = number_format($applicationCounter);
                             $inreview_counter = number_format($inreview_counter);
 

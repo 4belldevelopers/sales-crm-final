@@ -154,25 +154,27 @@
             <td>
                 @php
                     $client_title_name = $clientCompanyMap[$row->job_id] ?? ($row->client_name ?? '');
-                    $client_name = ucwords(mb_substr($client_title_name, 0, 15));
 
                     // Job type / recommendation
                     $recommendation_text = __('messages.internal_tag');
                     $jobTypeLabel = 'Internal';
                     $jobTypeClass = 'it-job-type-internal';
+                    $displayCompName = $client_title_name;
+
                     if ($row->recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
-                        // INTENT: Resolve Parent/Main Company Name for Direct Client jobs. Tenancy: scoped to row company_name/client_name.
-                        $parentCompName = !empty($row->company_name) ? $row->company_name : ($client_title_name ?? '');
+                        // Direct Client job: show parent company name, not client name
+                        $displayCompName = !empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : ($client_title_name ?? ''));
                         $recommendation_text = __('messages.clinet_tag');
                         $jobTypeLabel = 'Direct Client';
                         $jobTypeClass = 'it-job-type-direct';
                     }
+                    $client_name = ucwords(mb_substr($displayCompName, 0, 18));
                 @endphp
                 <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
                     {{ ucwords(mb_substr($row->job_title, 0, 18)) }}
                 </div>
-                <div class="it-job-company" data-toggle="tooltip" title="{{ ucwords($client_title_name) }}">
-                    {{ ucwords(mb_substr($client_name, 0, 14)) }}
+                <div class="it-job-company" data-toggle="tooltip" title="{{ ucwords($displayCompName) }}">
+                    {{ $client_name }}
                 </div>
                 <div class="it-job-tags">
                     <span class="it-job-type {{ $jobTypeClass }}">{{ $jobTypeLabel }}</span>
@@ -305,13 +307,17 @@
                     } else {
                         $rowpostedby = $row->posted_by;
                     }
+                    if (empty($rowpostedby)) {
+                        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+                    }
+                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->from_company_name) ? $row->from_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->company_name) ? $row->company_name : ''))));
                 @endphp
                 <div class="it-person-cell">
                     <div class="it-person-name" data-toggle="tooltip" title="{{ @$rowpostedby }}">
-                        {{ ucwords(mb_substr($rowpostedby, 0, 10)) }}
+                        {{ ucwords(mb_substr($rowpostedby, 0, 15)) }}
                     </div>
-                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$row->uc_company_name }}">
-                        {{ mb_substr(@$row->uc_company_name, 0, 10) }}
+                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$post_company_name }}">
+                        {{ ucwords(mb_substr(@$post_company_name, 0, 15)) }}
                     </div>
                 </div>
             </td>

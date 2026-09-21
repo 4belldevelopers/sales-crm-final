@@ -1258,6 +1258,7 @@ $end_date   =	date('d-M-Y', $date);
     $from_company_id = $relationget->from_company_id ?? null;
     $to_company_id = $relationget->to_company_id ?? null;
     $applicationCounter = GeneralMethod::statusCountAll($job->id);
+    $inreview_counter = GeneralMethod::statusCountAllInRe($job->id);
     $interview_counter = GeneralMethod::statusCountInterview($companyidcount,$job->id);
     $souCount = GeneralMethod::statusCount($companyidcount, $job->id,1);
     $evaCount = GeneralMethod::statusCount($companyidcount, $job->id,3);
@@ -1266,12 +1267,14 @@ $end_date   =	date('d-M-Y', $date);
     $recommendation_id = $to_company_id;
     if ($recommendation_id > 0 && ($job->comId ?? $job->company_id ?? null) != auth()->user()->company_id) {
         $applicationCounter = GeneralMethod::statusCountThirdpartyAll($to_company_id,$job->id);
+        $inreview_counter = GeneralMethod::statusCountAllThirdpartyInRe($to_company_id,$job->id);
         $interview_counter = GeneralMethod::statusCountThirdpartyInterview(auth()->user()->company_id, $job->id);
         $souCount = GeneralMethod::statusCountThirdparty($to_company_id, $job->id,1);
         $evaCount = GeneralMethod::statusCountThirdparty($to_company_id,$job->id,3);
         $offerCount = GeneralMethod::statusCountThirdparty($to_company_id, $job->id,5);
         $joindCount = GeneralMethod::statusCountThirdparty($to_company_id, $job->id,6);
     }
+    $applicationCounter = $applicationCounter + $inreview_counter;
     $applicationCounter = number_format($applicationCounter);
     $hiringManager = $hiringManagerdesignation = $hiringManagerCompany = $contact_person_number = $contact_person_email = '--------';
     $hrManager = $hrManagerdesignation = $hrcontact_person_number = $hrcontact_person_email = '';

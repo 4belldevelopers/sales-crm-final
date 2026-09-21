@@ -171,7 +171,7 @@
         @php
             // KPI counts for the direct-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
             $cur_company_id = auth()->user()->company_id;
-            $detail_from = @$directClientDetail->from_company_id ?: @$directClientDetail->company_id;
+            $detail_from = @$directClientDetail->client_id ?: (@$directClientDetail->from_company_id ?: @$directClientDetail->company_id);
             $kpiCacheKey = "ats:direct_client_kpi:{$cur_company_id}:{$detail_from}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($detail_from, $cur_company_id) {
                 $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
@@ -254,7 +254,7 @@
             </div>
             <div class="kpi-box">
               <div class="kpi-header"><div class="kpi-icon-box kpi-icon-purple"><i class="fas fa-people-arrows"></i></div><span class="kpi-label">Interviews Scheduled</span></div>
-              <div class="kpi-number">{{ $kpiInterviews }}</div>
+              <div class="kpi-number" id="kpiInterviewsScheduledCount">{{ $kpiInterviews }}</div>
             </div>
             <div class="kpi-box">
               <div class="kpi-header"><div class="kpi-icon-box kpi-icon-orange"><i class="fas fa-gift"></i></div><span class="kpi-label">Offers Generated</span></div>
@@ -365,7 +365,7 @@
                             <a class="nav-link" data-toggle="tab" href="#interview_tracker">
                                 <span class="nav-text">
                                     <i class="fas fa-calendar-alt" style="font-size:11px;opacity:.7;"></i>Interview Tracker
-                                    @if($kpiInterviews > 0)<span class="cd-tab-badge">{{ $kpiInterviews }}</span>@endif
+                                    <span class="cd-tab-badge" id="tabBadgeInterviewTracker" @if($kpiInterviews <= 0) style="display:none;" @endif>{{ $kpiInterviews }}</span>
                                 </span>
                             </a>
                         </li>
@@ -2269,7 +2269,7 @@
 
     function directfetchCandidatesInverViewTracker(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        var clientid = '{{ $directClientDetail->client_id ?? $directClientDetail->from_company_id ?? $directClientDetail->company_id }}';
         return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-interview-tracker') }}?page=${page}`,
             type: 'GET',
@@ -2281,6 +2281,14 @@
                 $('.page-loader').css('display', 'none');
                 $('#candidatetListinterviewtracker').html(response.html);
                 $('#paginationcandidateinterviewtracker').html(response.pagination);
+                if (response.pagination && typeof response.pagination.total !== 'undefined') {
+                    $('#kpiInterviewsScheduledCount').text(response.pagination.total);
+                    var $badge = $('#tabBadgeInterviewTracker');
+                    if ($badge.length) {
+                        $badge.text(response.pagination.total);
+                        if (response.pagination.total > 0) { $badge.show(); } else { $badge.hide(); }
+                    }
+                }
             }
         });
     }

@@ -105,7 +105,7 @@ class SeedCountersFromLive extends Command
             WHEN 6 THEN 'joined'
             WHEN 7 THEN 'rejected'
             WHEN 9 THEN 'rejected'
-            ELSE 'sourcing'
+            ELSE NULL
         END";
 
         // Aggregate by job_id only — job_applications.company_id can be NULL for

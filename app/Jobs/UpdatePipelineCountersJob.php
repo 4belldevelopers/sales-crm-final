@@ -29,6 +29,10 @@ class UpdatePipelineCountersJob implements ShouldQueue
         }
 
         $stage = $this->stageFromMasterStatus((int) $app->master_status_id);
+        if ($stage === null) {
+            return;
+        }
+
         $jobId = $app->job_id;
 
         try {
@@ -52,7 +56,7 @@ class UpdatePipelineCountersJob implements ShouldQueue
         );
     }
 
-    private function stageFromMasterStatus(int $masterStatusId): string
+    private function stageFromMasterStatus(int $masterStatusId): ?string
     {
         return match ($masterStatusId) {
             1       => 'sourcing',
@@ -62,7 +66,7 @@ class UpdatePipelineCountersJob implements ShouldQueue
             5       => 'offered',
             6       => 'joined',
             7, 9    => 'rejected',
-            default => 'sourcing',
+            default => null,
         };
     }
 }

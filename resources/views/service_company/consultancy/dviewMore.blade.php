@@ -1760,7 +1760,7 @@
                 </div>
                 <span class="kpi-label">Active Jobs</span>
               </div>
-              <div class="kpi-number">{{ $Active }}</div>
+              <div class="kpi-number" id="kpiActiveJobs">{{ $Active }}</div>
             </div>
             <div class="kpi-box">
               <div class="kpi-header">
@@ -1769,7 +1769,7 @@
                 </div>
                 <span class="kpi-label">Candidates Submitted</span>
               </div>
-              <div class="kpi-number">{{ $all_candidates }}</div>
+              <div class="kpi-number" id="kpiCandidatesSubmitted">{{ $all_candidates }}</div>
             </div>
             <div class="kpi-box">
               <div class="kpi-header">
@@ -1778,7 +1778,7 @@
                 </div>
                 <span class="kpi-label">Interviews Scheduled</span>
               </div>
-              <div class="kpi-number">{{ $all_interview }}</div>
+              <div class="kpi-number" id="kpiInterviewsScheduled">{{ $all_interview }}</div>
             </div>
             <div class="kpi-box">
               <div class="kpi-header">
@@ -1787,7 +1787,7 @@
                 </div>
                 <span class="kpi-label">Offers Generated</span>
               </div>
-              <div class="kpi-number">{{ $offers }}</div>
+              <div class="kpi-number" id="kpiOffersGenerated">{{ $offers }}</div>
             </div>
             <div class="kpi-box">
               <div class="kpi-header">
@@ -1796,7 +1796,7 @@
                 </div>
                 <span class="kpi-label">Successful Joins</span>
               </div>
-              <div class="kpi-number">{{ $Joined }}</div>
+              <div class="kpi-number" id="kpiSuccessfulJoins">{{ $Joined }}</div>
             </div>
           </div>
           <div class="tabs-bar">
@@ -3020,7 +3020,10 @@
                     $('.loadingMessagecandidatetList').css({ display: 'none' });
                     $('#candidatetList').html(response.html);
                     $('#paginationcandidate').html(response.pagination);
-                    if (response.total !== undefined) $('#tabCountCandidates').text(response.total);
+                    if (response.total !== undefined) {
+                        $('#tabCountCandidates').text(response.total);
+                        $('#kpiCandidatesSubmitted').text(response.total);
+                    }
                     AgencyDetailTabManager.initializedTabs['candidates'] = true;
                 },
                 error: function(xhr, status) {
@@ -3044,7 +3047,10 @@
                     $('.loadingMessagecandidatetListJoin').css({ display: 'none' });
                     $('#candidatetListJoin').html(response.html);
                     $('#paginationcandidatejoin').html(response.pagination);
-                    if (response.total !== undefined) $('#tabCountJoinings').text(response.total);
+                    if (response.total !== undefined) {
+                        $('#tabCountJoinings').text(response.total);
+                        $('#kpiSuccessfulJoins').text(response.total);
+                    }
                     AgencyDetailTabManager.initializedTabs['joinings'] = true;
                 },
                 error: function(xhr, status) {
@@ -3068,7 +3074,10 @@
                     $('.loadingMessagecandidatetListinterviewtracker').css({ display: 'none' });
                     $('#candidatetListinterviewtracker').html(response.html);
                     $('#paginationcandidateinterviewtracker').html(response.pagination);
-                    if (response.total !== undefined) $('#tabCountInterviews').text(response.total);
+                    if (response.total !== undefined) {
+                        $('#tabCountInterviews').text(response.total);
+                        $('#kpiInterviewsScheduled').text(response.total);
+                    }
                     AgencyDetailTabManager.initializedTabs['interviews'] = true;
                 },
                 error: function(xhr, status) {
@@ -3096,7 +3105,10 @@
                     $('.loadingMessagestaffingpartnerjob').css({ display: 'none' });
                     $('#staffingpartnerjob').html(response.html);
                     $('#paginationstaffingpartnerjob').html(response.pagination);
-                    if (response.total !== undefined) $('#tabCountJobs').text(response.total);
+                    if (response.total !== undefined) {
+                        $('#tabCountJobs').text(response.total);
+                        $('#kpiActiveJobs').text(response.total);
+                    }
                     AgencyDetailTabManager.initializedTabs['jobs'] = true;
                 },
                 error: function(xhr, status) {
