@@ -1150,37 +1150,59 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function directclientCandidateList(Request $request)
     {
-
-        $from_company_id = $request->clientid;
+        $from_company_id = (int) $request->clientid;
         $to_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
-        $searchQuery = $request->input('q');
+        $searchQuery = $request->input('search', $request->input('q'));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
+
+        $must = [
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['from_company_id' => $from_company_id]],
+                        ['term' => ['company_id' => $from_company_id]],
+                        ['term' => ['client_id' => $from_company_id]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['ClientComID' => $to_company_id]],
+                        ['term' => ['to_company_id' => $to_company_id]],
+                        ['term' => ['company_id' => $to_company_id]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+        ];
+
+        $mustNot = [
+            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+        ];
+
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['current_designation' => $searchQuery]],
+                        ['match_phrase_prefix' => ['email' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
         $boolQuery = [
             'bool' => [
-                'must' => [
-                    // Second condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['from_company_id' => $from_company_id]],
-                                ['term' => ['ClientComID' => $to_company_id]],
-                                ['term' => ['final_status' => 1]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'filter' => [], // We'll add all filters here
+                'must' => $must,
+                'must_not' => $mustNot,
             ],
         ];
 
@@ -1190,10 +1212,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
+                'sort' => [
+                    ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ],
                 'query' => $boolQuery,
             ],
         ];
+
         if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $total = 0;
             $data = [];
@@ -1216,67 +1241,73 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'html' => view('service_company.ajax_pages.custom_client_candidates', compact('data', 'company_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
-        // dd($pagination);
     }
 
     public function directclientCandidateJoinList(Request $request)
     {
-        // $candidates = JobApplication::query();
-        $from_company_id = $request->clientid;
+        $from_company_id = (int) $request->clientid;
         $to_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
-        $searchQuery = $request->input('q');
+        $searchQuery = $request->input('search', $request->input('q'));
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
+
+        $must = [
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['from_company_id' => $from_company_id]],
+                        ['term' => ['company_id' => $from_company_id]],
+                        ['term' => ['client_id' => $from_company_id]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['ClientComID' => $to_company_id]],
+                        ['term' => ['to_company_id' => $to_company_id]],
+                        ['term' => ['company_id' => $to_company_id]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+            [
+                'bool' => [
+                    'should' => [
+                        ['term' => ['job_master_status_id' => 6]],
+                        ['term' => ['job_master_status_id' => '6']],
+                        ['term' => ['master_status_id' => 6]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ],
+        ];
+
+        $mustNot = [
+            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
+        ];
+
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['current_designation' => $searchQuery]],
+                        ['match_phrase_prefix' => ['email' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
         $boolQuery = [
             'bool' => [
-                'must' => [
-                    // First condition
-                    // [
-                    // 	'bool' => [
-                    // 		'must' => array_merge([
-                    // 			['term' => ['from_company_id' => $from_company_id]],
-                    // 			['term' => ['to_company_id' => $to_company_id]],
-                    // 			['term' => ['ClientComID' => $to_company_id]],
-                    // 			['term' => ['job_master_status_id' => 6]],
-                    // 		])
-                    // 	]
-                    // ],
-                    // Second condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['from_company_id' => $from_company_id]],
-                                ['term' => ['ClientComID' => $to_company_id]],
-                                ['term' => ['job_master_status_id' => 6]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
-                            ]),
-                        ],
-                    ],
-                    // Third condition
-                    // [
-                    // 	'bool' => [
-                    // 		'must' => array_merge([
-                    // 			['term' => ['from_company_id' => $from_company_id]],
-                    // 			['term' => ['to_company_id' => $to_company_id]],
-                    // 			['term' => ['ClientComID' => $to_company_id]],
-                    // 			['term' => ['job_master_status_id' => 6]],
-                    // 			['range' => ['job_id' => ['gt' => 0]]],
-                    // 		])
-                    // 	]
-                    // ],
-                ],
-                'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
+                'must' => $must,
+                'must_not' => $mustNot,
             ],
         ];
 
@@ -1286,10 +1317,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
+                'sort' => [
+                    ['created_at' => ['order' => 'desc', 'unmapped_type' => 'long']],
+                ],
                 'query' => $boolQuery,
             ],
         ];
+
         if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $total = 0;
             $data = [];
@@ -1308,12 +1342,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'listType' => 'allcandidate',
         ];
 
-        // dd($pagination);
         return response()->json([
             'html' => view('service_company.ajax_pages.custom_client_candidates_join', compact('data', 'company_id'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     public function directclientCandidateInterviewTracker(Request $request)
@@ -1337,14 +1369,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'should' => [
                         ['term' => ['job_company_id' => $company_id]],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['ClientComID' => $company_id]],
-                                    ['term' => ['candidate_type' => 'other']],
-                                ],
-                            ],
-                        ],
+                        ['term' => ['to_company_id' => $company_id]],
+                        ['term' => ['ClientComID' => $company_id]],
+                        ['term' => ['company_id' => $company_id]],
                     ],
                     'minimum_should_match' => 1,
                 ],
@@ -1353,14 +1380,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'bool' => [
                     'should' => [
                         ['term' => ['client_id' => $client_id]],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['from_company_id' => $client_id]],
-                                    ['term' => ['to_company_id' => $company_id]],
-                                ],
-                            ],
-                        ],
+                        ['term' => ['from_company_id' => $client_id]],
+                        ['term' => ['company_id' => $client_id]],
                     ],
                     'minimum_should_match' => 1,
                 ],
