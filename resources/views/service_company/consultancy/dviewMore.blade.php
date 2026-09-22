@@ -3127,26 +3127,41 @@
             });
         }
 
+        function ensureChartJsLoaded(callback) {
+            if (typeof Chart !== 'undefined') {
+                callback();
+            } else {
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                script.onload = callback;
+                script.onerror = callback;
+                document.head.appendChild(script);
+            }
+        }
+
         function initOrUpdateChart(canvasId, type, dataObj, optionsObj) {
             var canvas = document.getElementById(canvasId);
             if (!canvas) return;
-            if (dashboardCharts[canvasId]) {
-                dashboardCharts[canvasId].data = dataObj;
-                dashboardCharts[canvasId].update();
-            } else {
-                dashboardCharts[canvasId] = new Chart(canvas.getContext('2d'), {
-                    type: type,
-                    data: dataObj,
-                    options: optionsObj || {}
-                });
-            }
+            ensureChartJsLoaded(function() {
+                if (typeof Chart === 'undefined') return;
+                if (dashboardCharts[canvasId]) {
+                    dashboardCharts[canvasId].data = dataObj;
+                    dashboardCharts[canvasId].update();
+                } else {
+                    dashboardCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+                        type: type,
+                        data: dataObj,
+                        options: optionsObj || {}
+                    });
+                }
+            });
         }
 
         function fetchDashboardData(signal, seq) {
             var clientid = myChartId;
             var agencyCompanyId = '{{ $directClientDetail->company_id }}';
             return $.ajax({
-                url: `{{ url('service_company_ajax/dashboard') }}/${clientid}`,
+                url: "{{ route('service_company.consultancy.dashboard_ajax', ':id') }}".replace(':id', clientid),
                 type: 'GET',
                 signal: signal,
                 success: function(res) {
@@ -3290,7 +3305,7 @@
 
                 this.activeTab = tabName;
 
-                if (!this.initializedTabs[tabName]) {
+                if (!this.initializedTabs[tabName] || tabName === 'reports') {
                     this.loadTabData(tabName, 1, $('#search').val());
                 }
 
@@ -3472,49 +3487,47 @@
 
         var searchDebounceTimer = null;
 
-        $(document).ready(function() {
-            AgencyDetailTabManager.resetState();
+        AgencyDetailTabManager.resetState();
 
-            $('#search').on('keyup', function() {
-                clearTimeout(searchDebounceTimer);
-                var searchVal = $(this).val();
-                searchDebounceTimer = setTimeout(function() {
-                    var activeTab = AgencyDetailTabManager.activeTab;
-                    if (activeTab === 'jobs' || activeTab === 'candidates' || activeTab === 'interviews' || activeTab === 'joinings') {
-                        AgencyDetailTabManager.loadTabData(activeTab, 1, searchVal);
-                    } else {
-                        AgencyDetailTabManager.switchTab(null, 'candidates');
-                    }
-                }, 300);
-            });
+        $(document).off('keyup', '#search').on('keyup', '#search', function() {
+            clearTimeout(searchDebounceTimer);
+            var searchVal = $(this).val();
+            searchDebounceTimer = setTimeout(function() {
+                var activeTab = AgencyDetailTabManager.activeTab;
+                if (activeTab === 'jobs' || activeTab === 'candidates' || activeTab === 'interviews' || activeTab === 'joinings') {
+                    AgencyDetailTabManager.loadTabData(activeTab, 1, searchVal);
+                } else {
+                    AgencyDetailTabManager.switchTab(null, 'candidates');
+                }
+            }, 300);
+        });
 
-            $(document).on('click', '#paginationcandidate .page-link', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled')) return;
-                AgencyDetailTabManager.loadTabData('candidates', page, $('#search').val());
-            });
+        $(document).off('click', '#paginationcandidate .page-link').on('click', '#paginationcandidate .page-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled')) return;
+            AgencyDetailTabManager.loadTabData('candidates', page, $('#search').val());
+        });
 
-            $(document).on('click', '#paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-                AgencyDetailTabManager.loadTabData('joinings', page, $('#search').val());
-            });
+        $(document).off('click', '#paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow').on('click', '#paginationcandidatejoin .page-link, #paginationcandidatejoin .pagi-page, #paginationcandidatejoin .pagi-arrow', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+            AgencyDetailTabManager.loadTabData('joinings', page, $('#search').val());
+        });
 
-            $(document).on('click', '#paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-                AgencyDetailTabManager.loadTabData('interviews', page, $('#search').val());
-            });
+        $(document).off('click', '#paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow').on('click', '#paginationcandidateinterviewtracker .page-link, #paginationcandidateinterviewtracker .pagi-page, #paginationcandidateinterviewtracker .pagi-arrow', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+            AgencyDetailTabManager.loadTabData('interviews', page, $('#search').val());
+        });
 
-            $(document).on('click', '#paginationstaffingpartnerjob .page-link, #paginationstaffingpartnerjob .pagi-page, #paginationstaffingpartnerjob .pagi-arrow', function(e) {
-                e.preventDefault();
-                const page = $(this).data('page');
-                if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
-                AgencyDetailTabManager.loadTabData('jobs', page, $('#search').val());
-            });
+        $(document).off('click', '#paginationstaffingpartnerjob .page-link, #paginationstaffingpartnerjob .pagi-page, #paginationstaffingpartnerjob .pagi-arrow').on('click', '#paginationstaffingpartnerjob .page-link, #paginationstaffingpartnerjob .pagi-page, #paginationstaffingpartnerjob .pagi-arrow', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (!page || $(this).hasClass('disabled') || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+            AgencyDetailTabManager.loadTabData('jobs', page, $('#search').val());
         });
     </script>
     <!--end::Tab AJAX loaders-->

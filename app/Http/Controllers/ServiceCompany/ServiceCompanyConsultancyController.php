@@ -778,7 +778,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
         $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v4:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v7:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -1235,6 +1235,17 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                                 ],
                             ],
                             ['term' => ['final_status' => 1]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 5]],
+                                        ['term' => ['master_status_id' => 5]],
+                                        ['term' => ['job_master_status_id' => 6]],
+                                        ['term' => ['master_status_id' => 6]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                         ],
                     ],
                 ],
@@ -1275,7 +1286,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             $dbOffersTotal = DB::table('add_job_wise_condidates')
                 ->where('company_id', $company_id)
                 ->where('thirdparty_company_id', $to_company_id)
-                ->where('master_status_id', 5)
+                ->whereIn('master_status_id', [5, 6])
                 ->count();
             if ($dbOffersTotal > 0) {
                 $candidateValuesTotaloffer = $dbOffersTotal;
@@ -1377,7 +1388,15 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'bool' => [
                         'must' => [
                             ['term' => ['from_company_id' => $company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                         ],
                         'filter' => [
                             [
@@ -1412,7 +1431,15 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'bool' => [
                         'must' => [
                             ['term' => ['from_company_id' => $company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                         ],
                         'filter' => [
                             [
@@ -1471,7 +1498,15 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'bool' => [
                         'must' => [
                             ['term' => ['from_company_id' => $company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                         ],
                         'filter' => [
                             [
