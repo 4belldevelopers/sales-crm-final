@@ -161,7 +161,7 @@
                     if (empty($rowpostedby)) {
                         $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
                     }
-                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->company_name) ? $row->company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->from_company_name) ? $row->from_company_name : ''))));
+                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->from_company_name) ? $row->from_company_name : (!empty($row->company_name) ? $row->company_name : ''))));
                 @endphp
                 <div class="it-person-cell">
                     <div class="it-person-name" data-toggle="tooltip" title="{{ @$rowpostedby }}">

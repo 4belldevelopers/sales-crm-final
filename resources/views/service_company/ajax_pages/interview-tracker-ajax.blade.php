@@ -11,6 +11,7 @@
 
     // Follow-up statuses pre-fetched from controller batch hydration
     $followupMap = $followupMap ?? collect();
+    $spokpersonMap = $spokpersonMap ?? collect();
 @endphp
 
 @if (count($data) > 0)
@@ -301,7 +302,8 @@
             <td>
                 @php
                     if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokName = $spokpersonMap->get($row->jobId . '_' . $row->ClientComID) ?? null;
+                        $spokKey = ($row->jobId ?? $row->job_id ?? 0) . '_' . $row->ClientComID;
+                        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
                         $rowpostedby = $spokName ? $spokName : $row->posted_by;
                         $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
                     } else {
