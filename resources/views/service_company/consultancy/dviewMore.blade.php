@@ -2,6 +2,7 @@
     @php
     use App\Helper\GeneralMethod;
     use Carbon\Carbon;
+        $userPermissions = $userPermissions ?? [];
         $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(5);
         $endOfMonthcomman =  Carbon::now()->endOfMonth();
         $endDate = Carbon::today()->endOfDay();
@@ -1577,7 +1578,7 @@
     <div class="modal-overlay show" id="agencyModal">
       <div class="modal-panel">
         <div class="modal-inner">
-          <input type="hidden" name="hid_client_id" id="hid_client_id" value="{{ $directClientDetail->client_id }}" />
+          <input type="hidden" name="hid_client_id" id="hid_client_id" value="{{ @$directClientDetail->id ?? @$directClientDetail->client_id }}" />
           <div class="profile-card">
             <div class="profile-top">
               <div class="profile-left">
@@ -2837,11 +2838,15 @@
               }
             </style>
             @php
-              $active_count = $counts->get('active', 0);
-              $hold_count = $counts->get('hold', 0);
-              $inactive_count = $counts->get('inactive', 0);
+              $active_count = $Active ?? $counts->get('active', 0);
+              $hold_count = $Hold ?? $counts->get('hold', 0);
+              $inactive_count = $Closed ?? $counts->get('inactive', 0);
               $alljobs_count = $active_count + $hold_count + $inactive_count;
-              $dcid = @$directClientDetail->client_id;
+              $dcid = @$directClientDetail->id ?? @$directClientDetail->client_id;
+              $candidateValuesTotal = $candidateValuesTotal ?? $all_candidates ?? 0;
+              $total_candidates = $total_candidates ?? $all_candidates ?? 0;
+              $candidateValuesTotaloffer = $candidateValuesTotaloffer ?? $offers ?? 0;
+              $candidateValuesTotaljoin = $candidateValuesTotaljoin ?? $Joined ?? 0;
             @endphp
             <div class="dash-wrap">
 
@@ -3004,7 +3009,7 @@
       </div>
     </div>
     <script>
-        var myChartId = "<?php echo @$directClientDetail->client_id; ?>";
+        var myChartId = "<?php echo @$directClientDetail->id ?? @$directClientDetail->client_id; ?>";
         var dashboardCharts = {};
 
         function fetchCandidates(page = 1, search = '', signal, seq) {
@@ -3016,6 +3021,7 @@
                 data: { search: search, clientid: clientid },
                 signal: signal,
                 success: function(response) {
+                    if (AgencyDetailTabManager.currentAgencyId !== clientid) return;
                     if (seq && seq !== AgencyDetailTabManager.requestSequence['candidates']) return;
                     $('.loadingMessagecandidatetList').css({ display: 'none' });
                     $('#candidatetList').html(response.html);
@@ -3043,6 +3049,7 @@
                 data: { search: search, clientid: clientid },
                 signal: signal,
                 success: function(response) {
+                    if (AgencyDetailTabManager.currentAgencyId !== clientid) return;
                     if (seq && seq !== AgencyDetailTabManager.requestSequence['joinings']) return;
                     $('.loadingMessagecandidatetListJoin').css({ display: 'none' });
                     $('#candidatetListJoin').html(response.html);
@@ -3070,6 +3077,7 @@
                 data: { search: search, clientid: clientid },
                 signal: signal,
                 success: function(response) {
+                    if (AgencyDetailTabManager.currentAgencyId !== clientid) return;
                     if (seq && seq !== AgencyDetailTabManager.requestSequence['interviews']) return;
                     $('.loadingMessagecandidatetListinterviewtracker').css({ display: 'none' });
                     $('#candidatetListinterviewtracker').html(response.html);
@@ -3101,13 +3109,13 @@
                 },
                 signal: signal,
                 success: function(response) {
+                    if (AgencyDetailTabManager.currentAgencyId !== clientid) return;
                     if (seq && seq !== AgencyDetailTabManager.requestSequence['jobs']) return;
                     $('.loadingMessagestaffingpartnerjob').css({ display: 'none' });
                     $('#staffingpartnerjob').html(response.html);
                     $('#paginationstaffingpartnerjob').html(response.pagination);
                     if (response.total !== undefined) {
                         $('#tabCountJobs').text(response.total);
-                        $('#kpiActiveJobs').text(response.total);
                     }
                     AgencyDetailTabManager.initializedTabs['jobs'] = true;
                 },
@@ -3136,11 +3144,13 @@
 
         function fetchDashboardData(signal, seq) {
             var clientid = myChartId;
+            var agencyCompanyId = '{{ $directClientDetail->company_id }}';
             return $.ajax({
                 url: `{{ url('service_company_ajax/dashboard') }}/${clientid}`,
                 type: 'GET',
                 signal: signal,
                 success: function(res) {
+                    if (AgencyDetailTabManager.currentAgencyId !== agencyCompanyId) return;
                     if (seq && seq !== AgencyDetailTabManager.requestSequence['reports']) return;
                     if (res.status === 'success' && res.data) {
                         var d = res.data;
@@ -3248,6 +3258,13 @@
             requestSequence: {},
 
             resetState: function() {
+                var self = this;
+                if (this.activeControllers) {
+                    Object.keys(this.activeControllers).forEach(function(key) {
+                        try { self.activeControllers[key].abort(); } catch(e) {}
+                    });
+                }
+                this.currentAgencyId = '{{ $directClientDetail->company_id }}';
                 this.initializedTabs = {
                     overview: true,
                     contacts: true,

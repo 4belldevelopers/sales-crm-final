@@ -19,20 +19,16 @@ class ConsultancyETag
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function handle(Request $request, Closure $next): Response
     {
         // ETag middleware applies to GET requests
-        if (!$request->isMethod('GET')) {
+        if (! $request->isMethod('GET')) {
             return $next($request);
         }
 
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return $next($request);
         }
 
@@ -42,8 +38,9 @@ class ConsultancyETag
         // Fetch version keys for tenant & user
         $companyVersion = Cache::get("ats:spartner_summary_cnt:comp_{$companyId}_v", 1);
         $userVersion = Cache::get("allconsultancy_version_user_{$userId}", 1);
+        $viewMoreVersion = Cache::get("consultancyviewmore_version_user_{$userId}", 1);
 
-        $etag = '"' . md5("consultancy_{$companyId}_{$userId}_{$companyVersion}_{$userVersion}_" . $request->fullUrl()) . '"';
+        $etag = '"'.md5("consultancy_v5_{$companyId}_{$userId}_{$companyVersion}_{$userVersion}_{$viewMoreVersion}_".$request->fullUrl()).'"';
 
         // Check If-None-Match header
         $clientEtag = $request->header('If-None-Match');
