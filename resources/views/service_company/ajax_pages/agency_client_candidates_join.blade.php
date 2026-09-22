@@ -328,36 +328,29 @@
             </td>
             <td>
                 @php
-
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->posted_by);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
+                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                    }else{
+                        $rowpostedby = $row->posted_by;
+                    }
+                    if (empty($rowpostedby) && !empty($row->spokperson_name)) {
+                        $rowpostedby = $row->spokperson_name;
                     }
 
+                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: ''))));
+
                     echo ' <div class="d-flex flex-column">
-                  				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$row->posted_by .
+                  				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
+                        htmlspecialchars(@$rowpostedby, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        mb_substr($row->posted_by, 0, 10) .
+                        htmlspecialchars(ucfirst(mb_substr($rowpostedby, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</a>
                   			</div>
 							<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->company_name .
+                        htmlspecialchars(@$post_company_name, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr(@$row->company_name, 0, 25)) .
+                        htmlspecialchars(ucwords(mb_substr(@$post_company_name, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</span>';
 
                 @endphp

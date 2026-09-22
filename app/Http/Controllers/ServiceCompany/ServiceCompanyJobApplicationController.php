@@ -1100,6 +1100,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
             'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
             'average_star_rating', 'created_at',
+            'posted_by', 'submitted_by', 'submitted_by_name', 'submitted_by_company_name', 'post_company_name',
+            'uc_company_name', 'from_company_name', 'spokperson_name', 'upload_by_name', 'ClientComID', 'thirdparty_company_id',
         ];
 
         $params = [
@@ -1372,6 +1374,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'interviewers', 'mode', 'mode_name', 'mode_lavel_name', 'meeting_link', 'status', 'available_status', 'feedback',
             'source', 'round_name', 'comments', 'master_status_id', 'master_status_name', 'child_status_id', 'css_style',
             'average_star_rating', 'created_at',
+            'posted_by', 'submitted_by', 'submitted_by_name', 'submitted_by_company_name', 'post_company_name',
+            'uc_company_name', 'from_company_name', 'spokperson_name', 'upload_by_name', 'ClientComID', 'thirdparty_company_id',
         ];
 
         $params = [
@@ -1581,10 +1585,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     }
 
+    /**
+     * Intent: Fetch candidate interview tracker list for specific agency (consultancy view).
+     * Tenancy: Restricted by from_company_id (auth tenant) AND ClientComID (agency company ID) to ensure only agency-shared candidate interviews are displayed.
+     */
     public function staffingclientCandidateInterviewTracker(Request $request)
     {
-        // $candidates = JobApplication::query();
-        $to_company_id = $request->clientid;
+        $to_company_id = (int) $request->clientid;
         $from_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
@@ -1592,47 +1599,18 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $size = (int) $request->input('size', 10); // Default 20 results per page
         $from = ($page - 1) * $size;
 
-        // if (empty($from_company_id) || empty($to_company_id)) {
-        // 	// fallback query (avoid ES crash)
-        // 	$must[] = ['match_all' => (object)[]];
-        // } else {
-        // 	$must[] = [
-        // 		'nested' => [
-        // 			'path' => 'recommendation_relation',
-        // 			'query' => [
-        // 				'bool' => [
-        // 					'must' => [
-        // 						['term' => ['recommendation_relation.from_company_id' => (int)$from_company_id]],
-        // 						['term' => ['recommendation_relation.to_company_id' => (int)$to_company_id]],
-        // 						['term' => ['recommendation_relation.final_status' => 1]],
-        // 					]
-        // 				]
-        // 			]
-        // 		]
-        // 	];
-        // }
-        // if (empty($must)) {
-        // 	$must[] = ['match_all' => (object)[]];
-        // }
-
         $must[] = [
             'bool' => [
                 'must' => [
                     [
-                        'term' => ['from_company_id' => $from_company_id],
+                        'term' => ['ClientComID' => $to_company_id],
                     ],
                     [
-                        'term' => ['to_company_id' => $to_company_id],
+                        'term' => ['from_company_id' => $from_company_id],
                     ],
                 ],
             ],
         ];
-
-        // $must[] = [
-        // 	'term' => [
-        // 		'real_company_id' => $to_company_id
-        // 	]
-        // ];
 
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,

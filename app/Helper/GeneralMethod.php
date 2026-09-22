@@ -14940,27 +14940,8 @@ END:VCALENDAR";
         $allInterview = 0;
         if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $mustInterview = [
-                'bool' => [
-                    'should' => [
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['from_company_id' => $from_company_id]],
-                                    ['term' => ['to_company_id' => $to_company_id]],
-                                ],
-                            ],
-                        ],
-                        [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['from_company_id' => $from_company_id]],
-                                    ['term' => ['ClientComID' => $to_company_id]],
-                                ],
-                            ],
-                        ],
-                    ],
-                    'minimum_should_match' => 1,
-                ],
+                ['term' => ['from_company_id' => $from_company_id]],
+                ['term' => ['ClientComID' => $to_company_id]],
             ];
 
             $paramsInterview = [

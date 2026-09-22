@@ -742,7 +742,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
         $versionKey = 'consultancyviewmore_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v2:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
