@@ -14222,8 +14222,27 @@ END:VCALENDAR";
                         'query' => [
                             'bool' => [
                                 'must' => [
-                                    ['term' => ['job_company_id' => $to_company_id]],
-                                    ['term' => ['client_id' => $from_company_id]],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['job_company_id' => (int) $to_company_id]],
+                                                ['term' => ['to_company_id' => (int) $to_company_id]],
+                                                ['term' => ['ClientComID' => (int) $to_company_id]],
+                                                ['term' => ['company_id' => (int) $to_company_id]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['client_id' => (int) $from_company_id]],
+                                                ['term' => ['from_company_id' => (int) $from_company_id]],
+                                                ['term' => ['company_id' => (int) $from_company_id]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],
