@@ -702,30 +702,64 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         return view('service_company.consultancy.suggestedPartners', $this->data);
     }
 
+    /**
+     * Resolves and verifies that the authenticated company has an active relation with target agency (by client_id or company_id).
+     */
+    protected function resolveAuthorizedAgencyCompanyId(int $authCompanyId, $rawId): ?int
+    {
+        if (empty($rawId)) {
+            return null;
+        }
+
+        $rawId = (int) $rawId;
+
+        // 1. Direct check: is $rawId ALREADY a company_id with active relation?
+        $isCompanyRelation = DB::table('staffing_company_relation')
+            ->where('final_status', 1)
+            ->where(function ($q) use ($authCompanyId, $rawId) {
+                $q->where(function ($inner) use ($authCompanyId, $rawId) {
+                    $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $rawId);
+                })->orWhere(function ($inner) use ($authCompanyId, $rawId) {
+                    $inner->where('from_company_id', $rawId)->where('to_company_id', $authCompanyId);
+                });
+            })
+            ->exists();
+
+        if ($isCompanyRelation) {
+            return $rawId;
+        }
+
+        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active relation?
+        $mappedCompanyId = (int) DB::table('clients')->where('id', $rawId)->value('company_id');
+        if ($mappedCompanyId > 0) {
+            $isMappedRelation = DB::table('staffing_company_relation')
+                ->where('final_status', 1)
+                ->where(function ($q) use ($authCompanyId, $mappedCompanyId) {
+                    $q->where(function ($inner) use ($authCompanyId, $mappedCompanyId) {
+                        $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $mappedCompanyId);
+                    })->orWhere(function ($inner) use ($authCompanyId, $mappedCompanyId) {
+                        $inner->where('from_company_id', $mappedCompanyId)->where('to_company_id', $authCompanyId);
+                    });
+                })
+                ->exists();
+
+            if ($isMappedRelation) {
+                return $mappedCompanyId;
+            }
+        }
+
+        return null;
+    }
+
     public function dviewMore($id)
     {
         $company_id = auth()->user()->company_id;
 
-        // Step A: Tenant Ownership Guard — resolve client -> company ID
-        $partnerCompanyId = DB::table('clients')
-            ->where('id', $id)
-            ->value('company_id');
+        $partnerCompanyId = $this->resolveAuthorizedAgencyCompanyId((int) $company_id, $id);
 
         if (! $partnerCompanyId) {
-            abort(404, 'Partner not found.');
+            abort(404, 'Partner not found or unauthorized.');
         }
-
-        // Step B: verify the auth'd tenant has an accepted relation with this company
-        $isAuthorizedPartner = DB::table('staffing_company_relation')
-            ->where(function ($query) use ($company_id, $partnerCompanyId) {
-                $query->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId);
-            })->orWhere(function ($query) use ($company_id, $partnerCompanyId) {
-                $query->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
-            })
-            ->where('final_status', 1)
-            ->exists();
-
-        abort_unless($isAuthorizedPartner, 404, 'Partner not found or unauthorized.');
 
         $previousUrl = url()->previous();
         $this->all_tab_show = false;
@@ -733,16 +767,18 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             $this->all_tab_show = true;
         }
 
+        $userId = auth()->user()->id ?? 0;
         $this->company_id = $company_id;
         $cachePayload = [
             'id' => $id,
+            'partner_company_id' => $partnerCompanyId,
             'company' => $company_id,
-            'user_id' => $this->user->id,
+            'user_id' => $userId,
         ];
 
-        $versionKey = 'consultancyviewmore_version_user_'.$this->user->id;
+        $versionKey = 'consultancyviewmore_version_user_'.$userId;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'consultancyviewmore_v2:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'consultancyviewmore_v4:'.$userId.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB / Redis first (Quick Win Step 4)
         ----------------------------- */
@@ -758,6 +794,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $this->countryArr = GeneralMethod::getAllCountryList();
         $this->statelist = GeneralMethod::statelist(101);
 
+        // Resolve actual client entity row ID for the authorized partner agency
+        $actualClientId = (int) DB::table('clients')->where('company_id', $partnerCompanyId)->value('id') ?: (int) $id;
+
         $this->directClientDetail = DB::table('clients')
             ->select(
                 'companies.id as company_id', 'companies.description as companies_description',
@@ -767,13 +806,13 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             )
             ->join('companies', 'companies.id', '=', 'clients.company_id')
             ->leftJoin('staffing_company_relation', 'staffing_company_relation.to_company_id', '=', 'companies.id')
-            ->where('clients.id', '=', $id)
+            ->where('clients.id', '=', $actualClientId)
             ->first();
 
-        $this->client_file = DB::table('client_file')->select('*')->where('client_id', $id)->get();
+        $this->client_file = DB::table('client_file')->select('*')->where('client_id', $actualClientId)->get();
         $this->client_location = DB::table('client_location')
             ->select('client_location.city', 'client_location.city_id', 'client_location.address', 'client_location.postcode', 'client_location.country_id')
-            ->where('client_location.client_id', $id)
+            ->where('client_location.client_id', $actualClientId)
             ->first();
 
         $this->city_name = '';
@@ -797,7 +836,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         // Quick Win Step 5b: Queries 1 & 2 deleted; Query 3 below provides exact final value
         $this->active_requisition = 0;
 
-        $requisitionRow = '';
         $requisitionRow = DB::table('recommendation_relation')
             ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
             ->select(
@@ -805,12 +843,12 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 DB::raw("SUM(CASE WHEN jobs.status = 'hold'  THEN 1 ELSE 0 END) AS hold"),
                 DB::raw("SUM(CASE WHEN jobs.status = 'inactive'  THEN 1 ELSE 0 END) AS inactive")
             )
-            ->where('recommendation_relation.from_company_id', '=', $this->directClientDetail->from_company_id)
-            ->where('recommendation_relation.to_company_id', '=', $this->directClientDetail->to_company_id)
+            ->where('recommendation_relation.from_company_id', '=', $company_id)
+            ->where('recommendation_relation.to_company_id', '=', $partnerCompanyId)
             ->where('recommendation_relation.final_status', '=', 1)
             ->first();
 
-        if ($requisitionRow->active > 0) {
+        if ($requisitionRow && $requisitionRow->active > 0) {
             $this->active_requisition = $requisitionRow->active;
         }
 
@@ -818,21 +856,30 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ->select('users.*')
             ->join('role_user', 'role_user.role_id', '=', 'roles.id')
             ->join('users', 'users.id', '=', 'role_user.user_id')
-            ->where('roles.company_id', '=', $this->directClientDetail->company_id)
+            ->where('roles.company_id', '=', $partnerCompanyId)
             ->where('roles.name', '=', 'admin')
             ->where('roles.display_name', '=', 'Administrator')
             ->get();
 
-        if ($id) {
-            $params = [
-                'index' => ELASTIC_CLIENT_LIST,
-                'id' => $id,
-            ];
+        if ($actualClientId && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            try {
+                $params = [
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'id' => $actualClientId,
+                ];
 
-            $response = $this->elasticService->getClient()->get($params);
-            $this->directClientDetail = (object) $response['_source'];
+                $response = $this->elasticService->getClient()->get($params);
+                if (! empty($response['_source'])) {
+                    $this->directClientDetail = (object) $response['_source'];
+                }
+            } catch (\Exception $e) {
+                // Keep DB fallback if ES fails
+            }
+        }
 
-            // dd($this->directClientDetail);
+        // Guarantee directClientDetail->company_id is ALWAYS set to partnerCompanyId
+        if ($this->directClientDetail) {
+            $this->directClientDetail->company_id = $partnerCompanyId;
         }
 
         // $startOfMonth = Carbon::now()->startOfMonth();
@@ -882,6 +929,10 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $this->startOfMonthcomman = $startOfMonthcomman;
         $this->endOfMonthcomman = $endOfMonthcomman;
 
+        if (empty($this->userPermissions)) {
+            $this->userPermissions = [];
+        }
+
         $view = view('service_company.consultancy.dviewMore', $this->data)->render();
         $responseData = Reply::dataOnly(['status' => 'success', 'view' => $view]);
 
@@ -898,24 +949,9 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
     {
         $company_id = auth()->user()->company_id;
 
-        $partnerCompanyId = DB::table('clients')
-            ->where('id', $id)
-            ->value('company_id');
+        $partnerCompanyId = $this->resolveAuthorizedAgencyCompanyId((int) $company_id, $id);
 
         if (! $partnerCompanyId) {
-            return response()->json(['status' => 'fail', 'message' => 'Partner not found.'], 404);
-        }
-
-        $isAuthorizedPartner = DB::table('staffing_company_relation')
-            ->where(function ($query) use ($company_id, $partnerCompanyId) {
-                $query->where('from_company_id', $company_id)->where('to_company_id', $partnerCompanyId);
-            })->orWhere(function ($query) use ($company_id, $partnerCompanyId) {
-                $query->where('from_company_id', $partnerCompanyId)->where('to_company_id', $company_id);
-            })
-            ->where('final_status', 1)
-            ->exists();
-
-        if (! $isAuthorizedPartner) {
             return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
         }
 
@@ -930,26 +966,21 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $boolQuery = [
             'bool' => [
                 'must' => [
+                    ['term' => ['from_company_id' => $company_id]],
                     [
                         'bool' => [
-                            'must' => [
-                                ['term' => ['from_company_id' => $company_id]],
+                            'should' => [
+                                ['term' => ['ClientComID' => $to_company_id]],
                                 ['term' => ['to_company_id' => $to_company_id]],
-                                ['term' => ['final_status' => 1]],
+                                ['term' => ['thirdparty_company_id' => $to_company_id]],
                             ],
-                            'must_not' => [
-                                ['terms' => ['job_master_status_id' => [8, 9]]],
-                            ],
+                            'minimum_should_match' => 1,
                         ],
                     ],
-                    [
-                        'range' => [
-                            'updated_at' => [
-                                'gte' => $startOfMonth,
-                                'lte' => $endOfMonth,
-                            ],
-                        ],
-                    ],
+                    ['term' => ['final_status' => 1]],
+                ],
+                'must_not' => [
+                    ['terms' => ['job_master_status_id' => [8, 9]]],
                 ],
             ],
         ];
@@ -990,6 +1021,37 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $Rejected_count = $resultData->get('7', 0);
         $inreview_count = $resultData->get('8', 0);
         $total_candidates = $inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
+
+        // DB Fallback for Candidate Pipeline breakdown if ES count is 0
+        if ($total_candidates == 0) {
+            $dbCandStats = DB::table('add_job_wise_condidates')
+                ->select(
+                    DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourcing_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 2 THEN 1 END) AS screening_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS evaluation_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 4 THEN 1 END) AS negotiation_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offer_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 7 THEN 1 END) AS rejected_count'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 8 THEN 1 END) AS inreview_count')
+                )
+                ->where('company_id', $company_id)
+                ->where('thirdparty_company_id', $to_company_id)
+                ->whereNotIn('master_status_id', [9])
+                ->first();
+
+            if ($dbCandStats) {
+                $joined_count = (int) $dbCandStats->joined_count;
+                $sourcing_count = (int) $dbCandStats->sourcing_count;
+                $screening_count = (int) $dbCandStats->screening_count;
+                $evaluation_count = (int) $dbCandStats->evaluation_count;
+                $negotiation_count = (int) $dbCandStats->negotiation_count;
+                $offer_count = (int) $dbCandStats->offer_count;
+                $Rejected_count = (int) $dbCandStats->rejected_count;
+                $inreview_count = (int) $dbCandStats->inreview_count;
+                $total_candidates = $inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count;
+            }
+        }
 
         // 2. Jobs doughnut graph
         $must = [];
@@ -1045,6 +1107,28 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $inactive_count = $counts->get('inactive', 0);
         $alljobs_count = $active_count + $hold_count + $inactive_count;
 
+        // DB Fallback for Jobs breakdown if ES count is 0
+        if ($alljobs_count == 0) {
+            $dbJobs = DB::table('recommendation_relation')
+                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                ->select(
+                    DB::raw("SUM(CASE WHEN jobs.status = 'active' THEN 1 ELSE 0 END) AS active"),
+                    DB::raw("SUM(CASE WHEN jobs.status = 'hold' THEN 1 ELSE 0 END) AS hold"),
+                    DB::raw("SUM(CASE WHEN jobs.status = 'inactive' THEN 1 ELSE 0 END) AS inactive")
+                )
+                ->where('recommendation_relation.from_company_id', $company_id)
+                ->where('recommendation_relation.to_company_id', $to_company_id)
+                ->where('recommendation_relation.final_status', 1)
+                ->first();
+
+            if ($dbJobs) {
+                $active_count = (int) $dbJobs->active;
+                $hold_count = (int) $dbJobs->hold;
+                $inactive_count = (int) $dbJobs->inactive;
+                $alljobs_count = $active_count + $hold_count + $inactive_count;
+            }
+        }
+
         // 3. Candidate last 7 days
         $endDate = Carbon::today()->endOfDay();
         $startDate = Carbon::today()->subDays(6)->startOfDay();
@@ -1057,26 +1141,29 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'query' => [
                     'bool' => [
                         'must' => [
+                            ['term' => ['from_company_id' => $company_id]],
                             [
                                 'bool' => [
-                                    'must' => [
-                                        ['term' => ['from_company_id' => $company_id]],
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
                                         ['term' => ['to_company_id' => $to_company_id]],
-                                        ['term' => ['final_status' => 1]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
                                     ],
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
+                                    'minimum_should_match' => 1,
                                 ],
                             ],
+                            ['term' => ['final_status' => 1]],
                             [
                                 'range' => [
-                                    'updated_at' => [
+                                    'created_at' => [
                                         'gte' => $startDate->toDateString(),
                                         'lte' => $endDate->toDateString(),
                                     ],
                                 ],
                             ],
+                        ],
+                        'must_not' => [
+                            ['terms' => ['job_master_status_id' => [8, 9]]],
                         ],
                     ],
                 ],
@@ -1113,6 +1200,19 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         }
         $candidateValuesTotal = array_sum($candidateValues);
 
+        // DB Fallback for Candidates last 7 days if ES count is 0
+        if ($candidateValuesTotal == 0) {
+            $db7Days = DB::table('add_job_wise_condidates')
+                ->where('company_id', $company_id)
+                ->where('thirdparty_company_id', $to_company_id)
+                ->whereBetween('created_at', [$startDate->format('Y-m-d 00:00:00'), $endDate->format('Y-m-d 23:59:59')])
+                ->count();
+            if ($db7Days > 0) {
+                $candidateValuesTotal = $db7Days;
+                $candidateValues[6] = $db7Days;
+            }
+        }
+
         // 4. Offer count graph
         $paramsOffer = [
             'index' => ELASTIC_CANDIDATES,
@@ -1124,23 +1224,24 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                     'bool' => [
                         'must' => [
                             ['term' => ['from_company_id' => $company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
-                            ['term' => ['final_status' => 1]],
                             [
-                                'range' => [
-                                    'of_created_date' => [
-                                        'gte' => $startOfMonthcomman->toDateString(),
-                                        'lte' => $endOfMonthcomman->toDateString(),
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
+                                        ['term' => ['to_company_id' => $to_company_id]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
                                     ],
+                                    'minimum_should_match' => 1,
                                 ],
                             ],
+                            ['term' => ['final_status' => 1]],
                         ],
                     ],
                 ],
                 'aggs' => [
                     'of_offer_count' => [
                         'date_histogram' => [
-                            'field' => 'of_created_date',
+                            'field' => 'created_at',
                             'calendar_interval' => 'month',
                             'format' => 'yyyy-MM',
                             'min_doc_count' => 0,
@@ -1169,6 +1270,19 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         }
         $candidateValuesTotaloffer = array_sum($candidateValuesCommoffer);
 
+        // DB Fallback for Offer count total if ES count is 0
+        if ($candidateValuesTotaloffer == 0) {
+            $dbOffersTotal = DB::table('add_job_wise_condidates')
+                ->where('company_id', $company_id)
+                ->where('thirdparty_company_id', $to_company_id)
+                ->where('master_status_id', 5)
+                ->count();
+            if ($dbOffersTotal > 0) {
+                $candidateValuesTotaloffer = $dbOffersTotal;
+                $candidateValuesCommoffer[5] = $dbOffersTotal;
+            }
+        }
+
         // 5. Candidate list joined
         $paramsJoin = [
             'index' => ELASTIC_CANDIDATES,
@@ -1176,19 +1290,29 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'body' => [
                 'track_total_hits' => true,
                 'size' => 6,
-                'sort' => [['of_joined_date' => ['order' => 'desc']]],
+                'sort' => [['id' => ['order' => 'desc']]],
                 'query' => [
                     'bool' => [
                         'must' => [
                             ['term' => ['from_company_id' => $company_id]],
-                            ['term' => ['to_company_id' => $to_company_id]],
+                            [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['ClientComID' => $to_company_id]],
+                                        ['term' => ['to_company_id' => $to_company_id]],
+                                        ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
                             ['term' => ['final_status' => 1]],
                             [
-                                'range' => [
-                                    'of_joined_date' => [
-                                        'gte' => $startOfMonthcomman->toDateString(),
-                                        'lte' => $endOfMonthcomman->toDateString(),
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 6]],
+                                        ['term' => ['master_status_id' => 6]],
                                     ],
+                                    'minimum_should_match' => 1,
                                 ],
                             ],
                         ],
@@ -1197,7 +1321,7 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 'aggs' => [
                     'of_joined_count' => [
                         'date_histogram' => [
-                            'field' => 'of_joined_date',
+                            'field' => 'created_at',
                             'calendar_interval' => 'month',
                             'format' => 'yyyy-MM',
                             'min_doc_count' => 0,
@@ -1223,6 +1347,20 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             $labelsCommjoin[] = $sDate->format('M Y');
             $cBucket = collect($candidateBucketsjoin)->firstWhere('key_as_string', $sDate->format('Y-m'));
             $candidateValuesCommjoin[] = $cBucket['doc_count'] ?? 0;
+        }
+        $candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
+
+        // DB Fallback for Joined count total if ES count is 0
+        if ($candidateValuesTotaljoin == 0) {
+            $dbJoinedTotal = DB::table('add_job_wise_condidates')
+                ->where('company_id', $company_id)
+                ->where('thirdparty_company_id', $to_company_id)
+                ->where('master_status_id', 6)
+                ->count();
+            if ($dbJoinedTotal > 0) {
+                $candidateValuesTotaljoin = $dbJoinedTotal;
+                $candidateValuesCommjoin[5] = $dbJoinedTotal;
+            }
         }
         $candidateValuesTotaljoin = array_sum($candidateValuesCommjoin);
 
@@ -1523,20 +1661,22 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
     public function allreq_ajax(Request $request)
     {
+        $rawId = $request->input('id') ?? $request->input('client_id');
+        $company_id = (int) auth()->user()->company_id;
 
-        $toCompanyId = request('id');
-        $company_id = auth()->user()->company_id;
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole 		=	DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        $job_status = GeneralMethod::job_status();
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
+        $partnerCompanyId = $this->resolveAuthorizedAgencyCompanyId($company_id, $rawId);
 
-        $searchQuery = $request->input('q');
+        if (! $partnerCompanyId) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
+        }
+
+        $toCompanyId = $partnerCompanyId;
+        $searchQuery = trim($request->input('search') ?? $request->input('q') ?? '');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
+        $must = [];
         $must[] = [
             'bool' => [
                 'should' => [
@@ -1559,36 +1699,76 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             ],
         ];
 
-        // FINAL ELASTIC PARAMS
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['title' => $searchQuery]],
+                        ['match_phrase_prefix' => ['job_title' => $searchQuery]],
+                        ['match_phrase_prefix' => ['company_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['client_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['skills' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
+
         $params = [
             'index' => ELASTIC_JOBS,
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
+                'sort' => [['id' => ['order' => 'desc']]],
                 'query' => [
                     'bool' => [
                         'must' => $must,
-                        'filter' => [],
                     ],
                 ],
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            $total = $response['hits']['total']['value'] ?? 0;
-            $data = array_map(function ($hit) {
-                return $hit['_source'];
-            }, $response['hits']['hits']);
+        $total = 0;
+        $data = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
+            try {
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $data = array_map(function ($hit) {
+                    return $hit['_source'];
+                }, $response['hits']['hits']);
+            } catch (\Exception $e) {
+                $total = 0;
+                $data = [];
+            }
         }
+
+        // DB Fallback if ES is empty or unreachable
+        if ($total == 0 && empty($searchQuery)) {
+            $dbJobsQuery = DB::table('recommendation_relation')
+                ->join('jobs', 'jobs.id', '=', 'recommendation_relation.job_id')
+                ->where('recommendation_relation.from_company_id', $company_id)
+                ->where('recommendation_relation.to_company_id', $toCompanyId)
+                ->where('recommendation_relation.final_status', 1);
+
+            $total = $dbJobsQuery->count();
+            if ($total > 0) {
+                $dbHits = $dbJobsQuery
+                    ->select('jobs.*')
+                    ->skip($from)
+                    ->take($size)
+                    ->get();
+                $data = $dbHits->map(function ($j) {
+                    return (array) $j;
+                })->toArray();
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => $total > 0 ? ceil($total / $size) : 1,
             'listType' => 'allcandidate',
         ];
         $userPermissions = $this->userPermissions;
@@ -1598,7 +1778,6 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     /**

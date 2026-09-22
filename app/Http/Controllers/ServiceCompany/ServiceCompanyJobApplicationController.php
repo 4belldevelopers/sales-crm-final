@@ -1427,50 +1427,100 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         ]);
     }
 
+    /**
+     * Resolves and verifies that the authenticated company has an active relation with target agency (by client_id or company_id).
+     */
+    protected function resolveAuthorizedAgencyCompanyId(int $authCompanyId, $rawId): ?int
+    {
+        if (empty($rawId)) {
+            return null;
+        }
+
+        $rawId = (int) $rawId;
+
+        // 1. Direct check: is $rawId ALREADY a company_id with active relation?
+        $isCompanyRelation = DB::table('staffing_company_relation')
+            ->where('final_status', 1)
+            ->where(function ($q) use ($authCompanyId, $rawId) {
+                $q->where(function ($inner) use ($authCompanyId, $rawId) {
+                    $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $rawId);
+                })->orWhere(function ($inner) use ($authCompanyId, $rawId) {
+                    $inner->where('from_company_id', $rawId)->where('to_company_id', $authCompanyId);
+                });
+            })
+            ->exists();
+
+        if ($isCompanyRelation) {
+            return $rawId;
+        }
+
+        // 2. Client ID check: is $rawId a clients.id mapping to a company_id with active relation?
+        $mappedCompanyId = (int) DB::table('clients')->where('id', $rawId)->value('company_id');
+        if ($mappedCompanyId > 0) {
+            $isMappedRelation = DB::table('staffing_company_relation')
+                ->where('final_status', 1)
+                ->where(function ($q) use ($authCompanyId, $mappedCompanyId) {
+                    $q->where(function ($inner) use ($authCompanyId, $mappedCompanyId) {
+                        $inner->where('from_company_id', $authCompanyId)->where('to_company_id', $mappedCompanyId);
+                    })->orWhere(function ($inner) use ($authCompanyId, $mappedCompanyId) {
+                        $inner->where('from_company_id', $mappedCompanyId)->where('to_company_id', $authCompanyId);
+                    });
+                })
+                ->exists();
+
+            if ($isMappedRelation) {
+                return $mappedCompanyId;
+            }
+        }
+
+        return null;
+    }
+
     public function staffingclientCandidateList(Request $request)
     {
-
-        // $params = [
-        // 	'index' => ELASTIC_CANDIDATES,
-        // 	'id'    => 63770, // 63786
-        // ];
-
-        // $response = $this->elasticService->getClient()->get($params);
-        // $this->application = (object) $response['_source'];
-        // dd($this->application);
-
-        $to_company_id = $request->clientid;
+        $rawClientId = $request->clientid ?? $request->input('id');
         $from_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
-        $searchQuery = $request->input('q');
+        $to_company_id = $this->resolveAuthorizedAgencyCompanyId($from_company_id, $rawClientId);
+
+        if (! $to_company_id) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
+        }
+
+        $searchQuery = trim($request->input('search') ?? $request->input('q') ?? '');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
-        $boolQuery = [
+        $must = [];
+        $must[] = ['term' => ['from_company_id' => $from_company_id]];
+        $must[] = ['term' => ['final_status' => 1]];
+        $must[] = [
             'bool' => [
-                'must' => [
-                    // Second condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['ClientComID' => $to_company_id]],
-                                ['term' => ['from_company_id' => $from_company_id]],
-                                ['term' => ['final_status' => 1]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
-                            ]),
-                        ],
-                    ],
+                'should' => [
+                    ['term' => ['ClientComID' => $to_company_id]],
+                    ['term' => ['to_company_id' => $to_company_id]],
+                    ['term' => ['thirdparty_company_id' => $to_company_id]],
                 ],
-                'filter' => [], // We'll add all filters here
+                'minimum_should_match' => 1,
             ],
         ];
+
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['email' => $searchQuery]],
+                        ['match_phrase_prefix' => ['phone' => $searchQuery]],
+                        ['match_phrase_prefix' => ['skills' => $searchQuery]],
+                        ['match_phrase_prefix' => ['current_designation' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
@@ -1478,14 +1528,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
-                'query' => $boolQuery,
+                'sort' => [['id' => ['order' => 'desc']]],
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                        'must_not' => [
+                            ['terms' => ['job_master_status_id' => [8, 9]]],
+                        ],
+                    ],
+                ],
             ],
         ];
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
+
+        $total = 0;
+        $data = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             try {
                 $response = $this->elasticService->getClient()->search($params);
                 $total = $response['hits']['total']['value'] ?? 0;
@@ -1498,10 +1556,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        // DB Fallback if ES is empty or unreachable
+        if ($total == 0 && empty($searchQuery)) {
+            $dbCandQuery = DB::table('add_job_wise_condidates')
+                ->join('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                ->where('add_job_wise_condidates.company_id', $from_company_id)
+                ->where('add_job_wise_condidates.thirdparty_company_id', $to_company_id)
+                ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9]);
+
+            $total = $dbCandQuery->count();
+            if ($total > 0) {
+                $dbHits = $dbCandQuery
+                    ->select('job_applications.*', 'add_job_wise_condidates.master_status_id', 'add_job_wise_condidates.job_id as job_id')
+                    ->skip($from)
+                    ->take($size)
+                    ->get();
+                $data = $dbHits->map(function ($c) {
+                    return (array) $c;
+                })->toArray();
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => $total > 0 ? ceil($total / $size) : 1,
             'listType' => 'allcandidate',
         ];
 
@@ -1510,38 +1589,60 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     public function staffingclientCandidateJoinList(Request $request)
     {
-        // $candidates = JobApplication::query();
-        $to_company_id = $request->clientid;
+        $rawClientId = $request->clientid ?? $request->input('id');
         $from_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
-        $searchQuery = $request->input('q');
+        $to_company_id = $this->resolveAuthorizedAgencyCompanyId($from_company_id, $rawClientId);
+
+        if (! $to_company_id) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
+        }
+
+        $searchQuery = trim($request->input('search') ?? $request->input('q') ?? '');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
-        $boolQuery = [
+        $must = [];
+        $must[] = ['term' => ['from_company_id' => $from_company_id]];
+        $must[] = [
             'bool' => [
-                'must' => [
-                    // First condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['ClientComID' => $to_company_id]],
-                                ['term' => ['from_company_id' => $from_company_id]],
-                                ['term' => ['job_master_status_id' => 6]],
-                            ]),
-                        ],
-                    ],
+                'should' => [
+                    ['term' => ['job_master_status_id' => 6]],
+                    ['term' => ['master_status_id' => 6]],
                 ],
-                'filter' => [], // We'll add all filters here
+                'minimum_should_match' => 1,
             ],
         ];
+        $must[] = [
+            'bool' => [
+                'should' => [
+                    ['term' => ['ClientComID' => $to_company_id]],
+                    ['term' => ['to_company_id' => $to_company_id]],
+                    ['term' => ['thirdparty_company_id' => $to_company_id]],
+                ],
+                'minimum_should_match' => 1,
+            ],
+        ];
+
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['email' => $searchQuery]],
+                        ['match_phrase_prefix' => ['phone' => $searchQuery]],
+                        ['match_phrase_prefix' => ['skills' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
         $params = [
             'index' => ELASTIC_CANDIDATES,
@@ -1549,14 +1650,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
-                'query' => $boolQuery,
+                'sort' => [['id' => ['order' => 'desc']]],
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
             ],
         ];
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
+
+        $total = 0;
+        $data = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             try {
                 $response = $this->elasticService->getClient()->search($params);
                 $total = $response['hits']['total']['value'] ?? 0;
@@ -1569,48 +1675,87 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        // DB Fallback if ES is empty or unreachable
+        if ($total == 0 && empty($searchQuery)) {
+            $dbCandQuery = DB::table('add_job_wise_condidates')
+                ->join('job_applications', 'job_applications.id', '=', 'add_job_wise_condidates.job_application_id')
+                ->where('add_job_wise_condidates.company_id', $from_company_id)
+                ->where('add_job_wise_condidates.thirdparty_company_id', $to_company_id)
+                ->where('add_job_wise_condidates.master_status_id', 6);
+
+            $total = $dbCandQuery->count();
+            if ($total > 0) {
+                $dbHits = $dbCandQuery
+                    ->select('job_applications.*', 'add_job_wise_condidates.master_status_id')
+                    ->skip($from)
+                    ->take($size)
+                    ->get();
+                $data = $dbHits->map(function ($c) {
+                    return (array) $c;
+                })->toArray();
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => $total > 0 ? ceil($total / $size) : 1,
             'listType' => 'allcandidate',
         ];
 
-        // dd($pagination);
         return response()->json([
             'html' => view('service_company.ajax_pages.agency_client_candidates_join', compact('data', 'company_id'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     /**
      * Intent: Fetch candidate interview tracker list for specific agency (consultancy view).
-     * Tenancy: Restricted by from_company_id (auth tenant) AND ClientComID (agency company ID) to ensure only agency-shared candidate interviews are displayed.
+     * Tenancy: Restricted by from_company_id (auth tenant) AND agency company ID (to_company_id / ClientComID) to ensure only agency-shared candidate interviews are displayed.
      */
     public function staffingclientCandidateInterviewTracker(Request $request)
     {
-        $to_company_id = (int) $request->clientid;
+        $rawClientId = $request->clientid ?? $request->input('id');
         $from_company_id = (int) auth()->user()->company_id;
         $company_id = (int) auth()->user()->company_id;
 
+        $to_company_id = $this->resolveAuthorizedAgencyCompanyId($from_company_id, $rawClientId);
+
+        if (! $to_company_id) {
+            return response()->json(['status' => 'fail', 'message' => 'Unauthorized partner.'], 403);
+        }
+
+        $searchQuery = trim($request->input('search') ?? $request->input('q') ?? '');
         $page = max((int) $request->input('page', 1), 1);
-        $size = (int) $request->input('size', 10); // Default 20 results per page
+        $size = (int) $request->input('size', 10);
         $from = ($page - 1) * $size;
 
+        $must = [];
+        $must[] = ['term' => ['from_company_id' => $from_company_id]];
         $must[] = [
             'bool' => [
-                'must' => [
-                    [
-                        'term' => ['ClientComID' => $to_company_id],
-                    ],
-                    [
-                        'term' => ['from_company_id' => $from_company_id],
-                    ],
+                'should' => [
+                    ['term' => ['ClientComID' => $to_company_id]],
+                    ['term' => ['thirdparty_company_id' => $to_company_id]],
                 ],
+                'minimum_should_match' => 1,
             ],
         ];
+
+        if (! empty($searchQuery)) {
+            $must[] = [
+                'bool' => [
+                    'should' => [
+                        ['match_phrase_prefix' => ['full_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['job_title' => $searchQuery]],
+                        ['match_phrase_prefix' => ['company_name' => $searchQuery]],
+                        ['match_phrase_prefix' => ['mode_name' => $searchQuery]],
+                    ],
+                    'minimum_should_match' => 1,
+                ],
+            ];
+        }
 
         $params = [
             'index' => ELASTIC_INERTVIEW_TRACKER,
@@ -1618,36 +1763,63 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'body' => [
                 'from' => $from,
                 'size' => $size,
-                'sort' => [],
+                'sort' => [['id' => ['order' => 'desc']]],
                 'query' => [
                     'bool' => [
                         'must' => $must,
-                        'filter' => [],
                     ],
                 ],
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-            $total = 0;
-            $data = [];
-        } else {
+        $total = 0;
+        $data = [];
+
+        if ($this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             try {
                 $response = $this->elasticService->getClient()->search($params);
                 $total = $response['hits']['total']['value'] ?? 0;
                 $data = array_map(function ($hit) {
                     return $hit['_source'];
                 }, $response['hits']['hits']);
-
             } catch (\Exception $e) {
                 $total = 0;
                 $data = [];
             }
         }
+
+        // DB Fallback if ES is empty or unreachable
+        if ($total == 0 && empty($searchQuery)) {
+            $dbInterviewQuery = DB::table('interview_schedules')
+                ->join('job_applications', 'job_applications.id', '=', 'interview_schedules.job_application_id')
+                ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
+                ->where('job_applications.company_id', $from_company_id)
+                ->where('job_applications.thirdparty_company_id', $to_company_id);
+
+            $total = $dbInterviewQuery->count();
+            if ($total > 0) {
+                $dbHits = $dbInterviewQuery
+                    ->select(
+                        'interview_schedules.*',
+                        'job_applications.full_name',
+                        'job_applications.email',
+                        'job_applications.phone',
+                        'job_applications.id as job_application_id',
+                        'jobs.title as job_title'
+                    )
+                    ->skip($from)
+                    ->take($size)
+                    ->get();
+                $data = $dbHits->map(function ($i) {
+                    return (array) $i;
+                })->toArray();
+            }
+        }
+
         $pagination = [
             'total' => $total,
             'current_page' => $page,
-            'last_page' => ceil($total / $size),
+            'last_page' => $total > 0 ? ceil($total / $size) : 1,
             'listType' => 'allcandidate',
         ];
 
@@ -1656,7 +1828,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ]);
-
     }
 
     /** Fetch résumé bytes from r2 / full URL / local public path. Returns string|null. */

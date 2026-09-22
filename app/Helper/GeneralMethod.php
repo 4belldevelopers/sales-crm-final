@@ -3377,7 +3377,7 @@ END:VCALENDAR";
         $from_company_id = (int) ($row->from_company_id ?? 0);
 
         $job_company_id = (int) ($row->company_id ?? 0);
-        $is_direct_client = ($recommendation_id > 0 && ($to_company_id === (int) $company_id || $from_company_id > 0)) || ((int)$company_id > 0 && $job_company_id > 0 && (int)$company_id !== $job_company_id);
+        $is_direct_client = ($recommendation_id > 0 && ($to_company_id === (int) $company_id || $from_company_id > 0)) || ((int) $company_id > 0 && $job_company_id > 0 && (int) $company_id !== $job_company_id);
 
         if ($is_direct_client) {
             if (empty($company_name) && $from_company_id > 0) {
@@ -14875,82 +14875,129 @@ END:VCALENDAR";
     public static function agencyCandidatesCountList($to_company_id, $from_company_id)
     {
         $elasticService = app(ElasticService::class);
-
-        $params = [
-            'index' => ELASTIC_CANDIDATES,
-            'body' => [
-                'size' => 0,
-                'query' => [
-                    'bool' => [
-                        'must' => [
-                            ['term' => ['from_company_id' => $from_company_id]],
-                            ['term' => ['ClientComID' => $to_company_id]],
-                            ['term' => ['final_status' => 1]],
-                        ],
-                        'must_not' => [
-                            ['terms' => ['job_master_status_id' => [8, 9]]],
-                        ],
-                    ],
-                ],
-                'aggs' => [
-                    'all_candidates' => [
-                        'value_count' => [
-                            'field' => 'id',
-                        ],
-                    ],
-                    'joined' => [
-                        'filter' => [
-                            'term' => [
-                                'job_master_status_id' => 6,
-                            ],
-                        ],
-                    ],
-                    'sourced' => [
-                        'filter' => [
-                            'term' => [
-                                'job_master_status_id' => 1,
-                            ],
-                        ],
-                    ],
-                    'evaluated' => [
-                        'filter' => [
-                            'term' => [
-                                'job_master_status_id' => 3,
-                            ],
-                        ],
-                    ],
-                    'offers' => [
-                        'filter' => [
-                            'exists' => [
-                                'field' => 'of_created_date',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $response = $elasticService->getClient()->search($params);
-        $allCandidate = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
-        $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
-        $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
-        $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
-        $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
-
+        $allCandidate = 0;
+        $Joined = 0;
+        $sourced = 0;
+        $evaluated = 0;
+        $offers = 0;
         $allInterview = 0;
-        if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-            $mustInterview = [
-                ['term' => ['from_company_id' => $from_company_id]],
-                ['term' => ['ClientComID' => $to_company_id]],
+
+        $to_company_id = (int) $to_company_id;
+        $from_company_id = (int) $from_company_id;
+
+        if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+            $params = [
+                'index' => ELASTIC_CANDIDATES,
+                'body' => [
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['from_company_id' => $from_company_id]],
+                                ['term' => ['final_status' => 1]],
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['ClientComID' => $to_company_id]],
+                                            ['term' => ['to_company_id' => $to_company_id]],
+                                            ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                            ],
+                            'must_not' => [
+                                ['terms' => ['job_master_status_id' => [8, 9]]],
+                            ],
+                        ],
+                    ],
+                    'aggs' => [
+                        'all_candidates' => [
+                            'value_count' => [
+                                'field' => 'id',
+                            ],
+                        ],
+                        'joined' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 6]],
+                                        ['term' => ['master_status_id' => 6]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                        'sourced' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 1]],
+                                        ['term' => ['master_status_id' => 1]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                        'evaluated' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 3]],
+                                        ['term' => ['master_status_id' => 3]],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                        'offers' => [
+                            'filter' => [
+                                'bool' => [
+                                    'should' => [
+                                        ['term' => ['job_master_status_id' => 5]],
+                                        ['term' => ['master_status_id' => 5]],
+                                        ['exists' => ['field' => 'offer_released_at']],
+                                        ['exists' => ['field' => 'of_created_date']],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
             ];
 
+            try {
+                $response = $elasticService->getClient()->search($params);
+                $allCandidate = $response['hits']['total']['value'] ?? ($response['aggregations']['all_candidates']['value'] ?? 0);
+                $Joined = $response['aggregations']['joined']['doc_count'] ?? 0;
+                $sourced = $response['aggregations']['sourced']['doc_count'] ?? 0;
+                $evaluated = $response['aggregations']['evaluated']['doc_count'] ?? 0;
+                $offers = $response['aggregations']['offers']['doc_count'] ?? 0;
+            } catch (\Exception $e) {
+                $allCandidate = 0;
+            }
+        }
+
+        if ($elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
             $paramsInterview = [
                 'index' => ELASTIC_INERTVIEW_TRACKER,
                 'body' => [
                     'size' => 0,
                     'query' => [
                         'bool' => [
-                            'must' => $mustInterview,
+                            'must' => [
+                                ['term' => ['from_company_id' => $from_company_id]],
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['ClientComID' => $to_company_id]],
+                                            ['term' => ['thirdparty_company_id' => $to_company_id]],
+                                        ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                            ],
                         ],
                     ],
                     'aggs' => [
@@ -14971,7 +15018,44 @@ END:VCALENDAR";
             }
         }
 
-        $recommendedDataListArr = (object) [
+        // DB Fallback if ES candidate or interview counts returned 0
+        if ($allCandidate == 0) {
+            $candidateDbStats = DB::table('add_job_wise_condidates')
+                ->select(
+                    DB::raw('COUNT(1) AS total_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 6 THEN 1 END) AS joined_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 1 THEN 1 END) AS sourced_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 3 THEN 1 END) AS eval_cand'),
+                    DB::raw('COUNT(CASE WHEN master_status_id = 5 THEN 1 END) AS offer_cand')
+                )
+                ->where('company_id', $from_company_id)
+                ->where('thirdparty_company_id', $to_company_id)
+                ->whereNotIn('master_status_id', [8, 9])
+                ->first();
+
+            if ($candidateDbStats && $candidateDbStats->total_cand > 0) {
+                $allCandidate = (int) $candidateDbStats->total_cand;
+                $Joined = (int) $candidateDbStats->joined_cand;
+                $sourced = (int) $candidateDbStats->sourced_cand;
+                $evaluated = (int) $candidateDbStats->eval_cand;
+                $offers = (int) $candidateDbStats->offer_cand;
+            }
+        }
+
+        if ($allInterview == 0) {
+            $interviewDbCount = DB::table('interview_schedules')
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', '=', 'interview_schedules.job_application_id')
+                ->where('add_job_wise_condidates.company_id', $from_company_id)
+                ->where('add_job_wise_condidates.thirdparty_company_id', $to_company_id)
+                ->whereNotIn('add_job_wise_condidates.master_status_id', [8, 9])
+                ->count('interview_schedules.id');
+
+            if ($interviewDbCount > 0) {
+                $allInterview = (int) $interviewDbCount;
+            }
+        }
+
+        return (object) [
             'all_candidates' => $allCandidate,
             'Joined' => $Joined,
             'offers' => $offers,
@@ -14979,7 +15063,5 @@ END:VCALENDAR";
             'evaluated' => $evaluated,
             'all_interview' => $allInterview,
         ];
-
-        return $recommendedDataListArr;
     }
 }
