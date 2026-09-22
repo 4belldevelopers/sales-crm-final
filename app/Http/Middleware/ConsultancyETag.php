@@ -40,7 +40,7 @@ class ConsultancyETag
         $userVersion = Cache::get("allconsultancy_version_user_{$userId}", 1);
         $viewMoreVersion = Cache::get("consultancyviewmore_version_user_{$userId}", 1);
 
-        $etag = '"'.md5("consultancy_v5_{$companyId}_{$userId}_{$companyVersion}_{$userVersion}_{$viewMoreVersion}_".$request->fullUrl()).'"';
+        $etag = '"'.md5("consultancy_v7_{$companyId}_{$userId}_{$companyVersion}_{$userVersion}_{$viewMoreVersion}_".$request->fullUrl()).'"';
 
         // Check If-None-Match header
         $clientEtag = $request->header('If-None-Match');
