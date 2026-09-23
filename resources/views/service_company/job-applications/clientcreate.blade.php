@@ -873,29 +873,22 @@ body {overflow-x:hidden; }
                         @if(!empty($skill_val->skill_name))
 
                             @php
-                                  if($skill_val->skill_value){
-                                    $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
-                                    // dd($skillValue);
-                                    if(!is_null($skillValue) && !empty($skillValue)){
-                                      $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
-                                      $skill_exp_years = ($total_skill_exp[0]);
-                                      $skill_exp_months = ($total_skill_exp[1]); 
+                                  $selected_skill_exp_year = null;
+                                  $selected_skill_exp_month = null;
+                                  $selected_skill_rating = null;
+
+                                  if(!empty($skill_val->skill_value)){
+                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
+                                    if($skillValue !== ''){
+                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
+                                      $skill_exp_years = $total_skill_exp[0] ?? null;
+                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
 
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
-                                      $selected_skill_rating = $skill_val->rating;
-                                    }else{
-                                      $selected_skill_exp_year = null;
-                                      $selected_skill_exp_month =null;
-                                      $selected_skill_rating = null;
+                                      $selected_skill_rating = $skill_val->rating ?? null;
                                     }
-                                    //  dd($skillValue,$skill_val->skill_value);
-                                  }else{
-                                    $selected_skill_exp_year = null;
-                                    $selected_skill_exp_month =null;
-                                    $selected_skill_rating = null;
                                   }
-
                             @endphp
 
                             <tr>
@@ -905,17 +898,13 @@ body {overflow-x:hidden; }
                                       <option value="0">Select Year</option>
                                       @php 
                                           for ($i = 1; $i <= 60; $i++) {
-                                               $selected = '';
+                                                $selected = '';
                                                 $s = 'Year';
                                                 if($i > 1){
                                                     $s = 'Years';
                                                 }
-                                                if(is_null($selected_skill_exp_year)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_exp_year){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }
@@ -927,17 +916,13 @@ body {overflow-x:hidden; }
                                       <option value="">Select Month</option>
                                       @php 
                                           for ($i = 0; $i <= 11; $i++) {
-                                            $selected = '';
+                                                $selected = '';
                                                 $s = 'Month';
                                                 if($i > 1){
                                                     $s = 'Months';
                                                 }
-                                                if(is_null($selected_skill_exp_month)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_exp_month){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }
@@ -949,17 +934,13 @@ body {overflow-x:hidden; }
                                       <option value="0">Select rating</option>
                                       @php 
                                           for ($i = 1; $i <= 5; $i++) {
-                                               $selected = '';
+                                                $selected = '';
                                                 $s = 'Star';
                                                 if($i > 1){
                                                     $s = 'Stars';
                                                 }
-                                                if(is_null($selected_skill_rating)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_rating){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }
