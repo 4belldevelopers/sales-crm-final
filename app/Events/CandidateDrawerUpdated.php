@@ -26,7 +26,8 @@ class CandidateDrawerUpdated implements ShouldBroadcast
         public readonly int $companyId,
         public readonly int $candidateId,
         public readonly int $entityVersion,
-        public readonly string $mutationType = 'updated'
+        public readonly string $mutationType = 'updated',
+        public readonly array $wiseIds = []
     ) {}
 
     public function broadcastOn(): PrivateChannel
@@ -43,6 +44,7 @@ class CandidateDrawerUpdated implements ShouldBroadcast
     {
         return [
             'candidate_id' => $this->candidateId,
+            'wise_ids' => $this->wiseIds,
             'entity_version' => $this->entityVersion,
             'mutation_type' => $this->mutationType,
             'timestamp' => now()->toIso8601String(),

@@ -876,7 +876,7 @@ body {overflow-x:hidden; }
                                   if($skill_val->skill_value){
                                     $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
                                     // dd($skillValue);
-                                    if(!is_null($value) && !empty($value)){
+                                    if(!is_null($skillValue) && !empty($skillValue)){
                                       $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
                                       $skill_exp_years = ($total_skill_exp[0]);
                                       $skill_exp_months = ($total_skill_exp[1]); 

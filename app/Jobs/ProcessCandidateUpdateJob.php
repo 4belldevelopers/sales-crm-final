@@ -341,6 +341,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                                     'interviewDateSix' => $interviewDateSix ? Carbon::parse($interviewDateSix)->toIso8601String() : null,
                                     'interview_mode_six' => $data['interview_mode_six'] ?? null,
                                     'comment' => $applications_up->comment,
+                                    'recruiter_note' => $applications_up->recruiter_note,
                                 ],
                                 'doc_as_upsert' => true,
                                 'detect_noop' => false,

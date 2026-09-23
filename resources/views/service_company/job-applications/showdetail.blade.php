@@ -763,6 +763,9 @@
        button outside the bar so it doesn't fight the primary/secondary
        button hierarchy.
        ============================================================ --}}
+  <input type="hidden" id="candidate_wise_id" value="{{ @$application->wiseId ?: @$jobWiseCanId }}" />
+  <input type="hidden" id="candidate_core_id" value="{{ @$application->id }}" />
+
   {{-- TOP ACTION BAR (outside any card, spans full width — mirrors job drawer top-actions) --}}
   <div class="cdr-topbar" aria-label="Candidate actions">
     <div class="cdr-topbar-group">
@@ -4651,28 +4654,49 @@ setTimeout(() => {
                       `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
                     );						
           $.ajax({
-            url				: '{{route('service_company.job-applications.skillExperienceUpdate', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',								   
+            url				: '{{ route('service_company.job-applications.skillExperienceUpdate') }}?_token={{ csrf_token() }}',
                   type 			: 'POST',
                   data 			: formData,
                   processData		: false,  	// tell jQuery not to process the data
                   contentType		: false,  	// tell jQuery not to set contentType
                   redirect			: true,
                   success			: function (response) {
-                    $btn.html('Save');
+                    $btn.html('Save Changes');
                     $btn.prop('disabled', false); // Re-enable after success
-                    $("#skill-update-form").html('Save');
+                    $("#skill-update-form").html('Save Changes');
                     $('.editSkillUpdate').addClass('d-none');
                     $('.editSkillCancel').addClass('d-none');
                     $('.job_skill_edit').addClass('d-none');
                     $('.job_skill_view').removeClass('d-none');
                     $('.editSkill').removeClass('d-none');
-                          Swal.fire("Success", 'Candidate Skill Experience updated successfully !',"success");
-                          $('.job_skill_view').html(response.html)
-                        },
+                    if (response.html) {
+                        $('.job_skill_view').html(response.html);
+                    }
+                    // Synchronize select inputs in side drawer so reopening shows updated values
+                    if (response.data && Array.isArray(response.data)) {
+                        response.data.forEach(function(item) {
+                            if (item.skillId) {
+                                if (typeof item.rating !== 'undefined') {
+                                    $('select[name="rating[' + item.skillId + ']"]').val(item.rating);
+                                }
+                            }
+                        });
+                    }
+                    // Multi-tier atomic cache invalidation for both wiseId and core candidateId
+                    var wId = $('#candidate_wise_id').val() || '{{ @$application->wiseId ?: @$jobWiseCanId }}';
+                    var cId = $('#candidate_core_id').val() || '{{ @$application->id }}';
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+                    Swal.fire("Success", 'Candidate Skill Experience updated successfully !',"success");
+                  },
                 error			: function (response) {
-                  $("#skill-update-form").html('Save');
-                          Swal.fire("Warning", 'Something is the issue.',"warning");
-                        }
+                  $btn.html('Save Changes');
+                  $btn.prop('disabled', false);
+                  $("#skill-update-form").html('Save Changes');
+                  Swal.fire("Warning", 'Something went wrong. Please try again.',"warning");
+                }
             });
 
     });
@@ -4960,6 +4984,14 @@ setTimeout(() => {
                         }
                         $('.po-no-notes').show();
                     }
+                    // Multi-tier atomic cache invalidation for both wiseId and core candidateId
+                    var wId = $('#candidate_wise_id').val() || '{{ @$application->wiseId ?: @$jobWiseCanId }}';
+                    var cId = $('#candidate_core_id').val() || appId;
+                    if (window.invalidateCandidateDrawerCache) {
+                        if (wId) window.invalidateCandidateDrawerCache(wId);
+                        if (cId) window.invalidateCandidateDrawerCache(cId);
+                    }
+
                     // Close drawer first; blur active element so focus-restore
                     // cannot re-trigger the Edit button after Swal closes
                     $('.rn-drawer-body').addClass('d-none');

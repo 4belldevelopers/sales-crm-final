@@ -3291,6 +3291,11 @@ $( document ).ready(function() {
                   if (e && e.candidate_id) {
                       window.invalidateCandidateDrawerCache(e.candidate_id);
                   }
+                  if (e && e.wise_ids && Array.isArray(e.wise_ids)) {
+                      e.wise_ids.forEach(function(wid) {
+                          window.invalidateCandidateDrawerCache(wid);
+                      });
+                  }
               });
       }
   });
@@ -3302,10 +3307,15 @@ $( document ).ready(function() {
       var url = settings.url;
       if (url.indexOf('skill-experience') !== -1 || url.indexOf('statusupdate') !== -1 || 
           url.indexOf('stage_submit') !== -1 || url.indexOf('job-question-update') !== -1 || 
-          url.indexOf('recruiter-note-update') !== -1 || url.indexOf('slots-update') !== -1) {
-          var activeId = $('#appId').val() || $('#application_id').val() || $('input[name="appId"]').val();
-          if (activeId) {
-              window.invalidateCandidateDrawerCache(activeId);
+          url.indexOf('recruiter-note-update') !== -1 || url.indexOf('slots-update') !== -1 ||
+          url.indexOf('job-applications/update') !== -1) {
+          var activeCoreId = $('#candidate_core_id').val() || $('#appId').val() || $('#application_id').val() || $('input[name="appId"]').val();
+          var activeWiseId = $('#candidate_wise_id').val() || window.__activeCandidateDrawerId;
+          if (activeCoreId) {
+              window.invalidateCandidateDrawerCache(activeCoreId);
+          }
+          if (activeWiseId) {
+              window.invalidateCandidateDrawerCache(activeWiseId);
           }
       }
   });
