@@ -2885,9 +2885,34 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $jobSkillsList = [];
         if (! empty($this->jobIdArr)) {
-            $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
-            $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
-            $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+            try {
+                $client = $this->elasticService->getClient();
+                foreach ($this->jobIdArr as $jid) {
+                    $esJob = $client->get([
+                        'index' => config('constants.ELASTIC_JOBS', 'jobs_index'),
+                        'id' => (int) $jid,
+                    ]);
+                    $source = $esJob['_source'] ?? [];
+                    if (! empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+                        foreach ($source['job_metronics_skills'] as $sk) {
+                            $sn = is_array($sk) ? ($sk['skill_name'] ?? '') : ($sk->skill_name ?? '');
+                            if (! empty($sn)) {
+                                $jobSkillsList[] = trim($sn);
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $esErr) {
+                \Log::warning('[fwd_resume] ES job skills read fallback to DB: '.$esErr->getMessage());
+            }
+
+            if (empty($jobSkillsList)) {
+                $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
+                $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+            } else {
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', $jobSkillsList))));
+            }
         }
         $this->jobSkills = $jobSkillsList;
 
@@ -3059,18 +3084,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
             }
 
-            // B. Check candidate_job_skill_exp if bench skills empty
-            if (empty($skillsArr)) {
-                $cjseList = $cjseSkills->get($cand->id);
-                if ($cjseList && count($cjseList) > 0) {
-                    foreach ($cjseList as $cRow) {
-                        $sn = trim((string) $cRow->skill_name);
-                        $snLower = strtolower($sn);
-                        if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                            continue;
-                        }
-                        $seenSkillNames[$snLower] = true;
+            // B. Map candidate evaluations from candidate_job_skill_exp
+            $cjseList = $cjseSkills->get($cand->id);
+            $cjseMap = [];
+            if ($cjseList && count($cjseList) > 0) {
+                foreach ($cjseList as $cRow) {
+                    $snLower = strtolower(trim((string) $cRow->skill_name));
+                    if ($snLower !== '') {
+                        $cjseMap[$snLower] = $cRow;
+                    }
+                }
+            }
 
+            // Prioritize active job skills
+            if (! empty($jobSkillsList) && count($skillsArr) < 7) {
+                foreach ($jobSkillsList as $jsName) {
+                    $jsTrim = trim((string) $jsName);
+                    $jsLower = strtolower($jsTrim);
+                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$jsLower] = true;
+
+                    if (isset($cjseMap[$jsLower])) {
+                        $cRow = $cjseMap[$jsLower];
                         $rawVal = trim((string) $cRow->skill_value);
                         $sExpText = '--';
                         $sExpNum = 0.0;
@@ -3095,23 +3132,75 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
-                            'name' => ucwords($sn),
+                            'name' => ucwords($jsTrim),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
                             'rating' => $ratingVal,
                         ];
-                        if (count($skillsArr) >= 7) {
-                            break;
-                        }
+                    } else {
+                        $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
+                        $skillsArr[] = [
+                            'name' => ucwords($jsTrim),
+                            'expText' => $expStr,
+                            'exp' => (float) $totExp ?: 0,
+                            'rating' => $defaultRating,
+                        ];
+                    }
+
+                    if (count($skillsArr) >= 7) {
+                        break;
                     }
                 }
             }
 
-            // C. Fallback to candidate's own parsed skills list with real experience & rating
-            if (empty($skillsArr)) {
-                $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
+            // C. If slots remain (< 7), include candidate's remaining evaluated or profile skills
+            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
+                foreach ($cjseList as $cRow) {
+                    $sn = trim((string) $cRow->skill_name);
+                    $snLower = strtolower($sn);
+                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $rawVal = trim((string) $cRow->skill_value);
+                    $sExpText = '--';
+                    $sExpNum = 0.0;
+                    if ($rawVal !== '') {
+                        if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
+                            $y = (int) $m[1];
+                            $mo = (int) $m[2];
+                            $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
+                            $sExpNum = $y + ($mo / 12);
+                        } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
+                            $sExpNum = (float) $m[1];
+                            $sExpText = $rawVal;
+                        } else {
+                            $sExpText = $rawVal;
+                        }
+                    }
+
+                    $ratingVal = (int) ($cRow->rating ?? 0);
+                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                        $ratingVal = (int) $cand->rating;
+                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
+
+                    $skillsArr[] = [
+                        'name' => ucwords($sn),
+                        'expText' => $sExpText,
+                        'exp' => $sExpNum,
+                        'rating' => $ratingVal,
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
+            }
+
+            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
                 $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                foreach ($combinedSkills as $skName) {
+                foreach ($candSkillsList as $skName) {
                     if (! $skName) {
                         continue;
                     }
@@ -3389,9 +3478,34 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $jobSkillsList = [];
         if (! empty($this->jobIdArr)) {
-            $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
-            $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
-            $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+            try {
+                $client = $this->elasticService->getClient();
+                foreach ($this->jobIdArr as $jid) {
+                    $esJob = $client->get([
+                        'index' => config('constants.ELASTIC_JOBS', 'jobs_index'),
+                        'id' => (int) $jid,
+                    ]);
+                    $source = $esJob['_source'] ?? [];
+                    if (! empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+                        foreach ($source['job_metronics_skills'] as $sk) {
+                            $sn = is_array($sk) ? ($sk['skill_name'] ?? '') : ($sk->skill_name ?? '');
+                            if (! empty($sn)) {
+                                $jobSkillsList[] = trim($sn);
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $esErr) {
+                \Log::warning('[test_fwd_resume] ES job skills read fallback to DB: '.$esErr->getMessage());
+            }
+
+            if (empty($jobSkillsList)) {
+                $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $this->jobIdArr)->pluck('skill_name')->toArray();
+                $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $this->jobIdArr)->pluck('skills.name')->toArray();
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+            } else {
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', $jobSkillsList))));
+            }
         }
         $this->jobSkills = $jobSkillsList;
 
@@ -3566,18 +3680,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
             }
 
-            // B. Check candidate_job_skill_exp if bench skills empty
-            if (empty($skillsArr)) {
-                $cjseList = $cjseSkills->get($cand->id);
-                if ($cjseList && count($cjseList) > 0) {
-                    foreach ($cjseList as $cRow) {
-                        $sn = trim((string) $cRow->skill_name);
-                        $snLower = strtolower($sn);
-                        if ($sn === '' || isset($seenSkillNames[$snLower])) {
-                            continue;
-                        }
-                        $seenSkillNames[$snLower] = true;
+            // B. Map candidate evaluations from candidate_job_skill_exp
+            $cjseList = $cjseSkills->get($cand->id);
+            $cjseMap = [];
+            if ($cjseList && count($cjseList) > 0) {
+                foreach ($cjseList as $cRow) {
+                    $snLower = strtolower(trim((string) $cRow->skill_name));
+                    if ($snLower !== '') {
+                        $cjseMap[$snLower] = $cRow;
+                    }
+                }
+            }
 
+            // Prioritize active job skills
+            if (! empty($jobSkillsList) && count($skillsArr) < 7) {
+                foreach ($jobSkillsList as $jsName) {
+                    $jsTrim = trim((string) $jsName);
+                    $jsLower = strtolower($jsTrim);
+                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$jsLower] = true;
+
+                    if (isset($cjseMap[$jsLower])) {
+                        $cRow = $cjseMap[$jsLower];
                         $rawVal = trim((string) $cRow->skill_value);
                         $sExpText = '--';
                         $sExpNum = 0.0;
@@ -3602,23 +3728,75 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         $ratingVal = min(5, max(0, $ratingVal));
 
                         $skillsArr[] = [
-                            'name' => ucwords($sn),
+                            'name' => ucwords($jsTrim),
                             'expText' => $sExpText,
                             'exp' => $sExpNum,
                             'rating' => $ratingVal,
                         ];
-                        if (count($skillsArr) >= 7) {
-                            break;
-                        }
+                    } else {
+                        $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
+                        $skillsArr[] = [
+                            'name' => ucwords($jsTrim),
+                            'expText' => $expStr,
+                            'exp' => (float) $totExp ?: 0,
+                            'rating' => $defaultRating,
+                        ];
+                    }
+
+                    if (count($skillsArr) >= 7) {
+                        break;
                     }
                 }
             }
 
-            // C. Fallback to candidate's own parsed skills list with real experience & rating
-            if (empty($skillsArr)) {
-                $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
+            // C. If slots remain (< 7), include candidate's remaining evaluated or profile skills
+            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
+                foreach ($cjseList as $cRow) {
+                    $sn = trim((string) $cRow->skill_name);
+                    $snLower = strtolower($sn);
+                    if ($sn === '' || isset($seenSkillNames[$snLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$snLower] = true;
+
+                    $rawVal = trim((string) $cRow->skill_value);
+                    $sExpText = '--';
+                    $sExpNum = 0.0;
+                    if ($rawVal !== '') {
+                        if (preg_match('/(\d+)\s*(?:years?|yrs?)?\s+(\d+)\s*(?:months?|mos?)/i', $rawVal, $m)) {
+                            $y = (int) $m[1];
+                            $mo = (int) $m[2];
+                            $sExpText = $y.' Year'.($y > 1 ? 's' : '').($mo > 0 ? ' '.$mo.' Month'.($mo > 1 ? 's' : '') : '');
+                            $sExpNum = $y + ($mo / 12);
+                        } elseif (preg_match('/^(\d+(?:\.\d+)?)/', $rawVal, $m)) {
+                            $sExpNum = (float) $m[1];
+                            $sExpText = $sExpNum.' Year'.($sExpNum == 1.0 ? '' : 's');
+                        } else {
+                            $sExpText = $rawVal;
+                        }
+                    }
+
+                    $ratingVal = (int) ($cRow->rating ?? 0);
+                    if ($ratingVal <= 0 && ! empty($cand->rating)) {
+                        $ratingVal = (int) $cand->rating;
+                    }
+                    $ratingVal = min(5, max(0, $ratingVal));
+
+                    $skillsArr[] = [
+                        'name' => ucwords($sn),
+                        'expText' => $sExpText,
+                        'exp' => $sExpNum,
+                        'rating' => $ratingVal,
+                    ];
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
+            }
+
+            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
                 $defaultRating = ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 0;
-                foreach ($combinedSkills as $skName) {
+                foreach ($candSkillsList as $skName) {
                     if (! $skName) {
                         continue;
                     }
@@ -3839,16 +4017,37 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         });
 
-        // 4. Resolve Target Job Skills
+        // 4. Resolve Target Job Skills (Elasticsearch first with resilient DB fallback, zero stale Redis caching)
         $jobSkillsList = [];
         if (! empty($jobIdArr)) {
-            $cacheJobSkillsKey = 'job_skills_metronic:'.implode('_', $jobIdArr);
-            $jobSkillsList = \Illuminate\Support\Facades\Cache::remember($cacheJobSkillsKey, 600, function () use ($jobIdArr) {
+            try {
+                $client = app(\App\Services\ElasticService::class)->getClient();
+                foreach ($jobIdArr as $jid) {
+                    $esJob = $client->get([
+                        'index' => config('constants.ELASTIC_JOBS', 'jobs_index'),
+                        'id' => (int) $jid,
+                    ]);
+                    $source = $esJob['_source'] ?? [];
+                    if (! empty($source['job_metronics_skills']) && is_array($source['job_metronics_skills'])) {
+                        foreach ($source['job_metronics_skills'] as $sk) {
+                            $sn = is_array($sk) ? ($sk['skill_name'] ?? '') : ($sk->skill_name ?? '');
+                            if (! empty($sn)) {
+                                $jobSkillsList[] = trim($sn);
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $esErr) {
+                \Log::warning('[test_fwd_resume_data] ES job skills read fallback to DB: '.$esErr->getMessage());
+            }
+
+            if (empty($jobSkillsList)) {
                 $metronicSkills = DB::table('job_metronics_skills')->whereIn('job_id', $jobIdArr)->pluck('skill_name')->toArray();
                 $standardSkills = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->whereIn('job_skills.job_id', $jobIdArr)->pluck('skills.name')->toArray();
-
-                return array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
-            });
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', array_merge($metronicSkills, $standardSkills)))));
+            } else {
+                $jobSkillsList = array_values(array_unique(array_filter(array_map('trim', $jobSkillsList))));
+            }
         }
 
         // 5. Query Candidates: Primary via ELASTIC_CANDIDATES (sub-3ms, 0 MySQL joins)
@@ -3969,11 +4168,54 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $hasResume = ($candResume !== '' && $candResume !== '0' && strtolower($candResume) !== 'null');
             $resumeUrl = $hasResume ? route('service_company.cvtracker.resume', $cId) : '';
 
-            // Skill ratings for dossier
+            // Skill ratings for dossier - prioritizes active job skills mapped to candidate evaluations
             $skillsArr = [];
             $seenSkillNames = [];
             $cjseList = $cjseSkills->get($cId);
+            $cjseMap = [];
             if ($cjseList && count($cjseList) > 0) {
+                foreach ($cjseList as $cRow) {
+                    $snLower = strtolower(trim((string) $cRow->skill_name));
+                    if ($snLower !== '') {
+                        $cjseMap[$snLower] = $cRow;
+                    }
+                }
+            }
+
+            // A. Prioritize active job skills
+            if (! empty($jobSkillsList)) {
+                foreach ($jobSkillsList as $jsName) {
+                    $jsTrim = trim((string) $jsName);
+                    $jsLower = strtolower($jsTrim);
+                    if ($jsLower === '' || isset($seenSkillNames[$jsLower])) {
+                        continue;
+                    }
+                    $seenSkillNames[$jsLower] = true;
+
+                    if (isset($cjseMap[$jsLower])) {
+                        $cRow = $cjseMap[$jsLower];
+                        $rawVal = trim((string) $cRow->skill_value);
+                        $skillsArr[] = [
+                            'name' => ucwords($jsTrim),
+                            'expText' => $rawVal !== '' ? $rawVal : $expStr,
+                            'rating' => min(5, max(0, (int) ($cRow->rating ?? ($cand->rating ?? 4)))),
+                        ];
+                    } else {
+                        $skillsArr[] = [
+                            'name' => ucwords($jsTrim),
+                            'expText' => $expStr,
+                            'rating' => min(5, max(0, (int) (@$cand->rating ?: 4))),
+                        ];
+                    }
+
+                    if (count($skillsArr) >= 7) {
+                        break;
+                    }
+                }
+            }
+
+            // B. If slots remain (< 7), include candidate's remaining evaluated skills
+            if (count($skillsArr) < 7 && $cjseList && count($cjseList) > 0) {
                 foreach ($cjseList as $cRow) {
                     $sn = trim((string) $cRow->skill_name);
                     $snLower = strtolower($sn);
@@ -3992,11 +4234,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     }
                 }
             }
-            if (empty($skillsArr)) {
-                $combinedSkills = array_values(array_unique(array_filter(array_merge($candSkillsList, $jobSkillsList))));
-                foreach ($combinedSkills as $skName) {
-                    $snLower = strtolower($skName);
-                    if (isset($seenSkillNames[$snLower])) {
+
+            // C. If still empty or slots remain (< 7), fill from candidate profile skills
+            if (count($skillsArr) < 7 && ! empty($candSkillsList)) {
+                foreach ($candSkillsList as $skName) {
+                    $snLower = strtolower(trim((string) $skName));
+                    if ($snLower === '' || isset($seenSkillNames[$snLower])) {
                         continue;
                     }
                     $seenSkillNames[$snLower] = true;
@@ -4053,11 +4296,17 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         return response()->json([
             'status' => 'success',
             'company' => $companyData,
+            'companyName' => $companyData['name'] ?? '',
             'templates' => $templates,
+            'templateData' => $templates,
             'candidates' => $formattedCandidates,
+            'applicationData' => $formattedCandidates,
             'job_skills' => $jobSkillsList,
+            'jobSkills' => $jobSkillsList,
             'sender_email' => $user->email,
             'sender_name' => $user->name ?: $user->email,
+            'from_email' => $user->email,
+            'reply_to_email' => $user->email,
         ]);
     }
 
