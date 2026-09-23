@@ -3296,6 +3296,22 @@ $( document ).ready(function() {
                           window.invalidateCandidateDrawerCache(wid);
                       });
                   }
+              })
+              .listen('.job.skills.updated', function(e) {
+                  if (e && e.candidate_ids && Array.isArray(e.candidate_ids)) {
+                      e.candidate_ids.forEach(function(cid) {
+                          window.invalidateCandidateDrawerCache(cid);
+                      });
+                  }
+                  if (e && e.wise_ids && Array.isArray(e.wise_ids)) {
+                      e.wise_ids.forEach(function(wid) {
+                          window.invalidateCandidateDrawerCache(wid);
+                      });
+                  }
+                  if (window.ForwardResumeManager) {
+                      window.ForwardResumeManager._compiledAttachments = {};
+                      window.ForwardResumeManager._recipientsCache = null;
+                  }
               });
       }
   });
@@ -3317,6 +3333,13 @@ $( document ).ready(function() {
           if (activeWiseId) {
               window.invalidateCandidateDrawerCache(activeWiseId);
           }
+      }
+      if (url.indexOf('jobs/update') !== -1 || url.indexOf('jobs/store') !== -1) {
+          if (window.ForwardResumeManager) {
+              window.ForwardResumeManager._compiledAttachments = {};
+              window.ForwardResumeManager._recipientsCache = null;
+          }
+          window.purgeCandidateDrawerCaches(false);
       }
   });
 
