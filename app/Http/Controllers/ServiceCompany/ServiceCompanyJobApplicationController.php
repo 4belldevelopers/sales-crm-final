@@ -2642,10 +2642,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
         $this->jobSkill = DB::table('job_metronics_skills')
-            ->leftJoin('candidate_job_skill_exp', function ($join) {
-                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id'); // Add the candidate condition
+            ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId) {
+                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
+                if (! empty($appId)) {
+                    $join->where('candidate_job_skill_exp.candidate_id', '=', $appId);
+                }
             })
-            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
+            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
             ->where('job_metronics_skills.job_id', '=', $this->jobId)
             ->groupBy('job_metronics_skills.id')
             ->get();

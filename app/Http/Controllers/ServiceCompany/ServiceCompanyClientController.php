@@ -1377,7 +1377,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         abort_if(Gate::denies('view_clients'), 403);
         $company_id = auth()->user()->company_id;
 
-        $cacheKey = "ats:client_dashboard:{$company_id}:{$id}";
+        $cacheKey = "ats:client_dashboard_v7:{$company_id}:{$id}";
         if (cache()->has($cacheKey)) {
             \Log::info('CLIENT_DETAILS_APM: dashboardAnalytics cache hit', [
                 'client_id' => $id,
@@ -1393,7 +1393,9 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
         $endOfMonthcomman = Carbon::now()->endOfMonth();
 
-        $isInternalClient = DB::table('clients')->where('id', $id)->exists();
+        $isInternalClient = DB::table('clients')->where('id', $id)->where('company_id', $company_id)->where(function ($q) {
+            $q->whereNull('self_company')->orWhere('self_company', 0);
+        })->exists();
 
         if ($isInternalClient) {
             $candMust = [
@@ -1401,23 +1403,38 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'bool' => [
                         'should' => [
                             ['term' => ['client_id' => (int) $id]],
+                            ['term' => ['client_id' => (string) $id]],
                             ['term' => ['from_company_id' => (int) $id]],
+                            ['term' => ['from_company_id' => (string) $id]],
                             ['term' => ['client_company_id' => (int) $id]],
+                            ['term' => ['client_company_id' => (string) $id]],
                             ['term' => ['client_comapny_id' => (int) $id]],
+                            ['term' => ['client_comapny_id' => (string) $id]],
                         ],
                         'minimum_should_match' => 1,
                     ],
                 ],
             ];
+            $candMustNot = [
+                ['terms' => ['job_master_status_id' => [9, '9']]],
+            ];
         } else {
+            // Direct Client: STRICTLY shared data only (from_company_id = $id, to_company_id = $company_id, ClientComID = $company_id, final_status = 1)
             $candMust = [
                 [
                     'bool' => [
                         'should' => [
-                            ['term' => ['client_id' => (int) $id]],
                             ['term' => ['from_company_id' => (int) $id]],
-                            ['term' => ['client_company_id' => (int) $id]],
-                            ['term' => ['client_comapny_id' => (int) $id]],
+                            ['term' => ['from_company_id' => (string) $id]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['to_company_id' => (int) $company_id]],
+                            ['term' => ['to_company_id' => (string) $company_id]],
                         ],
                         'minimum_should_match' => 1,
                     ],
@@ -1426,22 +1443,31 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'bool' => [
                         'should' => [
                             ['term' => ['ClientComID' => (int) $company_id]],
-                            ['term' => ['to_company_id' => (int) $company_id]],
-                            ['term' => ['thirdparty_company_id' => (int) $company_id]],
+                            ['term' => ['ClientComID' => (string) $company_id]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['final_status' => 1]],
+                            ['term' => ['final_status' => '1']],
                         ],
                         'minimum_should_match' => 1,
                     ],
                 ],
             ];
+            $candMustNot = [
+                ['terms' => ['job_master_status_id' => [9, '9']]],
+            ];
         }
 
-        // 1. Candidate status count graph (ES_CANDIDATES - shared candidates only)
+        // 1. Candidate status count graph (ES_CANDIDATES)
         $boolQuery = [
             'bool' => [
                 'must' => $candMust,
-                'must_not' => [
-                    ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                ],
+                'must_not' => $candMustNot,
             ],
         ];
         $params = [
@@ -1473,17 +1499,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $response = $this->elasticService->getClient()->search($params);
             $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
-            $result = collect($bucketData)->mapWithKeys(fn ($item) => [$item['key'] => $item['doc_count']]);
+            $result = collect($bucketData)->mapWithKeys(fn ($item) => [(string)$item['key'] => $item['doc_count']]);
         }
 
-        $joined_count = $result->get('6', 0);
-        $sourcing_count = $result->get('1', 0);
-        $screening_count = $result->get('2', 0);
-        $evaluation_count = $result->get('3', 0);
-        $negotiation_count = $result->get('4', 0);
-        $offer_count = $result->get('5', 0);
-        $Rejected_count = $result->get('7', 0);
-        $inreview_count = $result->get('8', 0);
+        $joined_count = $result->get('6', 0) ?? $result->get(6, 0);
+        $sourcing_count = $result->get('1', 0) ?? $result->get(1, 0);
+        $screening_count = $result->get('2', 0) ?? $result->get(2, 0);
+        $evaluation_count = $result->get('3', 0) ?? $result->get(3, 0);
+        $negotiation_count = $result->get('4', 0) ?? $result->get(4, 0);
+        $offer_count = $result->get('5', 0) ?? $result->get(5, 0);
+        $Rejected_count = $result->get('7', 0) ?? $result->get(7, 0);
+        $inreview_count = $result->get('8', 0) ?? $result->get(8, 0);
         $total_candidates = $response['hits']['total']['value'] ?? ($inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count);
 
         // 2. Jobs status counts graph (ES_JOBS)
@@ -1496,24 +1522,28 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'size' => 0,
                     'query' => [
                         'bool' => [
-                            'should' => [
-                                ['term' => ['client_id' => (int) $id]],
+                            'must' => [
                                 [
-                                    'nested' => [
-                                        'path' => 'recommendation_relation',
-                                        'query' => [
-                                            'bool' => [
-                                                'must' => [
-                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
-                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $id]],
-                                                    ['term' => ['recommendation_relation.final_status' => (int) 1]],
-                                                ],
-                                            ],
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['comId' => (int) $company_id]],
+                                            ['term' => ['comId' => (string) $company_id]],
+                                            ['term' => ['company_id' => (int) $company_id]],
+                                            ['term' => ['company_id' => (string) $company_id]],
                                         ],
+                                        'minimum_should_match' => 1,
+                                    ],
+                                ],
+                                [
+                                    'bool' => [
+                                        'should' => [
+                                            ['term' => ['client_id' => (int) $id]],
+                                            ['term' => ['client_id' => (string) $id]],
+                                        ],
+                                        'minimum_should_match' => 1,
                                     ],
                                 ],
                             ],
-                            'minimum_should_match' => 1,
                         ],
                     ],
                     'aggs' => ['status_counts' => ['terms' => ['field' => 'status', 'size' => 10]]],
@@ -1551,7 +1581,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             $counts = collect($bucketJobs)->mapWithKeys(fn ($item) => [$item['key'] => $item['doc_count']]);
         }
 
-        // 3. Candidate last 7 days histogram (shared candidates only)
+        // 3. Candidate last 7 days histogram
         $endDate7Days = Carbon::today()->endOfDay();
         $startDate7Days = Carbon::today()->subDays(6)->startOfDay();
         $paramsCandidates7Days = [
@@ -1563,10 +1593,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'query' => [
                     'bool' => [
                         'must' => $candMust,
-                        'must_not' => [
-                            ['terms' => ['job_master_status_id' => [8, 9, '8', '9']]],
-                        ],
-                        'filter' => [['range' => ['created_at' => ['gte' => $startDate7Days->toIso8601String(), 'lte' => $endDate7Days->toIso8601String()]]]],
+                        'must_not' => $candMustNot,
+                        'filter' => [['range' => ['created_at' => ['gte' => $startDate7Days->format('Y-m-d 00:00:00'), 'lte' => $endDate7Days->format('Y-m-d 23:59:59'), 'format' => 'yyyy-MM-dd HH:mm:ss||strict_date_optional_time||yyyy-MM-dd']]]],
                     ],
                 ],
                 'aggs' => [
@@ -1594,7 +1622,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
         }
 
-        // 4. Offer count graph (6 months - shared candidates only)
+        // 4. Offer count graph (6 months)
         $labelsOffer = [];
         $candidateValuesOffer = [];
         $startDateComm = Carbon::now();
@@ -1616,14 +1644,14 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     'query' => [
                         'bool' => [
                             'must' => $candMust,
-                            'must_not' => [['terms' => ['job_master_status_id' => [8, 9, '8', '9']]]],
+                            'must_not' => $candMustNot,
                             'should' => [
                                 ['term' => ['job_master_status_id' => 5]],
                                 ['term' => ['job_master_status_id' => '5']],
                                 ['exists' => ['field' => 'of_created_date']],
                             ],
                             'minimum_should_match' => 1,
-                            'filter' => [['range' => ['created_at' => ['gte' => $startDate6M->toIso8601String(), 'lte' => $endDate6M->toIso8601String()]]]],
+                            'filter' => [['range' => ['created_at' => ['gte' => $startDate6M->format('Y-m-d 00:00:00'), 'lte' => $endDate6M->format('Y-m-d 23:59:59'), 'format' => 'yyyy-MM-dd HH:mm:ss||strict_date_optional_time||yyyy-MM-dd']]]],
                         ],
                     ],
                     'aggs' => [
@@ -1649,7 +1677,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         }
         $candidateValuesOfferList = array_values($candidateValuesOffer);
 
-        // 5. Candidate joining list graph (6 months - shared candidates only)
+        // 5. Candidate joining list graph (6 months)
         $labelsJoin = [];
         $candidateValuesJoin = [];
         for ($i = 5; $i >= 0; $i--) {
@@ -1672,8 +1700,8 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                             'must' => array_merge($candMust, [
                                 ['terms' => ['job_master_status_id' => [6, '6']]],
                             ]),
-                            'must_not' => [['terms' => ['job_master_status_id' => [8, 9, '8', '9']]]],
-                            'filter' => [['range' => ['created_at' => ['gte' => $startDate6M->toIso8601String(), 'lte' => $endDate6M->toIso8601String()]]]],
+                            'must_not' => $candMustNot,
+                            'filter' => [['range' => ['created_at' => ['gte' => $startDate6M->format('Y-m-d 00:00:00'), 'lte' => $endDate6M->format('Y-m-d 23:59:59'), 'format' => 'yyyy-MM-dd HH:mm:ss||strict_date_optional_time||yyyy-MM-dd']]]],
                         ],
                     ],
                     'aggs' => [
@@ -1726,9 +1754,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     [
                         'bool' => [
                             'should' => [
-                                ['term' => ['ClientComID' => (int) $company_id]],
-                                ['term' => ['thirdparty_company_id' => (int) $company_id]],
-                                ['bool' => ['must' => [['term' => ['job_company_id' => (int) $company_id]], ['term' => ['candidate_type' => 'other']]]]],
+                                ['term' => ['from_company_id' => (int) $id]],
+                                ['term' => ['from_company_id' => (string) $id]],
+                                ['term' => ['client_id' => (int) $id]],
+                                ['term' => ['client_id' => (string) $id]],
                             ],
                             'minimum_should_match' => 1,
                         ],
@@ -1736,10 +1765,17 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                     [
                         'bool' => [
                             'should' => [
-                                ['term' => ['client_id' => (int) $id]],
-                                ['term' => ['from_company_id' => (int) $id]],
-                                ['term' => ['client_company_id' => (int) $id]],
-                                ['term' => ['client_comapny_id' => (int) $id]],
+                                ['term' => ['to_company_id' => (int) $company_id]],
+                                ['term' => ['to_company_id' => (string) $company_id]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                    [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['ClientComID' => (int) $company_id]],
+                                ['term' => ['ClientComID' => (string) $company_id]],
                             ],
                             'minimum_should_match' => 1,
                         ],
@@ -1970,7 +2006,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
 
         $versionKey = 'clientsdviewmore_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, time());
-        $cacheKeySet = 'ats:clientsdviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:clientsdviewmore_v4:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */

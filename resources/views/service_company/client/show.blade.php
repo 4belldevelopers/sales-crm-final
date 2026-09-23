@@ -2340,6 +2340,9 @@ use Carbon\Carbon;
         } else if ($('#contacts').hasClass('active') || $('a[href="#contacts"]').hasClass('active')) {
             initContactsDataTable();
             loadedTabs['contacts'] = true;
+        } else if ($('#candidateDashboard').hasClass('active') || $('a[href="#candidateDashboard"]').hasClass('active')) {
+            fetchClientDashboardAnalytics();
+            loadedTabs['candidateDashboard'] = true;
         }
 
         $(document).on('shown.bs.tab', 'a[data-toggle="tab"], a[data-bs-toggle="tab"]', function (e) {
@@ -2522,8 +2525,18 @@ use Carbon\Carbon;
         function createOrUpdateChart(canvasId, config) {
             var canvas = document.getElementById(canvasId);
             if (!canvas) return;
-            if (window.icChartInstances[canvasId]) {
-                window.icChartInstances[canvasId].destroy();
+            try {
+                if (typeof Chart !== 'undefined' && typeof Chart.getChart === 'function') {
+                    var existing = Chart.getChart(canvas);
+                    if (existing) {
+                        existing.destroy();
+                    }
+                }
+                if (window.icChartInstances && window.icChartInstances[canvasId]) {
+                    window.icChartInstances[canvasId].destroy();
+                }
+            } catch (e) {
+                console.warn('Chart destroy warning for ' + canvasId, e);
             }
             var ctx = canvas.getContext('2d');
             window.icChartInstances[canvasId] = new Chart(ctx, config);
@@ -2595,12 +2608,13 @@ use Carbon\Carbon;
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
             },
-            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+            plugins: [typeof showDataLabelsvertical !== 'undefined' ? showDataLabelsvertical : (typeof showDataLabels !== 'undefined' ? showDataLabels : {})]
         });
 
         createOrUpdateChart(`candidates_offer_chart_${clientId}`, {

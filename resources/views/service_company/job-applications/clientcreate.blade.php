@@ -883,7 +883,7 @@ body {overflow-x:hidden; }
 
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
-                                      $selected_skill_rating = $skill_val->rating;
+                                      $selected_skill_rating = $skill_val->rating ?? null;
                                     }else{
                                       $selected_skill_exp_year = null;
                                       $selected_skill_exp_month =null;
