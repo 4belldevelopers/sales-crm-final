@@ -1368,10 +1368,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             [
                 'bool' => [
                     'should' => [
-                        ['term' => ['job_company_id' => $company_id]],
-                        ['term' => ['to_company_id' => $company_id]],
                         ['term' => ['ClientComID' => $company_id]],
-                        ['term' => ['company_id' => $company_id]],
+                        ['term' => ['thirdparty_company_id' => $company_id]],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['job_company_id' => $company_id]],
+                                    ['term' => ['candidate_type' => 'other']],
+                                ],
+                            ],
+                        ],
+                        [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $company_id]],
+                                    ['term' => ['candidate_type' => 'other']],
+                                ],
+                            ],
+                        ],
                     ],
                     'minimum_should_match' => 1,
                 ],

@@ -172,6 +172,7 @@
             // KPI counts for the direct-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
             $cur_company_id = auth()->user()->company_id;
             $detail_from = @$directClientDetail->client_id ?: (@$directClientDetail->from_company_id ?: @$directClientDetail->company_id);
+            $dc_id = $detail_from;
             $kpiCacheKey = "ats:direct_client_kpi:{$cur_company_id}:{$detail_from}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($detail_from, $cur_company_id) {
                 $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
@@ -646,7 +647,7 @@
                                                         <!--end::Currency-->
 
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ $inactive_count+$active_count+$hold_count }}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="dcAllJobsCount_{{ $dc_id }}">{{ $inactive_count+$active_count+$hold_count }}</span>
                                                         <!--end::Amount-->
 
                                                         <!--begin::Badge-->
@@ -671,12 +672,12 @@
                                                 <!--begin::Chart-->
                                                 <div class="d-flex flex-center me-5 pt-2">
                                                     <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
+                                                        id="kt_card_widget_4_chart_{{ $dc_id }}" 
                                                         style="min-width: 170px; min-height: 170px" 
                                                         data-kt-size="170" 
                                                         data-kt-line="11">
                                                         <span></span>
-                                                        <canvas id="allJobGrapg_<?php echo @$client->id; ?>" height="70" width="70"></canvas>
+                                                        <canvas id="allJobGrapg_{{ $dc_id }}" height="70" width="70"></canvas>
                                                     </div>
                                                 </div>
                                                 <!--end::Chart-->
@@ -694,7 +695,7 @@
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $active_count }}</div>
+                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="dcActiveJobsCount_{{ $dc_id }}">{{ $active_count }}</div>
                                                         <!--end::Stats-->
                                                     </div>
                                                     <!--end::Label-->
@@ -710,7 +711,7 @@
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $hold_count }}</div>
+                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="dcHoldJobsCount_{{ $dc_id }}">{{ $hold_count }}</div>
                                                         <!--end::Stats-->                    
                                                     </div>
                                                     <!--end::Label-->
@@ -726,7 +727,7 @@
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class=" fw-bolder text-gray-700 text-xxl-end">{{ $inactive_count }}</div>
+                                                        <div class=" fw-bolder text-gray-700 text-xxl-end" id="dcClosedJobsCount_{{ $dc_id }}">{{ $inactive_count }}</div>
                                                         <!--end::Stats-->                      
                                                     </div>
                                                     <!--end::Label-->
@@ -752,7 +753,7 @@
                                                         <!--end::Currency-->
 
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotal}}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="dcAdded7DaysCount_{{ $dc_id }}">{{$candidateValuesTotal}}</span>
                                                         <!--end::Amount-->
 
                                                         <!--begin::Badge-->
@@ -775,11 +776,11 @@
                                             <!--begin::Card body-->
                                             <div class="card-body d-flex align-items-end px-3 pb-10">
                                                 <!--begin::Chart-->
-                                                <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 200px">
+                                                <div id="kt_card_widget_6_chart_{{ $dc_id }}" class="w-100" style="height: 200px">
                                                     <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
+                                                        id="kt_card_widget_4_chart_{{ $dc_id }}" 
                                                         style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_left_chart_<?php echo @$client->id; ?>" height="170"></canvas>
+                                                        <canvas id="candidates_left_chart_{{ $dc_id }}" height="170"></canvas>
                                                     </div>
                                                 </div>
                                                 <!--end::Chart-->
@@ -795,7 +796,7 @@
                                             <div class="card-header py-5">
                                                 <!--begin::Title-->
                                                 <h3 class="card-title align-items-start flex-column">   
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$total_candidates}} </span>         
+                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="dcTotalCandidatesCount_{{ $dc_id }}">{{$total_candidates}} </span>         
                                                     <span class="text-gray-500 pt-1 fw-semibold fs-6">Added In {{ date('d M y',strtotime($startOfMonth)) }} To {{ date('d M y',strtotime($endOfMonth)) }}</span>
                                                     {{-- <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span> --}}
                                                 </h3>
@@ -809,7 +810,7 @@
                                                 {{-- <div style="position: absolute; bottom: 50px; width: 222px; height: 53px; background: #ffffff; z-index: 99;"> </div> --}}
                                                 <div id="kt_charts_widget_3" class="min-h-auto">
 
-                                                    <canvas id="myChart_<?php echo @$client->id; ?>"></canvas>
+                                                    <canvas id="myChart_{{ $dc_id }}"></canvas>
 
                                                     
                         
@@ -831,7 +832,7 @@
                                                     <!--begin::Info--> 
                                                     <div class="d-flex align-items-center">
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaloffer}}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="dcTotalOffersCount_{{ $dc_id }}">{{$candidateValuesTotaloffer}}</span>
                                                         <!--end::Amount-->
                                                         
                                                         <!--begin::Badge-->
@@ -858,9 +859,9 @@
 
                                                 <div class="d-flex align-items-center flex-column mt-3 w-100">
                                                     <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
+                                                        id="kt_card_widget_4_chart_{{ $dc_id }}" 
                                                         style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_offer_chart_<?php echo @$client->id; ?>" height="170"></canvas>
+                                                        <canvas id="candidates_offer_chart_{{ $dc_id }}" height="170"></canvas>
                                                     </div>
                                                 </div>
                                                 <!--end::Progress-->
@@ -877,7 +878,7 @@
                                                 <!--begin::Title-->
                                                 <div class="card-title d-flex flex-column">                
                                                     <!--begin::Amount-->
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaljoin}}</span>
+                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="dcTotalJoinedCount_{{ $dc_id }}">{{$candidateValuesTotaljoin}}</span>
                                                     <!--end::Amount-->           
 
                                                     <!--begin::Subtitle-->
@@ -897,9 +898,9 @@
                                                 <div class="symbol-group symbol-hover flex-nowrap">
 
                                                     <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
+                                                        id="kt_card_widget_4_chart_{{ $dc_id }}" 
                                                         style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_join_chart_<?php echo @$client->id; ?>" height="170"></canvas>
+                                                        <canvas id="candidates_join_chart_{{ $dc_id }}" height="170"></canvas>
                                                     </div>
 
 
@@ -1031,19 +1032,19 @@
                                                     <!--begin::Tab Content-->
                                                     <div class="tab-content">
                                                             <!--begin::Tap pane-->
-                                                            <div class="tab-pane fade active show" id="kt_stats_widget_6_tab_1_<?php echo @$client->id; ?>" role="tabpanel">
+                                                            <div class="tab-pane fade active show" id="kt_stats_widget_6_tab_1_{{ $dc_id }}" role="tabpanel">
                                                                 <!--begin::Table container-->
 
-                                                                <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 200px">
+                                                                <div id="kt_card_widget_6_chart_{{ $dc_id }}" class="w-100" style="height: 200px">
 
-                                                                    <div class="inetview_recent_chart_<?php echo @$client->id; ?> d-none" id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
+                                                                    <div class="inetview_recent_chart_{{ $dc_id }} d-none" id="kt_card_widget_4_chart_{{ $dc_id }}" 
                                                                         style="min-width: 100%; min-height: 200px">
-                                                                        <canvas id="inetview_recent_chart_<?php echo @$client->id; ?>" height="300"></canvas>
+                                                                        <canvas id="inetview_recent_chart_{{ $dc_id }}" height="300"></canvas>
                                                                     </div>
                                                                     
-                                                                    <div class="inetview_recent_chart_month_<?php echo @$client->id; ?>" id="kt_card_widget_4_chart" 
+                                                                    <div class="inetview_recent_chart_month_{{ $dc_id }}" id="kt_card_widget_4_chart_month_{{ $dc_id }}" 
                                                                             style="min-width: 100%; min-height: 200px">
-                                                                            <canvas id="inetview_recent_chart_month_<?php echo @$client->id; ?>" height="230"></canvas>
+                                                                            <canvas id="inetview_recent_chart_month_{{ $dc_id }}" height="230"></canvas>
                                                                     </div>
 
                                                                 </div>
@@ -1424,375 +1425,251 @@
 </div>
 
 <script>
-           var myChartId = "<?php echo @$client->id; ?>";
-    
+           var myChartId = "{{ $dc_id }}";
+    window.dcChartInstances = window.dcChartInstances || {};
 
-            var showDataLabels = {
-                          id: 'showDataLabels',
-                          afterDatasetsDraw(chart) {
-                              const { ctx } = chart;
-                              chart.data.datasets.forEach((dataset, i) => {
-                                  const meta = chart.getDatasetMeta(i);
-                                  meta.data.forEach((bar, index) => {
-                                      const value = dataset.data[index];
-                                      ctx.save();
-                                      ctx.fillStyle = 'black';
-                                      ctx.font = 'bold 12px sans-serif';
-                                      ctx.textAlign = 'center';
-                                      ctx.fillText(value, bar.x, bar.y - 1.5);
-                                      ctx.restore();
-                                  });
-                              });
-                          }
-            };
-
-            var showDataLabelsvertical = {
-                id: 'showDataLabelsvertical',
-                afterDatasetsDraw(chart) {
-                    var { ctx } = chart;
-                    chart.data.datasets.forEach((dataset, i) => {
-                        var meta = chart.getDatasetMeta(i);
-                        meta.data.forEach((bar, index) => {
-                            var value = dataset.data[index];
-                            ctx.save();
-                            ctx.fillStyle = 'black';
-                            ctx.font = 'bold 12px sans-serif';
-                            ctx.textAlign = 'left';  // align left for horizontal bars
-                            ctx.textBaseline = 'middle';
-
-                            // place text at the end of bar (right side)
-                            ctx.fillText(value, bar.x + 1, bar.y);
-                            ctx.restore();
-                        });
-                    });
-                }
-            };
-
-            function loadCountryChart() {
-
-                var ctx = document.getElementById(`myChart_${myChartId}`).getContext('2d');
-            
-
-                var countryChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['In Review','Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer','Joined','Rejected'],
-                    datasets: [{
-                        label: 'Users',
-                        data: ["{{$inreview_count}}", "{{$sourcing_count}}", "{{$screening_count}}", "{{$evaluation_count}}", "{{$negotiation_count}}", "{{$offer_count}}", "{{$joined_count}}","{{$Rejected_count}}"],
-                        backgroundColor: [
-                            '#bdbd26', // inreview_count
-                            '#000000', // sourcing_count
-                            '#c000ff', // screening_count
-                            '#2896ff', // evaluation_count
-                            '#ff4098', // negotiation_count
-                            '#ffab00', // offer_count
-                            '#06c732',
-                            '#ff0202' // joined_count // joined_count
-                        ],
-                        borderRadius: 10,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    indexAxis: 'y', // makes it horizontal
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: ctx => ctx.parsed.x.toLocaleString()
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function (value) {
-                                    if (value <= 10) return value;
-                                    else if (value % 100 === 0) return value.toLocaleString();
-                                    else return '';
-                                }
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabelsvertical] // ✅ custom labels plugin
+    var showDataLabels = {
+        id: 'showDataLabels',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const value = dataset.data[index];
+                    ctx.save();
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(value, bar.x, bar.y - 1.5);
+                    ctx.restore();
+                });
             });
-               }
+        }
+    };
 
-                setTimeout(() => {
-                  loadCountryChart();
-             }, 300);  
-
-
-             // Get the canvas element
-        
-            var ctx_job_div = document.getElementById(`allJobGrapg_${myChartId}`).getContext('2d');
-              // Create the donut chart
-            var allJobGrapg = new Chart(ctx_job_div, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'], // Labels for the chart
-                    datasets: [{
-                        label: 'Total',
-                        data: ['{{ $active_count }}', '{{ $hold_count }}', '{{ $inactive_count }}'], // Values for the chart
-                        backgroundColor: [
-                            '#22c55e', // Green for 'Active Jobs'
-                            '#ffab00', // Blue for 'Hold Jobs'
-                            '#ff0202'  // Gray for 'Closed Jobs'
-                        ],
-                        hoverOffset: 4 // Highlight on hover
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false // Hide the legend in the chart area
-                        }
-                    },
-                    cutout: '70%' // To create the donut hole
-                }
+    var showDataLabelsvertical = {
+        id: 'showDataLabelsvertical',
+        afterDatasetsDraw(chart) {
+            var { ctx } = chart;
+            chart.data.datasets.forEach((dataset, i) => {
+                var meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    var value = dataset.data[index];
+                    ctx.save();
+                    ctx.fillStyle = 'black';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(value, bar.x + 1, bar.y);
+                    ctx.restore();
+                });
             });
+        }
+    };
 
+    function renderDirectClientDashboardCharts(d, clientId) {
+        if (!d) return;
 
-            
-            var candidates_left_chart = document.getElementById(`candidates_left_chart_${myChartId}`).getContext('2d');
+        var activeCount = d.counts ? (d.counts.active || 0) : 0;
+        var holdCount = d.counts ? (d.counts.hold || 0) : 0;
+        var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
 
-            var allJobGraphBar = new Chart(candidates_left_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labels) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValues) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-
-            
-            var candidates_offer_chart = document.getElementById(`candidates_offer_chart_${myChartId}`).getContext('2d');
-
-            var allofferGraphBar = new Chart(candidates_offer_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommoffer) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommoffer) !!},
-                        backgroundColor: [
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00', 
-                            '#ffab00' 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            
-            var candidates_join_chart = document.getElementById(`candidates_join_chart_${myChartId}`).getContext('2d');
-
-            var alljoinGraphBar = new Chart(candidates_join_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($labelsCommjoin) !!},
-                    datasets: [{
-                        label: 'Total Candidates',
-                        data: {!! json_encode($candidateValuesCommjoin) !!},
-                        backgroundColor: [
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732',  
-                            '#06c732'  
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            var inetview_recent_chart_month = document.getElementById(`inetview_recent_chart_month_${myChartId}`).getContext('2d');
-
-            var netview_recentGraphBarMonth = new Chart(inetview_recent_chart_month, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabelsMonth) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValuesMonth) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-            var inetview_recent_chart = document.getElementById(`inetview_recent_chart_${myChartId}`).getContext('2d');
-
-            var netview_recentGraphBar = new Chart(inetview_recent_chart, {
-                type: 'bar',
-                data: {
-                    labels: {!! json_encode($interviewlabels) !!},
-                    datasets: [{
-                        label: 'Total Interviews',
-                        data: {!! json_encode($interviewValues) !!},
-                        backgroundColor: [
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3', // Blue 
-                            '#2196f3'  // Blue 
-                        ],
-                        borderRadius: 5,
-                        borderSkipped: false,
-                        barThickness: 30
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // show integer values only
-                            }
-                        }
-                    }
-                },
-                plugins: [showDataLabels] // ✅ custom labels plugin
-            });
-
-
-            function filtersdatagetmonth(valSelected){
-                if(valSelected==1){
-                      $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
-                }else{
-                      $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
-                      $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
-                }
-
+        function createOrUpdateChart(canvasId, config) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            if (window.dcChartInstances[canvasId]) {
+                window.dcChartInstances[canvasId].destroy();
             }
+            var ctx = canvas.getContext('2d');
+            window.dcChartInstances[canvasId] = new Chart(ctx, config);
+        }
+
+        createOrUpdateChart(`allJobGrapg_${clientId}`, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
+                datasets: [{
+                    label: 'Total',
+                    data: [activeCount, holdCount, inactiveCount],
+                    backgroundColor: ['#22c55e', '#ffab00', '#ff0202'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '70%'
+            }
+        });
+
+        createOrUpdateChart(`candidates_left_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labels || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValues || [],
+                    backgroundColor: Array((d.labels || []).length).fill('#2196f3'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [showDataLabels]
+        });
+
+        createOrUpdateChart(`myChart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: ['In Review', 'Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer', 'Joined', 'Rejected'],
+                datasets: [{
+                    label: 'Users',
+                    data: [
+                        d.inreview_count || 0,
+                        d.sourcing_count || 0,
+                        d.screening_count || 0,
+                        d.evaluation_count || 0,
+                        d.negotiation_count || 0,
+                        d.offer_count || 0,
+                        d.joined_count || 0,
+                        d.Rejected_count || 0
+                    ],
+                    backgroundColor: [
+                        '#bdbd26', '#000000', '#c000ff', '#2896ff',
+                        '#ff4098', '#ffab00', '#06c732', '#ff0202'
+                    ],
+                    borderRadius: 10,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ctx.parsed.x.toLocaleString() } }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                if (value <= 10) return value;
+                                else if (value % 100 === 0) return value.toLocaleString();
+                                else return '';
+                            }
+                        }
+                    },
+                    y: { ticks: { font: { weight: 'bold' } } }
+                }
+            },
+            plugins: [showDataLabelsvertical]
+        });
+
+        createOrUpdateChart(`candidates_offer_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labelsCommoffer || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValuesCommoffer || [],
+                    backgroundColor: Array((d.labelsCommoffer || []).length).fill('#ffab00'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [showDataLabels]
+        });
+
+        createOrUpdateChart(`candidates_join_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labelsCommjoin || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValuesCommjoin || [],
+                    backgroundColor: Array((d.labelsCommjoin || []).length).fill('#06c732'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [showDataLabels]
+        });
+
+        createOrUpdateChart(`inetview_recent_chart_month_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.interviewlabelsMonth || [],
+                datasets: [{
+                    label: 'Total Interviews',
+                    data: d.interviewValuesMonth || [],
+                    backgroundColor: Array((d.interviewlabelsMonth || []).length).fill('#2196f3'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [showDataLabels]
+        });
+
+        createOrUpdateChart(`inetview_recent_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.interviewlabels || [],
+                datasets: [{
+                    label: 'Total Interviews',
+                    data: d.interviewValues || [],
+                    backgroundColor: Array((d.interviewlabels || []).length).fill('#2196f3'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [showDataLabels]
+        });
+    }
+
+    function filtersdatagetmonth(valSelected){
+        if(valSelected == 1){
+            $(`.inetview_recent_chart_month_${myChartId}`).removeClass('d-none');
+            $(`.inetview_recent_chart_${myChartId}`).addClass('d-none');
+        } else {
+            $(`.inetview_recent_chart_month_${myChartId}`).addClass('d-none');
+            $(`.inetview_recent_chart_${myChartId}`).removeClass('d-none');
+        }
+    }
 
             
     </script>
@@ -2312,17 +2189,38 @@
     }
 
     function fetchClientDashboardAnalytics() {
-        var clientId = '{{ $directClientDetail->client_id ?? $directClientDetail->company_id }}';
+        var clientId = '{{ $dc_id }}';
         return $.ajax({
             url: `{{ url('service_company/clients/dashboard-analytics') }}/${clientId}`,
             type: 'GET',
             success: function(response) {
                 if (response && response.status === 'success' && response.data) {
-                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily for direct client');
+                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily for direct client', response.data);
+                    var d = response.data;
+                    var activeCount = d.counts ? (d.counts.active || 0) : 0;
+                    var holdCount = d.counts ? (d.counts.hold || 0) : 0;
+                    var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
+                    var totalJobs = activeCount + holdCount + inactiveCount;
+
+                    $(`#dcAllJobsCount_${clientId}`).text(totalJobs);
+                    $(`#dcActiveJobsCount_${clientId}`).text(activeCount);
+                    $(`#dcHoldJobsCount_${clientId}`).text(holdCount);
+                    $(`#dcClosedJobsCount_${clientId}`).text(inactiveCount);
+
+                    $(`#dcAdded7DaysCount_${clientId}`).text(d.candidateValuesTotal || 0);
+                    $(`#dcTotalCandidatesCount_${clientId}`).text(d.total_candidates || 0);
+                    $(`#dcTotalOffersCount_${clientId}`).text(d.candidateValuesTotaloffer || 0);
+                    $(`#dcTotalJoinedCount_${clientId}`).text(d.candidateValuesTotaljoin || 0);
+
+                    renderDirectClientDashboardCharts(d, clientId);
                 }
             }
         });
     }
+
+    $(document).ready(function() {
+        fetchClientDashboardAnalytics();
+    });
 
 
 </script>

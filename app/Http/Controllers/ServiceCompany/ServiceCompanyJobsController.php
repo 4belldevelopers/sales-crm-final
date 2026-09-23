@@ -1571,6 +1571,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $client_id = request('client_id');
         $requisitionRow = DB::table('clients')->where('id', $client_id)->first();
         $toCompanyId = (int) ($requisitionRow->company_id ?? 0);
+        if (! $toCompanyId && $client_id) {
+            $toCompanyId = (int) $client_id;
+        }
         $custom = request('custom');
 
         $searchQuery = $request->input('q');
@@ -1629,8 +1632,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                                 'query' => [
                                     'bool' => [
                                         'must' => [
-                                            ['term' => ['recommendation_relation.to_company_id' => $company_id]],
-                                            ['term' => ['recommendation_relation.from_company_id' => $toCompanyId]],
+                                            ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                            ['term' => ['recommendation_relation.from_company_id' => (int) $toCompanyId]],
+                                            ['term' => ['recommendation_relation.final_status' => 1]],
                                         ],
                                     ],
                                 ],
