@@ -805,7 +805,7 @@ use Carbon\Carbon;
                                                         <!--end::Currency-->
 
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{ $inactive_count+$active_count+$hold_count }}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icAllJobsCount_{{ $client->id }}">{{ $inactive_count+$active_count+$hold_count }}</span>
                                                         <!--end::Amount-->
 
                                                         <!--begin::Badge-->
@@ -853,7 +853,7 @@ use Carbon\Carbon;
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $active_count }}</div>
+                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="icActiveJobsCount_{{ $client->id }}">{{ $active_count }}</div>
                                                         <!--end::Stats-->
                                                     </div>
                                                     <!--end::Label-->
@@ -869,7 +869,7 @@ use Carbon\Carbon;
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end">{{ $hold_count }}</div>
+                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="icHoldJobsCount_{{ $client->id }}">{{ $hold_count }}</div>
                                                         <!--end::Stats-->                    
                                                     </div>
                                                     <!--end::Label-->
@@ -885,7 +885,7 @@ use Carbon\Carbon;
                                                         <!--end::Label-->
 
                                                         <!--begin::Stats-->
-                                                        <div class=" fw-bolder text-gray-700 text-xxl-end">{{ $inactive_count }}</div>
+                                                        <div class=" fw-bolder text-gray-700 text-xxl-end" id="icClosedJobsCount_{{ $client->id }}">{{ $inactive_count }}</div>
                                                         <!--end::Stats-->                      
                                                     </div>
                                                     <!--end::Label-->
@@ -911,7 +911,7 @@ use Carbon\Carbon;
                                                         <!--end::Currency-->
 
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotal}}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icAdded7DaysCount_{{ $client->id }}">{{$candidateValuesTotal}}</span>
                                                         <!--end::Amount-->
 
                                                         <!--begin::Badge-->
@@ -954,7 +954,7 @@ use Carbon\Carbon;
                                             <div class="card-header py-5">
                                                 <!--begin::Title-->
                                                 <h3 class="card-title align-items-start flex-column">   
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$total_candidates}} </span>         
+                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalCandidatesCount_{{ $client->id }}">{{$total_candidates}} </span>         
                                                     <span class="text-gray-500 pt-1 fw-semibold fs-6">Added In {{ date('d M y',strtotime($startOfMonth)) }} To {{ date('d M y',strtotime($endOfMonth)) }}</span>
                                                     {{-- <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span> --}}
                                                 </h3>
@@ -990,7 +990,7 @@ use Carbon\Carbon;
                                                     <!--begin::Info--> 
                                                     <div class="d-flex align-items-center">
                                                         <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaloffer}}</span>
+                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalOffersCount_{{ $client->id }}">{{$candidateValuesTotaloffer}}</span>
                                                         <!--end::Amount-->
                                                         
                                                         <!--begin::Badge-->
@@ -1036,7 +1036,7 @@ use Carbon\Carbon;
                                                 <!--begin::Title-->
                                                 <div class="card-title d-flex flex-column">                
                                                     <!--begin::Amount-->
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2">{{$candidateValuesTotaljoin}}</span>
+                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalJoinedCount_{{ $client->id }}">{{$candidateValuesTotaljoin}}</span>
                                                     <!--end::Amount-->           
 
                                                     <!--begin::Subtitle-->
@@ -2510,6 +2510,166 @@ use Carbon\Carbon;
         });
     }
 
+    window.icChartInstances = window.icChartInstances || {};
+
+    function renderInternalClientDashboardCharts(d, clientId) {
+        if (!d) return;
+
+        var activeCount = d.counts ? (d.counts.active || 0) : 0;
+        var holdCount = d.counts ? (d.counts.hold || 0) : 0;
+        var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
+
+        function createOrUpdateChart(canvasId, config) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            if (window.icChartInstances[canvasId]) {
+                window.icChartInstances[canvasId].destroy();
+            }
+            var ctx = canvas.getContext('2d');
+            window.icChartInstances[canvasId] = new Chart(ctx, config);
+        }
+
+        createOrUpdateChart(`allJobGrapg_${clientId}`, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
+                datasets: [{
+                    label: 'Total',
+                    data: [activeCount, holdCount, inactiveCount],
+                    backgroundColor: ['#22c55e', '#ffab00', '#ff0202'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '70%'
+            }
+        });
+
+        createOrUpdateChart(`candidates_left_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labels || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValues || [],
+                    backgroundColor: Array((d.labels || []).length).fill('#2196f3'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+        });
+
+        createOrUpdateChart(`myChart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: ['In Review', 'Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer', 'Joined', 'Rejected'],
+                datasets: [{
+                    label: 'Users',
+                    data: [
+                        d.inreview_count || 0,
+                        d.sourcing_count || 0,
+                        d.screening_count || 0,
+                        d.evaluation_count || 0,
+                        d.negotiation_count || 0,
+                        d.offer_count || 0,
+                        d.joined_count || 0,
+                        d.Rejected_count || 0
+                    ],
+                    backgroundColor: [
+                        '#bdbd26', '#000000', '#c000ff', '#2896ff',
+                        '#ff4098', '#ffab00', '#06c732', '#ff0202'
+                    ],
+                    borderRadius: 10,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+        });
+
+        createOrUpdateChart(`candidates_offer_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labelsCommoffer || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValuesCommoffer || [],
+                    backgroundColor: Array((d.labelsCommoffer || []).length).fill('#ffab00'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+        });
+
+        createOrUpdateChart(`candidates_join_chart_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.labelsCommjoin || [],
+                datasets: [{
+                    label: 'Total Candidates',
+                    data: d.candidateValuesCommjoin || [],
+                    backgroundColor: Array((d.labelsCommjoin || []).length).fill('#06c732'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+        });
+
+        createOrUpdateChart(`inetview_recent_chart_month_${clientId}`, {
+            type: 'bar',
+            data: {
+                labels: d.interviewlabelsMonth || [],
+                datasets: [{
+                    label: 'Total Interviews',
+                    data: d.interviewValuesMonth || [],
+                    backgroundColor: Array((d.interviewlabelsMonth || []).length).fill('#2196f3'),
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barThickness: 30
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            },
+            plugins: [typeof showDataLabels !== 'undefined' ? showDataLabels : {}]
+        });
+    }
+
     function fetchClientDashboardAnalytics() {
         var clientId = '{{ $client->id }}';
         return $.ajax({
@@ -2517,7 +2677,24 @@ use Carbon\Carbon;
             type: 'GET',
             success: function(response) {
                 if (response && response.status === 'success' && response.data) {
-                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily');
+                    console.log('⚡ [Client Dashboard APM] Analytics loaded lazily for internal client', response.data);
+                    var d = response.data;
+                    var activeCount = d.counts ? (d.counts.active || 0) : 0;
+                    var holdCount = d.counts ? (d.counts.hold || 0) : 0;
+                    var inactiveCount = d.counts ? (d.counts.inactive || 0) : 0;
+                    var totalJobs = activeCount + holdCount + inactiveCount;
+
+                    $(`#icAllJobsCount_${clientId}`).text(totalJobs);
+                    $(`#icActiveJobsCount_${clientId}`).text(activeCount);
+                    $(`#icHoldJobsCount_${clientId}`).text(holdCount);
+                    $(`#icClosedJobsCount_${clientId}`).text(inactiveCount);
+
+                    $(`#icAdded7DaysCount_${clientId}`).text(d.candidateValuesTotal || 0);
+                    $(`#icTotalCandidatesCount_${clientId}`).text(d.total_candidates || 0);
+                    $(`#icTotalOffersCount_${clientId}`).text(d.candidateValuesTotaloffer || 0);
+                    $(`#icTotalJoinedCount_${clientId}`).text(d.candidateValuesTotaljoin || 0);
+
+                    renderInternalClientDashboardCharts(d, clientId);
                 }
             }
         });
