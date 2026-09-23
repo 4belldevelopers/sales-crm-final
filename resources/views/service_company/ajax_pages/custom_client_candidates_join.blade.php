@@ -328,36 +328,21 @@
             </td>
             <td>
                 @php
+                    $rowpostedby = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: ''))));
 
-                    $bgTextDecore = $strVal = '';
-                    $str = trim(@$row->posted_by);
-                    $str = $strVal = strtolower($str[0]);
-                    $str = ord($str);
-                    if ($str >= 97 && $str <= 101) {
-                        $bgTextDecore = 'fs-3 bg-light-danger text-danger';
-                    } elseif ($str >= 102 && $str <= 106) {
-                        $bgTextDecore = 'fs-3 bg-light-warning text-warning';
-                    } elseif ($str >= 107 && $str <= 111) {
-                        $bgTextDecore = 'fs-3 bg-light-primary text-primary';
-                    } elseif ($str >= 112 && $str <= 116) {
-                        $bgTextDecore = 'fs-3 bg-light-success text-success';
-                    } elseif ($str >= 117 && $str <= 121) {
-                        $bgTextDecore = 'fs-3 bg-dark text-secondary';
-                    } else {
-                        $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
-                    }
+                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: ''))));
 
                     echo ' <div class="d-flex flex-column">
-                  				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="" data-bs-original-title="' .
-                        @$row->posted_by .
+                   				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .
+                        htmlspecialchars((string) $rowpostedby, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        mb_substr($row->posted_by, 0, 10) .
+                        htmlspecialchars(ucfirst(mb_substr((string) $rowpostedby, 0, 20)), ENT_QUOTES, 'UTF-8') .
                         '</a>
-                  			</div>
-							<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
-                        @$row->company_name .
+                   			</div>
+ 							<span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="' .
+                        htmlspecialchars((string) $post_company_name, ENT_QUOTES, 'UTF-8') .
                         '">' .
-                        ucwords(mb_substr(@$row->company_name, 0, 25)) .
+                        htmlspecialchars(ucwords(mb_substr((string) $post_company_name, 0, 25)), ENT_QUOTES, 'UTF-8') .
                         '</span>';
 
                 @endphp

@@ -7,12 +7,28 @@
     $available_status = GeneralMethod::available_status();
 
     // Follow-up statuses — read-only display only (no actions)
-    $followupMap = collect();
-    if (\Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
+    $followupMap = $followupMap ?? collect();
+    if ($followupMap->isEmpty() && \Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
         $followupMap = DB::table('interview_schedules')
             ->whereIn('id', collect($data)->pluck('id')->all())
             ->get(['id', 'followup_status', 'followup_status_at'])
             ->keyBy('id');
+    }
+
+    // Pre-hydrate $spokpersonMap if not passed into view
+    if (!isset($spokpersonMap) || !is_object($spokpersonMap)) {
+        $spokpersonMap = collect();
+        $jobIds = collect($data)->pluck('jobId')->filter()->concat(collect($data)->pluck('job_id')->filter())->unique()->all();
+        if (!empty($jobIds)) {
+            $spokRows = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->whereIn('job_assign.job_id', $jobIds)
+                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->get();
+            foreach ($spokRows as $spok) {
+                $spokpersonMap->put($spok->job_id . '_' . $spok->company_id, $spok->name);
+            }
+        }
     }
 @endphp
 @if (count($data) > 0)
@@ -159,17 +175,26 @@
             {{-- Source badge (view-only) --}}
             <td>
                 @php
-                    $rowpostedby = !empty($row->posted_by) ? $row->posted_by : (!empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (!empty($row->upload_by_name) ? $row->upload_by_name : (@$row->source ?: ''))));
-                    
-                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->from_company_name) ? $row->from_company_name : '')));
+                    if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
+                        $spokKey = ($row->jobId ?? $row->job_id ?? 0) . '_' . $row->ClientComID;
+                        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
+                        $rowpostedby = $spokName ? $spokName : $row->posted_by;
+                        $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
+                    } else {
+                        $rowpostedby = $row->posted_by;
+                    }
+                    if (empty($rowpostedby)) {
+                        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+                    }
+                    $post_company_name = !empty($row->submitted_by_company_name) ? $row->submitted_by_company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->from_company_name) ? $row->from_company_name : (!empty($row->uc_company_name) ? $row->uc_company_name : (!empty($row->company_name) ? $row->company_name : ''))));
                 @endphp
-                <div class="d-flex flex-column">
-                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="{{ $rowpostedby }}">
-                        {{ ucfirst(mb_substr($rowpostedby, 0, 20)) }}
-                    </a>
-                    <span class="text-muted fw-bold d-block fs-7" data-toggle="tooltip" title="{{ $post_company_name }}">
-                        {{ ucwords(mb_substr($post_company_name, 0, 20)) }}
-                    </span>
+                <div class="it-person-cell">
+                    <div class="it-person-name" data-toggle="tooltip" title="{{ @$rowpostedby }}">
+                        {{ ucwords(mb_substr($rowpostedby, 0, 15)) }}
+                    </div>
+                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$post_company_name }}">
+                        {{ ucwords(mb_substr(@$post_company_name, 0, 15)) }}
+                    </div>
                 </div>
             </td>
 
