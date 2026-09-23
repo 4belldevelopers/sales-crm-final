@@ -780,453 +780,243 @@ use Carbon\Carbon;
 
                 <!--begin::candidateDashboard Content-->
                     <div class="tab-pane" id="candidateDashboard" role="tabpanel">
-                        <div class="cd-tabcard"><div class="cd-tabcard-head"><div class="cd-tabcard-title">Client Dashboard</div><div class="cd-tabcard-sub">Hiring analytics for this client.</div></div><div class="cd-tabwrap">
-                            <div class="card mb-3 bg-light mb-xl-3 mx-0 shadow-none rounded-0">
-                            <div class="card-body px-0 pt-0 pb-0">
-                                <div class="card mb-3 mb-xl-3 mx-0 shadow-none rounded-0">
-
-                                <div class="row gx-5 gx-xl-10 mb-xl-10">
-                                    <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                                        <div class="card card-flush h-md-50 mb-5 mb-xl-10">
-                                            @php
-                                            $active_count = $counts->get('active', 0);
-                                            $hold_count = $counts->get('hold', 0);
-                                            $inactive_count = $counts->get('inactive', 0);
-                                            $alljobs_count = $active_count + $hold_count + $inactive_count;
-                                            @endphp
-                                            <!--begin::Header-->
-                                            <div class="card-header pt-5">
-                                                <!--begin::Title-->
-                                                <div class="card-title d-flex flex-column">   
-                                                    <!--begin::Info--> 
-                                                    <div class="d-flex align-items-center">
-                                                        <!--begin::Currency-->
-                                                        <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start"></span>
-                                                        <!--end::Currency-->
-
-                                                        <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icAllJobsCount_{{ $client->id }}">{{ $inactive_count+$active_count+$hold_count }}</span>
-                                                        <!--end::Amount-->
-
-                                                        <!--begin::Badge-->
-                                                        {{-- <span class="badge badge-light-success fs-base">                                
-                                                            <i class="ki-outline ki-arrow-up fs-5 text-success ms-n1"></i> 
-                                                            2.2%
-                                                        </span>             --}}
-                                                        <!--end::Badge--> 
-                                                    </div>
-                                                    <!--end::Info--> 
-
-                                                    <!--begin::Subtitle-->
-                                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">All Jobs</span>
-                                                    <!--end::Subtitle--> 
-                                                </div>
-                                                <!--end::Title-->      
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body pt-2 pb-4 d-flex align-items-center">
-                                                <!--begin::Chart-->
-                                                <div class="d-flex flex-center me-5 pt-2">
-                                                    <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
-                                                        style="min-width: 170px; min-height: 170px" 
-                                                        data-kt-size="170" 
-                                                        data-kt-line="11">
-                                                        <span></span>
-                                                        <canvas id="allJobGrapg_<?php echo @$client->id; ?>" height="70" width="70"></canvas>
-                                                    </div>
-                                                </div>
-                                                <!--end::Chart-->
-                                                
-                                                <!--begin::Labels-->
-                                                <div class="d-flex flex-column content-justify-center w-100">
-                                                    <!--begin::Label-->
-                                                    <div class="d-flex fs-6 fw-semibold align-items-center">
-                                                        <!--begin::Bullet-->
-                                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #22c55e"></div>
-                                                        <!--end::Bullet-->
-
-                                                        <!--begin::Label-->
-                                                        <div class="text-gray-500 flex-grow-1 me-4">Active Jobs</div>
-                                                        <!--end::Label-->
-
-                                                        <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="icActiveJobsCount_{{ $client->id }}">{{ $active_count }}</div>
-                                                        <!--end::Stats-->
-                                                    </div>
-                                                    <!--end::Label-->
-
-                                                    <!--begin::Label-->
-                                                    <div class="d-flex fs-6 fw-semibold align-items-center my-3">
-                                                        <!--begin::Bullet-->
-                                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #ffab00"></div>
-                                                        <!--end::Bullet-->
-
-                                                        <!--begin::Label-->
-                                                        <div class="text-gray-500 flex-grow-1 me-4">Hold Jobs</div>
-                                                        <!--end::Label-->
-
-                                                        <!--begin::Stats-->
-                                                        <div class="fw-bolder text-gray-700 text-xxl-end" id="icHoldJobsCount_{{ $client->id }}">{{ $hold_count }}</div>
-                                                        <!--end::Stats-->                    
-                                                    </div>
-                                                    <!--end::Label-->
-
-                                                    <!--begin::Label-->
-                                                    <div class="d-flex fs-6 fw-semibold align-items-center">
-                                                        <!--begin::Bullet-->
-                                                        <div class="bullet w-8px h-6px rounded-2 me-3" style="background-color: #ff0202"></div>
-                                                        <!--end::Bullet-->
-
-                                                        <!--begin::Label-->
-                                                        <div class="text-gray-500 flex-grow-1 me-4">Closed Jobs</div>
-                                                        <!--end::Label-->
-
-                                                        <!--begin::Stats-->
-                                                        <div class=" fw-bolder text-gray-700 text-xxl-end" id="icClosedJobsCount_{{ $client->id }}">{{ $inactive_count }}</div>
-                                                        <!--end::Stats-->                      
-                                                    </div>
-                                                    <!--end::Label-->
-                                                </div>
-                                                <!--end::Labels-->
-                                            </div>
-                                            <!--end::Card body-->
-
-                                        </div>                       
+                        <div class="cd-tabcard">
+                            <div class="cd-tabcard-head d-flex align-items-center justify-content-between pb-3 mb-4" style="border-bottom: 1px solid #edf2f7;">
+                                <div>
+                                    <div class="cd-tabcard-title fs-4 fw-bold text-gray-900 d-flex align-items-center gap-2">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#3B82F6"/>
+                                            <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#10B981"/>
+                                            <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#F59E0B"/>
+                                            <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#6366F1"/>
+                                        </svg>
+                                        Client Dashboard
                                     </div>
-                                    <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                                        <div class="card card-flush  h-md-50 mb-5 mb-xl-10">
-                                        <!--begin::Card widget 6-->
-                                        <div class="card card-flush  h-md-50 mb-5 mb-xl-10">
-                                            <!--begin::Header-->
-                                            <div class="card-header pt-5">
-                                                <!--begin::Title-->
-                                                <div class="card-title d-flex flex-column">   
-                                                    <!--begin::Info--> 
-                                                    <div class="d-flex align-items-center">
-                                                        <!--begin::Currency-->
-                                                        <span class="fs-4 fw-semibold text-gray-500 me-1 align-self-start"></span>
-                                                        <!--end::Currency-->
-
-                                                        <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icAdded7DaysCount_{{ $client->id }}">{{$candidateValuesTotal}}</span>
-                                                        <!--end::Amount-->
-
-                                                        <!--begin::Badge-->
-                                                        {{-- <span class="badge badge-light-success fs-base">                                
-                                                            <i class="ki-outline ki-arrow-up fs-5 text-success ms-n1"></i> 
-                                                            2.6%
-                                                        </span>             --}}
-                                                        <!--end::Badge--> 
-                                                    </div>
-                                                    <!--end::Info--> 
-
-                                                    <!--begin::Subtitle-->
-                                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Added in last 7 days</span>
-                                                    <!--end::Subtitle--> 
-                                                </div>
-                                                <!--end::Title-->           
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body d-flex align-items-end px-3 pb-10">
-                                                <!--begin::Chart-->
-                                                <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 200px">
-                                                    <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
-                                                        style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_left_chart_<?php echo @$client->id; ?>" height="170"></canvas>
-                                                    </div>
-                                                </div>
-                                                <!--end::Chart-->
-                                            </div>
-                                            <!--end::Card body-->
-                                        </div>
-                                        <!--end::Card widget 6--> 
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-12 col-xl-cus-12 col-xl-12 col-xxl-12 mb-5 mb-xl-0">
-                                        <div class="card card-flush overflow-hidden h-md-100">
-                                            <!--begin::Header-->
-                                            <div class="card-header py-5">
-                                                <!--begin::Title-->
-                                                <h3 class="card-title align-items-start flex-column">   
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalCandidatesCount_{{ $client->id }}">{{$total_candidates}} </span>         
-                                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Added In {{ date('d M y',strtotime($startOfMonth)) }} To {{ date('d M y',strtotime($endOfMonth)) }}</span>
-                                                    {{-- <span class="text-gray-500 mt-1 fw-semibold fs-6">Users from all channels</span> --}}
-                                                </h3>
-                                                <!--end::Title-->
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body d-flex justify-content-between flex-column pb-1 px-0" style="position: relative">  
-                                                <!--begin::Chart-->
-                                                {{-- <div style="position: absolute; bottom: 50px; width: 222px; height: 53px; background: #ffffff; z-index: 99;"> </div> --}}
-                                                <div id="kt_charts_widget_3" class="min-h-auto">
-
-                                                    <canvas id="myChart_<?php echo @$client->id; ?>"></canvas>
-
-                                                    
-                        
-                                                    {{-- <div id="chart-container" style="width: 600px; height: 420px; margin: auto;"></div> --}}
-                                                </div><br>
-                                                <!--end::Chart--> 
-                                            </div>
-                                            <!--end::Card body-->
-                                        </div>
-                                    </div>
+                                    <div class="cd-tabcard-sub text-gray-500 fs-7 fw-medium mt-1">Real-time hiring & recruitment performance analytics for this client.</div>
                                 </div>
-                                <div class="row gx-5 gx-xl-10 mb-xl-10">
-                                    <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                                        <div class="card card-flush h-md-50 mb-xl-10">
-                                            <!--begin::Header-->
-                                            <div class="card-header pt-5">
-                                                <!--begin::Title-->
-                                                <div class="card-title d-flex flex-column">   
-                                                    <!--begin::Info--> 
-                                                    <div class="d-flex align-items-center">
-                                                        <!--begin::Amount-->
-                                                        <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalOffersCount_{{ $client->id }}">{{$candidateValuesTotaloffer}}</span>
-                                                        <!--end::Amount-->
-                                                        
-                                                        <!--begin::Badge-->
-                                                        {{-- <span class="badge badge-light-danger fs-base">                                
-                                                            <i class="ki-outline ki-arrow-down fs-5 text-danger ms-n1"></i> 
-                                                            2.2%
-                                                        </span>             --}}
-                                                        <!--end::Badge-->                
+                                <span class="badge badge-light-primary fw-semibold fs-8 px-3 py-2">Analytics Overview</span>
+                            </div>
+
+                            <div class="cd-tabwrap">
+                                <div class="card mb-3 shadow-none border-0 rounded-3">
+                                    <div class="card-body p-0">
+
+                                        <!-- Row 1: Jobs & 7-Day Sourcing Cards -->
+                                        <div class="row g-4 mb-4">
+                                            <!-- Card 1: Jobs Breakdown -->
+                                            <div class="col-md-6 col-lg-6">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    @php
+                                                    $active_count = $counts->get('active', 0);
+                                                    $hold_count = $counts->get('hold', 0);
+                                                    $inactive_count = $counts->get('inactive', 0);
+                                                    $alljobs_count = $active_count + $hold_count + $inactive_count;
+                                                    @endphp
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
+                                                        <div class="card-title d-flex flex-column">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="icAllJobsCount_{{ $client->id }}">{{ $inactive_count+$active_count+$hold_count }}</span>
+                                                                <span class="badge badge-light-success fs-8 fw-bold">Jobs Overview</span>
+                                                            </div>
+                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">All Client Jobs</span>
+                                                        </div>
                                                     </div>
-                                                    <!--end::Info--> 
-
-                                                    <!--begin::Subtitle-->
-                                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Offers In {{ date("M Y ", strtotime($startOfMonthcomman)) }} To {{ date("M Y ", strtotime($endOfMonthcomman)) }}</span>             
-                                                    <!--end::Subtitle--> 
-                                                </div>
-                                                <!--end::Title-->         
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body d-flex align-items-end pt-0">
-                                                <!--begin::Progress-->
-                                                
-
-                                                <div class="d-flex align-items-center flex-column mt-3 w-100">
-                                                    <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
-                                                        style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_offer_chart_<?php echo @$client->id; ?>" height="170"></canvas>
+                                                    <div class="card-body pt-1 pb-4 px-5 d-flex align-items-center justify-content-between">
+                                                        <div class="d-flex flex-center" style="min-width: 140px; min-height: 140px;">
+                                                            <div id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" style="min-width: 140px; min-height: 140px" data-kt-size="140" data-kt-line="11">
+                                                                <canvas id="allJobGrapg_<?php echo @$client->id; ?>" height="70" width="70"></canvas>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex flex-column gap-2 w-100 ps-4">
+                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #22c55e"></span>
+                                                                    <span class="text-gray-700 fs-7 fw-semibold">Active Jobs</span>
+                                                                </div>
+                                                                <span class="fw-bold text-gray-900 fs-7" id="icActiveJobsCount_{{ $client->id }}">{{ $active_count }}</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #ffab00"></span>
+                                                                    <span class="text-gray-700 fs-7 fw-semibold">Hold Jobs</span>
+                                                                </div>
+                                                                <span class="fw-bold text-gray-900 fs-7" id="icHoldJobsCount_{{ $client->id }}">{{ $hold_count }}</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between p-2 rounded-2" style="background: #f8fafc;">
+                                                                <div class="d-flex align-items-center">
+                                                                    <span class="w-8px h-8px rounded-circle me-2" style="background-color: #ff0202"></span>
+                                                                    <span class="text-gray-700 fs-7 fw-semibold">Closed Jobs</span>
+                                                                </div>
+                                                                <span class="fw-bold text-gray-900 fs-7" id="icClosedJobsCount_{{ $client->id }}">{{ $inactive_count }}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <!--end::Progress-->
                                             </div>
-                                            <!--end::Card body-->
 
-                                        </div>                        
-                                    </div>
-                                    <div class="col-md-6 col-xl-cus-5 col-lg-6 col-xl-5 col-xxl-6 mb-2">
-                                        <div class="card card-flush h-md-50 mb-xl-10">
-                                        
-                                            <!--begin::Header-->
-                                            <div class="card-header pt-5">
-                                                <!--begin::Title-->
-                                                <div class="card-title d-flex flex-column">                
-                                                    <!--begin::Amount-->
-                                                    <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1 ls-n2" id="icTotalJoinedCount_{{ $client->id }}">{{$candidateValuesTotaljoin}}</span>
-                                                    <!--end::Amount-->           
-
-                                                    <!--begin::Subtitle-->
-                                                    <span class="text-gray-500 pt-1 fw-semibold fs-6">Joined In {{ date("M Y ", strtotime($startOfMonthcomman)) }} To {{ date("M Y ", strtotime($endOfMonthcomman)) }}</span>
-                                                    <!--end::Subtitle--> 
-                                                </div>
-                                                <!--end::Title-->           
-                                            </div>
-                                            <!--end::Header-->
-
-                                            <!--begin::Card body-->
-                                            <div class="card-body d-flex flex-column justify-content-end pe-0">
-                                                <!--begin::Title-->
-                                                <!--end::Title-->
-
-                                                <!--begin::Users group-->
-                                                <div class="symbol-group symbol-hover flex-nowrap">
-
-                                                    <div 
-                                                        id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
-                                                        style="min-width: 100%; min-height: 200px">
-                                                        <canvas id="candidates_join_chart_<?php echo @$client->id; ?>" height="170"></canvas>
+                                            <!-- Card 2: Added in last 7 days -->
+                                            <div class="col-md-6 col-lg-6">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
+                                                        <div class="card-title d-flex flex-column">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="icAdded7DaysCount_{{ $client->id }}">{{$candidateValuesTotal}}</span>
+                                                                <span class="badge badge-light-info fs-8 fw-bold">7-Day Activity</span>
+                                                            </div>
+                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Sourced (Last 7 Days)</span>
+                                                        </div>
                                                     </div>
-
-
-                                                        
+                                                    <div class="card-body pt-0 px-4 pb-3 d-flex align-items-end">
+                                                        <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 150px">
+                                                            <div id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" style="min-width: 100%; min-height: 150px">
+                                                                <canvas id="candidates_left_chart_<?php echo @$client->id; ?>" height="150"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <!--end::Users group-->
                                             </div>
-                                            <!--end::Card body-->
-
                                         </div>
-                                    </div>
 
-                                </div>
-
-                                <!--Start Interview Section-->
-                                    <div class="row gy-5 g-xl-10">
-                                        <!--begin::Col-->
-                                        <div class="col-xl-4 mb-xl-10">
-                                            
-                                            <!--begin::List widget 17-->
-                                            <div class="card card-flush h-xl-100">
-                                                <!--begin::Header-->
-                                                <div class="card-header pt-7">
-                                                    <!--begin::Title-->
-                                                    <h3 class="card-title align-items-start flex-column">
-                                                        <span class="card-label fw-bold text-gray-800">Upcoming Interviews</span>
-                                                    </h3>
-                                                    <!--end::Title-->
-                                                    <!--end::Toolbar-->
+                                        <!-- Row 2: 6-Month Sourcing Trend Hero Card -->
+                                        <div class="row g-4 mb-4">
+                                            <div class="col-12">
+                                                <div class="card card-flush shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0 d-flex align-items-center justify-content-between">
+                                                        <div class="card-title d-flex flex-column">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="icTotalCandidatesCount_{{ $client->id }}">{{$total_candidates}}</span>
+                                                                <span class="badge badge-light-primary fs-8 fw-bold">6-Month Trend</span>
+                                                            </div>
+                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Sourced ({{ date('d M Y',strtotime($startOfMonth)) }} - {{ date('d M Y',strtotime($endOfMonth)) }})</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body pt-2 px-4 pb-3">
+                                                        <div id="kt_charts_widget_3" class="w-100" style="height: 320px; min-height: 320px;">
+                                                            <canvas id="myChart_<?php echo @$client->id; ?>" height="320" style="height: 320px; min-height: 320px;"></canvas>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <!--end::Header-->
+                                            </div>
+                                        </div>
 
-                                                <!--begin::Body-->
-                                                <div class="card-body pt-0"> 
-                                                    
-                                                        <!--begin::Content-->                                  
-                                                        <div class="d-flex flex-stack my-5">
-                                                            <span class="text-gray-500 fs-7 fw-bold"></span>
-                                                            
-                                                            <span class="text-gray-500 fw-bold fs-7"></span>
-                                                        </div>                   
-                                                        <!--end::Content-->
+                                        <!-- Row 3: Offers & Joinings Trend Cards -->
+                                        <div class="row g-4 mb-4">
+                                            <div class="col-md-6 col-lg-6">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
+                                                        <div class="card-title d-flex flex-column">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="icTotalOffersCount_{{ $client->id }}">{{$candidateValuesTotaloffer}}</span>
+                                                                <span class="badge badge-light-warning fs-8 fw-bold">Offers</span>
+                                                            </div>
+                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Offers Generated ({{ date("M Y", strtotime($startOfMonthcomman)) }} - {{ date("M Y", strtotime($endOfMonthcomman)) }})</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body pt-0 px-4 pb-3">
+                                                        <div id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" style="min-width: 100%; min-height: 150px">
+                                                            <canvas id="candidates_offer_chart_<?php echo @$client->id; ?>" height="150"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
+                                            <div class="col-md-6 col-lg-6">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
+                                                        <div class="card-title d-flex flex-column">
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="fs-2hx fw-bold text-gray-900 me-2 lh-1" id="icTotalJoinedCount_{{ $client->id }}">{{$candidateValuesTotaljoin}}</span>
+                                                                <span class="badge badge-light-success fs-8 fw-bold">Joins</span>
+                                                            </div>
+                                                            <span class="text-gray-500 pt-1 fw-semibold fs-7">Candidates Joined ({{ date("M Y", strtotime($startOfMonthcomman)) }} - {{ date("M Y", strtotime($endOfMonthcomman)) }})</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body pt-0 px-4 pb-3">
+                                                        <div id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" style="min-width: 100%; min-height: 150px">
+                                                            <canvas id="candidates_join_chart_<?php echo @$client->id; ?>" height="150"></canvas>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Row 4: Interview Section -->
+                                        <div class="row g-4">
+                                            <!-- Upcoming Interviews -->
+                                            <div class="col-lg-5 col-xl-4">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0">
+                                                        <h3 class="card-title fw-bold text-gray-900 fs-6 d-flex align-items-center gap-2">
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                                            Upcoming Interviews
+                                                        </h3>
+                                                    </div>
+                                                    <div class="card-body pt-1 px-5 pb-4">
                                                         @if (count($upcomingData) > 0)
                                                             @foreach ($upcomingData as $rowArr)
-
                                                                 @php
                                                                 $row = (object) $rowArr;
                                                                 $schedule_date = Carbon::parse($row->schedule_date)->format('M d');
                                                                 $schedule_date_explode = explode(" ",$schedule_date);
                                                                 @endphp
-                                                    
-                                                                <!--begin::Item-->
-                                                                <div class="d-flex flex-stack">                 
-                                                                    <!--begin::Wrapper-->                                  
+                                                                <div class="d-flex align-items-center justify-content-between p-2 rounded-3 mb-2" style="background: #f8fafc; border: 1px solid #f1f5f9;">
                                                                     <div class="d-flex align-items-center me-3">
-                                                                        <!--begin::Icon-->                         
-                                                                        <a href="#" class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary w-40px h-40px mr-2 text-center" style="display: inline-grid">
-                                                                        <span style="font-size: 12px; font-weight: 600;">{{$schedule_date_explode[0]}}</span><span style="color: #373bed; font-size: 17px; font-weight: 900;">{{$schedule_date_explode[1]}}</span>                
-                                                                        </a>                 
-                                                                        <!--end::Icon-->
-
-                                                                        <!--begin::Section-->                                  
-                                                                        <div class="flex-grow-1">
-                                                                            <a href="javascript:;" class="text-gray-800 text-hover-primary fs-5 fw-bold lh-0">{{ucwords(mb_substr(@$row->full_name, 0, 20))}}</a>
-                                                                            
-                                                                            <span class="text-gray-500 fw-semibold d-block fs-7">{{ucwords(mb_substr(@$row->current_designation, 0, 21))}}</span>
-                                                                        </div>                   
-                                                                        <!--end::Section-->
-                                                                    </div>                   
-                                                                    <!--end::Wrapper-->                 
-
-                                                                    <!--begin::Value-->
-                                                                    <span class="text-gray-800 fw-bold fs-6">
-                                                                        {{$row->schedule_to_time. ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '')}} <br>
-                                                                        <span class="text-gray-500 fw-semibold d-block fs-7">
-                                                                        {{ucwords(mb_substr($row->mode_name, 0, 13))}} 
-                                                                        <span> 
-                                                                    </span>
-                                                                    <!--end::Value-->               
+                                                                        <div class="rounded-3 text-center px-2 py-1 me-3" style="background: #eef2ff; border: 1px solid #e0e7ff; min-width: 44px;">
+                                                                            <span style="font-size: 10px; font-weight: 700; color: #6366f1; text-transform: uppercase; display: block;">{{$schedule_date_explode[0]}}</span>
+                                                                            <span style="color: #4f46e5; font-size: 15px; font-weight: 900; line-height: 1;">{{$schedule_date_explode[1]}}</span>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div class="text-gray-900 fs-7 fw-bold mb-0 text-truncate" style="max-width: 140px;">{{ucwords(mb_substr(@$row->full_name, 0, 20))}}</div>
+                                                                            <span class="text-gray-500 fs-8 d-block text-truncate" style="max-width: 140px;">{{ucwords(mb_substr(@$row->current_designation, 0, 21))}}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="text-end">
+                                                                        <span class="badge badge-light-primary fs-8 fw-semibold px-2 py-1 mb-1 d-inline-block">{{$row->schedule_to_time. ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '')}}</span>
+                                                                        <span class="text-gray-500 fs-8 d-block">{{ucwords(mb_substr($row->mode_name, 0, 13))}}</span>
+                                                                    </div>
                                                                 </div>
-                                                                <!--end::Item-->
-
-                                                                <!--begin::Separator-->
-                                                                <div class="separator separator-dashed my-4"></div>
-                                                                <!--end::Separator-->
                                                             @endforeach
                                                         @else
-                                                            <table border="1" width="100%" cellpadding="10">
-                                                                <tbody>
-                                                                        <tr>
-                                                                            <td colspan="4" align="center">No records found</td>
-                                                                        </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        @endif                                   
-                                                    
+                                                            <div class="text-center py-6 px-3 rounded-3" style="background: #f8fafc; border: 1px dashed #e2e8f0;">
+                                                                <svg class="mb-2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M8 7V3M16 7V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                                <div class="text-gray-500 fs-7 fw-medium">No upcoming interviews scheduled</div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 </div>
-                                                <!--end::Body-->
                                             </div>
-                                            <!--end::List widget 17-->     
-                                        </div>
-                                        <!--end::Col-->      
 
-                                        <!--begin::Col-->
-                                        <div class="col-xl-8 mb-5 mb-xl-10">
-                                            
-                                            <!--begin::Table widget 6-->
-                                            <div class="card card-flush h-xl-100">
-                                                <!--begin::Header-->
-                                                <div class="card-header pt-7" style="position: relative">
-                                                    <!--begin::Title-->
-                                                    <h3 class="card-title align-items-start flex-column">			
-                                                        <span class="card-label fw-bold text-gray-800">Candidates Interviews</span>
-                                                    </h3>
-                                                    <!--end::Title-->
-                                                    <span class="" style="position: absolute; right: 14px; top: 26px;"> 
-                                                    <select class="form-select form-select-lg form-select-solid" data-hide-search="true" id="sortingfilter" data-dropdown-css-class="w-150px" data-placeholder="Select an option" style="border: 1px solid #ffffff;" onchange="filtersdatagetmonth(this.value)">
+                                            <!-- Candidates Interviews Chart -->
+                                            <div class="col-lg-7 col-xl-8">
+                                                <div class="card card-flush h-100 shadow-xs border" style="border-color: #eef2f7 !important; border-radius: 12px;">
+                                                    <div class="card-header pt-4 pb-2 px-5 border-0 d-flex align-items-center justify-content-between">
+                                                        <h3 class="card-title fw-bold text-gray-900 fs-6 d-flex align-items-center gap-2">
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                                                            Candidates Interviews
+                                                        </h3>
+                                                        <select class="form-select form-select-sm form-select-solid w-140px fs-7 border-0" id="sortingfilter" onchange="filtersdatagetmonth(this.value)">
                                                             <option value="1">Last 6 Months</option>
                                                             <option value="0">Last 7 Days</option>
                                                         </select>
-                                                    </span>
-                                                    
-                                                </div>
-                                                <!--end::Header-->
-
-                                                <!--begin::Body-->
-                                                <div class="card-body">       
-                                                    <!--begin::Tab Content-->
-                                                    <div class="tab-content">
-                                                            <!--begin::Tap pane-->
-                                                            <div class="tab-pane fade active show" id="kt_stats_widget_6_tab_1_<?php echo @$client->id; ?>" role="tabpanel">
-                                                                <!--begin::Table container-->
-
-                                                                <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 200px">
-
-                                                                    <div class="inetview_recent_chart_<?php echo @$client->id; ?> d-none" id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" 
-                                                                        style="min-width: 100%; min-height: 200px">
-                                                                        <canvas id="inetview_recent_chart_<?php echo @$client->id; ?>" height="300"></canvas>
-                                                                    </div>
-                                                                    
-                                                                    <div class="inetview_recent_chart_month_<?php echo @$client->id; ?>" id="kt_card_widget_4_chart" 
-                                                                            style="min-width: 100%; min-height: 200px">
-                                                                            <canvas id="inetview_recent_chart_month_<?php echo @$client->id; ?>" height="230"></canvas>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                    
-                                                                <!--end::Table-->
-                                                            </div>
-                                                            <!--end::Tap pane-->
                                                     </div>
-                                                    <!--end::Tab Content-->        
+                                                    <div class="card-body pt-1 px-4 pb-3">
+                                                        <div id="kt_card_widget_6_chart_<?php echo @$client->id; ?>" class="w-100" style="height: 200px">
+                                                            <div class="inetview_recent_chart_<?php echo @$client->id; ?> d-none" id="kt_card_widget_4_chart_<?php echo @$client->id; ?>" style="min-width: 100%; min-height: 200px">
+                                                                <canvas id="inetview_recent_chart_<?php echo @$client->id; ?>" height="200"></canvas>
+                                                            </div>
+                                                            <div class="inetview_recent_chart_month_<?php echo @$client->id; ?>" id="kt_card_widget_4_chart" style="min-width: 100%; min-height: 200px">
+                                                                <canvas id="inetview_recent_chart_month_<?php echo @$client->id; ?>" height="200"></canvas>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <!--end: Card Body-->
                                             </div>
-                                            <!--end::Table widget 6-->   
                                         </div>
-                                        <!--end::Col-->      
+
                                     </div>
-                                <!--End Interview Section-->
-
-
                                 </div>
                             </div>
-                            </div>
-                        </div></div>
+                        </div>
                     </div>
                 <!--end begin::candidateDashboard Content-->
 
@@ -1952,11 +1742,14 @@ use Carbon\Carbon;
                             '#ff0202' // joined_count // joined_count
                         ],
                         borderRadius: 10,
-                        barThickness: 30
+                        barThickness: 20,
+                        maxBarThickness: 22
                     }]
                 },
                 options: {
                     indexAxis: 'y', // makes it horizontal
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -2604,7 +2397,8 @@ use Carbon\Carbon;
                         '#ff4098', '#ffab00', '#06c732', '#ff0202'
                     ],
                     borderRadius: 10,
-                    barThickness: 30
+                    barThickness: 20,
+                    maxBarThickness: 22
                 }]
             },
             options: {
