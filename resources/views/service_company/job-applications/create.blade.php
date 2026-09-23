@@ -1004,14 +1004,7 @@
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
                                       $selected_skill_rating = $skill_val->rating ?? null;
-<<<<<<< HEAD
-                                    }else{
-                                      $selected_skill_exp_year = null;
-                                      $selected_skill_exp_month =null;
-                                      $selected_skill_rating = null;
-=======
->>>>>>> 107efe99049538c53bc79574eae03de068b12fe4
-                                    }
+                                     }
                                   }
                             @endphp
 

@@ -2641,19 +2641,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
-        $candidateId = ! empty($this->appId) ? (int) $this->appId : 0;
+        $candidateId = ! empty($appId) ? (int) $appId : (! empty($this->appId) ? (int) $this->appId : 0);
         $this->jobSkill = DB::table('job_metronics_skills')
-<<<<<<< HEAD
-            ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId) {
-                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
-                if (! empty($appId)) {
-                    $join->where('candidate_job_skill_exp.candidate_id', '=', $appId);
-                }
-            })
-            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-            ->where('job_metronics_skills.job_id', '=', $this->jobId)
-            ->groupBy('job_metronics_skills.id')
-=======
             ->leftJoin('candidate_job_skill_exp', function ($join) use ($candidateId) {
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
                     ->where('candidate_job_skill_exp.candidate_id', '=', $candidateId);
@@ -2666,7 +2655,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             )
             ->where('job_metronics_skills.job_id', $this->jobId)
             ->groupBy('job_metronics_skills.skill_name')
->>>>>>> 107efe99049538c53bc79574eae03de068b12fe4
             ->get();
 
         // dd($this->jobSkill);
