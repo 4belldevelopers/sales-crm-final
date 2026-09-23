@@ -2948,7 +2948,31 @@
     }
     blob.filename = filename;
 
+    // Cryptographic SHA-256 Checksum in Browser RAM (Web Crypto API)
+    try {
+      blob.sha256 = await computeBlobSha256(blob);
+    } catch (hashErr) {
+      blob.sha256 = '';
+    }
+
     return blob;
+  }
+
+  /**
+   * Computes SHA-256 hexadecimal hash directly in User RAM using native Web Crypto API.
+   * Conforms to Browser-First / Server-Authoritative Checksum Verification.
+   */
+  async function computeBlobSha256(blob) {
+    if (!blob || typeof crypto === 'undefined' || !crypto.subtle) return '';
+    try {
+      var buffer = await blob.arrayBuffer();
+      var hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      var hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    } catch (e) {
+      console.warn('[computeBlobSha256] Checksum calculation error:', e);
+      return '';
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -2977,6 +3001,7 @@
     ensureOpenDocLab: ensureOpenDocLab,
     downloadBlob: downloadBlob,
     clean: clean,
-    fileSafeName: fileSafeName
+    fileSafeName: fileSafeName,
+    computeBlobSha256: computeBlobSha256
   };
 }));
