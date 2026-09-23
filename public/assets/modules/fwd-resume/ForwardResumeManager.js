@@ -129,6 +129,7 @@
             self._currentJobIdArr = jobIdArr || [];
             self._currentMatchMap = matchMap || {};
             self._confirmedMissing = false;
+            self._compiledAttachments = {};
 
             // 1. Instant Drawer Display (< 16ms)
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
@@ -227,6 +228,7 @@
             self._renderTags('cc');
             self._isCompiling = false;
             self._compileToken++;
+            self._compiledAttachments = {};
             var btn = document.getElementById('btnTestSubmit');
             if (btn) {
                 btn.disabled = false;
@@ -272,13 +274,13 @@
 
         _hydrateData: function (data) {
             var self = this;
-            self._applicationData = data.applicationData || [];
+            self._applicationData = data.applicationData || data.candidates || [];
             self._companyData = {
-                companyName: data.companyName || 'Hiring Partner',
-                companyLogo: data.companyLogo || ''
+                companyName: data.companyName || (data.company && data.company.name) || 'Hiring Partner',
+                companyLogo: data.companyLogo || (data.company && data.company.logo) || ''
             };
-            self._jobSkills = data.jobSkills || [];
-            self._templateData = data.templateData || [];
+            self._jobSkills = data.jobSkills || data.job_skills || [];
+            self._templateData = data.templateData || data.templates || [];
 
             // From & Reply-To
             if (data.from_email) {
