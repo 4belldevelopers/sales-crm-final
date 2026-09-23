@@ -821,22 +821,22 @@ class JobService
             }
 
             // Skills
-            if (! empty($requestData['tags'])) {
+            $skillsUpdated = false;
+            $currentSkillsList = [];
+            if (isset($requestData['tags'])) {
                 $tags = is_array($requestData['tags']) ? $requestData['tags'] : json_decode($requestData['tags'], true);
                 if (is_array($tags) && count($tags) > 0) {
                     $skillsAddElastic = array_column($tags, 'value');
                     if (count($skillsAddElastic) > 0) {
                         GeneralMethod::skillsAddElastic($skillsAddElastic);
                     }
-                    $tagsArr = $skillsAddElastic;
+                    $tagsArr = array_values(array_filter(array_map('trim', $skillsAddElastic)));
+                    $currentSkillsList = $tagsArr;
 
                     DB::table('job_metronics_skills')->where('job_id', $job->id)->whereNotIn('skill_name', $tagsArr)->delete();
                     $exitsSkill = DB::table('job_metronics_skills')->where('job_id', $job->id)->pluck('skill_name')->toArray();
 
-                    $notCommon = array_merge(
-                        array_diff($tagsArr, $exitsSkill),
-                        array_diff($exitsSkill, $tagsArr)
-                    );
+                    $notCommon = array_diff($tagsArr, $exitsSkill);
 
                     if (count($notCommon) > 0) {
                         $batchSkillInsert = [];
@@ -851,6 +851,10 @@ class JobService
                             DB::table('job_metronics_skills')->insert($batchSkillInsert);
                         }
                     }
+                    $skillsUpdated = true;
+                } else {
+                    DB::table('job_metronics_skills')->where('job_id', $job->id)->delete();
+                    $skillsUpdated = true;
                 }
             }
 
@@ -899,6 +903,48 @@ class JobService
             }
         } catch (\Throwable $e) {
             Log::error('[JobService@updateJob] ES Indexing failed: '.$e->getMessage());
+        }
+
+        // Multi-Tenant Atomic Cache Invalidation & Reverb Synchronization
+        try {
+            // A. Bust Job Caches across Redis
+            \Illuminate\Support\Facades\Cache::forget('jobDetails_version_company_'.$user->company_id);
+            \Illuminate\Support\Facades\Cache::forget('v3:status_job:'.$job->id);
+            \Illuminate\Support\Facades\Cache::forget('v3:status_log:'.$job->id);
+            \Illuminate\Support\Facades\Cache::forget('job_skills_metronic:'.$job->id);
+
+            // B. Invalidate candidate drawer caches for all candidates attached to this job
+            $linkedCandidates = DB::table('add_job_wise_condidates')
+                ->where('job_id', $job->id)
+                ->select('job_application_id', 'id')
+                ->get();
+
+            $candIds = $linkedCandidates->pluck('job_application_id')->filter()->unique()->values()->toArray();
+            $wiseIds = $linkedCandidates->pluck('id')->filter()->unique()->values()->toArray();
+            $targetIds = array_unique(array_merge($candIds, $wiseIds));
+
+            $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+            $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+            foreach ($targetIds as $tid) {
+                foreach ($slugs as $slug) {
+                    \Illuminate\Support\Facades\Cache::forget('tenant:'.$user->company_id.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+                }
+            }
+
+            // C. Broadcast JobSkillsUpdated over Laravel Reverb to synchronize all recruiter browser sessions
+            if (class_exists(\App\Events\JobSkillsUpdated::class)) {
+                \App\Events\JobSkillsUpdated::dispatch(
+                    (int) $user->company_id,
+                    (int) $job->id,
+                    array_map('intval', $candIds),
+                    array_map('intval', $wiseIds),
+                    $currentSkillsList,
+                    time()
+                );
+            }
+        } catch (\Throwable $cacheEx) {
+            Log::warning('[JobService@updateJob] Post-update cache invalidation warning: '.$cacheEx->getMessage());
         }
 
         return $job;

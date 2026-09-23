@@ -955,45 +955,228 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VECTOR KEYWORD HIGHLIGHTING (Matches showdetail 1:1)
+  // VECTOR KEYWORD HIGHLIGHTING (Single Uniform Amber/Gold Color)
   // ═══════════════════════════════════════════════════════════════════════════
   function rsKeywordPatternEscape(value) {
     return String(value == null ? '' : value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  // Pillar 1 & Pillar 3: Disjunction Splitter & Hierarchical Phrase Deconstruction
+  function rsDeconstructCompoundSkill(value) {
+    var raw = String(value == null ? '' : value).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+    if (!raw) return [];
+
+    var parts = [];
+    var seen = {};
+    function addPart(str) {
+      var s = String(str || '').replace(/\s+/g, ' ').trim();
+      if (!s || s.length < 2) return;
+      var k = s.toLowerCase();
+      if (!seen[k]) {
+        seen[k] = true;
+        parts.push(s);
+      }
+    }
+
+    // Always include the original intact phrase
+    addPart(raw);
+
+    // Pillar 1: Compound & Slash Disjunction Handling (/, \, &, |, or, and)
+    // E.g. "C++/C" -> "C++", "C" | "HTML/CSS" -> "HTML", "CSS" | "Python/Django" -> "Python", "Django"
+    var disjunctionRegex = /[\/\\|]|(?:\s*&\s*)|(?:\s+and\s+)|\s+or\s+/i;
+    if (disjunctionRegex.test(raw)) {
+      var atomicTokens = raw.split(disjunctionRegex).map(function (s) { return s.trim(); }).filter(Boolean);
+      atomicTokens.forEach(addPart);
+    }
+
+    // Strip trailing .js, -js, or js to also match base framework (e.g. React.js -> React)
+    if (/^[a-z0-9]+[\.\-_\s]js$/i.test(raw)) {
+      var baseTech = raw.replace(/[\.\-_\s]js$/i, '').trim();
+      if (baseTech.length >= 2) {
+        addPart(baseTech);
+      }
+    }
+
+    // Pillar 3: Hierarchical Phrase Deconstruction (Role & Compound Titles)
+    // Tier 1: Exact phrase (already in parts)
+    // Tier 2: Functional Core Competency (strips seniority stop-words: senior, lead, principal, junior, staff, etc.)
+    // Tier 3: Atomic Technical Keyword (strips generic noun modifiers: engineer, developer, architect, etc.)
+    parts.slice().forEach(function (item) {
+      var seniorityRegex = /\b(senior|lead|principal|junior|staff|associate|chief|head of|expert|intern)\s+/i;
+      if (seniorityRegex.test(item)) {
+        var coreRole = item.replace(seniorityRegex, '').trim();
+        addPart(coreRole);
+
+        var roleModifierRegex = /\s+(engineer|developer|architect|specialist|consultant|analyst|manager|administrator)$/i;
+        if (roleModifierRegex.test(coreRole)) {
+          var atomicCore = coreRole.replace(roleModifierRegex, '').trim();
+          if (atomicCore.length >= 3) {
+            addPart(atomicCore);
+          }
+        }
+      }
+    });
+
+    return parts;
+  }
+
   function rsKeywordAliasValues(value) {
     var raw = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
     var normalized = raw.toLowerCase().replace(/[^a-z0-9+#.]+/g, ' ').replace(/\s+/g, ' ').trim();
+    var normKey = normalized.replace(/[^a-z0-9+#]/g, '');
     var aliases = [raw];
     function add(alias) {
       if (alias && aliases.map(function (v) { return v.toLowerCase(); }).indexOf(alias.toLowerCase()) === -1) aliases.push(alias);
     }
+
+    // Cloud Providers
     if (/\baws\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
       add('AWS');
       add('Amazon Web Services');
     }
-    if (normalized === 'amazon web services') {
+    if (normalized === 'amazon web services' || normalized === 'aws' || normKey === 'aws') {
       add('AWS');
+      add('Amazon Web Services');
       add('AWS Cloud');
     }
-    if ((/\bgcp\b/.test(normalized) || normalized === 'google cloud platform') && normalized.indexOf('cloud') !== -1) {
+    if ((/\bgcp\b/.test(normalized) || normalized === 'google cloud platform' || normalized === 'google cloud') && normalized.indexOf('cloud') !== -1) {
       add('GCP');
       add('Google Cloud');
+      add('Google Cloud Platform');
     }
-    if (/\bazure\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
+    if (/\bazure\b/.test(normalized) && (/\bcloud\b/.test(normalized) || normalized === 'azure' || normalized === 'microsoft azure')) {
       add('Azure');
       add('Microsoft Azure');
     }
+
+    // Web & Frontend (Matches "React", "React.js", "ReactJS", "React-JS")
+    if (normKey === 'react' || normKey === 'reactjs') {
+      add('React');
+      add('React.js');
+      add('ReactJS');
+      add('React-JS');
+    }
+    if (normKey === 'node' || normKey === 'nodejs') {
+      add('Node');
+      add('Node.js');
+      add('NodeJS');
+      add('Node-JS');
+    }
+    if (normKey === 'vue' || normKey === 'vuejs') {
+      add('Vue');
+      add('Vue.js');
+      add('VueJS');
+    }
+    if (normKey === 'angular' || normKey === 'angularjs') {
+      add('Angular');
+      add('Angular.js');
+      add('AngularJS');
+    }
+    if (normKey === 'next' || normKey === 'nextjs') {
+      add('Next.js');
+      add('NextJS');
+    }
+    if (normKey === 'nest' || normKey === 'nestjs') {
+      add('Nest.js');
+      add('NestJS');
+    }
+    if (normKey === 'three' || normKey === 'threejs') {
+      add('Three.js');
+      add('ThreeJS');
+    }
+
+    // Languages & Runtimes
+    if (normKey === 'c++' || normKey === 'cpp') {
+      add('C++');
+      add('CPP');
+      add('C Plus Plus');
+    }
+    if (normKey === 'c#' || normKey === 'csharp') {
+      add('C#');
+      add('CSharp');
+      add('C Sharp');
+    }
+    if (normKey === 'net' || normKey === 'dotnet') {
+      add('.NET');
+      add('DotNet');
+      add('ASP.NET');
+      add('.NET Core');
+    }
+    if (normKey === 'golang' || normKey === 'go') {
+      add('Golang');
+      add('Go');
+    }
+    if (normKey === 'typescript' || normKey === 'ts') {
+      add('TypeScript');
+      add('TS');
+    }
+    if (normKey === 'javascript' || normKey === 'js') {
+      add('JavaScript');
+      add('JS');
+    }
+
+    // DevOps & Infra
+    if (normKey === 'kubernetes' || normKey === 'k8s') {
+      add('Kubernetes');
+      add('K8s');
+    }
+    if (normKey === 'cicd') {
+      add('CI/CD');
+      add('CICD');
+      add('CI-CD');
+    }
+    if (normKey === 'docker' || normKey === 'containers') {
+      add('Docker');
+    }
+
+    // Databases
+    if (normKey === 'postgres' || normKey === 'postgresql' || normKey === 'pgsql') {
+      add('PostgreSQL');
+      add('Postgres');
+      add('PGSQL');
+    }
+    if (normKey === 'mongo' || normKey === 'mongodb') {
+      add('MongoDB');
+      add('Mongo');
+    }
+
     return aliases;
   }
 
   function rsKeywordPatternFromValue(value) {
     var raw = String(value == null ? '' : value).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
     if (!raw) return '';
+
+    var lower = raw.toLowerCase();
+
+    // Pillar 4: Precision Boundary Guarding for Ambiguous Tokens (C, R, Go, C++, C#)
+    if (lower === 'c') {
+      // C is highlighted only when adjacent to programming keywords or inside skill/delimiter context
+      return '(?:(?:programming\\s+in|language|experience\\s+in|skills?[:\\-]|[\/\\\\|,&])\\s*\\b[Cc]\\b|\\b[Cc]\\b(?=\\s*[\/\\\\|,&]\\s*C\\+\\+|\\s+(?:language|programming|developer|code)))';
+    }
+    if (lower === 'r') {
+      // R is highlighted only when qualified by language/programming/script or within tech delimiters
+      return '(?:(?:programming\\s+in|language|skills?[:\\-]|[\/\\\\|,&])\\s*\\b[Rr]\\b|\\b[Rr]\\b(?=\\s+(?:language|programming|script|developer|studio)))';
+    }
+    if (lower === 'go' || lower === 'golang') {
+      // Go is matched via Golang or Go when capitalized / qualified by language/developer/programming
+      return '(?:\\bGolang\\b|\\bGo\\b(?=\\s+(?:language|developer|programming|code)|\\s*[\/\\\\|,&]))';
+    }
+    if (lower === 'c++' || lower === 'cpp') {
+      return '(?:\\bC\\+\\+|\\bCPP\\b|\\bC\\s*Plus\\s*Plus\\b)';
+    }
+    if (lower === 'c#' || lower === 'csharp') {
+      return '(?:\\bC#|\\bCSharp\\b|\\bC\\s*Sharp\\b)';
+    }
+    if (lower === '.net' || lower === 'dotnet') {
+      return '(?:\\.(?:NET|net)(?:\\s+Core)?|\\b(?:DotNet|dotnet|ASP\\.NET)\\b)';
+    }
+
     var compact = raw.replace(/\s+/g, '');
     if (/^[A-Za-z][+#]{1,2}$/i.test(compact)) {
       return '\\b' + rsKeywordPatternEscape(compact);
     }
+
     var expanded = raw
       .replace(/([a-z])([A-Z])/g, '$1 $2')
       .replace(/([A-Za-z])(\d)/g, '$1 $2')
@@ -1012,14 +1195,22 @@
   function rsKeywordPatternsForValue(value) {
     var seen = {};
     var patterns = [];
-    rsKeywordAliasValues(value).forEach(function (alias) {
-      var pattern = rsKeywordPatternFromValue(alias);
-      var key = pattern.toLowerCase();
-      if (pattern && !seen[key]) {
-        seen[key] = true;
-        patterns.push(pattern);
-      }
+
+    // 1. Deconstruct compound, slash, and hierarchical role phrases
+    var deconstructed = rsDeconstructCompoundSkill(value);
+
+    // 2. Expand aliases and build precision patterns for each deconstructed part
+    deconstructed.forEach(function (part) {
+      rsKeywordAliasValues(part).forEach(function (alias) {
+        var pattern = rsKeywordPatternFromValue(alias);
+        var key = pattern.toLowerCase();
+        if (pattern && !seen[key]) {
+          seen[key] = true;
+          patterns.push(pattern);
+        }
+      });
     });
+
     return patterns;
   }
 
