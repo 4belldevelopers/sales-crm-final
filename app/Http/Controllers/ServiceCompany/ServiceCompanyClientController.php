@@ -1393,29 +1393,47 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $startOfMonthcomman = Carbon::now()->startOfMonth()->subMonths(6);
         $endOfMonthcomman = Carbon::now()->endOfMonth();
 
-        $candMust = [
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['client_id' => (int) $id]],
-                        ['term' => ['from_company_id' => (int) $id]],
-                        ['term' => ['client_company_id' => (int) $id]],
-                        ['term' => ['client_comapny_id' => (int) $id]],
+        $isInternalClient = DB::table('clients')->where('id', $id)->exists();
+
+        if ($isInternalClient) {
+            $candMust = [
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['client_id' => (int) $id]],
+                            ['term' => ['from_company_id' => (int) $id]],
+                            ['term' => ['client_company_id' => (int) $id]],
+                            ['term' => ['client_comapny_id' => (int) $id]],
+                        ],
+                        'minimum_should_match' => 1,
                     ],
-                    'minimum_should_match' => 1,
                 ],
-            ],
-            [
-                'bool' => [
-                    'should' => [
-                        ['term' => ['ClientComID' => (int) $company_id]],
-                        ['term' => ['to_company_id' => (int) $company_id]],
-                        ['term' => ['thirdparty_company_id' => (int) $company_id]],
+            ];
+        } else {
+            $candMust = [
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['client_id' => (int) $id]],
+                            ['term' => ['from_company_id' => (int) $id]],
+                            ['term' => ['client_company_id' => (int) $id]],
+                            ['term' => ['client_comapny_id' => (int) $id]],
+                        ],
+                        'minimum_should_match' => 1,
                     ],
-                    'minimum_should_match' => 1,
                 ],
-            ],
-        ];
+                [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['ClientComID' => (int) $company_id]],
+                            ['term' => ['to_company_id' => (int) $company_id]],
+                            ['term' => ['thirdparty_company_id' => (int) $company_id]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ],
+            ];
+        }
 
         // 1. Candidate status count graph (ES_CANDIDATES - shared candidates only)
         $boolQuery = [
@@ -1468,30 +1486,64 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $inreview_count = $result->get('8', 0);
         $total_candidates = $response['hits']['total']['value'] ?? ($inreview_count + $sourcing_count + $screening_count + $evaluation_count + $negotiation_count + $offer_count + $joined_count + $Rejected_count);
 
-        // 2. Jobs status counts graph (ES_JOBS - shared jobs with this client via nested recommendation_relation)
-        $paramsJobs = [
-            'index' => ELASTIC_JOBS,
-            'request_cache' => true,
-            'body' => [
-                'track_total_hits' => true,
-                'size' => 0,
-                'query' => [
-                    'nested' => [
-                        'path' => 'recommendation_relation',
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
-                                    ['term' => ['recommendation_relation.from_company_id' => (int) $id]],
-                                    ['term' => ['recommendation_relation.final_status' => (int) 1]],
+        // 2. Jobs status counts graph (ES_JOBS)
+        if ($isInternalClient) {
+            $paramsJobs = [
+                'index' => ELASTIC_JOBS,
+                'request_cache' => true,
+                'body' => [
+                    'track_total_hits' => true,
+                    'size' => 0,
+                    'query' => [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['client_id' => (int) $id]],
+                                [
+                                    'nested' => [
+                                        'path' => 'recommendation_relation',
+                                        'query' => [
+                                            'bool' => [
+                                                'must' => [
+                                                    ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                                    ['term' => ['recommendation_relation.from_company_id' => (int) $id]],
+                                                    ['term' => ['recommendation_relation.final_status' => (int) 1]],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                    'aggs' => ['status_counts' => ['terms' => ['field' => 'status', 'size' => 10]]],
+                ],
+            ];
+        } else {
+            $paramsJobs = [
+                'index' => ELASTIC_JOBS,
+                'request_cache' => true,
+                'body' => [
+                    'track_total_hits' => true,
+                    'size' => 0,
+                    'query' => [
+                        'nested' => [
+                            'path' => 'recommendation_relation',
+                            'query' => [
+                                'bool' => [
+                                    'must' => [
+                                        ['term' => ['recommendation_relation.to_company_id' => (int) $company_id]],
+                                        ['term' => ['recommendation_relation.from_company_id' => (int) $id]],
+                                        ['term' => ['recommendation_relation.final_status' => (int) 1]],
+                                    ],
                                 ],
                             ],
                         ],
                     ],
+                    'aggs' => ['status_counts' => ['terms' => ['field' => 'status', 'size' => 10]]],
                 ],
-                'aggs' => ['status_counts' => ['terms' => ['field' => 'status', 'size' => 10]]],
-            ],
-        ];
+            ];
+        }
         $counts = collect();
         if ($this->elasticService->indexExists(ELASTIC_JOBS)) {
             $responseJobs = $this->elasticService->getClient()->search($paramsJobs);
@@ -1655,29 +1707,45 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $interviewValuesMonth = [];
 
         if ($this->elasticService->indexExists(ELASTIC_INERTVIEW_TRACKER)) {
-            $interviewMust = [
-                [
-                    'bool' => [
-                        'should' => [
-                            ['term' => ['ClientComID' => (int) $company_id]],
-                            ['term' => ['thirdparty_company_id' => (int) $company_id]],
-                            ['bool' => ['must' => [['term' => ['job_company_id' => (int) $company_id]], ['term' => ['candidate_type' => 'other']]]]],
+            if ($isInternalClient) {
+                $interviewMust = [
+                    [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['client_id' => (int) $id]],
+                                ['term' => ['from_company_id' => (int) $id]],
+                                ['term' => ['client_company_id' => (int) $id]],
+                                ['term' => ['client_comapny_id' => (int) $id]],
+                            ],
+                            'minimum_should_match' => 1,
                         ],
-                        'minimum_should_match' => 1,
                     ],
-                ],
-                [
-                    'bool' => [
-                        'should' => [
-                            ['term' => ['client_id' => (int) $id]],
-                            ['term' => ['from_company_id' => (int) $id]],
-                            ['term' => ['client_company_id' => (int) $id]],
-                            ['term' => ['client_comapny_id' => (int) $id]],
+                ];
+            } else {
+                $interviewMust = [
+                    [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['ClientComID' => (int) $company_id]],
+                                ['term' => ['thirdparty_company_id' => (int) $company_id]],
+                                ['bool' => ['must' => [['term' => ['job_company_id' => (int) $company_id]], ['term' => ['candidate_type' => 'other']]]]],
+                            ],
+                            'minimum_should_match' => 1,
                         ],
-                        'minimum_should_match' => 1,
                     ],
-                ],
-            ];
+                    [
+                        'bool' => [
+                            'should' => [
+                                ['term' => ['client_id' => (int) $id]],
+                                ['term' => ['from_company_id' => (int) $id]],
+                                ['term' => ['client_company_id' => (int) $id]],
+                                ['term' => ['client_comapny_id' => (int) $id]],
+                            ],
+                            'minimum_should_match' => 1,
+                        ],
+                    ],
+                ];
+            }
 
             $nowMinus1Hour = now()->subHour()->toIso8601String();
             $upcomingParams = [
