@@ -2641,7 +2641,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->default_loc = GeneralMethod::allCitiesSelected([]);
 
+        $candidateId = ! empty($this->appId) ? (int) $this->appId : 0;
         $this->jobSkill = DB::table('job_metronics_skills')
+<<<<<<< HEAD
             ->leftJoin('candidate_job_skill_exp', function ($join) use ($appId) {
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
                 if (! empty($appId)) {
@@ -2651,6 +2653,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
             ->where('job_metronics_skills.job_id', '=', $this->jobId)
             ->groupBy('job_metronics_skills.id')
+=======
+            ->leftJoin('candidate_job_skill_exp', function ($join) use ($candidateId) {
+                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                    ->where('candidate_job_skill_exp.candidate_id', '=', $candidateId);
+            })
+            ->select(
+                DB::raw('MIN(job_metronics_skills.id) as id'),
+                'job_metronics_skills.skill_name',
+                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+            )
+            ->where('job_metronics_skills.job_id', $this->jobId)
+            ->groupBy('job_metronics_skills.skill_name')
+>>>>>>> 107efe99049538c53bc79574eae03de068b12fe4
             ->get();
 
         // dd($this->jobSkill);
@@ -10465,14 +10481,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // 	->groupBy('job_metronics_skills.id')
         // 	->get();
 
+        $candidateId = ! empty($this->appId) ? (int) $this->appId : 0;
         $this->jobSkill = DB::table('job_metronics_skills')
-            ->leftJoin('candidate_job_skill_exp', function ($join) {
-                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
+            ->leftJoin('candidate_job_skill_exp', function ($join) use ($candidateId) {
+                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                    ->where('candidate_job_skill_exp.candidate_id', '=', $candidateId);
             })
             ->select(
                 DB::raw('MIN(job_metronics_skills.id) as id'), // 👈 pick one id
                 'job_metronics_skills.skill_name',
-                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value')
+                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
             )
             ->where('job_metronics_skills.job_id', $this->jobId)
             ->groupBy('job_metronics_skills.skill_name') // 👈 KEY FIX

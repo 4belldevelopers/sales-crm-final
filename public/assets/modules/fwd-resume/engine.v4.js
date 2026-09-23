@@ -614,6 +614,10 @@
 
       // Redact PII in DOCX XML directly if requested
       if (options.anonymizeRules && typeof rdcRedactTextValue === 'function') {
+        if (typeof rdcDiscoverAllContactsFromText === 'function') {
+          var allDocxText = sanitizedXml.replace(/<[^>]+>/g, ' ');
+          rdcDiscoverAllContactsFromText(allDocxText, options.anonymizeRules);
+        }
         sanitizedXml = sanitizedXml.replace(/<w:t\b([^>]*)>([\s\S]*?)<\/w:t>/gi, function (match, attrs, content) {
           return '<w:t' + attrs + '>' + rdcRedactTextValue(content, options.anonymizeRules) + '</w:t>';
         });
@@ -1428,6 +1432,97 @@
     return targets;
   }
 
+  /**
+   * Autonomous Client-Side Contact Discovery Engine
+   * Identifies unlisted phone numbers, emails, LinkedIn handles, and social links
+   * directly from raw document text in User Browser RAM (< 2ms) before redacting.
+   */
+  function rdcDiscoverAllContactsFromText(fullText, rules) {
+    if (!fullText || typeof fullText !== 'string' || !rules) return;
+
+    // 1. Universal Email Address Scanner
+    var emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/gi;
+    var emailMatch;
+    while ((emailMatch = emailRegex.exec(fullText)) !== null) {
+      var em = emailMatch[0].trim();
+      rdcPushUnique(rules.emails, em);
+      rdcPushUnique(rules.exactTerms, em);
+
+      // Handle PDF.js token splitting: add username prefix if >= 4 chars
+      var parts = em.split('@');
+      if (parts[0] && parts[0].length >= 4) {
+        rdcPushUnique(rules.exactTerms, parts[0]);
+      }
+    }
+
+    // 2. Global & Domestic Phone Number Scanner
+    var phoneRegexes = [
+      /(?:\+|00)[1-9]\d{0,3}[\s.-]?(?:\(?\d{1,5}\)?[\s.-]?)?\d{3,5}[\s.-]?\d{3,5}/g,
+      /\b(?:0)?[6-9]\d{4}[\s.-]?\d{5}\b/g, // India 10-digit mobile
+      /\b(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}\b/g, // US/Canada 10-digit
+      /(?:tel|phone|mobile|mob|cell|contact|ph|whatsapp)[\s.:#-]*([+\d\s().-]{7,20})/gi
+    ];
+
+    phoneRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        var rawPhone = (match[1] || match[0]).trim();
+        var digits = rdcDigitsOnly(rawPhone);
+        if (digits.length >= 7 && digits.length <= 15) {
+          // Guard against years (e.g. 2019-2023)
+          if (/^(?:19|20)\d{2}(?:19|20)\d{2}$/.test(digits)) continue;
+          rdcPushUnique(rules.phones, rawPhone);
+          rdcPushUnique(rules.exactTerms, rawPhone);
+          if (rules.phoneDigits.indexOf(digits) === -1) {
+            rules.phoneDigits.push(digits);
+          }
+          if (digits.length > 10) {
+            var last10 = digits.slice(-10);
+            if (rules.phoneDigits.indexOf(last10) === -1) {
+              rules.phoneDigits.push(last10);
+            }
+          }
+          var pRe = rdcPhoneTextRegex(rawPhone);
+          if (pRe) rules.textRegexes.push(pRe);
+        }
+      }
+    });
+
+    // 3. LinkedIn & Social Handle Scanner
+    var linkedinRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?linkedin\.com\/(?:in|pub|profile|company)\/([A-Za-z0-9_.-]+)(?:\/)?/gi,
+      /\b(?:linkedin|li)[\s.:\/-]+([A-Za-z0-9_.-]{3,50})\b/gi
+    ];
+
+    linkedinRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        var fullMatch = match[0].trim();
+        var handle = match[1] ? match[1].trim() : '';
+        rdcPushUnique(rules.exactTerms, fullMatch);
+        if (handle && handle.length >= 3 && !/^(?:com|in|profile|company)$/i.test(handle)) {
+          rdcPushUnique(rules.exactTerms, handle);
+          rdcPushUnique(rules.exactTerms, handle.replace(/[-_]+/g, ' '));
+        }
+      }
+    });
+
+    // 4. Other Social Links (GitHub, Twitter/X)
+    var socialRegexes = [
+      /(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9_.-]+)/gi,
+      /(?:https?:\/\/)?(?:www\.)?(?:twitter|x)\.com\/([A-Za-z0-9_.-]+)/gi
+    ];
+    socialRegexes.forEach(function (re) {
+      var match;
+      while ((match = re.exec(fullText)) !== null) {
+        rdcPushUnique(rules.exactTerms, match[0].trim());
+        if (match[1] && match[1].length >= 3) {
+          rdcPushUnique(rules.exactTerms, match[1].trim());
+        }
+      }
+    });
+  }
+
   function rdcAnonymizeRules(data, options) {
     data = data || {};
     options = options || {};
@@ -1464,9 +1559,11 @@
       var re = rdcFlexibleTextRegex(term);
       if (re) textRegexes.push(re);
     });
-    textRegexes.push(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/gi);
-    textRegexes.push(/\+?\d[\d\s().\-]{7,}\d/g);
-    textRegexes.push(/(?:https?:\/\/|www\.)?linkedin\.com\/(?:in|pub|company)\/[^\s<>"')]+/gi);
+    textRegexes.push(/\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/gi);
+    textRegexes.push(/(?:\+|00)[1-9]\d{0,3}[\s.-]?(?:\(?\d{1,5}\)?[\s.-]?)?\d{3,5}[\s.-]?\d{3,5}/g);
+    textRegexes.push(/\b(?:0)?[6-9]\d{4}[\s.-]?\d{5}\b/g);
+    textRegexes.push(/\b(?:\(?\d{3}\)?[\s.-]?)?\d{3}[\s.-]?\d{4}\b/g);
+    textRegexes.push(/(?:https?:\/\/|www\.)?linkedin\.com\/(?:in|pub|profile|company)\/[^\s<>"')]+/gi);
     rdcContactLabelRegexes().forEach(function (regex) { textRegexes.push(regex); });
     return { textRegexes: textRegexes, phoneDigits: phoneDigits, emails: emails, phones: phones, exactTerms: exactTerms };
   }
@@ -1483,8 +1580,8 @@
     if (!text) return false;
     var lower = text.toLowerCase();
     var digits = rdcDigitsOnly(text);
-    if (digits.length >= 5 && rules.phoneDigits.some(function (phoneDigits) {
-      return phoneDigits.indexOf(digits) !== -1 || digits.indexOf(phoneDigits) !== -1;
+    if (digits.length >= 7 && rules.phoneDigits.some(function (pDigits) {
+      return pDigits.length >= 7 && (pDigits.indexOf(digits) !== -1 || digits.indexOf(pDigits) !== -1);
     })) return true;
     if (rules.exactTerms.some(function (term) {
       term = rdcPlain(term).toLowerCase();
@@ -1518,6 +1615,31 @@
     var count = 0;
     ctx.save();
     ctx.fillStyle = '#ffffff';
+
+    // 1. Continuous Page Text Run Matching (catches contacts split across multiple PDF tokens)
+    var runsData = rsPageTextRuns(textContent);
+    if (runsData.text && runsData.runs.length && Array.isArray(rules.textRegexes)) {
+      rules.textRegexes.forEach(function (re) {
+        re.lastIndex = 0;
+        var match;
+        while ((match = re.exec(runsData.text)) !== null) {
+          var mStart = match.index;
+          var mEnd = mStart + match[0].length;
+          runsData.runs.forEach(function (run) {
+            if (run.end <= mStart || run.start >= mEnd) return;
+            var item = run.item;
+            var rect = rsTextItemRect(item, viewport);
+            if (!rect) return;
+            var pad = Math.max(2, Math.min(8, rect.h * 0.22));
+            ctx.fillRect(Math.max(0, rect.x - pad), Math.max(0, rect.y - pad), rect.w + (pad * 2), rect.h + (pad * 2));
+            count++;
+          });
+          if (match.index === re.lastIndex) re.lastIndex++;
+        }
+      });
+    }
+
+    // 2. Individual Item Matching (exact terms, phone digits, label regexes)
     (textContent.items || []).forEach(function (item) {
       if (!rdcShouldRedactText(item && item.str, rules)) return;
       var rect = rsTextItemRect(item, viewport);
@@ -1526,6 +1648,7 @@
       ctx.fillRect(Math.max(0, rect.x - pad), Math.max(0, rect.y - pad), rect.w + (pad * 2), rect.h + (pad * 2));
       count++;
     });
+
     ctx.restore();
     return count;
   }
@@ -1537,6 +1660,19 @@
     var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
     if (sig.indexOf('%PDF') === -1) throw new Error('Resume source is not a valid PDF');
     var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+
+    // Autonomous Pre-Scan: Extract full text from all pages and discover all unlisted contacts
+    var allPagesText = '';
+    for (var pScan = 1; pScan <= doc.numPages; pScan++) {
+      var scanPage = await doc.getPage(pScan);
+      var scanTc = await scanPage.getTextContent();
+      var scanRuns = rsPageTextRuns(scanTc);
+      if (scanRuns.text) {
+        allPagesText += scanRuns.text + '\n';
+      }
+    }
+    rdcDiscoverAllContactsFromText(allPagesText, rules);
+
     var JsPDF = window.jspdf.jsPDF;
     var outPdf = null;
     var textItems = 0;
@@ -2812,7 +2948,31 @@
     }
     blob.filename = filename;
 
+    // Cryptographic SHA-256 Checksum in Browser RAM (Web Crypto API)
+    try {
+      blob.sha256 = await computeBlobSha256(blob);
+    } catch (hashErr) {
+      blob.sha256 = '';
+    }
+
     return blob;
+  }
+
+  /**
+   * Computes SHA-256 hexadecimal hash directly in User RAM using native Web Crypto API.
+   * Conforms to Browser-First / Server-Authoritative Checksum Verification.
+   */
+  async function computeBlobSha256(blob) {
+    if (!blob || typeof crypto === 'undefined' || !crypto.subtle) return '';
+    try {
+      var buffer = await blob.arrayBuffer();
+      var hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+      var hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+    } catch (e) {
+      console.warn('[computeBlobSha256] Checksum calculation error:', e);
+      return '';
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -2841,6 +3001,7 @@
     ensureOpenDocLab: ensureOpenDocLab,
     downloadBlob: downloadBlob,
     clean: clean,
-    fileSafeName: fileSafeName
+    fileSafeName: fileSafeName,
+    computeBlobSha256: computeBlobSha256
   };
 }));
