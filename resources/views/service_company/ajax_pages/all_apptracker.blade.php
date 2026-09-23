@@ -31,13 +31,19 @@
     $jobMode = $jobData->max_sal_mode ?? @$row->current_ctc_mode;
     $jobCurrency = $jobData->max_salary_currency ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
+    $rowJobId = $row->job_id ?: ($row->jobId ?? 0);
+    $preSkillRows = $rowMaps['skills'][$rowJobId] ?? [];
+    $jobRequiredSkills = collect($preSkillRows)->pluck('skill_name')->toArray();
+    $skillArr = explode(',', (string) @$row->skills);
+    $percentage = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);
+    $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
     @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr style="height: 102px; position: relative;" data-candidate-id="{{ @$row->id }}" data-wise-id="{{ @$row->add_job_wise_condidates_id }}" data-job-id="{{ @$rowJobId }}">
             <td>
                 @php
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item" type="checkbox" data-Wiid="'. @$row->add_job_wise_condidates_id.
-                            '" value="' . @$row->id .'" data-wiseId="' .$row->add_job_wise_condidates_id .'" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" />
+                            '" value="' . @$row->id .'" data-wiseId="' .$row->add_job_wise_condidates_id .'" data-candidate-id="' . @$row->id . '" data-match="' . $matchScore . '" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" />
                   </div>';
                 @endphp
             </td>
@@ -117,7 +123,7 @@
                     $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
                     $matchBg = $matchStyle['bg'];
                     $matchColor = $matchStyle['color'];
-                    $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+                    $matchBadge = '<span class="badge my-1 jw-row-match-badge" data-candidate-id="'.@$row->id.'" data-wise-id="'.@$row->add_job_wise_condidates_id.'" data-match-pct="'.$matchScore.'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
                     $matchedSkillsArr = GeneralMethod::matchedSkillsList($skillArr, $jobRequiredSkills);
                     $unmatchedSkillsArr = array_values(array_udiff($skillArr, $matchedSkillsArr, 'strcasecmp'));
 

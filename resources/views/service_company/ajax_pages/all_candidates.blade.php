@@ -48,7 +48,7 @@
     
 
     @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr style="height: 102px; position: relative;" data-candidate-id="{{ @$row->candidate_id }}" data-wise-id="{{ @$row->wiseId }}" data-job-id="{{ @$row->jobId }}">
             <td>
                 @php
                     $hasResume = !empty($row->resume);
@@ -76,7 +76,7 @@
                     $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
                     <input class="form-check-input chk_list_item " name="chk_list_item[]" type="checkbox" data-jobId="' .
-                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-match="' . $matchScore . '" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" data-has-resume="' . ($hasResume ? '1' : '0') . '" value="' .$row->candidate_id .'" />
+                        $row->jobId .'" data-wiseId="' .$row->wiseId .'" data-candidate-id="' . $row->candidate_id . '" data-match="' . $matchScore . '" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" data-has-resume="' . ($hasResume ? '1' : '0') . '" value="' .$row->candidate_id .'" />
                   </div>';
                 @endphp
             </td>
@@ -200,8 +200,8 @@
                         // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
                         $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
                         $matchBg = $matchStyle['bg'];
-                        $matchColor = $matchStyle['color'];
-                        $matchBadge = '<span class="badge my-1" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
+                        $numericPct = (int) round((float) rtrim(@$percentage ?: '0', '%'));
+                        $matchBadge = '<span class="badge my-1 jw-row-match-badge" data-candidate-id="'.@$row->candidate_id.'" data-wise-id="'.@$row->wiseId.'" data-match-pct="'.$numericPct.'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
 
                         if (empty($limit)) {
                             foreach ($skillArr as $sval) {
