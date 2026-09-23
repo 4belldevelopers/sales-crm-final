@@ -61,8 +61,9 @@
       $bgTextDecore				=	$strVal	=	'';
       $str						=	@$jobDetail->title;
       // dd($str);
-      $str	= $strVal			=	strtolower($str[0]);
-      $str					    =	ord($str);
+      $firstChar = (!empty($str) && is_string($str)) ? strtolower(substr($str, 0, 1)) : '';
+      $strVal = $firstChar;
+      $str = !empty($firstChar) ? ord($firstChar) : 0;
       if($str >=97 && $str <=101){
         $bgTextDecore		=	'fs-3 bg-light-danger text-danger';	
       }else if($str >=102 && $str <=106){
@@ -122,24 +123,24 @@
         $snp_zero		=	'checked="checked"';	
         $snp_text_zero	=	'display:block';
       }  
-      $logos = GeneralMethod::companyDetails($jobDetail->id);
+      $jobDetailId = @$jobDetail->id ?? 0;
+      $logos = $jobDetailId ? GeneralMethod::companyDetails($jobDetailId) : null;
       $logo_path = '';
       $logo_path = url('public/user-uploads/company-logo/' . @$logos->logo);
       if (!empty($logos->logo_logical_path)) {
         $logo_path = url('public/' . @$logos->logo_logical_path);
       }
         
-      $logo_path = GeneralMethod::companyDetails($jobDetail->id);
-      $company_or_client = GeneralMethod::companyDetailsByClient($jobDetail->id);	
-      $Jobcities = GeneralMethod::Jobcities($jobDetail->id);	
+      $company_or_client = $jobDetailId ? GeneralMethod::companyDetailsByClient($jobDetailId) : null;	
+      $Jobcities = $jobDetailId ? GeneralMethod::Jobcities($jobDetailId) : '';	
       $locations  = explode('`,`',$Jobcities);
       $salaryModeSelect = GeneralMethod::salaryMode();
       $currencySymbole = GeneralMethod::currencySymbole();
-      $min_sal_mode = strtoupper(substr($salaryModeSelect[$jobDetail->min_sal_mode], 0, 1));
-      $max_sal_mode = strtoupper(substr($salaryModeSelect[$jobDetail->max_sal_mode], 0, 1));
-      $min_salary_currency = $currencySymbole[@$jobDetail->min_salary_currency];
-      $max_salary_currency = $currencySymbole[@$jobDetail->max_salary_currency];
-      $max_salary = GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary);
+      $min_sal_mode = (!empty($jobDetail->min_sal_mode) && isset($salaryModeSelect[$jobDetail->min_sal_mode])) ? strtoupper(substr($salaryModeSelect[$jobDetail->min_sal_mode], 0, 1)) : '';
+      $max_sal_mode = (!empty($jobDetail->max_sal_mode) && isset($salaryModeSelect[$jobDetail->max_sal_mode])) ? strtoupper(substr($salaryModeSelect[$jobDetail->max_sal_mode], 0, 1)) : '';
+      $min_salary_currency = $currencySymbole[@$jobDetail->min_salary_currency] ?? '';
+      $max_salary_currency = $currencySymbole[@$jobDetail->max_salary_currency] ?? '';
+      $max_salary = !empty($jobDetail->max_salary) ? GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary) : '0';
       $salary_currency = @$jobDetail->max_salary_currency ?? 0;
 @endphp 
 
@@ -150,7 +151,7 @@
   <!--begin::Container-->
   <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
     <!--begin::Page title-->
-      @include('sections.service_company.toolbar',['id' => $jobDetail->id])
+      @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
       <div class="d-flex align-items-center py-1">
           <div class="before-event d-flex align-items-center position-relative my-1 me-3">
             <!--begin::Buttons-->
@@ -989,29 +990,29 @@
                         @if(!empty($skill_val->skill_name))
 
                             @php
-                                  if($skill_val->skill_value){
-                                    $skillValue = str_replace(['Years','Year',' '],'',$skill_val->skill_value);
-                                    // dd($skillValue);
-                                    if(!is_null($skillValue) && !empty($skillValue)){
-                                      $total_skill_exp =  GeneralMethod::separateNumberParts($skillValue);
-                                      $skill_exp_years = ($total_skill_exp[0]);
-                                      $skill_exp_months = ($total_skill_exp[1]); 
+                                  $selected_skill_exp_year = null;
+                                  $selected_skill_exp_month = null;
+                                  $selected_skill_rating = null;
+
+                                  if(!empty($skill_val->skill_value)){
+                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
+                                    if($skillValue !== ''){
+                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
+                                      $skill_exp_years = $total_skill_exp[0] ?? null;
+                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
 
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
                                       $selected_skill_rating = $skill_val->rating ?? null;
+<<<<<<< HEAD
                                     }else{
                                       $selected_skill_exp_year = null;
                                       $selected_skill_exp_month =null;
                                       $selected_skill_rating = null;
+=======
+>>>>>>> 107efe99049538c53bc79574eae03de068b12fe4
                                     }
-                                    //  dd($skillValue,$skill_val->skill_value);
-                                  }else{
-                                    $selected_skill_exp_year = null;
-                                    $selected_skill_exp_month =null;
-                                    $selected_skill_rating = null;
                                   }
-
                             @endphp
 
                             <tr>
@@ -1021,17 +1022,13 @@
                                       <option value="0">Select Year</option>
                                       @php 
                                           for ($i = 1; $i <= 60; $i++) {
-                                               $selected = '';
+                                                $selected = '';
                                                 $s = 'Year';
                                                 if($i > 1){
                                                     $s = 'Years';
                                                 }
-                                                if(is_null($selected_skill_exp_year)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_exp_year){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }
@@ -1043,17 +1040,13 @@
                                       <option value="">Select Month</option>
                                       @php 
                                           for ($i = 0; $i <= 11; $i++) {
-                                            $selected = '';
+                                                $selected = '';
                                                 $s = 'Month';
                                                 if($i > 1){
                                                     $s = 'Months';
                                                 }
-                                                if(is_null($selected_skill_exp_month)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_exp_month){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }
@@ -1065,17 +1058,13 @@
                                       <option value="0">Select rating</option>
                                       @php 
                                           for ($i = 1; $i <= 5; $i++) {
-                                               $selected = '';
+                                                $selected = '';
                                                 $s = 'Star';
                                                 if($i > 1){
                                                     $s = 'Stars';
                                                 }
-                                                if(is_null($selected_skill_rating)){
-                                                $selected = '';
-                                                }else{
-                                                  if($i==$selected_skill_rating){
-                                                    $selected =  'selected';
-                                                }
+                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
+                                                    $selected = 'selected';
                                                 }
                                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                           }

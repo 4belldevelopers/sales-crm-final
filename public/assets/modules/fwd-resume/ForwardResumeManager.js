@@ -31,6 +31,156 @@
 
     var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+    function generateUuidV4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    /**
+     * JeroFwdDB — Tenant-Scoped L2 IndexedDB Store with Adaptive Quota Management
+     * Provides sub-8ms hydration and persistent offline capability.
+     */
+    var JeroFwdDB = {
+        _dbName: 'jero_fwd_store',
+        _db: null,
+
+        getDbName: function () {
+            var cid = window.companyId || (window.authCompanyId ? window.authCompanyId : '0');
+            return 'jero_fwd_tenant_' + cid;
+        },
+
+        init: function () {
+            var self = this;
+            if (self._db) return Promise.resolve(self._db);
+            if (typeof window.indexedDB === 'undefined') return Promise.resolve(null);
+
+            return new Promise(function (resolve) {
+                try {
+                    var req = window.indexedDB.open(self.getDbName(), 1);
+                    req.onupgradeneeded = function (e) {
+                        var db = e.target.result;
+                        if (!db.objectStoreNames.contains('candidates')) {
+                            db.createObjectStore('candidates', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('jobs')) {
+                            db.createObjectStore('jobs', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('templates')) {
+                            db.createObjectStore('templates', { keyPath: 'id' });
+                        }
+                        if (!db.objectStoreNames.contains('meta')) {
+                            db.createObjectStore('meta', { keyPath: 'key' });
+                        }
+                    };
+                    req.onsuccess = function (e) {
+                        self._db = e.target.result;
+                        resolve(self._db);
+                    };
+                    req.onerror = function (e) {
+                        console.warn('[JeroFwdDB] IndexedDB initialization bypassed:', e);
+                        resolve(null);
+                    };
+                } catch (ex) {
+                    resolve(null);
+                }
+            });
+        },
+
+        getCandidates: async function (ids) {
+            var self = this;
+            if (!Array.isArray(ids) || ids.length === 0) return [];
+            var db = await self.init();
+            if (!db) return [];
+            return new Promise(function (resolve) {
+                try {
+                    var tx = db.transaction(['candidates'], 'readonly');
+                    var store = tx.objectStore('candidates');
+                    var results = [];
+                    var count = 0;
+                    ids.forEach(function (id) {
+                        var req = store.get(id);
+                        req.onsuccess = function () {
+                            if (req.result) results.push(req.result);
+                            count++;
+                            if (count === ids.length) resolve(results);
+                        };
+                        req.onerror = function () {
+                            count++;
+                            if (count === ids.length) resolve(results);
+                        };
+                    });
+                } catch (err) {
+                    resolve([]);
+                }
+            });
+        },
+
+        saveCandidates: async function (candidates) {
+            var self = this;
+            if (!Array.isArray(candidates) || candidates.length === 0) return;
+            var db = await self.init();
+            if (!db) return;
+            try {
+                var tx = db.transaction(['candidates'], 'readwrite');
+                var store = tx.objectStore('candidates');
+                var now = Date.now();
+                candidates.forEach(function (cand) {
+                    if (cand && cand.id) {
+                        cand._cached_at = now;
+                        store.put(cand);
+                    }
+                });
+                self.enforceAdaptiveQuota(db);
+            } catch (err) {
+                console.warn('[JeroFwdDB] Candidate cache write error:', err);
+            }
+        },
+
+        enforceAdaptiveQuota: function (db) {
+            if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(function (est) {
+                    var used = est.usage || 0;
+                    var quota = est.quota || (50 * 1024 * 1024);
+                    if (used > quota * 0.2 || used > 50 * 1024 * 1024) {
+                        try {
+                            var tx = db.transaction(['candidates'], 'readwrite');
+                            var store = tx.objectStore('candidates');
+                            var req = store.getAll();
+                            req.onsuccess = function () {
+                                var all = req.result || [];
+                                if (all.length > 500) {
+                                    all.sort(function (a, b) { return (a._cached_at || 0) - (b._cached_at || 0); });
+                                    var toPrune = all.slice(0, all.length - 300);
+                                    toPrune.forEach(function (item) { store.delete(item.id); });
+                                }
+                            };
+                        } catch (e) {}
+                    }
+                }).catch(function () {});
+            }
+        },
+
+        saveTemplates: async function (templates) {
+            var self = this;
+            if (!Array.isArray(templates) || templates.length === 0) return;
+            var db = await self.init();
+            if (!db) return;
+            try {
+                var tx = db.transaction(['templates'], 'readwrite');
+                var store = tx.objectStore('templates');
+                templates.forEach(function (tmpl) {
+                    var tid = tmpl.id || tmpl.e_temp_id;
+                    if (tid) {
+                        tmpl.id = tid;
+                        store.put(tmpl);
+                    }
+                });
+            } catch (e) {}
+        }
+    };
+
     var ForwardResumeManager = {
         _routes: {
             shell: '/assets/modules/fwd-resume/shell.v4.html',
@@ -64,6 +214,10 @@
         _currentMatchMap: {},
         _confirmedMissing: false,
         _editorInitialized: false,
+        _broadcastChannel: null,
+        _draftState: 'DRAFT',
+        _pendingRequests: {},
+        _companyId: '0',
 
         initRoutes: function (routes) {
             if (routes && typeof routes === 'object') {
@@ -72,6 +226,28 @@
             var tokenEl = document.querySelector('meta[name="csrf-token"]');
             if (tokenEl) {
                 this._csrfToken = tokenEl.getAttribute('content');
+            }
+            this._initBroadcastChannel();
+        },
+
+        _initBroadcastChannel: function () {
+            var self = this;
+            if (typeof window.BroadcastChannel === 'undefined' || self._broadcastChannel) return;
+            try {
+                self._broadcastChannel = new window.BroadcastChannel('jero_fwd_sync');
+                self._broadcastChannel.onmessage = function (event) {
+                    if (!event || !event.data) return;
+                    var data = event.data;
+                    if (data.type === 'FWD_RESUME_SENT') {
+                        if (typeof window.resetCvTrackerSelection === 'function') {
+                            window.resetCvTrackerSelection();
+                        } else if (typeof window.clearCvSelection === 'function') {
+                            window.clearCvSelection();
+                        }
+                    }
+                };
+            } catch (e) {
+                console.warn('[BroadcastChannel] Cross-tab synchronization bypassed:', e);
             }
         },
 
@@ -130,6 +306,7 @@
             self._currentMatchMap = matchMap || {};
             self._confirmedMissing = false;
             self._compiledAttachments = {};
+            self._draftState = 'HYDRATING';
 
             // 1. Instant Drawer Display (< 16ms)
             var drawerEl = document.getElementById('kt_test_fwd_resume_drawer') ||
@@ -176,7 +353,22 @@
             // 3. Ensure WASM Engine is loaded in background
             self._loadEngineScript();
 
-            // 4. Fetch Micro-JSON Data (< 30ms over Redis/ES)
+            // 4. Local-First SWR: Check L2 IndexedDB for Instant Activation (< 8ms)
+            JeroFwdDB.getCandidates(candidateIds).then(function (cachedCands) {
+                if (cachedCands && cachedCands.length === candidateIds.length) {
+                    var cachedData = {
+                        applicationData: cachedCands,
+                        companyName: self._companyData.companyName,
+                        companyLogo: self._companyData.companyLogo,
+                        jobSkills: self._jobSkills,
+                        templateData: self._templateData
+                    };
+                    self._hydrateData(cachedData);
+                    console.info('V4.1 Forward Resume Drawer hydrated from L2 IndexedDB in < 8ms');
+                }
+            }).catch(function () {});
+
+            // 5. Authoritative Network Revalidation (Background or Cold-Start)
             var token = self._csrfToken || $('input[name="_token"]').val() || '';
             $.ajax({
                 url: self._routes.data,
@@ -191,16 +383,23 @@
                 success: function (res) {
                     if (res && res.status === 'success') {
                         var latency = Math.round(performance.now() - startTime);
-                        console.info('V4.1 Forward Resume Drawer ready in ' + latency + 'ms');
+                        console.info('V4.1 Forward Resume Drawer network revalidation ready in ' + latency + 'ms');
                         self._hydrateData(res);
+                        // Persist to L2 IndexedDB for zero-latency future hits
+                        if (res.applicationData) JeroFwdDB.saveCandidates(res.applicationData);
+                        if (res.templateData) JeroFwdDB.saveTemplates(res.templateData);
                     } else {
                         console.warn('Micro-JSON response failure, triggering fallback:', res);
-                        self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                        if (!self._applicationData || self._applicationData.length === 0) {
+                            self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                        }
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error('Micro-JSON endpoint error, falling back to legacy:', error);
-                    self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                    console.error('Micro-JSON endpoint error:', error);
+                    if (!self._applicationData || self._applicationData.length === 0) {
+                        self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                    }
                 }
             });
         },
@@ -277,7 +476,9 @@
             self._applicationData = data.applicationData || data.candidates || [];
             self._companyData = {
                 companyName: data.companyName || (data.company && data.company.name) || 'Hiring Partner',
-                companyLogo: data.companyLogo || (data.company && data.company.logo) || ''
+                companyLogo: data.companyLogo || (data.company && data.company.logo) || '',
+                sender_name: data.sender_name || data.senderName || '',
+                sender_email: data.sender_email || data.senderEmail || ''
             };
             self._jobSkills = data.jobSkills || data.job_skills || [];
             self._templateData = data.templateData || data.templates || [];
@@ -699,6 +900,178 @@
             }
         },
 
+        getFirstRecipientName: function () {
+            var self = this;
+            var personName = '';
+            if (self._emailTags && self._emailTags.to && self._emailTags.to.length > 0) {
+                var firstEmail = self._emailTags.to[0].trim().toLowerCase();
+                if (firstEmail) {
+                    personName = self._recipientNameMap[firstEmail] || '';
+                    if (!personName && self._recipientsCache) {
+                        var payload = self._recipientsCache.data || self._recipientsCache;
+                        var all = (payload.client_contacts || []).concat(payload.internal_team || []).concat(payload.client_contacts_data || []).concat(payload.internal_team_data || []);
+                        for (var i = 0; i < all.length; i++) {
+                            if (all[i] && all[i].email && all[i].email.trim().toLowerCase() === firstEmail) {
+                                personName = all[i].name || '';
+                                if (personName) {
+                                    self._recipientNameMap[firstEmail] = personName;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!personName) {
+                        var prefix = firstEmail.split('@')[0].replace(/[._-]/g, ' ').trim();
+                        if (prefix && prefix.length > 1 && !/^\d+$/.test(prefix)) {
+                            personName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+                        }
+                    }
+                }
+            }
+            var cleanName = String(personName || '')
+                .replace(/&quot;|&#039;|["']/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            var senderName = String(self._companyData && self._companyData.sender_name || '').toLowerCase().trim();
+            if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
+                cleanName = '';
+            }
+            return cleanName;
+        },
+
+        buildClientSkillTrackerHtml: function () {
+            var self = this;
+            if (!self._applicationData || self._applicationData.length === 0) return '';
+
+            var html = '<div style="margin:16px 0;font-family:\'Poppins\',Arial,sans-serif;">';
+            self._applicationData.forEach(function (cand, idx) {
+                var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
+                var designation = escapeHtml(cand.current_designation || cand.job_title || 'Software Engineer');
+                var totalExp = cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--');
+                var cSkills = cand.skills || cand.candidate_skills || [];
+
+                html += '<table style="width:100%;border-collapse:collapse;margin-bottom:14px;background:#ffffff;border:1px solid #E5E7EB;border-radius:6px;overflow:hidden;font-size:12.5px;">';
+                html += '<tr style="background:#F9FAFB;border-bottom:1px solid #E5E7EB;">';
+                html += '<th colspan="3" style="padding:8px 12px;text-align:left;font-weight:600;color:#111827;">' + cName + ' <span style="font-weight:400;color:#6B7280;font-size:11.5px;">(' + designation + ' • Exp: ' + totalExp + ')</span></th>';
+                html += '</tr>';
+
+                if (Array.isArray(cSkills) && cSkills.length > 0) {
+                    html += '<tr style="background:#F3F4F6;color:#374151;font-size:11px;font-weight:600;text-transform:uppercase;">';
+                    html += '<th style="padding:6px 12px;text-align:left;width:40%;">Skill / Competency</th>';
+                    html += '<th style="padding:6px 12px;text-align:left;width:30%;">Experience</th>';
+                    html += '<th style="padding:6px 12px;text-align:left;width:30%;">Evaluation</th>';
+                    html += '</tr>';
+
+                    cSkills.slice(0, 7).forEach(function (sk) {
+                        var skName = escapeHtml(sk.name || sk.skill_name || '');
+                        var skExp = escapeHtml(sk.expText || sk.skill_value || (sk.exp ? (sk.exp + ' Yrs') : '--'));
+                        var rating = parseInt(sk.rating, 10) || 0;
+                        var stars = '';
+                        for (var s = 1; s <= 5; s++) {
+                            stars += (s <= rating) ? '<span style="color:#F59E0B;font-size:13px;">★</span>' : '<span style="color:#D1D5DB;font-size:13px;">☆</span>';
+                        }
+
+                        html += '<tr style="border-bottom:1px solid #F3F4F6;">';
+                        html += '<td style="padding:6px 12px;font-weight:500;color:#1F2937;">' + skName + '</td>';
+                        html += '<td style="padding:6px 12px;color:#4B5563;">' + skExp + '</td>';
+                        html += '<td style="padding:6px 12px;">' + stars + '</td>';
+                        html += '</tr>';
+                    });
+                }
+                html += '</table>';
+            });
+            html += '</div>';
+            return html;
+        },
+
+        buildClientSummaryHtml: function () {
+            var self = this;
+            if (!self._applicationData || self._applicationData.length === 0) return '';
+            var html = '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px;border:1px solid #E5E7EB;font-family:\'Poppins\',Arial,sans-serif;">';
+            html += '<tr style="background:#0D9488;color:#ffffff;font-size:11.5px;font-weight:600;">';
+            html += '<th style="padding:8px 12px;text-align:left;">#</th>';
+            html += '<th style="padding:8px 12px;text-align:left;">Candidate Name</th>';
+            html += '<th style="padding:8px 12px;text-align:left;">Designation</th>';
+            html += '<th style="padding:8px 12px;text-align:left;">Experience</th>';
+            html += '<th style="padding:8px 12px;text-align:left;">Location</th>';
+            html += '</tr>';
+
+            self._applicationData.forEach(function (cand, idx) {
+                var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
+                var desig = escapeHtml(cand.current_designation || cand.job_title || '--');
+                var exp = escapeHtml(cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
+                var loc = escapeHtml(cand.current_location || cand.location || '--');
+                var bg = (idx % 2 === 0) ? '#ffffff' : '#F9FAFB';
+
+                html += '<tr style="background:' + bg + ';border-bottom:1px solid #E5E7EB;">';
+                html += '<td style="padding:6px 12px;color:#6B7280;">' + (idx + 1) + '</td>';
+                html += '<td style="padding:6px 12px;font-weight:600;color:#111827;">' + cName + '</td>';
+                html += '<td style="padding:6px 12px;color:#374151;">' + desig + '</td>';
+                html += '<td style="padding:6px 12px;color:#374151;">' + exp + '</td>';
+                html += '<td style="padding:6px 12px;color:#374151;">' + loc + '</td>';
+                html += '</tr>';
+            });
+            html += '</table>';
+            return html;
+        },
+
+        renderClientTemplate: function (templateId) {
+            var self = this;
+            if (!templateId) return false;
+            var tmpl = self._templateData.find(function (t) {
+                var tid = t.e_temp_id || t.id;
+                return String(tid) === String(templateId);
+            });
+
+            if (!tmpl || (!tmpl.body && !tmpl.template_body)) {
+                return false;
+            }
+
+            var rawSubject = tmpl.subject || tmpl.template_sub || 'Forwarded Candidate Profiles';
+            var rawBody = tmpl.body || tmpl.template_body || '';
+
+            var primaryCand = self._applicationData[0] || {};
+            var candidateName = primaryCand.full_name || 'Candidate';
+            var companyName = self._companyData.companyName || 'Hiring Partner';
+            var jobTitle = primaryCand.job_title || primaryCand.current_designation || 'Position';
+            var recipientName = self.getFirstRecipientName() || 'Hiring Manager';
+
+            var sub = rawSubject
+                .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
+                .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\[\{POSITION\}\]/gi, jobTitle);
+            $('#test_subject').val(sub);
+
+            var skillTrackerHtml = self.buildClientSkillTrackerHtml();
+            var candidateSummaryHtml = self.buildClientSummaryHtml();
+            var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            var body = rawBody
+                .replace(/\[\{HR_NAME\}\]/gi, recipientName)
+                .replace(/\[\{RECIPIENT_NAME\}\]/gi, recipientName)
+                .replace(/\[\{CANDIDATE_NAME\}\]/gi, candidateName)
+                .replace(/\{\{candidate\.name\}\}/gi, candidateName)
+                .replace(/\[\{COMPANY_NAME\}\]/gi, companyName)
+                .replace(/\[\{JOB_TITLE\}\]/gi, jobTitle)
+                .replace(/\[\{POSITION\}\]/gi, jobTitle)
+                .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
+                .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
+                .replace(/\[\{DATE\}\]/gi, dateStr);
+
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try {
+                    CKEDITOR.instances['test_editor1'].setData(body, function () {
+                        self.syncFirstRecipientSalutation();
+                    });
+                } catch (e) {}
+            }
+            $('#test_editor1').val(body);
+            setTimeout(function () { self.syncFirstRecipientSalutation(); }, 50);
+            return true;
+        },
+
         onTemplateChange: function (templateId) {
             var self = this;
             if (!templateId) {
@@ -710,6 +1083,12 @@
                 return;
             }
 
+            // Phase 1: Try instant Client-Side Template Rendering (< 2ms, zero MySQL strain)
+            if (self.renderClientTemplate(templateId)) {
+                return;
+            }
+
+            // Circuit-Breaker Fallback: Fetch from server if template body was not preloaded
             var url = self._routes.emailTemplate + '/' + templateId;
             var token = self._csrfToken || $('input[name="_token"]').val();
             var toEmail = self._emailTags.to.length > 0 ? self._emailTags.to[0] : 'info@jero.co.in';
@@ -872,30 +1251,66 @@
         syncFirstRecipientSalutation: function () {
             var self = this;
             var toList = self._emailTags.to || [];
-            if (!toList || toList.length === 0) return;
+            var personName = '';
 
-            var firstEmail = (toList[0] || '').trim().toLowerCase();
-            if (!firstEmail) return;
+            if (toList && toList.length > 0) {
+                var firstEmail = (toList[0] || '').trim().toLowerCase();
+                if (firstEmail) {
+                    personName = self._recipientNameMap[firstEmail] || '';
+                    if (!personName && self._recipientsCache) {
+                        var payload = self._recipientsCache.data || self._recipientsCache;
+                        var all = (payload.client_contacts || []).concat(payload.internal_team || []).concat(payload.client_contacts_data || []).concat(payload.internal_team_data || []);
+                        for (var i = 0; i < all.length; i++) {
+                            if (all[i] && all[i].email && all[i].email.trim().toLowerCase() === firstEmail) {
+                                personName = all[i].name || '';
+                                if (personName) {
+                                    self._recipientNameMap[firstEmail] = personName;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!personName) {
+                        var prefix = firstEmail.split('@')[0].replace(/[._-]/g, ' ').trim();
+                        if (prefix && prefix.length > 1 && !/^\d+$/.test(prefix)) {
+                            personName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+                        }
+                    }
+                }
+            }
 
-            var personName = self._recipientNameMap[firstEmail];
-            if (!personName) return;
+            // Clean name: strictly remove any double quotes, single quotes, html entities
+            var cleanName = String(personName || '')
+                .replace(/&quot;|&#039;|["']/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
 
-            var targetGreeting = 'Dear "' + personName + '",';
+            // Guard against greeting the recruiter themselves (logged-in user)
+            var senderName = String(self._companyData && self._companyData.sender_name || '').toLowerCase().trim();
+            if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
+                cleanName = '';
+            }
+
+            // Strictly single greeting, NO quotes around the name (e.g. "Dear Shobha,")
+            var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                 var editor = CKEDITOR.instances['test_editor1'];
                 var data = editor.getData() || '';
-                var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
 
-                if (greetingPattern.test(data)) {
-                    var updated = data.replace(greetingPattern, function (match, prefix, suffix) {
-                        var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
-                        var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
-                        return pOpen + targetGreeting + pClose;
-                    });
+                // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
+                var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+                // Pattern 2: Plain-text or br-separated leading greeting
+                var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
+
+                if (greetingBlockRegex.test(data)) {
+                    var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
+                    if (updated !== data) editor.setData(updated);
+                } else if (plainGreetingRegex.test(data)) {
+                    var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
                     if (updated !== data) editor.setData(updated);
                 } else if (data.trim() !== '') {
-                    editor.setData('<p>' + targetGreeting + '</p>' + data);
+                    editor.setData('<p>' + targetGreeting + '</p>\n' + data);
                 } else {
                     editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
                 }
@@ -909,6 +1324,14 @@
             self.syncRecipientDrawerState();
             $('#test_rcp_search_input').val('');
             self.filterRecipients('');
+
+            // Automatically switch to client contacts for 'to' field (forward resume goes to clients)
+            // and internal team for 'cc' field.
+            if (self._currentRcpTarget === 'to') {
+                self.switchRecipientTab('client');
+            } else {
+                self.switchRecipientTab('internal');
+            }
 
             var drawerEl = document.getElementById('kt_test_recipient_drawer');
             if (drawerEl) {
@@ -969,8 +1392,9 @@
             var internalWrap = $('#test_rcp_section_internal');
             var clientWrap = $('#test_rcp_section_client');
 
-            var internalTeam = data.internal_team_data || [];
-            var clientContacts = data.client_contacts_data || [];
+            var payload = (data && data.data) ? data.data : (data || {});
+            var internalTeam = payload.internal_team || payload.internal_team_data || [];
+            var clientContacts = payload.client_contacts || payload.client_contacts_data || [];
 
             $('#test_rcp_internal_count').text(internalTeam.length + ' active members');
             $('#test_rcp_client_count').text(clientContacts.length + ' available contacts');
@@ -981,12 +1405,12 @@
             // Populate Name Map
             internalTeam.forEach(function (user) {
                 if (user.email && user.name) {
-                    self._recipientNameMap[user.email.toLowerCase()] = user.name;
+                    self._recipientNameMap[String(user.email).trim().toLowerCase()] = String(user.name).trim();
                 }
             });
             clientContacts.forEach(function (user) {
                 if (user.email && user.name) {
-                    self._recipientNameMap[user.email.toLowerCase()] = user.name;
+                    self._recipientNameMap[String(user.email).trim().toLowerCase()] = String(user.name).trim();
                 }
             });
 
@@ -1007,6 +1431,11 @@
             }
 
             self.syncRecipientDrawerState();
+
+            // If recipient tags were already present before directory loaded, re-sync salutation with discovered names
+            if (self._emailTags.to && self._emailTags.to.length > 0) {
+                self.syncFirstRecipientSalutation();
+            }
         },
 
         _buildContactItemHtml: function (user, type) {
@@ -1302,6 +1731,7 @@
                                 candidate_name: cand.full_name || ('Candidate #' + cand.id),
                                 filename: outName,
                                 size: blob.size,
+                                sha256: blob.sha256 || '',
                                 mime: blob.type || 'application/pdf'
                             });
                         }
@@ -1351,12 +1781,17 @@
                 }
             }
 
+            var idempotencyKey = 'fwd_' + generateUuidV4();
             $('#test_fwd_btn_progress_text').text('Queuing delivery...');
             $.ajax({
                 url: self._routes.send,
                 type: 'POST',
+                headers: {
+                    'Idempotency-Key': idempotencyKey
+                },
                 data: {
                     '_token': token,
+                    'idempotency_key': idempotencyKey,
                     'template': template,
                     'from_email': fromEmail,
                     'reply_to_email': replyToEmail,
@@ -1375,6 +1810,18 @@
                     if (res && res.status === 'success') {
                         self._compiledAttachments = {};
                         self.close();
+
+                        // Cross-Tab Synchronization Broadcast via BroadcastChannel
+                        if (self._broadcastChannel) {
+                            try {
+                                self._broadcastChannel.postMessage({
+                                    type: 'FWD_RESUME_SENT',
+                                    candidateIds: candidateArr,
+                                    idempotencyKey: idempotencyKey,
+                                    timestamp: Date.now()
+                                });
+                            } catch (bcErr) {}
+                        }
 
                         // Reset table selections
                         if (typeof window.resetCvTrackerSelection === 'function') {

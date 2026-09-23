@@ -1263,7 +1263,7 @@
         #resume_cv .rcv-kw-group { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-top:0; }
         #resume_cv .rcv-kw-title { font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.4px; margin-top:4px; margin-bottom:0; flex-shrink:0; white-space:nowrap; }
         #resume_cv .rcv-chips { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
-        #resume_cv .rcv-chip-wrap { display:inline-flex; flex-direction:column; gap:4px; align-items:flex-start; }
+        #resume_cv .rcv-chip-wrap { display:inline-flex; align-items:center; }
         #resume_cv .rcv-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f8fafc; color:#475569; user-select:none; transition:all .12s; }
         #resume_cv .rcv-chip .rcv-cnt { font-size:10px; background:#e2e8f0; color:#475569; border-radius:10px; padding:0 5px; min-width:15px; text-align:center; }
         #resume_cv .rcv-chip.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
@@ -1271,13 +1271,6 @@
         #resume_cv .rcv-chip.missing { opacity:.55; }
         #resume_cv .rcv-chip.active { background:#fef3c7; border-color:#fcd34d; color:#92400e; box-shadow:0 0 0 2px rgba(251,191,36,.25); }
         #resume_cv .rcv-chip.active .rcv-cnt { background:#fcd34d; color:#92400e; }
-        #resume_cv .rcv-sub-pills { display:inline-flex; flex-wrap:wrap; gap:3px; padding-left:4px; }
-        #resume_cv .rcv-sub-pill { display:inline-flex; align-items:center; gap:3px; padding:1px 6px; border-radius:10px; font-size:9.5px; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#f1f5f9; color:#64748b; user-select:none; transition:all .12s; }
-        #resume_cv .rcv-sub-pill:hover { background:#e2e8f0; color:#334155; }
-        #resume_cv .rcv-sub-pill.found { border-color:#bbf7d0; background:#f0fdf4; color:#15803d; }
-        #resume_cv .rcv-sub-pill.found.active { background:#e0e7ff; border-color:#c7d2fe; color:#4338ca; box-shadow:0 0 0 1px rgba(99,102,241,.25); }
-        #resume_cv .rcv-sub-pill.missing { opacity:.5; }
-        #resume_cv .rcv-sub-pill .rcv-sub-cnt { font-size:9px; background:rgba(0,0,0,0.06); border-radius:6px; padding:0 3px; }
         #resume_cv .rcv-chip-x { margin-left:3px; cursor:pointer; font-weight:700; color:#92400e; opacity:.6; font-size:13px; line-height:1; }
         #resume_cv .rcv-chip-x:hover { opacity:1; }
         #resume_cv .rcv-kw-add-row { display:flex; gap:8px; margin:0; }
@@ -1314,9 +1307,9 @@
         #resume_cv .rcv-page canvas { display:block; }
         #resume_cv .rcv-textlayer { position:absolute; left:0; top:0; right:0; bottom:0; overflow:hidden; line-height:1; opacity:1; }
         #resume_cv .rcv-textlayer span { position:absolute; white-space:pre; color:transparent; transform-origin:0% 0%; }
-        #resume_cv .rcv-textlayer mark.rcv-hit { background:rgba(251,191,36,.45); color:transparent; border-radius:2px; }
-        #resume_cv .rcv-textlayer mark.rcv-hit-exact { background:rgba(245,158,11,.6); }
-        #resume_cv .rcv-textlayer mark.rcv-hit-token { background:rgba(56,189,248,.45); }
+        #resume_cv .rcv-textlayer mark.rcv-hit,
+        #resume_cv .rcv-textlayer mark.rcv-hit-exact,
+        #resume_cv .rcv-textlayer mark.rcv-hit-token { background:rgba(251,191,36,.45); color:transparent; border-radius:2px; }
         #resume_cv .rcv-textlayer mark.rcv-hit-active { background:rgba(249,115,22,.8) !important; box-shadow:0 0 0 2px rgba(249,115,22,.6); }
         #resume_cv .rcv-textlayer span.rcv-wasm-hit-span { display:block; pointer-events:auto; }
         #resume_cv .rcv-textlayer span.rcv-wasm-hit-span mark.rcv-hit { display:block; width:100%; height:100%; line-height:inherit; }
@@ -1332,9 +1325,9 @@
         #resume_cv .rcv-html img { height:auto; }
         #resume_cv .rcv-textlayer mark.rcv-redact { background:#111827; color:transparent !important; border-radius:2px; user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; pointer-events:none; }
         #resume_cv .rcv-html mark.rcv-redact { background:#111827; color:#111827; border-radius:2px; user-select:none !important; -webkit-user-select:none !important; -moz-user-select:none !important; }
-        #resume_cv .rcv-html mark.rcv-hit { background:rgba(251,191,36,.5); color:inherit; border-radius:2px; padding:0 1px; }
-        #resume_cv .rcv-html mark.rcv-hit-exact { background:rgba(245,158,11,.65); font-weight:600; }
-        #resume_cv .rcv-html mark.rcv-hit-token { background:rgba(56,189,248,.5); }
+        #resume_cv .rcv-html mark.rcv-hit,
+        #resume_cv .rcv-html mark.rcv-hit-exact,
+        #resume_cv .rcv-html mark.rcv-hit-token { background:rgba(251,191,36,.5); color:inherit; border-radius:2px; padding:0 1px; }
         #resume_cv .rcv-html mark.rcv-hit-active { background:rgba(249,115,22,.75) !important; box-shadow:0 0 0 2px rgba(249,115,22,.4); }
         #resume_cv .rcv-note { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:12px; padding:10px 14px; border-radius:8px; margin:12px; }
         @media (max-width:640px){ #resume_cv .rcv-summary { width:100%; } #resume_cv .rcv-sumitem { flex:1; } }
@@ -1677,18 +1670,7 @@
           var displayCount = k.phraseCount > 0 ? k.phraseCount : k.count;
           var mainChip = '<span class="'+cls+'" data-kw="'+esc(name)+'" title="Toggle '+esc(name)+'">'+esc(name)+'<span class="rcv-cnt">'+displayCount+'</span>'+rm+'</span>';
 
-          var subHtml = '';
-          if(k.tokens && k.tokens.length > 0){
-            var pills = [];
-            k.tokens.forEach(function(tok){
-              var ts = k.tokenStates[tok] || { active: true, count: 0 };
-              var pCls = 'rcv-sub-pill' + (ts.count > 0 ? ' found' : ' missing') + (ts.active ? ' active' : '');
-              pills.push('<span class="'+pCls+'" data-parent-kw="'+esc(name)+'" data-token="'+esc(tok)+'" title="Toggle '+esc(tok)+' individually">'+esc(tok)+' <span class="rcv-sub-cnt">'+ts.count+'</span></span>');
-            });
-            subHtml = '<div class="rcv-sub-pills">' + pills.join('') + '</div>';
-          }
-
-          return '<div class="rcv-chip-wrap" data-kw="'+esc(name)+'">' + mainChip + subHtml + '</div>';
+          return '<div class="rcv-chip-wrap" data-kw="'+esc(name)+'">' + mainChip + '</div>';
         }
 
         function renderChips(){
@@ -1822,13 +1804,11 @@
               if(hideContact){
                 html = redactHtml(html);
               }
-              // Highlight active keywords with exact vs token visual distinction
+              // Highlight active keywords in single uniform highlight color
               if(re){
                 re.lastIndex = 0;
                 html = html.replace(re, function(match){
-                  var isExact = reObj.exactLookup && reObj.exactLookup[match.toLowerCase().trim()];
-                  var cls = isExact ? 'rcv-hit rcv-hit-exact' : 'rcv-hit rcv-hit-token';
-                  return '<mark class="' + cls + '">' + match + '</mark>';
+                  return '<mark class="rcv-hit">' + match + '</mark>';
                 });
               }
               sp.innerHTML = html;
@@ -1863,17 +1843,6 @@
           renderChips(); applyHighlights();
         }
 
-        function toggleToken(parentName, tokenName){
-          if(!keywords[parentName] || !keywords[parentName].tokenStates[tokenName]) return;
-          var ts = keywords[parentName].tokenStates[tokenName];
-          ts.active = !ts.active;
-          var anyActive = false;
-          keywords[parentName].tokens.forEach(function(t){
-            if(keywords[parentName].tokenStates[t] && keywords[parentName].tokenStates[t].active) anyActive = true;
-          });
-          keywords[parentName].active = anyActive;
-          renderChips(); applyHighlights();
-        }
 
         function addKeyword(name, type){
           name = (name||'').trim();
@@ -2137,22 +2106,9 @@
             var x = e.target.closest && e.target.closest('#resume_cv .rcv-chip-x');
             if(x){ e.preventDefault(); var nm = x.getAttribute('data-rm'); if(keywords[nm]){ delete keywords[nm]; renderChips(); applyHighlights(); } }
           });
-          // sub-pill click toggles individual keyword
+          // chip click toggles highlight on/off (only if not clicking remove button)
           document.addEventListener('click', function(e){
-            var pill = e.target.closest && e.target.closest('#resume_cv .rcv-sub-pill');
-            if(pill){
-              e.preventDefault();
-              e.stopPropagation();
-              var parentKw = pill.getAttribute('data-parent-kw');
-              var token = pill.getAttribute('data-token');
-              if(parentKw && token){
-                toggleToken(parentKw, token);
-              }
-            }
-          });
-          // chip click toggles highlight on/off (only if not clicking sub-pill or remove button)
-          document.addEventListener('click', function(e){
-            if(e.target.closest && (e.target.closest('#resume_cv .rcv-chip-x') || e.target.closest('#resume_cv .rcv-sub-pill'))) return;
+            if(e.target.closest && e.target.closest('#resume_cv .rcv-chip-x')) return;
             var chip = e.target.closest && e.target.closest('#resume_cv .rcv-chip[data-kw]');
             if(chip){ toggleKw(chip.getAttribute('data-kw')); }
           });
