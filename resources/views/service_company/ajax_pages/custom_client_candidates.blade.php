@@ -390,7 +390,7 @@
                         $rowpostedby = $row->spokperson_name;
                     }
                     
-                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: ''))));
+                    $post_company_name = @$row->submitted_by_company_name ?: (@$row->post_company_name ?: (@$row->uc_company_name ?: (@$row->from_company_name ?: (@$row->company_name ?: ''))));
 
                     echo ' <div class="d-flex flex-column">
                   				<a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6" data-toggle="tooltip" title="' .

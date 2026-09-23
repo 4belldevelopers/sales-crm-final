@@ -2233,7 +2233,7 @@
 
     function directfetchCandidates(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
         return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-list') }}?page=${page}`,
             type: 'GET',
@@ -2251,7 +2251,7 @@
 
     function directfetchCandidatesJoin(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->from_company_id ?? $directClientDetail->company_id ?? $directClientDetail->client_id }}';
+        var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
         return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-join-list') }}?page=${page}`,
             type: 'GET',
@@ -2269,7 +2269,7 @@
 
     function directfetchCandidatesInverViewTracker(page = 1, search = '') {
         $('.page-loader').css('display', 'flex');
-        var clientid = '{{ $directClientDetail->client_id ?? $directClientDetail->from_company_id ?? $directClientDetail->company_id }}';
+        var clientid = '{{ $directClientDetail->client_id ?: ($directClientDetail->from_company_id ?: $directClientDetail->company_id) }}';
         return $.ajax({
             url: `{{ url('service_company/direct-client-candidate-interview-tracker') }}?page=${page}`,
             type: 'GET',

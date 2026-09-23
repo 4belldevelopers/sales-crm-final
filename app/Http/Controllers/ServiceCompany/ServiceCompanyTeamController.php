@@ -1352,8 +1352,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             $cc,
             $company_id
         )
-            ->onConnection('emails')
-            ->onQueue('email');
+            ->onConnection('emails');
 
         // $result = $this->mailService->sendEmail($user->email, $subject,'email.team.create-account', (object) $data, $attachments, $fromAddress, $senderName,$cc);
         $message = 'Team member created successfully. set password link has been sent to team member email';
@@ -1459,7 +1458,7 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                             $senderName,
                             $cc,
                             auth()->user()->company_id
-                        )->onConnection('emails')->onQueue('email');
+                        )->onConnection('emails');
 
                         $message = 'Team member created successfully. set password link has been sent to team member email';
                         $type = 'success';
