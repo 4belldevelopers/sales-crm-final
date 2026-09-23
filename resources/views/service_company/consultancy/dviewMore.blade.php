@@ -2785,56 +2785,252 @@
           <!--begin::Candidate Dashboard tab-->
           <div id="tab-reports" class="tab-content">
             <style>
-              #tab-reports .dash-wrap { display: flex; flex-direction: column; gap: 16px; }
-              #tab-reports .dash-grid { display: grid; gap: 16px; }
-              #tab-reports .dash-grid-2 { grid-template-columns: 1fr 1fr; }
-              #tab-reports .dash-grid-13 { grid-template-columns: 1fr 2fr; }
+              #tab-reports {
+                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+                color: #1e293b;
+              }
+              #tab-reports .dash-wrap {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                padding: 4px 0;
+              }
+              #tab-reports .dash-grid {
+                display: grid;
+                gap: 20px;
+              }
+              #tab-reports .dash-grid-2 {
+                grid-template-columns: 1fr 1fr;
+              }
+              #tab-reports .dash-grid-13 {
+                grid-template-columns: 1fr 1.8fr;
+              }
               #tab-reports .dash-card {
-                background: #fff; border: 1px solid #eff2f5; border-radius: 12px;
-                padding: 20px; display: flex; flex-direction: column;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                padding: 22px 24px;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 4px 18px -4px rgba(15, 23, 42, 0.04);
+                transition: all 0.25s ease;
+                position: relative;
+                overflow: hidden;
               }
-              #tab-reports .dash-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+              #tab-reports .dash-card:hover {
+                border-color: #cbd5e1;
+                box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.07);
+              }
+              #tab-reports .dash-head {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 20px;
+              }
               #tab-reports .dash-ic {
-                width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
-                display: flex; align-items: center; justify-content: center; font-size: 16px;
+                width: 46px;
+                height: 46px;
+                border-radius: 12px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                transition: transform 0.2s ease;
               }
-              #tab-reports .ic-blue { background: #f1faff; color: #009ef7; }
-              #tab-reports .ic-green { background: #e8fff3; color: #50cd89; }
-              #tab-reports .ic-purple { background: #f8f5ff; color: #7239ea; }
-              #tab-reports .ic-orange { background: #fff8dd; color: #f6a723; }
-              #tab-reports .ic-teal { background: #f0fdfa; color: #14b8a6; }
-              #tab-reports .dash-num { font-size: 24px; font-weight: 700; color: #181c32; line-height: 1.1; }
-              #tab-reports .dash-sub { font-size: 12px; color: #a1a5b7; font-weight: 500; margin-top: 2px; }
-              #tab-reports .dash-body { flex: 1; }
-              #tab-reports .chart-box { width: 100%; position: relative; }
-              #tab-reports .donut-body { display: flex; align-items: center; gap: 20px; }
-              #tab-reports .donut-chart { width: 150px; height: 150px; flex-shrink: 0; position: relative; }
-              #tab-reports .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 12px; }
-              #tab-reports .leg-row { display: flex; align-items: center; font-size: 13px; }
-              #tab-reports .leg-dot { width: 10px; height: 10px; border-radius: 3px; margin-right: 10px; flex-shrink: 0; }
-              #tab-reports .leg-label { color: #7e8299; flex: 1; }
-              #tab-reports .leg-val { font-weight: 700; color: #3f4254; }
+              #tab-reports .dash-card:hover .dash-ic {
+                transform: scale(1.05);
+              }
+              #tab-reports .ic-blue { background: #eff6ff; color: #2563eb; }
+              #tab-reports .ic-green { background: #ecfdf5; color: #10b981; }
+              #tab-reports .ic-purple { background: #f5f3ff; color: #8b5cf6; }
+              #tab-reports .ic-orange { background: #fffbeb; color: #f59e0b; }
+              #tab-reports .ic-teal { background: #f0fdfa; color: #0d9488; }
+              #tab-reports .dash-num {
+                font-size: 26px;
+                font-weight: 700;
+                color: #0f172a;
+                line-height: 1.15;
+                letter-spacing: -0.02em;
+              }
+              #tab-reports .dash-sub {
+                font-size: 12.5px;
+                color: #64748b;
+                font-weight: 500;
+                margin-top: 3px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              }
+              #tab-reports .dash-body {
+                flex: 1;
+              }
+              #tab-reports .chart-box {
+                width: 100%;
+                position: relative;
+              }
+              #tab-reports .donut-body {
+                display: flex;
+                align-items: center;
+                gap: 24px;
+              }
+              #tab-reports .donut-chart {
+                width: 155px;
+                height: 155px;
+                flex-shrink: 0;
+                position: relative;
+              }
+              #tab-reports .donut-legend {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+              }
+              #tab-reports .leg-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 13px;
+                padding: 8px 12px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border: 1px solid #f1f5f9;
+                transition: background 0.15s ease;
+              }
+              #tab-reports .leg-row:hover {
+                background: #f1f5f9;
+              }
+              #tab-reports .leg-row-left {
+                display: flex;
+                align-items: center;
+              }
+              #tab-reports .leg-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                margin-right: 10px;
+                flex-shrink: 0;
+                box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+              }
+              #tab-reports .leg-label {
+                color: #475569;
+                font-weight: 500;
+              }
+              #tab-reports .leg-val {
+                font-weight: 700;
+                color: #0f172a;
+                background: #ffffff;
+                padding: 2px 8px;
+                border-radius: 6px;
+                font-size: 12px;
+                border: 1px solid #e2e8f0;
+              }
               #tab-reports .dash-select {
-                padding: 6px 12px; border: 1px solid #e4e6ef; border-radius: 8px;
-                font-size: 12px; font-family: "Poppins", sans-serif; color: #3f4254;
-                background: #fff; cursor: pointer; outline: none;
+                padding: 6px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 500;
+                font-family: 'Poppins', sans-serif;
+                color: #334155;
+                background: #ffffff;
+                cursor: pointer;
+                outline: none;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                transition: all 0.2s ease;
               }
-              #tab-reports .iv-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px dashed #eff2f5; }
-              #tab-reports .iv-item:last-child { border-bottom: none; }
+              #tab-reports .dash-select:hover {
+                border-color: #94a3b8;
+              }
+              #tab-reports .dash-select:focus {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+              }
+              #tab-reports .iv-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 12px 14px;
+                margin-bottom: 8px;
+                border-radius: 10px;
+                background: #f8fafc;
+                border: 1px solid #f1f5f9;
+                transition: all 0.2s ease;
+              }
+              #tab-reports .iv-item:last-child {
+                margin-bottom: 0;
+              }
+              #tab-reports .iv-item:hover {
+                background: #f1f5f9;
+                border-color: #e2e8f0;
+              }
               #tab-reports .iv-date {
-                width: 44px; height: 44px; border-radius: 10px; background: #f5f8fa; flex-shrink: 0;
-                display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+                width: 44px;
+                height: 44px;
+                border-radius: 10px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.03);
               }
-              #tab-reports .iv-date .m { font-size: 10px; font-weight: 600; color: #7e8299; text-transform: uppercase; }
-              #tab-reports .iv-date .d { font-size: 16px; font-weight: 800; color: #5b4dff; }
-              #tab-reports .iv-name { font-size: 13px; font-weight: 600; color: #181c32; }
-              #tab-reports .iv-role { font-size: 11px; color: #a1a5b7; }
-              #tab-reports .iv-time { font-size: 12px; font-weight: 600; color: #3f4254; text-align: right; }
-              #tab-reports .iv-mode { font-size: 11px; color: #a1a5b7; font-weight: 500; }
-              #tab-reports .iv-empty { text-align: center; color: #a1a5b7; font-size: 13px; padding: 30px 0; }
+              #tab-reports .iv-date .m {
+                font-size: 9.5px;
+                font-weight: 700;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+              #tab-reports .iv-date .d {
+                font-size: 16px;
+                font-weight: 800;
+                color: #3b82f6;
+                margin-top: 1px;
+              }
+              #tab-reports .iv-name {
+                font-size: 13px;
+                font-weight: 600;
+                color: #0f172a;
+              }
+              #tab-reports .iv-role {
+                font-size: 11px;
+                color: #64748b;
+                margin-top: 1px;
+              }
+              #tab-reports .iv-time {
+                font-size: 12px;
+                font-weight: 600;
+                color: #334155;
+                text-align: right;
+              }
+              #tab-reports .iv-mode {
+                font-size: 10.5px;
+                color: #0284c7;
+                font-weight: 600;
+                background: #e0f2fe;
+                padding: 2px 8px;
+                border-radius: 12px;
+                display: inline-block;
+                margin-top: 2px;
+              }
+              #tab-reports .iv-empty {
+                text-align: center;
+                color: #94a3b8;
+                font-size: 13px;
+                padding: 36px 0;
+                background: #f8fafc;
+                border-radius: 10px;
+                border: 1px dashed #e2e8f0;
+              }
               @media (max-width: 992px) {
                 #tab-reports .dash-grid-2, #tab-reports .dash-grid-13 { grid-template-columns: 1fr; }
-                #tab-reports .donut-body { flex-direction: column; align-items: flex-start; }
+                #tab-reports .donut-body { flex-direction: column; align-items: stretch; }
+                #tab-reports .donut-chart { align-self: center; }
               }
             </style>
             @php
@@ -2865,9 +3061,9 @@
                       <canvas id="allJobGrapg_{{ $dcid }}"></canvas>
                     </div>
                     <div class="donut-legend">
-                      <div class="leg-row"><span class="leg-dot" style="background:#22c55e"></span><span class="leg-label">Active Jobs</span><span class="leg-val">{{ $active_count }}</span></div>
-                      <div class="leg-row"><span class="leg-dot" style="background:#ffab00"></span><span class="leg-label">Hold Jobs</span><span class="leg-val">{{ $hold_count }}</span></div>
-                      <div class="leg-row"><span class="leg-dot" style="background:#ff0202"></span><span class="leg-label">Closed Jobs</span><span class="leg-val">{{ $inactive_count }}</span></div>
+                      <div class="leg-row"><div class="leg-row-left"><span class="leg-dot" style="background:#10b981"></span><span class="leg-label">Active Jobs</span></div><span class="leg-val">{{ $active_count }}</span></div>
+                      <div class="leg-row"><div class="leg-row-left"><span class="leg-dot" style="background:#f59e0b"></span><span class="leg-label">Hold Jobs</span></div><span class="leg-val">{{ $hold_count }}</span></div>
+                      <div class="leg-row"><div class="leg-row-left"><span class="leg-dot" style="background:#ef4444"></span><span class="leg-label">Closed Jobs</span></div><span class="leg-val">{{ $inactive_count }}</span></div>
                     </div>
                   </div>
                 </div>
@@ -2880,7 +3076,7 @@
                     </div>
                   </div>
                   <div class="dash-body">
-                    <div class="chart-box" style="height: 200px">
+                    <div class="chart-box" style="height: 190px">
                       <canvas id="candidates_left_chart_{{ $dcid }}"></canvas>
                     </div>
                   </div>
@@ -2890,14 +3086,14 @@
               <!-- Row 2: Candidate pipeline (full width) -->
               <div class="dash-card">
                 <div class="dash-head">
-                  <div class="dash-ic ic-purple"><i class="fas fa-chart-bar"></i></div>
+                  <div class="dash-ic ic-purple"><i class="fas fa-chart-line"></i></div>
                   <div>
                     <div class="dash-num">{{ $total_candidates }}</div>
                     <div class="dash-sub">Candidate pipeline · {{ date('d M y',strtotime($startOfMonth)) }} – {{ date('d M y',strtotime($endOfMonth)) }}</div>
                   </div>
                 </div>
                 <div class="dash-body">
-                  <div class="chart-box">
+                  <div class="chart-box" style="height: 220px">
                     <canvas id="myChart_{{ $dcid }}"></canvas>
                   </div>
                 </div>
@@ -2907,28 +3103,28 @@
               <div class="dash-grid dash-grid-2">
                 <div class="dash-card">
                   <div class="dash-head">
-                    <div class="dash-ic ic-orange"><i class="fas fa-gift"></i></div>
+                    <div class="dash-ic ic-orange"><i class="fas fa-award"></i></div>
                     <div>
                       <div class="dash-num">{{ $candidateValuesTotaloffer }}</div>
                       <div class="dash-sub">Offers · {{ date("M Y", strtotime($startOfMonthcomman)) }} – {{ date("M Y", strtotime($endOfMonthcomman)) }}</div>
                     </div>
                   </div>
                   <div class="dash-body">
-                    <div class="chart-box" style="height: 200px">
+                    <div class="chart-box" style="height: 190px">
                       <canvas id="candidates_offer_chart_{{ $dcid }}"></canvas>
                     </div>
                   </div>
                 </div>
                 <div class="dash-card">
                   <div class="dash-head">
-                    <div class="dash-ic ic-green"><i class="fas fa-handshake"></i></div>
+                    <div class="dash-ic ic-green"><i class="fas fa-user-check"></i></div>
                     <div>
                       <div class="dash-num">{{ $candidateValuesTotaljoin }}</div>
                       <div class="dash-sub">Joined · {{ date("M Y", strtotime($startOfMonthcomman)) }} – {{ date("M Y", strtotime($endOfMonthcomman)) }}</div>
                     </div>
                   </div>
                   <div class="dash-body">
-                    <div class="chart-box" style="height: 200px">
+                    <div class="chart-box" style="height: 190px">
                       <canvas id="candidates_join_chart_{{ $dcid }}"></canvas>
                     </div>
                   </div>
@@ -2939,9 +3135,9 @@
               <div class="dash-grid dash-grid-13">
                 <div class="dash-card">
                   <div class="dash-head">
-                    <div class="dash-ic ic-teal"><i class="fas fa-calendar-day"></i></div>
+                    <div class="dash-ic ic-teal"><i class="fas fa-calendar-alt"></i></div>
                     <div>
-                      <div class="dash-num" style="font-size:15px;">Upcoming Interviews</div>
+                      <div class="dash-num" style="font-size:16px;">Upcoming Interviews</div>
                       <div class="dash-sub">Scheduled candidate interviews</div>
                     </div>
                   </div>
@@ -2954,7 +3150,7 @@
                           $schedule_date_explode = explode(" ",$schedule_date);
                         @endphp
                         <div class="iv-item">
-                          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                          <div style="display:flex;align-items:center;gap:12px;min-width:0;">
                             <div class="iv-date">
                               <span class="m">{{ $schedule_date_explode[0] }}</span>
                               <span class="d">{{ $schedule_date_explode[1] }}</span>
@@ -2966,22 +3162,22 @@
                           </div>
                           <div>
                             <div class="iv-time">{{ $row->schedule_to_time . ($row->timezone_abbreviation ? ' (' . $row->timezone_abbreviation . ')' : '') }}</div>
-                            <div class="iv-mode">{{ ucwords(mb_substr($row->mode_name, 0, 13)) }}</div>
+                            <div style="text-align:right;"><span class="iv-mode">{{ ucwords(mb_substr($row->mode_name, 0, 13)) }}</span></div>
                           </div>
                         </div>
                       @endforeach
                     @else
-                      <div class="iv-empty">No records found</div>
+                      <div class="iv-empty">No upcoming interviews scheduled</div>
                     @endif
                   </div>
                 </div>
                 <div class="dash-card">
                   <div class="dash-head" style="justify-content: space-between;">
-                    <div style="display:flex;align-items:center;gap:12px;">
-                      <div class="dash-ic ic-blue"><i class="fas fa-chart-column"></i></div>
+                    <div style="display:flex;align-items:center;gap:14px;">
+                      <div class="dash-ic ic-blue"><i class="fas fa-chart-bar"></i></div>
                       <div>
-                        <div class="dash-num" style="font-size:15px;">Candidates Interviews</div>
-                        <div class="dash-sub">Interview trend</div>
+                        <div class="dash-num" style="font-size:16px;">Candidates Interviews</div>
+                        <div class="dash-sub">Interview trend analysis</div>
                       </div>
                     </div>
                     <select class="dash-select" data-hide-search="true" data-dropdown-css-class="w-150px" onchange="filtersdatagetmonth(this.value)">
@@ -2990,7 +3186,7 @@
                     </select>
                   </div>
                   <div class="dash-body">
-                    <div class="chart-box" style="height: 230px">
+                    <div class="chart-box" style="height: 220px">
                       <div class="inetview_recent_chart_{{ $dcid }} d-none" style="height: 100%;">
                         <canvas id="inetview_recent_chart_{{ $dcid }}"></canvas>
                       </div>
@@ -3183,73 +3379,94 @@
                         initOrUpdateChart('myChart_' + clientid, 'bar', {
                             labels: ['In Review','Sourcing', 'Screening', 'Evaluation', 'Negotiation', 'Offer','Joined','Rejected'],
                             datasets: [{
-                                label: 'Users',
+                                label: 'Candidates',
                                 data: [d.inreview_count, d.sourcing_count, d.screening_count, d.evaluation_count, d.negotiation_count, d.offer_count, d.joined_count, d.Rejected_count],
-                                backgroundColor: ['#bdbd26','#000000','#c000ff','#2896ff','#ff4098','#ffab00','#06c732','#ff0202'],
-                                borderRadius: 10,
-                                barThickness: 30
+                                backgroundColor: ['#eab308','#3b82f6','#a855f7','#0284c7','#ec4899','#f59e0b','#10b981','#ef4444'],
+                                borderRadius: 6,
+                                barThickness: 20
                             }]
-                        }, { indexAxis: 'y', plugins: { legend: { display: false } } });
+                        }, {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', font: { family: 'Poppins', size: 11 } } },
+                                y: { grid: { display: false }, ticks: { color: '#334155', font: { family: 'Poppins', size: 11, weight: '500' } } }
+                            }
+                        });
 
                         initOrUpdateChart('allJobGrapg_' + clientid, 'doughnut', {
                             labels: ['Active Jobs', 'Hold Jobs', 'Closed Jobs'],
                             datasets: [{
                                 label: 'Total',
                                 data: [d.active_count, d.hold_count, d.inactive_count],
-                                backgroundColor: ['#22c55e','#ffab00','#ff0202'],
+                                backgroundColor: ['#10b981','#f59e0b','#ef4444'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
                                 hoverOffset: 4
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' });
+
+                        var barScalesConfig = {
+                            x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'Poppins', size: 11 } } },
+                            y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b', font: { family: 'Poppins', size: 11 } } }
+                        };
 
                         initOrUpdateChart('candidates_left_chart_' + clientid, 'bar', {
                             labels: d.labels,
                             datasets: [{
                                 label: 'Total Candidates',
                                 data: d.candidateValues,
-                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
-                                borderRadius: 5, barThickness: 30
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 6,
+                                barThickness: 24
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: barScalesConfig });
 
                         initOrUpdateChart('candidates_offer_chart_' + clientid, 'bar', {
                             labels: d.labelsCommoffer,
                             datasets: [{
                                 label: 'Total Candidates',
                                 data: d.candidateValuesCommoffer,
-                                backgroundColor: ['#ffab00','#ffab00','#ffab00','#ffab00','#ffab00','#ffab00'],
-                                borderRadius: 5, barThickness: 30
+                                backgroundColor: '#f59e0b',
+                                borderRadius: 6,
+                                barThickness: 24
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: barScalesConfig });
 
                         initOrUpdateChart('candidates_join_chart_' + clientid, 'bar', {
                             labels: d.labelsCommjoin,
                             datasets: [{
                                 label: 'Total Candidates',
                                 data: d.candidateValuesCommjoin,
-                                backgroundColor: ['#06c732','#06c732','#06c732','#06c732','#06c732','#06c732'],
-                                borderRadius: 5, barThickness: 30
+                                backgroundColor: '#10b981',
+                                borderRadius: 6,
+                                barThickness: 24
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: barScalesConfig });
 
                         initOrUpdateChart('inetview_recent_chart_month_' + clientid, 'bar', {
                             labels: d.interviewlabelsMonth,
                             datasets: [{
                                 label: 'Total Interviews',
                                 data: d.interviewValuesMonth,
-                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
-                                borderRadius: 5, barThickness: 30
+                                backgroundColor: '#0d9488',
+                                borderRadius: 6,
+                                barThickness: 24
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: barScalesConfig });
 
                         initOrUpdateChart('inetview_recent_chart_' + clientid, 'bar', {
                             labels: d.interviewlabels,
                             datasets: [{
                                 label: 'Total Interviews',
                                 data: d.interviewValues,
-                                backgroundColor: ['#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3','#2196f3'],
-                                borderRadius: 5, barThickness: 30
+                                backgroundColor: '#0d9488',
+                                borderRadius: 6,
+                                barThickness: 24
                             }]
-                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } });
+                        }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: barScalesConfig });
 
                         AgencyDetailTabManager.initializedTabs['reports'] = true;
                     }
