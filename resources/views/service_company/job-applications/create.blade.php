@@ -14,6 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
 @endpush
 
@@ -145,38 +146,35 @@
 @endphp 
 
 <!--begin::Toolbar-->
-<div class="toolbar" id="kt_toolbar">
-
-
+<div class="toolbar talent-top-toolbar candidate-top-toolbar" id="kt_toolbar">
   <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-    <!--begin::Page title-->
-      @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
-      <div class="d-flex align-items-center py-1">
-          <div class="before-event d-flex align-items-center position-relative my-1 me-3">
-            <!--begin::Buttons-->
-                <div class="form-row row fv-row">
-                  <div class="col-12 text-center py-10">
-                  @php 
-                      if($page_event == 'EDIT'){ 
-                        echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary">Update Candidate</button>';
-                      }else{
-                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary">Submit Candidate</button>';	
-                      }
-                  @endphp
-                    {{-- <a href="javascript:void(0);" class="btn btn-secondary">Cancel</a>  --}}
-                  
-                  </div>
-                </div>
-          </div>
+  <div id="kt_toolbar_container" class="container-fluid candidate-toolbar-container">
+    <div class="talent-topbar candidate-topbar">
+      <div class="talent-topbar-copy">
+        <div class="talent-topbar-title-row">
+          <h1>{{ $pagetitle }}</h1>
+        </div>
+        <p>{{ $page_event == 'EDIT' ? 'Review candidate details and update the submission.' : 'Add a candidate to this job while keeping their profile complete and client-ready.' }}</p>
       </div>
-    <!--end::Page title-->
+      <div class="talent-topbar-actions">
+        @php
+            if($page_event == 'EDIT'){
+              echo '<button type="button" name="update" id="update-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>';
+            }else{
+              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Candidate</button>';
+            }
+        @endphp
+      </div>
+    </div>
+    <div class="candidate-job-context">
+      @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
+    </div>
   </div>
   <!--end::Container-->
 </div>
 <!--end::Toolbar-->
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-4 job-candidate-create" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -198,14 +196,17 @@
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
           <div class="fc">
             <!-- Upload + Career Summary -->
-            <div class="g2" style="margin-bottom:16px">
+            <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
-                <div class="fs fv-row" style="margin-bottom:0">
-                    <div class="fsh">
-                        <h3>Upload Resume <span style="color:red">*</span></h3>
+                <div class="fs fv-row resume-card candidate-card" style="margin-bottom:0">
+                    <div class="fsh resume-card-header candidate-card-header">
+                        <div class="candidate-card-title">
+                          <span class="resume-card-icon candidate-card-icon"><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></span>
+                          <span><strong>Upload Resume <span class="rq">*</span></strong><small>Upload a PDF or Word resume to parse candidate details.</small></span>
+                        </div>
                     </div>
 
-                    <div class="fsc">
+                    <div class="fsc resume-card-body candidate-card-body">
                         <div class="ua" id="uploadBox">
 
                             <div class="ui">
@@ -390,12 +391,14 @@
 
                     </div>
                 </div>
-                <div class="fs fv-row" style="margin-bottom:0">
-                  <div class="fsh" style="justify-content:space-between">
-                    <h3>Career
-                      Summary <span style="color:var(--r)">*</span></h3>
+                <div class="fs fv-row summary-card candidate-card" style="margin-bottom:0">
+                  <div class="fsh resume-card-header summary-card-header candidate-card-header">
+                    <div class="candidate-card-title summary-title-wrap">
+                      <span class="summary-card-icon candidate-card-icon"><i class="fa-solid fa-align-left" aria-hidden="true"></i></span>
+                      <span><strong>Career Summary <span class="rq">*</span></strong><small>Highlight the candidate's experience, strengths, and suitability.</small></span>
+                    </div>
                   </div>
-                  <div class="fsc">
+                  <div class="fsc summary-card-body candidate-card-body">
                     <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
                     <div class="cc">0 / 100</div>
                     <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -445,11 +448,14 @@
             <!--end::Upload Photo & Resume/CV-->
 
             <!-- Basic Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Basic Details</h3>
+            <div class="fs bd-card candidate-card">
+              <div class="fsh candidate-card-header bd-hero">
+                <div class="candidate-card-title bd-hero-title">
+                  <span class="candidate-card-icon bd-hero-icon"><i class="fa-regular fa-user" aria-hidden="true"></i></span>
+                  <span><strong>Candidate Profile</strong><small>Identity, contact details, location, education, and work preference.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body bd-body">
                 <div class="g4">
                   <div class="fg fv-row">
                     <label>Full Name <span class="rq">*</span></label>
@@ -553,21 +559,33 @@
             </div>
 
             <!-- Professional Details -->
-            <div class="fs fv-row">
-              <div class="fsh"><h3>Primary Skills *</h3></div>
-              <div class="fsc">
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
               <div id="skillTags" class="skill-tags"></div>
                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
             <!-- Professional Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Professional Details</h3>
+            <div class="fs pd-card candidate-card">
+              <div class="fsh candidate-card-header pd-hero">
+                <div class="candidate-card-title pd-hero-title">
+                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Professional Profile</strong><small>Employment, experience, and availability details for this application.</small></span>
+                </div>
               </div>
-              <div class="fsc">
-                <div class="g4">
+              <div class="fsc candidate-card-body pd-body">
+                <div class="candidate-subsection-head">
+                  <span><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                  <div><strong>Experience Details</strong><small>Current role and relevant professional experience.</small></div>
+                </div>
+                <div class="g4 candidate-subsection-grid">
                   <div class="fg fv-row">
                     <label>Current Company <span class="rq">*</span></label>
                     <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
@@ -707,7 +725,11 @@
                     </div>
                   </div>
                 </div>
-                <div class="g4">
+                <div class="candidate-subsection-head candidate-subsection-head--availability">
+                  <span><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <div><strong>Availability &amp; Work Preferences</strong><small>Employment type, notice period, and reason for change.</small></div>
+                </div>
+                <div class="g4 candidate-subsection-grid candidate-subsection-grid--availability">
                   
                   <div class="fg fv-row">
                     <label>Employment Type</label>
@@ -766,11 +788,14 @@
             </div>
 
             <!-- Salary Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Salary Details</h3>
+            <div class="fs br-card salary-card candidate-card">
+              <div class="fsh candidate-card-header br-hero">
+                <div class="candidate-card-title br-hero-title">
+                  <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+                  <span><strong>Salary Details</strong><small>Current and expected annual, monthly, and hourly compensation.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body br-body">
                 <div class="sg">
                   <div>
                     <div class="fg fv-row">
@@ -971,11 +996,14 @@
             </div>
 
             <!-- Skills Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Job Skills Details</h3>
+            <div class="fs se-card job-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body candidate-table-wrap">
                 <table class="sk">
                   <thead>
                     <tr>
@@ -1074,11 +1102,14 @@
 
              <!-- Skills Details -->
           @if(!empty($job_additional_detail))
-            <div class="fs">
-              <div class="fsh">
-                <h3>Job Questions</h3>
+            <div class="fs candidate-card questions-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
+                  <span><strong>Job Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body">
 
                 <!--begin::Custom Details-->
                 <div class="" id="job_additional_detail">
@@ -1134,13 +1165,14 @@
 
 
             <!-- Availability -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Availability for Next 3 Days
-                  <span style="color: var(--r)">*</span>
-                </h3>
+            <div class="fs candidate-card interview-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--interview"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                  <span><strong>Availability for Next 3 Days <span class="rq">*</span></strong><small>Provide three interview windows and the preferred interview mode.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body">
                 <div class="ag">
                   <div class="ai">
                             <div class="ad">Date and Time(Slot-1)</div>
@@ -1224,11 +1256,14 @@
             </div>
 
             <!-- Additional Information -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Additional Information</h3>
+            <div class="fs addl-card candidate-card">
+              <div class="fsh candidate-card-header addl-hero">
+                <div class="candidate-card-title addl-hero-title">
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+                  <span><strong>Additional Information</strong><small>Professional links, visa status, and candidate reference details.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body addl-body">
                 <div class="g4">
                   <div class="fg fv-row">
                     <label>Likedin Link (Optional)</label>
@@ -1268,11 +1303,14 @@
             </div>
 
             <!-- Recruiter Note -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Recruiter Note</h3>
+            <div class="fs candidate-card recruiter-note-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
+                  <span><strong>Recruiter Note</strong><small>Add internal context for the hiring team; this is not shared with the candidate.</small></span>
+                </div>
               </div>
-              <div class="fsc">
+              <div class="fsc candidate-card-body">
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
                 <div class="fg fv-row" style="grid-column: 1 / -1;">
                   <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
