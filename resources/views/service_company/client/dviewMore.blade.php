@@ -169,11 +169,10 @@
           @media (max-width:1024px){ .jobx .table-card { overflow-x:auto; } .jobx .table-header, .jobx .job-row { min-width:980px; } }
         </style>
         @php
-            // KPI counts for the direct-client detail header cached for 15 minutes to guarantee < 60ms shell rendering.
             $cur_company_id = auth()->user()->company_id;
-            $detail_from = @$directClientDetail->client_id ?: (@$directClientDetail->from_company_id ?: @$directClientDetail->company_id);
+            $detail_from = @$directClientDetail->from_company_id ?: (@$directClientDetail->companies_id ?: (@$directClientDetail->company_id ?: @$directClientDetail->client_id));
             $dc_id = $detail_from;
-            $kpiCacheKey = "ats:direct_client_kpi:{$cur_company_id}:{$detail_from}";
+            $kpiCacheKey = "ats:direct_client_kpi_v3:{$cur_company_id}:{$detail_from}";
             $kpiData = cache()->remember($kpiCacheKey, 900, function() use ($detail_from, $cur_company_id) {
                 $kpiJobs = GeneralMethod::DirectClientJobsCountAllStatus($detail_from, $cur_company_id);
                 $kpiPerf = GeneralMethod::DirectClientCandidatesCountList($detail_from, $cur_company_id);

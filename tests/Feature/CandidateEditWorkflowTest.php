@@ -11,6 +11,7 @@ use Tests\TestCase;
  * Covers the verification matrix from 00_STEPS_IMPLEMENTATION_PLAN.md §Phase 3.
  *
  * Test groups:
+ *
  *   @group unit-logic  — pure logic tests, no DB or HTTP required
  *   @group integration — require a seeded database (run on staging / CI with DB seed)
  *
@@ -43,22 +44,24 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_value_decrypt_url_space_mutation_decrypts_successfully(): void
     {
-        $original  = 'edit-workflow-test-payload';
+        $original = 'edit-workflow-test-payload';
         $encrypted = encrypt($original);
-        $mutated   = str_replace('+', ' ', $encrypted);
+        $mutated = str_replace('+', ' ', $encrypted);
 
         if ($mutated === $encrypted) {
             // Payload happened to produce no '+' — find one that does.
             for ($i = 0; $i < 200; $i++) {
-                $c = 'payload-' . $i;
+                $c = 'payload-'.$i;
                 $e = encrypt($c);
                 $m = str_replace('+', ' ', $e);
                 if ($m !== $e) {
                     $this->assertSame($c, GeneralMethod::value_decrypt($m));
+
                     return;
                 }
             }
             $this->markTestSkipped('No + in 200 attempts — space mutation untestable in this run.');
+
             return;
         }
 
@@ -81,9 +84,9 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_value_decrypt_valid_encrypted_value_returns_original(): void
     {
-        $original  = 42;
+        $original = 42;
         $encrypted = encrypt($original);
-        $result    = GeneralMethod::value_decrypt($encrypted);
+        $result = GeneralMethod::value_decrypt($encrypted);
         $this->assertEquals($original, $result);
     }
 
@@ -97,10 +100,10 @@ class CandidateEditWorkflowTest extends TestCase
      * @internal
      * When $appId is a positive integer string, $isEdit must be true.
      */
-    public function test_is_edit_true_when_appId_is_positive_integer_string(): void
+    public function test_is_edit_true_when_app_id_is_positive_integer_string(): void
     {
-        $appId  = GeneralMethod::value_decrypt('456');  // numeric passthrough
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = GeneralMethod::value_decrypt('456');  // numeric passthrough
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertTrue($isEdit, '$isEdit must be true when $appId is a non-zero integer.');
     }
 
@@ -108,10 +111,10 @@ class CandidateEditWorkflowTest extends TestCase
      * @internal
      * When $appId is '0' (new-candidate URL), $isEdit must be false.
      */
-    public function test_is_edit_false_when_appId_is_zero_string(): void
+    public function test_is_edit_false_when_app_id_is_zero_string(): void
     {
-        $appId  = GeneralMethod::value_decrypt('0');
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = GeneralMethod::value_decrypt('0');
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertFalse($isEdit, '$isEdit must be false when $appId is "0".');
     }
 
@@ -119,10 +122,10 @@ class CandidateEditWorkflowTest extends TestCase
      * @internal
      * When $appId is null (route omitted), $isEdit must be false.
      */
-    public function test_is_edit_false_when_appId_is_null(): void
+    public function test_is_edit_false_when_app_id_is_null(): void
     {
-        $appId  = GeneralMethod::value_decrypt(null);
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = GeneralMethod::value_decrypt(null);
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertFalse($isEdit, '$isEdit must be false when $appId is null.');
     }
 
@@ -130,12 +133,12 @@ class CandidateEditWorkflowTest extends TestCase
      * @internal
      * When $appId is an encrypted positive integer, $isEdit must be true.
      */
-    public function test_is_edit_true_when_appId_is_valid_encrypted_integer(): void
+    public function test_is_edit_true_when_app_id_is_valid_encrypted_integer(): void
     {
         $originalId = 789;
-        $encrypted  = encrypt($originalId);
-        $appId      = GeneralMethod::value_decrypt($encrypted);
-        $isEdit     = !empty($appId) && (int) $appId !== 0;
+        $encrypted = encrypt($originalId);
+        $appId = GeneralMethod::value_decrypt($encrypted);
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertTrue($isEdit, '$isEdit must be true when $appId decrypts to a positive integer.');
     }
 
@@ -144,10 +147,10 @@ class CandidateEditWorkflowTest extends TestCase
      * When $appId is an invalid/corrupted encrypted string, $isEdit must be false
      * (value_decrypt returns null, and we never crash).
      */
-    public function test_is_edit_false_when_appId_decryption_fails(): void
+    public function test_is_edit_false_when_app_id_decryption_fails(): void
     {
-        $appId  = GeneralMethod::value_decrypt('totally-invalid-payload');
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = GeneralMethod::value_decrypt('totally-invalid-payload');
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertFalse($isEdit, '$isEdit must be false when $appId decryption fails (null returned).');
     }
 
@@ -166,8 +169,8 @@ class CandidateEditWorkflowTest extends TestCase
         // Simulate the exact condition from the controller:
         //   $isEdit = !empty($appId) && (int) $appId !== 0;
         //   if (!$isEdit) { /* coin check */ }
-        $appId  = 456;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = 456;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
 
         // Pretend coins are zero: packageStatus->status = true (would redirect)
         $packageStatusWouldRedirect = true;
@@ -182,10 +185,10 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_coin_gate_entered_during_new_candidate_creation(): void
     {
-        $appId  = 0;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = 0;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
 
-        $coinCheckWillRun = !$isEdit;
+        $coinCheckWillRun = ! $isEdit;
         $this->assertTrue($coinCheckWillRun, 'Coin check must run when $appId is 0 (new candidate creation).');
     }
 
@@ -200,11 +203,11 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_closed_job_constraint_relaxed_during_edit(): void
     {
-        $appId  = 456;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = 456;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
 
         // Controller logic: if (!$isEdit) { $query->where('jobs.status','active') ... }
-        $activeStatusEnforced = !$isEdit;
+        $activeStatusEnforced = ! $isEdit;
 
         $this->assertFalse(
             $activeStatusEnforced,
@@ -218,10 +221,10 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_active_job_constraint_enforced_during_new_creation(): void
     {
-        $appId  = 0;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = 0;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
 
-        $activeStatusEnforced = !$isEdit;
+        $activeStatusEnforced = ! $isEdit;
 
         $this->assertTrue(
             $activeStatusEnforced,
@@ -251,7 +254,7 @@ class CandidateEditWorkflowTest extends TestCase
         $jobId = GeneralMethod::value_decrypt('1');
         $this->assertSame(1, $jobId, 'Raw jobId "1" must decrypt to integer 1 without exception.');
         $this->markTestIncomplete(
-            'Full HTTP assertion requires seeded DB. Run manually on testing.jero.works: ' .
+            'Full HTTP assertion requires seeded DB. Run manually on testing.jero.works: '.
             'GET /service_company/job-applications/create/1/0 must NOT return 500.'
         );
     }
@@ -270,11 +273,11 @@ class CandidateEditWorkflowTest extends TestCase
     {
         // The $isEdit guard ensures coin check is skipped for edits.
         // Integration assertion requires a real session; see manual steps above.
-        $appId  = 999; // non-zero = edit
-        $isEdit = !empty($appId) && (int) $appId !== 0;
+        $appId = 999; // non-zero = edit
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
         $this->assertTrue($isEdit);
         $this->markTestIncomplete(
-            'Full HTTP assertion requires seeded DB with 0 coin balance. ' .
+            'Full HTTP assertion requires seeded DB with 0 coin balance. '.
             'Manual steps: see docblock above.'
         );
     }
@@ -291,11 +294,11 @@ class CandidateEditWorkflowTest extends TestCase
     public function test_integration_edit_on_closed_job_returns_200(): void
     {
         // The !$isEdit guard prevents the status=active where-clause from firing.
-        $appId  = 999;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
-        $this->assertFalse(!$isEdit, 'Status constraint must NOT fire for edit.');
+        $appId = 999;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
+        $this->assertFalse(! $isEdit, 'Status constraint must NOT fire for edit.');
         $this->markTestIncomplete(
-            'Full HTTP assertion requires seeded DB with closed job. ' .
+            'Full HTTP assertion requires seeded DB with closed job. '.
             'Manual steps: see docblock above.'
         );
     }
@@ -312,12 +315,30 @@ class CandidateEditWorkflowTest extends TestCase
      */
     public function test_integration_new_candidate_on_closed_job_returns_404(): void
     {
-        $appId  = 0;
-        $isEdit = !empty($appId) && (int) $appId !== 0;
-        $this->assertTrue(!$isEdit, 'Status constraint MUST fire for new candidates (appId=0).');
+        $appId = 0;
+        $isEdit = ! empty($appId) && (int) $appId !== 0;
+        $this->assertTrue(! $isEdit, 'Status constraint MUST fire for new candidates (appId=0).');
         $this->markTestIncomplete(
-            'Full HTTP assertion requires seeded DB with closed job. ' .
+            'Full HTTP assertion requires seeded DB with closed job. '.
             'Manual steps: see docblock above.'
         );
+    }
+
+    /**
+     * @internal
+     * Verify stdClass object representing job_metronics_skill without 'rating' property
+     * handles null coalescing ($skill_val->rating ?? null) without throwing ErrorException.
+     */
+    public function test_stdclass_job_skill_rating_property_access_does_not_throw(): void
+    {
+        $skill_val = (object) [
+            'id' => 1,
+            'job_id' => 10,
+            'skill_name' => 'PHP',
+            'skill_value' => '3 Years 0 Months',
+        ];
+
+        $selected_skill_rating = $skill_val->rating ?? null;
+        $this->assertNull($selected_skill_rating, 'Missing rating property must gracefully return null via null-coalescing.');
     }
 }
