@@ -902,7 +902,7 @@
           <div class="cdr-avatar-sq" aria-hidden="true">{{ $__hdrInitials }}</div>
           @if($__hdrJobTotal > 0)
             @php $__mpbClass = \App\Helper\GeneralMethod::getSkillMatchBadgeStyle($__hdrOverallPct)['class']; @endphp
-            <span class="cdr-match-pct-badge {{ $__mpbClass }}">{{ $__hdrOverallPct }}% Match</span>
+            <span class="cdr-match-pct-badge {{ $__mpbClass }} jw-drawer-match-badge" data-candidate-id="{{ @$application->id }}" data-match-pct="{{ $__hdrOverallPct }}">{{ $__hdrOverallPct }}% Match</span>
           @endif
         </div>
 
@@ -3183,9 +3183,9 @@
               @endif
             </div>
             @if(!empty($application->recruiter_note))
-              <div class="po-recruiter-note-text">{!! $application->recruiter_note !!}</div>
+              <div class="po-recruiter-note-text jw-recruiter-note-display" data-candidate-id="{{ @$application->id }}">{!! $application->recruiter_note !!}</div>
             @else
-              <p class="po-no-notes">No recruiter comments added yet.</p>
+              <p class="po-no-notes jw-recruiter-note-display" data-candidate-id="{{ @$application->id }}">No recruiter comments added yet.</p>
             @endif
           </section>
 
@@ -4628,6 +4628,9 @@ setTimeout(() => {
                     if (response.html) {
                         $('.job_skill_view').html(response.html);
                     }
+                    if (response.skill_match !== undefined && window.JWRealtimeSync && typeof window.JWRealtimeSync.updateMatchScore === 'function') {
+                        window.JWRealtimeSync.updateMatchScore(response.candidate_id, response.wise_ids, response.skill_match, true);
+                    }
                     // Synchronize select inputs in side drawer so reopening shows updated values
                     if (response.data && Array.isArray(response.data)) {
                         response.data.forEach(function(item) {
@@ -4939,6 +4942,9 @@ setTimeout(() => {
                             $('.po-recruiter-note-text').after('<p class="po-no-notes" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter comments added yet.</p>');
                         }
                         $('.po-no-notes').show();
+                    }
+                    if (window.JWRealtimeSync && typeof window.JWRealtimeSync.updateRecruiterNote === 'function') {
+                        window.JWRealtimeSync.updateRecruiterNote(appId, note, true);
                     }
                     // Multi-tier atomic cache invalidation for both wiseId and core candidateId
                     var wId = $('#candidate_wise_id').val() || '{{ @$application->wiseId ?: @$jobWiseCanId }}';

@@ -1501,6 +1501,7 @@
             });
         }
         countder();
+        window.countder = countder;
         $(document).on('click', '#stage_sub_stage_close', function() {
             $('#csd_drawer_close').trigger('click');
         });

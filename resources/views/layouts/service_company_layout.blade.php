@@ -3154,6 +3154,12 @@ $( document ).ready(function() {
           } else if (e.data.type === 'purge') {
               if (window.__candidateDrawerCache) window.__candidateDrawerCache.clear();
               if (window.__atsCandidateL2DB) window.__atsCandidateL2DB.clear();
+          } else if (e.data.type === 'match_score_updated' && window.JWRealtimeSync) {
+              window.JWRealtimeSync.updateMatchScore(e.data.candidate_id, e.data.wise_ids, e.data.score, false);
+          } else if (e.data.type === 'recruiter_note_updated' && window.JWRealtimeSync) {
+              window.JWRealtimeSync.updateRecruiterNote(e.data.candidate_id, e.data.note, false);
+          } else if (e.data.type === 'tracker_stage_updated' && window.JWRealtimeSync) {
+              window.JWRealtimeSync.updateTrackerStage(e.data.candidate_id, e.data.wise_ids, e.data.new_stage_id, e.data.old_stage_id, e.data.job_id, false);
           }
       };
   }
@@ -3282,30 +3288,220 @@ $( document ).ready(function() {
       }
   };
 
+  // Unified Real-Time Synchronization Engine (10K Concurrency / Zero Stale Data / Client-First)
+  window.JWRealtimeSync = {
+      getBadgeStyle: function(pct) {
+          var num = parseInt(pct, 10);
+          if (isNaN(num)) num = 0;
+          if (num >= 85) {
+              return { bg: '#dcfce7', color: '#16a34a', border: '#bbf7d0', cls: 'badge-light-success' };
+          } else if (num >= 50) {
+              return { bg: '#fef3c7', color: '#d97706', border: '#fde68a', cls: 'badge-light-warning' };
+          } else {
+              return { bg: '#fee2e2', color: '#dc2626', border: '#fecaca', cls: 'badge-light-danger' };
+          }
+      },
+
+      updateMatchScore: function(candidateId, wiseIds, score, broadcast) {
+          if (!candidateId && (!wiseIds || !wiseIds.length)) return;
+          var num = parseInt(score, 10);
+          if (isNaN(num)) num = 0;
+          var style = this.getBadgeStyle(num);
+          var cid = candidateId ? String(candidateId) : null;
+          var wids = Array.isArray(wiseIds) ? wiseIds.map(String) : (wiseIds ? [String(wiseIds)] : []);
+
+          // 1. Update row match badges on all table lists (App Tracker, Client App Tracker, CV Tracker)
+          var rowBadges = $();
+          if (cid) {
+              rowBadges = rowBadges.add($('.jw-row-match-badge[data-candidate-id="' + cid + '"]'));
+          }
+          wids.forEach(function(wid) {
+              rowBadges = rowBadges.add($('.jw-row-match-badge[data-wise-id="' + wid + '"]'));
+          });
+
+          rowBadges.each(function() {
+              var $badge = $(this);
+              $badge.text('Match ' + num + '%');
+              $badge.attr('data-match-pct', num);
+              $badge.css({
+                  'background': style.bg,
+                  'color': style.color,
+                  'font-weight': '600'
+              });
+          });
+
+          // 2. Update checkboxes data-match attribute
+          if (cid) {
+              $('input.chk_list_item[data-candidate-id="' + cid + '"], input.chk_list_item[value="' + cid + '"]').attr('data-match', num);
+          }
+          wids.forEach(function(wid) {
+              $('input.chk_list_item[data-wise-id="' + wid + '"], input.chk_list_item[data-wiseId="' + wid + '"]').attr('data-match', num);
+          });
+
+          // 3. Update candidate drawer match badge
+          var drawerBadges = $('.jw-drawer-match-badge');
+          if (cid) {
+              drawerBadges = drawerBadges.filter('[data-candidate-id="' + cid + '"], [data-candidate-id=""]');
+          }
+          drawerBadges.each(function() {
+              var $db = $(this);
+              $db.text(num + '% Match');
+              $db.attr('data-match-pct', num);
+              $db.removeClass('badge-light-success badge-light-warning badge-light-danger').addClass(style.cls);
+          });
+
+          // 4. Invalidate ForwardResumeManager attachment and recipient cache
+          if (window.ForwardResumeManager) {
+              window.ForwardResumeManager._compiledAttachments = {};
+              window.ForwardResumeManager._recipientsCache = null;
+          }
+
+          // 5. Broadcast to other recruiter tabs if local action
+          if (broadcast !== false && candidateBroadcastChannel) {
+              try {
+                  candidateBroadcastChannel.postMessage({
+                      type: 'match_score_updated',
+                      candidate_id: cid,
+                      wise_ids: wids,
+                      score: num
+                  });
+              } catch(e) {}
+          }
+      },
+
+      updateRecruiterNote: function(candidateId, note, broadcast) {
+          if (!candidateId) return;
+          var cid = String(candidateId);
+          var cleanNote = (note || '').trim();
+
+          // 1. Update Candidate Drawer display
+          if (cleanNote) {
+              if ($('.po-recruiter-note-text').length) {
+                  $('.po-recruiter-note-text').html(cleanNote).show();
+              } else if ($('.po-no-notes').length) {
+                  $('.po-no-notes').replaceWith('<div class="po-recruiter-note-text jw-recruiter-note-display" data-candidate-id="' + cid + '" style="font-size:12px;line-height:1.7;color:#475569;">' + cleanNote + '</div>');
+              }
+              $('.po-no-notes').hide();
+          } else {
+              $('.po-recruiter-note-text').hide();
+              if ($('.po-no-notes').length === 0) {
+                  $('.po-recruiter-note-text').after('<p class="po-no-notes jw-recruiter-note-display" data-candidate-id="' + cid + '" style="font-size:12px;color:#94a3b8;font-style:italic;margin:0;">No recruiter comments added yet.</p>');
+              }
+              $('.po-no-notes').show();
+          }
+
+          // 2. Update editor if open
+          if ($('#jw_recruiter_note_editor').length && !$('#jw_recruiter_note_editor').is(':focus')) {
+              $('#jw_recruiter_note_editor').html(cleanNote);
+          }
+
+          // 3. Invalidate ForwardResumeManager attachments
+          if (window.ForwardResumeManager) {
+              window.ForwardResumeManager._compiledAttachments = {};
+              window.ForwardResumeManager._recipientsCache = null;
+          }
+
+          // 4. Invalidate drawer cache for this candidate so future drawer opens fetch fresh comments
+          window.invalidateCandidateDrawerCache(cid, false);
+
+          // 5. Broadcast to other recruiter tabs if local action
+          if (broadcast !== false && candidateBroadcastChannel) {
+              try {
+                  candidateBroadcastChannel.postMessage({
+                      type: 'recruiter_note_updated',
+                      candidate_id: cid,
+                      note: cleanNote
+                  });
+              } catch(e) {}
+          }
+      },
+
+      updateTrackerStage: function(candidateId, wiseIds, newStageId, oldStageId, jobId, broadcast) {
+          var cid = candidateId ? String(candidateId) : null;
+          var wids = Array.isArray(wiseIds) ? wiseIds.map(String) : (wiseIds ? [String(wiseIds)] : []);
+          var nStage = parseInt(newStageId, 10);
+          var oStage = parseInt(oldStageId, 10);
+
+          // 1. If on App Tracker: refresh counters
+          if (typeof window.countder === 'function') {
+              window.countder();
+          }
+
+          // 2. If on Client App Tracker: adjust stage count badges
+          if (nStage && oStage && nStage !== oStage) {
+              var $oldEl = $('#bg_' + oStage);
+              var $newEl = $('#bg_' + nStage);
+              if ($oldEl.length) {
+                  var oCnt = Math.max(0, parseInt($oldEl.text(), 10) - 1);
+                  $oldEl.text(oCnt);
+              }
+              if ($newEl.length) {
+                  var nCnt = (parseInt($newEl.text(), 10) || 0) + 1;
+                  $newEl.text(nCnt);
+              }
+          }
+
+          // 3. If on CV Tracker: refresh hero stats
+          if (typeof window.updateCvHeroStats === 'function' && typeof window.fetchCvHeroStats === 'function') {
+              window.fetchCvHeroStats();
+          }
+
+          // 4. Invalidate drawer cache for candidate & wise IDs
+          if (cid) window.invalidateCandidateDrawerCache(cid, false);
+          wids.forEach(function(wid) {
+              window.invalidateCandidateDrawerCache(wid, false);
+          });
+
+          // 5. Broadcast to other tabs
+          if (broadcast !== false && candidateBroadcastChannel) {
+              try {
+                  candidateBroadcastChannel.postMessage({
+                      type: 'tracker_stage_updated',
+                      candidate_id: cid,
+                      wise_ids: wids,
+                      new_stage_id: nStage,
+                      old_stage_id: oStage,
+                      job_id: jobId
+                  });
+              } catch(e) {}
+          }
+      }
+  };
+
   // Intent: Phase 3 Real-time Reverb WebSocket synchronization across recruiter tabs
   @if(auth()->check() && auth()->user()->company_id)
   $(document).ready(function() {
       if (typeof window.Echo !== 'undefined') {
           window.Echo.private('company.{{ (int) auth()->user()->company_id }}')
               .listen('.candidate.drawer.updated', function(e) {
-                  if (e && e.candidate_id) {
-                      window.invalidateCandidateDrawerCache(e.candidate_id);
+                  if (!e) return;
+                  if (e.candidate_id) {
+                      window.invalidateCandidateDrawerCache(e.candidate_id, false);
                   }
-                  if (e && e.wise_ids && Array.isArray(e.wise_ids)) {
+                  if (e.wise_ids && Array.isArray(e.wise_ids)) {
                       e.wise_ids.forEach(function(wid) {
-                          window.invalidateCandidateDrawerCache(wid);
+                          window.invalidateCandidateDrawerCache(wid, false);
                       });
+                  }
+                  if (e.skill_match !== null && e.skill_match !== undefined && window.JWRealtimeSync) {
+                      window.JWRealtimeSync.updateMatchScore(e.candidate_id, e.wise_ids, e.skill_match, false);
+                  }
+                  if (e.recruiter_note !== null && e.recruiter_note !== undefined && window.JWRealtimeSync) {
+                      window.JWRealtimeSync.updateRecruiterNote(e.candidate_id, e.recruiter_note, false);
+                  }
+                  if (e.stage_id !== null && e.stage_id !== undefined && window.JWRealtimeSync) {
+                      window.JWRealtimeSync.updateTrackerStage(e.candidate_id, e.wise_ids, e.stage_id, e.old_stage_id, e.job_id, false);
                   }
               })
               .listen('.job.skills.updated', function(e) {
                   if (e && e.candidate_ids && Array.isArray(e.candidate_ids)) {
                       e.candidate_ids.forEach(function(cid) {
-                          window.invalidateCandidateDrawerCache(cid);
+                          window.invalidateCandidateDrawerCache(cid, false);
                       });
                   }
                   if (e && e.wise_ids && Array.isArray(e.wise_ids)) {
                       e.wise_ids.forEach(function(wid) {
-                          window.invalidateCandidateDrawerCache(wid);
+                          window.invalidateCandidateDrawerCache(wid, false);
                       });
                   }
                   if (window.ForwardResumeManager) {
@@ -3317,14 +3513,14 @@ $( document ).ready(function() {
   });
   @endif
 
-  // Auto-invalidate RAM & IndexedDB caches when candidate mutations succeed
+  // Auto-invalidate RAM & IndexedDB caches and sync DOM when candidate mutations succeed
   $(document).ajaxSuccess(function(event, xhr, settings) {
       if (!settings || !settings.url) return;
       var url = settings.url;
       if (url.indexOf('skill-experience') !== -1 || url.indexOf('statusupdate') !== -1 || 
           url.indexOf('stage_submit') !== -1 || url.indexOf('job-question-update') !== -1 || 
           url.indexOf('recruiter-note-update') !== -1 || url.indexOf('slots-update') !== -1 ||
-          url.indexOf('job-applications/update') !== -1) {
+          url.indexOf('job-applications/update') !== -1 || url.indexOf('quick_upload_resume') !== -1) {
           var activeCoreId = $('#candidate_core_id').val() || $('#appId').val() || $('#application_id').val() || $('input[name="appId"]').val();
           var activeWiseId = $('#candidate_wise_id').val() || window.__activeCandidateDrawerId;
           if (activeCoreId) {
@@ -3333,8 +3529,24 @@ $( document ).ready(function() {
           if (activeWiseId) {
               window.invalidateCandidateDrawerCache(activeWiseId);
           }
+
+          if (xhr && xhr.responseJSON) {
+              var res = xhr.responseJSON;
+              if (res.skill_match !== undefined && window.JWRealtimeSync) {
+                  window.JWRealtimeSync.updateMatchScore(res.candidate_id || activeCoreId, res.wise_ids || (activeWiseId ? [activeWiseId] : []), res.skill_match, true);
+              }
+              if (res.recruiter_note !== undefined && window.JWRealtimeSync) {
+                  window.JWRealtimeSync.updateRecruiterNote(res.candidate_id || activeCoreId, res.recruiter_note, true);
+              }
+              if ((url.indexOf('stage_submit') !== -1 || url.indexOf('client_stage_submit') !== -1) && window.JWRealtimeSync) {
+                  var sId = $('#master_status').val() || $('select[name="master_status"]').val();
+                  window.JWRealtimeSync.updateTrackerStage(activeCoreId, activeWiseId ? [activeWiseId] : [], sId, null, null, true);
+              }
+          }
       }
-      if (url.indexOf('jobs/update') !== -1 || url.indexOf('jobs/store') !== -1) {
+      if (url.indexOf('jobs/update') !== -1 || url.indexOf('jobs/store') !== -1 ||
+          url.indexOf('rec_candidate_assign') !== -1 || url.indexOf('copy_current_selected_applicant') !== -1 || 
+          url.indexOf('add_to_list') !== -1) {
           if (window.ForwardResumeManager) {
               window.ForwardResumeManager._compiledAttachments = {};
               window.ForwardResumeManager._recipientsCache = null;

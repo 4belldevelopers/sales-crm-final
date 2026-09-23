@@ -2563,6 +2563,7 @@
                 }
             });
         }
+        window.updateCvHeroStats = updateCvHeroStats;
 
        $(document).on('change', '.chk_copy_item', function () {
            const isChecked = $(this).is(':checked');

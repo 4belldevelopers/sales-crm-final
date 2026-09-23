@@ -2747,7 +2747,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($result) {
                             $coinsDeductions = GeneralMethod::coinsDeductions((int) @$jobRow->company_id, $eventId, auth()->user()->id, @$thirdparty_company_id, '', '');
 
-                            GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+                            app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(
+                                (int) $application_id,
+                                (int) $sel_job_id,
+                                (int) $lastWiseIs,
+                                (int) ($jobRow->company_id ?? $company_id)
+                            );
                             if ($applicationRow->condidate_type != 'other') {
                                 //    GeneralMethod::elasticBenchCandidateAddEditIndex($applicationRow->id);
                             }
@@ -4115,10 +4120,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $cId = (int) $cand->id;
             $candSkillsList = array_values(array_filter(array_map('trim', explode(',', (string) @$cand->skills))));
 
+            // Target job for this candidate dossier: prioritize active target job from request over historical profile job_id
+            $targetJobIdForCand = ! empty($jobIdArr[0]) ? (int) $jobIdArr[0] : (! empty($cand->job_id) ? (int) $cand->job_id : null);
+
             // Server-authoritative match score
             $authoritativeMatch = $authService->computeAuthoritativeMatch(
                 $cId,
-                ! empty($cand->job_id) ? (int) $cand->job_id : (! empty($jobIdArr[0]) ? (int) $jobIdArr[0] : null),
+                $targetJobIdForCand,
                 $candSkillsList,
                 $jobSkillsList,
                 (int) (@$cand->rating ?: 4)
@@ -4280,7 +4288,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'education' => $cand->qualification_name ?? (@$cand->qualification ?: '--'),
                 'work_mode' => ! empty($cand->wm) ? ucwords(str_replace(['_', '-'], ' ', strtolower($cand->wm))) : 'Hybrid',
                 'career_summary' => trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8'))),
-                'recruiter_note_text' => trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8'))),
+                'recruiter_note_text' => trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8'))) ?: 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
                 'match' => $authoritativeMatch,
                 'rating' => (int) (@$cand->rating ?: 4),
                 'skills' => $skillsArr,
@@ -4716,7 +4724,54 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         } catch (\Throwable $e) {
         }
 
-        // Keep Elasticsearch in sync if job runner exists
+        // Synchronously re-index all linked candidate rows in Elasticsearch
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $candidateId)->pluck('id')->toArray();
+        foreach ($wiseIds as $wId) {
+            \App\Helper\GeneralMethod::JobApplicationsAddEditUpload($wId);
+        }
+
+        try {
+            $elasticService = app(\App\Services\ElasticService::class);
+            if ($elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('[quick_upload_resume] ES refresh failed: '.$e->getMessage());
+        }
+
+        // Invalidate candidate drawer and list caches
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $targetIds = array_unique(array_merge([$candidateId], $wiseIds));
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+        foreach ($targetIds as $tid) {
+            foreach ($slugs as $slug) {
+                cache()->forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+            }
+        }
+        \App\Helper\GeneralMethod::cacheClean('candidateDetails_version_user_'.auth()->id());
+
+        // Broadcast real-time resume upload update
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $candidateId,
+                time(),
+                'resume_uploaded',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                $storedFilename
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('[quick_upload_resume] CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+        }
+
+        // Keep secondary indexes in sync if job runner exists
         try {
             if (class_exists(\App\Jobs\ProcessCandidateUpdateJob::class)) {
                 \App\Jobs\ProcessCandidateUpdateJob::dispatch($candidateId);

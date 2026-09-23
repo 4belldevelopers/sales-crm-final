@@ -357,9 +357,49 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         }
 
+        // Recalculate skill match score for this job and candidate
+        $candSkills = DB::table('job_applications')->where('id', $appId)->value('skills') ?? '';
+        $candSkillArr = array_filter(array_map('trim', explode(',', $candSkills)));
+        if (! empty($insertedSkills)) {
+            foreach ($insertedSkills as $is) {
+                if (! empty($is['skill_name']) && ! in_array($is['skill_name'], $candSkillArr)) {
+                    $candSkillArr[] = $is['skill_name'];
+                }
+            }
+            $candSkills = implode(',', array_unique($candSkillArr));
+            DB::table('job_applications')->where('id', $appId)->update([
+                'skills' => $candSkills,
+                'updated_at' => now(),
+            ]);
+        }
+
+        $calc = GeneralMethod::calculateSkillMatch((int) $job_id, $candSkills);
+        $matchPct = (int) ($calc['percentage'] ?? 0);
+
+        DB::table('add_job_wise_condidates')
+            ->where('job_application_id', $appId)
+            ->where('job_id', $job_id)
+            ->update([
+                'skill_match' => $matchPct,
+                'skills' => $candSkills,
+                'updated_at' => now(),
+            ]);
+
+        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
+        foreach ($wiseIds as $wId) {
+            GeneralMethod::JobApplicationsAddEditUpload($wId);
+        }
+
+        try {
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('skillExperienceUpdate ELASTIC_CANDIDATES refresh failed: '.$e->getMessage());
+        }
+
         // Bust candidate drawer cache across all slugs and associated job-wise IDs
         $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
-        $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
         $targetIds = array_unique(array_merge([$appId], $wiseIds));
         $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
 
@@ -371,6 +411,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $cachekeys = [
             'candidateDetails_version_user_'.$this->user->id,
+            'allcvtracker_version_user_'.$this->user->id,
+            'allapptracker_version_user_'.$this->user->id,
+            'allclientapp_version_user_'.$this->user->id,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
@@ -378,12 +421,32 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Intent: Phase 3 Reverb broadcast to invalidate client RAM cache in all connected recruiter tabs
         try {
-            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'skills_updated', array_map('intval', $wiseIds));
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $appId,
+                time(),
+                'skills_updated',
+                array_map('intval', $wiseIds),
+                $matchPct,
+                $candSkills,
+                null,
+                null,
+                null,
+                (int) $job_id
+            );
         } catch (\Throwable $e) {
             \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
-        return response()->json(['status' => true, 'html' => $html, 'data' => $insertedSkills]);
+        return response()->json([
+            'status' => true,
+            'html' => $html,
+            'data' => $insertedSkills,
+            'skill_match' => $matchPct,
+            'candidate_id' => (int) $appId,
+            'wise_ids' => array_map('intval', $wiseIds),
+            'job_id' => (int) $job_id,
+        ]);
 
     }
 
@@ -755,6 +818,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ],
                     ],
                 ]);
+                $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
             }
         } catch (\Throwable $e) {
             \Log::warning('recruiterNoteUpdate ELASTIC_CANDIDATES update failed: '.$e->getMessage());
@@ -771,6 +835,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             'doc' => ['recruiter_note' => $recruiterNote],
                         ],
                     ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES_BENCH]);
                 }
             }
         } catch (\Throwable $e) {
@@ -794,14 +859,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             GeneralMethod::cacheClean($key);
         }
 
-        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs
+        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs with full recruiter note payload
         try {
-            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'notes_updated', array_map('intval', $wiseIds));
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $companyId,
+                (int) $appId,
+                time(),
+                'notes_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                $recruiterNote
+            );
         } catch (\Throwable $e) {
             \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
-        return response()->json(['status' => true]);
+        return response()->json([
+            'status' => true,
+            'candidate_id' => (int) $appId,
+            'wise_ids' => array_map('intval', $wiseIds),
+            'recruiter_note' => $recruiterNote,
+        ]);
     }
 
     public function clientCandidateList(Request $request)
@@ -6798,10 +6877,32 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
             // ─────────────────────────────────────────────────────────────────────────────
 
-            if ($request->has('AddJobWiseCondidateRankRow') && $request->AddJobWiseCondidateRankRow > 0) {
-                $skillArr = explode(',', @$jobApplication->skills);
-                $percentage = GeneralMethod::skill_match_percentage(@$request->job_id, $skillArr);
-                DB::table('add_job_wise_condidates')->where('id', '=', $request->AddJobWiseCondidateRankRow)->update(['skill_match' => $percentage]);
+            // Recalculate skill match for ALL jobs this candidate is linked to, ensuring complete synchronization across App Tracker, Client App Tracker, and Candidate Drawer.
+            $allWiseCandidates = DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $jobApplication->id)
+                ->get(['id', 'job_id', 'company_id']);
+
+            $updatedWiseIds = [];
+            $primaryMatchPct = null;
+            $candSkillsStr = (string) ($jobApplication->skills ?? '');
+
+            foreach ($allWiseCandidates as $wiseRow) {
+                $calc = GeneralMethod::calculateSkillMatch((int) $wiseRow->job_id, $candSkillsStr);
+                $pct = (int) ($calc['percentage'] ?? 0);
+                DB::table('add_job_wise_condidates')->where('id', $wiseRow->id)->update([
+                    'skill_match' => $pct,
+                    'skills' => $candSkillsStr,
+                    'updated_at' => now(),
+                ]);
+                $updatedWiseIds[] = (int) $wiseRow->id;
+                if ((int) ($request->AddJobWiseCondidateRankRow ?? 0) === (int) $wiseRow->id || (int) ($request->job_id ?? 0) === (int) $wiseRow->job_id) {
+                    $primaryMatchPct = $pct;
+                }
+            }
+
+            if ($primaryMatchPct === null && ! empty($request->job_id)) {
+                $calc = GeneralMethod::calculateSkillMatch((int) $request->job_id, $candSkillsStr);
+                $primaryMatchPct = (int) ($calc['percentage'] ?? 0);
             }
 
             // Resume handling on UPDATE: v2 session takes priority over v1 file upload.
@@ -6860,10 +6961,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->update(['resume' => '']);
             }
 
-            // Primary ES candidate update — kept fast and synchronous so edits reflect immediately in the UI.
-            $addJobWiseCandidateId = (int) ($request->AddJobWiseCondidateRankRow ?? 0);
-            if ($addJobWiseCandidateId > 0) {
-                GeneralMethod::JobApplicationsAddEditUpload($addJobWiseCandidateId);
+            // Primary ES candidate update — sync every linked job-wise row so searches and trackers update immediately.
+            foreach ($updatedWiseIds as $wId) {
+                GeneralMethod::JobApplicationsAddEditUpload($wId);
+            }
+            if (empty($updatedWiseIds)) {
+                $addJobWiseCandidateId = (int) ($request->AddJobWiseCondidateRankRow ?? 0);
+                if ($addJobWiseCandidateId > 0) {
+                    GeneralMethod::JobApplicationsAddEditUpload($addJobWiseCandidateId);
+                }
+            }
+
+            // Explicit Elasticsearch refresh to guarantee zero stale data on read
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CANDIDATES]);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('ELASTIC_CANDIDATES refresh in update() failed: '.$e->getMessage());
             }
 
             $cachekeys = [
@@ -6878,7 +6993,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Bust candidate drawer cache across all slugs and associated job-wise IDs
             $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
-            $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
+            $wiseIds = ! empty($updatedWiseIds) ? $updatedWiseIds : DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
             $targetIds = array_unique(array_merge([(int) $jobApplication->id], $wiseIds));
             $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
 
@@ -6889,7 +7004,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             try {
-                \App\Events\CandidateDrawerUpdated::dispatch((int) $company_id, (int) $jobApplication->id, time(), 'candidate_updated', array_map('intval', $wiseIds));
+                \App\Events\CandidateDrawerUpdated::dispatch(
+                    (int) $company_id,
+                    (int) $jobApplication->id,
+                    time(),
+                    'candidate_updated',
+                    array_map('intval', $wiseIds),
+                    $primaryMatchPct,
+                    $candSkillsStr,
+                    (string) ($jobApplication->recruiter_note ?? ''),
+                    null,
+                    null,
+                    (int) ($request->job_id ?? 0),
+                    (string) ($jobApplication->resume ?? '')
+                );
             } catch (\Throwable $e) {
                 \Log::warning('CandidateDrawerUpdated dispatch in update() failed: '.$e->getMessage());
             }
@@ -10361,6 +10489,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }
 
+        try {
+            $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', (int) $application_id)->pluck('id')->toArray();
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $finalCompanyId,
+                (int) $application_id,
+                time(),
+                'stage_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                (int) $master_status,
+                (int) ($data->job_master_status_id ?? 8),
+                (int) $finalJobId
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('stage_submit CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+        }
+
         return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);
 
     }
@@ -12439,6 +12586,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $finalCompanyId = (int) ($company_id ?? auth()->user()->company_id ?? 0);
         if ($finalJobId > 0 && $finalCompanyId > 0) {
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
+        }
+
+        try {
+            $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', (int) $application_id)->pluck('id')->toArray();
+            \App\Events\CandidateDrawerUpdated::dispatch(
+                (int) $finalCompanyId,
+                (int) $application_id,
+                time(),
+                'stage_updated',
+                array_map('intval', $wiseIds),
+                null,
+                null,
+                null,
+                (int) $master_status,
+                (int) ($data->job_master_status_id ?? 8),
+                (int) $finalJobId
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('client_stage_submit CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
         return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);

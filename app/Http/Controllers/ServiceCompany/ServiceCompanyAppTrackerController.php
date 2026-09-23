@@ -4040,10 +4040,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         }
 
-        // Horizon isn't consuming this queue in this environment — jobs sit
-        // unprocessed and the candidate never reflects in Total Candidates In
-        // Job. Reverted to synchronous until a worker is confirmed running.
-        GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+        // Immediately align prescreen report, keyskills, recruiter comments, and destroy multi-tier caches
+        if (! empty($lastWiseIs) && ! empty($application_id) && ! empty($source_jobid)) {
+            app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(
+                (int) $application_id,
+                (int) $source_jobid,
+                (int) $lastWiseIs,
+                (int) ($jobRow->company_id ?? auth()->user()->company_id)
+            );
+        } else {
+            GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+        }
 
         return Reply::dataOnly(['status' => 'success']);
 

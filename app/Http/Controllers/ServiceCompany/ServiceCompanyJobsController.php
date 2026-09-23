@@ -14167,7 +14167,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
         $lastWiseIs = DB::getPdo()->lastInsertId();
         if ($query_update) {
-            GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+            app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(
+                (int) $condidateId,
+                (int) $jobId,
+                (int) $lastWiseIs,
+                (int) ($jobs->company_id ?? $company_id)
+            );
             GeneralMethod::elasticBenchCandidateAddEditIndex($condidateId);
         }
         $row_data = DB::table('job_applications')->select('*')->where('id', @$condidateId)->first();

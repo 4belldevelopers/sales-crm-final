@@ -32,14 +32,17 @@
     $jobCurrency = $jobData->jobCurrency ?? @$row->current_ctc_cur;
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
 
+    $skillArr = explode(',', (string) @$row->skills);
+    $percentage = GeneralMethod::skill_percentage($jobid, $skillArr);
+    $matchScore = (int) round((float) rtrim(@$percentage ?: '0', '%'));
     @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr style="height: 102px; position: relative;" data-candidate-id="{{ @$row->id }}" data-wise-id="{{ @$row->condidate_id }}" data-job-id="{{ @$jobid }}">
             <td>
                 @php
                     echo '<div class="form-check form-check-sm form-check-custom form-check-solid">
 															<input class="form-check-input chk_list_item" type="checkbox" value="' .
                         @$row->id .
-                        '" />
+                        '" data-candidate-id="' . @$row->id . '" data-wise-id="' . @$row->condidate_id . '" data-jobId="' . @$jobid . '" data-match="' . $matchScore . '" data-skills="' . e(@$row->skills ?? '') . '" data-cname="' . e(@$row->full_name ?? '') . '" />
                         </div>';
                 @endphp
             </td>
@@ -97,7 +100,7 @@
                     $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
                     $matchBg = $matchStyle['bg'];
                     $matchColor = $matchStyle['color'];
-                    $matchBadge = '<span class="badge my-1" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
+                    $matchBadge = '<span class="badge my-1 jw-row-match-badge" data-candidate-id="' . @$row->id . '" data-wise-id="' . @$row->condidate_id . '" data-match-pct="' . $matchScore . '" style="background:' . $matchBg . ';color:' . $matchColor . ';font-weight:600;">Match ' . @$percentage . '</span>';
 
                     if ($flag == 1) {
                         // client-show-application-detail
