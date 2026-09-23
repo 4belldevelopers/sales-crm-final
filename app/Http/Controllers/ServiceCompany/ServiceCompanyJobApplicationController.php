@@ -304,27 +304,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->get();
 
             $skillShow = true;
+            $html = '<div class="skills-thead">
+                        <div>Skill</div>
+                        <div>Experience</div>
+                        <div>Self Rating</div>
+                    </div>';
             if (! empty($jobSkill)) {
-                $html = '<div class="row">';
-                $html .= '<div class="skills-thead">
-										<div>Skill</div>
-										<div>Experience</div>
-										<div>Self Rating</div>
-									</div>';
+                $html .= '<div class="row">';
                 foreach ($jobSkill as $skill_val) {
-                    $exp = 'EXP.';
-                    $yrs = '';
-                    if (! empty($skill_val->skill_value)) {
-
-                        $yrs = '';
-                    }
                     $skillShowView = '';
                     if ($skillShow) {
-                        $skillShowView = $skill_val->skill_value;
-                        if (is_int($skill_val->skill_value)) {
-                            $skillShowView = $skill_val->skill_value.' '.$yrs;
-                        }
-
+                        $skillShowView = $skill_val->skill_value ?? '';
                     }
 
                     $html .= '<div class="skills-row">
@@ -337,45 +327,32 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.strtoupper($skill_val->skill_name).'
+                            '.ucwords(strtolower((string) $skill_val->skill_name)).'
                           </div>
                           <div class="skill-exp-cell">'.$skillShowView.'</div>
                           <div class="skill-rating-cell">
                             <div class="stars">
                               <svg class="star-skill '.(@$skill_val->rating >= 1 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                                <path
-                                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                                </path>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                               </svg>
                               <svg class="star-skill '.(@$skill_val->rating >= 2 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                                <path
-                                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                                </path>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                               </svg>
                               <svg class="star-skill '.(@$skill_val->rating >= 3 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                                <path
-                                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                                </path>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                               </svg>
                               <svg class="star-skill '.(@$skill_val->rating >= 4 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
-                                <path
-                                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                                </path>
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                               </svg>
-                              <svg class="star-skill '.(@$skill_val->rating >= 5 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none"
-                                aria-hidden="true">
-                                <path
-                                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
-                                </path>
+                              <svg class="star-skill '.(@$skill_val->rating >= 5 ? '' : 'star-empty').'" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                               </svg>
                             </div>
                             <span class="rating-text">'.(@$skill_val->rating ?? 0).' / 5</span>
                           </div>
                         </div>';
-
                 }
                 $html .= '</div>';
-
             }
 
         }
@@ -401,12 +378,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // Intent: Phase 3 Reverb broadcast to invalidate client RAM cache in all connected recruiter tabs
         try {
-            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'skills_updated');
+            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'skills_updated', array_map('intval', $wiseIds));
         } catch (\Throwable $e) {
             \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
-        return response()->json(['status' => true, 'html' => $html]);
+        return response()->json(['status' => true, 'html' => $html, 'data' => $insertedSkills]);
 
     }
 
@@ -815,6 +792,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $cachekeys = ['candidateDetails_version_user_'.$this->user->id];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
+        }
+
+        // Intent: Broadcast to invalidate client RAM & IndexedDB cache across all recruiter tabs
+        try {
+            \App\Events\CandidateDrawerUpdated::dispatch((int) $companyId, (int) $appId, time(), 'notes_updated', array_map('intval', $wiseIds));
+        } catch (\Throwable $e) {
+            \Log::warning('CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
         return response()->json(['status' => true]);
@@ -5031,6 +5015,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application->bill_rate_mode = $data->bill_rate_mode;
             $this->application->percentage_hike = $data->percentage_hike;
             $this->application->comment = $data->comment;
+            $this->application->recruiter_note = $data->recruiter_note ?? ($this->application->recruiter_note ?? '');
             $this->application->secondary_mobile = $data->secondary_mobile;
             $this->application->email = $data->email;
             $this->application->secondrary_email = $data->secondrary_email;
@@ -6698,6 +6683,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
+            }
+
+            // Bust candidate drawer cache across all slugs and associated job-wise IDs
+            $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+            $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $jobApplication->id)->pluck('id')->toArray();
+            $targetIds = array_unique(array_merge([(int) $jobApplication->id], $wiseIds));
+            $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+
+            foreach ($targetIds as $tid) {
+                foreach ($slugs as $slug) {
+                    cache()->forget('tenant:'.$company_id.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+                }
+            }
+
+            try {
+                \App\Events\CandidateDrawerUpdated::dispatch((int) $company_id, (int) $jobApplication->id, time(), 'candidate_updated', array_map('intval', $wiseIds));
+            } catch (\Throwable $e) {
+                \Log::warning('CandidateDrawerUpdated dispatch in update() failed: '.$e->getMessage());
             }
 
             DB::commit();
