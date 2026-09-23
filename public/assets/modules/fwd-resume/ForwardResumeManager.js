@@ -277,7 +277,9 @@
             self._applicationData = data.applicationData || data.candidates || [];
             self._companyData = {
                 companyName: data.companyName || (data.company && data.company.name) || 'Hiring Partner',
-                companyLogo: data.companyLogo || (data.company && data.company.logo) || ''
+                companyLogo: data.companyLogo || (data.company && data.company.logo) || '',
+                sender_name: data.sender_name || data.senderName || '',
+                sender_email: data.sender_email || data.senderEmail || ''
             };
             self._jobSkills = data.jobSkills || data.job_skills || [];
             self._templateData = data.templateData || data.templates || [];
@@ -872,30 +874,66 @@
         syncFirstRecipientSalutation: function () {
             var self = this;
             var toList = self._emailTags.to || [];
-            if (!toList || toList.length === 0) return;
+            var personName = '';
 
-            var firstEmail = (toList[0] || '').trim().toLowerCase();
-            if (!firstEmail) return;
+            if (toList && toList.length > 0) {
+                var firstEmail = (toList[0] || '').trim().toLowerCase();
+                if (firstEmail) {
+                    personName = self._recipientNameMap[firstEmail] || '';
+                    if (!personName && self._recipientsCache) {
+                        var payload = self._recipientsCache.data || self._recipientsCache;
+                        var all = (payload.client_contacts || []).concat(payload.internal_team || []).concat(payload.client_contacts_data || []).concat(payload.internal_team_data || []);
+                        for (var i = 0; i < all.length; i++) {
+                            if (all[i] && all[i].email && all[i].email.trim().toLowerCase() === firstEmail) {
+                                personName = all[i].name || '';
+                                if (personName) {
+                                    self._recipientNameMap[firstEmail] = personName;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (!personName) {
+                        var prefix = firstEmail.split('@')[0].replace(/[._-]/g, ' ').trim();
+                        if (prefix && prefix.length > 1 && !/^\d+$/.test(prefix)) {
+                            personName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+                        }
+                    }
+                }
+            }
 
-            var personName = self._recipientNameMap[firstEmail];
-            if (!personName) return;
+            // Clean name: strictly remove any double quotes, single quotes, html entities
+            var cleanName = String(personName || '')
+                .replace(/&quot;|&#039;|["']/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
 
-            var targetGreeting = 'Dear "' + personName + '",';
+            // Guard against greeting the recruiter themselves (logged-in user)
+            var senderName = String(self._companyData && self._companyData.sender_name || '').toLowerCase().trim();
+            if (cleanName && senderName && cleanName.toLowerCase() === senderName) {
+                cleanName = '';
+            }
+
+            // Strictly single greeting, NO quotes around the name (e.g. "Dear Shobha,")
+            var targetGreeting = cleanName ? ('Dear ' + cleanName + ',') : 'Dear Sir/Madam,';
 
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                 var editor = CKEDITOR.instances['test_editor1'];
                 var data = editor.getData() || '';
-                var greetingPattern = /((?:<p[^>]*>)?\s*(?:Dear|Hi|Hello)\s+)(?:&quot;[^&quot;]*&quot;|"[^"]*"|\[\{[^}]+\}\]|Sir\/Madam|Sir\s*\/\s*Madam|Client|Stakeholder|Team|[A-Za-z0-9\s.'-]+?)([,:]?\s*(?:<\/p>)?)/i;
 
-                if (greetingPattern.test(data)) {
-                    var updated = data.replace(greetingPattern, function (match, prefix, suffix) {
-                        var pOpen = prefix.indexOf('<p') !== -1 ? prefix.substring(0, prefix.indexOf('>') + 1) : '';
-                        var pClose = suffix.indexOf('</p>') !== -1 ? '</p>' : '';
-                        return pOpen + targetGreeting + pClose;
-                    });
+                // Pattern 1: Matches any existing opening greeting block (including stacked/corrupted lines)
+                var greetingBlockRegex = /^(?:\s*<p[^>]*>(?:&nbsp;|<br\s*\/?>|\s*)*<\/p>)*\s*(?:<p[^>]*>(?:\s*<[^>]+>)*\s*(?:Dear|Hi|Hello)\b[\s\S]*?<\/p>\s*)+/i;
+                // Pattern 2: Plain-text or br-separated leading greeting
+                var plainGreetingRegex = /^\s*(?:Dear|Hi|Hello)\b[^\n\r<]*(?:<br\s*\/?>|\r?\n)?/i;
+
+                if (greetingBlockRegex.test(data)) {
+                    var updated = data.replace(greetingBlockRegex, '<p>' + targetGreeting + '</p>\n');
+                    if (updated !== data) editor.setData(updated);
+                } else if (plainGreetingRegex.test(data)) {
+                    var updated = data.replace(plainGreetingRegex, '<p>' + targetGreeting + '</p>\n');
                     if (updated !== data) editor.setData(updated);
                 } else if (data.trim() !== '') {
-                    editor.setData('<p>' + targetGreeting + '</p>' + data);
+                    editor.setData('<p>' + targetGreeting + '</p>\n' + data);
                 } else {
                     editor.setData('<p>' + targetGreeting + '</p><p><br></p>');
                 }
@@ -909,6 +947,14 @@
             self.syncRecipientDrawerState();
             $('#test_rcp_search_input').val('');
             self.filterRecipients('');
+
+            // Automatically switch to client contacts for 'to' field (forward resume goes to clients)
+            // and internal team for 'cc' field.
+            if (self._currentRcpTarget === 'to') {
+                self.switchRecipientTab('client');
+            } else {
+                self.switchRecipientTab('internal');
+            }
 
             var drawerEl = document.getElementById('kt_test_recipient_drawer');
             if (drawerEl) {
@@ -969,8 +1015,9 @@
             var internalWrap = $('#test_rcp_section_internal');
             var clientWrap = $('#test_rcp_section_client');
 
-            var internalTeam = data.internal_team_data || [];
-            var clientContacts = data.client_contacts_data || [];
+            var payload = (data && data.data) ? data.data : (data || {});
+            var internalTeam = payload.internal_team || payload.internal_team_data || [];
+            var clientContacts = payload.client_contacts || payload.client_contacts_data || [];
 
             $('#test_rcp_internal_count').text(internalTeam.length + ' active members');
             $('#test_rcp_client_count').text(clientContacts.length + ' available contacts');
@@ -981,12 +1028,12 @@
             // Populate Name Map
             internalTeam.forEach(function (user) {
                 if (user.email && user.name) {
-                    self._recipientNameMap[user.email.toLowerCase()] = user.name;
+                    self._recipientNameMap[String(user.email).trim().toLowerCase()] = String(user.name).trim();
                 }
             });
             clientContacts.forEach(function (user) {
                 if (user.email && user.name) {
-                    self._recipientNameMap[user.email.toLowerCase()] = user.name;
+                    self._recipientNameMap[String(user.email).trim().toLowerCase()] = String(user.name).trim();
                 }
             });
 
@@ -1007,6 +1054,11 @@
             }
 
             self.syncRecipientDrawerState();
+
+            // If recipient tags were already present before directory loaded, re-sync salutation with discovered names
+            if (self._emailTags.to && self._emailTags.to.length > 0) {
+                self.syncFirstRecipientSalutation();
+            }
         },
 
         _buildContactItemHtml: function (user, type) {
