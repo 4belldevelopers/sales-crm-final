@@ -4418,6 +4418,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     {
         $companyId = (int) auth()->user()->company_id;
         $userId = (int) auth()->user()->id;
+
+        // Two-Tier Idempotency Barrier: Fast Redis Lock (120s TTL)
+        $idempotencyKey = (string) ($request->header('Idempotency-Key') ?: $request->input('idempotency_key', ''));
+        $idemLockKey = ! empty($idempotencyKey) ? "fwd_idem:{$companyId}:{$idempotencyKey}" : null;
+        if ($idemLockKey) {
+            $lockAcquired = \Illuminate\Support\Facades\Redis::set($idemLockKey, 'PROCESSING', 'EX', 120, 'NX');
+            if (! $lockAcquired) {
+                $statusVal = \Illuminate\Support\Facades\Redis::get($idemLockKey);
+                if ($statusVal === 'SENT') {
+                    return Reply::dataOnly([
+                        'status' => 'success',
+                        'message' => 'Candidate resumes have been forwarded successfully.',
+                    ]);
+                }
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'message' => 'A forward resume request is currently being processed. Please wait.',
+                ]);
+            }
+        }
+
         $subject = trim((string) $request->subject);
         $toRaw = $request->to_email;
         $message = (string) $request->editor1;
@@ -4539,16 +4560,42 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         }
 
         $fwdRequestUuid = (string) \Illuminate\Support\Str::uuid();
+        if (! empty($idempotencyKey)) {
+            $rawUuid = str_replace('fwd_', '', $idempotencyKey);
+            if (\Illuminate\Support\Str::isUuid($rawUuid)) {
+                $fwdRequestUuid = $rawUuid;
+            }
+        }
 
-        if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
-            \App\Models\ForwardRequest::create([
-                'uuid' => $fwdRequestUuid,
-                'company_id' => $companyId,
-                'user_id' => $userId,
-                'candidate_count' => count($attachmentUuids),
-                'recipient_count' => count($to),
-                'status' => 'SENT',
-            ]);
+        // Tier 2: Atomic DB Transaction Barrier for State & Tracking
+        DB::transaction(function () use ($fwdRequestUuid, $companyId, $userId, $attachmentUuids, $to) {
+            if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
+                $fwdReq = \App\Models\ForwardRequest::where('uuid', $fwdRequestUuid)->first();
+                if (! $fwdReq) {
+                    $fwdReq = \App\Models\ForwardRequest::create([
+                        'uuid' => $fwdRequestUuid,
+                        'company_id' => $companyId,
+                        'user_id' => $userId,
+                        'candidate_count' => count($attachmentUuids),
+                        'recipient_count' => count($to),
+                        'status' => 'SENT',
+                    ]);
+                }
+
+                // Associate uploaded attachments with this forward request
+                if (! empty($attachmentUuids) && \Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                    \App\Models\ForwardAttachment::whereIn('uuid', $attachmentUuids)
+                        ->where('company_id', $companyId)
+                        ->update([
+                            'forward_request_id' => $fwdReq->id,
+                            'status' => 'DISPATCHED',
+                        ]);
+                }
+            }
+        });
+
+        if ($idemLockKey) {
+            \Illuminate\Support\Facades\Redis::set($idemLockKey, 'SENT', 'EX', 3600);
         }
 
         $companyRow = DB::table('companies')->select('company_name')->where('id', $companyId)->first();
