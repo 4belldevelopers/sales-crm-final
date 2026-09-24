@@ -107,24 +107,13 @@
       $created_at 		=	@$jobDetail->created_at;
       $created_at 		=	date("d M, Y", strtotime($created_at));
 		
-      $snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
-      $snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
-      $snp_mode = @$application->serving_notice_period_mode;
-      if($snp_mode== 1){
-        $snp_one		=	'checked="checked"';
-        $snp_text_one	=	'display: flex;';
-        $snp_text_dummy = 'Serving Notice Period';   
-        $snp_last_working = $application->np_id;                                 	
-      }else if($snp_mode== 2){
-        $snp_two	=	'checked="checked"';
-        $snp_text_one	=	'display: flex;';
-        $snp_text_dummy = 'Immediate';  
-        $snp_last_working = $application->last_working_date;   
-      }else{
-        $snp_zero		=	'checked="checked"';	
-        $snp_text_zero	=	'display:block';
-      }  
-      $jobDetailId = @$jobDetail->id ?? 0;
+      $snp_mode = (int) (@$application->serving_notice_period_mode ?? 0);
+      $snp_last_working = '';
+      if ($snp_mode === 1) {
+        $snp_last_working = @$application->np_id;
+      } elseif ($snp_mode === 2) {
+        $snp_last_working = @$application->last_working_date;
+      }      $jobDetailId = @$jobDetail->id ?? 0;
       $logos = $jobDetailId ? GeneralMethod::companyDetails($jobDetailId) : null;
       $logo_path = '';
       $logo_path = url('public/user-uploads/company-logo/' . @$logos->logo);
@@ -870,54 +859,56 @@
               </div>
               <div class="fsc candidate-card-body aw-body">
                 <div class="candidate-notice-status-block">
-                  <label>Notice Period Status <span class="rq">*</span></label>
-                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Status">
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="2" role="radio" aria-checked="false">
+                  <label>Notice Period <span class="rq">*</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
                       <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
                     </button>
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="1" role="radio" aria-checked="false">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
                       <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
                     </button>
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="0" role="radio" aria-checked="false">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
                       <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
                     </button>
                   </div>
                   <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
-                    <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                    <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                    <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
+                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period</option>
+                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
                   </select>
                 </div>
 
                 <div class="candidate-notice-details-grid">
-                  <div class="fg fv-row candidate-notice-detail">
-                    <label>Notice Period / Last Working Date <span class="rq">*</span></label>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ $snp_mode === 0 ? 'hidden' : '' }}>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date' : 'Last Working Date' }} <span class="rq">*</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                      <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
-                        <div class="candidate-notice-status-copy"><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
-                        <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date or notice period" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
+                      <div class="candidate-date-picker">
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date' : 'Select last working date' }}" readonly {{ $snp_mode === 0 ? 'disabled' : '' }}>
+                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ $snp_mode === 0 ? 'disabled' : '' }}>
                       </div>
-                      <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
+                    </div>
+                  </div>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
+                    <label>Notice Period <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
                         <option value="">Select Notice Period</option>
                         @php
                             for ($i = 1; $i <= 200; $i++) {
-                                    $s = 'Day';
-                                    if($i > 1){
-                                        $s = 'Days';
-                                    }
-                                  $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $s . '</option>';
+                                $suffix = $i === 1 ? 'Day' : 'Days';
+                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
                             }
                         @endphp
                       </select>
-                      <input type="text" id="calender" name="calender" style="display:none">
                     </div>
                   </div>
                   <div class="fg fv-row">
@@ -925,7 +916,7 @@
                     <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
                   </div>
                 </div>
-              </div>
+                <input type="text" id="calender" name="calender" hidden>              </div>
             </div>
 
             <!-- Preferred Work Mode -->
@@ -2940,24 +2931,6 @@ KTUtil.onDOMContentLoaded(function () {
 
 
    
-$(document).on('change','#serving_notice_period',function(){
-    var cvalue = $('#serving_notice_period').val();
-		$('#np_id').val('');
-		$('#ddl_np_id').val('');
-		if(cvalue == 0){
-			$('#ddl_np_id').show();
-			$('#np_id').hide();		
-      $('#snp-immediate').hide();		
-		}else if(cvalue==1){
-      $('#snp-immediate').show();
-			$('#ddl_np_id').hide();
-			$('#np_id').show();		
-			$('#np_id').attr("disabled", false);	
-			$("#np_id").attr('type','date');
-      $('#text_display').val('Serving Notice Period');
-			$("#np_id").css({ '-webkit-calendar-picker-indicator':'display(none)' });	
-      $("#snp-immediate").attr('style','display:flex');	
-      dateManageFunc();
 		}else if(cvalue ==2){
       $('#snp-immediate').show();
 			$('#ddl_np_id').hide();
@@ -4085,17 +4058,67 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 
     var noticePeriodSelect = root.querySelector('#serving_notice_period');
     var noticePeriodOptions = root.querySelectorAll('.candidate-notice-option');
+    var noticeDateField = root.querySelector('#candidateNoticeDateField');
+    var noticeDaysField = root.querySelector('#candidateNoticeDaysField');
+    var noticeDateLabel = root.querySelector('#candidateNoticeDateLabel');
+    var noticeDateInput = root.querySelector('#np_id');
+    var noticeDateDisplay = root.querySelector('#np_id_display');
+    var noticeDaysSelect = root.querySelector('#ddl_np_id');
+    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '0';
 
-    function syncNoticePeriodOptions() {
+    function formatNoticeDate(value) {
+        if (!value) {
+            return '';
+        }
+
+        var parts = value.split('-');
+        return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value;
+    }
+
+    function syncNoticePeriodComponent(clearPreviousValue) {
         if (!noticePeriodSelect) {
             return;
         }
 
+        var mode = String(noticePeriodSelect.value);
+        var usesDate = mode === '1' || mode === '2';
+        var today = new Date().toISOString().split('T')[0];
+
+        if (clearPreviousValue && mode !== previousNoticeMode) {
+            if (noticeDateInput) noticeDateInput.value = '';
+            if (noticeDateDisplay) noticeDateDisplay.value = '';
+            if (noticeDaysSelect) noticeDaysSelect.value = '';
+        }
+
         noticePeriodOptions.forEach(function (option) {
-            var selected = option.getAttribute('data-notice-period-value') === String(noticePeriodSelect.value);
+            var selected = option.getAttribute('data-notice-period-value') === mode;
             option.classList.toggle('is-selected', selected);
             option.setAttribute('aria-checked', selected ? 'true' : 'false');
         });
+
+        if (noticeDateField) noticeDateField.hidden = !usesDate;
+        if (noticeDaysField) noticeDaysField.hidden = mode !== '0';
+        if (noticeDateInput) {
+            noticeDateInput.disabled = !usesDate;
+            noticeDateInput.required = usesDate;
+            noticeDateInput.min = mode === '1' ? today : '';
+            noticeDateInput.max = mode === '2' ? today : '';
+        }
+        if (noticeDateDisplay) {
+            noticeDateDisplay.disabled = !usesDate;
+            noticeDateDisplay.placeholder = mode === '1'
+                ? 'Select expected last working date'
+                : 'Select last working date';
+        }
+        if (noticeDaysSelect) {
+            noticeDaysSelect.disabled = mode !== '0';
+            noticeDaysSelect.required = mode === '0';
+        }
+        if (noticeDateLabel) {
+            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date' : 'Last Working Date') + ' <span class="rq">*</span>';
+        }
+
+        previousNoticeMode = mode;
     }
 
     noticePeriodOptions.forEach(function (option) {
@@ -4106,13 +4129,27 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 
             noticePeriodSelect.value = option.getAttribute('data-notice-period-value');
             noticePeriodSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            syncNoticePeriodOptions();
         });
     });
 
+    if (noticeDateDisplay && noticeDateInput) {
+        noticeDateDisplay.addEventListener('click', function () {
+            if (typeof noticeDateInput.showPicker === 'function') {
+                noticeDateInput.showPicker();
+            } else {
+                noticeDateInput.click();
+            }
+        });
+        noticeDateInput.addEventListener('change', function () {
+            noticeDateDisplay.value = formatNoticeDate(noticeDateInput.value);
+        });
+    }
+
     if (noticePeriodSelect) {
-        noticePeriodSelect.addEventListener('change', syncNoticePeriodOptions);
-        syncNoticePeriodOptions();
+        noticePeriodSelect.addEventListener('change', function () {
+            syncNoticePeriodComponent(true);
+        });
+        syncNoticePeriodComponent(false);
     }
     var salaryFieldMap = {
         current: {
