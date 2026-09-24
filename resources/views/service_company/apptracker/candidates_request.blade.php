@@ -1508,7 +1508,21 @@
                     url: url,
                     success: function(response) {
                         benchReqMarkCandidateRowAdded($btn);
-                        benchReqToast.fire({ icon: 'success', title: 'Added successfully to public bench' });
+                        benchReqToast.fire({ icon: 'success', title: 'Added successfully to job' });
+
+                        // Dynamically update KPI header counters on page
+                        var $poolCounter = $('#pool_counter');
+                        if ($poolCounter.length) {
+                            var currentPool = parseInt($poolCounter.text()) || 0;
+                            $poolCounter.text(currentPool + 1);
+                        }
+                        var $reqCounter = $('#benchTalentReq_counter');
+                        if ($reqCounter.length) {
+                            var currentReq = parseInt($reqCounter.text()) || 0;
+                            if (currentReq > 0) {
+                                $reqCounter.text(currentReq - 1);
+                            }
+                        }
                     },
                     error: function() {
                         restoreButton();

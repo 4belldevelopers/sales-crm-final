@@ -23,6 +23,8 @@
         $relationMap = GeneralMethod::getrRcommendationRelationDataBulk($pageViewerCompanyId, $pageJobIds);
         $benchReqMap = GeneralMethod::benchRequestCheckBulk($condidate_id, $pageJobIds);
         $skillsByJob = DB::table('job_metronics_skills')->whereIn('job_id', $pageJobIds)->get()->groupBy('job_id');
+        $pageCategoryIds = array_values(array_filter(array_map(fn ($r) => $r['category_id'] ?? null, $data)));
+        $categoriesMap = !empty($pageCategoryIds) ? DB::table('job_categories')->whereIn('id', $pageCategoryIds)->pluck('name', 'id')->toArray() : [];
     @endphp
     @foreach ($data as $rowArr)
     @php
@@ -67,6 +69,11 @@
        second. */
     $clientTypeId   = (string) ($row->comId ?? $row->companyidcount ?? '');
     if ($clientTypeId === '' || $clientTypeId === '0') { $clientTypeId = ''; }
+
+    $deptName = $row->v2_category_name ?? ($row->category_name ?? ($categoriesMap[$row->category_id ?? 0] ?? ''));
+    if (empty($deptName)) {
+        $deptName = 'Marketing / Content';
+    }
 
     $bgTextDecore = $strVal = '';
         $str = trim(@$row->title);
@@ -218,8 +225,8 @@
                         <h2 class="jc-job-title client-show-detail" data-row-id="{{ $row->id }}" title="{{ @$row->title }}">
                             {{ ucwords(mb_substr(@$row->title, 0, 40)) }}
                         </h2>
-                        <div class="jc-job-dept" title="{{ @$row->clients_name ?: (@$row->client_name ?: '') }}">
-                            {{ ucwords(@$row->clients_name ?: (@$row->client_name ?: 'Marketing / Content')) }}
+                        <div class="jc-job-dept" title="{{ $deptName }}">
+                            {{ ucwords($deptName) }}
                         </div>
                         <div class="skills-row">
                             @if(!empty($skillArr))
@@ -261,10 +268,6 @@
                         <div class="jc-meta-item" title="Salary">
                             <i class="fa-solid fa-indian-rupee-sign"></i>
                             <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salaryModeShort }}</span>
-                        </div>
-                        <div class="jc-meta-item" title="Industry">
-                            <i class="fa-regular fa-building"></i>
-                            <span>{{ ucwords(@$row->clients_name ?: 'Marketing / Content') }}</span>
                         </div>
                     </div>
 
@@ -341,9 +344,13 @@
                             </a>
                         @else
                             @if ($benchRequestCheck->ac_status == 1)
-                                <span class="action-status action-status--added"><i class="fa-solid fa-check"></i> Added</span>
+                                <a href="javascript:void(0);" class="btn-cta-primary btn-cta-added disabled" style="pointer-events:none;">
+                                    <i class="fa-solid fa-check me-1"></i> Added
+                                </a>
                             @else
-                                <span class="action-status action-status--sent"><i class="fa-regular fa-clock"></i> Request sent</span>
+                                <a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;">
+                                    <i class="fa-regular fa-clock me-1"></i> Request Sent
+                                </a>
                             @endif
                         @endif
 

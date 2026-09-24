@@ -9107,16 +9107,20 @@ END:VCALENDAR";
         }
         $elasticService = app(ElasticService::class);
         $map = [];
+        $intJobIds = array_values(array_unique(array_map('intval', $jobIds)));
         try {
             $response = $elasticService->getClient()->search([
                 'index' => ELASTIC_CANDIDATES_REQUEST,
                 'body' => [
-                    'size' => count($jobIds) * 2,
+                    'size' => count($intJobIds) * 10,
+                    'sort' => [
+                        ['id' => ['order' => 'desc']],
+                    ],
                     'query' => [
                         'bool' => [
                             'filter' => [
-                                ['term' => ['candidate_id' => $candidate_id]],
-                                ['terms' => ['job_id' => array_map('intval', $jobIds)]],
+                                ['term' => ['candidate_id' => (int) $candidate_id]],
+                                ['terms' => ['job_id' => $intJobIds]],
                             ],
                         ],
                     ],
@@ -9124,13 +9128,39 @@ END:VCALENDAR";
             ]);
             foreach ($response['hits']['hits'] ?? [] as $hit) {
                 $src = $hit['_source'] ?? [];
-                $jid = $src['job_id'] ?? null;
+                $jid = isset($src['job_id']) ? (int) $src['job_id'] : null;
                 if ($jid !== null && ! isset($map[$jid])) {
                     $map[$jid] = (object) $src;
                 }
             }
         } catch (\Throwable $e) {
             \Log::error('benchRequestCheckBulk failed: '.$e->getMessage());
+        }
+
+        // MySQL Fallback: Ensure 100% data authoritative accuracy if ES is un-indexed or lagging
+        $missingJobIds = array_diff($intJobIds, array_keys($map));
+        if (! empty($missingJobIds)) {
+            $dbRows = DB::table('rec_candidate_assign')
+                ->where('source_application_id', (int) $candidate_id)
+                ->whereIn('source_jobid', $missingJobIds)
+                ->orderBy('id', 'desc')
+                ->get();
+            foreach ($dbRows as $r) {
+                $jid = (int) $r->source_jobid;
+                if (! isset($map[$jid])) {
+                    $map[$jid] = (object) [
+                        'id' => $r->id,
+                        'rec_candidate_assign_id' => $r->id,
+                        'candidate_id' => $r->source_application_id,
+                        'job_id' => $r->source_jobid,
+                        'ac_status' => $r->ac_status,
+                        'source_from_company_id' => $r->source_from_company_id,
+                        'source_company_id' => $r->source_company_id,
+                        'created_at' => $r->created_at,
+                        'updated_at' => $r->updated_at,
+                    ];
+                }
+            }
         }
 
         return $map;
@@ -13740,32 +13770,56 @@ END:VCALENDAR";
 
     public static function benchRequestCheck($candidate_id, $job_id)
     {
-
         $elasticService = app(ElasticService::class);
-
-        $params = [
-            'index' => ELASTIC_CANDIDATES_REQUEST,
-            'body' => [
-                'size' => 1,
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['term' => ['candidate_id' => $candidate_id]],
-                            ['term' => ['job_id' => $job_id]],
+        $data = null;
+        try {
+            $params = [
+                'index' => ELASTIC_CANDIDATES_REQUEST,
+                'body' => [
+                    'size' => 1,
+                    'sort' => [
+                        ['id' => ['order' => 'desc']],
+                    ],
+                    'query' => [
+                        'bool' => [
+                            'filter' => [
+                                ['term' => ['candidate_id' => (int) $candidate_id]],
+                                ['term' => ['job_id' => (int) $job_id]],
+                            ],
                         ],
                     ],
                 ],
-            ],
-        ];
+            ];
 
-        $response = $elasticService->getClient()->search($params);
+            $response = $elasticService->getClient()->search($params);
+            $hit = $response['hits']['hits'][0] ?? null;
+            $data = $hit ? (object) $hit['_source'] : null;
+        } catch (\Throwable $e) {
+            \Log::error('benchRequestCheck failed: '.$e->getMessage());
+        }
 
-        $hit = $response['hits']['hits'][0] ?? null;
-
-        $data = $hit ? (object) $hit['_source'] : null;
+        if (! $data) {
+            $dbRow = DB::table('rec_candidate_assign')
+                ->where('source_application_id', (int) $candidate_id)
+                ->where('source_jobid', (int) $job_id)
+                ->orderBy('id', 'desc')
+                ->first();
+            if ($dbRow) {
+                $data = (object) [
+                    'id' => $dbRow->id,
+                    'rec_candidate_assign_id' => $dbRow->id,
+                    'candidate_id' => $dbRow->source_application_id,
+                    'job_id' => $dbRow->source_jobid,
+                    'ac_status' => $dbRow->ac_status,
+                    'source_from_company_id' => $dbRow->source_from_company_id,
+                    'source_company_id' => $dbRow->source_company_id,
+                    'created_at' => $dbRow->created_at,
+                    'updated_at' => $dbRow->updated_at,
+                ];
+            }
+        }
 
         return $data;
-
     }
 
     public static function InternalClientCandidatesCount($client_id)

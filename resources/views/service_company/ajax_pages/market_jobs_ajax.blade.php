@@ -192,10 +192,6 @@
                     <i class="fa-solid fa-indian-rupee-sign"></i>
                     <span>{!! $salary_currency !!}{{ $min_salary }} – {{ $max_salary }} / {{ $salModeShort }}</span>
                 </div>
-                <div class="jc-meta-item" title="Industry">
-                    <i class="fa-regular fa-building"></i>
-                    <span>{{ $ind_name ?: ($deptName ?: 'IT Services') }}</span>
-                </div>
             </div>
 
             {{-- COL 3: Dates & Status --}}
