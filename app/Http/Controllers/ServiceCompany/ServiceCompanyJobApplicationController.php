@@ -5057,6 +5057,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application->posted_by_image = $data->posted_by_image;
             $this->application->np_id = $data->np_id;
             $this->application->serving_notice_period_mode = $data->serving_notice_period_mode;
+            $this->application->last_working_date = $data->last_working_date ?? ($this->application->last_working_date ?? null);
             $this->application->rel_exp = $data->rel_exp;
             $this->application->qualification_name = $data->qualification_name;
             $this->application->dob = $data->dob;
@@ -5310,6 +5311,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application->posted_by_image = $data->posted_by_image;
             $this->application->np_id = $data->np_id;
             $this->application->serving_notice_period_mode = $data->serving_notice_period_mode;
+            $this->application->last_working_date = $data->last_working_date ?? ($this->application->last_working_date ?? null);
             $this->application->rel_exp = $data->rel_exp;
             $this->application->qualification_name = $data->qualification_name;
             $this->application->dob = $data->dob;
