@@ -689,48 +689,69 @@
               </div>
             </div>
 
-            <!-- Availability and Work Preferences -->
-            <div class="fs aw-card candidate-card candidate-availability-card">
+            <!-- Notice Period and Joining Details -->
+            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
               <div class="fsh candidate-card-header aw-hero">
                 <div class="candidate-card-title aw-hero-title">
                   <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <span><strong>Availability &amp; Work Preferences</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body aw-body">
-                <div class="candidate-availability-grid">
-                  <div class="fg fv-row">
-                    <label>Notice Period Status <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
-                    </select></div>
+                <div class="candidate-notice-status-block">
+                  <label>Notice Period Status <span class="rq">*</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Status">
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="2" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="1" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="0" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                    </button>
                   </div>
+                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
+                    <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                    <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                  </select>
+                </div>
+
+                <div class="candidate-notice-details-grid">
                   <div class="fg fv-row candidate-notice-detail">
                     <label>Notice Period / Last Working Date <span class="rq">*</span></label>
-                    <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
-                      <div><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
-                      <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                      <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
+                        <div class="candidate-notice-status-copy"><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
+                        <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date or notice period" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
+                      </div>
+                      <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
+                        <option value="">Select Notice Period</option>
+                        @php
+                            for ($i = 1; $i <= 200; $i++) {
+                                    $s = 'Day';
+                                    if($i > 1){
+                                        $s = 'Days';
+                                    }
+                                  $selected = ($i == @$application->np_id) ? 'selected' : '';
+                                echo "<option value="$i" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
+                      <input type="text" id="calender" name="calender" style="display:none">
                     </div>
-                    <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                      <option value="">Select Notice Period</option>
-                      @php
-                          for ($i = 1; $i <= 200; $i++) {
-                                  $s = 'Day';
-                                  if($i > 1){
-                                      $s = 'Days';
-                                  }
-                                $selected = ($i == @$application->np_id) ? 'selected' : '';
-                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                          }
-                      @endphp
-                    </select>
-                    <input type="text" id="calender" name="calender" style="display:none">
                   </div>
                   <div class="fg fv-row">
                     <label>Reason for Job Change</label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
+                    <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
                   </div>
                 </div>
               </div>
@@ -774,6 +795,46 @@
                   <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
                   <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
                 </div>
+                <div class="candidate-salary-header-currency">
+                  <label for="current_ctc_cur">Currency</label>
+                  <select id="current_ctc_cur" name="current_ctc_cur">
+                    @php
+                        $current_ctc_cur = "";
+                        $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
+                        foreach($currency as $key=>$val){
+                            $sel = '';
+                            if($current_ctc_cur===null){
+                              if($currency_code==$val){
+                                $sel = 'selected="selected"';
+                              }
+                            }else{
+                              if($current_ctc_cur == $key){
+                                $sel = 'selected="selected"';
+                              }
+                            }
+                            echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                        }
+                    @endphp
+                  </select>
+                  <div class="d-none">
+                    <select name="current_ectc_cur" id="current_ectc_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                    <select name="current_th_cur" id="current_th_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                  </div>
+                </div>
               </div>
               <div class="fsc candidate-card-body br-body">
                 <div class="candidate-salary-grid">
@@ -813,80 +874,18 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row">
-                        <label>Currency <span class="rq">*</span></label>
-                        <select id="current_ctc_cur" name="current_ctc_cur">
-                          @php
-                              $current_ctc_cur = "";
-                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              foreach($currency as $key=>$val){
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }
-                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-                              }
-                          @endphp
-                        </select>
-                      </div>
                       <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
-                      <div class="candidate-salary-auto"><span>Auto Calculated</span><div><strong>Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div><div><strong>Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div></div>
                     </div>
                     <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row">
-                        <label>Currency <span class="rq">*</span></label>
-                        <select name="current_ectc_cur" id="current_ectc_cur">
-                          @php
-                              $current_ctc_cur = "";
-                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              foreach($currency as $key=>$val){
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }
-                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-                              }
-                          @endphp
-                        </select>
-                      </div>
                       <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row">
-                        <label>Currency <span class="rq">*</span></label>
-                        <select name="current_th_cur" id="current_th_cur">
-                          @php
-                              $current_ctc_cur = "";
-                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              foreach($currency as $key=>$val){
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel = 'selected="selected"';
-                                    }
-                                  }
-                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
-                              }
-                          @endphp
-                        </select>
-                      </div>
                       <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                    </div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-current-auto-label-one">Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-current-auto-label-two">Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div>
                     </div>
                   </section>
 
@@ -899,7 +898,6 @@
                     </div>
                     <div class="candidate-salary-period is-active" data-salary-panel="expected" data-salary-period="annual">
                       <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
-                      <div class="candidate-salary-auto"><span>Auto Calculated</span><div><strong>Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div><div><strong>Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div></div>
                     </div>
                     <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="monthly">
                       <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
@@ -907,13 +905,18 @@
                     <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="hourly">
                       <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-expected-auto-label-one">Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-expected-auto-label-two">Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div>
+                    </div>
                   </section>
 
                   <aside class="candidate-salary-panel candidate-salary-summary">
                     <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
                     <div class="candidate-salary-summary-list">
-                      <div><span>Current Salary</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
-                      <div><span>Expected Salary</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
+                      <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
+                      <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
                       <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
                     </div>
                     <div class="fg fv-row candidate-hike-field"><label>Hike Percentage</label><div class="ig"><input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" /><span class="ig-a">%</span></div><small>Calculated from annual salary.</small></div>
@@ -934,7 +937,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Skills Details -->
             <div class="fs se-card job-skills-card candidate-card">
               <div class="fsh candidate-card-header se-hero">
@@ -4039,6 +4041,37 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         syncProfessionalProfile();
     }
 
+    var noticePeriodSelect = root.querySelector('#serving_notice_period');
+    var noticePeriodOptions = root.querySelectorAll('.candidate-notice-option');
+
+    function syncNoticePeriodOptions() {
+        if (!noticePeriodSelect) {
+            return;
+        }
+
+        noticePeriodOptions.forEach(function (option) {
+            var selected = option.getAttribute('data-notice-period-value') === String(noticePeriodSelect.value);
+            option.classList.toggle('is-selected', selected);
+            option.setAttribute('aria-checked', selected ? 'true' : 'false');
+        });
+    }
+
+    noticePeriodOptions.forEach(function (option) {
+        option.addEventListener('click', function () {
+            if (!noticePeriodSelect) {
+                return;
+            }
+
+            noticePeriodSelect.value = option.getAttribute('data-notice-period-value');
+            noticePeriodSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            syncNoticePeriodOptions();
+        });
+    });
+
+    if (noticePeriodSelect) {
+        noticePeriodSelect.addEventListener('change', syncNoticePeriodOptions);
+        syncNoticePeriodOptions();
+    }
     var salaryFieldMap = {
         current: {
             annual: 'pay_annual',
@@ -4051,12 +4084,18 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             hourly: 'ectc'
         }
     };
-
-    var salaryCurrencyMap = {
-        annual: 'current_ctc_cur',
-        monthly: 'current_ectc_cur',
-        hourly: 'current_th_cur'
+    var salaryPeriodLabels = {
+        annual: 'Annual',
+        monthly: 'Monthly',
+        hourly: 'Hourly'
     };
+    var salaryHoursPerMonth = 160;
+    var salaryMonthsPerYear = 12;
+    var salaryCurrencySelect = root.querySelector('#current_ctc_cur');
+    var salaryCurrencyMirrors = [
+        root.querySelector('#current_ectc_cur'),
+        root.querySelector('#current_th_cur')
+    ];
 
     function fieldValue(id) {
         var field = root.querySelector('#' + id);
@@ -4064,17 +4103,17 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         return Number.isFinite(value) ? value : 0;
     }
 
-    function currencyLabel(period) {
-        var select = root.querySelector('#' + salaryCurrencyMap[period]);
-        if (!select || select.selectedIndex < 0) {
+    function currencyLabel() {
+        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) {
             return '';
         }
 
-        return select.options[select.selectedIndex].text.trim();
+        return salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex].text.trim();
     }
 
     function formatAmount(value) {
         return new Intl.NumberFormat('en-IN', {
+            minimumFractionDigits: 0,
             maximumFractionDigits: 2
         }).format(value || 0);
     }
@@ -4084,19 +4123,54 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         return activeButton ? activeButton.getAttribute('data-salary-period') : 'annual';
     }
 
-    function updateSalaryAutoValues(group) {
-        var annual = fieldValue(salaryFieldMap[group].annual);
-        var monthly = fieldValue(salaryFieldMap[group].monthly) || (annual / 12);
-        var hourly = fieldValue(salaryFieldMap[group].hourly) || (annual / 2080);
-        var prefix = group === 'current' ? 'candidate-current-' : 'candidate-expected-';
-        var monthlyOutput = root.querySelector('#' + prefix + 'monthly-auto');
-        var hourlyOutput = root.querySelector('#' + prefix + 'hourly-auto');
+    function salaryValuesFromPeriod(period, amount) {
+        var values = {
+            annual: 0,
+            monthly: 0,
+            hourly: 0
+        };
 
-        if (monthlyOutput) {
-            monthlyOutput.textContent = formatAmount(monthly);
+        if (period === 'annual') {
+            values.annual = amount;
+            values.monthly = amount / salaryMonthsPerYear;
+            values.hourly = values.monthly / salaryHoursPerMonth;
+        } else if (period === 'monthly') {
+            values.monthly = amount;
+            values.annual = amount * salaryMonthsPerYear;
+            values.hourly = amount / salaryHoursPerMonth;
+        } else {
+            values.hourly = amount;
+            values.monthly = amount * salaryHoursPerMonth;
+            values.annual = values.monthly * salaryMonthsPerYear;
         }
-        if (hourlyOutput) {
-            hourlyOutput.textContent = formatAmount(hourly);
+
+        return values;
+    }
+
+    function updateSalaryAutoValues(group) {
+        var activePeriod = activeSalaryPeriod(group);
+        var activeAmount = fieldValue(salaryFieldMap[group][activePeriod]);
+        var values = salaryValuesFromPeriod(activePeriod, activeAmount);
+        var otherPeriods = ['annual', 'monthly', 'hourly'].filter(function (period) {
+            return period !== activePeriod;
+        });
+        var prefix = group === 'current' ? 'candidate-current-' : 'candidate-expected-';
+        var labelOne = root.querySelector('#' + prefix + 'auto-label-one');
+        var labelTwo = root.querySelector('#' + prefix + 'auto-label-two');
+        var outputOne = root.querySelector('#' + prefix + 'monthly-auto');
+        var outputTwo = root.querySelector('#' + prefix + 'hourly-auto');
+
+        if (labelOne) {
+            labelOne.textContent = salaryPeriodLabels[otherPeriods[0]] + ' Salary';
+        }
+        if (labelTwo) {
+            labelTwo.textContent = salaryPeriodLabels[otherPeriods[1]] + ' Salary';
+        }
+        if (outputOne) {
+            outputOne.textContent = formatAmount(values[otherPeriods[0]]);
+        }
+        if (outputTwo) {
+            outputTwo.textContent = formatAmount(values[otherPeriods[1]]);
         }
     }
 
@@ -4105,19 +4179,46 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             var period = activeSalaryPeriod(group);
             var amount = fieldValue(salaryFieldMap[group][period]);
             var target = root.querySelector(group === 'current' ? '#candidateSalaryCurrentSummary' : '#candidateSalaryExpectedSummary');
+            var label = root.querySelector(group === 'current' ? '#candidateSalaryCurrentLabel' : '#candidateSalaryExpectedLabel');
 
             if (target) {
-                target.textContent = currencyLabel(period) + ' ' + formatAmount(amount);
+                target.textContent = currencyLabel() + ' ' + formatAmount(amount);
+            }
+            if (label) {
+                label.textContent = (group === 'current' ? 'Current Salary (' : 'Expected Salary (') + salaryPeriodLabels[period] + ')';
             }
 
             updateSalaryAutoValues(group);
         });
 
+        var currentAnnual = fieldValue(salaryFieldMap.current.annual);
+        var expectedAnnual = fieldValue(salaryFieldMap.expected.annual);
+        var calculatedHike = currentAnnual > 0 ? ((expectedAnnual - currentAnnual) / currentAnnual) * 100 : 0;
         var hike = root.querySelector('#percentage_hike');
+        var enteredHike = hike ? parseFloat(hike.value) : NaN;
         var hikeOutput = root.querySelector('#candidateSalaryHikeSummary');
+
         if (hikeOutput) {
-            hikeOutput.textContent = formatAmount(hike ? parseFloat(hike.value) || 0 : 0) + '%';
+            hikeOutput.textContent = formatAmount(Number.isFinite(enteredHike) ? enteredHike : calculatedHike) + '%';
         }
+    }
+
+    function syncSalaryCurrency() {
+        if (!salaryCurrencySelect) {
+            return;
+        }
+
+        salaryCurrencyMirrors.forEach(function (select) {
+            if (select) {
+                select.value = salaryCurrencySelect.value;
+            }
+        });
+
+        root.querySelectorAll('.changeTextCurrency').forEach(function (label) {
+            label.textContent = currencyLabel();
+        });
+
+        updateSalarySummary();
     }
 
     root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
@@ -4143,17 +4244,24 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     [
         'pay_annual', 'pay_monthly', 'ctc',
         'bill_annual', 'bill_monthly', 'ectc',
-        'current_ctc_cur', 'current_ectc_cur', 'current_th_cur',
         'percentage_hike'
     ].forEach(function (id) {
         var field = root.querySelector('#' + id);
         if (field) {
-            field.addEventListener('input', updateSalarySummary);
-            field.addEventListener('change', updateSalarySummary);
+            field.addEventListener('input', function () {
+                window.setTimeout(updateSalarySummary, 0);
+            });
+            field.addEventListener('change', function () {
+                window.setTimeout(updateSalarySummary, 0);
+            });
         }
     });
 
-    updateSalarySummary();
+    if (salaryCurrencySelect) {
+        salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
+    }
+
+    syncSalaryCurrency();
 })();
 </script>
 

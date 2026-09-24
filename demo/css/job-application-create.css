@@ -1512,3 +1512,275 @@
         flex-direction: column;
     }
 }
+
+/* Purpose: attached-design treatment for Notice Period & Joining Details only. */
+.job-candidate-create .notice-joining-card .candidate-card-header {
+    min-height: 70px !important;
+    background: #fff !important;
+}
+
+.job-candidate-create .notice-joining-card .aw-hero-icon {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    flex-basis: 46px !important;
+    color: #111a3f !important;
+    background: #ffc400 !important;
+    box-shadow: 0 8px 18px rgba(255, 196, 0, .2) !important;
+}
+
+.job-candidate-create .notice-joining-card .aw-body {
+    padding: 16px !important;
+}
+
+.job-candidate-create .candidate-notice-status-block > label,
+.job-candidate-create .candidate-notice-details-grid .fg > label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--jac-text);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-notice-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.job-candidate-create .candidate-notice-option {
+    display: grid;
+    grid-template-columns: 18px 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 82px;
+    padding: 12px 14px;
+    border: 1px solid #dce2ee;
+    border-radius: 7px;
+    color: var(--jac-text);
+    background: #fff;
+    font-family: 'Poppins', sans-serif;
+    text-align: left;
+    letter-spacing: 0;
+    transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.job-candidate-create .candidate-notice-option:hover,
+.job-candidate-create .candidate-notice-option:focus-visible {
+    border-color: #ffc400;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .12);
+}
+
+.job-candidate-create .candidate-notice-option.is-selected {
+    border-color: #f2b900;
+    background: #fffaf0;
+    box-shadow: 0 0 0 1px #f2b900;
+}
+
+.job-candidate-create .candidate-notice-option-radio {
+    width: 17px;
+    height: 17px;
+    border: 2px solid #8b96b1;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: inset 0 0 0 4px #fff;
+}
+
+.job-candidate-create .candidate-notice-option.is-selected .candidate-notice-option-radio {
+    border-color: #ffc400;
+    background: #111a3f;
+}
+
+.job-candidate-create .candidate-notice-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 17px;
+}
+
+.job-candidate-create .candidate-notice-option-icon--immediate {
+    color: #f4b900;
+    background: #fff5d2;
+}
+
+.job-candidate-create .candidate-notice-option-icon--serving {
+    color: #1670e8;
+    background: #eaf3ff;
+}
+
+.job-candidate-create .candidate-notice-option-icon--select {
+    color: #6941e8;
+    background: #f1ecff;
+}
+
+.job-candidate-create .candidate-notice-option-copy {
+    min-width: 0;
+}
+
+.job-candidate-create .candidate-notice-option-copy strong,
+.job-candidate-create .candidate-notice-option-copy small {
+    display: block;
+    overflow-wrap: anywhere;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-notice-option-copy strong {
+    color: var(--jac-text);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.job-candidate-create .candidate-notice-option-copy small {
+    margin-top: 5px;
+    color: var(--jac-muted);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.job-candidate-create .candidate-notice-native-select {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+}
+
+.job-candidate-create .candidate-notice-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
+    margin-top: 16px;
+}
+
+.job-candidate-create .candidate-notice-details-grid .fg {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.job-candidate-create .candidate-notice-input-shell {
+    position: relative;
+    width: 100%;
+}
+
+.job-candidate-create .candidate-notice-input-shell > i {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 14px;
+    color: #65728f;
+    font-size: 14px;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.job-candidate-create .candidate-notice-input-shell #snp-immediate,
+.job-candidate-create .candidate-notice-input-shell .candidate-date-picker {
+    width: 100%;
+}
+
+.job-candidate-create .candidate-notice-input-shell #snp-immediate > .candidate-notice-status-copy {
+    display: none !important;
+}
+
+.job-candidate-create .candidate-notice-input-shell #snp-immediate > .candidate-date-picker {
+    flex: 1 1 auto;
+}
+
+.job-candidate-create .candidate-notice-input-shell #np_id_display,
+.job-candidate-create .candidate-notice-input-shell #ddl_np_id {
+    width: 100%;
+    min-height: 44px;
+    padding-left: 42px !important;
+}
+
+.job-candidate-create .candidate-reason-control > input {
+    min-height: 44px !important;
+}
+
+@media (max-width: 1050px) {
+    .job-candidate-create .candidate-notice-options {
+        grid-template-columns: 1fr;
+    }
+
+    .job-candidate-create .candidate-notice-option {
+        min-height: 72px;
+    }
+}
+
+@media (max-width: 767px) {
+    .job-candidate-create .candidate-notice-details-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+}
+
+/* Purpose: shared salary currency control and period-aware calculation presentation. */
+.job-candidate-create .salary-card .candidate-card-header {
+    gap: 16px;
+}
+
+.job-candidate-create .candidate-salary-header-currency {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+}
+
+.job-candidate-create .candidate-salary-header-currency > label {
+    margin: 0;
+    color: var(--jac-text);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-salary-header-currency > select {
+    width: 140px;
+    min-height: 36px;
+    padding: 7px 32px 7px 10px;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    color: var(--jac-text) !important;
+    background-color: #fff !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-salary-auto--dynamic {
+    margin: 0 10px 10px;
+}
+
+.job-candidate-create .candidate-salary-panel--current,
+.job-candidate-create .candidate-salary-panel--expected {
+    display: flex;
+    flex-direction: column;
+}
+
+.job-candidate-create .candidate-salary-panel--current .candidate-salary-auto--dynamic,
+.job-candidate-create .candidate-salary-panel--expected .candidate-salary-auto--dynamic {
+    margin-top: auto;
+}
+
+@media (max-width: 767px) {
+    .job-candidate-create .salary-card .candidate-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .job-candidate-create .candidate-salary-header-currency {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
