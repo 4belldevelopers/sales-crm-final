@@ -4,13 +4,14 @@
 
 Redesign the Service Company Add Candidate page at `service_company/job-applications/create` by taking visual inspiration from the Add Talent page at `service_company/bench-candidates/create`, while preserving all existing Add Candidate business logic, field names, IDs, validation hooks, AJAX submit routes, resume parsing, interview slot behavior, job-question behavior, and hidden job context.
 
-This document is the pre-code design map requested before implementation.
+This document is the approved design map and implementation record for the completed card redesign.
 
 ## Source Pages Reviewed
 
 - Inspiration page: `resources/views/service_company/bench-candidates/create.blade.php`
 - Target page: `resources/views/service_company/job-applications/create.blade.php`
-- Shared stylesheet currently used by both flows: `demo/css/candidate-form.css`
+- Add Talent visual reference stylesheet: `demo/css/candidate-form.css`
+- Add Candidate isolated stylesheet: `demo/css/job-application-create.css`
 - Add Talent style include: `resources/views/service_company/bench-candidates/partials/_form_styles.blade.php`
 - Routes: `routes/service.php`
 
@@ -38,7 +39,7 @@ These Add Candidate areas should receive the Add Talent visual treatment because
 | Notice Period and Work Mode | `job-applications/create.blade.php:723-760` and `536-547` | Add Talent `aw-card` at `bench-candidates/create.blade.php:800-899` | Use the same availability card treatment. Preserve `serving_notice_period`, `np_id`, `ddl_np_id`, `calender`, and `wm` radio values. |
 | Salary Details | `job-applications/create.blade.php:768-966` | Add Talent `br-card` visual structure at `bench-candidates/create.blade.php:900-1163` | Use only the rate-panel design pattern. Keep Add Candidate salary meaning: Current CTC, Expected CTC, salary currency/mode, offer holding, percentage hike, and comments. Do not copy Add Talent commercial model, free/paid service, pay-rate/bill-rate business copy, or marketplace margin logic unless the existing Add Candidate logic already supports it. |
 | Job Skills Details | `job-applications/create.blade.php:973-1074` | Add Talent `se-card` table shell at `bench-candidates/create.blade.php:1163-1194` | Copy table styling, card header, and responsive scroll. Do not add Add Skill, Popular Skills, or delete actions because Add Candidate job skills are job-driven and readonly skill names. |
-| Additional Information | `job-applications/create.blade.php:1226-1265` | Add Talent additional/social card at `bench-candidates/create.blade.php:1267-1354` | Use branded/social field styling for LinkedIn, GitHub, Behance, Other Link, visa, and reference. Preserve existing validation hooks for LinkedIn/GitHub. |
+| Professional Links and Additional Details | Existing combined Add Candidate information section | Add Talent Professional Links and Additional Details cards | Split the visual card only. Keep `linkedin`, `github`, `behance`, `otherLink`, `visastatu`, and `referencename` unchanged. |
 | Recruiter Note | `job-applications/create.blade.php:1270-1289` | Add Talent card framing style, not a direct feature copy | Improve visual framing around template selector and CKEditor textarea. Preserve `recruiter_note_template_select`, `recruiter_note`, and CKEditor setup. |
 
 ## Add Candidate Unique Sections To Keep, Not Blind-Copy
@@ -65,38 +66,39 @@ These Add Talent elements should not be added to Add Candidate because the funct
 - Popular Skills and Add Skill actions from Add Talent skills table. Add Candidate job skills come from the job requirement and have readonly skill names.
 - In-House Talent badges/copy. Add Candidate should use Candidate / Job Candidate language.
 
-## Proposed Target Card Order
+## Implemented Target Card Order
 
-1. Add Candidate toolbar with Submit/Update action.
-2. Resume Upload + Career Summary, using Add Talent's two-card layout.
-3. Candidate Profile, including name, email, phone, location, qualification, secondary contact, gender, nationality, and DOB.
-4. Primary Skills, preserving the Tagify `skills` input.
-5. Professional Profile, including current company, current designation, and employment type.
-6. Experience Details, including total and relevant experience.
-7. Availability & Work Preferences, including notice period, last working date/notice days, preferred work mode, and reason for job change.
-8. Salary Details, redesigned with rate panels but keeping Add Candidate CTC/ECTC semantics.
-9. Job Skills Details, styled like Add Talent skills table but without add/remove/popular-skill actions.
-10. Job Questions, only when `$job_additional_detail` exists.
-11. Availability for Next 3 Days, preserving all three interview slot fields.
-12. Additional Information.
-13. Recruiter Note.
-
-## Files Expected To Change During Implementation
-
-Primary implementation should be limited to:
+1. Add Candidate toolbar with the existing Submit/Update action.
+2. Resume Upload and Career Summary in the existing two-card layout.
+3. Candidate Profile: Full Name, Primary Email, Primary Contact Number, Current Location, Highest Qualification, Nationality, plus collapsible secondary details for Gender, Date of Birth, Secondary Email, and Secondary Contact Number.
+4. Experience Details: Total Experience and Relevant Experience.
+5. Professional Profile: Current Company, Current Designation, and Employment Type; visually hidden when Total Experience is Fresher without disabling or clearing its fields.
+6. Availability & Work Preferences: Notice Period Status, notice days or Last Working Date, and Reason for Job Change.
+7. Preferred Work Mode as its own card: Remote, Hybrid, and Work From Office.
+8. Primary Skills, preserving the original Tagify `skills` input.
+9. Salary Details: Current Salary, Expected Salary, Salary Summary, Offer in Hand, Hike Percentage, and Comments using the Add Talent commercial-card visual language only.
+10. Job Skills Details, preserving job-driven skill rows and values.
+11. Screening Questions, preserving the original conditional job-question generator and submitted field names.
+12. Availability for Next 3 Days, preserving all three interview slots and mode handlers.
+13. Professional Links: LinkedIn, GitHub, Behance, and Portfolio / Website.
+14. Additional Details: Current Visa Status and Professional Reference.
+15. Recruiter Note, preserving template selection and CKEditor integration.
+## Files Changed
 
 - `resources/views/service_company/job-applications/create.blade.php`
+- `demo/css/job-application-create.css`
+- `docs/V2_Submit_Candidate/Add-Candidate-Create-Design-Replication-Plan.md`
 
-Possible styling file, only if existing CSS cannot fully support the target layout:
+All new styles are scoped under `.job-candidate-create`; no Add Talent, Bench Candidate, controller, route, request, model, query, or persistence file was changed.
+## Verification Record
 
-- `demo/css/candidate-form.css`
-
-Any CSS added for Add Candidate should be scoped with an Add Candidate page wrapper/class so existing Add Talent, Bench Candidate, App Tracker, and drawer designs do not change.
-
-## Verification Needed After Implementation
-
-- Run PHP syntax check on `resources/views/service_company/job-applications/create.blade.php` using the local XAMPP PHP path if plain `php` is unavailable.
-- Run whitespace/diff validation.
-- Confirm source search that these IDs and names still exist: `createForm`, `save-form`, `update-form`, `resume`, `resumeCheck`, `resume_session_uuid`, `careersummary`, `full_name`, `email`, `phone`, `kt_tagify_work_location`, `kt_tagify_2`, `serving_notice_period`, `np_id`, `ddl_np_id`, `wm`, `pay_annual`, `bill_annual`, `skillExperienceWrapper` or job skill table names, `interviewDateOne`, `interview_mode_one`, `recruiter_note`.
-- Browser verification is recommended for 1366x768 and 1920x1080, especially card heights, upload panel behavior, CKEditor note area, interview slot wrapping, and no page-level horizontal scroll.
-
+- PHP syntax: passed for `resources/views/service_company/job-applications/create.blade.php`.
+- Laravel Blade compilation: passed with php artisan view:cache.
+- Whitespace and patch validation: passed with `git diff --check`.
+- Form contract comparison against `HEAD`: all 80 original submitted field names remain; no field name was added or removed.
+- DOM hook comparison against `HEAD`: all 114 original IDs remain.
+- Field signature comparison: no named input changed its element type, input type, or ID.
+- Route comparison: no original Blade route expression was removed.
+- Inline handler comparison: no original `onclick`, `onchange`, `oninput`, or `onsubmit` hook was removed.
+- Added IDs are presentation-only: `candidateProfessionalProfile`, four salary auto-display IDs, and three salary summary IDs.
+- Live authenticated browser verification remains for the testing server at 1366x768, 1920x1080, and mobile widths.

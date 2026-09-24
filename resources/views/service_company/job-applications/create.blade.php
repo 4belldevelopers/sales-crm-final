@@ -447,86 +447,36 @@
             </div>
             <!--end::Upload Photo & Resume/CV-->
 
-            <!-- Basic Details -->
-            <div class="fs bd-card candidate-card">
+            <!-- Candidate Profile -->
+            <div class="fs bd-card candidate-card candidate-profile-card">
               <div class="fsh candidate-card-header bd-hero">
                 <div class="candidate-card-title bd-hero-title">
-                  <span class="candidate-card-icon bd-hero-icon"><i class="fa-regular fa-user" aria-hidden="true"></i></span>
-                  <span><strong>Candidate Profile</strong><small>Identity, contact details, location, education, and work preference.</small></span>
+                  <span class="candidate-card-icon bd-hero-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span><strong>Candidate Profile</strong><small>Basic information to identify and contact this candidate.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body bd-body">
-                <div class="g4">
+                <div class="candidate-profile-grid">
                   <div class="fg fv-row">
                     <label>Full Name <span class="rq">*</span></label>
-                    <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
-                      placeholder="Enter full name" />
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" /></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Gender</label>
-                    <select name="gender" id="gender">
-                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather
-                        Not Say</option>
-                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                    </select>
+                    <label>Primary Email <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" /></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Nationality</label>
-                    <select name="nationality" id="nationality">
-                      <option value="">Select nationality</option>
-                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
-                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
-                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
-                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
-                    </select>
+                    <label>Primary Contact Number <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code"></div></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()"
-                      placeholder="Select date" />
-                  </div>
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Enter Primary Email ID <span class="rq">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Email ID</label>
-                    <input type="email" name="secondrary_email" id="secondrary_email"
-                      value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
-                    </div>
-                  </div>
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row" style="grid-column: span 2">
                     <label>Current Location <span class="rq">*</span></label>
-                        <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Enter current location" />
+                    <div class="candidate-field-control candidate-field-control--tagify"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" /></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Highest Education <span class="rq">*</span></label>
-                    <select name="qualification" id="qualification">
-                      <option value="">Select Qualification</option>
+                    <label>Highest Qualification <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><select name="qualification" id="qualification">
+                      <option value="">Select qualification</option>
                       @foreach($qualification as $data_value)
                       @php
                       $sel = '';
@@ -536,86 +486,93 @@
                       @endphp
                       <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
                       @endforeach
-                    </select>
+                    </select></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <div class="rg">
-                      <div class="ri"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <label for="wr">Remote</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
-                        <label for="wh">Hybrid</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office</label>
-                      </div>
+                    <label>Nationality</label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-flag" aria-hidden="true"></i><select name="nationality" id="nationality">
+                      <option value="">Select nationality</option>
+                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
+                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
+                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
+                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+                    </select></div>
+                  </div>
+                </div>
+
+                <details class="candidate-secondary-details" {{ (!empty(@$application->gender) || !empty(@$application->dob) || !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile)) ? 'open' : '' }}>
+                  <summary>
+                    <span class="candidate-secondary-summary"><span class="candidate-secondary-icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span><span><strong>Additional Secondary Details</strong><small>Gender, date of birth, and optional secondary contact information.</small></span></span>
+                    <span class="candidate-secondary-toggle"><span class="candidate-secondary-show">Show Details</span><span class="candidate-secondary-hide">Hide Details</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                  </summary>
+                  <div class="candidate-secondary-grid">
+                    <div class="fg fv-row">
+                      <label>Gender</label>
+                      <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
+                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                      </select></div>
+                    </div>
+                    <div class="fg fv-row">
+                      <label>Date of Birth</label>
+                      <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
+                    </div>
+                    <div class="fg fv-row">
+                      <label>Secondary Email</label>
+                      <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" /></div>
+                    </div>
+                    <div class="fg fv-row">
+                      <label>Secondary Contact Number</label>
+                      <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code"></div></div>
                     </div>
                   </div>
-                </div>
+                </details>
               </div>
             </div>
 
-            <!-- Professional Details -->
-            <div class="fs fv-row se-card primary-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+            <!-- Experience Details -->
+            <div class="fs pd-experience-section-card candidate-card experience-details-card">
+              <div class="fsh candidate-card-header pd-experience-hero">
+                <div class="candidate-card-title pd-experience-hero-title">
+                  <span class="candidate-card-icon pd-experience-hero-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                  <span><strong>Experience Details</strong><small>Capture total and relevant experience for this job application.</small></span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body">
-              <div id="skillTags" class="skill-tags"></div>
-               <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
-              </div>
-            </div>
+              <div class="fsc candidate-card-body pd-experience-body">
+                @php
+                 $value = @$application->total_exp; // Convert to string to preserve decimal
+                 if(!is_null($value)){
+                  $total_exp = GeneralMethod::separateNumberParts($value);
+                  $exp_years = ($total_exp[0]);
+                  $exp_months = ($total_exp[1]);
+                  $selected_exp_year = ($exp_years);
+                  $selected_exp_month = ($exp_months);
+                 }else{
+                  $selected_exp_year = null;
+                  $selected_exp_month = null;
+                 }
 
-            <!-- Professional Details -->
-            <div class="fs pd-card candidate-card">
-              <div class="fsh candidate-card-header pd-hero">
-                <div class="candidate-card-title pd-hero-title">
-                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Professional Profile</strong><small>Employment, experience, and availability details for this application.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body pd-body">
-                <div class="candidate-subsection-head">
-                  <span><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
-                  <div><strong>Experience Details</strong><small>Current role and relevant professional experience.</small></div>
-                </div>
-                <div class="g4 candidate-subsection-grid">
-                  <div class="fg fv-row">
-                    <label>Current Company <span class="rq">*</span></label>
-                    <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Current Designation <span class="rq">*</span></label>
-                    <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Total Experience <span class="rq">*</span></label>
+                 $valuew = @$application->rel_exp;
+                 if(!is_null($value)){
+                  $total_rel_exp = GeneralMethod::separateNumberParts($valuew);
+                  $rel_exp_years = ($total_rel_exp[0]);
+                  $rel_exp_months = ($total_rel_exp[1]);
+                  $selected_rel_exp_year = ($rel_exp_years);
+                  $selected_rel_exp_month = ($rel_exp_months);
+                 }else{
+                  $selected_rel_exp_year = null;
+                  $selected_rel_exp_month = null;
+                 }
+                @endphp
+                <div class="candidate-experience-grid">
+                  <div class="candidate-experience-panel">
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-clock" aria-hidden="true"></i></span><strong>Total Experience</strong><span class="candidate-required-dot">*</span></div>
                     <div class="ei">
-                      @php
-                       $value = @$application->total_exp; // Convert to string to preserve decimal
-                       if(!is_null($value)){
-                        $total_exp =  GeneralMethod::separateNumberParts($value);
-                        $exp_years = ($total_exp[0]) ;
-                        $exp_months = ($total_exp[1]); 
-                      
-                        $selected_exp_year = ($exp_years) ;
-                        $selected_exp_month = ($exp_months); 
-                       }else{
-                        $selected_exp_year = null ;
-                        $selected_exp_month = null; 
-                       }
-                      @endphp
-
                       <select id="total_exp_year" name="total_exp_year">
                         <option value="">Years</option>
-                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option> 
-                        @php 
+                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        @php
                             for ($i = 1; $i <= 60; $i++) {
                                   $selected = '';
                                   $s = 'Year';
@@ -626,164 +583,197 @@
                                     $selected = '';
                                   }else{
                                     if($i==$selected_exp_year){
-                                      $selected =  'selected';
-                                  }
+                                      $selected = 'selected';
+                                    }
                                   }
                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                             }
-                          @endphp
+                        @endphp
                       </select>
-                     <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
-                          <option value="">Select Month</option>
-                          @php 
-                                       for ($i = 0; $i <= 11; $i++) {
-                                              $selected = '';
-                                              $s = 'Month';
-                                              if($i > 1){
-                                                 $s = 'Months';
-                                              }
-                                              if(is_null($selected_exp_month)){
-                                                $selected = '';
-                                              }else{
-                                                if($i==$selected_exp_month){
-                                                  $selected =  'selected';
-                                              }
-                                              }
-                                              
-                                            echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                        }
-                          @endphp
-                        </select>
+                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
+                        <option value="">Select Month</option>
+                        @php
+                            for ($i = 0; $i <= 11; $i++) {
+                                  $selected = '';
+                                  $s = 'Month';
+                                  if($i > 1){
+                                     $s = 'Months';
+                                  }
+                                  if(is_null($selected_exp_month)){
+                                    $selected = '';
+                                  }else{
+                                    if($i==$selected_exp_month){
+                                      $selected = 'selected';
+                                    }
+                                  }
+                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
                     </div>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Relevant Experience <span class="rq">*</span></label>
+                  <div class="candidate-experience-panel candidate-experience-panel--relevant">
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span><strong>Relevant Experience</strong><span class="candidate-required-dot">*</span></div>
                     <div class="ei">
-                        @php
-
-                            $valuew = @$application->rel_exp;
-                            // dd( $value);
-                            if(!is_null($value)){
-                              $total_rel_exp =  GeneralMethod::separateNumberParts($valuew);
-                              // dd($total_rel_exp,$valuew);
-                              $rel_exp_years = ($total_rel_exp[0]);
-                              $rel_exp_months = ($total_rel_exp[1]);  
-
-                              $selected_rel_exp_year = ($rel_exp_years);
-                              $selected_rel_exp_month= ($rel_exp_months);
-                              // dd($selected_rel_exp_year,$selected_rel_exp_month);
-                            }else{
-                              $selected_rel_exp_year = null;
-                              $selected_rel_exp_month= null;
-                            }
-                            //  dd($total_rel_exp);
-                            //  dd($selected_rel_exp_year,$selected_rel_exp_month);
-
-                        @endphp
                       <select id="rel_exp_year" name="rel_exp_year">
                         <option value="">Years</option>
-                        <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>   
-                        @php 
+                        <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        @php
                               for ($i = 1; $i <= 60; $i++) {
                                     $selected = '';
                                     $s = 'Year';
                                     if($i > 1){
                                         $s = 'Years';
                                     }
-                                    
-                                  if(is_null($selected_rel_exp_year)){
+                                    if(is_null($selected_rel_exp_year)){
                                       $selected = '';
                                     }else{
                                       if($i==$selected_rel_exp_year){
-                                        $selected =  'selected';
-                                    }
+                                        $selected = 'selected';
+                                      }
                                     }
                                   echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                               }
                         @endphp
                       </select>
                       <select class="" arial-label="Select rel_exp_month" id="rel_exp_month" name="rel_exp_month">
-                          <option value="">Select Month</option>
-                          @php 
-                                        for ($i = 0; $i <= 11; $i++) {
-                                             $selected = '';
-                                              $s = 'Month';
-                                              if($i > 1){
-                                                 $s = 'Months';
-                                              }
-                                              if(is_null($selected_rel_exp_month)){
-                                                $selected = '';
-                                              }else{
-                                                if($i==$selected_rel_exp_month){
-                                                  $selected =  'selected';
-                                              }
-                                              }
-                                            echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                        }
-                          @endphp
-                        </select>
+                        <option value="">Select Month</option>
+                        @php
+                            for ($i = 0; $i <= 11; $i++) {
+                                  $selected = '';
+                                  $s = 'Month';
+                                  if($i > 1){
+                                     $s = 'Months';
+                                  }
+                                  if(is_null($selected_rel_exp_month)){
+                                    $selected = '';
+                                  }else{
+                                    if($i==$selected_rel_exp_month){
+                                      $selected = 'selected';
+                                    }
+                                  }
+                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
                     </div>
+                    <small>Relevant experience in the recommended or primary skills.</small>
+                  </div>
+                  <div class="candidate-experience-tip">
+                    <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
+                    <div><strong>Tip</strong><p>Relevant experience should match the skills required for this job.</p></div>
                   </div>
                 </div>
-                <div class="candidate-subsection-head candidate-subsection-head--availability">
-                  <span><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <div><strong>Availability &amp; Work Preferences</strong><small>Employment type, notice period, and reason for change.</small></div>
+              </div>
+            </div>
+
+            <!-- Professional Profile -->
+            <div class="fs pd-card candidate-card professional-profile-card {{ ((string) $selected_exp_year === '0') ? 'is-fresher-hidden' : '' }}" id="candidateProfessionalProfile">
+              <div class="fsh candidate-card-header pd-hero">
+                <div class="candidate-card-title pd-hero-title">
+                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
                 </div>
-                <div class="g4 candidate-subsection-grid candidate-subsection-grid--availability">
-                  
+              </div>
+              <div class="fsc candidate-card-body pd-body">
+                <div class="professional-profile-grid">
                   <div class="fg fv-row">
-                    <label>Employment Type</label>
-                    <select name="employmentType" id="EmploymentType">
+                    <label>Current Company <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Current Designation <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-people-group" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
                       <option value="">Select employment type</option>
                       <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
                       <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
                       <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
                       <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
-                    </select>
+                    </select></div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Availability and Work Preferences -->
+            <div class="fs aw-card candidate-card candidate-availability-card">
+              <div class="fsh candidate-card-header aw-hero">
+                <div class="candidate-card-title aw-hero-title">
+                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <span><strong>Availability &amp; Work Preferences</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body aw-body">
+                <div class="candidate-availability-grid">
                   <div class="fg fv-row">
-                    <label>Notice Period <span class="rq">*</span></label>
-                    <select name="serving_notice_period" id="serving_notice_period">
+                    <label>Notice Period Status <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><select name="serving_notice_period" id="serving_notice_period">
                       <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
                       <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
-                    </select>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    </select></div>
                   </div>
-
-                    <div class="fg fv-row">
-                       <label>&nbsp;</label>
-                        <div style="{{ @$snp_text_one }}" id="snp-immediate" class="" >
-                            <div style="position: relative;margin-right: 6px;">
-                              <input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly>
-                            </div>
-                          
-                            <div style="position: relative;">
-                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
-                                <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
-                            </div>
-                        </div>
-                    
-                        <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                          <option value="">Select Notice Period</option>
-                          @php 
-                              for ($i = 1; $i <= 200; $i++) {
-                                      $s = 'Day';
-                                      if($i > 1){
-                                          $s = 'Days';
-                                      }
-                                    $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                              }
-                          @endphp
-                        </select>
-                        
-                        <input type="text" id="calender" name="calender" style="display:none">
+                  <div class="fg fv-row candidate-notice-detail">
+                    <label>Notice Period / Last Working Date <span class="rq">*</span></label>
+                    <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
+                      <div><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
+                      <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
                     </div>
-                    <div class="fg fv-row">
-                      <label>Reason for Job Change </label>
-                      <input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter current company" />
-                    </div>                   
+                    <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
+                      <option value="">Select Notice Period</option>
+                      @php
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Reason for Job Change</label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-regular fa-building" aria-hidden="true"></i></span><span><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><span><strong>Work From Office</strong><small>Office location based work.</small></span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Skills -->
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div id="skillTags" class="skill-tags"></div>
+                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -792,205 +782,165 @@
               <div class="fsh candidate-card-header br-hero">
                 <div class="candidate-card-title br-hero-title">
                   <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
-                  <span><strong>Salary Details</strong><small>Current and expected annual, monthly, and hourly compensation.</small></span>
+                  <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body br-body">
-                <div class="sg">
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Annual Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color:var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-
-                      
-                      <div class="col-4 pl-0 d-none">
+                <div class="candidate-salary-grid">
+                  <section class="candidate-salary-panel candidate-salary-panel--current">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-user" aria-hidden="true"></i></span><div><strong>Current Salary</strong><small>What the candidate currently earns</small></div></div>
+                    <div class="candidate-salary-tabs" role="tablist" aria-label="Current salary period">
+                      <button type="button" class="is-active" data-salary-group="current" data-salary-period="annual">Annual</button>
+                      <button type="button" data-salary-group="current" data-salary-period="monthly">Monthly</button>
+                      <button type="button" data-salary-group="current" data-salary-period="hourly">Hourly</button>
+                    </div>
+                    <div class="candidate-salary-period is-active" data-salary-panel="current" data-salary-period="annual">
+                      <div class="d-none">
                         <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="current_ectc_mode" id="current_ectc_mode">
-                              @php 
-                                          $current_ectc_mode	=	"";
-                                          $current_ectc_mode	=	@$application->current_ectc_mode;
-                                          foreach($salaryMode as $key=>$val){
-                                            $sel	=	'';
-                                            if(2==$key){
-                                              $sel	=	'selected="selected"';	
-                                            }
-                                            echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                                          }
-                              @endphp
+                          @php
+                              $current_ectc_mode = "";
+                              $current_ectc_mode = @$application->current_ectc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if(2==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
                         </select>
-                      </div>
-                      <div class="col-4 pl-0 d-none">
                         <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
-                            @php 
-                                        $current_ctc_mode	=	"";
-                                        $current_ctc_mode	=	@$application->current_ctc_mode;
-                                        foreach($salaryMode as $key=>$val){
-                                          $sel	=	'';
-                                          if(2==$key){
-                                            $sel	=	'selected="selected"';	
-                                          }	
-                                          echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                                        }
-                            @endphp
+                          @php
+                              $current_ctc_mode = "";
+                              $current_ctc_mode = @$application->current_ctc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if(2==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
                         </select>
                       </div>
-
-
-                      <select id="current_ctc_cur" name="current_ctc_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
+                      <div class="fg fv-row">
+                        <label>Currency <span class="rq">*</span></label>
+                        <select id="current_ctc_cur" name="current_ctc_cur">
+                          @php
+                              $current_ctc_cur = "";
+                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
                               foreach($currency as $key=>$val){
-                                  $sel	=	'';
+                                  $sel = '';
                                   if($current_ctc_cur===null){
                                     if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }else{
                                     if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                               }
                           @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Current CTC (Annual) <span  style="float: right; color: #ef560a;"id="pay_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
+                        </select>
                       </div>
-                      <span class="form-text text-muted payrateannual"></span>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="candidate-salary-auto"><span>Auto Calculated</span><div><strong>Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div><div><strong>Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div></div>
                     </div>
-                    <div class="fg fv-row"><label>Expected CTC (Annual) <span style="float: right; color: #ef560a;" id="bill_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billrateannual"></span>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Monthly Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="current_ectc_cur" id="current_ectc_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
+                    <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="monthly">
+                      <div class="fg fv-row">
+                        <label>Currency <span class="rq">*</span></label>
+                        <select name="current_ectc_cur" id="current_ectc_cur">
+                          @php
+                              $current_ctc_cur = "";
+                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
                               foreach($currency as $key=>$val){
-                                  $sel	=	'';
+                                  $sel = '';
                                   if($current_ctc_cur===null){
                                     if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }else{
                                     if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                               }
                           @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Current (Monthly) <span style="float: right; color: #ef560a;" id="pay_rate_monthly_usd"></span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
+                        </select>
                       </div>
-                      <span class="form-text text-muted payratemonthly"></span>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
-                    <div class="fg fv-row"><label>Expected (Monthly) <span style="float: right; color: #ef560a;" id="bill_rate_monthly_usd"> </span></label>
-                      <div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billratemonthly"></span>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row"><label style="color: var(--p)">Hourly Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="current_th_cur" id="current_th_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
+                    <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="hourly">
+                      <div class="fg fv-row">
+                        <label>Currency <span class="rq">*</span></label>
+                        <select name="current_th_cur" id="current_th_cur">
+                          @php
+                              $current_ctc_cur = "";
+                              $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
                               foreach($currency as $key=>$val){
-                                  $sel	=	'';
+                                  $sel = '';
                                   if($current_ctc_cur===null){
                                     if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }else{
                                     if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
+                                      $sel = 'selected="selected"';
+                                    }
                                   }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                               }
                           @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Current (Hourly) <span style="float: right; color: #ef560a;" id="pay_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
+                        </select>
                       </div>
-                      <span class="form-text text-muted CurrentCTC"></span> 
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
-                    <div class="fg fv-row"><label>Expected (Hourly) <span  style="float: right; color: #ef560a;"id="bill_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted expectedctc"></span> 
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row">
-                          <label style="color: var(--p)">Other Salary Details</label>
-                        <div style="display: flex;">
-                            <div class="">
-                              <label>Hike Percentage</label>
-                              <div class="ig">
-                                <input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" />
-                                <span class="ig-a">%</span>
-                              </div>
-                              <div style="font-size: 0.95rem; color: var(--t-l); margin-top: 3px;">(Calculated from Annual CTC)</div>
-                            </div>
-                            <div class="" style="margin-left: 10px;">
-                              <div style="margin-bottom: 8px">
-                                <label style="font-size: 1rem; font-weight: 600">Offer in Hand?</label>
-                                <div class="rg">
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} />
-                                    <label for="ohy">Yes</label>
-                                  </div>
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohn" value="no"  {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }}  />
-                                    <label for="ohn">No</label>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
-                    </div>
+                  </section>
 
-                    <div class="fg fv-row">
-                      <label>Comments</label>
-                      <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                      <div class="cc">0 / 500</div>
+                  <section class="candidate-salary-panel candidate-salary-panel--expected">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-tabs" role="tablist" aria-label="Expected salary period">
+                      <button type="button" class="is-active" data-salary-group="expected" data-salary-period="annual">Annual</button>
+                      <button type="button" data-salary-group="expected" data-salary-period="monthly">Monthly</button>
+                      <button type="button" data-salary-group="expected" data-salary-period="hourly">Hourly</button>
                     </div>
-                  </div>
+                    <div class="candidate-salary-period is-active" data-salary-panel="expected" data-salary-period="annual">
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="candidate-salary-auto"><span>Auto Calculated</span><div><strong>Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div><div><strong>Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div></div>
+                    </div>
+                    <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="monthly">
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                    </div>
+                    <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="hourly">
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                    </div>
+                  </section>
+
+                  <aside class="candidate-salary-panel candidate-salary-summary">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
+                    <div class="candidate-salary-summary-list">
+                      <div><span>Current Salary</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
+                      <div><span>Expected Salary</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
+                      <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
+                    </div>
+                    <div class="fg fv-row candidate-hike-field"><label>Hike Percentage</label><div class="ig"><input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" /><span class="ig-a">%</span></div><small>Calculated from annual salary.</small></div>
+                    <div class="candidate-offer-field">
+                      <strong>Offer in Hand</strong>
+                      <div class="rg">
+                        <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
+                        <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+
+                <div class="candidate-salary-comments">
+                  <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
+                  <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
+                  <div class="cc">0 / 500</div>
                 </div>
               </div>
             </div>
@@ -1106,7 +1056,7 @@
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
-                  <span><strong>Job Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
+                  <span><strong>Screening Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -1255,34 +1205,54 @@
                 </div>
             </div>
 
-            <!-- Additional Information -->
-            <div class="fs addl-card candidate-card">
+            <!-- Professional Links -->
+            <div class="fs addl-card candidate-card professional-links-card">
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title">
                   <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
-                  <span><strong>Additional Information</strong><small>Professional links, visa status, and candidate reference details.</small></span>
+                  <span><strong>Professional Links</strong><small>Add online profiles that help clients evaluate this candidate.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body addl-body">
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label>Likedin Link (Optional)</label>
-                    <input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter Likedin Link" />
+                <div class="candidate-professional-links">
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--linkedin" aria-hidden="true">in</span>
+                    <label for="linkedin">LinkedIn <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" /></div>
+                    <small>e.g. https://www.linkedin.com/in/yourname</small>
                   </div>
-                  <div class="fg fv-row">
-                    <label>GitHub Link (Optional)</label>
-                    <input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub Link" />
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--github" aria-hidden="true">GH</span>
+                    <label for="github">GitHub <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" /></div>
+                    <small>e.g. https://github.com/yourusername</small>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Behance Link (Optional)</label>
-                    <input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance Link" />
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--behance" aria-hidden="true">Be</span>
+                    <label for="behance">Behance <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" /></div>
+                    <small>e.g. https://www.behance.net/yourname</small>
                   </div>
-                  <div class="fg fv-row">
-                    <label>Other Link (Optional)</label>
-                    <input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter URL" />
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--website" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
+                    <label for="otherLink">Portfolio / Website <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" /></div>
+                    <small>e.g. https://yourportfolio.com</small>
                   </div>
                 </div>
-                <div class="g4">
+              </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="fs candidate-card additional-details-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--additional"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                  <span><strong>Additional Details</strong><small>Provide any other relevant information about the candidate's professional background.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-additional-details-grid">
                   <div class="fg fv-row">
                     <label>Current Visa Status (For International)</label>
                     <select name="visastatu" id="visastatu">
@@ -1295,10 +1265,12 @@
                     </select>
                   </div>
                   <div class="fg fv-row">
-                    <label>Reference Name (Optional)</label>
+                    <label>Professional Reference <span class="candidate-optional-label">(Optional)</span></label>
                     <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
+                    <small class="candidate-field-help">Provide a reference name who can vouch for the candidate's work experience.</small>
                   </div>
                 </div>
+                <div class="candidate-section-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>All fields in this section are optional. Add relevant details when they apply to this candidate.</span></div>
               </div>
             </div>
 
@@ -4049,6 +4021,150 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         $('#recruiter_note').val(content);
     }
 });
+
+// Add Candidate presentation only: card visibility, salary display tabs, and summaries.
+(function () {
+    'use strict';
+
+    var root = document.querySelector('.job-candidate-create');
+    if (!root) {
+        return;
+    }
+
+    var experienceSelect = root.querySelector('#total_exp_year');
+    var professionalProfile = root.querySelector('#candidateProfessionalProfile');
+
+    function syncProfessionalProfile() {
+        if (!experienceSelect || !professionalProfile) {
+            return;
+        }
+
+        var isFresher = String(experienceSelect.value) === '0';
+        professionalProfile.classList.toggle('is-fresher-hidden', isFresher);
+        professionalProfile.setAttribute('aria-hidden', isFresher ? 'true' : 'false');
+    }
+
+    if (experienceSelect) {
+        experienceSelect.addEventListener('change', syncProfessionalProfile);
+        syncProfessionalProfile();
+    }
+
+    var salaryFieldMap = {
+        current: {
+            annual: 'pay_annual',
+            monthly: 'pay_monthly',
+            hourly: 'ctc'
+        },
+        expected: {
+            annual: 'bill_annual',
+            monthly: 'bill_monthly',
+            hourly: 'ectc'
+        }
+    };
+
+    var salaryCurrencyMap = {
+        annual: 'current_ctc_cur',
+        monthly: 'current_ectc_cur',
+        hourly: 'current_th_cur'
+    };
+
+    function fieldValue(id) {
+        var field = root.querySelector('#' + id);
+        var value = field ? parseFloat(field.value) : 0;
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function currencyLabel(period) {
+        var select = root.querySelector('#' + salaryCurrencyMap[period]);
+        if (!select || select.selectedIndex < 0) {
+            return '';
+        }
+
+        return select.options[select.selectedIndex].text.trim();
+    }
+
+    function formatAmount(value) {
+        return new Intl.NumberFormat('en-IN', {
+            maximumFractionDigits: 2
+        }).format(value || 0);
+    }
+
+    function activeSalaryPeriod(group) {
+        var activeButton = root.querySelector('.candidate-salary-tabs button.is-active[data-salary-group="' + group + '"]');
+        return activeButton ? activeButton.getAttribute('data-salary-period') : 'annual';
+    }
+
+    function updateSalaryAutoValues(group) {
+        var annual = fieldValue(salaryFieldMap[group].annual);
+        var monthly = fieldValue(salaryFieldMap[group].monthly) || (annual / 12);
+        var hourly = fieldValue(salaryFieldMap[group].hourly) || (annual / 2080);
+        var prefix = group === 'current' ? 'candidate-current-' : 'candidate-expected-';
+        var monthlyOutput = root.querySelector('#' + prefix + 'monthly-auto');
+        var hourlyOutput = root.querySelector('#' + prefix + 'hourly-auto');
+
+        if (monthlyOutput) {
+            monthlyOutput.textContent = formatAmount(monthly);
+        }
+        if (hourlyOutput) {
+            hourlyOutput.textContent = formatAmount(hourly);
+        }
+    }
+
+    function updateSalarySummary() {
+        ['current', 'expected'].forEach(function (group) {
+            var period = activeSalaryPeriod(group);
+            var amount = fieldValue(salaryFieldMap[group][period]);
+            var target = root.querySelector(group === 'current' ? '#candidateSalaryCurrentSummary' : '#candidateSalaryExpectedSummary');
+
+            if (target) {
+                target.textContent = currencyLabel(period) + ' ' + formatAmount(amount);
+            }
+
+            updateSalaryAutoValues(group);
+        });
+
+        var hike = root.querySelector('#percentage_hike');
+        var hikeOutput = root.querySelector('#candidateSalaryHikeSummary');
+        if (hikeOutput) {
+            hikeOutput.textContent = formatAmount(hike ? parseFloat(hike.value) || 0 : 0) + '%';
+        }
+    }
+
+    root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
+        button.setAttribute('aria-selected', button.classList.contains('is-active') ? 'true' : 'false');
+        button.addEventListener('click', function () {
+            var group = button.getAttribute('data-salary-group');
+            var period = button.getAttribute('data-salary-period');
+
+            root.querySelectorAll('.candidate-salary-tabs button[data-salary-group="' + group + '"]').forEach(function (candidateButton) {
+                var selected = candidateButton === button;
+                candidateButton.classList.toggle('is-active', selected);
+                candidateButton.setAttribute('aria-selected', selected ? 'true' : 'false');
+            });
+
+            root.querySelectorAll('.candidate-salary-period[data-salary-panel="' + group + '"]').forEach(function (panel) {
+                panel.classList.toggle('is-active', panel.getAttribute('data-salary-period') === period);
+            });
+
+            updateSalarySummary();
+        });
+    });
+
+    [
+        'pay_annual', 'pay_monthly', 'ctc',
+        'bill_annual', 'bill_monthly', 'ectc',
+        'current_ctc_cur', 'current_ectc_cur', 'current_th_cur',
+        'percentage_hike'
+    ].forEach(function (id) {
+        var field = root.querySelector('#' + id);
+        if (field) {
+            field.addEventListener('input', updateSalarySummary);
+            field.addEventListener('change', updateSalarySummary);
+        }
+    });
+
+    updateSalarySummary();
+})();
 </script>
 
 @endpush
