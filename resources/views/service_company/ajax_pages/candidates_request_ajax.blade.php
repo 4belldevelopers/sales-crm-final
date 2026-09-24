@@ -63,7 +63,7 @@
                     $skilltagclass = '';
                     $skillArr = explode(',', $row->skills);
 
-                    $targetJobId = $row->job_id ?? ($jobid ?? 0);
+                    $targetJobId = (!empty($jobid) && (int)$jobid > 0) ? (int)$jobid : (int)(@$row->job_id ?: (@$row->source_jobid ?: session()->get('job_id')));
                     if ($targetJobId > 0) {
                         $percentageString = GeneralMethod::skill_percentage($targetJobId, $skillArr);
                         $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
@@ -446,7 +446,7 @@
 
                     if ($row->ac_status==0) {
                         echo '<div class="d-flex flex-column">
-                            <a href="javascript:void(0);" data-row-id="' . @$row->source_jobid .'" data-recomnded-id="' . @$row->rec_candidate_assign_id .'" data-condidate-id="' .@$row->id .'" class="btn btn-sm btn-primary add_to_list">Add to job</a>
+                            <a href="javascript:void(0);" data-row-id="' . $targetJobId .'" data-recomnded-id="' . @$row->rec_candidate_assign_id .'" data-condidate-id="' .@$row->id .'" class="btn btn-sm btn-primary add_to_list">Add to job</a>
                             <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
                         </div>';
                     } elseif ($row->ac_status==1) {

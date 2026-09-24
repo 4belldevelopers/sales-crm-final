@@ -6263,7 +6263,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $company_id = auth()->user()->company_id;
 
-        $chkAdminRole = $this->user->hasRole('admin');
+        $chkAdminRole = auth()->user()->hasRole('admin');
         $job_status = GeneralMethod::job_status();
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
@@ -6328,14 +6328,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'min_salary' => $min_salary,
             'requiredSkills' => $requiredSkills ?? [],
             'custom_status' => $custom_status,
-            'user_id' => $this->user->id,
+            'user_id' => auth()->user()->id,
             'custom_hiringtype' => $custom_hiringtype,
             'work_mode' => request('work_mode'),
         ];
 
-        $versionKey = 'allbenchrecommendreq_version_user_'.$this->user->id;
+        $versionKey = 'allbenchrecommendreq_version_user_'.auth()->user()->id;
         $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchrecommendreq:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $cacheKeySet = 'ats:allbenchrecommendreq:'.auth()->user()->id.':'.$version.':'.md5(json_encode($cachePayload));
         $eTag = '"'.md5($cacheKeySet).'"';
 
         /* ----------------------------
@@ -7159,9 +7159,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             // $source_from_company_id = $source_from_company_id;
             // $event_name = $event_name;
             $event_table_name = 'jobs';
-            $event_table_id = @$source_jobid;
             $query = DB::table('rec_candidate_assign')->insert($values);
             $rec_id = DB::getPdo()->lastInsertId();
+
+            try {
+                GeneralMethod::candidateRequestIndexElastic((int) $rec_id);
+            } catch (\Throwable $e) {
+                \Log::error('candidateRequestIndexElastic direct call failed: ' . $e->getMessage());
+            }
 
             /**
              * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
@@ -7195,14 +7200,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
 
                 $jobRow = DB::table('job_applications')->select('job_applications.*', 'city_list.city')
-                    ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')->where('job_applications.id', '=', $source_application_id)->first();
+                    ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')->where('job_applications.id', '=', $source_application_id)->first();
 
                 $salaryMode = GeneralMethod::salaryMode();
                 $currencySymbole = GeneralMethod::currencySymbole();
-                $bill_rate_mode = $bill_rate_currency = $bill_rate_amount = '';
-                $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode], 0, 1));
-                $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency];
-                $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount);
+                $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
+                $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
+                $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
                 $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
 
                 $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
@@ -7241,9 +7245,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         }
 
+        $userId = auth()->user()->id ?? $this->user->id ?? 0;
         $cachekeys = [
-            'allbenchrecommendreq_version_user_'.$this->user->id,
-            'allbenchrecommendinternalreq_version_user_'.$this->user->id,
+            'allbenchrecommendreq_version_user_'.$userId,
+            'allbenchrecommendinternalreq_version_user_'.$userId,
         ];
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
@@ -7294,15 +7299,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
             $jobRow = DB::table('job_applications')
                 ->select('job_applications.*', 'city_list.city')
-                ->join('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
                 ->where('job_applications.id', '=', $source_application_id)
                 ->first();
 
             $salaryMode = GeneralMethod::salaryMode();
             $currencySymbole = GeneralMethod::currency();
-            $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode], 0, 1));
-            $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency];
-            $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount);
+            $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
+            $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
+            $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
             $salaryRange = $bill_rate_currency.' '.$bill_rate_amount.'/'.$bill_rate_mode;
 
             $npDate = $jobRow->np_id;

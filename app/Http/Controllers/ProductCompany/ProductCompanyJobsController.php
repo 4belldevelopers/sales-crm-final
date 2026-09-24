@@ -6074,31 +6074,87 @@ Request Hire
     public function add_to_list(Request $request)
     {
 
-        $jobId = $request->jobId;
-        $recomndedId = $request->recomndedId;
-        $condidateId = $request->condidateId;
-        $jobs = JobApplication::findOrFail($condidateId);
-        // $query = DB::table('job_applications')->where('id',$condidateId)->update(['job_id'=>$jobId]);
-        $company_id = auth()->user()->company_id;
-        $user_id = auth()->user()->id;
+        $jobId = (int) ($request->jobId ?: session()->get('job_id'));
+        $recomndedId = (int) $request->recomndedId;
+        $condidateId = (int) $request->condidateId;
+        $jobs = JobApplication::withoutGlobalScopes()->find($condidateId);
 
-        $insertArr = ['job_id' => $jobId, 'job_application_id' => $condidateId, 'rec_candidate_assign_id' => $recomndedId, 'status_id' => 2, 'master_status_id' => 1, 'child_status_id' => 0, 'company_id' => $company_id, 'submitted_by' => $user_id];
+        // 🔒 Candidate Duplicate Check
+        $existingWise = DB::table('add_job_wise_condidates')
+            ->where('job_id', $jobId)
+            ->where(function ($q) use ($condidateId, $jobs) {
+                $q->where('job_application_id', $condidateId);
+                if ($jobs && (! empty($jobs->email) || ! empty($jobs->phone))) {
+                    $q->orWhereIn('job_application_id', function ($sub) use ($jobs) {
+                        $sub->select('id')->from('job_applications')
+                            ->where(function ($eq) use ($jobs) {
+                                if (! empty($jobs->email) && ! empty($jobs->phone)) {
+                                    $eq->where('email', $jobs->email)->orWhere('phone', $jobs->phone);
+                                } elseif (! empty($jobs->email)) {
+                                    $eq->where('email', $jobs->email);
+                                } elseif (! empty($jobs->phone)) {
+                                    $eq->where('phone', $jobs->phone);
+                                }
+                            });
+                    });
+                }
+            })
+            ->first();
 
-        $query_update = DB::table('add_job_wise_condidates')->insert($insertArr);
+        if ($existingWise) {
+            if ($recomndedId > 0) {
+                DB::table('rec_candidate_assign')
+                    ->where('id', $recomndedId)
+                    ->update(['ac_status' => 1]);
+            }
 
-        if ($query_update) {
+            GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$this->user->id);
+            GeneralMethod::cacheClean('allapptracker_version_user_'.$this->user->id);
+            Cache::forget('custome_count_all:'.$this->user->company_id.':'.$jobId);
 
-            $res = [
-                'status' => true,
-            ];
-        } else {
-            $res = [
-                'status' => false,
-            ];
-
+            return ['status' => true, 'message' => 'Candidate is already added to this job'];
         }
 
-        return $res;
+        $company_id = auth()->user()->company_id;
+        $user_id = auth()->user()->id;
+        $now = now();
+        $master_status_id = 1;
+        $jobsCompanyId = $jobs ? $jobs->company_id : null;
+
+        if ((int) $jobsCompanyId != (int) $company_id) {
+            $insertArr = ['job_id' => $jobId, 'job_application_id' => $condidateId, 'rec_candidate_assign_id' => $recomndedId, 'status_id' => 2, 'master_status_id' => $master_status_id, 'thirdparty_company_id' => $jobsCompanyId, 'child_status_id' => 0, 'company_id' => $company_id, 'submitted_by' => $user_id, 'existing' => 1, 'created_at' => $now, 'updated_at' => $now];
+        } else {
+            $insertArr = ['job_id' => $jobId, 'job_application_id' => $condidateId, 'rec_candidate_assign_id' => $recomndedId, 'status_id' => 2, 'master_status_id' => $master_status_id, 'child_status_id' => 0, 'company_id' => $company_id, 'submitted_by' => $user_id, 'existing' => 1, 'created_at' => $now, 'updated_at' => $now];
+        }
+
+        $lastWiseIs = DB::table('add_job_wise_condidates')->insertGetId($insertArr);
+
+        $cachekeys = [
+            'allcandidatesrequest_version_user_'.$this->user->id,
+            'allapptracker_version_user_'.$this->user->id,
+            'allcandidates_version_user_'.$this->user->id,
+            'alljobslist_version_user_'.$this->user->id,
+            'custome_count_all:'.$company_id.':'.$jobId,
+        ];
+        if ($jobsCompanyId) {
+            $cachekeys[] = 'custome_count_all:'.$jobsCompanyId.':'.$jobId;
+        }
+        foreach ($cachekeys as $key) {
+            GeneralMethod::cacheClean($key);
+            Cache::forget($key);
+        }
+
+        if ($lastWiseIs > 0) {
+            app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(
+                (int) $condidateId,
+                (int) $jobId,
+                (int) $lastWiseIs,
+                (int) $company_id
+            );
+            GeneralMethod::elasticBenchCandidateAddEditIndex($condidateId);
+        }
+
+        return ['status' => true];
 
     }
 }

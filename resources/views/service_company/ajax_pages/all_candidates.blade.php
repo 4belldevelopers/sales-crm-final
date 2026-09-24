@@ -200,6 +200,7 @@
                         // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
                         $matchStyle = GeneralMethod::getSkillMatchBadgeStyle($percentage);
                         $matchBg = $matchStyle['bg'];
+                        $matchColor = $matchStyle['color'];
                         $numericPct = (int) round((float) rtrim(@$percentage ?: '0', '%'));
                         $matchBadge = '<span class="badge my-1 jw-row-match-badge" data-candidate-id="'.@$row->candidate_id.'" data-wise-id="'.@$row->wiseId.'" data-match-pct="'.$numericPct.'" style="background:'.$matchBg.';color:'.$matchColor.';font-weight:600;">Match '.@$percentage.'</span>';
 
