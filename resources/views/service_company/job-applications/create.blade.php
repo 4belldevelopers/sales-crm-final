@@ -692,6 +692,11 @@
               </div>
             </div>
 
+            @php
+              $candidateSalaryMode = (int) (@$application->current_ctc_mode ?? 0);
+              $candidateSalaryMode = in_array($candidateSalaryMode, [0, 1, 2], true) ? $candidateSalaryMode : 0;
+              $candidateSalaryPeriod = [0 => 'annual', 1 => 'monthly', 2 => 'hourly'][$candidateSalaryMode];
+            @endphp
             <!-- Salary Details -->
             <div class="fs br-card salary-card candidate-card">
               <div class="fsh candidate-card-header br-hero">
@@ -751,12 +756,12 @@
                         <span class="candidate-salary-lock-tooltip">Current Salary is locked for fresher candidates. Expected Salary remains available.</span>
                       </span>
                     </div>
-                    <div class="candidate-salary-tabs" role="tablist" aria-label="Current salary period">
-                      <button type="button" class="is-active" data-salary-group="current" data-salary-period="annual">Annual</button>
-                      <button type="button" data-salary-group="current" data-salary-period="monthly">Monthly</button>
-                      <button type="button" data-salary-group="current" data-salary-period="hourly">Hourly</button>
+                    <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="annual" data-salary-mode="0">Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
-                    <div class="candidate-salary-period is-active" data-salary-panel="current" data-salary-period="annual">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="annual">
                       <div class="d-none">
                         <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="current_ectc_mode" id="current_ectc_mode">
                           @php
@@ -764,7 +769,7 @@
                               $current_ectc_mode = @$application->current_ectc_mode;
                               foreach($salaryMode as $key=>$val){
                                 $sel = '';
-                                if(2==$key){
+                                if($candidateSalaryMode==$key){
                                   $sel = 'selected="selected"';
                                 }
                                 echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
@@ -777,7 +782,7 @@
                               $current_ctc_mode = @$application->current_ctc_mode;
                               foreach($salaryMode as $key=>$val){
                                 $sel = '';
-                                if(2==$key){
+                                if($candidateSalaryMode==$key){
                                   $sel = 'selected="selected"';
                                 }
                                 echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
@@ -787,10 +792,10 @@
                       </div>
                       <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
-                    <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="monthly">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
                       <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
-                    <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="hourly">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
                       <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -802,18 +807,18 @@
 
                   <section class="candidate-salary-panel candidate-salary-panel--expected">
                     <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
-                    <div class="candidate-salary-tabs" role="tablist" aria-label="Expected salary period">
-                      <button type="button" class="is-active" data-salary-group="expected" data-salary-period="annual">Annual</button>
-                      <button type="button" data-salary-group="expected" data-salary-period="monthly">Monthly</button>
-                      <button type="button" data-salary-group="expected" data-salary-period="hourly">Hourly</button>
+                    <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" disabled>Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" disabled>Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" disabled>Hourly</button>
                     </div>
-                    <div class="candidate-salary-period is-active" data-salary-panel="expected" data-salary-period="annual">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
                       <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
-                    <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="monthly">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
                       <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
-                    <div class="candidate-salary-period" data-salary-panel="expected" data-salary-period="hourly">
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
                       <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -828,9 +833,9 @@
                     <div class="candidate-salary-summary-list">
                       <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
                       <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
+                      <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
                       <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
                     </div>
-                    <div class="fg fv-row candidate-hike-field"><label>Hike Percentage</label><div class="ig"><input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" /><span class="ig-a">%</span></div><small>Calculated from annual salary.</small></div>
                     <div class="candidate-offer-field">
                       <strong>Offer in Hand</strong>
                       <div class="rg">
@@ -1954,7 +1959,6 @@ $(document).ready(function () {
             $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
             $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
             updatePayUI();
-            percentage_hike();
 
             isUpdating = false;
         });
@@ -1970,7 +1974,6 @@ $(document).ready(function () {
             $('#ctc').val(format(hourly));
             $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
             updatePayUI();
-            percentage_hike();
 
             isUpdating = false;
         });
@@ -1987,7 +1990,6 @@ $(document).ready(function () {
             $('#ctc').val(format(hourly));
             $('#pay_monthly').val(format(monthly));
             updatePayUI();
-            percentage_hike();
 
             isUpdating = false;
         });
@@ -2002,7 +2004,6 @@ $(document).ready(function () {
             $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
             $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
             updateBillUI();
-            percentage_hike();
             isUpdating = false;
         });
 
@@ -2017,7 +2018,6 @@ $(document).ready(function () {
             $('#ectc').val(format(hourly));
             $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
             updateBillUI();
-            percentage_hike();
 
             isUpdating = false;
         });
@@ -2034,7 +2034,6 @@ $(document).ready(function () {
             $('#ectc').val(format(hourly));
             $('#bill_monthly').val(format(monthly));
             updateBillUI();
-            percentage_hike();
 
             isUpdating = false;
         });
@@ -2109,18 +2108,6 @@ $(document).ready(function () {
 
         
 
-        function percentageBillRate(){
-             var currentCTC = parseFloat($('#bill_annual').val());
-
-            let annual = currentCTC;
-
-            let monthly = annual / MONTHS_PER_YEAR;
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ectc').val(format(hourly));
-            $('#bill_monthly').val(format(monthly));
-            updateBillUI();
-        }
 
 
 
@@ -2496,16 +2483,6 @@ async function isInternetAvailable() {
                         }
                     },
 					
-                    // 'percentage_hike':
-                    // {
-                    //     validators:
-                    //     {
-                    //         // notEmpty:{ message: "Hike is required"},                          
-                    //         digits:{message: "Hike must contain digits"}
-                    //         // stringLength:{ min: 1,	max: 2,	message: "Hike contain 2 digit"}
-                          
-                    //     }
-                    // },
 					
                     'country':
                     {
@@ -3008,11 +2985,7 @@ KTUtil.onDOMContentLoaded(function () {
    });
    $('body').on('change', '#current_ctc_mode', function(){
    			var	current_ctc_mode	=	$(this).val();
-			document.getElementById("current_ectc_mode").selectedIndex = current_ctc_mode;
-   });
-   $('body').on('change', '#current_ectc_mode', function(){
-   			var	current_ectc_mode	=	$(this).val();
-			document.getElementById("current_ctc_mode").selectedIndex = current_ectc_mode;
+			document.getElementById("current_ectc_mode").value = current_ctc_mode;
    });
   
       setTimeout(() => {
@@ -3172,18 +3145,6 @@ KTUtil.onDOMContentLoaded(function () {
     $(document).on("keyup", "#ectc", updateCTCFields);
     $(".currency").on("change", updateCTCFields);
             
-    $(document).on('keyup', '#ectc', function() { 
-      percentage_hike()
-     });
-     $(document).on('keyup', '#ctc', function() { 
-      percentage_hike()
-     });
-
-     $(document).on('keyup', '#percentage_hike', function() { 
-      ectc();
-      percentageBillRate();
-
-     });
 
      $(document).on('change', '#total_exp, #rel_exp', function() { 
       total_exp_and_rel_exp();
@@ -3345,16 +3306,6 @@ var KTAddCandidate = function () {
                         }
                     },
 					
-                    // 'percentage_hike':
-                    // {
-                    //     validators:
-                    //     {
-                    //         // notEmpty:{ message: "Hike is required"},                          
-                    //         digits:{message: "Hike must contain digits"}
-                    //         // stringLength:{ min: 1,	max: 2,	message: "Hike contain 2 digit"}
-                          
-                    //     }
-                    // },
 					
                     'country':
                     {
@@ -3697,28 +3648,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
           
-    function percentage_hike(){
-     
-        var currentCTC = parseFloat($('#pay_annual').val());
-        var expectedCTC = parseFloat($('#bill_annual').val());
-        
-        var percentageIncrease = ((expectedCTC - currentCTC) / currentCTC) * 100;
-        if (expectedCTC > 0) {
-        $('#percentage_hike').val(percentageIncrease.toFixed(0));
-        }else{
-          $('#percentage_hike').val('');
-        }
-    }
 
-    function ectc(){
-        var currentCTC = parseFloat($('#pay_annual').val());
-        var percentage_hike = $('#percentage_hike').val();
-        var amount = currentCTC*percentage_hike/100;
-        $('#bill_annual').val(amount+currentCTC);
-
-        
-    }
-    
     function total_exp_and_rel_exp(){
         var total_exp = parseFloat($('#total_exp').val());
         var rel_exp = parseFloat($('#rel_exp').val());
@@ -4197,8 +4127,8 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }).format(value || 0);
     }
 
-    function activeSalaryPeriod(group) {
-        var activeButton = root.querySelector('.candidate-salary-tabs button.is-active[data-salary-group="' + group + '"]');
+    function activeSalaryPeriod() {
+        var activeButton = root.querySelector('.candidate-salary-tabs button.is-active[data-salary-group="current"]');
         return activeButton ? activeButton.getAttribute('data-salary-period') : 'annual';
     }
 
@@ -4226,8 +4156,7 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         return values;
     }
 
-    function updateSalaryAutoValues(group) {
-        var activePeriod = activeSalaryPeriod(group);
+    function updateSalaryAutoValues(group, activePeriod) {
         var activeAmount = fieldValue(salaryFieldMap[group][activePeriod]);
         var values = salaryValuesFromPeriod(activePeriod, activeAmount);
         var otherPeriods = ['annual', 'monthly', 'hourly'].filter(function (period) {
@@ -4254,32 +4183,72 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     }
 
     function updateSalarySummary() {
-        ['current', 'expected'].forEach(function (group) {
-            var period = activeSalaryPeriod(group);
-            var amount = fieldValue(salaryFieldMap[group][period]);
-            var target = root.querySelector(group === 'current' ? '#candidateSalaryCurrentSummary' : '#candidateSalaryExpectedSummary');
-            var label = root.querySelector(group === 'current' ? '#candidateSalaryCurrentLabel' : '#candidateSalaryExpectedLabel');
+        var period = activeSalaryPeriod();
+        var currentAmount = fieldValue(salaryFieldMap.current[period]);
+        var expectedAmount = fieldValue(salaryFieldMap.expected[period]);
+        var currentTarget = root.querySelector('#candidateSalaryCurrentSummary');
+        var expectedTarget = root.querySelector('#candidateSalaryExpectedSummary');
+        var currentLabel = root.querySelector('#candidateSalaryCurrentLabel');
+        var expectedLabel = root.querySelector('#candidateSalaryExpectedLabel');
+        var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
+        var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
+        var currency = currencyLabel();
+        var difference = expectedAmount - currentAmount;
+        var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
+            ? (difference / currentAmount) * 100
+            : 0;
 
-            if (target) {
-                target.textContent = currencyLabel() + ' ' + formatAmount(amount);
-            }
-            if (label) {
-                label.textContent = (group === 'current' ? 'Current Salary (' : 'Expected Salary (') + salaryPeriodLabels[period] + ')';
-            }
+        if (currentTarget) {
+            currentTarget.textContent = currency + ' ' + formatAmount(currentAmount);
+        }
+        if (expectedTarget) {
+            expectedTarget.textContent = currency + ' ' + formatAmount(expectedAmount);
+        }
+        if (currentLabel) {
+            currentLabel.textContent = 'Current Salary (' + salaryPeriodLabels[period] + ')';
+        }
+        if (expectedLabel) {
+            expectedLabel.textContent = 'Expected Salary (' + salaryPeriodLabels[period] + ')';
+        }
+        if (differenceOutput) {
+            differenceOutput.textContent = currency + ' ' + formatAmount(difference);
+        }
+        if (increaseOutput) {
+            increaseOutput.textContent = formatAmount(calculatedIncrease) + '%';
+        }
 
-            updateSalaryAutoValues(group);
+        updateSalaryAutoValues('current', period);
+        updateSalaryAutoValues('expected', period);
+    }
+
+    function syncSalaryPeriod(period) {
+        var modeByPeriod = {
+            annual: '0',
+            monthly: '1',
+            hourly: '2'
+        };
+        var normalizedPeriod = Object.prototype.hasOwnProperty.call(modeByPeriod, period) ? period : 'annual';
+
+        root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
+            var selected = button.getAttribute('data-salary-period') === normalizedPeriod;
+            button.classList.toggle('is-active', selected);
+            button.setAttribute('aria-selected', selected ? 'true' : 'false');
         });
 
-        var currentAnnual = fieldValue(salaryFieldMap.current.annual);
-        var expectedAnnual = fieldValue(salaryFieldMap.expected.annual);
-        var calculatedHike = currentAnnual > 0 ? ((expectedAnnual - currentAnnual) / currentAnnual) * 100 : 0;
-        var hike = root.querySelector('#percentage_hike');
-        var enteredHike = hike ? parseFloat(hike.value) : NaN;
-        var hikeOutput = root.querySelector('#candidateSalaryHikeSummary');
+        root.querySelectorAll('.candidate-salary-period').forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.getAttribute('data-salary-period') === normalizedPeriod);
+        });
 
-        if (hikeOutput) {
-            hikeOutput.textContent = formatAmount(Number.isFinite(enteredHike) ? enteredHike : calculatedHike) + '%';
+        var currentMode = root.querySelector('#current_ctc_mode');
+        var expectedMode = root.querySelector('#current_ectc_mode');
+        if (currentMode) {
+            currentMode.value = modeByPeriod[normalizedPeriod];
         }
+        if (expectedMode) {
+            expectedMode.value = modeByPeriod[normalizedPeriod];
+        }
+
+        updateSalarySummary();
     }
 
     function syncSalaryCurrency() {
@@ -4300,30 +4269,15 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         updateSalarySummary();
     }
 
-    root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
-        button.setAttribute('aria-selected', button.classList.contains('is-active') ? 'true' : 'false');
+    root.querySelectorAll('.candidate-salary-tabs button[data-salary-group="current"]').forEach(function (button) {
         button.addEventListener('click', function () {
-            var group = button.getAttribute('data-salary-group');
-            var period = button.getAttribute('data-salary-period');
-
-            root.querySelectorAll('.candidate-salary-tabs button[data-salary-group="' + group + '"]').forEach(function (candidateButton) {
-                var selected = candidateButton === button;
-                candidateButton.classList.toggle('is-active', selected);
-                candidateButton.setAttribute('aria-selected', selected ? 'true' : 'false');
-            });
-
-            root.querySelectorAll('.candidate-salary-period[data-salary-panel="' + group + '"]').forEach(function (panel) {
-                panel.classList.toggle('is-active', panel.getAttribute('data-salary-period') === period);
-            });
-
-            updateSalarySummary();
+            syncSalaryPeriod(button.getAttribute('data-salary-period'));
         });
     });
 
     [
         'pay_annual', 'pay_monthly', 'ctc',
-        'bill_annual', 'bill_monthly', 'ectc',
-        'percentage_hike'
+        'bill_annual', 'bill_monthly', 'ectc'
     ].forEach(function (id) {
         var field = root.querySelector('#' + id);
         if (field) {
@@ -4335,11 +4289,11 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             });
         }
     });
-
     if (salaryCurrencySelect) {
         salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
     }
 
+    syncSalaryPeriod(activeSalaryPeriod());
     syncSalaryCurrency();
 })();
 </script>

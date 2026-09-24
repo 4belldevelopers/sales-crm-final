@@ -1254,16 +1254,13 @@
     white-space: nowrap;
 }
 
-.job-candidate-create .candidate-hike-field,
-.job-candidate-create .candidate-offer-field {
-    margin: 0 10px 9px;
+.job-candidate-create .candidate-salary-tabs--synced button:disabled {
+    opacity: 1;
+    cursor: default;
 }
 
-.job-candidate-create .candidate-hike-field > small {
-    display: block;
-    margin-top: 4px;
-    color: var(--jac-muted);
-    font-size: 9px;
+.job-candidate-create .candidate-offer-field {
+    margin: 0 10px 9px;
 }
 
 .job-candidate-create .candidate-offer-field {

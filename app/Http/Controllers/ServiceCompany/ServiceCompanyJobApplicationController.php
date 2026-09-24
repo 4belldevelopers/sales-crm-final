@@ -101,6 +101,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     }
 
+    /**
+     * Normalizes the Current Salary frequency used as the shared salary mode.
+     */
+    private function normalizedCandidateSalaryMode(mixed $mode): int
+    {
+        $normalizedMode = (int) $mode;
+
+        return in_array($normalizedMode, [0, 1, 2], true) ? $normalizedMode : 0;
+    }
+
+    /**
+     * Calculates the persisted increase from normalized annual salary values.
+     */
+    private function calculatedCandidateSalaryIncrease(mixed $currentAnnual, mixed $expectedAnnual): ?float
+    {
+        $current = (float) $currentAnnual;
+        $expected = (float) $expectedAnnual;
+
+        if ($current <= 0 || $expected <= 0) {
+            return null;
+        }
+
+        return round((($expected - $current) / $current) * 100, 2);
+    }
+
     // **  start ajax  */
     public function uploadresume(Request $request)
     {
@@ -2886,13 +2911,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // $jobApplication->total_exp 			=	$request->total_exp;
         $jobApplication->rel_exp = $rel_exp; // $request->rel_exp;
         // $jobApplication->passport				=	$request->passport;
+        $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
         $jobApplication->ctc = $request->ctc;
         $jobApplication->current_ctc_cur = $request->current_ctc_cur;
-        $jobApplication->current_ctc_mode = $request->current_ctc_mode;
+        $jobApplication->current_ctc_mode = $salaryMode;
 
         $jobApplication->ectc = $request->ectc;
         $jobApplication->current_ectc_cur = $request->current_ectc_cur;
-        $jobApplication->current_ectc_mode = $request->current_ectc_mode;
+        $jobApplication->current_ectc_mode = $salaryMode;
         $jobApplication->gender = $request->gender;
         $jobApplication->notice_comments = @$request->notice_comments;
 
@@ -2922,7 +2948,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ctc_hourly = @$ctcdivided->hourly;
 
         $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
-        $jobApplication->percentage_hike = $request->percentage_hike;
+        $jobApplication->percentage_hike = $this->calculatedCandidateSalaryIncrease(
+            $jobApplication->ctc_yearly,
+            $jobApplication->ectc_yearly
+        );
         $jobApplication->comment = $request->comment;
         $jobApplication->pincode = $experienceGet;
 
@@ -6686,16 +6715,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->np_id = $noticePeriodState['np_id'];
         $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
         $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
+        $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
         $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         if (! empty($request->ctc)) {
             $jobApplication->ctc = @$request->ctc;
         }
-        $jobApplication->current_ctc_mode = $request->current_ctc_mode;
+        $jobApplication->current_ctc_mode = $salaryMode;
         $jobApplication->current_ectc_cur = $request->current_ectc_cur;
         if (! empty($request->ectc)) {
             $jobApplication->ectc = @$request->ectc;
         }
-        $jobApplication->current_ectc_mode = @$request->current_ectc_mode;
+        $jobApplication->current_ectc_mode = $salaryMode;
 
         $currency = GeneralMethod::currency();  // Currency code
 
@@ -6722,7 +6752,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->ctc_monthly = @$ctcdivided->monthly;
         $jobApplication->ctc_hourly = @$ctcdivided->hourly;
 
-        $jobApplication->percentage_hike = @$request->percentage_hike;
+        $jobApplication->percentage_hike = $this->calculatedCandidateSalaryIncrease(
+            $jobApplication->ctc_yearly,
+            $jobApplication->ectc_yearly
+        );
         $jobApplication->comment = @$request->comment;
         $jobApplication->notice_comments = @$request->notice_comments;
 
