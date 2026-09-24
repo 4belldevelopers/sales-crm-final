@@ -146,28 +146,18 @@
 @endphp 
 
 <!--begin::Toolbar-->
-<div class="toolbar talent-top-toolbar candidate-top-toolbar" id="kt_toolbar">
+<div class="toolbar candidate-top-toolbar" id="kt_toolbar">
   <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid candidate-toolbar-container">
-    <div class="talent-topbar candidate-topbar">
-      <div class="talent-topbar-copy">
-        <div class="talent-topbar-title-row">
-          <h1>{{ $pagetitle }}</h1>
-        </div>
-        <p>{{ $page_event == 'EDIT' ? 'Review candidate details and update the submission.' : 'Add a candidate to this job while keeping their profile complete and client-ready.' }}</p>
-      </div>
-      <div class="talent-topbar-actions">
-        @php
-            if($page_event == 'EDIT'){
-              echo '<button type="button" name="update" id="update-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>';
-            }else{
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Candidate</button>';
-            }
-        @endphp
-      </div>
-    </div>
-    <div class="candidate-job-context">
-      @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
+  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack candidate-toolbar-container">
+    @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
+    <div class="d-flex align-items-center py-1 candidate-header-actions">
+      @php
+          if($page_event == 'EDIT'){
+            echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>';
+          }else{
+            echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Candidate</button>';
+          }
+      @endphp
     </div>
   </div>
   <!--end::Container-->
