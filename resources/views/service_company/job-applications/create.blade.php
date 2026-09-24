@@ -488,26 +488,26 @@
                       <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
                     </select></div>
                   </div>
+                  <div class="fg fv-row">
+                    <label>Gender</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
+                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Date of Birth</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
+                  </div>
                 </div>
 
-                <details class="candidate-secondary-details" {{ (!empty(@$application->gender) || !empty(@$application->dob) || !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile)) ? 'open' : '' }}>
+                <details class="candidate-secondary-details" {{ (!empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile)) ? 'open' : '' }}>
                   <summary>
-                    <span class="candidate-secondary-summary"><span class="candidate-secondary-icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span><span><strong>Additional Secondary Details</strong><small>Gender, date of birth, and optional secondary contact information.</small></span></span>
+                    <span class="candidate-secondary-summary"><span class="candidate-secondary-icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span><span><strong>Additional Secondary Contact</strong><small>Optional secondary email and contact number.</small></span></span>
                     <span class="candidate-secondary-toggle"><span class="candidate-secondary-show">Show Details</span><span class="candidate-secondary-hide">Hide Details</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
                   </summary>
                   <div class="candidate-secondary-grid">
-                    <div class="fg fv-row">
-                      <label>Gender</label>
-                      <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
-                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                      </select></div>
-                    </div>
-                    <div class="fg fv-row">
-                      <label>Date of Birth</label>
-                      <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
-                    </div>
                     <div class="fg fv-row">
                       <label>Secondary Email</label>
                       <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" /></div>
@@ -518,6 +518,20 @@
                     </div>
                   </div>
                 </details>
+              </div>
+            </div>
+
+            <!-- Primary Skills -->
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div id="skillTags" class="skill-tags"></div>
+                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -689,105 +703,6 @@
               </div>
             </div>
 
-            <!-- Notice Period and Joining Details -->
-            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
-              <div class="fsh candidate-card-header aw-hero">
-                <div class="candidate-card-title aw-hero-title">
-                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
-                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body aw-body">
-                <div class="candidate-notice-status-block">
-                  <label>Notice Period Status <span class="rq">*</span></label>
-                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Status">
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="2" role="radio" aria-checked="false">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="1" role="radio" aria-checked="false">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
-                    </button>
-                    <button type="button" class="candidate-notice-option" data-notice-period-value="0" role="radio" aria-checked="false">
-                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
-                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
-                    </button>
-                  </div>
-                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
-                    <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                    <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                    <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
-                  </select>
-                </div>
-
-                <div class="candidate-notice-details-grid">
-                  <div class="fg fv-row candidate-notice-detail">
-                    <label>Notice Period / Last Working Date <span class="rq">*</span></label>
-                    <div class="candidate-notice-input-shell">
-                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
-                      <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
-                        <div class="candidate-notice-status-copy"><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
-                        <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date or notice period" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
-                      </div>
-                      <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
-                        <option value="">Select Notice Period</option>
-                        @php
-                            for ($i = 1; $i <= 200; $i++) {
-                                    $s = 'Day';
-                                    if($i > 1){
-                                        $s = 'Days';
-                                    }
-                                  $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                echo "<option value="$i" $selected>{$i} {$s}</option>";
-                            }
-                        @endphp
-                      </select>
-                      <input type="text" id="calender" name="calender" style="display:none">
-                    </div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Reason for Job Change</label>
-                    <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Preferred Work Mode -->
-            <div class="fs candidate-card preferred-work-mode-card">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
-                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-                <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span><strong>Remote</strong><small>Can work from any location.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-regular fa-building" aria-hidden="true"></i></span><span><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><span><strong>Work From Office</strong><small>Office location based work.</small></span></label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Primary Skills -->
-            <div class="fs fv-row se-card primary-skills-card candidate-card">
-              <div class="fsh candidate-card-header se-hero">
-                <div class="candidate-card-title se-title">
-                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-                <div id="skillTags" class="skill-tags"></div>
-                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
-              </div>
-            </div>
-
             <!-- Salary Details -->
             <div class="fs br-card salary-card candidate-card">
               <div class="fsh candidate-card-header br-hero">
@@ -838,8 +753,15 @@
               </div>
               <div class="fsc candidate-card-body br-body">
                 <div class="candidate-salary-grid">
-                  <section class="candidate-salary-panel candidate-salary-panel--current">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-user" aria-hidden="true"></i></span><div><strong>Current Salary</strong><small>What the candidate currently earns</small></div></div>
+                  <section class="candidate-salary-panel candidate-salary-panel--current {{ ((string) $selected_exp_year === '0') ? 'is-fresher-locked' : '' }}">
+                                        <div class="candidate-salary-panel-head">
+                      <span><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                      <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
+                      <span class="candidate-salary-lock-info" tabindex="0" role="note" aria-label="Current Salary is locked for fresher candidates. Expected Salary remains editable.">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        <span class="candidate-salary-lock-tooltip">Current Salary is locked for fresher candidates. Expected Salary remains available.</span>
+                      </span>
+                    </div>
                     <div class="candidate-salary-tabs" role="tablist" aria-label="Current salary period">
                       <button type="button" class="is-active" data-salary-group="current" data-salary-period="annual">Annual</button>
                       <button type="button" data-salary-group="current" data-salary-period="monthly">Monthly</button>
@@ -874,13 +796,13 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
@@ -937,6 +859,92 @@
                 </div>
               </div>
             </div>
+
+            <!-- Notice Period and Joining Details -->
+            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
+              <div class="fsh candidate-card-header aw-hero">
+                <div class="candidate-card-title aw-hero-title">
+                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body aw-body">
+                <div class="candidate-notice-status-block">
+                  <label>Notice Period Status <span class="rq">*</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Status">
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="2" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="1" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option" data-notice-period-value="0" role="radio" aria-checked="false">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                    </button>
+                  </div>
+                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
+                    <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
+                    <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                  </select>
+                </div>
+
+                <div class="candidate-notice-details-grid">
+                  <div class="fg fv-row candidate-notice-detail">
+                    <label>Notice Period / Last Working Date <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                      <div style="{{ @$snp_text_one }}" id="snp-immediate" class="candidate-last-working-date">
+                        <div class="candidate-notice-status-copy"><input type="text" id="text_display" value="{{ $snp_text_dummy }}" class="form-control form-control-solid" placeholder="" readonly></div>
+                        <div class="candidate-date-picker"><input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date or notice period" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly><input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()"></div>
+                      </div>
+                      <select class="form-select form-select-solid" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="<?php echo @$snp_text_zero; ?>">
+                        <option value="">Select Notice Period</option>
+                        @php
+                            for ($i = 1; $i <= 200; $i++) {
+                                    $s = 'Day';
+                                    if($i > 1){
+                                        $s = 'Days';
+                                    }
+                                  $selected = ($i == @$application->np_id) ? 'selected' : '';
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $s . '</option>';
+                            }
+                        @endphp
+                      </select>
+                      <input type="text" id="calender" name="calender" style="display:none">
+                    </div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Reason for Job Change</label>
+                    <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-regular fa-building" aria-hidden="true"></i></span><span><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><span><strong>Work From Office</strong><small>Office location based work.</small></span></label>
+                </div>
+              </div>
+            </div>
+
             <!-- Skills Details -->
             <div class="fs se-card job-skills-card candidate-card">
               <div class="fsh candidate-card-header se-hero">
@@ -1042,8 +1050,13 @@
               </div>
             </div>
 
-             <!-- Skills Details -->
-          @if(!empty($job_additional_detail))
+            <!-- Screening Questions -->
+            @php
+                $screeningQuestions = collect($job_additional_detail ?? [])->filter(function ($question) {
+                    return is_object($question) && trim((string) ($question->detail_value ?? '')) !== '';
+                });
+            @endphp
+          @if($screeningQuestions->isNotEmpty())
             <div class="fs candidate-card questions-card">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
@@ -1064,7 +1077,7 @@
                     $inc_first		=	0;
                     $inc_last		=	1;
                      $html	.=	'<div class="form-group row mb-10">';	
-                    foreach($job_additional_detail as $aDetailArr){
+                    foreach($screeningQuestions as $aDetailArr){
                       if(!empty($aDetailArr->detail_value)){
                       
                       $ans_value	=	'';
@@ -1120,10 +1133,10 @@
                             <div class="ad">Date and Time(Slot-1)</div>
                              <div class="row">
                               <div class="col-4 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
                               </div>
                               <div class="col-3 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" readonly="readonly">
+                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off">
                               </div>
                               <div class="col-5 pl-0">
                                 <select name="interview_mode_one" id="interview_mode_one"
@@ -1146,10 +1159,10 @@
                             <div class="ad">Date and Time(Slot-2)</div>
                             <div class="row">
                               <div class="col-4 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" readonly="readonly">
+                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" autocomplete="off">
                               </div>
                               <div class="col-3 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
+                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off">
                               </div>
                               <div class="col-5 pl-0">
                                 <select name="interview_mode_two" id="interview_mode_two"
@@ -1172,10 +1185,10 @@
                               <div class="ad">Date and Time(Slot-3)</div>
                               <div class="row">
                                 <div class="col-4 pl-0">
-                                  <input class="form-control form-control-solid" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" readonly="readonly">
+                                  <input class="form-control form-control-solid" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
                                 </div>
                                 <div class="col-3 pl-0">
-                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" readonly="readonly">
+                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off">
                                 </div>
                                 <div class="col-5 pl-0">
                                   <select name="interview_mode_three" id="interview_mode_three"
@@ -1266,12 +1279,12 @@
               </div>
             </div>
 
-            <!-- Recruiter Note -->
+            <!-- Recruiter Comments -->
             <div class="fs candidate-card recruiter-note-card">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
-                  <span><strong>Recruiter Note</strong><small>Add internal context for the hiring team; this is not shared with the candidate.</small></span>
+                  <span><strong>Recruiter Comments</strong><small>Add internal context for the hiring team; this is not shared with the candidate.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -2161,6 +2174,8 @@ setTimeout(() => {
                     time_24hr: format === "H:i",
                     minuteIncrement: 1,
                     allowInput: true, // allow user to delete value
+                    clickOpens: true,
+                    disableMobile: true,
                     onChange: function(selectedDates, dateStr, instance) {
                         if (selectedDates.length > 0) {
                             let d = selectedDates[0];
@@ -2187,10 +2202,13 @@ setTimeout(() => {
               let existingDate = $(selector).val();
               let savedDateObj = parseDMY(existingDate);
 
-              $(selector).flatpickr({
+              return $(selector).flatpickr({
                   dateFormat: "d-m-Y",
                   altInput: true,
                   altFormat: "d-M-Y",
+                  allowInput: true,
+                  clickOpens: true,
+                  disableMobile: true,
                   defaultDate: savedDateObj || getFutureDate(offsetDays),
                   minDate: savedDateObj ? null : "today", // block past unless saved
                   disable: savedDateObj
@@ -4025,20 +4043,44 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 
     var experienceSelect = root.querySelector('#total_exp_year');
     var professionalProfile = root.querySelector('#candidateProfessionalProfile');
+    var currentSalaryPanel = root.querySelector('.candidate-salary-panel--current');
+    var currentSalaryInputs = [
+        root.querySelector('#pay_annual'),
+        root.querySelector('#pay_monthly'),
+        root.querySelector('#ctc')
+    ];
 
-    function syncProfessionalProfile() {
-        if (!experienceSelect || !professionalProfile) {
+    function syncFresherDependentSections() {
+        if (!experienceSelect) {
             return;
         }
 
         var isFresher = String(experienceSelect.value) === '0';
-        professionalProfile.classList.toggle('is-fresher-hidden', isFresher);
-        professionalProfile.setAttribute('aria-hidden', isFresher ? 'true' : 'false');
+
+        if (professionalProfile) {
+            professionalProfile.classList.toggle('is-fresher-hidden', isFresher);
+            professionalProfile.setAttribute('aria-hidden', isFresher ? 'true' : 'false');
+        }
+
+        if (currentSalaryPanel) {
+            currentSalaryPanel.classList.toggle('is-fresher-locked', isFresher);
+            currentSalaryPanel.setAttribute('aria-disabled', isFresher ? 'true' : 'false');
+            currentSalaryPanel.title = isFresher
+                ? 'Current Salary is locked for fresher candidates. Expected Salary remains editable.'
+                : '';
+        }
+
+        currentSalaryInputs.forEach(function (input) {
+            if (input) {
+                input.readOnly = isFresher;
+                input.setAttribute('aria-readonly', isFresher ? 'true' : 'false');
+            }
+        });
     }
 
     if (experienceSelect) {
-        experienceSelect.addEventListener('change', syncProfessionalProfile);
-        syncProfessionalProfile();
+        experienceSelect.addEventListener('change', syncFresherDependentSections);
+        syncFresherDependentSections();
     }
 
     var noticePeriodSelect = root.querySelector('#serving_notice_period');
