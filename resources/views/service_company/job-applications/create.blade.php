@@ -661,7 +661,7 @@
             </div>
 
             <!-- Professional Profile -->
-            <div class="fs pd-card candidate-card professional-profile-card {{ ((string) $selected_exp_year === '0') ? 'is-fresher-hidden' : '' }}" id="candidateProfessionalProfile">
+            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
               <div class="fsh candidate-card-header pd-hero">
                 <div class="candidate-card-title pd-hero-title">
                   <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
@@ -747,14 +747,11 @@
               </div>
               <div class="fsc candidate-card-body br-body">
                 <div class="candidate-salary-grid">
-                  <section class="candidate-salary-panel candidate-salary-panel--current {{ ((string) $selected_exp_year === '0') ? 'is-fresher-locked' : '' }}">
+                  <section class="candidate-salary-panel candidate-salary-panel--current">
                                         <div class="candidate-salary-panel-head">
                       <span><i class="fa-solid fa-user" aria-hidden="true"></i></span>
                       <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
-                      <span class="candidate-salary-lock-info" tabindex="0" role="note" aria-label="Current Salary is locked for fresher candidates. Expected Salary remains editable.">
-                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                        <span class="candidate-salary-lock-tooltip">Current Salary is locked for fresher candidates. Expected Salary remains available.</span>
-                      </span>
+
                     </div>
                     <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
                       <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="annual" data-salary-mode="0">Annual</button>
@@ -790,13 +787,13 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount"  {{ ((string) $selected_exp_year === '0') ? 'readonly' : '' }}/><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
@@ -1184,7 +1181,7 @@
                                   <input class="form-control form-control-solid" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
                                 </div>
                                 <div class="col-3 pl-0">
-                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off">
+                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off">
                                 </div>
                                 <div class="col-5 pl-0">
                                   <select name="interview_mode_three" id="interview_mode_three"
@@ -2139,96 +2136,7 @@ $(document).ready(function () {
 
 
 
-setTimeout(() => {
-          
-          var defaultTimeFormat = '{{$defaultTimeFormat}}';
-         
-           // For all time pickers
-          function initTimePicker(selector, format) {
-                return $(selector).flatpickr({
-                    enableTime: true,
-                    noCalendar: true,
-                    dateFormat: format,   // "h:i K" or "H:i"
-                    time_24hr: format === "H:i",
-                    minuteIncrement: 1,
-                    allowInput: true, // allow user to delete value
-                    clickOpens: true,
-                    disableMobile: true,
-                    onChange: function(selectedDates, dateStr, instance) {
-                        if (selectedDates.length > 0) {
-                            let d = selectedDates[0];
-                            if (d.getHours() === 0 && d.getMinutes() === 0) {
-                                instance.clear(); // auto clear if 00:00
-                            }
-                        }
-                    }
-                });
-            }
 
-            // Example init
-          let timeOnePicker   = initTimePicker("#interviewTimeOne",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeTwoPicker   = initTimePicker("#interviewTimeTwo",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeThreePicker = initTimePicker("#interviewTimeThree",'{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-
-          function parseDMY(dmy) {
-              if (!dmy) return null;
-              let parts = dmy.split("-");
-              return new Date(parts[2], parts[1] - 1, parts[0]); // Y, M-1, D
-          }
-
-          function initInterviewDatePicker(selector, offsetDays) {
-              let existingDate = $(selector).val();
-              let savedDateObj = parseDMY(existingDate);
-
-              return $(selector).flatpickr({
-                  dateFormat: "d-m-Y",
-                  altInput: true,
-                  altFormat: "d-M-Y",
-                  allowInput: true,
-                  clickOpens: true,
-                  disableMobile: true,
-                  defaultDate: savedDateObj || getFutureDate(offsetDays),
-                  minDate: savedDateObj ? null : "today", // block past unless saved
-                  disable: savedDateObj
-                      ? [
-                          function (date) {
-                              let today = new Date();
-                              today.setHours(0,0,0,0);
-                              let sameAsSaved = date.getTime() === savedDateObj.getTime();
-                              return date < today && !sameAsSaved;
-                          }
-                        ]
-                      : [],
-                  onReady: function(selectedDates, dateStr, instance) {
-                      instance.altInput.style.width = "129px";
-                  }
-              });
-          }
-
-          function getFutureDate(days) {
-              const date = new Date();
-              date.setDate(date.getDate() + days);
-              return date;
-          }
-
-          initInterviewDatePicker("#interviewDateOne", 0);
-          initInterviewDatePicker("#interviewDateTwo", 1);
-          initInterviewDatePicker("#interviewDateThree", 2);
-
-
-
-          function clearAll() {
-            timeOnePicker.clear();
-            timeTwoPicker.clear();
-            timeThreePicker.clear();
-
-            dateOnePicker.clear();
-            dateTwoPicker.clear();
-            dateThreePicker.clear();
-        }
-        
-          
-}, 500);
 
 
     let linkedinRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/i;
@@ -2708,266 +2616,134 @@ KTUtil.onDOMContentLoaded(function () {
 @php } @endphp
 
 <script>
+  var tagifyskill = null;
+  var tagifylocation = null;
 
-	var input2 = document.querySelector("#kt_tagify_2");
-	// new Tagify(input2);
-
-  var tagifyskill =  new Tagify(input2, {
-        whitelist: [''],
-        dropdown: {
-            maxItems: 20,           // <- mixumum allowed rendered suggestions 
-            classname: "", // <- custom classname for this dropdown, so it could be targeted tagify__inline__suggestions
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true    // <- do not hide the suggestions dropdown once an item has been selected
-        },
-        maxTags: 10,
-        validate: function(tagData) {
-            // Prevent empty tags after cleaning
-            return tagData.value.trim().length > 0 ? true : false;
-        },
-        templates: {
-            tag: function(tagData) {
-                tagData = tagData || {};
-                const value = tagData.value || '';
-                return `
-                    <tag title="${value}" contenteditable='false' spellcheck="false"
-                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                        ${this.getAttributes(tagData)}>
-                        <div style="padding:2px 6px; display:flex; align-items:center; gap:6px;">
-                            <span class="tagify__tag-text">${value}</span>
-                            <span style="width:16px;height:16px;border-radius:50%;background:#A5B4FC; border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3730A3;line-height:1;flex-shrink:0;">
-                                <x title="" class="tagify__tag__removeBtn"role="button" aria-label="remove tag"></x>
-                            </span>
-                        </div>
-                    </tag>
-                `;
-            }
-        },
-
-        transformTag: function(tagData) {
-            tagData.checked = tagData.checked || false;
-            return tagData;
-        }
-    });
-
-     const fetchSuggestionsSkills = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Skill: ", data);
-
-                if (Array.isArray(data)) {
-                    tagifyskill.settings.whitelist = data; // Update whitelist
-                    // tagifyskill.dropdown.show(query); // Show suggestions
-                    tagifyskill.dropdown.show.call(tagifyskill);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching Skill:", err);
-            }
-        });
-    }, 5); 
-
-    // Listen for user input to trigger API call
-    tagifyskill.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 1) return;
-        fetchSuggestionsSkills(query);
-    });
-
-
- 
-                             
-    // Initialize Tagify script on the above inputs
-    var tagifylocation =  new Tagify(inputloc, {
-        whitelist: cities,
-        enforceWhitelist: true, // Prevents users from adding custom values
-        maxTags: 1,
-        dropdown: {
-            maxItems: 20,           // <- mixumum allowed rendered suggestions 
-            classname: "", // <- custom classname for this dropdown, so it could be targeted tagify__inline__suggestions
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true    // <- do not hide the suggestions dropdown once an item has been selected
-        },
-        templates: {
-            tag: function(tagData) {
-                tagData = tagData || {};
-                const value = tagData.value || '';
-                return `
-                    <tag title="${value}" contenteditable='false' spellcheck="false"
-                        class="tagify__tag ${tagData.class ? tagData.class : ""}"
-                        ${this.getAttributes(tagData)}>
-                        <div style="padding:2px 6px; display:flex; align-items:center; gap:6px;">
-                            <span class="tagify__tag-text">${value}</span>
-                            <span style="width:16px;height:16px;border-radius:50%;background:#A5B4FC; border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3730A3;line-height:1;flex-shrink:0;">
-                                <x title="" class="tagify__tag__removeBtn"role="button" aria-label="remove tag"></x>
-                            </span>
-                        </div>
-                    </tag>
-                `;
-            }
-        },
-
-        transformTag: function(tagData) {
-            tagData.checked = tagData.checked || false;
-            return tagData;
-        }
-    });
-
-    // Prevent creating tags on blur or enter key
-    tagifylocation.on('input', function(e) {
-      tagifylocation.dropdown.show(); // show the dropdown immediately
-    });
-
-    // Create tags only on select
-    tagifylocation.on('dropdown:select', function(e) {
-      tagifylocation.addTags([e.detail.data.value]);
-    });
-    tagifylocation.on('add', function(e) {
-      // alert(cities);
-    // Remove the tag if it wasn't selected from the dropdown
-    // if (!cities.includes(e.detail.data.value)) {
-    //   setTimeout(() => {
-    //     tagifylocation.removeTag(e.detail.data.value);
-    //   }, 200);
-       
-    // }
-   });
-
-   document.addEventListener('click', function (e) {
-            // remove button clicked
-            if (e.target.classList.contains('tagify__tag__removeBtn')) {
-
-                // get tag element
-                const tagElm = e.target.closest('.tagify__tag');
-
-                // remove tag from tagify
-                tagifyskill.removeTags(tagElm);
-                tagifylocation.removeTags(tagElm);
-            }
-        });
-
-
-   function debounce(func, delay) {
-        let timer;
-        return function (...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => func.apply(this, args), delay);
-        };
-    }
-
-     // Debounced function to fetch suggestions
-    const fetchSuggestions = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Cities: ", data);
-
-                if (Array.isArray(data)) {
-                    tagifylocation.settings.whitelist = data; // Update whitelist
-                    // tagifylocation.dropdown.show(query); // Show suggestions
-                    tagifylocation.dropdown.show.call(tagifylocation);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching cities:", err);
-            }
-        });
-    }, 300); // 300ms delay
-
-    // Listen for user input to trigger API call
-    tagifylocation.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 2) return;
-        fetchSuggestions(query);
-    });
-
-    setTimeout(() => {
-      var city = "{{@$default_loc}}";
-      if(city !=''){
-        var cityName = city.split(" | ")[0]; // Get the first part (Ballia)
-        fetchSuggestions(cityName);
+  function candidateNormalizeSuggestions(data) {
+      if (!Array.isArray(data)) {
+          return [];
       }
-    }, 100);
-    setTimeout(() => {
-        var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
-        if (defaultLocation) {
-            tagifylocation.addTags([defaultLocation]); // Add the default location as a tag
-            tagifylocation.dropdown.hide();
-        }
-    }, 2000); // 3 seconds delay
 
-
-  
-
-
-   
-		}else if(cvalue ==2){
-      $('#snp-immediate').show();
-			$('#ddl_np_id').hide();
-			$('#np_id').show();		
-			// $("#np_id").attr('type','text');
-			$('#np_id').attr("disabled", false);
-      $("#np_id").attr('type','date');
-			$('#text_display').val('Immediate');
-      $("#snp-immediate").attr('style','display:flex');	
-      dateManageFunc();
-		}	
-   })
-   
-   $(document).on('change','#np_id',function(){
-        var datess = $(this).val();
-        if (datess) {
-        var dateObj = new Date(datess);
-        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
-        var formattedDate = 
-            ('0' + dateObj.getDate()).slice(-2) + '/' + 
-            months[dateObj.getMonth()] + '/' + 
-            dateObj.getFullYear(); // Convert to DD/Mon/YYYY
-
-        document.getElementById('np_id_display').value = formattedDate;
-    }
-        // document.getElementById('np_id_display').value = datess;
-   });
-  
-         
-         
-
-  function dateManageFunc(){
-     // var radios = document.getElementsByName('serving_notice_period');
-      var radios = $('#serving_notice_period').val();
-         var today = new Date().toISOString().split('T')[0];
-          // Loop through each radio button and check which one is selected
-          for (var i = 0; i < radios.length; i++) {
-              if (radios==1 || radios==2) {
-                if (radios == 1) {
-                    // Future dates allowed
-                    $('#np_id').removeAttr('max'); // Remove max restriction
-                    $('#np_id').attr('min', today); // Set min to today
-                    $('#np_id').attr('placeholder', 'Select your last working date (future dates allowed)'); // Set placeholder
-                } else {
-                    // Past dates allowed
-                    $('#np_id').removeAttr('min'); // Remove min restriction
-                    $('#np_id').attr('max', today); // Set max to today
-                    $('#np_id').attr('placeholder', 'Select your last working date (past  dates allowed)'); // Set placeholder
-                }
-                  break; // Stop the loop once the selected radio button is found
-              }
+      return data.map(function (item) {
+          if (typeof item === 'string') {
+              return item.trim();
           }
+
+          return String((item && (item.value || item.name || item.text)) || '').trim();
+      }).filter(Boolean);
   }
-  dateManageFunc();
-  
 
+  function candidateDebounce(callback, delay) {
+      var timer;
 
+      return function () {
+          var context = this;
+          var args = arguments;
+          window.clearTimeout(timer);
+          timer = window.setTimeout(function () {
+              callback.apply(context, args);
+          }, delay);
+      };
+  }
 
+  var candidateSkillInput = document.querySelector('#kt_tagify_2');
+  var candidateLocationInput = document.querySelector('#kt_tagify_work_location');
 
+  if (typeof window.Tagify === 'function' && candidateSkillInput && candidateLocationInput) {
+      tagifyskill = new window.Tagify(candidateSkillInput, {
+          whitelist: [],
+          maxTags: 10,
+          dropdown: {
+              maxItems: 20,
+              enabled: 1,
+              closeOnSelect: true,
+              highlightFirst: true
+          }
+      });
+
+      var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
+          window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
+              .done(function (data) {
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  tagifyskill.settings.whitelist = suggestions;
+                  tagifyskill.dropdown.show(query);
+              });
+      }, 250);
+
+      tagifyskill.on('input', function (event) {
+          var query = String(event.detail.value || '').trim();
+          if (query.length < 1) {
+              tagifyskill.dropdown.hide();
+              return;
+          }
+
+          fetchCandidateSkillSuggestions(query);
+      });
+
+      var initialLocations = candidateNormalizeSuggestions(@json($cities));
+      var defaultLocation = String(@json(@$default_loc) || '').trim();
+      if (defaultLocation && initialLocations.indexOf(defaultLocation) === -1) {
+          initialLocations.push(defaultLocation);
+      }
+
+      tagifylocation = new window.Tagify(candidateLocationInput, {
+          whitelist: initialLocations,
+          enforceWhitelist: true,
+          maxTags: 1,
+          dropdown: {
+              maxItems: 20,
+              enabled: 0,
+              closeOnSelect: true,
+              highlightFirst: true
+          }
+      });
+
+      function setSingleCandidateLocation(value) {
+          var normalizedValue = String(value || '').trim();
+          tagifylocation.removeAllTags();
+
+          if (normalizedValue) {
+              if (tagifylocation.settings.whitelist.indexOf(normalizedValue) === -1) {
+                  tagifylocation.settings.whitelist.unshift(normalizedValue);
+              }
+              tagifylocation.addTags([normalizedValue]);
+          }
+      }
+
+      var fetchCandidateLocationSuggestions = candidateDebounce(function (query) {
+          window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: query })
+              .done(function (data) {
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  tagifylocation.settings.whitelist = suggestions;
+                  tagifylocation.dropdown.show(query);
+              });
+      }, 250);
+
+      tagifylocation.on('input', function (event) {
+          var query = String(event.detail.value || '').trim();
+          if (query.length < 2) {
+              tagifylocation.dropdown.show(query);
+              return;
+          }
+
+          fetchCandidateLocationSuggestions(query);
+      });
+
+      tagifylocation.on('dropdown:select', function (event) {
+          setSingleCandidateLocation(event.detail.data.value);
+      });
+
+      tagifylocation.on('add', function (event) {
+          if (tagifylocation.value.length > 1) {
+              setSingleCandidateLocation(event.detail.data.value);
+          }
+      });
+
+      if (defaultLocation) {
+          setSingleCandidateLocation(defaultLocation);
+          tagifylocation.dropdown.hide();
+      }
+  }
    $('body').on('change', '#current_ctc_cur', function(){
    			var	current_ctc_cur		=	$(this).val();
 			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
@@ -3559,10 +3335,18 @@ function re_test(text){
                       $('#current_company').val(response.currentjob);
                       $('#qualification').val(response.qualification).change();
 
-                      tagifyskill.removeAllTags(); // Clear existing tags first
-                      tagifyskill.addTags(response.skills); // Add new tags
-                      tagifylocation.removeAllTags(); // Clear existing tags first
-                      tagifylocation.addTags(response.country); // Add new tags
+                      var parsedSkills = Array.isArray(response.skills)
+                          ? response.skills
+                          : String(response.skills || '').split(',').map(function (skill) {
+                              return skill.trim();
+                          }).filter(Boolean);
+                      if (tagifyskill && parsedSkills.length) {
+                          tagifyskill.removeAllTags();
+                          tagifyskill.addTags(parsedSkills);
+                      }
+                      if (tagifylocation && response.country) {
+                          setSingleCandidateLocation(response.country);
+                      }
 
                       // Refresh the post-upload Resume Information card
                       // with the parser's per-file metadata. Skills count +
@@ -3827,7 +3611,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     
 $(document).ready(function() {
-    $.noConflict();  
         var optionFormat = function(item) {
             if ( !item.id ) {
                 return item.text;
@@ -3942,48 +3725,6 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     var root = document.querySelector('.job-candidate-create');
     if (!root) {
         return;
-    }
-
-    var experienceSelect = root.querySelector('#total_exp_year');
-    var professionalProfile = root.querySelector('#candidateProfessionalProfile');
-    var currentSalaryPanel = root.querySelector('.candidate-salary-panel--current');
-    var currentSalaryInputs = [
-        root.querySelector('#pay_annual'),
-        root.querySelector('#pay_monthly'),
-        root.querySelector('#ctc')
-    ];
-
-    function syncFresherDependentSections() {
-        if (!experienceSelect) {
-            return;
-        }
-
-        var isFresher = String(experienceSelect.value) === '0';
-
-        if (professionalProfile) {
-            professionalProfile.classList.toggle('is-fresher-hidden', isFresher);
-            professionalProfile.setAttribute('aria-hidden', isFresher ? 'true' : 'false');
-        }
-
-        if (currentSalaryPanel) {
-            currentSalaryPanel.classList.toggle('is-fresher-locked', isFresher);
-            currentSalaryPanel.setAttribute('aria-disabled', isFresher ? 'true' : 'false');
-            currentSalaryPanel.title = isFresher
-                ? 'Current Salary is locked for fresher candidates. Expected Salary remains editable.'
-                : '';
-        }
-
-        currentSalaryInputs.forEach(function (input) {
-            if (input) {
-                input.readOnly = isFresher;
-                input.setAttribute('aria-readonly', isFresher ? 'true' : 'false');
-            }
-        });
-    }
-
-    if (experienceSelect) {
-        experienceSelect.addEventListener('change', syncFresherDependentSections);
-        syncFresherDependentSections();
     }
 
     var noticePeriodSelect = root.querySelector('#serving_notice_period');
@@ -4298,4 +4039,123 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 })();
 </script>
 
+
+<script>
+(function initializeCandidateAvailabilityPickers() {
+    'use strict';
+
+    var dateFields = [
+        { id: 'interviewDateOne', offset: 0 },
+        { id: 'interviewDateTwo', offset: 1 },
+        { id: 'interviewDateThree', offset: 2 }
+    ];
+    var timeFieldIds = ['interviewTimeOne', 'interviewTimeTwo', 'interviewTimeThree'];
+    var timeFormat = @json($defaultTimeFormat == 1 ? 'h:i K' : 'H:i');
+
+    function parseDisplayDate(value) {
+        var match = String(value || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
+    }
+
+    function futureDate(offset) {
+        var date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + offset);
+        return date;
+    }
+
+    function nativeDateValue(date) {
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return date.getFullYear() + '-' + month + '-' + day;
+    }
+
+    function nativeTimeValue(value) {
+        var match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+        if (!match) {
+            return '';
+        }
+
+        var hour = Number(match[1]);
+        var suffix = String(match[3] || '').toUpperCase();
+        if (suffix === 'PM' && hour < 12) {
+            hour += 12;
+        } else if (suffix === 'AM' && hour === 12) {
+            hour = 0;
+        }
+
+        return String(hour).padStart(2, '0') + ':' + match[2];
+    }
+
+    if (typeof window.flatpickr === 'function') {
+        timeFieldIds.forEach(function (id) {
+            var field = document.getElementById(id);
+            if (!field || field._flatpickr) {
+                return;
+            }
+
+            window.flatpickr(field, {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: timeFormat,
+                time_24hr: timeFormat === 'H:i',
+                minuteIncrement: 1,
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: true
+            });
+        });
+
+        dateFields.forEach(function (config) {
+            var field = document.getElementById(config.id);
+            if (!field || field._flatpickr) {
+                return;
+            }
+
+            var savedDate = parseDisplayDate(field.value);
+            window.flatpickr(field, {
+                dateFormat: 'd-m-Y',
+                altInput: true,
+                altFormat: 'd-M-Y',
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: true,
+                defaultDate: savedDate || futureDate(config.offset),
+                minDate: savedDate ? null : 'today',
+                disable: savedDate ? [function (date) {
+                    var today = futureDate(0);
+                    return date < today && date.getTime() !== savedDate.getTime();
+                }] : []
+            });
+        });
+
+        return;
+    }
+
+    dateFields.forEach(function (config) {
+        var field = document.getElementById(config.id);
+        if (!field) {
+            return;
+        }
+
+        var savedDate = parseDisplayDate(field.value);
+        field.type = 'date';
+        field.value = nativeDateValue(savedDate || futureDate(config.offset));
+        if (!savedDate) {
+            field.min = nativeDateValue(futureDate(0));
+        }
+    });
+
+    timeFieldIds.forEach(function (id) {
+        var field = document.getElementById(id);
+        if (!field) {
+            return;
+        }
+
+        var existingValue = nativeTimeValue(field.value);
+        field.type = 'time';
+        field.value = existingValue;
+    });
+})();
+</script>
 @endpush
