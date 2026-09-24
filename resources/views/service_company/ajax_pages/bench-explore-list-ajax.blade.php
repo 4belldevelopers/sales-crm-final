@@ -55,7 +55,7 @@
                           ? 'client-show-detail' : 'show-detail';
 
     $logo_path = @$jobDetails->logo ?? '';
-    $company_display_name = ucwords(@$jobDetails->company_name ?? @$row->other_company ?? @$row->client_name ?? '');
+    $company_display_name = '';
 
     $displayTitle = @$jobDetails->title;
     if (empty($displayTitle) || str_starts_with($displayTitle, 'Requisition #')) {
@@ -160,27 +160,78 @@
         $workModeIconSvg = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M9 21v-6h6v6M8 7h.01M12 7h.01M16 7h.01M8 11h.01M12 11h.01M16 11h.01"/></svg>';
     }
 
-    /* ── Client Type Badge — derived from the same branch that the jobs
-       page uses to colour its $internalBadge. Pure data-derivation, no
-       new queries. Routed recommendations (recommendation_id > 0 with
-       to_company_id == viewer's company_id) → Direct Client (green);
-       in-house (self_company == 1) or any non-routed route → Internal
-       Client (blue). The numeric "· jobId" suffix matches the legacy
-       "Internal Client · 1410" / "Direct Client · 1390" form so a
-       reader familiar with the page sees the ID jump out at the same
-       spot it always did. The badge occupies the third vertical slot
-       in the EXPERIENCE column (under exp + salary) for visual
-       hierarchy: profile-anchored text first, classification last. ── */
-    if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
-        $parentCompName   = $row->company_name ?? ($row->clients_name ?? '');
+    /* ── Client Type Badge & Direct Client detection ──────
+       If job belongs to an external/direct client company ($jobDetails->comId != $company_id
+       or recommendation_id > 0 with to_company_id == $company_id), mark as Direct Client.
+       Otherwise mark as Internal / Internal Client. ── */
+    $isDirectClientJob = ($recommendation_id > 0 && (int) $to_company_id === (int) $company_id)
+        || ((int) ($jobDetails->comId ?? 0) > 0 && (int) $jobDetails->comId !== (int) $company_id)
+        || ((int) $from_company_id > 0 && (int) $from_company_id !== (int) $company_id);
+
+    static $bxrClientCache = [];
+    $clientId = (int) ($jobDetails->client_id ?? $jobDetails->clientId ?? 0);
+    $clientName = $jobDetails->client_name ?? $jobDetails->clients_name ?? '';
+    $clientLogo = '';
+    $isSelfCompany = false;
+
+    if ($clientId > 0) {
+        if (!array_key_exists($clientId, $bxrClientCache)) {
+            $clientRow = DB::table('clients')->where('id', $clientId)->select('name', 'self_company', 'logo', 'logo_logical_path')->first();
+            $bxrClientCache[$clientId] = [
+                'name' => $clientRow->name ?? '',
+                'self_company' => ((int) ($clientRow->self_company ?? 0)) === 1,
+                'logo' => !empty($clientRow->logo_logical_path)
+                    ? (str_starts_with($clientRow->logo_logical_path, 'http') ? $clientRow->logo_logical_path : url('public/'.$clientRow->logo_logical_path))
+                    : (!empty($clientRow->logo) ? (str_starts_with($clientRow->logo, 'http') ? $clientRow->logo : url('public/'.$clientRow->logo)) : '')
+            ];
+        }
+        $isSelfCompany = $bxrClientCache[$clientId]['self_company'];
+        $clientLogo = $bxrClientCache[$clientId]['logo'];
+        if (empty($clientName)) {
+            $clientName = $bxrClientCache[$clientId]['name'];
+        }
+    } else {
+        $isSelfCompany = ((int) ($jobDetails->self_company ?? $row->self_company ?? 0)) === 1;
+    }
+
+    static $bxrCompNameCache = [];
+    $parentCompName = '';
+    if ($isDirectClientJob) {
+        $parentCompId = (int) ($from_company_id ?: ($jobDetails->comId ?? 0));
+        if ($parentCompId > 0) {
+            if (!array_key_exists($parentCompId, $bxrCompNameCache)) {
+                $bxrCompNameCache[$parentCompId] = DB::table('companies')->where('id', $parentCompId)->value('company_name') ?? '';
+            }
+            $parentCompName = $bxrCompNameCache[$parentCompId];
+        }
+        if (empty($parentCompName)) {
+            $parentCompName = !empty($jobDetails->company_name) ? $jobDetails->company_name : (!empty($row->company_name) ? $row->company_name : ($row->clients_name ?? ''));
+        }
+        $parentCompName = ucwords($parentCompName);
+
         $clientBadgeKey   = 'direct';
         $clientBadgeLabel = 'Direct Client';
         $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l2-2h14l2 2v13H3z"/><circle cx="12" cy="13" r="3.2"/></svg>';
+        $company_display_name = $parentCompName;
+        $logo_path = @$jobDetails->logo ?? '';
     } else {
         $clientBadgeKey   = 'internal';
-        $clientBadgeLabel = 'Internal';
+        $clientBadgeLabel = $isSelfCompany ? __('messages.internal_tag') : 'Internal Client';
         $clientBadgeSvg   = '<svg viewBox="0 0 24 24" width="11.5" height="11.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-7h6v7"/></svg>';
+        $company_display_name = ucwords(($isSelfCompany || empty($clientName)) ? (@$jobDetails->company_name ?? @$row->other_company ?? '') : $clientName);
+        $logo_path = $isSelfCompany ? (@$jobDetails->logo ?? '') : $clientLogo;
     }
+
+    $initialStr = !empty($company_display_name) ? trim($company_display_name)[0] : (trim($displayTitle)[0] ?? 'J');
+    $str      = strtolower($initialStr);
+    $ord      = ord($str);
+    $initials = strtoupper($str);
+    if     ($ord >= 97  && $ord <= 101) { $initBg = '#FEE2E2'; $initClr = '#DC2626'; }
+    elseif ($ord >= 102 && $ord <= 106) { $initBg = '#FEF3C7'; $initClr = '#D97706'; }
+    elseif ($ord >= 107 && $ord <= 111) { $initBg = '#DBEAFE'; $initClr = '#2563EB'; }
+    elseif ($ord >= 112 && $ord <= 116) { $initBg = '#DCFCE7'; $initClr = '#16A34A'; }
+    elseif ($ord >= 117 && $ord <= 121) { $initBg = '#1E293B'; $initClr = '#94A3B8'; }
+    else                                { $initBg = '#F1F5F9'; $initClr = '#475569'; }
 
     /* Category/department line (e.g. "IT (Information Technology)") — one
        lookup per DISTINCT category on the page, memoized across rows. */
@@ -233,8 +284,13 @@
     $showDesig = $hiringDesig && !in_array(strtolower(trim($hiringDesig)), $skipDesigList);
 
     /* ── Internal / Client tag ───────────────────── */
-    $recommendation_text = ($jobDetails->comId == $company_id)
-        ? __('messages.internal_tag') : __('messages.clinet_tag');
+    if ($isDirectClientJob) {
+        $recommendation_text = 'Direct Client';
+    } elseif ($isSelfCompany) {
+        $recommendation_text = 'Internal';
+    } else {
+        $recommendation_text = 'Internal Client';
+    }
     $jobIdText = $jobDetails->id . '-' . $recommendation_text;
 
     /* ── Job stage ───────────────────────────────── */
@@ -270,15 +326,48 @@
         try { $daysAgo = Carbon::parse($row->created_at)->diffForHumans(); } catch(\Exception $e){}
     }
 
-    /* ── Added by user ───────────────────────────── */
-    $addedByName = '';
-    $subUserId = (int)($row->submitted_by ?? 0);
-    if ($subUserId > 0) {
-        if (!array_key_exists($subUserId, $bxrUserCache)) {
-            $bxrUserCache[$subUserId] = DB::table('users')->where('id', $subUserId)->value('name') ?? '';
-        }
-        $addedByName = ucwords($bxrUserCache[$subUserId]);
+    /* ── Added by / Posted by / Direct Client Job Captain resolution ── */
+    if (!isset($spokpersonMap) || !is_object($spokpersonMap)) {
+        $spokpersonMap = collect();
     }
+    $row->ClientComID = $row->ClientComID ?? $to_company_id ?? $jobDetails->comId ?? 0;
+    $row->rec_candidate_assign_id = $row->rec_candidate_assign_id ?? $row->id ?? null;
+    $row->posted_by = $row->posted_by ?? $parentAgencyUserName ?? null;
+    $row->submitted_by_name = $row->submitted_by_name ?? $parentAgencyUserName ?? null;
+
+    if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
+        $spokKey = ($row->jobId ?? $row->job_id ?? 0) . '_' . $row->ClientComID;
+        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
+        $rowpostedby = $spokName ? $spokName : $row->posted_by;
+        $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by : $rowpostedby;
+    } else {
+        $rowpostedby = $row->posted_by;
+    }
+    if (empty($rowpostedby)) {
+        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+    }
+
+    // Direct Client Job Captain Name (spok_user_id > 0 for direct client comId)
+    static $bxrCaptainCache = [];
+    $directClientCaptainName = '';
+    $directClientComId = (int) ($row->ClientComID ?: ($to_company_id ?: ($jobDetails->comId ?? 0)));
+    $capKey = $jobId . '_' . $directClientComId;
+
+    if ($isDirectClientJob && $jobId > 0 && $directClientComId > 0) {
+        if (!array_key_exists($capKey, $bxrCaptainCache)) {
+            $bxrCaptainCache[$capKey] = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->where('job_assign.job_id', $jobId)
+                ->where('job_assign.company_id', $directClientComId)
+                ->where('job_assign.spok_user_id', '>', 0)
+                ->value('users.name') ?? '';
+        }
+        $directClientCaptainName = ucwords($bxrCaptainCache[$capKey]);
+    }
+
+    $addedUserDisplay = ($isDirectClientJob && !empty($directClientCaptainName))
+        ? $directClientCaptainName
+        : (!empty($rowpostedby) ? $rowpostedby : ($addedByName ?: '—'));
 
 @endphp
 
@@ -396,7 +485,7 @@
     {{-- ⑥ ADDED BY --}}
     <td>
         <div class="bxr-added-cell">
-            <span class="bxr-added-name">{{ $addedByName ?: '—' }}</span>
+            <span class="bxr-added-name" title="{{ $addedUserDisplay }}">{{ ucwords(mb_substr($addedUserDisplay, 0, 18)) ?: '—' }}</span>
             @if($addedDate)
                 <span class="bxr-added-date">{{ $addedDate }}</span>
             @endif

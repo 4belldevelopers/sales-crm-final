@@ -101,6 +101,7 @@
 .it-job-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .it-job-type{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;background:var(--it-primary-light);color:var(--it-primary)}
 .it-job-type-internal{background:#eef2ff;color:#4f46e5}
+.it-job-type-internal-client{background:#e0f2fe;color:#0284c7}
 .it-job-type-direct{background:#f0fdf4;color:#16a34a}
 .it-job-id{font-size:10px;color:var(--it-primary);font-weight:500;text-decoration:none}
 .it-job-id:hover{text-decoration:underline}
@@ -442,11 +443,19 @@ function renderBenchInterviewRows(data, companyId) {
         var jobTitle = (row.job_title || '').trim();
         var shortJobTitle = jobTitle.length > 18 ? jobTitle.substring(0, 18) : jobTitle;
 
+        var jobCompanyId = parseInt(row.job_company_id || row.real_company_id || row.ClientComID || row.from_company_id || row.thirdparty_company_id || 0);
+        var isDirectClientJob = (jobCompanyId > 0 && jobCompanyId != companyId) || ((row.recommendation_id || 0) > 0 && (row.to_company_id == companyId));
+
+        var isSelfCompany = (row.is_self_company_enriched !== undefined) ? !!row.is_self_company_enriched : true;
+
         var jobTypeLabel = 'Internal';
         var jobTypeClass = 'it-job-type-internal';
-        if ((row.recommendation_id || 0) > 0 && (row.to_company_id == companyId)) {
+        if (isDirectClientJob) {
             jobTypeLabel = 'Direct Client';
             jobTypeClass = 'it-job-type-direct';
+        } else if (!isSelfCompany) {
+            jobTypeLabel = 'Internal Client';
+            jobTypeClass = 'it-job-type-internal-client';
         }
 
         var modeIcon = '';
@@ -493,10 +502,29 @@ function renderBenchInterviewRows(data, companyId) {
             }
         }
 
-        var postedBy = ucwords((row.posted_by || '').trim());
+        var directClientCaptainName = '';
+        if (isDirectClientJob) {
+            if (row.captain_name_enriched) {
+                directClientCaptainName = row.captain_name_enriched;
+            } else if (row.job_assign && Array.isArray(row.job_assign)) {
+                for (var jaIdx = 0; jaIdx < row.job_assign.length; jaIdx++) {
+                    var jaItem = row.job_assign[jaIdx];
+                    if (jaItem && parseInt(jaItem.spok_user_id || 0) > 0 && jaItem.user_name) {
+                        directClientCaptainName = jaItem.user_name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        var displayPostedBy = (isDirectClientJob && directClientCaptainName)
+            ? directClientCaptainName
+            : (row.posted_by || row.submitted_by_name || row.spokperson_name || row.source || '—');
+
+        var postedBy = ucwords(String(displayPostedBy).trim());
         var companyName = (row.company_name || '').trim();
-        var shortPostedBy = postedBy.length > 12 ? postedBy.substring(0, 12) : postedBy;
-        var shortCompanyName = companyName.length > 12 ? companyName.substring(0, 12) : companyName;
+        var shortPostedBy = postedBy.length > 15 ? postedBy.substring(0, 15) : postedBy;
+        var shortCompanyName = companyName.length > 15 ? companyName.substring(0, 15) : companyName;
 
         var stageName = '';
         if (row.master_status_id == 8) stageName = 'Private';

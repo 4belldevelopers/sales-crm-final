@@ -77,12 +77,33 @@
                     $client_title_name = $row->client_title_name_enriched ?? $row->client_name ?? $row->company_name ?? '';
                     $client_name = ucwords(mb_substr($client_title_name, 0, 15));
 
+                    $jobId = (int) ($row->job_id ?? $row->jobId ?? 0);
+                    $jobCompanyId = (int) ($row->job_company_id ?? $row->real_company_id ?? $row->ClientComID ?? $row->from_company_id ?? $row->thirdparty_company_id ?? 0);
+                    $isDirectClientJob = ($jobCompanyId > 0 && $jobCompanyId != $company_id) || (($row->recommendation_id ?? 0) > 0 && (@$row->to_company_id == $company_id));
+
+                    static $benchSelfCompanyCache = [];
+                    $isSelfCompany = true;
+                    if (isset($row->is_self_company_enriched)) {
+                        $isSelfCompany = (bool) $row->is_self_company_enriched;
+                    } elseif ($jobId > 0) {
+                        if (!array_key_exists($jobId, $benchSelfCompanyCache)) {
+                            $sc = DB::table('jobs')
+                                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                                ->where('jobs.id', $jobId)
+                                ->value('clients.self_company');
+                            $benchSelfCompanyCache[$jobId] = ($sc === null || (int)$sc === 1);
+                        }
+                        $isSelfCompany = $benchSelfCompanyCache[$jobId];
+                    }
+
                     $jobTypeLabel = 'Internal';
                     $jobTypeClass = 'it-job-type-internal';
-                    if (($row->recommendation_id ?? 0) > 0 && (@$row->to_company_id == auth()->user()->company_id)) {
-                        $parentCompName = $row->company_name ?? ($row->client_title_name_enriched ?? '');
+                    if ($isDirectClientJob) {
                         $jobTypeLabel = 'Direct Client';
                         $jobTypeClass = 'it-job-type-direct';
+                    } elseif (!$isSelfCompany) {
+                        $jobTypeLabel = 'Internal Client';
+                        $jobTypeClass = 'it-job-type-internal-client';
                     }
                 @endphp
                 <div class="it-job-title" data-toggle="tooltip" title="{{ ucwords($row->job_title) }}">
@@ -182,12 +203,69 @@
 
             {{-- Source (Owner) --}}
             <td>
+                @php
+                    $jobId = (int) ($row->job_id ?? $row->jobId ?? 0);
+                    $jobCompanyId = (int) ($row->job_company_id ?? $row->real_company_id ?? $row->ClientComID ?? $row->from_company_id ?? $row->thirdparty_company_id ?? 0);
+                    $isDirectClientJob = ($jobCompanyId > 0 && $jobCompanyId != $company_id) || (($row->recommendation_id ?? 0) > 0 && (@$row->to_company_id == $company_id));
+
+                    static $benchCapCache = [];
+                    $directClientCaptainName = '';
+                    $capKey = $jobId . '_' . $jobCompanyId;
+
+                    if ($isDirectClientJob && $jobId > 0 && $jobCompanyId > 0) {
+                        // 1. Pre-hydrated map from controller
+                        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($capKey) ?? null) : null;
+                        if (!empty($spokName)) {
+                            $directClientCaptainName = $spokName;
+                        }
+
+                        // 2. Fallback to ES nested job_assign array
+                        if (empty($directClientCaptainName) && !empty($row->job_assign) && is_array($row->job_assign)) {
+                            foreach ($row->job_assign as $ja) {
+                                if (is_array($ja) && !empty($ja['spok_user_id']) && (int)$ja['spok_user_id'] > 0 && !empty($ja['user_name'])) {
+                                    $directClientCaptainName = $ja['user_name'];
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 3. Fallback to DB query cache
+                        if (empty($directClientCaptainName)) {
+                            if (!array_key_exists($capKey, $benchCapCache)) {
+                                $benchCapCache[$capKey] = DB::table('job_assign')
+                                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                                    ->where('job_assign.job_id', $jobId)
+                                    ->where('job_assign.company_id', $jobCompanyId)
+                                    ->where('job_assign.spok_user_id', '>', 0)
+                                    ->value('users.name') ?? '';
+                            }
+                            $directClientCaptainName = $benchCapCache[$capKey];
+                        }
+                    }
+
+                    if ($isDirectClientJob && $jobCompanyId > 0) {
+                        $spokKey = $jobId . '_' . $jobCompanyId;
+                        $spokName = (isset($spokpersonMap) && is_object($spokpersonMap)) ? ($spokpersonMap->get($spokKey) ?? null) : null;
+                        $rowpostedby = $spokName ? $spokName : (@$row->posted_by);
+                    } else {
+                        $rowpostedby = @$row->posted_by;
+                    }
+                    if (empty($rowpostedby)) {
+                        $rowpostedby = !empty($row->submitted_by_name) ? $row->submitted_by_name : (!empty($row->spokperson_name) ? $row->spokperson_name : (@$row->source ?: ''));
+                    }
+
+                    $sourcePersonName = ($isDirectClientJob && !empty($directClientCaptainName))
+                        ? $directClientCaptainName
+                        : (!empty($rowpostedby) ? $rowpostedby : '—');
+
+                    $sourceCompanyName = !empty($row->company_name) ? $row->company_name : (!empty($row->post_company_name) ? $row->post_company_name : (!empty($row->from_company_name) ? $row->from_company_name : ''));
+                @endphp
                 <div class="it-person-cell">
-                    <div class="it-person-name" data-toggle="tooltip" title="{{ @$row->posted_by }}">
-                        {{ ucwords(mb_substr(@$row->posted_by, 0, 12)) }}
+                    <div class="it-person-name" data-toggle="tooltip" title="{{ ucwords($sourcePersonName) }}">
+                        {{ ucwords(mb_substr($sourcePersonName, 0, 15)) }}
                     </div>
-                    <div class="it-person-company" data-toggle="tooltip" title="{{ @$row->company_name }}">
-                        {{ ucwords(mb_substr(@$row->company_name, 0, 12)) }}
+                    <div class="it-person-company" data-toggle="tooltip" title="{{ ucwords($sourceCompanyName) }}">
+                        {{ ucwords(mb_substr($sourceCompanyName, 0, 15)) }}
                     </div>
                 </div>
             </td>

@@ -2709,10 +2709,55 @@ $end_date   =	date('d-M-Y', $date);
                                             @foreach ($updateTimeLine as $tdata)
                                                 @php
                                                     $tdata     = (object) $tdata;
-                                                    $tlDate    = date('d-M-Y', strtotime(@$tdata->created_at));
-                                                    $tlTime    = date('h:i A', strtotime(@$tdata->created_at));
+                                                    $tlDateStr = @$tdata->created_at ?: (@$tdata->create_at ?: '');
+                                                    $tlDate    = !empty($tlDateStr) ? date('d-M-Y', strtotime($tlDateStr)) : '';
+                                                    $tlTime    = !empty($tlDateStr) ? date('h:i A', strtotime($tlDateStr)) : '';
                                                     $tlBy      = ucwords(@$tdata->name);
                                                     $tlCompany = ucwords(@$tdata->cur_companyname);
+
+                                                    $tlJobId = (int) (@$tdata->job_id ?: (@$job->id ?? 0));
+                                                    $tlCurrentCompanyId = (int) (auth()->user()->company_id ?? 0);
+
+                                                    static $tlJobCompCache = [];
+                                                    static $tlCaptainCache = [];
+                                                    static $tlCompNameCache = [];
+
+                                                    if ($tlJobId > 0) {
+                                                        if (!array_key_exists($tlJobId, $tlJobCompCache)) {
+                                                            $tlJobCompCache[$tlJobId] = (int) (
+                                                                @$job->comId
+                                                                ?? @$job->company_id
+                                                                ?? DB::table('jobs')->where('id', $tlJobId)->value('company_id')
+                                                                ?? 0
+                                                            );
+                                                        }
+                                                        $tlJobCompanyId = $tlJobCompCache[$tlJobId];
+
+                                                        $isDirectClientJob = ($tlJobCompanyId > 0 && $tlJobCompanyId != $tlCurrentCompanyId);
+
+                                                        if ($isDirectClientJob) {
+                                                            $capKey = $tlJobId . '_' . $tlJobCompanyId;
+                                                            if (!array_key_exists($capKey, $tlCaptainCache)) {
+                                                                $tlCaptainCache[$capKey] = DB::table('job_assign')
+                                                                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                                                                    ->where('job_assign.job_id', $tlJobId)
+                                                                    ->where('job_assign.company_id', $tlJobCompanyId)
+                                                                    ->where('job_assign.spok_user_id', '>', 0)
+                                                                    ->value('users.name') ?? '';
+                                                            }
+                                                            if (!empty($tlCaptainCache[$capKey])) {
+                                                                $tlBy = ucwords($tlCaptainCache[$capKey]);
+                                                            }
+
+                                                            if (!array_key_exists($tlJobCompanyId, $tlCompNameCache)) {
+                                                                $tlCompNameCache[$tlJobCompanyId] = DB::table('companies')->where('id', $tlJobCompanyId)->value('company_name') ?? '';
+                                                            }
+                                                            if (!empty($tlCompNameCache[$tlJobCompanyId])) {
+                                                                $tlCompany = ucwords($tlCompNameCache[$tlJobCompanyId]);
+                                                            }
+                                                        }
+                                                    }
+
                                                     $prevBg = $curBg = '';
                                                     if (!empty(@$tdata->prev_process_name)) {
                                                         $prevBg = GeneralMethod::candidateStatusColorCode(@$tdata->prev_process_name)['tiles_bg'] ?? '';
