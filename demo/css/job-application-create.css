@@ -1784,3 +1784,97 @@
         justify-content: flex-end;
     }
 }
+
+/* Purpose: requested fresher salary state, link readability, and interview picker usability. */
+.job-candidate-create .candidate-salary-panel-head {
+    position: relative;
+}
+
+.job-candidate-create .candidate-salary-panel-head > div {
+    min-width: 0;
+}
+
+.job-candidate-create .candidate-salary-lock-info {
+    position: relative;
+    display: none !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    margin-left: auto;
+    border: 1px solid #f3c64e;
+    border-radius: 6px !important;
+    color: #8a6200 !important;
+    background: #fff7d6 !important;
+    cursor: help;
+}
+
+.job-candidate-create .candidate-salary-panel--current.is-fresher-locked {
+    border-color: #e2c45f;
+    background: #fffdf5;
+}
+
+.job-candidate-create .candidate-salary-panel--current.is-fresher-locked .candidate-salary-lock-info {
+    display: inline-flex !important;
+}
+
+.job-candidate-create .candidate-salary-lock-tooltip {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 9px);
+    right: 0;
+    width: 250px;
+    padding: 9px 11px;
+    border: 1px solid #ead58b;
+    border-radius: 6px;
+    color: #39415e;
+    background: #fff;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, .14);
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-3px);
+    transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+.job-candidate-create .candidate-salary-panel--current.is-fresher-locked:hover .candidate-salary-lock-tooltip,
+.job-candidate-create .candidate-salary-lock-info:hover .candidate-salary-lock-tooltip,
+.job-candidate-create .candidate-salary-lock-info:focus .candidate-salary-lock-tooltip,
+.job-candidate-create .candidate-salary-lock-info:focus-visible .candidate-salary-lock-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.job-candidate-create .candidate-salary-panel--current.is-fresher-locked input[readonly] {
+    color: #7a829e !important;
+    background: #f3f5f9 !important;
+    cursor: not-allowed;
+}
+
+.job-candidate-create .candidate-link-row > small {
+    font-size: 11px !important;
+    line-height: 1.5;
+}
+
+.job-candidate-create .interview-card input[id^="interviewDate"],
+.job-candidate-create .interview-card input[id^="interviewTime"],
+.job-candidate-create .interview-card .flatpickr-input {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+
+.flatpickr-calendar.open {
+    z-index: 11000 !important;
+}
+
+@media (max-width: 767px) {
+    .job-candidate-create .candidate-salary-lock-tooltip {
+        right: -6px;
+        width: min(250px, calc(100vw - 48px));
+    }
+}
