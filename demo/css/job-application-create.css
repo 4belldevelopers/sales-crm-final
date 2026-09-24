@@ -1546,7 +1546,10 @@
 .job-candidate-create .candidate-notice-options {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    overflow: hidden;
+    border: 1px solid #dce2ee;
+    border-radius: 7px;
+    background: #fff;
 }
 
 .job-candidate-create .candidate-notice-option {
@@ -1557,8 +1560,9 @@
     min-width: 0;
     min-height: 82px;
     padding: 12px 14px;
-    border: 1px solid #dce2ee;
-    border-radius: 7px;
+    border: 0;
+    border-right: 1px solid #dce2ee;
+    border-radius: 0;
     color: var(--jac-text);
     background: #fff;
     font-family: 'Poppins', sans-serif;
@@ -1567,17 +1571,19 @@
     transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
 }
 
+.job-candidate-create .candidate-notice-option:last-child {
+    border-right: 0;
+}
 .job-candidate-create .candidate-notice-option:hover,
 .job-candidate-create .candidate-notice-option:focus-visible {
-    border-color: #ffc400;
     outline: 0;
-    box-shadow: 0 0 0 3px rgba(255, 196, 0, .12);
+    background: #fffdf6;
+    box-shadow: inset 0 0 0 2px rgba(255, 196, 0, .45);
 }
 
 .job-candidate-create .candidate-notice-option.is-selected {
-    border-color: #f2b900;
     background: #fffaf0;
-    box-shadow: 0 0 0 1px #f2b900;
+    box-shadow: inset 0 0 0 2px #f2b900;
 }
 
 .job-candidate-create .candidate-notice-option-radio {
@@ -1683,17 +1689,16 @@
     pointer-events: none;
 }
 
-.job-candidate-create .candidate-notice-input-shell #snp-immediate,
 .job-candidate-create .candidate-notice-input-shell .candidate-date-picker {
     width: 100%;
 }
 
-.job-candidate-create .candidate-notice-input-shell #snp-immediate > .candidate-notice-status-copy {
+.job-candidate-create .candidate-notice-detail[hidden] {
     display: none !important;
 }
 
-.job-candidate-create .candidate-notice-input-shell #snp-immediate > .candidate-date-picker {
-    flex: 1 1 auto;
+.job-candidate-create .candidate-date-picker #np_id_display {
+    cursor: pointer;
 }
 
 .job-candidate-create .candidate-notice-input-shell #np_id_display,
@@ -1714,6 +1719,12 @@
 
     .job-candidate-create .candidate-notice-option {
         min-height: 72px;
+        border-right: 0;
+        border-bottom: 1px solid #dce2ee;
+    }
+
+    .job-candidate-create .candidate-notice-option:last-child {
+        border-bottom: 0;
     }
 }
 

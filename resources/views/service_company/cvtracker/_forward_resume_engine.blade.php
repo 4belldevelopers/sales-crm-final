@@ -2469,7 +2469,7 @@
       aiVersion: 'Live Intelligence',
       match: matchScore,
       isImmediate: !!candidate.is_immediate,
-      recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
+      recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || '',
       careerSummary: candidate.career_summary || candidate.careersummary || candidate.cover_letter || 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.',
       jobTitle: candidate.job_title || candidate.current_designation || 'Verified Professional',
       skills: skills,

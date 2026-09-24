@@ -269,6 +269,7 @@ class ProcessCandidateUpdateJob implements ShouldQueue
                                     'email' => $applications_up->email,
                                     'phone' => $applications_up->phone,
                                     'np_id' => $applications_up->np_id,
+                                    'last_working_date' => $applications_up->last_working_date,
                                     'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
                                     'country' => $applications_up->country,
                                     'state' => $applications_up->state,

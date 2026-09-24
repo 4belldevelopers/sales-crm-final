@@ -3038,8 +3038,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $sum = trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8')));
             $cand->career_summary = ! empty($sum) ? $sum : 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
 
-            $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8')));
-            $cand->recruiter_note_text = ! empty($note) ? $note : 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
+            $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8')));
+            $cand->recruiter_note_text = $note;
 
             // Real Skills & Ratings for Skill Intelligence card
             $skillsArr = [];
@@ -3634,8 +3634,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $sum = trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8')));
             $cand->career_summary = ! empty($sum) ? $sum : 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
 
-            $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8')));
-            $cand->recruiter_note_text = ! empty($note) ? $note : 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
+            $note = trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8')));
+            $cand->recruiter_note_text = $note;
 
             // Real Skills & Ratings for Skill Intelligence card
             $skillsArr = [];
@@ -4288,7 +4288,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'education' => $cand->qualification_name ?? (@$cand->qualification ?: '--'),
                 'work_mode' => ! empty($cand->wm) ? ucwords(str_replace(['_', '-'], ' ', strtolower($cand->wm))) : 'Hybrid',
                 'career_summary' => trim(strip_tags(html_entity_decode((string) (@$cand->careersummary ?: @$cand->cover_letter), ENT_QUOTES, 'UTF-8'))),
-                'recruiter_note_text' => trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?: @$cand->comment), ENT_QUOTES, 'UTF-8'))) ?: 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
+                'recruiter_note_text' => trim(strip_tags(html_entity_decode((string) (@$cand->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8'))),
                 'match' => $authoritativeMatch,
                 'rating' => (int) (@$cand->rating ?: 4),
                 'skills' => $skillsArr,
