@@ -675,6 +675,9 @@
           }
       } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
           $__hdrAvailability = 'Immediate Joiner';
+          if (! empty($application->last_working_date)) {
+              $__hdrAvailability .= ' - LWD ' . date('d M Y', strtotime($application->last_working_date));
+          }
       } else {
           $__hdrAvailability = trim((string) @$application->np_id);
       }
@@ -1217,6 +1220,9 @@
             }
         } elseif (@$application->serving_notice_period_mode == 2 || strtolower((string)@$application->np_id) === 'immediate') {
             $rcvBNotice = 'Immediate';
+            if (! empty($application->last_working_date)) {
+                $rcvBNotice .= ' - LWD ' . date('d M Y', strtotime($application->last_working_date));
+            }
         } else {
             $rcvBNotice = trim((string) @$application->np_id);
         }
@@ -5305,7 +5311,12 @@ setTimeout(() => {
   $rsNpRaw=trim((string)@$application->np_id);
   $rsNpTs=$rsNpRaw!=='' ? strtotime($rsNpRaw) : false;
   $rsIsBench = (@$application->condidate_type === 'bench_condidate');
-  if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){ $rsNotice='Immediate'; }
+  if($rsNpMode===2||strtolower($rsNpRaw)==='immediate'){
+      $rsNotice='Immediate';
+      if (!empty($application->last_working_date)) {
+          $rsNotice .= ' - LWD '.date('d M Y', strtotime($application->last_working_date));
+      }
+  }
   elseif($rsNpMode===0&&(int)$rsNpRaw>0){ $rsNotice=$rsNpRaw.' Days'; }
   elseif($rsNpMode===1&&$rsNpTs!==false&&(int)date('Y',$rsNpTs)>1970){
       if (date('Y-m-d', $rsNpTs) < date('Y-m-d')) {
