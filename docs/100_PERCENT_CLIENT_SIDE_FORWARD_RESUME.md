@@ -1,9 +1,9 @@
-# 100% Client-Side Forward Resume: Architecture Audit & 10K Concurrency Implementation Plan
+# 100% Client-Side Forward Resume: Architecture Audit, Security Model & 10K Concurrency Implementation Plan
 
 **Document Path:** `docs/100_PERCENT_CLIENT_SIDE_FORWARD_RESUME.md`  
 **System Profile:** JERO Multi-Tenant B2B Hiring SaaS  
 **Architecture Mandate:** CQRS (0% MySQL reads on web/API paths, Elasticsearch universal read scope, Redis/Horizon queues, Client-First Browser Execution via WASM)  
-**Scale Target:** **10,000 concurrent users** per page with **0% server CPU, 0% server disk I/O, 0% MySQL reads, and 0% Elasticsearch read strain**.
+**Scale Target:** **10,000 concurrent users** per page with **0% server CPU, 0% server disk I/O, 0% MySQL reads, and 0% Elasticsearch read strain on the hot path**.
 
 ---
 
@@ -62,267 +62,342 @@ In [`resources/views/service_company/cvtracker/index.blade.php`](file:///c:/User
 
 ---
 
-## 2. Concurrency Stress Audit: Handling 10,000 Concurrent Users
+## 2. Core Architectural Principle: Authority vs. Computation
 
-### 2.1 The 10K Concurrency Law (JERO Architecture)
-At 10,000 concurrent recruiters clicking "Forward Resume" simultaneously, the system budget is:
-- **Max Database Connections:** 150 to 500 (MySQL pool ceiling)
-- **Max Web Server RAM:** 32 GB dedicated
-- **Max Server CPU:** Dedicated 32-core instance
-- **Max Storage I/O:** 0% disk write operations for document generation
+> **The Golden Law of Distributed Systems:**  
+> **Move computation and binary data to the browser and cloud edge, but NEVER move authority or financial state to the browser.**
 
-### 2.2 Component Vulnerability Matrix Under 10,000 Users
+```
+┌────────────────────────────────────────────────────────┐
+│                      JERO BROWSER                      │
+│            (Performance, Assembly & Cache)             │
+│                                                        │
+│  • In-Memory Dossier Hydration                         │
+│  • Tenant-Scoped IndexedDB (JeroFwdDB)                 │
+│  • Adaptive WASM Worker Pool (Hardware-aware)          │
+│  • Bounded Binary R2 Upload Queue (2-3 concurrency)    │
+│  • Micro-Dispatch Payload Construction (<2KB)          │
+└───────────────────────────┬────────────────────────────┘
+                            │
+               Request Upload Intent (Idempotent)
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   JERO CONTROL PLANE                   │
+│             (Security, Tenancy & Authority)            │
+│                                                        │
+│  • Multi-Tenant Boundary Enforcement                   │
+│  • Cryptographic Match Score Signing                   │
+│  • Finite State Machine Transition Guards              │
+│  • Short-Lived Presigned PUT URL Minting               │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                    CLOUDFLARE R2                       │
+│               (Serverless Storage Edge)                │
+│                                                        │
+│  • Direct Binary Ingestion (0 Bytes Server Disk)       │
+│  • Cryptographic SHA-256 ETag Validation               │
+└───────────────────────────┬────────────────────────────┘
+                            │
+                 Finalize & Micro-Dispatch
+                            │
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   JERO DISPATCH API                    │
+│            (Verification, Billing & Enqueue)           │
+│                                                        │
+│  • Two-Phase Atomic Coin Reservation (Redis Lua)       │
+│  • R2 Object Byte-Range & Hash Verification            │
+│  • Authoritative Ledger State Commitment               │
+│  • Horizon Asynchronous Queue Enqueue (<20ms)          │
+└────────────────────────────────────────────────────────┘
+```
 
-| Pipeline Stage | Legacy / Fallback Behavior | Failure Mode at 10K Users | Target 100% Client-Side Behavior |
-| :--- | :--- | :--- | :--- |
-| **1. Drawer Trigger** | Sends AJAX request to PHP worker; executes 7 `LEFT JOIN`s on MySQL. | **Complete DB collapse:** 10,000 simultaneous SQL joins cause `Too many connections (1040)` and 504 Gateway Timeouts. | **0ms Local Activation:** Drawer HTML shell is pre-rendered or cached in memory; zero network requests. |
-| **2. Candidate Data** | Re-queries candidate details, skills, notes, and ratings from DB. | **DB lock & buffer pool thrashing.** Redundant reads of data already present on the page. | **In-Memory Hydration:** Candidate attributes read directly from table row DOM / pre-fetched JSON state. |
-| **3. Templates** | Queries `ELASTIC_EMAIL_TEMPLATE` with `size: 10000` on every click. | **ES cluster node CPU saturation** due to high-frequency pagination and shard reads. | **IndexedDB / LocalStorage:** Templates cached locally per company; refreshed only via push/version invalidation. |
-| **4. PDF Assembly** | Handled in browser (WASM). | **100% Stable:** Zero server load. Client RAM + CPU absorb 100% of PDF generation. | **100% Client-Side WASM Engine:** Offloaded to Browser Web Worker pool. |
-| **5. File Attachment** | Uploads multipart blobs via `FormData` to `storage/app/temp-attachments/`. | **Disk I/O thrashing & bandwidth saturation:** 10K users $\times$ 3 resumes $\times$ 2MB = **60GB of concurrent disk writes**. | **Direct-to-Cloud (R2):** Client browser uploads directly to Cloudflare R2 via presigned PUT URLs. **0 bytes to server disk.** |
-| **6. Email Dispatch** | PHP worker loops over recipients, updates MySQL audit tables, deduces coins. | **Row-level deadlocks** on `company_coins` table under simultaneous tenant submissions. | **Atomic Redis Ledger Check + Micro-Job Queueing:** Micro-dispatch payload (<2KB) pushed to Horizon `emails` queue. |
+### The Boundary of Trust:
+- **Untrusted Client Domain:** Candidate IDs, Company IDs, Candidate Emails, Template IDs, Coin Balances, R2 Object Keys, Attachment UUIDs, and Authorization States originate from or pass through the client. **The server must independently authorize and validate every entity against the authenticated session (`auth()->user()->company_id`).**
+- **Trusted Server Domain:** Multi-tenant isolation, billing ledgers, presigned token generation, attachment integrity verification, and SMTP gateway delivery.
 
 ---
 
-## 3. The 6 Architectural Pillars for 100% Client-Side Forward Resume
+## 3. Finite State Machine: Upload Intent + Finalization
+
+To ensure bulletproof reliability and idempotency across 10,000 concurrent operations, the Forward Resume lifecycle moves through a rigorous **Explicit State Machine**:
 
 ```mermaid
-flowchart TD
-    subgraph BrowserClient ["User Browser (User RAM & Client CPU)"]
-        UI["Click Forward Resume"] -->|0ms Local Activation| Shell["Static Pre-Rendered Shell (shell.v4.html)"]
-        Shell -->|Read Table Row Data| Hydrate["In-Memory Dossier Hydration (0% MySQL)"]
-        Shell -->|Read Local Cache| IDB["Tenant-Scoped IndexedDB (JeroFwdDB)"]
-        Hydrate --> WASM["WASM Multi-Profile Engine (engine.v4.js)"]
-        WASM -->|Compile Vector PDF| Blob["Client Vector PDF (<= 6MB)"]
-        Blob -->|Compute Hash| SHA["Native WebCrypto SHA-256"]
-        Blob -->|HTTP PUT Direct| R2["Cloudflare R2 Bucket (0 Bytes Server Disk)"]
-    end
-
-    subgraph BackendServer ["Server Infrastructure (0% Read Strain)"]
-        Intent["POST /test_fwd_resume_intent"] -->|Presigned PUT URLs| R2
-        Send["POST /test_fwd_resume_send (2KB JSON)"] --> Redis["Redis Queue (emails)"]
-        Redis --> Horizon["Horizon Queue Workers"]
-        Horizon --> SES["SMTP / Amazon SES Relay"]
-    end
-
-    BrowserClient -->|Request Presigned URLs| Intent
-    BrowserClient -->|Dispatch 2KB Micro-JSON| Send
+stateDiagram-v2
+    [*] --> CREATE_INTENT: User selects candidates & clicks Send
+    CREATE_INTENT --> AUTHORIZED: Server verifies tenancy & permissions
+    CREATE_INTENT --> CANCELLED: User closes drawer / aborts
+    
+    AUTHORIZED --> PRESIGNED: Server mints scoped R2 PUT URLs
+    AUTHORIZED --> EXPIRED: Presigned token TTL timeout (15m)
+    
+    PRESIGNED --> UPLOADING: Browser bounded queue initiates PUTs
+    UPLOADING --> UPLOADED: Cloudflare R2 responds HTTP 200
+    UPLOADING --> UPLOAD_FAILED: Network timeout / socket failure
+    UPLOAD_FAILED --> UPLOADING: Idempotent client retry
+    
+    UPLOADED --> VERIFIED: Server verifies object presence & SHA-256
+    UPLOADED --> VERIFY_FAILED: Hash mismatch / 0-byte corrupt file
+    
+    VERIFIED --> READY_TO_SEND: All selected candidate PDFs verified
+    READY_TO_SEND --> COINS_RESERVED: Redis 2-phase coin reservation
+    COINS_RESERVED --> QUEUED: Micro-job pushed to Horizon 'emails'
+    COINS_RESERVED --> REFUND_PENDING: Queue rejection / system fault
+    
+    QUEUED --> SENT: Downstream SMTP/SES gateway transmits
+    QUEUED --> SEND_FAILED: SMTP hard bounce / provider rejection
+    
+    REFUND_PENDING --> [*]: Atomic balance release
+    SENT --> [*]: Ledger finalized
 ```
 
-### Pillar 1: Static Pre-Rendered Shell & Instant Activation (<16ms)
-- The drawer shell (`shell.v4.html`) is served as a static asset or inlined hidden partial.
-- Clicking the "Forward Resume" button toggles the Metronic drawer class instantly without an HTTP roundtrip.
-- Replaces the 220KB Blade compilation on PHP workers.
-
-### Pillar 2: 100% Client-Side In-Memory Dossier Hydration
-- The CV Tracker and App Tracker tables already possess the candidate's core attributes in the DOM (`data-candidate-id`, `data-name`, `data-email`, `data-experience`, `data-skills`, `data-match`, `data-notice`).
-- For supplementary attributes (recruiter comments, full skill breakdown), the client queries the lightweight micro-JSON endpoint `test_fwd_resume_data` which queries **Elasticsearch / Redis strictly**, bypassing MySQL completely.
-- If data is already in `JeroFwdDB` (IndexedDB), even the micro-JSON call is skipped.
-
-### Pillar 3: Tenant-Scoped L2 IndexedDB Persistence (`JeroFwdDB`)
-- Database: `jero_fwd_tenant_{company_id}`.
-- Object Stores:
-  - `candidates`: Normalized candidate dossier metadata.
-  - `resumes`: Binary resume byte arrays.
-  - `templates`: Email templates.
-  - `meta`: Configuration, company branding, and logos.
-- Result: Subsequent opens for previously evaluated candidates load in **< 5ms** with zero server hits.
-
-### Pillar 4: WebAssembly Web Worker Multi-Threaded Compilation
-- Document assembly (`engine.v4.js`) executes in a dedicated Web Worker thread.
-- Up to 5 candidate resumes are compiled in parallel across available CPU cores.
-- The UI thread remains locked at 60 FPS without lag or jank.
-
-### Pillar 5: Direct-to-Cloud (R2) Presigned Upload Pipeline
-- Client requests presigned PUT URLs via lightweight JSON call (`test_fwd_resume_intent`).
-- The browser streams PDF blobs straight from browser RAM to Cloudflare R2 edge storage.
-- The web server's local disk is **never touched (0 bytes written to SSD)**.
-- Multipart form uploads (`custom_attachments[]`) are completely eliminated.
-
-### Pillar 6: Headless Micro-Dispatch & Asynchronous Queue
-- The dispatch payload contains only:
-  ```json
-  {
-    "_token": "csrf_token",
-    "template_id": 12,
-    "to_email": "client@example.com",
-    "subject": "Candidate Profiles for Senior Laravel Role",
-    "message": "<p>Please find attached...</p>",
-    "attachment_uuids": ["uuid-1", "uuid-2"]
-  }
-  ```
-- Payload size is **< 2KB**.
-- The server validates permissions, executes an atomic coin check via Redis, logs the transaction, and pushes the job to Horizon in **< 25ms**.
+### State Definitions & Transitions:
+1. **`CREATE_INTENT`:** Browser submits candidate IDs and requested format with an `Idempotency-Key`.
+2. **`AUTHORIZED`:** Control plane validates that every candidate belongs to the authenticated tenant (`company_id` or `thirdparty_company_id`). Unauthorized IDs are rejected immediately.
+3. **`PRESIGNED`:** Scoped, temporary presigned PUT URLs are generated with a strict 15-minute expiration and exact content-length bounds.
+4. **`UPLOADING`:** Browser bounded queue (concurrency 2–3) streams compiled PDF blobs directly to Cloudflare R2.
+5. **`UPLOADED`:** Client confirms successful R2 ingestion.
+6. **`VERIFIED`:** Control plane executes a server-to-R2 metadata probe (`HEAD` request) to verify non-zero byte size and exact SHA-256 integrity hash.
+7. **`READY_TO_SEND`:** All candidates in the batch (up to 5) are verified in R2 storage.
+8. **`COINS_RESERVED`:** Two-phase coin reservation freezes required balance in Redis.
+9. **`QUEUED`:** Micro-dispatch payload (<2KB) is pushed onto Horizon Redis queue.
+10. **`SENT`:** Horizon worker transmits email via SES/SMTP and releases lock.
 
 ---
 
-## 4. Phase-Wise Implementation Plan
+## 4. Two-Phase Coin Reservation & Idempotent Ledger
 
-```mermaid
-gantt
-    title 100% Client-Side Forward Resume Implementation
-    dateFormat  YYYY-MM-DD
-    section Phase 1: Script Loading Fix
-    Fix Unclosed Script Tag in cvtracker/index :done, 2026-09-24, 1d
-    Verify ForwardResumeManager Initialization :done, 2026-09-24, 1d
-    section Phase 2: In-Memory Hydration
-    Extract Table Row Data Attributes          :2026-09-25, 2d
-    Wire JeroFwdDB IndexedDB Cache            :2026-09-27, 2d
-    section Phase 3: Direct R2 Enforcement
-    Remove Multipart Form Upload Fallback      :2026-09-29, 1d
-    Enforce Presigned PUT R2 Uploads           :2026-09-30, 2d
-    section Phase 4: Headless Micro-Dispatch
-    Lightweight Send Route & Horizon Offload   :2026-10-02, 2d
-    Atomic Redis Coin Deductions               :2026-10-04, 2d
-    section Phase 5: 10K Concurrency Verification
-    Artillery / k6 Stress Benchmark            :2026-10-06, 2d
-    Sign-off & Production Rollout             :2026-10-08, 1d
+`DECRBY` alone is dangerously vulnerable to race conditions, double charging, and partial execution during high concurrency. Under 10,000 concurrent requests, the system implements a **Two-Phase Reserve $\rightarrow$ Commit $\rightarrow$ Release** model.
+
+### 4.1 Balance Separation
+For every tenant, the wallet maintains two balances:
+- `available_balance`: Unencumbered coins available for operations.
+- `reserved_balance`: Coins locked for in-flight forward resume dispatches.
+
+### 4.2 State Machine for Coin Ledger
+```
+AVAILABLE ──(reserve)──> RESERVED ──(queue success)──> COMMITTED (authoritative)
+                            │
+                            └──(failure / timeout)───> RELEASED (refunded)
 ```
 
-### Phase 1: Script Loading & DOM Root Fix (Immediate)
-**Objective:** Restore immediate visibility of the 100% Client-Side Engine (`ForwardResumeManager.js`).
-1. **Fix `cvtracker/index.blade.php`:**
-   - Properly close the `<script>` tag before including `ForwardResumeManager.js`.
-   - Ensure `@if(config('feature.fwd_resume_v4_enabled', true))` loads `ForwardResumeManager.js` in clean HTML scope.
-2. **Verify Global Availability:**
-   - Confirm `window.ForwardResumeManager` is defined upon page load.
-   - Verify that clicking `.test_fwd_resume` immediately executes `ForwardResumeManager.open()`.
+### 4.3 Atomic Redis Lua Script for Reservation
+```lua
+-- KEYS[1]: tenant coin key (e.g. tenant:1042:coins)
+-- ARGV[1]: required_coins (e.g. 5)
+-- ARGV[2]: idempotency_key (e.g. frw_8f73a1...)
 
-### Phase 2: In-Memory Client Dossier Hydration (Zero MySQL Reads)
-**Objective:** Eliminate the 7-JOIN MySQL query on drawer opening.
-1. **Table Attribute Extraction:**
-   - Ensure the CV Tracker table row markup contains complete candidate metadata in `data-*` attributes or a page-level JSON cache (`window._candidatesMap`).
-2. **Elasticsearch Micro-JSON Fallback:**
-   - If supplementary data is needed, call `POST /test_fwd_resume_data`.
-   - Verify `test_fwd_resume_data` reads strictly from Elasticsearch and Redis, never MySQL.
-3. **IndexedDB Local Storage:**
-   - Save hydrated candidate profiles in `JeroFwdDB` to ensure zero network requests on subsequent drawer opens.
+local available = tonumber(redis.call('HGET', KEYS[1], 'available') or '0')
+local required = tonumber(ARGV[1])
+local idemKey = 'idem:' .. ARGV[2]
 
-### Phase 3: Strict Direct-to-Cloud Enforcement (Zero Server Disk I/O)
-**Objective:** Eradicate multipart PDF uploads to the web server SSD.
-1. **Remove `custom_attachments[]` Form Upload:**
-   - In `fwd_resume.blade.php` and `ForwardResumeManager.js`, remove code writing blobs into `formData.append('custom_attachments[...]')`.
-2. **Mandate Cloudflare R2 Uploads:**
-   - Ensure the browser initiates presigned PUT URLs via `/test_fwd_resume_intent`.
-   - The browser streams binary PDF bytes directly to R2 edge storage.
-   - Return only attachment UUIDs to the server.
+-- Check if request already processed (idempotency guard)
+local existing = redis.call('GET', idemKey)
+if existing then
+    return existing
+end
 
-### Phase 4: Headless Micro-Dispatch & Atomic Coin Deduction
-**Objective:** Ensure server response latency under 30ms during email send.
-1. **Lightweight Controller Endpoint:**
-   - Refactor `test_fwd_resume_send` to accept only a 2KB JSON payload.
-   - Zero file parsing, zero disk writes on the web server.
-2. **Atomic Coin Verification:**
-   - Use Redis `DECRBY` or cached tenant balance to verify coins without locking MySQL tables.
-3. **Queue Dispatch:**
-   - Push `QueueCandidatesMailAndResumeForwardMailService` directly to Horizon with R2 object keys.
+if available >= required then
+    redis.call('HINCRBY', KEYS[1], 'available', -required)
+    redis.call('HINCRBY', KEYS[1], 'reserved', required)
+    redis.call('SETEX', idemKey, 3600, 'RESERVED')
+    return 'RESERVED'
+else
+    return 'INSUFFICIENT_FUNDS'
+end
+```
 
-### Phase 5: High-Concurrency Stress Testing & 10K User Verification
-**Objective:** Validate that 10,000 concurrent users cause 0% MySQL strain.
-1. **Benchmark Suite:**
-   - Run k6 / Locust load scripts simulating 10,000 concurrent recruiters opening drawers and dispatching resumes.
-2. **Target Metrics:**
-   - Drawer Open Latency: **< 20ms (P99)**
-   - MySQL Active Connections during load: **0 increase**
-   - Elasticsearch CPU during load: **< 5%**
-   - Web Server Disk Write I/O: **0 bytes**
+### 4.4 Finalizing and Error Recovery:
+- **On Horizon Queue Push Success:** Server logs the transaction to the MySQL authoritative ledger (`coins_history`) and commits the reservation (`HINCRBY reserved -N`).
+- **On Failure / HTTP Timeout:** Server issues an atomic rollback script returning the reserved coins back to `available_balance` (`HINCRBY available +N`, `HINCRBY reserved -N`).
 
 ---
 
-## 5. Architectural Code Blueprint
+## 5. Universal Idempotency Everywhere
 
-### 5.1 The Script Tag Fix in `cvtracker/index.blade.php`
+At 10,000 concurrent requests, client-side retries (due to mobile carrier blips, network lag, or user impatience) are inevitable. Without idempotency, retries create duplicate R2 uploads, multiple emails to clients, and duplicate coin charges.
 
-```html
-<!-- BEFORE (BROKEN): Nested script tag causing syntax termination -->
-        $(document).on('click', '.chk_list', function() {
-            ...
-        });
-    @if(config('feature.fwd_resume_v4_enabled', true))
-        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
-    @endif
-    <script>
-        $(document).ready(function() {
-            ...
+### Idempotency Matrix:
+1. **`Idempotency-Key` HTTP Header:** Mandatory on `POST /test_fwd_resume_intent` and `POST /test_fwd_resume_send`.
+2. **`forward_request_id` (UUIDv4):** Generated by the client at drawer open, persisting across retries.
+3. **`intent_id`:** Locks the candidate set and requested format. Retrying with the same key returns the existing presigned URLs rather than generating duplicates.
+4. **`attachment_uuid`:** Unique per candidate compilation, preventing overwrite collisions.
+5. **`coin_transaction_id`:** Tied to the `forward_request_id`, ensuring a tenant is billed **exactly once** regardless of retry count.
 
-<!-- AFTER (CORRECT): Clean script boundary separation -->
-        $(document).on('click', '.chk_list', function() {
-            ...
-        });
-    </script>
+---
 
-    @if(config('feature.fwd_resume_v4_enabled', true))
-        <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
-    @endif
+## 6. Hardware-Adaptive Client Concurrency & Resource Budget
 
-    <script>
-        $(document).ready(function() {
-            ...
-```
+Compiling vector PDFs and WASM DOCX layouts consumes CPU and memory. Hardcoding 5 parallel compilation threads can cause **Out-Of-Memory (OOM) browser tab crashes** on entry-level recruiter laptops (e.g., dual-core Celeron/i3 machines with 4GB RAM), violating JERO's 15.6" screen and broad device support mandate.
 
-### 5.2 Direct-to-Cloud Upload Pipeline (No Server Disk)
+### 6.1 Adaptive Worker Pool Sizing
+The compilation engine inspects hardware capabilities via native browser APIs before instantiating Web Workers:
 
 ```javascript
 /**
- * Direct-to-Cloud R2 Upload Handler
- * Eliminates 100% of server disk writes and Octane worker file streaming.
+ * Adaptive Hardware-Aware Concurrency Pool
  */
-async function uploadCompiledBlobsDirectly(candidateBlobs, intentUrl, csrfToken) {
-    var filesPayload = Object.keys(candidateBlobs).map(function(candId) {
-        var item = candidateBlobs[candId];
-        return {
-            candidate_id: candId,
-            filename: item.filename,
-            size: item.blob.size,
-            mime: 'application/pdf'
-        };
-    });
+function getOptimalWorkerConcurrency() {
+    var cores = navigator.hardwareConcurrency || 2;
+    var deviceMemory = navigator.deviceMemory || 4; // GB (if supported)
 
-    // 1. Request presigned PUT URLs (Micro-JSON response < 1KB)
-    var intentRes = await fetch(intentUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ files: filesPayload })
-    });
-
-    var intentJson = await intentRes.json();
-    if (intentJson.status !== 'success' || !intentJson.uploads) {
-        throw new Error('Failed to acquire direct upload authorization.');
+    // Low-end devices (<= 2 cores or <= 2GB RAM): strictly sequential
+    if (cores <= 2 || deviceMemory <= 2) {
+        return 1;
     }
-
-    // 2. Parallel upload directly to Cloudflare R2 Edge
-    var uploadPromises = Object.keys(candidateBlobs).map(async function(candId) {
-        var uploadInfo = intentJson.uploads[candId];
-        var blobItem = candidateBlobs[candId];
-
-        var r2Res = await fetch(uploadInfo.upload_url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/pdf' },
-            body: blobItem.blob
-        });
-
-        if (!r2Res.ok) {
-            throw new Error('Direct R2 upload failed with HTTP ' + r2Res.status);
-        }
-
-        return uploadInfo.attachment_id;
-    });
-
-    return await Promise.all(uploadPromises);
+    // Mid-tier devices (4 cores, 4GB-8GB RAM): 2 parallel workers
+    if (cores <= 4) {
+        return 2;
+    }
+    // High-performance workstations (8+ cores): 3-4 parallel workers
+    return Math.min(4, Math.floor(cores / 2));
 }
 ```
 
+### 6.2 Browser Memory Guard:
+- Each compilation task enforces explicit memory reclamation (`doc.free()`, nullifying typed arrays, manual ArrayBuffer detachment).
+- Cooperative yielding (`yieldToMain()`) is invoked every 16ms to keep the browser event loop responsive at 60 FPS.
+
 ---
 
-## 6. Verification Checklist & Definition of Done
+## 7. Bounded Direct-to-Cloud Upload Queue
 
-- [ ] **Zero Unclosed Tags:** All `<script>` blocks in `cvtracker/index.blade.php`, `apptracker/index.blade.php`, and `apptracker/clientapp.blade.php` are properly closed and valid HTML.
-- [ ] **ForwardResumeManager Verification:** `window.ForwardResumeManager` evaluates to `true` in browser console on page load.
-- [ ] **Zero MySQL Query on Drawer Open:** Opening Forward Resume generates **0 SQL queries** in Laravel Telescope / MySQL general query log.
-- [ ] **Zero Server Disk Writes:** `storage/app/temp-attachments/` remains completely empty during resume compilation and sending.
-- [ ] **Adaptive Document Size:** All compiled resumes strictly conform to $\le$ 6MB ceiling with automatic SHA-256 integrity calculation.
-- [ ] **10,000 Concurrency Certification:** Load tests confirm 10,000 simultaneous users experience sub-100ms drawer response with 0 database errors.
+Executing `Promise.all(uploadPromises)` across 5 large PDF files simultaneously can saturate browser HTTP connection limits (browsers limit concurrent connections to the same host to 6), leading to socket timeouts on mobile hotspots or corporate proxies.
+
+### 7.1 Bounded Upload Throttler
+All R2 uploads pass through a bounded concurrency queue:
+
+```javascript
+/**
+ * Bounded Concurrency Task Pool (Max 2-3 Concurrent Uploads)
+ */
+async function runBoundedQueue(tasks, limit) {
+    var results = [];
+    var executing = [];
+    for (var i = 0; i < tasks.length; i++) {
+        var p = tasks[i]().then(function(res) {
+            executing.splice(executing.indexOf(p), 1);
+            return res;
+        });
+        results.push(p);
+        executing.push(p);
+        if (executing.length >= limit) {
+            await Promise.race(executing);
+        }
+    }
+    return Promise.all(results);
+}
+```
+- **Concurrency Cap:** Strictly capped at **2 concurrent PUT requests**.
+- **Payload Streaming:** PDF blobs stream directly to R2 without intermediate base64 serialization, eliminating 33% memory expansion overhead.
+
+---
+
+## 8. Tiered Read Architecture (Elasticsearch as Cold-Cache Circuit Breaker)
+
+To achieve **true 0% read strain**, Elasticsearch must NOT be queried on the normal Forward Resume path.
+
+```
+[Normal Path]: Table Row Data ──> In-Memory Hydration ──> IndexedDB ──> WASM Engine (0% MySQL, 0% ES)
+                                                                 │
+                                                    [Dossier Missing in Cache]
+                                                                 │
+                                                                 ▼
+[Cold Recovery]: Controlled Micro-JSON API ──> Elasticsearch Hit ──> Populate IndexedDB
+```
+
+1. **Hot Path (100% In-Memory):** Candidate cards and resume URLs are already rendered on the CV Tracker / App Tracker page. The drawer reads directly from existing DOM attributes (`data-candidate-id`, `data-name`, `data-experience`, `data-skills`, `data-match`, `data-notice`).
+2. **Warm Path (IndexedDB):** If drawer is re-opened, candidate dossiers and email templates load from `JeroFwdDB` in `< 5ms`.
+3. **Cold Circuit-Breaker Path (Elasticsearch):** Only if a candidate's complete skills matrix is completely missing from both DOM and IndexedDB does the client call `POST /test_fwd_resume_data`. This turns Elasticsearch from a high-frequency bottleneck into a rare recovery mechanism (<0.1% of requests).
+
+---
+
+## 9. End-to-End Concurrency & Security SLA Matrix
+
+The system must satisfy these non-negotiable targets under automated 10,000-user stress benchmarks:
+
+| SLA Category | Metric | Production Target | Failure Condition |
+| :--- | :--- | :--- | :--- |
+| **Latency** | Drawer Activation | **< 16ms (P99)** | > 50ms |
+| **Latency** | API Response (Intent & Send) | **< 40ms (P99)** | > 100ms |
+| **Database** | MySQL Reads / Drawer Open | **0** | $\ge 1$ |
+| **Elasticsearch** | ES Reads / Hot Path | **0** | $\ge 1$ |
+| **Server Disk** | Web Server Disk Write I/O | **0 Bytes** | $> 0$ Bytes |
+| **Server CPU** | Server PDF Processing CPU | **0%** | $> 0$% |
+| **Storage Edge** | Direct R2 Upload Success | **> 99.99%** | $< 99.9%$ |
+| **Idempotency** | Duplicate Email Dispatches | **0 (Zero)** | $> 0$ |
+| **Billing** | Duplicate Coin Deductions | **0 (Zero)** | $> 0$ |
+| **Security** | Cross-Tenant Attachment Access | **0 (Zero)** | $> 0$ |
+| **Reliability** | Queue Enqueue Drop Rate | **0%** | $> 0.01%$ |
+| **Client Stability** | Browser Tab OOM Crash Rate | **0%** | $> 0.05%$ |
+| **Concurrency** | 10,000 Simultaneous Users | **100% Pass** | Any 502/504 error |
+
+---
+
+## 10. Phase-Wise Implementation Roadmap
+
+```mermaid
+gantt
+    title Production Rollout: 100% Client-Side Forward Resume (10K Concurrency)
+    dateFormat  YYYY-MM-DD
+    section Phase 1: Script Boundary Fix
+    Repair Unclosed Script Tag in cvtracker/index :done, 2026-09-24, 1d
+    Verify ForwardResumeManager Initialization :done, 2026-09-24, 1d
+    section Phase 2: Security & Authority Control Plane
+    Implement Finite State Machine Transitions :2026-09-25, 2d
+    Multi-Tenant Scoped Intent Validation     :2026-09-27, 2d
+    section Phase 3: Financial Concurrency Engine
+    Atomic Two-Phase Redis Lua Coin Scripts   :2026-09-29, 2d
+    Idempotent Billing Ledger Integration     :2026-10-01, 2d
+    section Phase 4: Client Resource Adaptation
+    Adaptive Worker Pool (navigator.hardware)  :2026-10-03, 1d
+    Bounded Upload Queue (Max 2 PUTs)         :2026-10-04, 1d
+    section Phase 5: Cold-Cache Tiering
+    Eradicate Hot-Path Elasticsearch Reads    :2026-10-05, 2d
+    IndexedDB Auto-Sync Hydration Barrier     :2026-10-07, 1d
+    section Phase 6: 10K Concurrency Certification
+    k6 Load Stress (10,000 Virtual Users)     :2026-10-08, 2d
+    Production Deployment & Monitoring        :2026-10-10, 1d
+```
+
+### Phase 1: Script Loading & DOM Root Fix (Immediate)
+- Repair the unclosed `<script>` tag in `resources/views/service_company/cvtracker/index.blade.php`.
+- Ensure clean HTML script tags so `ForwardResumeManager.js` initializes unconditionally.
+
+### Phase 2: Security & Authority Control Plane
+- Refactor `ForwardResumeAuthorizationService` to implement the 10-state lifecycle state machine (`CREATE_INTENT` $\rightarrow$ `SENT`).
+- Enforce strict server-side tenant boundary verification on every candidate ID before minting R2 presigned URLs.
+- Add cryptographic match score signatures so client-side tampering is impossible.
+
+### Phase 3: Financial Concurrency Engine (Two-Phase Coin Reservation)
+- Implement Redis Lua scripts for atomic `RESERVE` and `RELEASE` operations.
+- Require `Idempotency-Key` headers on all financial mutation routes.
+- Integrate asynchronous commit with the MySQL `coins_history` authoritative ledger.
+
+### Phase 4: Client Resource Adaptation & Bounded Queues
+- Upgrade `engine.v4.js` to dynamically scale worker pool threads based on `navigator.hardwareConcurrency` and `navigator.deviceMemory`.
+- Enforce a bounded upload queue (max 2 concurrent PUTs) inside `ForwardResumeManager.js` to protect mobile and low-bandwidth connections.
+
+### Phase 5: Cold-Cache Tiering (True Zero-Read Architecture)
+- Re-architect candidate hydration: 100% of candidate attributes hydrate from existing page DOM or `JeroFwdDB`.
+- Confine Elasticsearch reads strictly to cold-cache recovery when local state is corrupt or missing.
+
+### Phase 6: Concurrency Certification (10,000 User Stress Test)
+- Run automated load test suites (k6 / Locust) generating 10,000 simultaneous users.
+- Verify 0 MySQL queries, 0 ES hot-path queries, 0 server disk writes, and 100% delivery without duplicate charges.
+
+---
+
+## 11. Definition of Done
+
+- [ ] `<script>` tags in `cvtracker/index.blade.php`, `apptracker/index.blade.php`, and `apptracker/clientapp.blade.php` are 100% syntactically valid and closed.
+- [ ] `window.ForwardResumeManager` is active on page load with zero console warnings.
+- [ ] Opening the Forward Resume drawer produces **0 MySQL queries and 0 Elasticsearch queries** in the Laravel query log.
+- [ ] File generation produces **0 bytes of disk writes** to `storage/app/temp-attachments/`.
+- [ ] Bounded upload queue ensures no more than 2 parallel PUT streams to Cloudflare R2 per client.
+- [ ] Web worker pool dynamically scales according to device hardware cores, preventing browser tab crashes.
+- [ ] Atomic Redis Lua coin scripts prevent double deductions or negative balances across parallel tabs.
+- [ ] 10,000-user stress test passes all criteria in the Concurrency SLA Matrix.

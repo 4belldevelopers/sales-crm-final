@@ -540,8 +540,10 @@
       
     $jobId = $application->jobId ?? $application->job_id;
     $jobData = $jobData ?? (empty($jobId) ? null : DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$jobId)->first());
-    $jobMode = $jobData->jobMode ?? @$application->current_ctc_mode;
-    $jobCurrency = $jobData->jobCurrency ?? @$application->current_ctc_cur;
+    $isDirectCandidate = (@$application->condidate_type === 'other');
+    $jobMode = $isDirectCandidate ? (int) (@$application->current_ctc_mode ?? 0) : ($jobData->jobMode ?? @$application->current_ctc_mode);
+    $jobMode = isset($salaryMode[$jobMode]) ? $jobMode : 0;
+    $jobCurrency = $isDirectCandidate ? (@$application->current_ctc_cur ?? 0) : ($jobData->jobCurrency ?? @$application->current_ctc_cur);
     $symbols = $symbolsValue[$jobCurrency] ?? "INR";
       
    $resume_url				=	'<i class="fa fa-download" aria-hidden="true" style="color:#003300"></i>';	
@@ -3279,10 +3281,7 @@
                   <span class="comp-label">Offer in Hand</span>
                   <span class="comp-value">{{ ucwords(@$application->oh) }}</span>
                 </div>
-                <div class="comp-row">
-                  <span class="comp-label">Hike Percentage</span>
-                  <span class="comp-value">{{ @$application->percentage_hike }}%</span>
-                </div>
+
                 <div class="comp-row">
                   <span class="comp-label"><b style="color: #0f172a;">Salary Details Comments: </b> {{ ucwords(@$application->comment) }}</span>
                 </div>
