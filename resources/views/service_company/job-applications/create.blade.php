@@ -913,7 +913,7 @@
                                         $s = 'Days';
                                     }
                                   $selected = ($i == @$application->np_id) ? 'selected' : '';
-                                echo "<option value="$i" $selected>{$i} {$s}</option>";
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $s . '</option>';
                             }
                         @endphp
                       </select>
