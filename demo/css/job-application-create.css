@@ -20,8 +20,17 @@
 }
 
 .candidate-toolbar-container {
-    display: block !important;
-    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 64px;
+    padding: 8px 16px !important;
+}
+
+.candidate-header-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
 }
 
 .candidate-topbar {
