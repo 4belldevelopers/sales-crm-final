@@ -5369,7 +5369,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobId = @$AddJobWiseCondidate->job_id;
         // dd($id,$jobId,$AddJobWiseCondidate);
         $this->intModeArr = GeneralMethod::interview_mode();
-        $this->application = JobApplication::select(
+        $this->application = JobApplication::withoutGlobalScopes()->select(
             'job_applications.id',
             'add_job_wise_condidates.submitted_by',
             'job_applications.submitted_by as editAllow',
@@ -5523,7 +5523,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->section_hourly = 'd-none';
             $offerPermision = 66;
         }
-
         // dd($this->text_change_value);
 
         $offerDetails = DB::table('offer_create_main_tds')
@@ -5907,7 +5906,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function saveCreateOffer(Request $request)
     {
-
         $offer_id = $request->offer_id;
         $yearly_gross = 0;
         $yearly_final_gross = 0;
