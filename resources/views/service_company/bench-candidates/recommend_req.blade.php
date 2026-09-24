@@ -631,6 +631,8 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 }
 .action-status--added{ background:#DCFCE7; color:#15803D; border:1px solid #BBF7D0; }
 .action-status--sent{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
+.btn-cta-sent{ background:#FEF3C7 !important; color:#A16207 !important; border:1px solid #FDE68A !important; font-weight:700 !important; cursor:default !important; }
+.btn-cta-added{ background:#DCFCE7 !important; color:#15803D !important; border:1px solid #BBF7D0 !important; font-weight:700 !important; cursor:default !important; }
 
 /* Skills sub-row — preserved match logic, just visually tightened to fit
    beneath the grid without bloating row height. */
@@ -1504,38 +1506,52 @@ $(document).ready(function() {
     $(document).on("click",".checkrequestsend", function(){
         swal("Bench Request Alert", 'Please move the candidate to Bench status before sending bench request', "warning");
     });
-    $(document).on("click",".request-send", function(){
+    $(document).on("click",".request-send", function(e){
+        e.preventDefault();
         var ele = $(this);
-        var jobId  = $(this).attr('data-jobId');
-        var conId  = $(this).attr('data-conId');
-        swal({
-            title: "Are you sure?", text: "Do you want to Send Bench Request on this Job?", type: "warning",
-            showCancelButton: true, confirmButtonColor: '#0066ff', confirmButtonText: 'Yes, Send Bench Request!',
-            cancelButtonText: "No, cancel it!", closeOnConfirm: false, closeOnCancel: false
-        },
-        function(isConfirm){
-            if (isConfirm){
-                var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
-                url = url.replace(':id', jobId)+"?conId="+conId;
-                $.ajax({
-                    type: 'GET', url: url,
-                    success: function (response) {
-                        if(response.status=='success'){
-                            swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
-                            var jobId  = ele.attr('data-jobId');
-                            var conId  = ele.attr('data-conId');
-                            var matlaccess = 1;
-                            var url = "{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
-                            url = url.replace(':id', jobId)+"?conId="+conId+"?matlaccess="+matlaccess;
-                            fetchBenchRecommendedReqCandidateList();
-                            $.ajax({ type: 'GET', url: url, success: function (response) {} });
-                        }else{
-                            fetchBenchRecommendedReqCandidateList();
-                            swal("Request Failed", response.message, "warning").then(function(){ fetchBenchRecommendedReqCandidateList(); });
-                        }
+        if (ele.hasClass('disabled') || ele.prop('disabled')) return;
+
+        var jobId = ele.attr('data-jobId');
+        var conId = ele.attr('data-conId');
+        if (!jobId || !conId) return;
+
+        var originalHtml = ele.html();
+        ele.addClass('disabled').prop('disabled', true).css('pointer-events', 'none')
+           .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Submitting...');
+
+        var url = "{{ route('service_company.jobs.recommandedrequestcondidate',':id') }}";
+        url = url.replace(':id', jobId) + "?conId=" + conId;
+
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function (response) {
+                if (response && (response.status === 'success' || response.status === true)) {
+                    swal("Request Sent!", "Bench request successfully sent for this job requirement!", "success");
+
+                    ele.replaceWith('<a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;"><i class="fa-regular fa-clock me-1"></i> Request Sent</a>');
+
+                    var mailUrl = "{{ route('service_company.jobs.mailrecommandedrequestcondidate',':id') }}";
+                    mailUrl = mailUrl.replace(':id', jobId) + "?conId=" + conId + "&matlaccess=1";
+
+                    if (typeof fetchBenchRecommendedReqCandidateList === 'function') {
+                        fetchBenchRecommendedReqCandidateList();
                     }
-                });
-            } else { swal("Cancelled", "", "error"); }
+                    $.ajax({ type: 'GET', url: mailUrl, success: function (res) {} });
+                } else {
+                    ele.removeClass('disabled').prop('disabled', false).css('pointer-events', 'auto').html(originalHtml);
+                    var msg = (response && response.message) ? response.message : "Failed to send request.";
+                    swal("Request Failed", msg, "warning");
+                }
+            },
+            error: function (xhr) {
+                ele.removeClass('disabled').prop('disabled', false).css('pointer-events', 'auto').html(originalHtml);
+                var errorMsg = "Something went wrong while sending request.";
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                swal("Request Failed", errorMsg, "error");
+            }
         });
     });
 });

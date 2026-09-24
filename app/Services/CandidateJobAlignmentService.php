@@ -317,6 +317,13 @@ class CandidateJobAlignmentService
             }
         }
 
+        // Intent: Invalidate header counter cache (custome_count_all) so Total Candidates In Job count updates instantly
+        Cache::forget("custome_count_all:{$companyId}:{$targetJobId}");
+        $authCompanyId = auth()->user()?->company_id;
+        if ($authCompanyId && (int) $authCompanyId !== (int) $companyId) {
+            Cache::forget("custome_count_all:{$authCompanyId}:{$targetJobId}");
+        }
+
         // 4. Real-time WebSocket Reverb broadcast to clear client RAM & IndexedDB
         try {
             JobSkillsUpdated::dispatch(

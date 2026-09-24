@@ -1874,10 +1874,6 @@
                         <i class="fa-solid fa-indian-rupee-sign"></i>
                         <span>${salaryDisplay}</span>
                     </div>
-                    <div class="jc-meta-item" title="Industry">
-                        <i class="fa-regular fa-building"></i>
-                        <span>${row.industry_name || row.department || 'IT Services'}</span>
-                    </div>
                 </div>
 
                 <!-- ── COL 3: Dates & Status ── -->
