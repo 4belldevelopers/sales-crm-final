@@ -344,9 +344,13 @@
                             </a>
                         @else
                             @if ($benchRequestCheck->ac_status == 1)
-                                <span class="action-status action-status--added"><i class="fa-solid fa-check"></i> Added</span>
+                                <a href="javascript:void(0);" class="btn-cta-primary btn-cta-added disabled" style="pointer-events:none;">
+                                    <i class="fa-solid fa-check me-1"></i> Added
+                                </a>
                             @else
-                                <span class="action-status action-status--sent"><i class="fa-regular fa-clock"></i> Request sent</span>
+                                <a href="javascript:void(0);" class="btn-cta-primary btn-cta-sent disabled" style="pointer-events:none;">
+                                    <i class="fa-regular fa-clock me-1"></i> Request Sent
+                                </a>
                             @endif
                         @endif
 
