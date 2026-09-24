@@ -208,17 +208,10 @@ class JobApplyService
         $jobApplication->secondrary_email = $request->input('secondrary_email');
         $jobApplication->secondary_mobile = $request->input('secondary_mobile');
         $jobApplication->submitted_by = 0;
-        $jobApplication->serving_notice_period_mode = (int) $request->input('serving_notice_period');
-
-        $serving_notice_period = $request->input('serving_notice_period');
-        if ($serving_notice_period == 1) {
-            $jobApplication->np_id = $request->input('np_id');
-        } elseif ($serving_notice_period == 2) {
-            $jobApplication->np_id = 'Immediate';
-            $jobApplication->last_working_date = $request->input('np_id');
-        } else {
-            $jobApplication->np_id = $request->input('ddl_np_id');
-        }
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
+        $jobApplication->np_id = $noticePeriodState['np_id'];
+        $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
 
         if (! empty($request->input('qualification'))) {
             $jobApplication->qualification = (int) $request->input('qualification');

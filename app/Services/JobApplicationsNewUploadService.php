@@ -104,22 +104,15 @@ class JobApplicationsNewUploadService
                 $jobApplication->submitted_by = $submitted_by;
             }
 
-            $serving_notice_period = '';
-            $serving_notice_period = $request->serving_notice_period;
-            if ($serving_notice_period == 1) {
-                $jobApplication->np_id = $request->np_id;
-            } elseif ($serving_notice_period == 2) {
-                $jobApplication->np_id = 'Immediate';
-                $jobApplication->last_working_date = $request->np_id;
-            } else {
-                $jobApplication->np_id = $request->ddl_np_id;
-            }
+            $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+            $jobApplication->np_id = $noticePeriodState['np_id'];
+            $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
 
             if (! empty($request->qualification)) {
                 $jobApplication->qualification = $request->qualification;
             }
             $jobApplication->company_id = $jobApplication_company_id;
-            $jobApplication->serving_notice_period_mode = $request->serving_notice_period;
+            $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
             if ($request->has('gender')) {
                 $jobApplication->gender = $request->gender;
             }

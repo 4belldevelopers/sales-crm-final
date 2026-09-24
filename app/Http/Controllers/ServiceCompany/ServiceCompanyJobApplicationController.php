@@ -48,11 +48,13 @@ use App\Models\Skill;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
 use App\Notifications\CandidateScheduleInterview;
+use App\Services\CandidateNoticePeriodState;
 use App\Services\ElasticService;
 use App\Services\GoogleSheetServiceCandidate;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
+use App\Services\R2PresignService;
 use App\Services\ReferenceDataCache;
 use Barryvdh\DomPDF\Facade as PDF;
 use Carbon\Carbon;
@@ -2304,6 +2306,51 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
+     * Download Resume Center: Generates pre-signed PUT URLs so the browser can upload
+     * client-compiled PDFs directly to Cloudflare R2 without passing bytes through PHP/Octane.
+     */
+    public function rdc_attachment_initiate(Request $request, R2PresignService $r2PresignService)
+    {
+        try {
+            $companyId = (int) auth()->user()->company_id;
+            $userId    = (int) auth()->user()->id;
+
+            $filename    = (string) $request->input('filename', 'Jeroworks_Resume.pdf');
+            $contentType = (string) $request->input('contentType', 'application/pdf');
+            $candidateId = (int) $request->input('candidate_id', 0);
+
+            // Tenancy check on candidate
+            if ($candidateId > 0) {
+                $exists = DB::table('job_applications')
+                    ->where('id', $candidateId)
+                    ->where('company_id', $companyId)
+                    ->exists();
+                if (! $exists && ! auth()->user()->is_superadmin) {
+                    return response()->json(['status' => 'error', 'message' => 'Unauthorized candidate scope.'], 403);
+                }
+            }
+
+            $sanitizedFilename = preg_replace('/[^\w\s.-]/', '_', $filename);
+            $result = $r2PresignService->generateUploadUrl($sanitizedFilename, $contentType, 900);
+
+            return response()->json([
+                'status'     => 'success',
+                'upload_url' => $result['upload_url'],
+                'object_key' => $result['object_key'],
+                'public_url' => $result['public_url'],
+                'expires_in' => $result['expires_in'],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('[rdc_attachment_initiate] Cloud initiation fallback: '.$e->getMessage());
+
+            return response()->json([
+                'status'  => 'fallback',
+                'message' => 'Cloud storage initiation unavailable: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Same-origin proxy for the logged-in company's own logo so it can be embedded
      * into the résumé-banner canvas without CORS taint. No URL param -> no SSRF.
      */
@@ -2586,10 +2633,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $rsCareerSummary = 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.';
         }
 
-        $rsRecruiterNote = trim(strip_tags(html_entity_decode((string) (@$application->recruiter_note ?: (@$application->comment ?: '')), ENT_QUOTES, 'UTF-8')));
-        if (empty($rsRecruiterNote)) {
-            $rsRecruiterNote = 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.';
-        }
+        $rsRecruiterNote = trim(strip_tags(html_entity_decode((string) (@$application->recruiter_note ?? ''), ENT_QUOTES, 'UTF-8')));
 
         $rsCurrentCompany = ucwords((string) (@$application->current_company ?: (@$application->cur_company_name ?: 'Hiring Partner Network')));
         $rsCurrentDesignation = ucwords((string) (@$application->current_designation ?: (@$job->title ?: 'Verified Professional')));
@@ -2791,17 +2835,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // 	return redirect($url);
         // }
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), array_merge([
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
             ],
-        ], [
+        ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
-        ]);
+        ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
@@ -2938,22 +2982,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $jobApplication->submitted_by = $submitted_by;
         }
 
-        $serving_notice_period = '';
-        $serving_notice_period = $request->serving_notice_period;
-        if ($serving_notice_period == 1) {
-            $jobApplication->np_id = $request->np_id;
-        } elseif ($serving_notice_period == 2) {
-            $jobApplication->np_id = 'Immediate';
-            $jobApplication->last_working_date = $request->np_id;
-        } else {
-            $jobApplication->np_id = $request->ddl_np_id;
-        }
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $jobApplication->np_id = $noticePeriodState['np_id'];
+        $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
 
         if (! empty($request->qualification)) {
             $jobApplication->qualification = $request->qualification;
         }
         $jobApplication->company_id = $this->user->company_id;
-        $jobApplication->serving_notice_period_mode = $request->serving_notice_period;
+        $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
         if ($request->has('gender')) {
             $jobApplication->gender = $request->gender;
         }
@@ -6552,17 +6589,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
         }
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), array_merge([
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
             ],
-        ], [
+        ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
-        ]);
+        ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
@@ -6643,32 +6680,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $jobApplication->gender = $request->gender;
 
-        $serving_notice_period = '';
-        $serving_notice_period = $request->serving_notice_period;
-        if ($serving_notice_period == 1) {
-            // if (!empty($request->calender)) {
-            //    $jobApplication->np_id 				= 'SNP-LWD-' . $request->calender;
-            // } else {
-            $np_id_date = $request->np_id;
-            if (! empty($request->np_id_display)) {
-                $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
-            }
-
-            $jobApplication->np_id = $np_id_date;
-
-            // }
-        } elseif ($serving_notice_period == 2) {
-            $jobApplication->np_id = 'Immediate';
-            $np_id_date = $request->np_id;
-            if (! empty($request->np_id_display)) {
-                $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
-            }
-            $jobApplication->last_working_date = $np_id_date;
-
-        } else {
-            $jobApplication->np_id = $request->ddl_np_id;
-        }
-        $jobApplication->serving_notice_period_mode = $request->serving_notice_period;
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $jobApplication->np_id = $noticePeriodState['np_id'];
+        $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
+        $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
         $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         if (! empty($request->ctc)) {
             $jobApplication->ctc = @$request->ctc;
@@ -10661,17 +10676,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // 	return redirect($url);
         // }
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), array_merge([
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
             ],
-        ], [
+        ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
-        ]);
+        ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
@@ -10773,8 +10788,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (! empty($request->percentage_hike)) {
             $job_application_arr['percentage_hike'] = $request->percentage_hike;
         }
-        if (! empty($request->comment)) {
-            $job_application_arr['comment'] = $request->comment;
+        if ($request->has('comment')) {
+            $job_application_arr['comment'] = $request->input('comment');
         }
         if (! empty($request->pincode)) {
             $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
@@ -10810,8 +10825,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (! empty($request->referencename)) {
             $job_application_arr['referencename'] = $request->referencename;
         }
-        if (! empty($request->recruiter_note)) {
-            $job_application_arr['recruiter_note'] = $request->recruiter_note;
+        if ($request->has('recruiter_note')) {
+            $job_application_arr['recruiter_note'] = $request->input('recruiter_note');
         }
         if (! empty($request->reason_for_job_change)) {
             $job_application_arr['reason_for_job_change'] = $request->reason_for_job_change;
@@ -10863,16 +10878,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $job_application_arr['submitted_by'] = $submitted_by;
         }
 
-        $serving_notice_period = '';
-        $serving_notice_period = $request->serving_notice_period;
-        if ($serving_notice_period == 1) {
-            $job_application_arr['np_id'] = $request->np_id;
-        } elseif ($serving_notice_period == 2) {
-            $job_application_arr['np_id'] = 'Immediate';
-            $job_application_arr['last_working_date'] = $request->np_id;
-        } else {
-            $job_application_arr['np_id'] = $request->ddl_np_id;
-        }
+        $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
+        $job_application_arr['np_id'] = $noticePeriodState['np_id'];
+        $job_application_arr['last_working_date'] = $noticePeriodState['last_working_date'];
 
         if (! empty($request->qualification)) {
             $job_application_arr['qualification'] = $request->qualification;
@@ -10880,7 +10888,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $job_application_arr['thirdparty_company_id'] = $this->user->company_id;
         $job_application_arr['company_id'] = $jobRow->company_id;
-        $job_application_arr['serving_notice_period_mode'] = $request->serving_notice_period;
+        $job_application_arr['serving_notice_period_mode'] = $noticePeriodState['serving_notice_period_mode'];
         if ($request->has('gender')) {
             $job_application_arr['gender'] = $request->gender;
         }

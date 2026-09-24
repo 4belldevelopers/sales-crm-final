@@ -3278,7 +3278,7 @@
                   <span class="comp-value">{{ @$application->percentage_hike }}%</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label"><b style="color: #0f172a;">Comments : </b> {{ ucwords(@$application->comment) }}</span>
+                  <span class="comp-label"><b style="color: #0f172a;">Salary Details Comments: </b> {{ ucwords(@$application->comment) }}</span>
                 </div>
 
               @endif
@@ -4641,6 +4641,32 @@ setTimeout(() => {
                             }
                         });
                     }
+                    // Instant DOM synchronization for Download Resume Center
+                    var rsDataEl = document.getElementById('rsData');
+                    if (rsDataEl && response.skill_match !== undefined) {
+                        rsDataEl.setAttribute('data-match', response.skill_match);
+                    }
+                    if (rsDataEl && response.data && Array.isArray(response.data)) {
+                        try {
+                            var currentSkills = JSON.parse(rsDataEl.getAttribute('data-skills') || '[]');
+                            response.data.forEach(function(item) {
+                                var found = currentSkills.find(function(s) {
+                                    return (s.id && s.id == item.skillId) || (s.name && item.skillName && s.name.toLowerCase() === item.skillName.toLowerCase());
+                                });
+                                if (found) {
+                                    if (typeof item.rating !== 'undefined') found.rating = parseInt(item.rating, 10) || 0;
+                                    if (typeof item.experience !== 'undefined') found.expText = item.experience;
+                                }
+                            });
+                            rsDataEl.setAttribute('data-skills', JSON.stringify(currentSkills));
+                        } catch(e) {}
+                    }
+                    if (window.AgyResumeRenderer && window.AgyResumeRenderer.JeroRdcDB) {
+                        try {
+                            var candData = typeof readData === 'function' ? readData() : null;
+                            if (candData) window.AgyResumeRenderer.JeroRdcDB.saveCandidate(candData);
+                        } catch(e) {}
+                    }
                     // Multi-tier atomic cache invalidation for both wiseId and core candidateId
                     var wId = $('#candidate_wise_id').val() || '{{ @$application->wiseId ?: @$jobWiseCanId }}';
                     var cId = $('#candidate_core_id').val() || '{{ @$application->id }}';
@@ -4945,6 +4971,18 @@ setTimeout(() => {
                     }
                     if (window.JWRealtimeSync && typeof window.JWRealtimeSync.updateRecruiterNote === 'function') {
                         window.JWRealtimeSync.updateRecruiterNote(appId, note, true);
+                    }
+                    // Instant DOM synchronization for Download Resume Center
+                    var rsDataEl = document.getElementById('rsData');
+                    if (rsDataEl) {
+                        var plainNote = $('<div>').html(note || '').text().trim();
+                        rsDataEl.setAttribute('data-recruiter-note', plainNote);
+                    }
+                    if (window.AgyResumeRenderer && window.AgyResumeRenderer.JeroRdcDB) {
+                        try {
+                            var candData = typeof readData === 'function' ? readData() : null;
+                            if (candData) window.AgyResumeRenderer.JeroRdcDB.saveCandidate(candData);
+                        } catch(e) {}
                     }
                     // Multi-tier atomic cache invalidation for both wiseId and core candidateId
                     var wId = $('#candidate_wise_id').val() || '{{ @$application->wiseId ?: @$jobWiseCanId }}';
@@ -5326,7 +5364,7 @@ setTimeout(() => {
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
   @php
-    $rsNoteRaw = strip_tags((string)(@$application->recruiter_note ?: @$application->comment ?? ''));
+    $rsNoteRaw = strip_tags((string)(@$application->recruiter_note ?? ''));
     $rsSummaryFinal = $rsCareerSummary ?: trim(strip_tags(html_entity_decode((string)(@$application->cover_letter??''),ENT_QUOTES,'UTF-8')));
   @endphp
   data-recruiter-note="{{ \Illuminate\Support\Str::limit($rsNoteRaw, 500) }}"
@@ -6362,7 +6400,54 @@ function readData(){
   if(!el) throw new Error('rsData not found');
   var g=function(k){ return el.getAttribute(k)||''; };
   var gj=function(k){ try{return JSON.parse(el.getAttribute(k)||'[]')||[];}catch(ex){return[];} };
-  return {
+
+  // Live DOM synchronization for recruiter comments
+  var liveNote = '';
+  var editorEl = document.getElementById('jw_recruiter_note_editor');
+  if (editorEl) {
+    liveNote = (editorEl.innerText || editorEl.textContent || '').trim();
+  }
+  if (!liveNote) {
+    var displayEl = document.querySelector('.po-recruiter-note-text');
+    if (displayEl && displayEl.style.display !== 'none') {
+      liveNote = (displayEl.innerText || displayEl.textContent || '').trim();
+    }
+  }
+  var finalNote = liveNote || g('data-recruiter-note');
+
+  // Live DOM synchronization for notice period
+  var liveNotice = '';
+  var rcvWrap = document.querySelector('.rcv-wrap');
+  if (rcvWrap && rcvWrap.getAttribute('data-b-notice')) {
+    liveNotice = rcvWrap.getAttribute('data-b-notice');
+  }
+  var finalNotice = liveNotice || g('data-notice');
+
+  // Live DOM synchronization for location
+  var liveLoc = '';
+  if (rcvWrap && rcvWrap.getAttribute('data-b-loc')) {
+    liveLoc = rcvWrap.getAttribute('data-b-loc');
+  }
+  var finalLoc = liveLoc || g('data-location');
+
+  // Live DOM synchronization for experience
+  var liveExp = '';
+  if (rcvWrap && rcvWrap.getAttribute('data-b-exp')) {
+    liveExp = rcvWrap.getAttribute('data-b-exp');
+  }
+  var finalExp = liveExp || g('data-experience');
+
+  // Live DOM synchronization for match score
+  var matchVal = safeNumber(g('data-match'), 0, 100);
+  var matchEl = document.querySelector('.jw-match-score-badge, .skill-match-percent, [data-skill-match]');
+  if (matchEl) {
+    var mAttr = matchEl.getAttribute('data-skill-match');
+    var mText = mAttr || matchEl.innerText || matchEl.textContent || '';
+    var mNum = parseInt(mText.replace(/[^\d]/g, ''), 10);
+    if (!isNaN(mNum) && mNum >= 0 && mNum <= 100) matchVal = mNum;
+  }
+
+  var raw = {
     name:g('data-name')||'Candidate',
     email:g('data-email'),
     secondaryEmail:g('data-secondary-email'),
@@ -6373,9 +6458,9 @@ function readData(){
     linkedin:g('data-linkedin'),
     designation:g('data-designation'),
     company:g('data-company'),
-    location:g('data-location'),
-    experience:g('data-experience'),
-    notice:g('data-notice'),
+    location:finalLoc,
+    experience:finalExp,
+    notice:finalNotice,
     education:g('data-education'),
     workMode:g('data-work-mode'),
     reportId:g('data-report-id'),
@@ -6384,14 +6469,23 @@ function readData(){
     reportCompanyName:g('data-report-company-name'),
     reportCompanyLogo:g('data-report-company-logo'),
     aiVersion:g('data-ai-version'),
-    match:safeNumber(g('data-match'),0,100),
+    match:matchVal,
     isImmediate:g('data-is-immediate')==='1',
-    recruiterNote:g('data-recruiter-note'),
+    recruiterNote:finalNote,
     careerSummary:g('data-career-summary'),
     jobTitle:g('data-job-title'),
     skills:gj('data-skills'),
     validation:gj('data-validation')
   };
+
+  if (window.AgyResumeRenderer && typeof window.AgyResumeRenderer.normalizeCandidateData === 'function') {
+    return window.AgyResumeRenderer.normalizeCandidateData(raw, {
+      companyName: raw.reportCompanyName,
+      companyLogo: raw.reportCompanyLogo,
+      recruiterName: raw.recruiterName
+    });
+  }
+  return raw;
 }
 function isGap(value){
   value=clean(value,'');
@@ -6728,6 +6822,10 @@ function buildDefinition(data,logoUri,options){
 }
 async function buildRecruiterSummary(){
   if(window.__rsBusy) return Promise.resolve(false);
+  if(window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function'){
+    var cData = typeof readData === 'function' ? readData() : {};
+    return window.AgyResumeRenderer.processOption(5, cData);
+  }
   window.__rsBusy=true;
   try{
     var data=readData();
@@ -8207,6 +8305,10 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 async function processAgyTestOption(optNum, options){
   options = options || {};
   if(window.__rsBusy) return Promise.resolve(false);
+  if(window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function'){
+    var candData = typeof readData === 'function' ? readData() : {};
+    return window.AgyResumeRenderer.processOption(optNum, candData, options);
+  }
   window.__rsBusy = true;
   try{
     var resumeSources = (Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl || '']).map(function(url){

@@ -201,6 +201,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('job-applications/timeline/{id}', [ServiceCompanyJobApplicationController::class, 'getTimeline'])->name('job-applications.timeline');
                 Route::get('job-applications/resume-meta/{id}', [ServiceCompanyJobApplicationController::class, 'getResumeMeta'])->name('job-applications.resume-meta');
                 Route::get('job-applications/r2-download-url/{id}', [ServiceCompanyJobApplicationController::class, 'resumeR2DownloadUrl'])->name('job-applications.r2-download-url');
+                Route::post('job-applications/rdc-attachment-initiate', [ServiceCompanyJobApplicationController::class, 'rdc_attachment_initiate'])->name('job-applications.rdc-attachment-initiate');
                 Route::get('job-applications/interview-show/{id?}', [ServiceCompanyJobApplicationController::class, 'interviewShow'])->name('job-applications.interview-show');
                 Route::get('apptracker/show-interviews/{id?}', [ServiceCompanyAppTrackerController::class, 'showInterviews'])->name('apptracker.show-interviews');
                 Route::get('job-applications/create/{jobId?}/{appId?}', [ServiceCompanyJobApplicationController::class, 'create'])->name('job-applications.create');
