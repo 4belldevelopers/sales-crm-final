@@ -6988,7 +6988,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->application_id = $id;
         // dd($this->application_id);
         $this->interview_detail = [];
-        $this->application = JobApplication::select(
+        $this->application = JobApplication::withoutGlobalScopes()->select(
             'job_applications.*',
             'clients.name as client_name',
             'clients.self_company',
@@ -7011,29 +7011,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'add_job_wise_condidates.thirdparty_company_id as ClientComID',
             'jobs.client_id'
         )
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('master_status', function ($join) {
+            ->leftjoin('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+            ->leftjoin('master_status', function ($join) {
                 $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
             })
-            ->join('jobs', function ($join) {
+            ->leftjoin('jobs', function ($join) {
                 $join->on('jobs.id', 'add_job_wise_condidates.job_id');
             })
-            // ->join('jobs', 'jobs.id', '=', 'job_applications.job_id')
-            ->join('clients', 'clients.id', '=', 'jobs.client_id')
-            // ->join('master_status', 'master_status.id', '=', 'job_applications.master_status_id')
-            ->join('users', 'users.id', '=', 'add_job_wise_condidates.submitted_by')
+            ->leftjoin('clients', 'clients.id', '=', 'jobs.client_id')
+            ->leftjoin('users', 'users.id', '=', 'add_job_wise_condidates.submitted_by')
             ->leftjoin('client_location_jobs', 'client_location_jobs.job_id', 'jobs.id')
             ->leftjoin('client_location', 'client_location.id', 'client_location_jobs.client_location_id')
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-            ->where('add_job_wise_condidates.id', $this->application_id)
+            ->where(function ($query) use ($id) {
+                $query->where('add_job_wise_condidates.id', $id)
+                    ->orWhere('job_applications.id', $id);
+            })
             ->groupBy('job_applications.id')->first();
 
-        // dd($aval);
-        $i = 0;
-        if ($this->application->condidate_type == 'bench_condidate') {
+        if (! $this->application) {
+            $this->application = JobApplication::find($this->application_id);
+        }
 
-            $bench_assign = DB::table(table: 'bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
+        if (! $this->application) {
+            return Reply::error('Candidate application not found.');
+        }
+
+        $i = 0;
+        if (($this->application->condidate_type ?? '') == 'bench_condidate') {
+
+            $bench_assign = DB::table('bench_assign')->join('users', 'users.id', '=', 'bench_assign.user_id')
                 ->select('users.id', 'users.email', 'users.name')
                 ->where('bench_assign.bench_applications_id', $this->application->id)
                 ->get()->toArray();
@@ -7066,8 +7074,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (empty($this->application->state)) {
             $this->row_state_name = '----';
         } else {
-            if ($this->application->country == 101) {
-                $this->row_state_name = $this->application->state_name;
+            if (($this->application->country ?? null) == 101) {
+                $this->row_state_name = $this->application->state_name ?? '';
             } else {
                 $state = $this->application->state;
                 if (is_numeric($this->application->country) && is_numeric($state)) {
@@ -7082,56 +7090,57 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $this->row_city_name = '';
-        if ($this->application->country == 101) {
-            $row_city = DB::table('city_list')->select('*')->where('city_id', $this->application->city_id)->first();
+        if (($this->application->country ?? null) == 101) {
+            $row_city = DB::table('city_list')->select('*')->where('city_id', $this->application->city_id ?? 0)->first();
             $this->row_city_name = @$row_city->city;
         } else {
-            $this->row_city_name = $this->application->city;
+            $this->row_city_name = $this->application->city ?? '';
         }
 
         $current_ctc_cur = $current_ectc_cur = $ctc = $ectc = $current_ctc_mode = $current_ectc_mode = '';
-        $current_ctc_cur = $currencySymbole[$this->application->current_ctc_cur];
-        $current_ectc_cur = $currencySymbole[$this->application->current_ectc_cur];
-        if ($this->application->condidate_type == 'bench_condidate') {
-            $current_ectc_cur = $currencySymbole[$this->application->bill_rate_currency];
+        $current_ctc_cur = $currencySymbole[$this->application->current_ctc_cur ?? 0] ?? '';
+        $current_ectc_cur = $currencySymbole[$this->application->current_ectc_cur ?? 0] ?? '';
+        if (($this->application->condidate_type ?? '') == 'bench_condidate') {
+            $current_ectc_cur = $currencySymbole[$this->application->bill_rate_currency ?? 0] ?? '';
         }
-        $ctc = GeneralMethod::thousandsCurrencyFormat($this->application->ctc);
-        $ectc = GeneralMethod::thousandsCurrencyFormat($this->application->ectc);
-        if ($this->application->condidate_type == 'bench_condidate') {
-            $ectc = GeneralMethod::thousandsCurrencyFormat($this->application->bill_rate_amount);
+        $ctc = GeneralMethod::thousandsCurrencyFormat($this->application->ctc ?? 0);
+        $ectc = GeneralMethod::thousandsCurrencyFormat($this->application->ectc ?? 0);
+        if (($this->application->condidate_type ?? '') == 'bench_condidate') {
+            $ectc = GeneralMethod::thousandsCurrencyFormat($this->application->bill_rate_amount ?? 0);
         }
-        $current_ctc_mode = substr($salaryMode[$this->application->current_ctc_mode ?? 0], 0, 1);
-        $current_ectc_mode = substr($salaryMode[$this->application->current_ectc_mode ?? 0], 0, 1);
-        if ($this->application->condidate_type == 'bench_condidate') {
-            $current_ectc_mode = substr($salaryMode[$this->application->bill_rate_mode], 0, 1);
+        $current_ctc_mode = substr($salaryMode[$this->application->current_ctc_mode ?? 0] ?? '', 0, 1);
+        $current_ectc_mode = substr($salaryMode[$this->application->current_ectc_mode ?? 0] ?? '', 0, 1);
+        if (($this->application->condidate_type ?? '') == 'bench_condidate') {
+            $current_ectc_mode = substr($salaryMode[$this->application->bill_rate_mode ?? 0] ?? '', 0, 1);
         }
         $this->current_ctc = @$current_ctc_cur.@$ctc.'/'.@$current_ctc_mode;
         $this->expected_ctc = @$current_ectc_cur.@$ectc.'/'.@$current_ectc_mode;
 
         $this->child_status_name = '';
-        $submitted_by_company_id = $this->application->submitted_by_company_id;
-        $submitted_by_row = DB::table('companies')->select('*')->where('companies.id', $submitted_by_company_id)->first();
-        $this->submitted_by_company = $submitted_by_row->company_name;
+        $submitted_by_company_id = $this->application->submitted_by_company_id ?? $this->application->company_id ?? null;
+        $submitted_by_row = $submitted_by_company_id ? DB::table('companies')->select('*')->where('companies.id', $submitted_by_company_id)->first() : null;
+        $this->submitted_by_company = $submitted_by_row->company_name ?? '';
 
-        if ($this->application->child_status_id) {
+        if (! empty($this->application->child_status_id)) {
             $child_status_by_row = DB::table('candidate_status')->select('*')->where('candidate_status.id', $this->application->child_status_id)->first();
-            $this->child_status_name = $child_status_by_row->name;
+            $this->child_status_name = $child_status_by_row->name ?? '';
         }
 
         $this->interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
-        $this->client_contact_info = DB::table('jobs')->join('client_contact_info_jobs', 'client_contact_info_jobs.job_id', '=', 'jobs.id')->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->select('client_contact_info.id', 'client_contact_info.contact_person_name', 'client_contact_info.contact_person_email')->where('client_contact_info_jobs.job_id', '=', $this->application->jobId)->orderBy('client_contact_info.contact_person_name', 'ASC')->first();
+        $jobId = $this->application->jobId ?? $this->application->job_id ?? null;
+        $this->client_contact_info = $jobId ? DB::table('jobs')->join('client_contact_info_jobs', 'client_contact_info_jobs.job_id', '=', 'jobs.id')->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->select('client_contact_info.id', 'client_contact_info.contact_person_name', 'client_contact_info.contact_person_email')->where('client_contact_info_jobs.job_id', '=', $jobId)->orderBy('client_contact_info.contact_person_name', 'ASC')->first() : null;
 
-        $this->job_id = $this->application->jobId;
+        $this->job_id = $jobId;
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
         // interview_mode_lavel
         $this->email_template = DB::table('th_email_template')->select('*')->where('th_email_template.status', 1)->where('th_email_template.temptype', 3)->orderBy('th_email_template.e_temp_id', 'ASC')->get();
         $this->from_email = $this->user->email;
         $this->cc_email = $this->user->email;
-        if ($this->application->submitted_by_email != $this->user->email) {
+        if (! empty($this->application->submitted_by_email) && $this->application->submitted_by_email != $this->user->email) {
             $this->cc_email = $this->cc_email.' , '.$this->application->submitted_by_email;
         }
 
-        $client_contact_arr = DB::table('client_contact_info')->join('client_contact_info_jobs', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_email')->where('client_contact_info_jobs.job_id', $this->application->jobId)->get();
+        $client_contact_arr = $jobId ? DB::table('client_contact_info')->join('client_contact_info_jobs', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')->select('client_contact_info.contact_person_name', 'client_contact_info.contact_person_email')->where('client_contact_info_jobs.job_id', $jobId)->get() : [];
         if (! empty($client_contact_arr)) {
             foreach ($client_contact_arr as $ccData) {
                 if (! empty($ccData->contact_person_email)) {
@@ -7149,38 +7158,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->where('users.status', 'active')
             ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->groupBy('users.id')->get()->toArray();
 
-        $assignDatatwo = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')
+        $assignDatatwo = $jobId ? DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')
             ->leftjoin('role_user', 'role_user.user_id', 'users.id')
             ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
             ->leftjoin('roles', 'roles.id', 'role_user.role_id')
             ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-            ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->where('job_assign.job_id', $this->application->jobId)->get()->toArray();
+            ->select('users.id', 'users.email', 'users.name', 'users_profile.designation as display_name', 'users.working_status', 'companies.company_name')->where('job_assign.job_id', $jobId)->get()->toArray() : [];
 
         $mergedData = array_udiff($assignDataone, $assignDatatwo, function ($a, $b) {
             return $a->id <=> $b->id; // Compare by 'id' field
         });
 
         // dd($mergedData);
-        $clientId = Job::where('jobs.id', $this->application->jobId)
-            ->join('clients', 'clients.id', '=', 'jobs.client_id')->pluck('jobs.client_id')->toArray();
+        $clientId = $jobId ? Job::where('jobs.id', $jobId)
+            ->join('clients', 'clients.id', '=', 'jobs.client_id')->pluck('jobs.client_id')->toArray() : [];
 
-        $assignDataclient = DB::table('clients')
+        $assignDataclient = ! empty($clientId) ? DB::table('clients')
             ->leftjoin('companies', 'companies.id', 'clients.company_id')
             ->join('client_contact_info', 'clients.id', '=', 'client_contact_info.client_id')
             ->select('client_contact_info.id', 'client_contact_info.contact_person_email as email', 'client_contact_info.contact_person_name as name', 'client_contact_info.contact_person_designation as display_name', 'clients.name as company_name')
-            ->whereIn('clients.id', $clientId)->get()->toArray();
+            ->whereIn('clients.id', $clientId)->get()->toArray() : [];
 
-        // dd($assignDataclient,$clientId,$this->application->jobId);
-
-        // $assignData = DB::table('job_assign')->join('users', 'users.id', '=', 'job_assign.user_id')
-        // ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-        // ->leftjoin('users_profile', 'users_profile.user_id', 'users.id')
-        // ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-        // ->leftjoin('companies', 'companies.id', 'job_assign.company_id')
-        // ->select('users.id','users.email','users.name','users_profile.designation as display_name', 'users.working_status','companies.company_name')->where('job_assign.job_id',$this->application->jobId )->get()->toArray();
-        // dd($this->application->jobId,$assignData);
-
-        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id);
+        $companyOrClientName = GeneralMethod::companyOrClientName($this->application->client_id ?? null);
         $this->selfCompany = ($companyOrClientName->selfCompany) ? $companyOrClientName->selfCompany : '';
         $this->companyTemp = ($companyOrClientName->company) ? $companyOrClientName->company : '';
         $this->clientTemp = ($companyOrClientName->client) ? $companyOrClientName->client : '';

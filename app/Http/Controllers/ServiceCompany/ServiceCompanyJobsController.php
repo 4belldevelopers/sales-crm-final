@@ -6184,7 +6184,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $this->benchshowtabclose = false;
         }
 
-        $versionKey = 'jobDetails_version_user_'.$this->user->id;
+        $versionKey = 'jobDetails_v2_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:jobDetails:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------

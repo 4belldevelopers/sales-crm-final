@@ -576,7 +576,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'valCheck_date' => $valCheck_date,
         ];
 
-        $versionKey = 'allinterviewbenchcandidates_version_user_'.$this->user->id;
+        $versionKey = 'allinterviewbenchcandidates_v13_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allinterviewbenchcandidates:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
@@ -739,18 +739,26 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             }, $response['hits']['hits'] ?? []);
         }
 
-        // Batch pre-hydrate client names and latest feedback for the page to eliminate Blade N+1 queries
+        // Batch pre-hydrate client names, self_company status, and latest feedback for the page to eliminate Blade N+1 queries
         if (! empty($data)) {
             $jobIds = array_values(array_unique(array_filter(array_column($data, 'job_id'))));
             $clientMap = [];
+            $clientSelfCompanyMap = [];
             if (! empty($jobIds)) {
-                $clientMap = DB::table('jobs')
+                $clientRows = DB::table('jobs')
                     ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                     ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
                     ->whereIn('jobs.id', $jobIds)
-                    ->select('jobs.id as job_id', DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"))
-                    ->pluck('client_title', 'job_id')
-                    ->all();
+                    ->select(
+                        'jobs.id as job_id',
+                        DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"),
+                        DB::raw("COALESCE(clients.self_company, 1) as self_company")
+                    )
+                    ->get();
+                foreach ($clientRows as $cRow) {
+                    $clientMap[$cRow->job_id] = $cRow->client_title;
+                    $clientSelfCompanyMap[$cRow->job_id] = ((int) $cRow->self_company === 1);
+                }
             }
 
             $interviewIds = array_values(array_unique(array_filter(array_column($data, 'id'))));
@@ -767,13 +775,30 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 }
             }
 
+            $spokpersonMap = collect();
+            if (! empty($jobIds)) {
+                $spokRows = DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->whereIn('job_assign.job_id', $jobIds)
+                    ->where('job_assign.spok_user_id', '>', 0)
+                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                    ->get();
+
+                foreach ($spokRows as $spok) {
+                    $spokpersonMap->put($spok->job_id.'_'.$spok->company_id, $spok->name);
+                }
+            }
+
             foreach ($data as &$row) {
                 $jobId = $row['job_id'] ?? null;
                 $row['client_title_name_enriched'] = $clientMap[$jobId] ?? ($row['client_name'] ?? $row['company_name'] ?? '');
+                $row['is_self_company_enriched'] = $clientSelfCompanyMap[$jobId] ?? true;
                 $intId = $row['id'] ?? null;
                 $row['latest_feedback_enriched'] = $feedbackMap[$intId] ?? null;
             }
             unset($row);
+        } else {
+            $spokpersonMap = collect();
         }
         $pagination = [
             'total' => $total,
@@ -787,7 +812,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         // Compute dashboard stats so top hero cards reflect live counts (§3.5 audit fix)
         $stats = $this->dashboardStats($company_id, $chkAdminRole, $page);
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-candidate-interview-schedule-ajax', compact('data', 'userPermissions', 'company_id', 'available_status'))->render(),
+            'html' => view('service_company.ajax_pages.bench-candidate-interview-schedule-ajax', compact('data', 'userPermissions', 'company_id', 'available_status', 'spokpersonMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'stats' => $stats,
@@ -840,7 +865,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             'valCheck_date' => $valCheck_date,
         ];
 
-        $versionKey = 'allinterviewbenchcandidates_version_user_'.$this->user->id;
+        $versionKey = 'allinterviewbenchcandidates_v2_v12_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allinterviewbenchcandidates_v2:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
 
@@ -994,14 +1019,22 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         if (! empty($data)) {
             $jobIds = array_values(array_unique(array_filter(array_column($data, 'job_id'))));
             $clientMap = [];
+            $clientSelfCompanyMap = [];
             if (! empty($jobIds)) {
-                $clientMap = DB::table('jobs')
+                $clientRows = DB::table('jobs')
                     ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
                     ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
                     ->whereIn('jobs.id', $jobIds)
-                    ->select('jobs.id as job_id', DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"))
-                    ->pluck('client_title', 'job_id')
-                    ->all();
+                    ->select(
+                        'jobs.id as job_id',
+                        DB::raw("COALESCE(clients.name, companies.company_name, '') as client_title"),
+                        DB::raw("COALESCE(clients.self_company, 1) as self_company")
+                    )
+                    ->get();
+                foreach ($clientRows as $cRow) {
+                    $clientMap[$cRow->job_id] = $cRow->client_title;
+                    $clientSelfCompanyMap[$cRow->job_id] = ((int) $cRow->self_company === 1);
+                }
             }
 
             $interviewIds = array_values(array_unique(array_filter(array_column($data, 'id'))));
@@ -1018,9 +1051,27 @@ class InterviewScheduleController extends ServiceCompanyBaseController
                 }
             }
 
+            $spokpersonMap = collect();
+            if (! empty($jobIds)) {
+                $spokRows = DB::table('job_assign')
+                    ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                    ->whereIn('job_assign.job_id', $jobIds)
+                    ->where('job_assign.spok_user_id', '>', 0)
+                    ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                    ->get();
+
+                foreach ($spokRows as $spok) {
+                    $spokpersonMap->put($spok->job_id.'_'.$spok->company_id, $spok->name);
+                }
+            }
+
             foreach ($data as &$row) {
                 $jobId = $row['job_id'] ?? null;
+                $jobCompanyId = (int) ($row['job_company_id'] ?? $row['real_company_id'] ?? $row['ClientComID'] ?? $row['from_company_id'] ?? $row['thirdparty_company_id'] ?? 0);
+                $capKey = $jobId.'_'.$jobCompanyId;
+                $row['captain_name_enriched'] = $spokpersonMap->get($capKey) ?? '';
                 $row['client_title_name_enriched'] = $clientMap[$jobId] ?? ($row['client_name'] ?? $row['company_name'] ?? '');
+                $row['is_self_company_enriched'] = $clientSelfCompanyMap[$jobId] ?? true;
                 $intId = $row['id'] ?? null;
                 $row['latest_feedback_enriched'] = $feedbackMap[$intId] ?? null;
             }
