@@ -7098,7 +7098,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-recommend-req-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'sal_mode', 'min_salary_currency', 'job_status', 'currentRowJob', 'condidate_id'))->render(),
+            'html' => view('service_company.ajax_pages.bench-recommend-internal-req-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'sal_mode', 'min_salary_currency', 'job_status', 'currentRowJob', 'condidate_id'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
