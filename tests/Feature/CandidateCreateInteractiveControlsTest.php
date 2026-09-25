@@ -27,13 +27,20 @@ class CandidateCreateInteractiveControlsTest extends TestCase
     public function test_current_location_supports_remote_suggestions_and_resume_population(): void
     {
         $form = $this->source('resources/views/service_company/job-applications/create.blade.php');
+        $css = $this->source('demo/css/job-application-create.css');
 
         $this->assertStringContainsString("document.querySelector('#kt_tagify_work_location')", $form);
+        $this->assertStringContainsString("mode: 'select'", $form);
+        $this->assertStringContainsString('maxTags: 1', $form);
+        $this->assertStringContainsString("classname: 'candidate-location-dropdown'", $form);
+        $this->assertStringContainsString("classList.add('candidate-location-tagify')", $form);
         $this->assertStringContainsString('/city-job-suggestions', $form);
         $this->assertStringContainsString('tagifylocation.dropdown.show(query)', $form);
         $this->assertStringContainsString('initialLocations.push(defaultLocation)', $form);
         $this->assertStringContainsString('tagifylocation.settings.whitelist.unshift(normalizedValue)', $form);
         $this->assertStringContainsString('setSingleCandidateLocation(response.country)', $form);
+        $this->assertStringContainsString('.candidate-location-tagify.tagify--hasMaxTags .tagify__input', $css);
+        $this->assertStringContainsString('.tagify__dropdown.candidate-location-dropdown', $css);
     }
 
     public function test_all_three_availability_slots_initialize_date_and_time_pickers(): void
