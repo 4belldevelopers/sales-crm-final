@@ -2,8 +2,8 @@
 
 **Document Path:** `docs/V4_Jeroworks_Upgrade/100_PERCENT_CLIENT_SIDE_FORWARD_RESUME.md`  
 **System Profile:** JERO Multi-Tenant B2B Hiring SaaS  
-**Architecture Mandate:** CQRS (0% MySQL reads on web/API paths, Elasticsearch universal read scope, Redis/Horizon queues, Client-First Browser Execution via WASM)  
-**Scale Target:** **10,000 concurrent users** per page with **0% server CPU, 0% server disk I/O, 0 MySQL reads, and 0 Elasticsearch reads on the hot path**.  
+**Architecture Mandate:** CQRS (0% MySQL reads on browser/drawer hot paths, Elasticsearch universal read scope, Redis/Horizon queues, Client-First Browser Execution via WASM)  
+**Scale Target:** **10,000 Concurrent User Certification Target** with **Server PDF compilation CPU = 0%**, **Web server document disk write I/O = 0 Bytes**, **MySQL reads on browser/drawer hot path = 0**, **Elasticsearch reads on browser/drawer hot path = 0**, and **Control-plane CPU = bounded & measured (< 3% under load)**.  
 **Naming Precision:** Client-First Forward Resume Architecture (Client-Side Document Processing & Direct-to-R2 Pipeline).
 
 ---
@@ -73,11 +73,12 @@ In [`resources/views/service_company/cvtracker/index.blade.php`](file:///c:/User
 │                      JERO BROWSER                      │
 │            (Performance, Assembly & Cache)             │
 │                                                        │
+│  • Owns: forward_request_id (UUIDv4)                   │
 │  • In-Memory Dossier Hydration (Authorized DOM attrs)  │
 │  • Tenant-Scoped IndexedDB (JeroFwdDB Performance L2) │
-│  • Session-Generation Aware Cache Invalidation         │
+│  • Runtime Triple-Check: tenant + user + session_gen   │
 │  • Hardware-Adaptive Worker Pool (1-4 Workers)         │
-│  • Explicit 150MB Client Memory Ceiling Guard          │
+│  • 150MB Application Working-Set Memory Guard          │
 │  • Bounded Binary R2 Upload Queue (Max 2 PUTs)         │
 │  • Micro-Dispatch Payload Construction (<2KB)          │
 └───────────────────────────┬────────────────────────────┘
@@ -89,11 +90,12 @@ In [`resources/views/service_company/cvtracker/index.blade.php`](file:///c:/User
 │                   JERO CONTROL PLANE                   │
 │             (Security, Tenancy & Authority)            │
 │                                                        │
+│  • Owns: reservation_id, attachment_uuid, dispatch_id  │
 │  • Authentication & CSRF Validation                    │
 │  • Multi-Tenant Boundary Enforcement                   │
 │  • Per-User / Per-Company Rate Limiting                │
-│  • Finite State Machine Transition Enforcement         │
-│  • Short-Lived Scoped Presigned PUT URL Minting        │
+│  • Finite State Machine Transition Guard Enforcement   │
+│  • Scoped Presigned PUT URL Minting (Signed Metadata)  │
 └───────────────────────────┬────────────────────────────┘
                             │
                             ▼
@@ -102,7 +104,8 @@ In [`resources/views/service_company/cvtracker/index.blade.php`](file:///c:/User
 │               (Serverless Storage Edge)                │
 │                                                        │
 │  • Direct Binary Streaming (0 Bytes Web Server Disk)   │
-│  • SHA-256 Integrity Metadata Ingestion                │
+│  • Immutable Attachment UUID Object Keys               │
+│  • SHA-256 Attestation Metadata Ingestion (x-amz-meta) │
 │  • 24-Hour Lifecycle Expiration for Orphaned Blobs     │
 └───────────────────────────┬────────────────────────────┘
                             │
@@ -113,33 +116,46 @@ In [`resources/views/service_company/cvtracker/index.blade.php`](file:///c:/User
 │                   JERO DISPATCH API                    │
 │            (Verification, Billing & Enqueue)           │
 │                                                        │
-│  • R2 Metadata Verification (Size & Metadata probe)    │
-│  • Two-Phase Atomic Coin Reservation (Redis Lua)       │
-│  • Authoritative Dispatch Intent Persistence           │
-│  • Horizon Asynchronous Queue Enqueue (<40ms)          │
+│  • R2 Metadata Probe (Exact Hash & Byte Equality)      │
+│  • Redis Reservation Lock (Ephemeral Mirror)           │
+│  • MySQL Atomic Commit:                                │
+│    ├── forward_requests                                │
+│    ├── coin_reservations (Durable Financial Authority) │
+│    ├── outbox_events (At-Least-Once Dispatch Intent)   │
+│    └── forward_resume_events (Audit Event Journal)     │
+│  • Outbox Publisher Enqueue to Horizon (<40ms)         │
 └───────────────────────────┬────────────────────────────┘
                             │
                             ▼
 ┌────────────────────────────────────────────────────────┐
 │               RECONCILIATION & DISPATCH                │
 │                                                        │
-│  • Horizon Worker Transmits via SMTP / SES             │
-│  • Outbox FSM: PROVIDER_ACCEPTED -> LEDGER_COMMITTED   │
-│  • Asynchronous Ledger Commitment (MySQL coins_history)│
+│  • Atomic CAS Worker Claim (worker_token)              │
+│  • ForwardResumeProvider Interface:                    │
+│    ├── PROVIDER_SUBMITTING (Idempotent Key Enforced)   │
+│    └── findByIdempotencyKey Recovery                   │
+│  • Provider Gateway Acceptance (provider_message_id)   │
+│  • Authoritative Ledger Commit (MySQL coins_history)   │
 │  • ForwardResumeReconciliationJob (Self-Healing Cron)  │
 └────────────────────────────────────────────────────────┘
 ```
 
-### The Boundary of Trust:
-- **Untrusted Client Domain:** Candidate IDs, Company IDs, Candidate Emails, Template IDs, Coin Balances, R2 Object Keys, Attachment UUIDs, Match Scores, and Authorization States originate from or pass through the client. **The server must independently authorize and validate every entity against the authenticated session (`auth()->user()->company_id`).**
-- **Trusted Server Domain:** Multi-tenant isolation, billing ledgers, presigned token generation, attachment integrity verification, reconciliation, and SMTP gateway delivery.
-- **Match Score Clarification:** Match score is treated as an operational screening / UI display attribute. It does not carry financial or cryptographic signing overhead, but candidate existence and tenancy are strictly verified on the server.
+### 2.1 The Authority Hierarchy:
+- **Client Ownership:** The browser strictly owns the UI interaction and the client-minted `forward_request_id` (UUIDv4) that spans retries.
+- **Server Ownership:** The control plane exclusively mints and owns:
+  - `reservation_id` (UUIDv4) — Server-minted financial reservation handle.
+  - `attachment_uuid` (UUIDv4) — Immutable binary blob identifier.
+  - `coin_transaction_id` (UUIDv4) — Authoritative ledger entry key.
+  - `dispatch_id` (UUIDv4) — Internal messaging track.
+- **Core Financial Invariant:**  
+  > **MySQL is authoritative. Redis can never create a financial reservation that does not exist in MySQL.**
+- **Hot-Path Read Rule:** **`0 MySQL reads on the browser/drawer hot path`** and **`0 Elasticsearch reads on the browser/drawer hot path`**. Candidate hydration occurs entirely from pre-rendered DOM and local cache. `POST /send` may perform authoritative MySQL writes, transactional consistency checks, and outbox commits without violating the read-path mandate.
 
 ---
 
 ## 3. 10K Concurrency Capacity Model & Traffic Flow
 
-To guarantee that JERO handles **10,000 concurrent users** on Forward Resume without server collapse, DB strain, or UI lockups, the system is modeled with realistic recruiter concurrency patterns:
+To achieve and certify the **10,000 Concurrent User Certification Target** on Forward Resume without server collapse, DB strain, or UI lockups, the system is modeled with realistic recruiter concurrency patterns:
 
 ### 3.1 Concurrency Model Parameters
 - **Concurrent Active Users ($N$):** 10,000 recruiters with drawer open or initiating forwards.
@@ -147,36 +163,107 @@ To guarantee that JERO handles **10,000 concurrent users** on Forward Resume wit
 - **Candidates per Batch:** Average 3 candidates (Maximum 5 candidates).
 - **Control-Plane Endpoints per Dispatch:**
   1. `POST /intent` (Auth & Scope check): 1 call
-  2. `POST /presigned` (R2 token minting): 1 call
+  2. `POST /presigned` (R2 token minting with SHA-256 metadata): 1 call
   3. Direct R2 PUT (Browser $\rightarrow$ Cloudflare edge): 3 PUTs (0 hits to JERO web servers)
   4. `POST /finalize` (R2 probe verification): 1 call
-  5. `POST /send` (Coin reservation & queue push): 1 call
+  5. `POST /send` (Coin reservation & outbox persistence): 1 call
 
-### 3.2 System Throughput & Load Calculations
-| Metric | Peak Load Formula | Peak Value | Target System Headroom |
-| :--- | :--- | :--- | :--- |
-| **Control-Plane Request Rate** | $1,000 \times 4\text{ API calls} / 60\text{ sec}$ | **~67 to 100 RPS** (Bursts up to **1,500 RPS**) | FrankenPHP/Octane easily handles 10,000+ RPS |
-| **MySQL Read Queries / Sec** | 0 reads on hot path (auth in session/JWT) | **0 QPS** | 100% capacity preserved |
-| **Elasticsearch Hot-Path Reads** | 0 reads on hot path (DOM & IndexedDB) | **0 QPS** | 100% search cluster preserved |
-| **Direct R2 Uploads** | $1,000 \times 3\text{ PDFs} / 60\text{ sec}$ | **~50 to 250 PUTs / sec** | Cloudflare R2 SLA handles millions / min |
-| **JERO Server Disk I/O** | Direct browser upload to R2 | **0 Bytes / sec** | Local disk wear = 0 |
-| **Redis Lua Operations** | Coin reservation & idempotency checks | **~300 to 1,500 Ops / sec** | Redis handles 100,000+ Ops / sec |
-| **Horizon Queue Jobs** | Forward dispatch micro-payloads (<2KB) | **~17 to 50 Jobs / sec** | Horizon handles 2,000+ Jobs / sec |
-| **JERO Web Server CPU** | Micro-JSON auth, token minting, verification | **< 3% CPU utilization** | 32 GB RAM FrankenPHP pool remains cold |
+### 3.2 Derived Steady-State vs. Burst Load Calculations
+The capacity model explicitly separates steady-state throughput from campaign burst surges, defining operational requirements and measurable certification targets:
+
+| Architectural Metric | Steady-State Formula | Steady-State Value | Surge / Burst Multiplier | Peak Burst Load | Operational Requirement & Certification Target |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Control-Plane API Rate** | $1,000 \times 4\text{ API calls} / 60\text{s}$ | **66.7 RPS** | $15\times$ concurrent spike | **~1,000 RPS** | **Engineering Target:** $\ge 1,000$ RPS sustained control-plane throughput with $< 40$ms P99 latency via distributed k6 test. |
+| **MySQL Reads on Hot Path** | 0 reads on hot path (pre-authorized) | **0 QPS** | $0\times$ | **0 QPS** | **Engineering Target:** 0 queries on drawer open or send request. 100% capacity preserved. |
+| **Elasticsearch Hot-Path Reads** | 0 reads on hot path (DOM & IndexedDB) | **0 QPS** | $0\times$ | **0 QPS** | **Engineering Target:** 0 queries on hot path. Search cluster 100% reserved for discovery. |
+| **Direct R2 Uploads** | $1,000 \times 3\text{ PDFs} / 60\text{s}$ | **50 PUTs/sec** | $5\times$ upload burst | **~250 PUTs/sec** | Cloudflare R2 SLA handles millions/min with zero web server load. |
+| **JERO Web Server Disk I/O** | Direct browser upload to R2 | **0 Bytes/sec** | $0\times$ | **0 Bytes/sec** | Zero local document write I/O. |
+| **Redis Lua Operations** | Coin reservation & idempotency checks | **~300 Ops/sec** | $5\times$ surge | **~1,500 Ops/sec** | **Benchmark Target:** Benchmark Redis at $\ge 2,500$ Ops/sec at P99 $< 2$ms. |
+| **Queue Publish Throughput** | Micro-payloads (<2KB) pushed via Outbox | **~17 Jobs/sec** | $3\times$ surge | **~50 to 100 Jobs/sec** | **Benchmark Target:** Benchmark Horizon at $\ge 200$ Jobs/sec at P99 $< 10$ms (outbox $\rightarrow$ queue enqueue). |
+| **End-to-End Dispatch Throughput**| Worker execution, R2 stream, SES delivery | **~17 emails/sec**| $3\times$ surge | **~50 to 100 emails/sec**| **Benchmark Target:** Measure end-to-end dispatch drain rate matching external provider quotas. |
+| **MySQL Ledger & Outbox Writes**| Committed atomically by API & worker | **~17 Writes/sec** | $3\times$ surge | **~50 to 100 Writes/sec** | **Benchmark Target:** Benchmark MySQL write pool at $\ge 250$ Writes/sec at P99 $< 20$ms. |
+| **Web Server CPU Usage** | Micro-JSON auth, token minting, verification | **< 1.5% CPU** | Burst surge | **< 3% CPU** | Dedicated 32 GB RAM FrankenPHP pool remains cold. |
 
 ---
 
-## 4. Finite State Machine & Financial Consistency Outbox Pattern
+## 4. Transactional Outbox Pattern, Event Journal & Multi-Tier Guarantees
 
-To eliminate race conditions, double charging, and orphaned cloud objects across high concurrency, the forward resume process executes under a **Formal Finite State Machine** with a transactional Outbox pattern:
+To eliminate race conditions, double charging, and orphaned cloud objects across high concurrency, the forward resume process executes under a **Formal Finite State Machine** backed by a **Transactional Outbox Table**, **Durable MySQL Coin Reservations**, and a **Forward Resume Event Journal**.
 
+### 4.1 Schema Definitions: `outbox_events`, `coin_reservations`, and `forward_resume_events`
+
+```sql
+-- ========================================================
+-- TABLE 1: OUTBOX EVENTS (At-Least-Once Dispatch Publisher)
+-- ========================================================
+CREATE TABLE outbox_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id VARCHAR(36) NOT NULL UNIQUE,
+    aggregate_type VARCHAR(64) NOT NULL, -- 'FORWARD_RESUME'
+    aggregate_id VARCHAR(36) NOT NULL, -- forward_request_id
+    event_type VARCHAR(64) NOT NULL, -- 'FORWARD_RESUME_DISPATCH_REQUESTED'
+    payload JSON NOT NULL,
+    status ENUM('PENDING', 'PUBLISHED', 'FAILED') NOT NULL DEFAULT 'PENDING',
+    attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status_created (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- TABLE 2: COIN RESERVATIONS (Authoritative Durable State)
+-- ========================================================
+CREATE TABLE coin_reservations (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    reservation_id VARCHAR(36) NOT NULL UNIQUE,
+    company_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED NOT NULL,
+    forward_request_id VARCHAR(36) NOT NULL UNIQUE,
+    amount INT NOT NULL,
+    status ENUM('RESERVED', 'COMMITTING', 'COMMITTED', 'RELEASED', 'EXPIRED') NOT NULL DEFAULT 'RESERVED',
+    expires_at TIMESTAMP NOT NULL,
+    committed_at TIMESTAMP NULL,
+    released_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_company_status (company_id, status),
+    INDEX idx_expires_status (expires_at, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ========================================================
+-- TABLE 3: FORWARD RESUME EVENT JOURNAL (Forensic Audit Log)
+-- ========================================================
+CREATE TABLE forward_resume_events (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id VARCHAR(36) NOT NULL UNIQUE,
+    forward_request_id VARCHAR(36) NOT NULL,
+    event_type VARCHAR(64) NOT NULL,
+    previous_state VARCHAR(64) NULL,
+    new_state VARCHAR(64) NOT NULL,
+    actor_type ENUM('USER', 'SYSTEM', 'WORKER', 'RECONCILIATION') NOT NULL,
+    actor_id BIGINT UNSIGNED NULL,
+    metadata JSON NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_fwd_request (forward_request_id),
+    INDEX idx_event_type (event_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 4.2 Multi-Tier Delivery & Execution Guarantees
+To prevent semantic ambiguity in distributed operations, the system enforces four distinct guarantee levels:
+1. **Queue (Outbox Layer):** **At-Least-Once Publication**. Events are persisted before queueing; reconciliation guarantees eventual publishing.
+2. **Worker (Application Processing Layer):** **Single Successful CAS Owner**. The atomic `UPDATE ... status = 'PROCESSING', worker_token = :token WHERE status = 'QUEUED'` guarantees that exactly one worker thread processes a job.
+3. **Provider (Email Transmission Layer):** **Idempotent by `forward_request_id`**. The concrete provider adapter reuses the same canonical idempotency identity on all retries.
+4. **Financial Ledger (Coins Layer):** **Exactly-Once Commitment**. Enforced via MySQL `UNIQUE(coin_transaction_id)` and authoritative `coin_reservations` state transitions.
+
+### 4.3 FSM State Flow Diagram
 ```mermaid
 stateDiagram-v2
     [*] --> CREATE_INTENT: User selects candidates & clicks Send
     CREATE_INTENT --> AUTHORIZED: Server verifies tenant boundaries
     CREATE_INTENT --> CANCELLED: User cancels or closes drawer
     
-    AUTHORIZED --> PRESIGNED: Server mints scoped R2 PUT URLs
+    AUTHORIZED --> PRESIGNED: Server mints scoped R2 PUT URLs with signed sha256
     AUTHORIZED --> EXPIRED: 15-min presigned token TTL expires
     
     PRESIGNED --> UPLOADING: Browser bounded queue initiates PUTs
@@ -184,81 +271,83 @@ stateDiagram-v2
     UPLOADING --> UPLOAD_FAILED: Network timeout / socket failure
     UPLOAD_FAILED --> UPLOADING: Idempotent client retry
     
-    UPLOADED --> VERIFIED: Server probes R2 metadata & size
-    UPLOADED --> VERIFY_FAILED: Metadata probe failure / 0-byte file
+    UPLOADED --> VERIFIED: Server probes R2: exact hash attestation + exact byte size
+    UPLOADED --> VERIFY_FAILED: Hash mismatch / size discrepancy
     
     VERIFIED --> READY_TO_SEND: All batch candidate PDFs verified
-    READY_TO_SEND --> COINS_RESERVED: Redis 2-phase coin reservation
-    COINS_RESERVED --> QUEUED: Micro-job pushed to Horizon queue
-    COINS_RESERVED --> REFUND_PENDING: Queue push failure / timeout
+    READY_TO_SEND --> COINS_RESERVED: Redis 2-phase coin lock
+    COINS_RESERVED --> QUEUED: MySQL atomic commit (forward_requests + coin_reservations + outbox_events)
+    COINS_RESERVED --> REFUND_PENDING: DB commit failure / rollback
     
-    QUEUED --> PROCESSING: Horizon worker picks up job
-    PROCESSING --> PROVIDER_ACCEPTED: SES/SMTP returns provider_message_id
-    PROCESSING --> PROVIDER_REJECTED: Provider hard bounce / auth rejection
+    QUEUED --> PROCESSING: Worker claims job via Atomic CAS (worker_token)
+    PROCESSING --> PROVIDER_SUBMITTING: Worker transmits payload via ForwardResumeProvider
+    PROVIDER_SUBMITTING --> PROVIDER_ACCEPTED: Provider returns provider_message_id
+    PROVIDER_SUBMITTING --> PROVIDER_REJECTED: Provider hard bounce / auth rejection
     
-    PROVIDER_ACCEPTED --> LEDGER_COMMITTED: MySQL coins_history committed
+    PROVIDER_ACCEPTED --> LEDGER_COMMITTED: MySQL coin_reservations + coins_history committed
     PROVIDER_REJECTED --> REFUND_PENDING: Trigger refund transition
     
-    REFUND_PENDING --> [*]: Atomic balance release in Redis & DB
+    REFUND_PENDING --> [*]: Atomic balance release in Redis & MySQL coin_reservations
     LEDGER_COMMITTED --> [*]: Outbox transaction finalized
 ```
 
-### 4.1 FSM State Definitions
-1. **`CREATE_INTENT`:** Browser submits candidate IDs and requested format with client-generated `Idempotency-Key` and `forward_request_id`.
-2. **`AUTHORIZED`:** Control plane validates that every candidate belongs to the authenticated tenant (`company_id` or `thirdparty_company_id`).
-3. **`PRESIGNED`:** Scoped, temporary presigned PUT URLs generated with strict 15-minute expiration and exact content-length limits.
-4. **`UPLOADING`:** Browser bounded queue (concurrency max 2) streams compiled PDF blobs directly to Cloudflare R2.
-5. **`UPLOADED`:** Client confirms R2 upload completion.
-6. **`VERIFIED`:** Control plane executes a server-to-R2 metadata probe (`HEAD` request) verifying non-zero size and SHA-256 metadata headers.
-7. **`READY_TO_SEND`:** All candidates in the batch (up to 5) are verified in R2 storage.
-8. **`COINS_RESERVED`:** Two-phase coin reservation freezes required balance in Redis.
-9. **`QUEUED`:** Micro-dispatch payload (<2KB) pushed onto Horizon Redis queue.
-10. **`PROCESSING`:** Background Horizon worker claims job and attempts email transmission.
-11. **`PROVIDER_ACCEPTED`:** SES / SMTP provider accepts message and returns `provider_message_id`.
-12. **`LEDGER_COMMITTED`:** Worker commits `coins_history` MySQL ledger entry and decrements `reserved_balance`.
-13. **`PROVIDER_REJECTED` / `REFUND_PENDING`:** On delivery failure, releases frozen coins back to `available_balance`.
-
-### 4.2 Self-Healing: `ForwardResumeReconciliationJob`
-A standing cron job runs every 5 minutes to audit and reconcile state:
-- **Stale `UPLOADING` / `UPLOADED` (> 30 mins):** Marked `EXPIRED`.
-- **Dangling `COINS_RESERVED` without `QUEUED` (> 10 mins):** Automatically releases locked coins back to `available_balance`.
-- **Job in `PROCESSING` / `QUEUED` (> 15 mins):** Queries email provider with `provider_message_id`. If accepted by provider, moves state to `LEDGER_COMMITTED`; if lost or failed, moves to `REFUND_PENDING` and refunds coins.
-- **R2 Orphan Policy:** Automated Cloudflare R2 bucket lifecycle rule deletes any object under `temporary/forward-resume/*` older than 24 hours.
+### 4.4 Mandatory State Machine Guard Rule
+> **Strict Architectural Invariant:** No controller, service, or worker may directly mutate status fields on `forward_requests`, `coin_reservations`, or `forward_attachments` via raw Eloquent assignment. All state transitions must pass through `ForwardResumeStateMachine::transition($model, ForwardResumeState::TARGET, $actorContext)`, which automatically records an entry in `forward_resume_events`.
 
 ---
 
-## 5. Two-Phase Coin Reservation & 3-Tier Database Idempotency
+## 5. Durable Financial Architecture & Idempotent Ledger
 
-`DECRBY` alone is vulnerable to race conditions, double charging, and partial execution during high concurrency. Under 10,000 concurrent requests, the system implements a **Two-Phase Reserve $\rightarrow$ Commit $\rightarrow$ Release** model backed by database unique constraints.
+`DECRBY` alone is vulnerable to race conditions, double charging, and partial execution during high concurrency. Under 10,000 concurrent requests, the system implements a **Two-Phase Reserve $\rightarrow$ Commit $\rightarrow$ Release** model backed by both a high-speed Redis concurrency mirror and a durable MySQL authority.
 
-### 5.1 Balance Separation
-For every tenant, the wallet maintains two balances:
-- `available_balance`: Unencumbered coins available for operations.
-- `reserved_balance`: Coins locked for in-flight forward resume dispatches.
+### 5.1 Financial Architecture: Elasticsearch Reads, Redis Concurrency & MySQL Authority
+Under JERO's strict CQRS mandate, financial operations strictly separate read, locking, and commitment layers:
+- **Elasticsearch Read Store (`ELASTIC_COMPANIES_COINS`):** Serves 100% of read operations for coin balance queries on drawer open, recruiter profile widgets, and company dashboards. Indexed via `php artisan elasticsearch:index-companies-coins` and `ElasticCampanyCoins` (mapping `company_coins_view`), this guarantees **0 MySQL reads on page loads or drawer opening**.
+- **Redis Concurrency Mirror (`tenant:{company_id}:coins`):** Coordinates fast in-memory locks, holds active `available` vs `reserved` balances, and executes atomic compare-and-decrement in $<1$ms via `reserve_coins.lua`. On cold cache startup, Redis can pre-warm its available balance from `ELASTIC_COMPANIES_COINS`.
+- **MySQL Durable Financial Authority (`coin_reservations` and `coins_history`):** The legal ACID system of record for commits and durable financial reservations.
+- **Why Elasticsearch Cannot Replace MySQL for Deductions:** Elasticsearch is an *eventually consistent* search engine with a 1-second index refresh interval and asynchronous queue updates. If a recruiter opens 2 browser tabs and sends emails simultaneously, relying on Elasticsearch for deduction authority would cause Tab 2 to read a stale balance, resulting in **double-spending and negative coin exploits**. Therefore, Redis provides atomic concurrency locking and MySQL provides ACID durability.
 
-### 5.2 Atomic Redis Lua Scripts
+### 5.2 Reservation-Specific Atomic Redis Lua Scripts with Parameter Validation
+
 ```lua
 -- ========================================================
 -- SCRIPT 1: ATOMIC COIN RESERVATION (reserve_coins.lua)
 -- ========================================================
 -- KEYS[1]: tenant coin key (e.g. tenant:1042:coins)
+-- KEYS[2]: reservation key (e.g. coin_reservation:res_8f73a1...)
 -- ARGV[1]: required_coins (e.g. 5)
--- ARGV[2]: idempotency_key (e.g. frw_8f73a1...)
+-- ARGV[2]: forward_request_id
+-- ARGV[3]: company_id
+
+local resStatus = redis.call('HGET', KEYS[2], 'status')
+if resStatus then
+    -- Validate parameter immutability on replay / retry
+    local existingComp = redis.call('HGET', KEYS[2], 'company_id')
+    local existingFwd = redis.call('HGET', KEYS[2], 'forward_request_id')
+    local existingAmount = tonumber(redis.call('HGET', KEYS[2], 'amount') or '0')
+    
+    if existingComp == ARGV[3] and existingFwd == ARGV[2] and existingAmount == tonumber(ARGV[1]) then
+        return resStatus -- Valid idempotent retry
+    else
+        return 'RESERVATION_PARAM_MISMATCH' -- Conflict: reject replayed reservation with modified params
+    end
+end
 
 local available = tonumber(redis.call('HGET', KEYS[1], 'available') or '0')
 local required = tonumber(ARGV[1])
-local idemKey = 'idem:' .. ARGV[2]
-
--- Check if request already processed (idempotency guard)
-local existing = redis.call('GET', idemKey)
-if existing then
-    return existing
-end
 
 if available >= required then
     redis.call('HINCRBY', KEYS[1], 'available', -required)
     redis.call('HINCRBY', KEYS[1], 'reserved', required)
-    redis.call('SETEX', idemKey, 3600, 'RESERVED')
+    
+    redis.call('HMSET', KEYS[2], 
+        'status', 'RESERVED',
+        'amount', required,
+        'forward_request_id', ARGV[2],
+        'company_id', ARGV[3],
+        'created_at', redis.call('TIME')[1]
+    )
+    redis.call('EXPIRE', KEYS[2], 3600)
     return 'RESERVED'
 else
     return 'INSUFFICIENT_FUNDS'
@@ -267,35 +356,60 @@ end
 
 ```lua
 -- ========================================================
--- SCRIPT 2: ATOMIC COIN RELEASE / REFUND (release_coins.lua)
+-- SCRIPT 2: RESERVATION-SPECIFIC ATOMIC COIN RELEASE (release_coins.lua)
 -- ========================================================
 -- KEYS[1]: tenant coin key (e.g. tenant:1042:coins)
--- ARGV[1]: release_coins (e.g. 5)
--- ARGV[2]: idempotency_key (e.g. frw_8f73a1...)
+-- KEYS[2]: reservation key (e.g. coin_reservation:res_8f73a1...)
 
-local reserved = tonumber(redis.call('HGET', KEYS[1], 'reserved') or '0')
-local release = tonumber(ARGV[1])
-local idemKey = 'idem:' .. ARGV[2]
+local resStatus = redis.call('HGET', KEYS[2], 'status')
 
-local toRelease = math.min(reserved, release)
-if toRelease > 0 then
-    redis.call('HINCRBY', KEYS[1], 'reserved', -toRelease)
-    redis.call('HINCRBY', KEYS[1], 'available', toRelease)
-    redis.call('SETEX', idemKey, 3600, 'RELEASED')
+if not resStatus then
+    return 'RESERVATION_NOT_FOUND'
+end
+
+if resStatus == 'RELEASED' then
+    return 'ALREADY_RELEASED'
+end
+
+if resStatus == 'COMMITTED' then
+    return 'ALREADY_COMMITTED'
+end
+
+if resStatus == 'RESERVED' then
+    local amount = tonumber(redis.call('HGET', KEYS[2], 'amount') or '0')
+    if amount > 0 then
+        redis.call('HINCRBY', KEYS[1], 'reserved', -amount)
+        redis.call('HINCRBY', KEYS[1], 'available', amount)
+    end
+    redis.call('HSET', KEYS[2], 'status', 'RELEASED')
     return 'RELEASED'
 end
-return 'NO_RESERVED_BALANCE'
+
+return 'INVALID_STATE'
 ```
 
-### 5.3 Three-Tier Idempotency Matrix (Browser $\rightarrow$ API $\rightarrow$ Database)
-1. **Tier 1 (Browser Layer):** `forward_request_id` (UUIDv4) is minted once when the user opens the forward modal, surviving client retries.
-2. **Tier 2 (API Cache Layer):** Redis keys `idem:{idempotency_key}` lock requests for 3,600s.
-3. **Tier 3 (Database Integrity Layer):** Authoritative MySQL schema enforces **Hard Unique Constraints**:
-   - `UNIQUE KEY uq_forward_request (forward_request_id)`
-   - `UNIQUE KEY uq_coin_transaction (coin_transaction_id)`
-   - `UNIQUE KEY uq_dispatch_id (dispatch_id)`
-   - `UNIQUE KEY uq_provider_message (provider_message_id)`
-4. **Delivery Guarantee:** Target is **`Duplicate application dispatch attempts = 0`**. Downstream delivery status is tracked via `provider_message_id`.
+### 5.3 Redis $\leftrightarrow$ MySQL Reconciliation Rebuild Algorithm
+To guarantee that Redis never drifts from MySQL, `ForwardResumeReconciliationJob` implements a two-way synchronization algorithm:
+
+```
+[Reconciliation Scan Every 5 Minutes]
+  │
+  ├─ 1. Forward Scan (MySQL -> Redis):
+  │     Find MySQL coin_reservations WHERE status = 'RESERVED' AND expires_at > NOW()
+  │     Does Redis key coin_reservation:{reservation_id} exist?
+  │     ├── YES: OK (In sync)
+  │     └── NO (Redis Crashed): Reconstruct Redis reservation key & adjust tenant 'reserved' balance
+  │
+  └─ 2. Reverse Scan (Redis -> MySQL):
+        Find all active Redis reservation keys
+        Does matching MySQL record exist with status = 'RESERVED'?
+        ├── YES: OK (In sync)
+        └── NO: Has Redis key existed > 60 seconds (grace period)?
+            ├── NO: In-flight API transaction (Wait)
+            └── YES: ORPHANED_REDIS_RESERVATION
+                     Execute release_coins.lua, restore available_balance,
+                     log audit event to forward_resume_events.
+```
 
 ---
 
@@ -339,65 +453,56 @@ function getOptimalWorkerConcurrency() {
 }
 ```
 
-### 7.2 Hard Application Memory Budget
-- **Limit:** `MAX_FORWARD_RESUME_MEMORY = 150 * 1024 * 1024` (150MB maximum allocated heap).
-- Total estimated memory = `(estimated_pdf_memory * active_workers) + wasm_memory + page_overhead`.
-- If memory exceeds 150MB, active worker count automatically throttles down to 1.
+### 7.2 Application-Controlled Working-Set Memory Budget
+- **Limit:** `MAX_FORWARD_RESUME_MEMORY = 150 * 1024 * 1024` (150MB application working-set ceiling).
+- **Scope of Working Set:** Includes WASM linear memory heap, raw ArrayBuffers, compiled PDF binary blobs, Web Worker message transfer buffers, and active DOM nodes.
+- If estimated working set exceeds 150MB, active worker pool dynamically throttles down to 1.
 - Each compilation task enforces explicit memory reclamation (`doc.free()`, nullifying typed arrays, manual ArrayBuffer detachment).
 - Cooperative yielding (`yieldToMain()`) is invoked every 16ms to keep the browser event loop responsive at 60 FPS.
 
 ---
 
-## 8. Bounded Direct-to-Cloud Upload Queue with SHA-256 Metadata Probe
+## 8. Bounded Direct-to-Cloud Upload Queue & Immutable Attachment Architecture
 
 Executing `Promise.all(uploadPromises)` across 5 large PDF files simultaneously can saturate browser HTTP connection limits (browsers limit concurrent connections to the same host to 6), leading to socket timeouts on mobile hotspots or corporate proxies.
 
-### 8.1 Bounded Upload Throttler with Backoff
-All R2 uploads pass through a bounded concurrency queue:
-
-```javascript
-/**
- * Bounded Concurrency Task Pool (Max 2 Concurrent Uploads) with Exponential Backoff
- */
-async function uploadWithRetry(uploadFn, maxRetries) {
-    maxRetries = maxRetries || 4;
-    var delay = 500;
-    for (var attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            return await uploadFn();
-        } catch (err) {
-            if (attempt === maxRetries) throw err;
-            var jitter = Math.random() * 200;
-            await new Promise(function(resolve) { setTimeout(resolve, delay + jitter); });
-            delay *= 2;
-        }
-    }
-}
-
-async function runBoundedQueue(tasks, limit) {
-    var results = [];
-    var executing = [];
-    for (var i = 0; i < tasks.length; i++) {
-        var p = uploadWithRetry(tasks[i]).then(function(res) {
-            executing.splice(executing.indexOf(p), 1);
-            return res;
-        });
-        results.push(p);
-        executing.push(p);
-        if (executing.length >= limit) {
-            await Promise.race(executing);
-        }
-    }
-    return Promise.all(results);
-}
+### 8.1 Schema: `forward_attachments` Table & Lifecycle States
+```sql
+CREATE TABLE forward_attachments (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    forward_request_id VARCHAR(36) NOT NULL,
+    candidate_id INT UNSIGNED NOT NULL,
+    company_id INT UNSIGNED NOT NULL,
+    expected_sha256 VARCHAR(64) NOT NULL,
+    expected_size INT UNSIGNED NOT NULL,
+    object_key VARCHAR(255) NOT NULL,
+    status ENUM('PRESIGNED', 'UPLOADING', 'UPLOADED', 'VERIFIED', 'FAILED', 'EXPIRED', 'DELETING', 'DELETED') NOT NULL DEFAULT 'PRESIGNED',
+    verified_at TIMESTAMP NULL,
+    failed_at TIMESTAMP NULL,
+    expires_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_fwd_request (forward_request_id),
+    INDEX idx_company_uuid (company_id, uuid),
+    INDEX idx_status_expires (status, expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
-- **Concurrency Cap:** Strictly capped at **2 concurrent PUT requests**.
-- **Payload Streaming:** PDF blobs stream directly to R2 without intermediate base64 serialization, eliminating 33% memory expansion overhead.
-- **SHA-256 Integrity Metadata Probe:** Client computes SHA-256 of the generated blob in browser via `crypto.subtle.digest('SHA-256', blobBuffer)` and transmits `expected_sha256` alongside `file_size` in `/finalize`. The server verifies object existence and metadata headers via direct S3 API `HEAD` probe without downloading the file.
+
+### 8.2 Immutable-After-VERIFIED Invariant
+> **Strict Attachment Invariant:** Once `forward_attachments.status` transitions to `VERIFIED`, the record is **immutable**. Its `object_key`, `expected_sha256`, `expected_size`, and `candidate_id` can never be modified. If the recruiter edits candidate data or re-generates the PDF, the client MUST request a brand-new `attachment_uuid`.
+
+### 8.3 Two-Tier Security Levels for SHA-256 Verification
+1. **Tier 1 (Current Production Guarantee):**
+   - Client computes SHA-256 via `crypto.subtle.digest('SHA-256', blob)`.
+   - Control plane signs `x-amz-meta-sha256: <hash>` and `Content-Length: <size>` into the presigned URL.
+   - S3 `HEAD` probe checks `HEAD.Metadata['sha256'] === expected_sha256` AND `actual_size === expected_size` (**exact byte equality, 0% tolerance**).
+2. **Tier 2 (Enhanced Storage Checksum):**
+   - Provider-native object checksum (`x-amz-checksum-sha256` or equivalent) where supported by storage edge, allowing direct body hashing verification.
 
 ---
 
-## 9. Tiered Read Architecture & Zero Stale Data Guarantee
+## 9. Tiered Read Architecture & Staleness-Controlled Cache
 
 To achieve **true 0% read strain**, Elasticsearch must NOT be queried on the normal Forward Resume path.
 
@@ -410,10 +515,27 @@ To achieve **true 0% read strain**, Elasticsearch must NOT be queried on the nor
 [Cold Recovery]: Controlled Micro-JSON API ──> Elasticsearch Hit ──> Populate IndexedDB
 ```
 
-1. **Hot Path (100% In-Memory):** Candidate cards and resume URLs are already rendered on the CV Tracker / App Tracker page. The drawer reads directly from existing DOM attributes (`data-candidate-id`, `data-name`, `data-experience`, `data-skills`, `data-match`, `data-notice`).
-2. **Warm Path (IndexedDB):** If drawer is re-opened, candidate dossiers and email templates load from `JeroFwdDB` in `< 5ms`.
-3. **Cold Circuit-Breaker Path (Elasticsearch):** Only if a candidate's complete skills matrix is completely missing from both DOM and IndexedDB does the client call `POST /test_fwd_resume_data`. This turns Elasticsearch from a high-frequency bottleneck into a rare recovery mechanism (<0.1% of requests).
-4. **Metric Standard:** **`Elasticsearch hot-path reads = 0`**.
+### 9.1 Security Correctness vs. Display Freshness
+- **Security Correctness:** Guaranteed by authoritative server validation. `POST /send` independently verifies candidate existence, tenant access, and permissions regardless of client-cached values.
+- **Display Freshness:** Governed by short IndexedDB TTLs and session-generation invalidation. Stale local data only affects client-side preview rendering, never backend dispatch authority.
+- **Metric Standard:** **`MySQL reads on browser/drawer hot path = 0`**, **`Elasticsearch hot-path reads = 0`**.
+
+### 9.2 Complete Touchpoint Audit Matrix: Reads vs. Writes
+To satisfy JERO's non-negotiable CQRS rule (*"MySQL strictly for writes; Elasticsearch strictly for reads"*), every touchpoint across the entire Forward Resume pipeline is partitioned:
+
+| Pipeline Touchpoint | Legacy Operation | New V4 Architecture Source | Hot-Path MySQL Reads |
+| :--- | :--- | :--- | :--- |
+| **Candidate Dossier** (Name, Title, Exp) | `SELECT FROM job_applications` | **DOM attributes / `JeroFwdDB` IndexedDB** | **0** |
+| **Candidate Skills Matrix** | `SELECT FROM job_application_skills` | **DOM attributes / `JeroFwdDB` IndexedDB** | **0** |
+| **Email Recipient Contacts** | `SELECT FROM client_contact_info`, `users` | **IndexedDB / Elasticsearch `ats_client_list`** | **0** |
+| **Email Templates** | `SELECT FROM email_templates` | **`JeroFwdDB` IndexedDB L2 Cache** | **0** |
+| **Coin Balance Check** | `SELECT FROM company_coins` | **Redis Cache / Elasticsearch (`ELASTIC_COMPANIES_COINS`)** | **0** |
+| **Candidate Ownership Check** (`/intent`) | `SELECT id FROM job_applications` | **Session Token / Elasticsearch (`ELASTIC_JOB_APPLICATIONS_V3`)** | **0** |
+| **Dispatch Intent Persistence** (`/send`) | N/A (untracked) | **MySQL `DB::transaction()` INSERT (`forward_requests`, `coin_reservations`, `outbox_events`)** | **0 Reads** (Atomic Write) |
+| **Worker Ledger Commit** | Synchronous PHP deduction | **Background Horizon Worker async INSERT `coins_history`** | **0 Reads** (Async Worker Write) |
+| **Self-Healing Reconciliation** | N/A | **CLI Cron Job (`ForwardResumeReconciliationJob` every 5m)** | **0 Reads on Web Path** |
+
+👉 **Hot-Path Web/API MySQL Reads = 0.** All read traffic is served by DOM, IndexedDB, Redis, and Elasticsearch. MySQL exclusively handles durable writes.
 
 ---
 
@@ -425,7 +547,7 @@ To achieve **true 0% read strain**, Elasticsearch must NOT be queried on the nor
 - **Safe to Hydrate:** `candidate_id`, `name`, `total_experience`, `skills`, `notice_period`, `match_score`, `current_designation`.
 - **Sensitive Fields (Masked / Separate Authorization):** `phone`, `personal_email`, `address`, `salary/ctc`, `private_recruiter_notes`. Masking rules (`rcvMaskContact`) apply automatically.
 
-### 10.2 IndexedDB Tenant Fingerprint & Session Generation
+### 10.2 IndexedDB Triple-Check Security Guard
 To guarantee zero cross-tenant contamination or stale cached data across tabs:
 - Storage namespace includes tenant fingerprint: `jero_fwd_tenant_{company_id}`.
 - Every cached record contains:
@@ -437,7 +559,14 @@ To guarantee zero cross-tenant contamination or stale cached data across tabs:
       "cached_at": 1727184000
   }
   ```
-- If the browser tab is kept open across a user logout/login cycle, any cache entry with a mismatched `session_generation` is instantly rejected.
+- **Runtime Triple-Check:** On every read operation from `JeroFwdDB`, the client runtime strictly checks:
+  ```javascript
+  if (record.tenant_id !== currentTenant || 
+      record.user_id !== currentUser || 
+      record.session_generation !== currentSessionGen) {
+      return null; // Discard immediately, do not return data to caller
+  }
+  ```
 - **On Logout or Company Switch:** An explicit event listener purges cached tenant data:
   ```javascript
   window.addEventListener('jero:tenant-switch', function() {
@@ -447,135 +576,196 @@ To guarantee zero cross-tenant contamination or stale cached data across tabs:
   });
   ```
 
-### 10.3 Rate Limiting & Abuse Protection
-Every endpoint enforces Redis-backed rate limits:
-- **Company Level:** Max 100 intent requests / minute.
-- **User Level:** Max 30 intent requests / minute.
-- **Batch Constraint:** Strictly max 5 candidates per forward request.
-- **Payload Constraint:** Max 10MB per compiled PDF.
+---
+
+## 11. Provider Abstraction & Canonical Idempotency Contract
+
+To eliminate "unknown outcome" states when worker processes crash during external email transmission, the architecture enforces a formal **Provider Interface**:
+
+### 11.1 `ForwardResumeProvider` Interface
+```php
+namespace App\Services\ForwardResume\Providers;
+
+interface ForwardResumeProvider
+{
+    /**
+     * Dispatches email with attachments using an immutable idempotency key.
+     * The concrete provider adapter MUST implement idempotent submission
+     * based on forward_request_id.
+     */
+    public function send(ForwardResumeDispatchPayload $payload): ProviderSubmissionResult;
+
+    /**
+     * Queries external provider logs/tags by forwardRequestId to recover delivery outcome
+     * if the worker crashed before capturing provider_message_id.
+     */
+    public function findByIdempotencyKey(string $forwardRequestId): ?ProviderSubmissionResult;
+}
+```
+
+### 11.2 Canonical Provider Contract:
+1. `forward_request_id` is JERO's canonical provider idempotency identity.
+2. The concrete provider adapter MUST implement idempotent submission and lookup semantics for this identity.
+3. The exact same `forward_request_id` **MUST be reused for every retry or reconciliation attempt**.
+4. If a worker crashes while in `PROVIDER_SUBMITTING` and `provider_message_id` is NULL:
+   - `ForwardResumeReconciliationJob` calls `findByIdempotencyKey($forwardRequestId)`.
+   - If provider confirms message was accepted $\rightarrow$ captures `provider_message_id`, advances to `PROVIDER_ACCEPTED`, commits MySQL `coin_reservations` and `coins_history`.
+   - If provider confirms no record exists after 15 minutes $\rightarrow$ marks `REFUND_PENDING` and restores balance via `release_coins.lua`.
 
 ---
 
-## 11. End-to-End Concurrency & Security SLA Matrix
+## 12. End-to-End Concurrency & Security SLA Matrix
 
-The system must satisfy these non-negotiable targets under automated 10,000-user stress benchmarks:
+The system specifies **Engineering Targets** for automated stress testing, transforming into **Production SLOs** upon formal certification:
 
-### 11.1 Latency Breakdown SLAs
-| Endpoint / Action | Target (P95) | Production SLA (P99) | Hard Timeout |
+### 12.1 Latency Breakdown Matrix
+| Endpoint / Action | Engineering Target (P95) | Production SLO Target (P99) | Hard Timeout |
 | :--- | :--- | :--- | :--- |
 | **Drawer Activation (DOM/Cache)** | **< 8ms** | **< 16ms** | 50ms |
 | **`POST /test_fwd_resume_intent`** | **< 20ms** | **< 40ms** | 80ms |
 | **`POST /test_fwd_resume_presigned`** | **< 20ms** | **< 40ms** | 80ms |
 | **`POST /test_fwd_resume_finalize`** | **< 50ms** | **< 100ms** | 200ms |
-| **`POST /test_fwd_resume_send` (Queue)** | **< 20ms** | **< 40ms** | 80ms |
+| **`POST /test_fwd_resume_send` (Queue Enqueue)** | **< 20ms** | **< 40ms** | 80ms |
 
-### 11.2 Hard Invariants vs. Infrastructure SLOs
+### 12.2 Hard Invariants vs. Infrastructure SLOs
 | Metric Type | Invariant / SLO Description | Acceptable Tolerance |
 | :--- | :--- | :--- |
 | **Hard Invariant (Zero Tolerance)** | Cross-Tenant Attachment Access | **0 (Absolute Zero)** |
 | **Hard Invariant (Zero Tolerance)** | Duplicate Application Dispatch Attempts | **0 (Absolute Zero)** |
 | **Hard Invariant (Zero Tolerance)** | Double Coin Deductions | **0 (Absolute Zero)** |
-| **Hard Invariant (Zero Tolerance)** | Web Server Disk Write I/O | **0 Bytes** |
-| **Hard Invariant (Zero Tolerance)** | MySQL Reads on Hot Path | **0 Queries** |
-| **Hard Invariant (Zero Tolerance)** | Elasticsearch Hot-Path Reads | **0 Queries** |
+| **Hard Invariant (Zero Tolerance)** | Web Server Document Disk Write I/O | **0 Bytes** |
+| **Hard Invariant (Zero Tolerance)** | MySQL Reads on Browser/Drawer Hot Path | **0 Queries** |
+| **Hard Invariant (Zero Tolerance)** | Elasticsearch Reads on Hot Path | **0 Queries** |
 | **Infrastructure SLO** | Control-Plane HTTP 5xx Error Rate | **< 0.01%** |
 | **Infrastructure SLO** | Direct R2 Upload Success Rate | **> 99.99%** |
-| **Infrastructure SLO** | Browser Tab OOM Crash Rate | **0% (< 0.001%)** |
+| **Infrastructure SLO** | Browser Tab OOM Crash Rate | **Engineering Target: 0% (Maximum Tolerated: < 0.001%)** |
 
 ---
 
-## 12. Three-Tier Verification & Chaos Testing Suite
+## 13. Comprehensive Verification & Chaos Testing Suite
 
-To rigorously certify 10,000 concurrent user readiness, three distinct testing suites must be executed:
+To rigorously certify the 10,000 concurrent user target, four distinct testing suites must be executed:
 
 ### Test A: Browser & Client-Side Scalability Suite
 - **Tools:** Playwright / Puppeteer distributed cluster running across headless browsers.
 - **Verification:**
   1. WASM compilation memory profiling under low-spec simulation (dual-core, 2GB heap).
   2. Bounded upload queue behavior under packet loss (5% artificial packet drop).
-  3. Memory ceiling compliance (<150MB heap peak).
+  3. Working-set memory ceiling compliance (<150MB working set peak).
   4. Tab crash / OOM rate = 0%.
 
 ### Test B: Server Control-Plane Scalability Suite
 - **Tools:** k6 running distributed load generators across multiple nodes.
 - **Verification:**
-  1. 10,000 concurrent `/intent` requests.
-  2. 10,000 concurrent `/finalize` verification probes.
-  3. 10,000 concurrent two-phase coin reservations via Redis Lua.
-  4. 10,000 concurrent Horizon queue submissions.
-  5. MySQL connections remain flat with 0 read queries on the hot path.
+  1. 1,000 sustained RPS against control-plane endpoints.
+  2. 10,000 concurrent two-phase coin reservations via Redis Lua.
+  3. 10,000 concurrent Horizon queue submissions via Transactional Outbox.
+  4. MySQL connections remain flat with 0 read queries on the hot path.
 
 ### Test C: Chaos & Failure Injection Suite
-- **Scenarios:**
-  1. **Worker Crash during Processing:** Kill Horizon worker after SES delivery but before ledger commit $\rightarrow$ verify `ForwardResumeReconciliationJob` recovers state and commits ledger via `provider_message_id`.
-  2. **R2 Network Partition:** Inject 500ms latency or dropped packets to R2 $\rightarrow$ verify bounded queue backoff + retry mechanism succeeds without browser UI hang.
-  3. **Redis Failover:** Simulate Redis master restart $\rightarrow$ verify idempotency locks fail gracefully without double deductions.
+- **Scenario C.1: Worker Crash during Processing:** Kill Horizon worker after SES delivery but before ledger commit $\rightarrow$ verify `ForwardResumeReconciliationJob` recovers state and commits ledger via `provider_message_id`.
+- **Scenario C.2: R2 Network Partition:** Inject 500ms latency or dropped packets to R2 $\rightarrow$ verify bounded queue backoff + retry mechanism succeeds without browser UI hang.
+- **Scenario C.3: Redis Failover:** Simulate Redis master restart $\rightarrow$ verify idempotency locks fail gracefully without double deductions.
+
+### Test D: Advanced Distributed Concurrency Tests
+- **Scenario D.1 (Chaos D — Duplicate Worker Execution):** Two Horizon workers intentionally claim the same queued forward request simultaneously $\rightarrow$ verify atomic Compare-And-Set (CAS) ensures exactly one worker succeeds and exactly one email is dispatched.
+- **Scenario D.2 (Chaos E — DB Failure After Provider Acceptance):** SES gateway successfully accepts the email, but MySQL network disconnects before ledger commit $\rightarrow$ verify worker retries or `ForwardResumeReconciliationJob` reconciles and commits ledger exactly once without sending duplicate emails.
+- **Scenario D.3 (Chaos F — Redis Loss After Reservation):** Redis master crashes immediately after the MySQL atomic transaction commits `coin_reservations` $\rightarrow$ verify `ForwardResumeReconciliationJob` reconstructs Redis reservation state from authoritative MySQL `coin_reservations` records without double charges or lost state.
+- **Scenario D.4 (Chaos G — Orphaned Redis Reservation Cleanup):** Simulate PHP API process crash after Redis `reserve_coins.lua` but before MySQL transaction begins $\rightarrow$ verify reconciliation scans and purges the dangling reservation after 60-second grace period.
 
 ---
 
-## 13. Complete Implementation Contract & Engineering Checklist
+## 14. Complete Implementation Contract & Engineering Checklist
 
 Every endpoint and background worker must follow this non-negotiable step-by-step checklist:
 
-### 13.1 `POST /test_fwd_resume_intent` (Intent Authorization)
+### 14.1 `POST /test_fwd_resume_intent` (Intent Authorization)
 - [ ] **1. Input:** Extract `candidate_ids` (array, max 5), `forward_request_id` (UUIDv4), `Idempotency-Key` header.
 - [ ] **2. Auth:** Verify authenticated user session (`auth()->check()`).
 - [ ] **3. Tenant Auth:** Authorize that every `candidate_id` belongs to `auth()->user()->company_id` (or authorized 3rd party).
-- [ ] **4. Idempotency:** Check Redis `idem:{Idempotency-Key}`. If exists, return cached intent.
+- [ ] **4. Idempotency:** Check Redis `coin_reservation:{forward_request_id}`. If exists, return cached intent.
 - [ ] **5. Rate Limit:** Verify company rate limit (100 req/min) and user rate limit (30 req/min) via Redis throttle.
-- [ ] **6. FSM Validation:** Transition state to `AUTHORIZED`.
+- [ ] **6. FSM Validation:** Transition state to `AUTHORIZED` via `ForwardResumeStateMachine::transition()`.
 - [ ] **7. Redis Cache:** Store intent context with 15-minute TTL.
 - [ ] **8. Response:** Return 200 OK with `intent_id` and authorized candidate summary.
 
-### 13.2 `POST /test_fwd_resume_presigned` (R2 URL Minting)
-- [ ] **1. Input:** `intent_id`, `candidate_id`, `content_type`, `estimated_size`.
+### 14.2 `POST /test_fwd_resume_presigned` (R2 URL Minting with Signed Metadata)
+- [ ] **1. Input:** `intent_id`, `candidate_id`, `content_type`, `expected_size`, `expected_sha256`.
 - [ ] **2. Auth & Tenancy:** Verify `intent_id` matches current tenant and contains `candidate_id`.
-- [ ] **3. Scope Bounds:** Enforce `max_size <= 10MB` and `content_type == 'application/pdf'`.
-- [ ] **4. Object Key:** Generate unique scoped key: `temporary/forward-resume/{company_id}/{forward_request_id}/{candidate_id}.pdf`.
-- [ ] **5. S3 Minting:** Generate S3 presigned PUT URL with 15-minute signature TTL.
-- [ ] **6. FSM Validation:** Transition state to `PRESIGNED`.
-- [ ] **7. Response:** Return presigned URL, required headers, and upload key.
+- [ ] **3. Scope Bounds:** Enforce `expected_size <= 10MB` and `content_type == 'application/pdf'`.
+- [ ] **4. Attachment UUID & Key:** Mint server-side `attachment_uuid` (UUIDv4). Object key: `temporary/forward-resume/{company_id}/{forward_request_id}/{attachment_uuid}.pdf`.
+- [ ] **5. Persist Record:** Insert row in `forward_attachments` with status `PRESIGNED`.
+- [ ] **6. S3 Presigned Minting:** Generate S3 presigned PUT URL signing:
+  - Header: `x-amz-meta-sha256: {expected_sha256}`
+  - Header: `Content-Length: {expected_size}`
+  - Signature TTL: 15 minutes.
+- [ ] **7. FSM Validation:** Transition state to `PRESIGNED`.
+- [ ] **8. Response:** Return presigned URL, `attachment_uuid`, required headers, and upload key.
 
-### 13.3 `POST /test_fwd_resume_finalize` (Integrity Verification)
-- [ ] **1. Input:** `intent_id`, `candidate_id`, `object_key`, `expected_sha256`, `actual_size`.
-- [ ] **2. Auth & Tenancy:** Ensure `object_key` begins with `temporary/forward-resume/{company_id}/`.
+### 14.3 `POST /test_fwd_resume_finalize` (Attestation & Byte-Exact Verification)
+- [ ] **1. Input:** `intent_id`, `attachment_uuid`, `expected_sha256`, `expected_size`.
+- [ ] **2. Auth & Tenancy:** Ensure attachment belongs to current tenant and forward request.
 - [ ] **3. S3 Metadata Probe:** Execute S3 `HEAD` object request to R2:
   - Verify HTTP 200 exists.
-  - Verify `Content-Length > 0` and matches `actual_size` ($\pm 1\%$).
-- [ ] **4. FSM Validation:** Transition state from `UPLOADED` to `VERIFIED`.
-- [ ] **5. Response:** Return 200 OK `{"status": "VERIFIED"}`.
+  - Verify `actual_size === expected_size` (**exact byte equality, 0% tolerance**).
+  - Verify `HEAD.Metadata['sha256'] === expected_sha256`.
+  - Verify `HEAD.ContentType === 'application/pdf'`.
+- [ ] **4. FSM Validation:** Transition attachment state to `VERIFIED` via `ForwardResumeStateMachine::transition()`.
+- [ ] **5. Immutability Lock:** Mark attachment record immutable.
+- [ ] **6. Response:** Return 200 OK `{"status": "VERIFIED"}`.
 
-### 13.4 `POST /test_fwd_resume_send` (Coin Reservation & Enqueue)
+### 14.4 `POST /test_fwd_resume_send` (Transactional Outbox & Enqueue)
 - [ ] **1. Input:** `forward_request_id`, `intent_id`, recipient email, subject, body, options.
 - [ ] **2. Auth & Recipient Validation:** Sanitize recipient email; reject unauthorized domains if restricted.
-- [ ] **3. All Candidates Verified:** Check that all candidate PDFs in intent are in `VERIFIED` state.
-- [ ] **4. Two-Phase Coin Reserve:** Execute `reserve_coins.lua` Redis script. If `INSUFFICIENT_FUNDS`, return 402 Payment Required.
-- [ ] **5. Persist Dispatch Intent:** Insert `forward_requests` record into MySQL with status `QUEUED`, `coin_reservation_id`, and `forward_request_id`.
-- [ ] **6. Horizon Enqueue:** Push `ProcessForwardResumeDispatchJob` to Horizon `emails` queue with payload < 2KB.
-- [ ] **7. Response:** Return 200 OK `{"status": "QUEUED", "request_id": "..."}` in < 40ms.
+- [ ] **3. All Candidates Verified:** Check that all candidate attachments in intent are in `VERIFIED` state.
+- [ ] **4. Server-Generated Reservation ID:** Mint server-side `reservation_id = (string) Str::uuid()`.
+- [ ] **5. Two-Phase Coin Reserve:** Execute `reserve_coins.lua` Redis script passing `reservation_id`, validating parameter immutability. If `INSUFFICIENT_FUNDS`, return 402 Payment Required.
+- [ ] **6. Atomic DB Transaction:**
+  - Insert `forward_requests` record with status `QUEUED`, `coin_reservation_id = reservation_id`, and `forward_request_id`.
+  - Insert `coin_reservations` record with `reservation_id`, status `RESERVED`, `amount`, and `expires_at = NOW() + INTERVAL 30 MINUTE`.
+  - Insert `outbox_events` record with `aggregate_id = forward_request_id`, `event_type = 'FORWARD_RESUME_DISPATCH_REQUESTED'`, and `status = 'PENDING'`.
+  - Insert `forward_resume_events` audit record.
+  - Commit transaction.
+- [ ] **7. Outbox Publishing:** Push `ProcessForwardResumeDispatchJob` to Horizon `emails` queue (<2KB payload) and mark `outbox_events.status = 'PUBLISHED'`.
+- [ ] **8. Response:** Return 200 OK `{"status": "QUEUED", "request_id": "..."}` in < 40ms.
 
-### 13.5 `ProcessForwardResumeDispatchJob` (Horizon Worker)
-- [ ] **1. Deduplication:** Check if `forward_requests` status is already `PROCESSING` or `SENT`.
-- [ ] **2. FSM State:** Update status to `PROCESSING`.
-- [ ] **3. SMTP / SES Send:** Stream attachments from R2 and dispatch via email provider.
+### 14.5 `ProcessForwardResumeDispatchJob` (Horizon Worker with Atomic CAS Claim)
+- [ ] **1. Atomic CAS Worker Claim:**
+  ```sql
+  UPDATE forward_requests
+  SET status = 'PROCESSING',
+      worker_token = :worker_token,
+      processing_started_at = NOW()
+  WHERE id = :id AND status = 'QUEUED';
+  ```
+  If affected rows == 0, another worker already owns this job. Exit immediately.
+- [ ] **2. FSM State:** Transition to `PROVIDER_SUBMITTING` via `ForwardResumeStateMachine`.
+- [ ] **3. Provider Dispatch:** Dispatch via `ForwardResumeProvider::send()` using `forward_request_id` as canonical idempotency identity.
 - [ ] **4. Provider Acceptance:** Capture `provider_message_id`. Update state to `PROVIDER_ACCEPTED`.
 - [ ] **5. Authoritative Ledger Commit:**
   - Execute DB transaction:
     - Insert into `coins_history` (with `UNIQUE(coin_transaction_id)`).
+    - Update `coin_reservations` set `status = 'COMMITTED'`, `committed_at = NOW()`.
     - Decrement `reserved_balance` in MySQL wallet table.
     - Update `forward_requests` status to `LEDGER_COMMITTED`.
+    - Insert `forward_resume_events` audit record.
 - [ ] **6. Redis Balance Sync:** Clean up Redis reservation keys.
-- [ ] **7. Failure Handler:** If provider rejects or times out, trigger `release_coins.lua` and mark status `REFUND_PENDING`.
+- [ ] **7. Failure Handler:** If provider rejects or times out, trigger `release_coins.lua`, update `coin_reservations.status = 'RELEASED'`, and mark status `REFUND_PENDING`.
 
-### 13.6 `ForwardResumeReconciliationJob` (Self-Healing Scheduled Job)
+### 14.6 `ForwardResumeReconciliationJob` (Self-Healing Scheduled Job)
 - [ ] **1. Schedule:** Registered in `app/Console/Kernel.php` to run every 5 minutes.
-- [ ] **2. Expired Intents:** Find unfinalized intents > 30 mins $\rightarrow$ mark `EXPIRED`.
-- [ ] **3. Orphaned Reservations:** Find `COINS_RESERVED` without corresponding Horizon queue job > 10 mins $\rightarrow$ execute `release_coins.lua`.
-- [ ] **4. Stalled Processing:** Find jobs in `PROCESSING` > 15 mins $\rightarrow$ query SES/SMTP provider API with `provider_message_id` to confirm delivery status, then commit ledger or refund.
+- [ ] **2. Stalled Outbox Events:** Find `outbox_events` with `status = 'PENDING'` older than 2 minutes $\rightarrow$ re-publish to Horizon queue and mark `PUBLISHED`.
+- [ ] **3. Two-Way Redis $\leftrightarrow$ MySQL Audit:**
+  - Forward Scan: Reconstruct any missing Redis reservation keys from MySQL `coin_reservations` (`status = 'RESERVED'`).
+  - Reverse Scan: Purge any orphaned Redis reservations older than 60 seconds with no matching MySQL record.
+- [ ] **4. Stalled Submissions:** Find jobs in `PROVIDER_SUBMITTING` or `PROCESSING` > 15 mins:
+  - Call `ForwardResumeProvider::findByIdempotencyKey($forwardRequestId)`.
+  - If delivered $\rightarrow$ commit MySQL ledger.
+  - If rejected/lost $\rightarrow$ execute `release_coins.lua`, mark `coin_reservations.status = 'RELEASED'`, and mark `REFUND_PENDING`.
 
 ---
 
-## 14. Phase-Wise Implementation Roadmap & Definition of Done
+## 15. Phase-Wise Implementation Roadmap & Definition of Done
 
 ```mermaid
 gantt
@@ -588,30 +778,35 @@ gantt
     Implement FSM Transitions & Intent Auth    :2026-09-25, 2d
     Multi-Tenant Boundary & Rate Limiting     :2026-09-27, 2d
     section Phase 3: Financial Concurrency Engine
-    Atomic Two-Phase Redis Lua Coin Scripts   :2026-09-29, 2d
-    Reconciliation Job & Ledger Integration   :2026-10-01, 2d
+    Transactional Outbox, Event Journal & DB  :2026-09-29, 2d
+    Atomic Two-Phase Redis Lua Coin Scripts   :2026-10-01, 2d
+    Provider Interface & Reconciliation Job   :2026-10-03, 2d
     section Phase 4: Client Resource Adaptation
-    Adaptive Worker Pool (navigator.hardware)  :2026-10-03, 1d
-    Bounded Upload Queue (Max 2 PUTs + Backoff):2026-10-04, 1d
+    Adaptive Worker Pool (navigator.hardware)  :2026-10-05, 1d
+    Bounded Upload Queue & Immutable UUID Keys :2026-10-06, 1d
     section Phase 5: Cold-Cache Tiering & Privacy
-    Eradicate Hot-Path Elasticsearch Reads    :2026-10-05, 2d
-    Session Generation & IndexedDB Cache Purge:2026-10-07, 1d
+    Eradicate Hot-Path Elasticsearch Reads    :2026-10-07, 2d
+    Session Generation & IndexedDB Cache Purge:2026-10-09, 1d
     section Phase 6: Concurrency Certification
-    Browser Scalability Suite (Playwright)    :2026-10-08, 1d
-    Control-Plane Stress Suite (k6 10K)       :2026-10-09, 1d
-    Production Deployment & Monitoring        :2026-10-10, 1d
+    Browser Scalability Suite (Playwright)    :2026-10-10, 1d
+    Control-Plane Stress Suite (k6 10K)       :2026-10-11, 1d
+    Chaos Testing (Chaos C, D, E, F, G)        :2026-10-12, 1d
+    Production Deployment & Monitoring        :2026-10-13, 1d
 ```
 
 ### Definition of Done Checklist:
 - [ ] `<script>` tags in `cvtracker/index.blade.php`, `apptracker/index.blade.php`, and `apptracker/clientapp.blade.php` are 100% syntactically valid and closed.
 - [ ] `window.ForwardResumeManager` is active on page load with zero console warnings.
-- [ ] Opening the Forward Resume drawer produces **0 MySQL queries and 0 Elasticsearch reads** on the hot path.
+- [ ] Opening the Forward Resume drawer produces **0 MySQL queries and 0 Elasticsearch reads** on the browser hot path.
 - [ ] File generation produces **0 bytes of disk writes** to `storage/app/temp-attachments/`.
+- [ ] R2 object keys utilize immutable attachment UUIDs (`forward_attachments`), and records become immutable once `VERIFIED`.
 - [ ] Bounded upload queue ensures no more than 2 parallel PUT streams to Cloudflare R2 per client with exponential backoff.
-- [ ] Web worker pool dynamically scales according to device hardware cores with an enforced 150MB heap budget.
-- [ ] Two-phase Redis Lua coin reservation prevents double deductions across parallel tabs.
-- [ ] Database unique constraints (`forward_request_id`, `coin_transaction_id`, `provider_message_id`) prevent duplicate dispatches and duplicate billing.
-- [ ] `ForwardResumeReconciliationJob` automatically repairs orphaned reservations and expired uploads.
-- [ ] No cross-tenant R2 object access is permitted; expired intents cannot finalize.
-- [ ] Logout and company switch completely purge client-side IndexedDB caches via `session_generation` validation.
-- [ ] Two-tier 10,000-user stress test passes all criteria in the Concurrency SLA Matrix.
+- [ ] Web worker pool dynamically scales according to device hardware cores with an enforced 150MB working-set memory budget.
+- [ ] Presigned PUT URLs sign `x-amz-meta-sha256`; `/finalize` enforces **exact byte equality** (`actual_size === expected_size`) and matching attestation hash.
+- [ ] Server exclusively mints `reservation_id`, validating parameter immutability on Redis retries.
+- [ ] Atomic Compare-And-Set worker claim (`worker_token`) prevents duplicate worker dispatch attempts.
+- [ ] Transactional Outbox table (`outbox_events`), durable `coin_reservations` table, and `forward_resume_events` journal guarantee complete auditability and deterministic reconciliation.
+- [ ] Two-way reconciliation algorithm synchronizes Redis and MySQL, purging orphaned reservations after a 60-second grace window.
+- [ ] `ForwardResumeProvider` interface enforces canonical idempotency via `forward_request_id`.
+- [ ] Logout and company switch completely purge client-side IndexedDB caches, backed by runtime triple-check validation.
+- [ ] Multi-tier 10,000-user stress test passes all criteria in the Concurrency SLA Matrix.

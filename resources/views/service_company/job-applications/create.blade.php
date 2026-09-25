@@ -450,7 +450,7 @@
                   </div>
                   <div class="fg fv-row">
                     <label>Current Location <span class="rq">*</span></label>
-                    <div class="candidate-field-control candidate-field-control--tagify"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" /></div>
+                    <div class="candidate-field-control candidate-field-control--tagify candidate-field-control--location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" autocomplete="off" aria-label="Search current location" /><i class="fa-solid fa-chevron-down candidate-location-chevron" aria-hidden="true"></i></div>
                   </div>
                   <div class="fg fv-row">
                     <label>Highest Qualification <span class="rq">*</span></label>
@@ -1337,16 +1337,19 @@
 @push('footer-script')
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="{{ asset('js/resume-presign.js') }}"></script>
+<script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
 
 <script>
 $(document).ready(function () {
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
-    // resume-presign.js is always loaded unconditionally so it is never missing
-    // from a cached page. v2 activates only when BOTH conditions are true at
-    // runtime: the module is loaded AND the server emitted the presign URL.
-    @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
+    // resume-presign.js is loaded unconditionally; v2 activates only when the
+    // module exists and the server confirms the complete session contract.
+    @if(config('resumes.features.browser_upload')
+        && config('resumes.features.presign_endpoint')
+        && config('resumes.features.finalize_endpoint')
+        && config('resumes.features.submit_with_session')
+        && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
     window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
     @endif
     var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
@@ -1429,6 +1432,21 @@ $(document).ready(function () {
 
     const uploadBox = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
+    var resumeUploadGeneration = 0;
+
+    /**
+     * Intent: Use the existing same-origin raw-byte uploader as a circuit breaker
+     * when this browser or network cannot complete the direct Cloudflare R2 PUT.
+     */
+    function shouldUseResumeUploadFallback(error) {
+        var message = String((error && error.message) || '');
+
+        return message.indexOf('R2 upload failed') !== -1
+            || message.indexOf('Network error during upload') !== -1
+            || message.indexOf('Upload timed out') !== -1
+            || message.indexOf('Upload feature is not enabled') !== -1
+            || message.indexOf('Presign request failed') !== -1;
+    }
 
     // ==========================
     // Common file handler
@@ -1451,6 +1469,7 @@ $(document).ready(function () {
             alert('Maximum file size is 6 MB.');
             return;
         }
+        var uploadGeneration = ++resumeUploadGeneration;
 
         // Show human-readable size: KB for small files (avoids "0.07 MB" display)
         const sizeStr = sizeMB >= 1
@@ -1471,8 +1490,22 @@ $(document).ready(function () {
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
             // startUpload() is async; state changes drive the UI via onStateChange.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
-                // error already surfaced via onStateChange 'failed'
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
+                if (uploadGeneration !== resumeUploadGeneration
+                    || !shouldUseResumeUploadFallback(error)
+                    || typeof uploadWithProgress !== 'function') {
+                    return;
+                }
+
+                // The direct route failed before a usable upload completed. Clear
+                // its temporary session so candidate submit uses only v1 fields.
+                window.ResumePresign.cancelUpload(getUpContextKey());
+                $('#resume_session_uuid').val('');
+                $('#uploaded_file_path').val('');
+                $('#resume_original_name').val('');
+                $('#upBanner').removeClass('ok err').hide().empty();
+                $('#upStats').text('Direct upload unavailable - retrying securely...');
+                uploadWithProgress(file);
             });
         } else if (typeof uploadWithProgress === 'function') {
             // v1 path: PHP multipart POST (unchanged)
@@ -1524,6 +1557,7 @@ $(document).ready(function () {
     // Go back to the dropzone / progress-possible state. Called by
     // the #removeFile button and the card's Replace/Remove buttons.
     function backToDropzone() {
+        resumeUploadGeneration++;
         resetProgress();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
@@ -2687,16 +2721,27 @@ KTUtil.onDOMContentLoaded(function () {
       }
 
       tagifylocation = new window.Tagify(candidateLocationInput, {
+          mode: 'select',
           whitelist: initialLocations,
           enforceWhitelist: true,
           maxTags: 1,
+          duplicates: false,
+          editTags: false,
+          skipInvalid: true,
           dropdown: {
+              classname: 'candidate-location-dropdown',
               maxItems: 20,
               enabled: 0,
               closeOnSelect: true,
-              highlightFirst: true
+              highlightFirst: true,
+              searchKeys: ['value']
           }
       });
+
+      if (tagifylocation.DOM && tagifylocation.DOM.scope) {
+          tagifylocation.DOM.scope.classList.add('candidate-location-tagify');
+          tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
+      }
 
       function setSingleCandidateLocation(value) {
           var normalizedValue = String(value || '').trim();
@@ -2719,6 +2764,10 @@ KTUtil.onDOMContentLoaded(function () {
               });
       }, 250);
 
+      tagifylocation.on('focus', function () {
+          tagifylocation.dropdown.show('');
+      });
+
       tagifylocation.on('input', function (event) {
           var query = String(event.detail.value || '').trim();
           if (query.length < 2) {
@@ -2729,14 +2778,12 @@ KTUtil.onDOMContentLoaded(function () {
           fetchCandidateLocationSuggestions(query);
       });
 
-      tagifylocation.on('dropdown:select', function (event) {
-          setSingleCandidateLocation(event.detail.data.value);
-      });
 
       tagifylocation.on('add', function (event) {
           if (tagifylocation.value.length > 1) {
               setSingleCandidateLocation(event.detail.data.value);
           }
+          tagifylocation.dropdown.hide();
       });
 
       if (defaultLocation) {
