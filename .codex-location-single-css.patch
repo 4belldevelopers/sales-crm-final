@@ -1,0 +1,130 @@
+--- demo/css/job-application-create.css
++++ demo/css/job-application-create.css
+@@ -719,6 +719,127 @@
+     padding-left: 34px;
+ }
+ 
++/* Current Location is a searchable single-select, while preserving Tagify's JSON payload. */
++.job-candidate-create .candidate-field-control--location > .candidate-location-tagify {
++    display: flex;
++    flex-wrap: nowrap;
++    align-items: center;
++    min-height: 40px;
++    padding: 3px 38px 3px 38px !important;
++    overflow: hidden;
++    cursor: text;
++}
++
++.job-candidate-create .candidate-field-control--location > .candidate-location-chevron {
++    right: 13px;
++    left: auto;
++    width: 12px;
++    color: #7180a6;
++    font-size: 10px;
++    transition: color .16s ease, transform .16s ease;
++}
++
++.job-candidate-create .candidate-field-control--location:focus-within > .candidate-location-chevron {
++    color: var(--jac-primary);
++    transform: rotate(180deg);
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__tag {
++    flex: 0 1 auto;
++    max-width: 100%;
++    margin: 0;
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__tag > div {
++    max-width: 100%;
++    min-height: 30px;
++    padding: 5px 27px 5px 9px;
++    border-radius: 5px;
++    color: #2849a8;
++    background: #f3f6ff;
++    font-size: 12px;
++    font-weight: 600;
++    line-height: 20px;
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__tag > div::before {
++    border-radius: 5px !important;
++    background: #f3f6ff !important;
++    box-shadow: inset 0 0 0 1px #cbd7f4 !important;
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__tag-text {
++    display: block;
++    max-width: 100%;
++    overflow: hidden;
++    text-overflow: ellipsis;
++    white-space: nowrap;
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__tag__removeBtn {
++    right: 6px;
++    width: 17px;
++    height: 17px;
++    color: #536494;
++    background: transparent;
++}
++
++.job-candidate-create .candidate-location-tagify .tagify__input {
++    flex: 1 1 auto;
++    min-width: 120px;
++    margin: 0;
++    padding: 5px 3px;
++    color: var(--jac-text);
++    font-family: 'Poppins', sans-serif;
++    font-size: 12px;
++    font-weight: 500;
++    line-height: 20px;
++    white-space: nowrap;
++}
++
++.job-candidate-create .candidate-location-tagify.tagify--hasMaxTags .tagify__input {
++    flex: 0 0 0;
++    width: 0;
++    min-width: 0;
++    margin: 0;
++    padding: 0;
++    opacity: 0;
++    pointer-events: none;
++}
++
++.tagify__dropdown.candidate-location-dropdown {
++    z-index: 12000;
++    margin-top: 5px;
++    color: #111b3f;
++    font-family: 'Poppins', sans-serif;
++    font-size: 12px;
++    letter-spacing: 0;
++}
++
++.tagify__dropdown.candidate-location-dropdown .tagify__dropdown__wrapper {
++    max-height: 240px;
++    padding: 5px;
++    overflow-y: auto;
++    border: 1px solid #d6deef;
++    border-radius: 6px;
++    background: #fff;
++    box-shadow: 0 12px 30px rgba(21, 35, 72, .14);
++}
++
++.tagify__dropdown.candidate-location-dropdown .tagify__dropdown__item {
++    margin: 1px 0;
++    padding: 9px 11px;
++    border-radius: 4px;
++    color: #26345f;
++    font-weight: 500;
++    line-height: 1.4;
++}
++
++.tagify__dropdown.candidate-location-dropdown .tagify__dropdown__item--active {
++    color: #173fba;
++    background: #eef3ff;
++}
++
+ .job-candidate-create .candidate-phone-control > i {
+     left: 83px;
+ }

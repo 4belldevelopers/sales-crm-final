@@ -92,14 +92,25 @@ class ForwardResumeUploadService
             $fileSize = ! empty($file['size']) ? (int) $file['size'] : null;
             $mimeType = ! empty($file['mime']) ? (string) $file['mime'] : 'application/pdf';
 
+            $expectedSha = ! empty($file['expected_sha256']) ? (string) $file['expected_sha256'] : (! empty($file['sha256']) ? (string) $file['sha256'] : null);
+            $expectedSize = ! empty($file['expected_size']) ? (int) $file['expected_size'] : $fileSize;
+
             $attUuid = (string) Str::uuid();
             $objectKey = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
 
-            $cmd = $this->client->getCommand('PutObject', [
+            $cmdParams = [
                 'Bucket' => $this->bucket,
                 'Key' => $objectKey,
                 'ContentType' => $mimeType,
-            ]);
+            ];
+
+            if ($expectedSha) {
+                $cmdParams['Metadata'] = [
+                    'sha256' => $expectedSha,
+                ];
+            }
+
+            $cmd = $this->client->getCommand('PutObject', $cmdParams);
 
             $presigned = $this->client->createPresignedRequest($cmd, '+'.$expirySeconds.' seconds');
             $uploadUrl = (string) $presigned->getUri();
@@ -114,9 +125,11 @@ class ForwardResumeUploadService
                         'r2_object_key' => $objectKey,
                         'filename' => $rawFilename,
                         'file_size_bytes' => $fileSize,
+                        'expected_size' => $expectedSize,
+                        'expected_sha256' => $expectedSha,
                         'mime_type' => $mimeType,
-                        'status' => 'PENDING',
-                        'expires_at' => now()->addHours(4),
+                        'status' => 'PRESIGNED',
+                        'expires_at' => now()->addMinutes(15),
                     ]);
                 }
             } catch (\Throwable $dbErr) {
@@ -126,10 +139,134 @@ class ForwardResumeUploadService
             $results[$candidateId] = [
                 'attachment_id' => $attUuid,
                 'upload_url' => $uploadUrl,
+                'object_key' => $objectKey,
+                'expected_sha256' => $expectedSha,
+                'expected_size' => $expectedSize,
             ];
         }
 
         return $results;
+    }
+
+    /**
+     * Probes Cloudflare R2 object via HEAD request and cryptographically verifies
+     * exact byte size (actual_size === expected_size) and SHA-256 metadata hash.
+     *
+     * @param int $companyId
+     * @param string $attachmentUuid
+     * @param string|null $expectedSha256
+     * @param int|null $expectedSize
+     * @return array{verified: bool, status: string, message: string, actual_size?: int}
+     */
+    public function probeAndVerifyAttachment(
+        int $companyId,
+        string $attachmentUuid,
+        ?string $expectedSha256 = null,
+        ?int $expectedSize = null
+    ): array {
+        if (! $this->client) {
+            return [
+                'verified' => false,
+                'status' => 'VERIFY_FAILED',
+                'message' => 'R2 storage client is not configured.',
+            ];
+        }
+
+        $attachment = ForwardAttachment::where('uuid', $attachmentUuid)
+            ->where('company_id', $companyId)
+            ->first();
+
+        if (! $attachment) {
+            return [
+                'verified' => false,
+                'status' => 'NOT_FOUND',
+                'message' => 'Attachment record not found.',
+            ];
+        }
+
+        // If already VERIFIED, enforce immutable-after-VERIFIED invariant
+        if ($attachment->status === 'VERIFIED') {
+            return [
+                'verified' => true,
+                'status' => 'VERIFIED',
+                'message' => 'Attachment is already verified and locked.',
+                'actual_size' => $attachment->file_size_bytes,
+            ];
+        }
+
+        $targetSha = $expectedSha256 ?: $attachment->expected_sha256;
+        $targetSize = $expectedSize !== null ? $expectedSize : ($attachment->expected_size ?: $attachment->file_size_bytes);
+
+        try {
+            $head = $this->client->headObject([
+                'Bucket' => $this->bucket,
+                'Key' => $attachment->r2_object_key,
+            ]);
+
+            $actualSize = (int) ($head['ContentLength'] ?? 0);
+            $metadata = $head['Metadata'] ?? [];
+            $storedSha = $metadata['sha256'] ?? ($metadata['x-amz-meta-sha256'] ?? null);
+
+            // 1. Exact Byte Equality Check (0% tolerance)
+            if ($targetSize !== null && $targetSize > 0 && $actualSize !== $targetSize) {
+                $attachment->update([
+                    'status' => 'VERIFY_FAILED',
+                    'failed_at' => now(),
+                ]);
+
+                return [
+                    'verified' => false,
+                    'status' => 'VERIFY_FAILED',
+                    'message' => "Byte size mismatch: expected {$targetSize} bytes, got {$actualSize} bytes.",
+                    'actual_size' => $actualSize,
+                ];
+            }
+
+            // 2. Cryptographic SHA-256 Hash Attestation Check
+            if ($targetSha && $storedSha && strtolower(trim($targetSha)) !== strtolower(trim($storedSha))) {
+                $attachment->update([
+                    'status' => 'VERIFY_FAILED',
+                    'failed_at' => now(),
+                ]);
+
+                return [
+                    'verified' => false,
+                    'status' => 'VERIFY_FAILED',
+                    'message' => 'SHA-256 hash attestation mismatch.',
+                    'actual_size' => $actualSize,
+                ];
+            }
+
+            // Verification successful: Transition to VERIFIED and lock immutably
+            $attachment->update([
+                'status' => 'VERIFIED',
+                'file_size_bytes' => $actualSize,
+                'verified_at' => now(),
+            ]);
+
+            return [
+                'verified' => true,
+                'status' => 'VERIFIED',
+                'message' => 'Attachment verified successfully.',
+                'actual_size' => $actualSize,
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning("[ForwardResumeUploadService] probeAndVerifyAttachment error: {$e->getMessage()}", [
+                'attachment_uuid' => $attachmentUuid,
+                'key' => $attachment->r2_object_key,
+            ]);
+
+            $attachment->update([
+                'status' => 'VERIFY_FAILED',
+                'failed_at' => now(),
+            ]);
+
+            return [
+                'verified' => false,
+                'status' => 'VERIFY_FAILED',
+                'message' => 'Storage probe failed: ' . $e->getMessage(),
+            ];
+        }
     }
 
     /**

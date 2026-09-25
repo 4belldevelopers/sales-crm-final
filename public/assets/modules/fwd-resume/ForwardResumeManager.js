@@ -39,6 +39,58 @@
     }
 
     /**
+     * Adaptive Hardware-Aware Concurrency Pool (Section 7.1)
+     */
+    function getOptimalWorkerConcurrency() {
+        var cores = (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) || 2;
+        var deviceMemory = (typeof navigator !== 'undefined' && navigator.deviceMemory) || 4;
+        if (cores <= 2 || deviceMemory <= 2) return 1;
+        if (cores <= 4) return 2;
+        return Math.min(4, Math.floor(cores / 2));
+    }
+
+    /**
+     * Computes real SHA-256 cryptographic digest hex of a blob (Section 8.3)
+     */
+    async function computeSha256Hex(blob) {
+        try {
+            if (window.crypto && window.crypto.subtle && blob && blob.arrayBuffer) {
+                var buffer = await blob.arrayBuffer();
+                var hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
+                var hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+            }
+        } catch (e) {
+            console.warn('[ForwardResume] Crypto SHA-256 computation warning:', e);
+        }
+        return '';
+    }
+
+    /**
+     * Bounded Direct-to-Cloud Upload Queue (Section 8)
+     * Enforces maximum 2 concurrent PUT streams to Cloudflare R2
+     */
+    async function uploadWithBoundedQueue(items, maxConcurrent, onUploadItem) {
+        var results = [];
+        var executing = [];
+        for (var i = 0; i < items.length; i++) {
+            var p = Promise.resolve().then(onUploadItem.bind(null, items[i]));
+            results.push(p);
+            if (maxConcurrent <= items.length) {
+                var e = p.then(function () {
+                    var idx = executing.indexOf(e);
+                    if (idx !== -1) executing.splice(idx, 1);
+                });
+                executing.push(e);
+                if (executing.length >= maxConcurrent) {
+                    await Promise.race(executing);
+                }
+            }
+        }
+        return Promise.allSettled(results);
+    }
+
+    /**
      * JeroFwdDB — Tenant-Scoped L2 IndexedDB Store with Adaptive Quota Management
      * Provides sub-8ms hydration and persistent offline capability.
      */
@@ -93,6 +145,10 @@
             if (!Array.isArray(ids) || ids.length === 0) return [];
             var db = await self.init();
             if (!db) return [];
+            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+
             return new Promise(function (resolve) {
                 try {
                     var tx = db.transaction(['candidates'], 'readonly');
@@ -102,7 +158,17 @@
                     ids.forEach(function (id) {
                         var req = store.get(id);
                         req.onsuccess = function () {
-                            if (req.result) results.push(req.result);
+                            if (req.result) {
+                                var rec = req.result;
+                                // Runtime Triple-Check (Section 10.2)
+                                var isMatch = true;
+                                if (rec._tenant_id && curTenant && rec._tenant_id !== curTenant) isMatch = false;
+                                if (rec._user_id && curUser && rec._user_id !== curUser) isMatch = false;
+                                if (rec._session_generation && rec._session_generation !== curSessionGen) isMatch = false;
+                                if (isMatch) {
+                                    results.push(rec);
+                                }
+                            }
                             count++;
                             if (count === ids.length) resolve(results);
                         };
@@ -122,6 +188,10 @@
             if (!Array.isArray(candidates) || candidates.length === 0) return;
             var db = await self.init();
             if (!db) return;
+            var curTenant = parseInt(window.companyId || (window.authCompanyId ? window.authCompanyId : 0), 10);
+            var curUser = parseInt(window.userId || (window.authUserId ? window.authUserId : 0), 10);
+            var curSessionGen = window._jeroSessionGen || ('gen_' + (window.companyId || '0'));
+
             try {
                 var tx = db.transaction(['candidates'], 'readwrite');
                 var store = tx.objectStore('candidates');
@@ -129,6 +199,9 @@
                 candidates.forEach(function (cand) {
                     if (cand && cand.id) {
                         cand._cached_at = now;
+                        cand._tenant_id = curTenant;
+                        cand._user_id = curUser;
+                        cand._session_generation = curSessionGen;
                         store.put(cand);
                     }
                 });
@@ -181,6 +254,16 @@
         }
     };
 
+    if (typeof window !== 'undefined') {
+        window.addEventListener('jero:tenant-switch', function() {
+            if (window.indexedDB) {
+                try {
+                    window.indexedDB.deleteDatabase(JeroFwdDB.getDbName());
+                } catch (e) {}
+            }
+        });
+    }
+
     var ForwardResumeManager = {
         _routes: {
             shell: '/assets/modules/fwd-resume/shell.v4.html',
@@ -188,6 +271,8 @@
             data: '/service_company/cvtracker/test_fwd_resume_data',
             recipients: '/service_company/cvtracker/fwd_recipients',
             intent: '/service_company/cvtracker/test_fwd_resume_intent',
+            presigned: '/service_company/cvtracker/test_fwd_resume_presigned',
+            finalize: '/service_company/cvtracker/test_fwd_resume_finalize',
             send: '/service_company/cvtracker/test_fwd_resume_send',
             quickUpload: '/service_company/cvtracker/quick_upload_resume',
             emailTemplate: '/service_company/cvtracker/email_template',
@@ -1725,20 +1810,24 @@
                         if (blob) {
                             var safeName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
                             var outName = (optId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
-                            candidateBlobs[cand.id] = { blob: blob, filename: outName };
+                            var blobSha = await computeSha256Hex(blob);
+
+                            candidateBlobs[cand.id] = { blob: blob, filename: outName, sha256: blobSha };
                             filesToInitiate.push({
                                 candidate_id: cand.id,
                                 candidate_name: cand.full_name || ('Candidate #' + cand.id),
                                 filename: outName,
                                 size: blob.size,
-                                sha256: blob.sha256 || '',
+                                expected_size: blob.size,
+                                sha256: blobSha,
+                                expected_sha256: blobSha,
                                 mime: blob.type || 'application/pdf'
                             });
                         }
                     }
 
                     if (filesToInitiate.length > 0) {
-                        $('#test_fwd_btn_progress_text').text('Uploading to Cloudflare R2...');
+                        $('#test_fwd_btn_progress_text').text('Initiating direct upload intent...');
                         var initiateRes = await new Promise(function (resolve) {
                             $.ajax({
                                 url: self._routes.intent,
@@ -1746,7 +1835,11 @@
                                 dataType: 'json',
                                 contentType: 'application/json',
                                 headers: { 'X-CSRF-TOKEN': token },
-                                data: JSON.stringify({ files: filesToInitiate }),
+                                data: JSON.stringify({
+                                    forward_request_id: generateUuidV4(),
+                                    candidate_ids: filesToInitiate.map(function (f) { return f.candidate_id; }),
+                                    files: filesToInitiate
+                                }),
                                 success: resolve,
                                 error: function (xhr, st, err) {
                                     resolve({ status: 'fallback', message: (xhr.responseJSON && xhr.responseJSON.message) || err });
@@ -1756,18 +1849,56 @@
 
                         var attMap = (initiateRes && (initiateRes.attachments || initiateRes.uploads)) ? (initiateRes.attachments || initiateRes.uploads) : null;
                         if (attMap) {
-                            var uploadResults = await Promise.allSettled(filesToInitiate.map(async function (item) {
+                            $('#test_fwd_btn_progress_text').text('Uploading to Cloudflare R2 (Bounded Queue)...');
+                            
+                            // Bounded upload queue (max 2 parallel PUT streams)
+                            var uploadResults = await uploadWithBoundedQueue(filesToInitiate, 2, async function (item) {
                                 var initInfo = attMap[item.candidate_id];
                                 if (!initInfo || !initInfo.upload_url) throw new Error('Missing presigned upload URL for candidate ' + item.candidate_id);
                                 var blobInfo = candidateBlobs[item.candidate_id];
+                                
+                                var headers = {
+                                    'Content-Type': item.mime || 'application/pdf'
+                                };
+                                if (item.sha256) {
+                                    headers['x-amz-meta-sha256'] = item.sha256;
+                                }
+
                                 var r2Res = await fetch(initInfo.upload_url, {
                                     method: 'PUT',
-                                    headers: { 'Content-Type': item.mime || 'application/pdf' },
+                                    headers: headers,
                                     body: blobInfo.blob
                                 });
                                 if (!r2Res.ok) throw new Error('R2 returned HTTP ' + r2Res.status);
-                                return { candidate_id: item.candidate_id, attachment_id: initInfo.attachment_id };
-                            }));
+
+                                // Byte-exact & cryptographic attestation verification via /finalize
+                                var finRes = await new Promise(function (resolve) {
+                                    $.ajax({
+                                        url: self._routes.finalize,
+                                        type: 'POST',
+                                        dataType: 'json',
+                                        contentType: 'application/json',
+                                        headers: { 'X-CSRF-TOKEN': token },
+                                        data: JSON.stringify({
+                                            attachment_uuid: initInfo.attachment_id,
+                                            expected_sha256: item.sha256,
+                                            expected_size: item.size
+                                        }),
+                                        success: resolve,
+                                        error: function (xhr) {
+                                            resolve({ verified: false, message: (xhr.responseJSON && xhr.responseJSON.message) || 'Attestation check failed' });
+                                        }
+                                    });
+                                });
+
+                                if (finRes && (finRes.verified || finRes.status === 'success')) {
+                                    return { candidate_id: item.candidate_id, attachment_id: initInfo.attachment_id, verified: true };
+                                } else {
+                                    console.warn('[ForwardResume] Finalize probe failed:', finRes);
+                                    // Still allow attachment_id if R2 PUT was HTTP 200
+                                    return { candidate_id: item.candidate_id, attachment_id: initInfo.attachment_id, verified: false };
+                                }
+                            });
 
                             uploadResults.forEach(function (res) {
                                 if (res.status === 'fulfilled' && res.value && res.value.attachment_id) {

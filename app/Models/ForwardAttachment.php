@@ -24,13 +24,20 @@ class ForwardAttachment extends Model
         'filename',
         'file_size_bytes',
         'mime_type',
+        'expected_sha256',
+        'expected_size',
         'status',
+        'verified_at',
+        'failed_at',
         'expires_at',
         'deleted_at',
     ];
 
     protected $casts = [
         'file_size_bytes' => 'integer',
+        'expected_size' => 'integer',
+        'verified_at' => 'datetime',
+        'failed_at' => 'datetime',
         'expires_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
