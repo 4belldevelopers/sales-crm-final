@@ -7117,3 +7117,652 @@ select option,
         grid-template-columns: minmax(0, 1fr) !important;
     }
 }
+
+/* Professional Profile: yellow screenshot treatment scoped to this candidate card. */
+#createForm .pd-card--professional {
+    overflow: hidden;
+    border: 1px solid #efd36b !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 9px 24px rgba(100, 75, 0, .08) !important;
+}
+#createForm .pd-card--professional .pd-hero {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 82px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+}
+#createForm .pd-card--professional .pd-hero-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+#createForm .pd-card--professional .pd-hero-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+    border: 1px solid #f3c719 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: linear-gradient(145deg, #ffd946, #ffc400) !important;
+    box-shadow: 0 7px 15px rgba(218, 164, 0, .18) !important;
+    font-size: 18px !important;
+}
+#createForm .pd-card--professional .pd-hero-title strong {
+    display: block;
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .pd-card--professional .pd-hero-title small {
+    display: block;
+    margin-top: 2px;
+    color: #65708e !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    font-weight: 500;
+}
+#createForm .pd-card--professional .pd-body {
+    padding: 18px 20px 16px !important;
+    background: #ffffff !important;
+}
+#createForm .pd-card--professional .pd-professional-primary {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px 20px !important;
+    margin: 0 !important;
+    align-items: start;
+}
+#createForm .pd-card--professional .pd-field {
+    min-width: 0;
+    margin: 0 !important;
+}
+#createForm .pd-card--professional .pd-field > label {
+    display: block;
+    margin: 0 0 8px !important;
+    color: #071434 !important;
+    font-size: 13px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .pd-card--professional .pd-field > label .rq {
+    color: #dc9f00 !important;
+}
+#createForm .pd-card--professional .pd-control {
+    position: relative;
+    min-width: 0;
+}
+#createForm .pd-card--professional .pd-control > i {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    z-index: 2;
+    color: #725400 !important;
+    font-size: 16px !important;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+#createForm .pd-card--professional .pd-control input,
+#createForm .pd-card--professional .pd-control select {
+    width: 100% !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    border: 1px solid #e4d38e !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px !important;
+    font-weight: 500;
+}
+#createForm .pd-card--professional .pd-control input {
+    padding: 0 42px !important;
+}
+#createForm .pd-card--professional .pd-control select {
+    padding: 0 36px 0 42px !important;
+}
+#createForm .pd-card--professional .pd-control input::placeholder,
+#createForm .pd-card--professional .pd-control select:invalid {
+    color: #8a91a7 !important;
+    opacity: 1;
+}
+#createForm .pd-card--professional .pd-control input:focus,
+#createForm .pd-card--professional .pd-control select:focus {
+    border-color: #dca600 !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .14) !important;
+    outline: 0;
+}
+#createForm .pd-card--professional .pd-control-clear {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: #725400;
+    background: transparent;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+#createForm .pd-card--professional .pd-control-clear:hover,
+#createForm .pd-card--professional .pd-control-clear:focus-visible {
+    color: #5f4600;
+    background: #fff1b7;
+    outline: 0;
+}
+#createForm .pd-card--professional .pd-control-clear > i {
+    color: inherit !important;
+    font-size: 14px !important;
+}
+#createForm .pd-card--professional .pd-field > small {
+    display: block;
+    min-height: 17px;
+    margin: 6px 0 0 !important;
+    color: #747d98 !important;
+    font-size: 11px !important;
+    line-height: 1.45;
+    font-weight: 500;
+}
+#createForm .pd-card--professional .pd-professional-secondary {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px 20px !important;
+    margin: 14px 0 0 !important;
+    padding-top: 14px;
+    border-top: 1px solid #f3e6b4;
+    align-items: start !important;
+}
+#createForm .pd-card--professional .pd-professional-secondary .d-none {
+    display: none !important;
+}
+@media (max-width: 980px) {
+    #createForm .pd-card--professional .pd-professional-primary,
+    #createForm .pd-card--professional .pd-professional-secondary {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (max-width: 640px) {
+    #createForm .pd-card--professional .pd-hero,
+    #createForm .pd-card--professional .pd-body {
+        padding: 12px !important;
+    }
+    #createForm .pd-card--professional .pd-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        flex-basis: 44px !important;
+    }
+    #createForm .pd-card--professional .pd-professional-primary,
+    #createForm .pd-card--professional .pd-professional-secondary {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+
+/* Salary Details: yellow screenshot layout with shared current/expected mode controls. */
+#createForm .salary-details-card,
+#createForm .salary-details-card.is-free-service,
+#createForm .salary-details-card.is-paid-service {
+    --br-accent: #dca600;
+    --br-accent-deep: #725400;
+    --br-soft: #fff0aa;
+    --br-softest: #fffaf0;
+    --br-border: #efd36b;
+    --br-shadow: rgba(100, 75, 0, .08);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #efd36b !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 9px 24px rgba(100, 75, 0, .08) !important;
+}
+#createForm .salary-details-card .br-hero {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 82px !important;
+    padding: 14px 250px 14px 20px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+}
+#createForm .salary-details-card .br-hero-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+#createForm .salary-details-card .br-hero-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+    border: 1px solid #f3c719 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: linear-gradient(145deg, #ffd946, #ffc400) !important;
+    box-shadow: 0 7px 15px rgba(218, 164, 0, .18) !important;
+    font-size: 18px !important;
+}
+#createForm .salary-details-card .br-hero-title strong {
+    display: block;
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .salary-details-card .br-hero-title small {
+    display: block;
+    margin-top: 2px;
+    color: #65708e !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    font-weight: 500;
+}
+#createForm .salary-details-card .br-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    background: #ffffff !important;
+}
+#createForm .salary-details-card .br-rates-step {
+    order: 1;
+    padding: 18px 20px !important;
+    border-top: 0 !important;
+    background: #ffffff !important;
+}
+#createForm .salary-details-card .br-body > .br-step:first-child {
+    order: 2;
+    margin: 0 20px 18px;
+    padding: 14px !important;
+    border: 1px dashed #e7ca65 !important;
+    border-radius: 8px;
+    background: #fffaf0;
+}
+#createForm .salary-details-card .br-body > .br-step:first-child .br-step-head {
+    gap: 10px;
+}
+#createForm .salary-details-card .br-body > .br-step:first-child .br-step-head strong {
+    color: #071434 !important;
+    font-size: 12px !important;
+}
+#createForm .salary-details-card .br-body > .br-step:first-child .br-step-head small {
+    color: #747d98 !important;
+    font-size: 10px !important;
+}
+#createForm .salary-details-card .br-rates-head {
+    height: 0;
+    min-height: 0;
+    margin: 0 !important;
+}
+#createForm .salary-details-card .br-rates-head .br-step-head {
+    display: none !important;
+}
+#createForm .salary-details-card .br-currency {
+    position: absolute;
+    top: 22px;
+    right: 20px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 210px;
+}
+#createForm .salary-details-card .br-currency label {
+    margin: 0 !important;
+    color: #071434 !important;
+    font-size: 11px !important;
+    font-weight: 700;
+}
+#createForm .salary-details-card .br-currency select {
+    width: 100%;
+    height: 42px;
+    min-height: 42px !important;
+    border: 1px solid #e4d38e !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px !important;
+    font-weight: 600;
+}
+#createForm .salary-details-card .br-rate-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    align-items: stretch;
+}
+#createForm .salary-details-card .br-rate-panel,
+#createForm .salary-details-card .br-margin-panel,
+#createForm .salary-details-card .br-bill-panel.is-locked {
+    min-width: 0;
+    border: 1px solid #ead88f !important;
+    border-radius: 8px !important;
+    background: #fffef9 !important;
+    box-shadow: none !important;
+}
+#createForm .salary-details-card .br-panel-head,
+#createForm .salary-details-card .br-pay-panel .br-panel-head,
+#createForm .salary-details-card .br-bill-panel .br-panel-head,
+#createForm .salary-details-card .br-margin-panel .br-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 72px;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: linear-gradient(100deg, #fff7d2, #fffdf5) !important;
+}
+#createForm .salary-details-card .br-panel-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex: 0 0 40px !important;
+    border: 1px solid #f0d36c;
+    border-radius: 8px !important;
+    color: #725400 !important;
+    background: #ffe88b !important;
+    box-shadow: none !important;
+    font-size: 16px !important;
+}
+#createForm .salary-details-card .br-panel-head strong {
+    color: #071434 !important;
+    font-size: 13px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .salary-details-card .br-panel-head small {
+    color: #68718b !important;
+    font-size: 11px !important;
+    line-height: 1.4;
+}
+#createForm .salary-details-card .br-rate-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    padding: 12px 16px 10px;
+}
+#createForm .salary-details-card .br-rate-tabs button,
+#createForm .salary-details-card .br-bill-panel.is-locked .br-rate-tabs button {
+    min-height: 38px;
+    padding: 7px 8px;
+    border: 1px solid #ddd6bc !important;
+    border-radius: 0;
+    color: #59627c !important;
+    background: #fafafa !important;
+    font-size: 11px !important;
+    font-weight: 600;
+    cursor: pointer;
+}
+#createForm .salary-details-card .br-rate-tabs button:first-child {
+    border-radius: 8px 0 0 8px;
+}
+#createForm .salary-details-card .br-rate-tabs button:last-child {
+    border-radius: 0 8px 8px 0;
+}
+#createForm .salary-details-card .br-rate-tabs button + button {
+    margin-left: -1px;
+}
+#createForm .salary-details-card .br-rate-tabs button.is-active,
+#createForm .salary-details-card .br-rate-tabs button.active,
+#createForm .salary-details-card .br-bill-panel.is-locked .br-rate-tabs button.is-active {
+    position: relative;
+    z-index: 1;
+    border-color: #dca600 !important;
+    color: #071434 !important;
+    background: linear-gradient(180deg, #ffe88b, #fff3bf) !important;
+    box-shadow: 0 3px 8px rgba(218, 164, 0, .12) !important;
+}
+#createForm .salary-details-card .br-rate-field {
+    padding: 0 16px 10px !important;
+}
+#createForm .salary-details-card .br-rate-field label,
+#createForm .salary-details-card .br-hike-field label {
+    display: block;
+    margin: 0 0 7px !important;
+    color: #071434 !important;
+    font-size: 11px !important;
+    line-height: 1.4;
+    font-weight: 700;
+}
+#createForm .salary-details-card .br-rate-field label .rq {
+    color: #dc9f00 !important;
+}
+#createForm .salary-details-card .br-rate-field .ig,
+#createForm .salary-details-card .br-hike-field .ig {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+#createForm .salary-details-card .br-rate-field .ig input,
+#createForm .salary-details-card .br-hike-field .ig input {
+    width: 100%;
+    height: 44px;
+    min-height: 44px !important;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid #e4d38e !important;
+    border-radius: 8px 0 0 8px !important;
+    color: #071434 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px !important;
+    font-weight: 500;
+}
+#createForm .salary-details-card .br-rate-field .ig-a,
+#createForm .salary-details-card .br-hike-field .ig-a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    padding: 0 10px;
+    border: 1px solid #e4d38e;
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+    color: #725400;
+    background: #fff9df;
+    font-size: 11px;
+    font-weight: 700;
+}
+#createForm .salary-details-card .br-rate-field .ig input:focus,
+#createForm .salary-details-card .br-hike-field .ig input:focus,
+#createForm .salary-details-card .br-currency select:focus,
+#createForm .salary-details-card .br-comments-card textarea:focus {
+    border-color: #dca600 !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .14) !important;
+    outline: 0;
+}
+#createForm .salary-details-card .br-rate-field .form-text {
+    min-height: 16px;
+    margin-top: 5px;
+    color: #747d98 !important;
+    font-size: 10px !important;
+}
+#createForm .salary-details-card .br-auto-box,
+#createForm .salary-details-card .br-bill-panel .br-auto-box {
+    margin: 8px 16px 14px;
+    padding: 12px;
+    border: 1px solid #f0dda0 !important;
+    border-radius: 8px;
+    background: #fff9e7 !important;
+}
+#createForm .salary-details-card .br-auto-box strong {
+    margin-bottom: 7px;
+    color: #071434 !important;
+    font-size: 10px !important;
+}
+#createForm .salary-details-card .br-auto-box em {
+    color: #68718b;
+    font-size: 10px;
+}
+#createForm .salary-details-card .br-auto-box b {
+    color: #071434 !important;
+    font-size: 12px !important;
+}
+#createForm .salary-details-card .br-formula {
+    display: none !important;
+}
+#createForm .salary-details-card .br-margin-list {
+    margin: 10px 14px 12px !important;
+    padding: 5px 10px !important;
+    border: 1px solid #f0dda0 !important;
+    border-radius: 8px !important;
+    background: #fffdf5 !important;
+}
+#createForm .salary-details-card .br-margin-list span {
+    min-height: 38px;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid #f1e5ba !important;
+    color: #59627c;
+    font-size: 10px !important;
+}
+#createForm .salary-details-card .br-margin-list b,
+#createForm .salary-details-card .br-margin-list span:nth-child(3) b {
+    color: #725400 !important;
+    font-size: 11px !important;
+}
+#createForm .salary-details-card .br-hike-field {
+    padding: 0 14px 12px !important;
+}
+#createForm .salary-details-card .br-hike-field small {
+    display: block;
+    margin-top: 5px;
+    color: #747d98;
+    font-size: 10px;
+    line-height: 1.4;
+}
+#createForm .salary-details-card .br-margin-state {
+    display: none !important;
+}
+#createForm .salary-details-card .br-comments-card {
+    margin-top: 16px !important;
+    padding: 12px 14px 9px !important;
+    border: 1px solid #ead88f !important;
+    border-radius: 8px !important;
+    background: #fffef9 !important;
+}
+#createForm .salary-details-card .br-comments-icon {
+    color: #725400 !important;
+    background: #ffe88b !important;
+}
+#createForm .salary-details-card .br-comments-head strong {
+    color: #071434 !important;
+    font-size: 12px !important;
+}
+#createForm .salary-details-card .br-comments-head strong em {
+    color: #68718b;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 500;
+}
+#createForm .salary-details-card .br-comments-head small {
+    color: #68718b !important;
+    font-size: 10px !important;
+}
+#createForm .salary-details-card .br-comments-card textarea {
+    min-height: 72px;
+    border: 1px solid #e4d38e !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: #ffffff !important;
+}
+#createForm .salary-details-card .br-model-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+#createForm .salary-details-card .br-model-option,
+#createForm .salary-details-card .br-model-option:not(.is-selected),
+#createForm .salary-details-card .br-model-option:not(.is-selected):hover {
+    min-height: 64px;
+    padding: 10px 12px;
+    border: 1px solid #e4d8aa !important;
+    color: #071434 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+#createForm .salary-details-card .br-model-option.is-selected {
+    border-color: #dca600 !important;
+    background: #fff4c4 !important;
+    box-shadow: none !important;
+}
+#createForm .salary-details-card .br-model-option.is-selected .br-radio {
+    border-color: #dca600 !important;
+    background: #dca600 !important;
+}
+#createForm .salary-details-card .br-option-icon,
+#createForm .salary-details-card .br-model-option:not(.is-selected) .br-option-icon,
+#createForm .salary-details-card .br-model-option.is-selected .br-option-icon {
+    color: #725400 !important;
+    background: #ffe88b !important;
+}
+#createForm .salary-details-card .br-option-copy strong,
+#createForm .salary-details-card .br-model-option.is-selected .br-option-copy strong {
+    color: #071434 !important;
+    font-size: 11px;
+}
+#createForm .salary-details-card .br-option-copy em,
+#createForm .salary-details-card .br-option-copy small {
+    color: #68718b !important;
+    font-size: 10px !important;
+}
+@media (max-width: 1050px) {
+    #createForm .salary-details-card .br-rate-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    #createForm .salary-details-card .br-margin-panel {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 720px) {
+    #createForm .salary-details-card .br-hero {
+        padding: 12px !important;
+    }
+    #createForm .salary-details-card .br-rates-step {
+        padding: 12px !important;
+    }
+    #createForm .salary-details-card .br-rates-head {
+        display: flex;
+        justify-content: flex-end;
+        height: auto;
+        margin-bottom: 12px !important;
+    }
+    #createForm .salary-details-card .br-currency {
+        position: static;
+        width: 100%;
+        min-width: 0;
+    }
+    #createForm .salary-details-card .br-rate-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #createForm .salary-details-card .br-margin-panel {
+        grid-column: auto;
+    }
+    #createForm .salary-details-card .br-body > .br-step:first-child {
+        margin: 0 12px 12px;
+    }
+    #createForm .salary-details-card .br-model-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
