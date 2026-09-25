@@ -506,10 +506,24 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 return $hit['_source'];
             }, $response['hits']['hits']);
 
-            // Bulk pre-fetch work-preference (wm), view counts, and download counts to prevent N+1 queries in Blade
+            // Bulk pre-fetch work-preference (wm), view counts, download counts, and live stage activity counts to prevent N+1 queries in Blade
             $pageIds = array_filter(array_column($data, 'id'));
             if (! empty($pageIds)) {
                 $wmMap = DB::table('job_applications')->whereIn('id', $pageIds)->pluck('wm', 'id');
+
+                // Bulk fetch live pipeline activity stage counts from DB
+                $dbStageCounts = DB::table('add_job_wise_condidates')
+                    ->select('job_application_id', 'master_status_id', DB::raw('COUNT(*) as cnt'))
+                    ->whereIn('job_application_id', $pageIds)
+                    ->groupBy('job_application_id', 'master_status_id')
+                    ->get()
+                    ->groupBy('job_application_id');
+
+                $dbTotalJobCounts = DB::table('add_job_wise_condidates')
+                    ->select('job_application_id', DB::raw('COUNT(*) as total_jobs'))
+                    ->whereIn('job_application_id', $pageIds)
+                    ->groupBy('job_application_id')
+                    ->pluck('total_jobs', 'job_application_id');
 
                 // Bulk fetch view and download counts using index idx_bcvd_cand_type_stat
                 $counts = DB::table('bench_count_view_download')
@@ -528,7 +542,28 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
 
                 foreach ($data as &$row) {
-                    $row['wm'] = $wmMap[$row['id'] ?? null] ?? $row['wm'] ?? null;
+                    $candId = $row['id'] ?? null;
+                    $row['wm'] = $wmMap[$candId] ?? $row['wm'] ?? null;
+
+                    if ($candId && isset($dbTotalJobCounts[$candId])) {
+                        $cStages = $dbStageCounts->get($candId) ?? collect();
+                        $sourcing = $cStages->where('master_status_id', 1)->sum('cnt');
+                        $screening = $cStages->where('master_status_id', 2)->sum('cnt');
+                        $evaluation = $cStages->where('master_status_id', 3)->sum('cnt');
+                        $negotiation = $cStages->where('master_status_id', 4)->sum('cnt');
+                        $offered = $cStages->where('master_status_id', 5)->sum('cnt');
+                        $joined = $cStages->where('master_status_id', 6)->sum('cnt');
+                        $rejected = $cStages->whereIn('master_status_id', [7, 9])->sum('cnt');
+
+                        $row['InReview'] = $dbTotalJobCounts[$candId];
+                        $row['Sourcing'] = $sourcing;
+                        $row['Screening'] = $screening;
+                        $row['Evaluation'] = $evaluation;
+                        $row['Negotiation'] = $negotiation;
+                        $row['Offered'] = $offered;
+                        $row['Joined'] = $joined;
+                        $row['Rejected'] = $rejected;
+                    }
                 }
                 unset($row);
             }

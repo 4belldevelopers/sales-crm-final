@@ -283,13 +283,14 @@
                 <div class="pipe">
                     <div>
                         <div class="pipe-grid">
-                            <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">JOI</div><div class="h">REJ</div>
+                            <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">OFF</div><div class="h">JOI</div><div class="h">REJ</div>
                             {{-- Intent: Clicking INW (InReview) opens the full bench explore list with stage = 'all' --}}
                             <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary">{{ $row->InReview }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary">{{ $row->Sourcing }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary">{{ $row->Screening }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary">{{ $row->Evaluation }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary">{{ $row->Negotiation }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary">{{ $row->Offered }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary">{{ $row->Joined }}</a></div>
                             <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary">{{ $row->Rejected }}</a></div>
                         </div>
