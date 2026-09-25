@@ -107,35 +107,44 @@ LUA;
     {
         $tenantKey = "tenant:{$companyId}:coins";
         try {
-            $exists = Redis::exists($tenantKey);
-            if (! $exists) {
-                // Read from Elasticsearch (0 MySQL reads)
-                $available = 0;
-                try {
-                    $indexName = config('constants.ELASTIC_COMPANIES_COINS', 'ats_company_coins');
-                    $resp = $this->elasticService->getClient()->search([
-                        'index' => $indexName,
-                        'body' => [
-                            'query' => ['term' => ['company_id' => $companyId]],
-                            'size' => 1,
-                        ],
-                    ]);
-                    $hit = $resp['hits']['hits'][0]['_source'] ?? null;
-                    if ($hit && isset($hit['balance'])) {
-                        $available = (int) $hit['balance'];
-                    }
-                } catch (\Throwable $e) {
-                    // Fallback to MySQL if ES index is cold
-                    $cc = DB::table('company_coins')->where('company_id', $companyId)->first();
-                    $available = $cc ? (int) ($cc->coin ?? 0) : 0;
-                }
+            $coinEvent = DB::table('coin_events')->where('id', 43)->first();
+            $eventType = $coinEvent ? $coinEvent->event_type : 'operational';
 
-                Redis::hmset($tenantKey, [
-                    'available' => $available,
-                    'reserved' => 0,
+            $available = 0;
+            try {
+                $indexName = config('constants.ELASTIC_COMPANIES_COINS', 'ats_company_coins');
+                $resp = $this->elasticService->getClient()->search([
+                    'index' => $indexName,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['company_id' => $companyId]],
+                                    ['term' => ['event_type' => $eventType]],
+                                ],
+                            ],
+                        ],
+                        'size' => 1,
+                    ],
                 ]);
-                Redis::expire($tenantKey, 86400);
+                $hit = $resp['hits']['hits'][0]['_source'] ?? null;
+                if ($hit && isset($hit['coins'])) {
+                    $available = (float) $hit['coins'];
+                }
+            } catch (\Throwable $e) {
+                // Fallback to MySQL company_coins
+                $cc = DB::table('company_coins')
+                    ->where('company_id', $companyId)
+                    ->where('event_type', $eventType)
+                    ->first();
+                $available = $cc ? (float) ($cc->coins ?? 0) : 0;
             }
+
+            Redis::hmset($tenantKey, [
+                'available' => (int) $available,
+                'reserved' => 0,
+            ]);
+            Redis::expire($tenantKey, 86400);
         } catch (\Throwable $e) {
             Log::warning("[ForwardResumeCoinService] Redis ensureTenantRedisBalance warning: {$e->getMessage()}");
         }
@@ -143,6 +152,7 @@ LUA;
 
     /**
      * Reserve coins in Redis and return status.
+     * Enforces authoritative JERO business logic via GeneralMethod::coinsValidationsAllcompany.
      */
     public function reserve(
         int $companyId,
@@ -154,8 +164,35 @@ LUA;
         $tenantKey = "tenant:{$companyId}:coins";
         $reservationKey = "coin_reservation:{$reservationId}";
 
-        $this->ensureTenantRedisBalance($companyId);
+        // 1. Authoritative JERO Business Validation for Event 43 (Candidate Resume Forward)
+        $validation = GeneralMethod::coinsValidationsAllcompany($companyId, 43, $requiredCoins);
+        if ($validation && ! empty($validation->status)) {
+            // status === true means validation failed (insufficient coins or inactive pack)
+            return [
+                'success' => false,
+                'status' => 'INSUFFICIENT_FUNDS',
+                'message' => $validation->message ?? 'Insufficient coin balance to send candidate resumes.',
+                'company_coins' => $validation->company_coins ?? 0.00,
+            ];
+        }
 
+        $realCoins = $validation && isset($validation->company_coins) ? (int) $validation->company_coins : 0;
+
+        // 2. Synchronize Redis Mirror with Authoritative MySQL / ES Balance (Self-Healing)
+        try {
+            $curAvailable = Redis::hget($tenantKey, 'available');
+            if ($curAvailable === null || (int) $curAvailable < $requiredCoins) {
+                Redis::hset($tenantKey, 'available', max($realCoins, $requiredCoins));
+                if (! Redis::hexists($tenantKey, 'reserved')) {
+                    Redis::hset($tenantKey, 'reserved', 0);
+                }
+                Redis::expire($tenantKey, 86400);
+            }
+        } catch (\Throwable $redisSyncErr) {
+            Log::warning("[ForwardResumeCoinService] Redis sync warning: {$redisSyncErr->getMessage()}");
+        }
+
+        // 3. Atomic Redis Lua Reservation
         try {
             $result = (string) Redis::eval(
                 self::reserveScript(),
@@ -168,14 +205,32 @@ LUA;
             );
 
             if ($result === 'RESERVED') {
-                return ['success' => true, 'status' => 'RESERVED'];
+                return ['success' => true, 'status' => 'RESERVED', 'company_coins' => $realCoins];
+            }
+
+            // If Redis returned INSUFFICIENT_FUNDS despite validation passing (stale balance in cache),
+            // auto-heal Redis available balance and retry
+            if ($result === 'INSUFFICIENT_FUNDS') {
+                Redis::hset($tenantKey, 'available', max($realCoins, $requiredCoins));
+                $retryResult = (string) Redis::eval(
+                    self::reserveScript(),
+                    2,
+                    $tenantKey,
+                    $reservationKey,
+                    $requiredCoins,
+                    $forwardRequestId,
+                    $companyId
+                );
+                if ($retryResult === 'RESERVED') {
+                    return ['success' => true, 'status' => 'RESERVED', 'company_coins' => $realCoins];
+                }
             }
 
             return ['success' => false, 'status' => $result];
         } catch (\Throwable $e) {
             Log::error("[ForwardResumeCoinService] reserve error: {$e->getMessage()}");
-            // If Redis is unreachable, allow graceful DB fallback
-            return ['success' => true, 'status' => 'RESERVED', 'redis_fallback' => true];
+            // If Redis is unreachable, allow graceful DB fallback since validation passed
+            return ['success' => true, 'status' => 'RESERVED', 'redis_fallback' => true, 'company_coins' => $realCoins];
         }
     }
 
