@@ -26,16 +26,39 @@ class SesForwardResumeProvider implements ForwardResumeProvider
     {
         try {
             $companyId = $payload->companyId;
-            $replyEmailSetting = EmailSetting::where('company_id', $companyId)->first();
 
-            if ($replyEmailSetting) {
-                if ($replyEmailSetting->mail_driver === 'smtp') {
-                    Config::set('mail.mailers.smtp.host', $replyEmailSetting->mail_host);
-                    Config::set('mail.mailers.smtp.port', $replyEmailSetting->mail_port);
-                    Config::set('mail.mailers.smtp.username', $replyEmailSetting->mail_username);
-                    Config::set('mail.mailers.smtp.password', $replyEmailSetting->mail_password);
-                    Config::set('mail.mailers.smtp.encryption', $replyEmailSetting->mail_encryption);
+            // Load authoritative SMTP settings from smtp_settings (ID 12 is AWS SES, fallback to ID 9 or default active)
+            $smtp = \Illuminate\Support\Facades\Cache::remember('smtp_settings:forward_resume', 3600, function () {
+                $record = EmailSetting::where('status', '=', 0)->where('id', 12)->first();
+                if (! $record) {
+                    $record = EmailSetting::where('status', '=', 0)->where('id', 9)->first();
                 }
+                if (! $record) {
+                    $record = EmailSetting::where('status', '=', 0)->orderByDesc('id')->first() ?: EmailSetting::first();
+                }
+
+                return $record;
+            });
+
+            if ($smtp) {
+                $host = $smtp->notification_mail_host ?: $smtp->mail_host;
+                $port = $smtp->notification_mail_port ?: $smtp->mail_port;
+                $user = $smtp->notification_mail_username ?: $smtp->mail_username;
+                $pass = $smtp->notification_mail_password ?: $smtp->mail_password;
+                $enc  = $smtp->notification_mail_encryption ?: $smtp->mail_encryption;
+
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => $host,
+                    'mail.mailers.smtp.port' => (int) $port,
+                    'mail.mailers.smtp.username' => $user,
+                    'mail.mailers.smtp.password' => $pass,
+                    'mail.mailers.smtp.encryption' => $enc,
+                    'mail.from.address' => ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : config('mail.from.address'),
+                    'mail.from.name' => $payload->senderName ?: config('mail.from.name', 'JERO Recruitment'),
+                ]);
+                Mail::purge();
             }
 
             $mailHost = parse_url(config('app.url', 'jero.works'), PHP_URL_HOST) ?: 'jero.works';
@@ -46,11 +69,27 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                 return ProviderSubmissionResult::failure('No valid recipients provided.');
             }
 
-            // We dispatch email to the designated recipients with the in-memory attachments
-            $fromAddress = $payload->fromAddress ?: config('mail.from.address');
+            // Envelope From must match verified domain/SES identity (notify@jeroworks.com)
+            $fromAddress = ! empty($smtp->mail_from_email) ? $smtp->mail_from_email : (config('mail.from.address') ?: 'notify@jeroworks.com');
             $senderName = $payload->senderName ?: config('mail.from.name', 'JERO Recruitment');
+            $replyToEmail = ! empty($payload->replyTo) ? $payload->replyTo : ($payload->fromAddress ?: $fromAddress);
 
-            Mail::html($payload->body, function ($msg) use ($payload, $recipients, $fromAddress, $senderName, $canonicalMsgId) {
+            // Render email using branded JERO template
+            try {
+                $htmlBody = view('email.resume-forward.forward-resume', [
+                    'data' => (object) [
+                        'message' => $payload->body,
+                        'subject' => $payload->subject,
+                        'company_name' => config('app.name', 'JERO'),
+                        'candidate_skills' => [],
+                    ],
+                ])->render();
+            } catch (\Throwable $viewErr) {
+                Log::warning('[SesForwardResumeProvider] Blade render fallback: ' . $viewErr->getMessage());
+                $htmlBody = $payload->body;
+            }
+
+            Mail::html($htmlBody, function ($msg) use ($payload, $recipients, $fromAddress, $senderName, $replyToEmail, $canonicalMsgId) {
                 $msg->to($recipients)
                     ->subject($payload->subject)
                     ->from($fromAddress, $senderName);
@@ -59,14 +98,15 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                 $headers->addTextHeader('X-Forward-Request-ID', $payload->forwardRequestId);
                 $headers->addIdHeader('Message-ID', $canonicalMsgId);
 
-                if (! empty($payload->replyTo)) {
-                    $msg->replyTo($payload->replyTo);
+                if (! empty($replyToEmail)) {
+                    $msg->replyTo($replyToEmail, $senderName);
                 }
 
                 if (! empty($payload->cc)) {
                     foreach ($payload->cc as $ccAddr) {
-                        if (filter_var($ccAddr, FILTER_VALIDATE_EMAIL)) {
-                            $msg->cc($ccAddr);
+                        $cleanCc = strtolower(trim((string) $ccAddr));
+                        if (! empty($cleanCc) && filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
+                            $msg->cc($cleanCc);
                         }
                     }
                 }
@@ -81,6 +121,52 @@ class SesForwardResumeProvider implements ForwardResumeProvider
                     }
                 }
             });
+
+            // Delivery attempt tracking & multi-recipient tracking
+            try {
+                $fwd = ForwardRequest::where('uuid', $payload->forwardRequestId)->first();
+                if ($fwd && \Illuminate\Support\Facades\Schema::hasTable('forward_delivery_attempts')) {
+                    foreach ($recipients as $recipient) {
+                        $attempt = ForwardDeliveryAttempt::firstOrCreate(
+                            [
+                                'forward_request_id' => $fwd->id,
+                                'recipient_email' => $recipient,
+                            ],
+                            [
+                                'status' => 'PENDING',
+                                'attempt_count' => 0,
+                                'idempotency_key' => md5($payload->forwardRequestId . ':' . $recipient),
+                            ]
+                        );
+                        $attempt->increment('attempt_count');
+                        $attempt->update([
+                            'status' => 'SENT',
+                            'sent_at' => now(),
+                            'provider_message_id' => $canonicalMsgId,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $attErr) {
+                Log::warning('[SesForwardResumeProvider] Delivery attempt tracking warning: ' . $attErr->getMessage());
+            }
+
+            // Company email count audit logging
+            try {
+                $createdAt = now();
+                foreach ($recipients as $recipient) {
+                    DB::table('email_count_companies')->insertGetId([
+                        'to_email' => $recipient,
+                        'subject' => $payload->subject,
+                        'mailBody' => json_encode(['message' => $payload->body]),
+                        'emailType' => 2,
+                        'company_id' => $payload->companyId,
+                        'created_at' => $createdAt,
+                        'updated_at' => $createdAt,
+                    ]);
+                }
+            } catch (\Throwable $auditErr) {
+                Log::warning('[SesForwardResumeProvider] email_count_companies logging skipped: ' . $auditErr->getMessage());
+            }
 
             // Cache delivery confirmation in Redis for rapid idempotency checks (24-hour TTL)
             try {
