@@ -7984,7 +7984,7 @@ END:VCALENDAR";
             'job_applications.recruiter_note',
             'job_applications.phone',
             'job_applications.np_id',
-                'job_applications.last_working_date',
+            'job_applications.last_working_date',
             'job_applications.serving_notice_period_mode',
             'job_applications.country',
             'job_applications.submitted_by',
@@ -8138,7 +8138,7 @@ END:VCALENDAR";
                         'pay_rate_mode' => $application->pay_rate_mode,
                         'phone' => $application->phone,
                         'np_id' => $application->np_id,
-                                'last_working_date' => $application->last_working_date,
+                        'last_working_date' => $application->last_working_date,
                         'immediate_join' => $application->np_id,
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
                         'state' => $application->state,
@@ -9495,7 +9495,7 @@ END:VCALENDAR";
                         'bill_rate_mode' => $application->bill_rate_mode,
                         'outsourcing_type' => $application->outsourcing_type,
                         'np_id' => $application->np_id,
-                                'last_working_date' => $application->last_working_date,
+                        'last_working_date' => $application->last_working_date,
                         'immediate_join' => $application->np_id,
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
                         'comission_type' => $application->comission_type,
@@ -11213,7 +11213,7 @@ END:VCALENDAR";
             'job_applications.email',
             'job_applications.phone',
             'job_applications.np_id',
-                'job_applications.last_working_date',
+            'job_applications.last_working_date',
             'job_applications.company_id',
             'job_applications.serving_notice_period_mode',
             'job_applications.country',
@@ -11440,7 +11440,7 @@ END:VCALENDAR";
                         'email' => $application->email,
                         'phone' => $application->phone,
                         'np_id' => $application->np_id,
-                                'last_working_date' => $application->last_working_date,
+                        'last_working_date' => $application->last_working_date,
                         'immediate_join' => $application->np_id,
                         'status_type' => 'DIRECT',
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
@@ -13114,10 +13114,29 @@ END:VCALENDAR";
         return config('services.evolution.url');
     }
 
+    /**
+     * Safely increments the cache version integer for the given key.
+     * Handles non-numeric values (e.g. stdClass objects previously cached under $key) safely to avoid type conversion errors.
+     *
+     * @param  string|mixed  $key
+     * @return bool
+     */
     public static function cacheClean($key)
     {
+        if (is_object($key)) {
+            $key = $key->key ?? $key->id ?? null;
+        }
+
+        if (is_array($key) || empty($key)) {
+            return false;
+        }
+
+        $key = (string) $key;
+
         Cache::lock('lock_'.$key, 2)->block(2, function () use ($key) {
-            cache()->forever($key, (int) cache()->get($key, 1) + 1);
+            $val = cache()->get($key, 1);
+            $currentVal = is_numeric($val) ? (int) $val : 1;
+            cache()->forever($key, $currentVal + 1);
         });
 
         return true;
