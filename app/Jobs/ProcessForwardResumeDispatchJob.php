@@ -116,6 +116,38 @@ class ProcessForwardResumeDispatchJob implements ShouldQueue
 
         foreach ($attachments as $att) {
             $bytes = $uploadService->getR2ObjectBytes($att->r2_object_key);
+
+            // Resilient Fallback: If R2 object bytes are missing, try fetching candidate's original resume directly
+            if (($bytes === null || strlen($bytes) <= 50) && ! empty($att->candidate_id)) {
+                try {
+                    $cand = DB::table('job_applications')
+                        ->where('id', $att->candidate_id)
+                        ->where(function ($q) {
+                            $q->where('company_id', $this->companyId)
+                                ->orWhere('thirdparty_company_id', $this->companyId);
+                        })
+                        ->first();
+
+                    if ($cand && ! empty($cand->resume)) {
+                        $candResume = $cand->resume;
+                        if (filter_var($candResume, FILTER_VALIDATE_URL)) {
+                            $httpRes = \Illuminate\Support\Facades\Http::timeout(15)->get($candResume);
+                            if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
+                                $bytes = $httpRes->body();
+                            }
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($candResume)) {
+                            $bytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($candResume);
+                        } elseif (file_exists(public_path('user-uploads/resumes/'.$candResume))) {
+                            $bytes = file_get_contents(public_path('user-uploads/resumes/'.$candResume));
+                        } elseif (file_exists(public_path('user-uploads/resume/'.$candResume))) {
+                            $bytes = file_get_contents(public_path('user-uploads/resume/'.$candResume));
+                        }
+                    }
+                } catch (\Throwable $recovErr) {
+                    Log::warning("[ProcessForwardResumeDispatchJob] Candidate resume recovery fallback error: {$recovErr->getMessage()}");
+                }
+            }
+
             if ($bytes !== null && strlen($bytes) > 0) {
                 $inMemoryAttachments[] = [
                     'filename' => $att->filename,
