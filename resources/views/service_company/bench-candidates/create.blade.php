@@ -208,14 +208,14 @@ if($snp_mode== 1){
                         <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                         <span class="resume-card-title">
                             <strong>Upload Resume <span class="rq">*</span></strong>
-                            <small>Upload the resume and we'll automatically extract the talent details.</small>
+                            <small>Upload a PDF or Word resume to parse candidate details.</small>
                         </span>
                     </div>
 
                     <div class="fsc resume-card-body">
                         <div class="ua" id="uploadBox">
 
-                            <div class="ui">
+                            <div class="ui resume-upload-visual">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="1.5" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -266,26 +266,26 @@ if($snp_mode== 1){
                             <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
                                 <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
                                 @if(!empty($resume_url))
-                                <a href="{{ $resume_url }}" target="_blank" class="download-file"
-                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
-                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
+                                <a href="{{ $resume_url }}" target="_blank" class="download-file">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
                                 </a>
                                 @endif
                                 <button type="button" class="remove-file" id="removeFile">Remove</button>
                             </div>
 
                         </div>
-                        <div class="resume-note marketplace-privacy">
-                            <span class="resume-note-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
-                            <div class="marketplace-privacy-content">
-                                <strong>Marketplace Privacy Check</strong>
-                                <small>Before uploading, remove sensitive details from the resume. Resumes with these details cannot be published.</small>
-                                <ul class="marketplace-privacy-list" aria-label="Details to remove">
-                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Phone numbers</li>
-                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Email addresses</li>
-                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Current company name</li>
-                                    <li><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Company logos</li>
-                                </ul>
+                        <div class="resume-support-strip" aria-label="Resume upload highlights">
+                            <div class="resume-support-item">
+                                <span class="resume-support-icon resume-support-icon--secure"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
+                                <span><strong>Secure Upload</strong><small>Your data is safe</small></span>
+                            </div>
+                            <div class="resume-support-item">
+                                <span class="resume-support-icon resume-support-icon--parse"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span>
+                                <span><strong>Auto Parse</strong><small>Extracts key details</small></span>
+                            </div>
+                            <div class="resume-support-item">
+                                <span class="resume-support-icon resume-support-icon--size"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span>
+                                <span><strong>Max 6 MB</strong><small>PDF, DOC, DOCX</small></span>
                             </div>
                         </div>
 
@@ -352,21 +352,22 @@ if($snp_mode== 1){
                     <div class="summary-title-wrap">
                       <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                       <span class="resume-card-title">
-                        <strong>Professional Summary <span class="rq">*</span></strong>
-                        <small>A concise summary of this talent's expertise and experience.</small>
+                        <strong>Career Summary <span class="rq">*</span></strong>
+                        <small>Highlight the candidate's experience, strengths, and suitability.</small>
                       </span>
                     </div>
                   </div>
                   <div class="fsc summary-card-body">
-                    <textarea placeholder="Enter professional summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
                     <div class="cc summary-counter">0 / 500</div>
                     <div class="summary-tip">
                       <span class="summary-tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
                       <div>
-                        <strong>Tips for a great summary:</strong>
+                        <strong>Tips for a good summary</strong>
                         <ul>
-                          <li>Highlight key skills, years of experience and major achievements.</li>
-                          <li>Keep it concise and client-facing.</li>
+                          <li>Mention total experience and key skills.</li>
+                          <li>Highlight major achievements and relevant experience.</li>
+                          <li>Keep it concise and focused on the role.</li>
                         </ul>
                       </div>
                     </div>
