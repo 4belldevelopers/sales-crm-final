@@ -2560,6 +2560,22 @@ async function isInternetAvailable() {
                                    return false;
                                 }
 
+                                if (response.status !== 'success') {
+                                    $("#update-form").html(`Update`);
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    Swal.fire("Update Failed", response.message || "The candidate could not be updated. Please try again.", "error");
+                                    return false;
+                                }
+
+                                if (typeof response.url !== 'string' || response.url.trim() === '') {
+                                    $("#update-form").html(`Update`);
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    Swal.fire("Update Saved", "The candidate was updated, but the return page could not be opened. Please return to the candidate tracker.", "warning");
+                                    return false;
+                                }
+
 
 submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
@@ -2573,12 +2589,13 @@ submitButton.removeAttribute('data-kt-indicator');
                                             }
                                     }).then(function (result) {
                                         if (result.isConfirmed) {
-                                            form.querySelector('[name="email1"]').value 		= "";
-                                            form.querySelector('[name="password1"]').value 		= "";
+                                            var emailField = form.querySelector('[name="email1"]');
+                                            var passwordField = form.querySelector('[name="password1"]');
+                                            if (emailField) emailField.value = "";
+                                            if (passwordField) passwordField.value = "";
+                                            window.location.assign(response.url);
                                         }
                                     });
-
-																				window.location = response.url;
 																			},
 															error			: function (xhr, textStatus, errorThrown) {
                                                                             $("#update-form").prop("disabled", false);

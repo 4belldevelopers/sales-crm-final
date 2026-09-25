@@ -7141,11 +7141,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // (response.status===success && response.candidate_id && response.url) on create.blade.php passes.
             $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             if ($currentSlug == 'cvtracker') {
-                $redirectUrl = url('/service_company/cvtracker/');
+                $redirectUrl = route('service_company.cvtracker.index');
+            } elseif (empty($rawJobId)) {
+                $redirectUrl = route('service_company.cvtracker.allcandidates');
             } elseif ($recommendation_id > 0 && @$to_company_id == auth()->user()->company_id) {
-                $redirectUrl = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($rawJobId).'/all');
+                $redirectUrl = route('service_company.apptracker.clientapp', [
+                    'id' => GeneralMethod::value_encrypt($rawJobId),
+                    'mstatus_id' => 'all',
+                ]);
             } else {
-                $redirectUrl = url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all');
+                $redirectUrl = route('service_company.apptracker.index', [
+                    'id' => GeneralMethod::value_encrypt($rawJobId),
+                    'mstatus_id' => 'all',
+                ]);
             }
             DB::commit();
 
