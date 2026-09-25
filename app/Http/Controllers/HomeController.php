@@ -5699,6 +5699,7 @@ class HomeController extends Controller
         foreach ($add_job_wise_condidates as $add_job_wise) {
             GeneralMethod::JobApplicationsAddEditUpload($add_job_wise->id);
         }
+         dd("dhjfhjf");
 
         $mapping = $this->elasticService->getClient()->indices()->getMapping([
             'index' => ELASTIC_CANDIDATES,
