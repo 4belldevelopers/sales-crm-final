@@ -126,6 +126,66 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         return round((($expected - $current) / $current) * 100, 2);
     }
 
+    /**
+     * Normalizes the single Current Location value across Tagify, form, and API payload shapes.
+     */
+    private function normalizedCandidateLocation(mixed $locationInput): ?array
+    {
+        if (is_string($locationInput)) {
+            $locationInput = trim($locationInput);
+            if ($locationInput === '') {
+                return null;
+            }
+
+            $decoded = json_decode($locationInput, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $locationInput = $decoded;
+            }
+        }
+
+        if (is_object($locationInput)) {
+            $locationInput = (array) $locationInput;
+        }
+
+        $locationValue = null;
+        if (is_string($locationInput)) {
+            $locationValue = $locationInput;
+        } elseif (is_array($locationInput) && isset($locationInput['value']) && is_scalar($locationInput['value'])) {
+            $locationValue = (string) $locationInput['value'];
+        } elseif (is_array($locationInput)) {
+            foreach ($locationInput as $candidateLocation) {
+                if (is_object($candidateLocation)) {
+                    $candidateLocation = (array) $candidateLocation;
+                }
+
+                if (is_array($candidateLocation) && isset($candidateLocation['value']) && is_scalar($candidateLocation['value'])) {
+                    $locationValue = (string) $candidateLocation['value'];
+                    break;
+                }
+
+                if (is_string($candidateLocation)) {
+                    $locationValue = $candidateLocation;
+                    break;
+                }
+            }
+        }
+
+        if ($locationValue === null || trim($locationValue) === '') {
+            return null;
+        }
+
+        $parts = array_map('trim', explode('|', $locationValue));
+        if (count($parts) < 3 || $parts[0] === '' || $parts[1] === '' || $parts[2] === '') {
+            return null;
+        }
+
+        return [
+            'city' => $parts[0],
+            'state' => $parts[1],
+            'country' => $parts[2],
+        ];
+    }
+
     // **  start ajax  */
     public function uploadresume(Request $request)
     {
@@ -3031,33 +3091,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $cityID = '';
         $countryID = '';
         $location_find = '';
-        $work_city = request('kt_tagify_work_location');
-        $work_city_all = json_decode($work_city, true);
-        if (\request('kt_tagify_work_location') != '') {
-            foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $cityName = trim($parts[0]);
-                $stateName = trim($parts[1]);
-                $countrName = trim($parts[2]);
-                $location_find = $cityName.'_'.$stateName.'_'.$countrName;
-                // dd($cityName);
-                // Debugging line
-                $city_row = DB::table('city_list')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city_id', 'countries.id as country_id')
-                    ->where('city_list.city', '!=', '')
-                    ->where('city_list.city', '=', $cityName)
-                    ->where('countries.country_name', '=', $countrName)
-                    ->first();
+        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+        if ($workLocation !== null) {
+            $cityName = $workLocation['city'];
+            $stateName = $workLocation['state'];
+            $countrName = $workLocation['country'];
+            $location_find = $cityName.'_'.$stateName.'_'.$countrName;
+            $city_row = DB::table('city_list')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city_id', 'countries.id as country_id')
+                ->where('city_list.city', '!=', '')
+                ->where('city_list.city', '=', $cityName)
+                ->where('countries.country_name', '=', $countrName)
+                ->first();
 
-                if ($city_row) {
-                    $cityID = (@$city_row) ? $city_row->city_id : '';
-                    $countryID = (@$city_row) ? $city_row->country_id : '';
-                    $stateId = GeneralMethod::stateId($cityID);
-                }
-
+            if ($city_row) {
+                $cityID = $city_row->city_id;
+                $countryID = $city_row->country_id;
+                $stateId = GeneralMethod::stateId($cityID);
             }
         }
 
@@ -6773,35 +6825,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $cityID = '';
         $countryID = '';
         $location_find = '';
-        $work_city = request('kt_tagify_work_location');
-        $work_city_all = json_decode($work_city, true);
-        if (\request('kt_tagify_work_location') != '') {
-            foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $cityName = trim($parts[0]);
-                $stateName = trim($parts[1]);
-                $countrName = trim($parts[2]);
-                $location_find = $cityName.'_'.$stateName.'_'.$countrName;
+        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+        if ($workLocation !== null) {
+            $cityName = $workLocation['city'];
+            $stateName = $workLocation['state'];
+            $countrName = $workLocation['country'];
+            $location_find = $cityName.'_'.$stateName.'_'.$countrName;
+            $city_row = DB::table('city_list')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city_id', 'countries.id as country_id')
+                ->where('city_list.city', '!=', '')
+                ->where('city_list.city', '=', $cityName)
+                ->where('countries.country_name', '=', $countrName)
+                ->first();
 
-                // dd($cityName,$location_find);
-                // Debugging line
-                $city_row = DB::table('city_list')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city_id', 'countries.id as country_id')
-                    ->where('city_list.city', '!=', '')
-                    ->where('city_list.city', '=', $cityName)
-                    ->where('countries.country_name', '=', $countrName)
-                    ->first();
-
-                if ($city_row) {
-                    $cityID = (@$city_row) ? $city_row->city_id : '';
-                    $countryID = (@$city_row) ? $city_row->country_id : '';
-                    $stateId = GeneralMethod::stateId($cityID);
-                    // dd($stateId,$countryID);
-                }
-
+            if ($city_row) {
+                $cityID = $city_row->city_id;
+                $countryID = $city_row->country_id;
+                $stateId = GeneralMethod::stateId($cityID);
             }
         }
 
@@ -10934,32 +10976,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $stateId = '';
         $cityID = '';
         $countryID = '';
-        $work_city = request('kt_tagify_work_location');
-        $work_city_all = json_decode($work_city, true);
-        if (\request('kt_tagify_work_location') != '') {
-            foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $cityName = trim($parts[0]);
-                $countrName = trim($parts[2]);
+        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+        if ($workLocation !== null) {
+            $cityName = $workLocation['city'];
+            $countrName = $workLocation['country'];
+            $city_row = DB::table('city_list')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city_id', 'countries.id as country_id')
+                ->where('city_list.city', '!=', '')
+                ->where('city_list.city', '=', $cityName)
+                ->where('countries.country_name', '=', $countrName)
+                ->first();
 
-                // dd($cityName);
-                // Debugging line
-                $city_row = DB::table('city_list')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city_id', 'countries.id as country_id')
-                    ->where('city_list.city', '!=', '')
-                    ->where('city_list.city', '=', $cityName)
-                    ->where('countries.country_name', '=', $countrName)
-                    ->first();
-
-                if ($city_row) {
-                    $cityID = (@$city_row) ? $city_row->city_id : '';
-                    $countryID = (@$city_row) ? $city_row->country_id : '';
-                    $stateId = GeneralMethod::stateId($cityID);
-                }
-
+            if ($city_row) {
+                $cityID = $city_row->city_id;
+                $countryID = $city_row->country_id;
+                $stateId = GeneralMethod::stateId($cityID);
             }
         }
         $job_application_arr['country'] = $countryID;
