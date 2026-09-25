@@ -4719,8 +4719,8 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             if (($resResult['status'] ?? '') === 'INSUFFICIENT_FUNDS') {
                 return Reply::dataOnly([
                     'status' => 'coinCheck',
-                    'message' => 'Insufficient coin balance to send candidate resumes.',
-                    'company_coins' => 0.00,
+                    'message' => $resResult['message'] ?? 'Insufficient coin balance to send candidate resumes.',
+                    'company_coins' => $resResult['company_coins'] ?? 0.00,
                 ]);
             }
             return Reply::dataOnly([
