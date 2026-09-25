@@ -1177,6 +1177,44 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         return view('service_company.bench-candidates.talent_pool', $this->data);
     }
 
+    /**
+     * Read the associated job's required skills from the tenant-scoped Elasticsearch document.
+     * The create/edit form uses these names for display-only matching and never writes them back.
+     */
+    private function requiredJobSkillsForCandidateForm(?int $jobId, int $companyId): array
+    {
+        if (empty($jobId)) {
+            return [];
+        }
+
+        try {
+            $response = $this->elasticService->getClient()->get([
+                'index' => ELASTIC_JOBS,
+                'id' => $jobId,
+            ]);
+            $source = $response['_source'] ?? [];
+            if ((int) ($source['company_id'] ?? 0) !== $companyId) {
+                return [];
+            }
+
+            $uniqueSkills = [];
+            foreach (($source['job_metronics_skills'] ?? []) as $skill) {
+                $name = trim((string) ($skill['skill_name'] ?? ''));
+                $key = mb_strtolower($name);
+                if ($key !== '') {
+                    $uniqueSkills[$key] = [
+                        'skill_name' => $name,
+                        'canonical_key' => $key,
+                    ];
+                }
+            }
+
+            return array_values($uniqueSkills);
+        } catch (\Throwable $exception) {
+            return [];
+        }
+    }
+
     public function create($jobId = null, $appId = null)
     {
 
@@ -1188,6 +1226,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $eventId = 5;
         $coinsRequ = 1;
         $companyId = (int) auth()->user()->company_id;
+        $associatedJobId = (int) ($jobId ?: request()->query('job_id', 0));
+        $this->requiredJobSkills = $this->requiredJobSkillsForCandidateForm($associatedJobId, $companyId);
+        $this->jobSkillMatch = GeneralMethod::calculateSkillMatch($this->requiredJobSkills, []);
         $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
         if ($packageStatus->status) {
             session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
@@ -2264,6 +2305,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->where('candidate_id', $this->application->id)
             ->get()
             ->keyBy('skill_key'); // java, php, html
+
+        $this->requiredJobSkills = $this->requiredJobSkillsForCandidateForm((int) $this->jobId, (int) $company_id);
+        $candidateSkillsForMatch = array_values(array_filter(array_merge(
+            array_map('trim', explode(',', (string) $this->application->skills)),
+            $this->skillExperiences->keys()->all()
+        ), 'strlen'));
+        $this->jobSkillMatch = GeneralMethod::calculateSkillMatch($this->requiredJobSkills, $candidateSkillsForMatch);
 
         $this->currencyConverter = GeneralMethod::currencyConverter();
 

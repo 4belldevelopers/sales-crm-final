@@ -6071,3 +6071,1049 @@ select option,
         min-height: 240px;
     }
 }
+
+/* Candidate Profile screenshot pass: page-scoped yellow styling with the original form contracts intact. */
+#createForm .bd-card {
+    overflow: hidden;
+    border: 1px solid #f0d36d !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 28px rgba(105, 79, 0, .08) !important;
+}
+#createForm .bd-hero {
+    min-height: 82px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f5e7ad !important;
+    background: linear-gradient(90deg, #fff9df 0%, #fffdf5 72%, #fff7cf 100%) !important;
+}
+#createForm .bd-hero-title {
+    gap: 14px;
+}
+#createForm .bd-hero-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: linear-gradient(135deg, #ffbf00 0%, #ffd51c 100%) !important;
+    box-shadow: 0 8px 18px rgba(224, 166, 0, .22) !important;
+    font-size: 18px !important;
+}
+#createForm .bd-hero-title strong {
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+}
+#createForm .bd-hero-title small {
+    margin-top: 3px;
+    color: #56617f !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+}
+#createForm .bd-body {
+    padding: 20px !important;
+}
+#createForm .bd-grid {
+    gap: 16px 24px;
+    margin-bottom: 18px;
+}
+#createForm .bd-grid--personal {
+    margin-bottom: 20px;
+}
+#createForm .bd-field {
+    min-width: 0;
+}
+#createForm .bd-field label {
+    margin-bottom: 7px;
+    color: #071434 !important;
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+    font-weight: 700 !important;
+}
+#createForm .bd-field label .rq {
+    color: #d89d00 !important;
+}
+#createForm .bd-control,
+#createForm .bd-phone-control {
+    position: relative;
+    min-width: 0;
+}
+#createForm .bd-control > i,
+#createForm .bd-phone-control > i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px;
+    height: 20px;
+    color: #5d6681 !important;
+    font-size: 15px !important;
+}
+#createForm .bd-control > i {
+    left: 14px;
+}
+#createForm .bd-phone-control > i {
+    left: 112px;
+}
+#createForm .bd-control input,
+#createForm .bd-control select,
+#createForm .bd-phone-control input,
+#createForm .bd-phone-control .iti input {
+    min-height: 46px !important;
+    height: 46px !important;
+    border: 1px solid #ead98f !important;
+    border-radius: 7px !important;
+    color: #071434 !important;
+    background: #fffef9 !important;
+    box-shadow: 0 1px 2px rgba(105, 79, 0, .03) !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+#createForm .bd-control input,
+#createForm .bd-control select {
+    padding-left: 44px !important;
+}
+#createForm .bd-control select {
+    padding-right: 38px !important;
+}
+#createForm .bd-control input::placeholder,
+#createForm .bd-phone-control input::placeholder {
+    color: #8991a8 !important;
+    opacity: 1;
+}
+#createForm .bd-control input:focus,
+#createForm .bd-control select:focus,
+#createForm .bd-phone-control input:focus,
+#createForm .bd-phone-control .iti input:focus {
+    border-color: #e4ad00 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .16) !important;
+}
+#createForm .bd-control--date input {
+    padding-right: 44px !important;
+}
+#createForm .bd-control--date::after {
+    content: "\f073";
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    z-index: 2;
+    color: #5d6681;
+    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome";
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+#createForm .bd-phone-control .iti {
+    width: 100%;
+}
+#createForm .bd-phone-control .iti input,
+#createForm .bd-phone-control > input[type="tel"] {
+    padding-left: 142px !important;
+}
+#createForm .bd-phone-control .iti__selected-country-primary {
+    min-height: 44px;
+    border-radius: 7px 0 0 7px;
+}
+#createForm .bd-phone-control .iti__selected-dial-code,
+#createForm .bd-phone-control .iti__arrow {
+    color: #071434 !important;
+}
+#createForm .bd-control--tagify .tagify {
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 5px 34px 5px 40px !important;
+    border: 1px solid #ead98f !important;
+    border-radius: 7px !important;
+    background: #fffef9 !important;
+    box-shadow: 0 1px 2px rgba(105, 79, 0, .03) !important;
+}
+#createForm .bd-control--tagify .tagify:hover,
+#createForm .bd-control--tagify .tagify.tagify--focus {
+    border-color: #e4ad00 !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .16) !important;
+}
+#createForm .bd-control--tagify .tagify__tag > div {
+    min-height: 28px;
+    padding: 3px 8px !important;
+    border: 1px solid #f0c94e !important;
+    border-radius: 999px !important;
+    background: #fff8d8 !important;
+}
+#createForm .bd-control--tagify .tagify__tag__removeBtn {
+    color: #715300 !important;
+    background: #ffe690 !important;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item::before {
+    color: #c99100 !important;
+}
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item--active,
+.tagify__dropdown.bd-location-dropdown .tagify__dropdown__item:hover {
+    color: #715300 !important;
+    background: #fff8d8 !important;
+}
+#createForm .bd-secondary {
+    margin: 0;
+    overflow: hidden;
+    border: 1px dashed #e8c449;
+    border-radius: 8px;
+    background: #fffefa;
+}
+#createForm .bd-secondary[open] {
+    border-style: solid;
+    box-shadow: 0 5px 16px rgba(105, 79, 0, .06);
+}
+#createForm .bd-secondary > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    min-height: 70px;
+    padding: 12px 16px;
+    color: #071434;
+    background: linear-gradient(90deg, #fffef8 0%, #fff9db 100%);
+    list-style: none;
+    cursor: pointer;
+}
+#createForm .bd-secondary-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+#createForm .bd-secondary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    color: #8b6500;
+    background: #ffefae;
+    font-size: 15px;
+}
+#createForm .bd-secondary-title strong {
+    display: block;
+    color: #071434;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .bd-secondary-title small {
+    display: block;
+    margin-top: 2px;
+    color: #626c87;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+#createForm .bd-secondary-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+    color: #a97900;
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 700;
+    white-space: nowrap;
+}
+#createForm .bd-secondary-action i {
+    transition: transform .2s ease;
+}
+#createForm .bd-secondary[open] .bd-secondary-action i {
+    transform: rotate(180deg);
+}
+#createForm .bd-secondary-grid {
+    margin: 0;
+    padding: 16px;
+    border-top: 1px solid #f2e3a5;
+    background: #ffffff;
+}
+@media (max-width: 1280px) {
+    #createForm .bd-body {
+        padding: 16px !important;
+    }
+    #createForm .bd-grid {
+        gap: 14px 18px;
+    }
+}
+@media (max-width: 900px) {
+    #createForm .bd-hero {
+        min-height: 74px !important;
+    }
+    #createForm .bd-secondary > summary {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    #createForm .bd-secondary-action {
+        align-self: flex-end;
+    }
+}
+@media (max-width: 560px) {
+    #createForm .bd-hero,
+    #createForm .bd-body {
+        padding: 12px !important;
+    }
+    #createForm .bd-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        flex-basis: 44px !important;
+    }
+    #createForm .bd-secondary > summary,
+    #createForm .bd-secondary-grid {
+        padding: 12px;
+    }
+    #createForm .bd-secondary-title {
+        align-items: flex-start;
+    }
+    #createForm .bd-secondary-action {
+        align-self: flex-start;
+        margin-left: 56px;
+    }
+}
+
+/* Primary Skills screenshot pass: yellow card, live job match, suggestions, and preserved experience rows. */
+#createForm .se-card {
+    overflow: hidden;
+    border: 1px solid #f0d36d !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 28px rgba(105, 79, 0, .08) !important;
+}
+#createForm .se-card .se-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 96px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f5e7ad !important;
+    background: linear-gradient(90deg, #fff9df 0%, #fffdf5 72%, #fff7cf 100%) !important;
+}
+#createForm .se-card .se-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+#createForm .se-card .se-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: linear-gradient(135deg, #ffbf00 0%, #ffd51c 100%) !important;
+    box-shadow: 0 8px 18px rgba(224, 166, 0, .22) !important;
+    font-size: 18px !important;
+}
+#createForm .se-card .se-title strong {
+    display: block;
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.3 !important;
+    font-weight: 700 !important;
+}
+#createForm .se-card .se-title small {
+    display: block;
+    margin-top: 3px;
+    color: #56617f !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    font-weight: 500 !important;
+}
+#createForm .se-card .se-title .rq {
+    color: #d89d00 !important;
+}
+#createForm .se-match {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+    min-width: 292px;
+    min-height: 68px;
+    padding: 9px 14px;
+    border: 1px solid #f0dda0;
+    border-radius: 8px;
+    background: rgba(255, 248, 216, .78);
+}
+#createForm .se-match-ring {
+    --match-percent: 0;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 54px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: conic-gradient(#d9a400 calc(var(--match-percent) * 1%), #f1e6bd 0);
+}
+#createForm .se-match-ring::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: #fffef8;
+}
+#createForm .se-match-ring span {
+    position: relative;
+    z-index: 1;
+    color: #071434;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 700;
+}
+#createForm .se-match.is-empty .se-match-ring {
+    background: #f1e6bd;
+}
+#createForm .se-match.is-complete .se-match-ring {
+    box-shadow: 0 0 0 4px rgba(255, 196, 0, .12);
+}
+#createForm .se-match-copy {
+    min-width: 0;
+}
+#createForm .se-match-copy strong {
+    display: block;
+    color: #071434;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+#createForm .se-match-copy small {
+    display: block;
+    margin-top: 3px;
+    color: #68718b;
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 600;
+}
+#createForm .se-match.is-complete .se-match-copy small {
+    color: #8a6500;
+}
+#createForm .se-match.is-complete .se-match-copy small::after {
+    content: "\f00c";
+    margin-left: 6px;
+    color: #b98500;
+    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome";
+    font-weight: 900;
+}
+#createForm .se-body {
+    padding: 18px 20px 20px !important;
+}
+#createForm .se-skill-entry {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 1px 126px;
+    align-items: center;
+    min-height: 50px;
+    border: 1px solid #ead98f;
+    border-radius: 8px;
+    background: #fffef9;
+    box-shadow: 0 1px 2px rgba(105, 79, 0, .03);
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+#createForm .se-skill-entry:focus-within {
+    border-color: #e4ad00;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .16);
+}
+#createForm .se-skill-entry > i {
+    color: #071434 !important;
+    font-size: 15px !important;
+    text-align: center;
+}
+#createForm .se-skill-entry input {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 14px 0 0;
+    border: 0;
+    outline: 0;
+    color: #071434;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+}
+#createForm .se-skill-entry input::placeholder {
+    color: #8991a8;
+    opacity: 1;
+}
+#createForm .se-skill-entry-divider {
+    width: 1px;
+    height: 28px;
+    background: #eadfae;
+}
+#createForm .se-skill-entry button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 40px;
+    margin: 4px 6px;
+    border: 1px solid #ffc400;
+    border-radius: 7px;
+    color: #071434;
+    background: linear-gradient(135deg, #ffbf00, #ffd51c);
+    box-shadow: 0 5px 12px rgba(224, 166, 0, .16);
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+}
+#createForm .se-skill-entry button:hover,
+#createForm .se-skill-entry button:focus-visible {
+    border-color: #dca600;
+    background: #f5bb00;
+}
+#createForm .se-selected-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    min-height: 0;
+    margin-top: 14px;
+}
+#createForm .se-selected-skill {
+    display: inline-flex;
+    align-items: center;
+    overflow: hidden;
+    min-height: 36px;
+    border: 1px solid #efc94b;
+    border-radius: 999px;
+    color: #071434;
+    background: #fffaf0;
+}
+#createForm .se-selected-skill-label,
+#createForm .se-selected-skill-remove {
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font-family: 'Poppins', sans-serif;
+}
+#createForm .se-selected-skill-label {
+    min-height: 34px;
+    padding: 7px 5px 7px 13px;
+    font-size: 13px;
+    font-weight: 600;
+}
+#createForm .se-selected-skill-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 34px;
+    padding: 0;
+    font-size: 13px;
+}
+#createForm .se-selected-skill-remove i {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #5d4c1a !important;
+    background: #fff0ba;
+}
+#createForm .se-selected-skill:hover {
+    border-color: #dca600;
+    background: #fff6d5;
+}
+#createForm .se-selected-empty {
+    margin-top: 12px;
+    color: #7a8299;
+    font-size: 12px;
+    font-weight: 500;
+}
+#createForm .se-selected-empty[hidden],
+#createForm .se-suggested[hidden] {
+    display: none !important;
+}
+#createForm .se-suggested {
+    margin-top: 16px;
+    padding: 13px 14px 14px;
+    border-top: 1px solid #f0e3ad;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #fffdf6 0%, #fff9dd 100%);
+}
+#createForm .se-suggested-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+#createForm .se-suggested-title {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+#createForm .se-suggested-title > i {
+    color: #a97900 !important;
+    font-size: 16px !important;
+}
+#createForm .se-suggested-title strong {
+    display: block;
+    color: #071434;
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+#createForm .se-suggested-title small {
+    display: block;
+    color: #68718b;
+    font-size: 11px;
+    line-height: 1.35;
+    font-weight: 500;
+}
+#createForm .se-remaining {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: 999px;
+    color: #725400;
+    background: #ffefb2;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 700;
+    white-space: nowrap;
+}
+#createForm .se-suggested-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+#createForm .se-suggested-skill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 34px;
+    padding: 6px 8px 6px 12px;
+    border: 1px solid #ead98f;
+    border-radius: 999px;
+    color: #071434;
+    background: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+}
+#createForm .se-suggested-skill i {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #725400 !important;
+    background: #fff2bf;
+}
+#createForm .se-suggested-skill:hover,
+#createForm .se-suggested-skill:focus-visible {
+    border-color: #dca600;
+    background: #fff7d9;
+}
+#createForm .se-experience-details {
+    margin-top: 16px;
+    overflow: hidden;
+    border: 1px solid #f0dda0;
+    border-radius: 8px;
+    background: #ffffff;
+}
+#createForm .se-experience-details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 13px;
+    color: #6f5509;
+    background: #fffaf0;
+    font-size: 12px;
+    font-weight: 700;
+    list-style: none;
+    cursor: pointer;
+}
+#createForm .se-experience-details > summary::-webkit-details-marker {
+    display: none;
+}
+#createForm .se-experience-details > summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+#createForm .se-experience-details > summary > i {
+    transition: transform .2s ease;
+}
+#createForm .se-experience-details[open] > summary > i {
+    transform: rotate(180deg);
+}
+#createForm .se-experience-details .se-table-scroll {
+    padding: 14px 10px 0;
+    border-top: 1px solid #f3e6b4;
+}
+#createForm .se-card .sk .se-field {
+    border-color: #ead98f !important;
+    background: #fffef9 !important;
+}
+#createForm .se-card .sk .se-field:focus-within {
+    border-color: #e4ad00 !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .14) !important;
+}
+#createForm .se-card .sk .se-field > i {
+    color: #725400 !important;
+    background: #fff8da !important;
+}
+#createForm .se-card .sk .ab {
+    border-color: #ead98f !important;
+    color: #725400 !important;
+    background: #fffaf0 !important;
+}
+#createForm .se-card .sk .ab:hover,
+#createForm .se-card .sk .ab:focus-visible {
+    border-color: #dca600 !important;
+    color: #5f4600 !important;
+    background: #fff1b7 !important;
+}
+.se-enterprise-dropdown .select2-results__option--highlighted[aria-selected] {
+    color: #725400 !important;
+    background: #fff6d5 !important;
+}
+#createForm .se-card .asb {
+    margin: 2px 20px 14px;
+    border-color: #e8c449 !important;
+    color: #725400 !important;
+    background: #fff8dc !important;
+}
+#createForm .se-card .asb:hover {
+    border-color: #dca600 !important;
+    background: #fff1b7 !important;
+}
+@media (max-width: 900px) {
+    #createForm .se-card .se-hero {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    #createForm .se-match {
+        width: 100%;
+        min-width: 0;
+    }
+}
+@media (max-width: 640px) {
+    #createForm .se-card .se-hero,
+    #createForm .se-body {
+        padding: 12px !important;
+    }
+    #createForm .se-card .se-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        flex-basis: 44px !important;
+    }
+    #createForm .se-skill-entry {
+        grid-template-columns: 40px minmax(0, 1fr) 1px 94px;
+    }
+    #createForm .se-suggested-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    #createForm .se-remaining {
+        margin-left: 27px;
+    }
+}
+
+/* Experience Details: screenshot-aligned yellow treatment scoped to the candidate form. */
+#createForm .pd-experience-section-card {
+    overflow: hidden;
+    border: 1px solid #efd36b !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 9px 24px rgba(100, 75, 0, .08) !important;
+}
+#createForm .pd-experience-hero {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 82px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+}
+#createForm .pd-experience-hero-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+#createForm .pd-experience-hero-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+    border: 1px solid #f3c719 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: linear-gradient(145deg, #ffd946, #ffc400) !important;
+    box-shadow: 0 7px 15px rgba(218, 164, 0, .18) !important;
+    font-size: 18px !important;
+}
+#createForm .pd-experience-hero-title strong {
+    display: block;
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .pd-experience-hero-title small {
+    display: block;
+    margin-top: 2px;
+    color: #65708e !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    font-weight: 500;
+}
+#createForm .pd-experience-body {
+    padding: 18px 20px !important;
+    background: #ffffff !important;
+}
+#createForm .pd-experience-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    align-items: stretch !important;
+}
+#createForm .pd-experience-section-card .pd-exp-card,
+#createForm .pd-experience-section-card .pd-tip-card {
+    min-width: 0;
+    min-height: 230px;
+    margin: 0 !important;
+    padding: 16px !important;
+    border: 1px solid #ead88f !important;
+    border-radius: 8px !important;
+    background: #fffef9 !important;
+    box-shadow: none !important;
+}
+#createForm .pd-experience-section-card .pd-exp-card--relevant {
+    background: #fffdf4 !important;
+}
+#createForm .pd-exp-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    min-width: 0;
+}
+#createForm .pd-experience-section-card .pd-exp-head > span,
+#createForm .pd-tip-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    flex: 0 0 44px !important;
+    border: 1px solid #f1d36a !important;
+    border-radius: 8px !important;
+    color: #725400 !important;
+    background: #fff0aa !important;
+    box-shadow: none !important;
+    font-size: 17px !important;
+}
+#createForm .pd-exp-card--relevant .pd-exp-head > span {
+    color: #634900 !important;
+    background: #ffe88b !important;
+}
+#createForm .pd-exp-head > div,
+#createForm .pd-tip-head > div {
+    min-width: 0;
+}
+#createForm .pd-exp-head strong,
+#createForm .pd-tip-head strong {
+    display: block;
+    color: #071434 !important;
+    font-size: 13px !important;
+    line-height: 1.35;
+    font-weight: 700;
+}
+#createForm .pd-exp-head strong .rq {
+    display: inline !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    color: #dc9f00 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: inherit !important;
+}
+#createForm .pd-exp-head small,
+#createForm .pd-tip-head p {
+    display: block;
+    margin: 3px 0 0 !important;
+    color: #68718b !important;
+    font-size: 11px !important;
+    line-height: 1.45;
+    font-weight: 500;
+}
+#createForm .pd-exp-inputs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-top: 16px !important;
+}
+#createForm .pd-exp-field {
+    display: block;
+    min-width: 0;
+    margin: 0;
+}
+#createForm .pd-exp-field > span {
+    display: block;
+    margin-bottom: 7px;
+    color: #071434;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+#createForm .pd-exp-field select {
+    width: 100% !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 34px 0 12px !important;
+    border: 1px solid #e4d38e !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px !important;
+    font-weight: 500;
+}
+#createForm .pd-exp-field select:focus {
+    border-color: #dca600 !important;
+    box-shadow: 0 0 0 3px rgba(255, 196, 0, .14) !important;
+    outline: 0;
+}
+#createForm .pd-exp-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 11px 12px;
+    border: 1px solid #f1dea0;
+    border-radius: 8px;
+    color: #68718b;
+    background: #fff9df;
+    font-size: 11px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+#createForm .pd-exp-note > i {
+    margin-top: 2px;
+    color: #b78300 !important;
+    font-size: 15px !important;
+}
+#createForm .pd-tip-card {
+    display: block !important;
+}
+#createForm .pd-tip-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+#createForm .pd-tip-icon {
+    color: #654a00 !important;
+    background: #ffdf59 !important;
+}
+#createForm .pd-tip-examples {
+    margin-top: 14px;
+    padding: 12px 13px;
+    border-left: 4px solid #ffc400;
+    border-radius: 0 8px 8px 0;
+    background: #fff9e7;
+}
+#createForm .pd-tip-examples > strong {
+    display: block;
+    margin: 0 0 6px;
+    color: #071434;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+#createForm .pd-tip-examples ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+#createForm .pd-tip-examples li {
+    position: relative;
+    margin-top: 5px;
+    padding-left: 16px;
+    color: #68718b;
+    font-size: 11px;
+    line-height: 1.45;
+    font-weight: 500;
+}
+#createForm .pd-tip-examples li::before {
+    position: absolute;
+    top: .55em;
+    left: 1px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffc400;
+    content: '';
+}
+@media (max-width: 1050px) {
+    #createForm .pd-experience-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    #createForm .pd-tip-card {
+        grid-column: 1 / -1;
+        min-height: 0;
+    }
+}
+@media (max-width: 720px) {
+    #createForm .pd-experience-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #createForm .pd-tip-card {
+        grid-column: auto;
+    }
+    #createForm .pd-experience-section-card .pd-exp-card,
+    #createForm .pd-experience-section-card .pd-tip-card {
+        min-height: 0;
+    }
+}
+@media (max-width: 520px) {
+    #createForm .pd-experience-hero,
+    #createForm .pd-experience-body {
+        padding: 12px !important;
+    }
+    #createForm .pd-experience-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        flex-basis: 44px !important;
+    }
+    #createForm .pd-exp-inputs {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
