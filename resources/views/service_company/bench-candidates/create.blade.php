@@ -919,18 +919,14 @@ if($snp_mode== 1){
             </div>
 
             <!-- Salary Details -->
-            <div class="fs br-card {{ (@$application->comission_type == 1) ? 'is-free-service' : 'is-paid-service' }}">
+            <div class="fs br-card salary-details-card {{ (@$application->comission_type == 1) ? 'is-free-service' : 'is-paid-service' }}">
               <div class="br-hero">
                 <div class="br-hero-title">
-                  <span class="br-hero-icon"><i class="fa-solid fa-coins"></i></span>
+                  <span class="br-hero-icon"><i class="fa-solid fa-wallet"></i></span>
                   <span>
-                    <strong>Commercials &amp; Bill Rates</strong>
-                    <small>Define the commercial model and rates for this talent. Fields will adjust based on your selection.</small>
+                    <strong>Salary Details</strong>
+                    <small>Capture current and expected salary. Related values continue to calculate automatically.</small>
                   </span>
-                </div>
-                <div class="br-hero-help">
-                  <i class="fa-regular fa-circle-info"></i>
-                  <span>Choose how this talent will be offered to clients.</span>
                 </div>
               </div>
 
@@ -939,8 +935,8 @@ if($snp_mode== 1){
                   <div class="br-step-head">
                     <span class="br-step-num">1</span>
                     <span>
-                      <strong>Commercial Model <span class="rq">*</span></strong>
-                      <small>Select how this talent will be offered to clients</small>
+                      <strong>Service Model <span class="rq">*</span></strong>
+                      <small>Existing client billing preference</small>
                     </span>
                   </div>
                   <div class="br-model-grid">
@@ -970,8 +966,8 @@ if($snp_mode== 1){
                     <div class="br-step-head">
                       <span class="br-step-num">2</span>
                       <span>
-                        <strong>Rates &amp; Cost Details</strong>
-                        <small>Enter candidate cost and client bill rate. Other values will be calculated automatically.</small>
+                        <strong>Salary Inputs</strong>
+                        <small>Enter either current or expected salary. Related values calculate automatically.</small>
                       </span>
                     </div>
                     <div class="br-currency">
@@ -1001,14 +997,17 @@ if($snp_mode== 1){
                   </div>
 
                   <div class="d-none">
-                    <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="pay_rate_mode" id="pay_rate_mode">
+                    @php
+                      $selectedSalaryMode = @$application->pay_rate_mode ?? @$application->bill_rate_mode ?? 2;
+                    @endphp
+                    <select class="form-select form-select-solid" aria-label="Select current salary mode" name="pay_rate_mode" id="pay_rate_mode">
                     @foreach($salaryMode as $key=>$val)
-                      <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>
+                      <option value="{{ $key }}" {{ ((int) $selectedSalaryMode === (int) $key) ? 'selected' : '' }}>{{ $val }}</option>
                     @endforeach
                     </select>
-                    <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="bill_rate_mode" id="bill_rate_mode">
+                    <select class="form-select form-select-solid" aria-label="Select expected salary mode" name="bill_rate_mode" id="bill_rate_mode">
                     @foreach($salaryMode as $key=>$val)
-                      <option value="{{ $key }}" {{ (2==$key) ? 'selected' : '' }}>{{ $val }}</option>
+                      <option value="{{ $key }}" {{ ((int) $selectedSalaryMode === (int) $key) ? 'selected' : '' }}>{{ $val }}</option>
                     @endforeach
                     </select>
                     <select name="bill_rate_currency" id="bill_rate_currency">
@@ -1058,33 +1057,33 @@ if($snp_mode== 1){
                       <div class="br-panel-head">
                         <span class="br-panel-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
                         <span>
-                          <strong>Candidate Cost (Pay Rate)</strong>
-                          <small>What you pay to the candidate</small>
+                          <strong>Current Salary</strong>
+                          <small>What the candidate currently earns.</small>
                         </span>
                       </div>
                       <div class="br-rate-tabs" data-rate-tabs="pay">
-                        <button type="button" class="is-active" data-rate-tab="annual">Annual</button>
-                        <button type="button" data-rate-tab="monthly">Monthly</button>
-                        <button type="button" data-rate-tab="hourly">Hourly</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 0) ? 'is-active' : '' }}" data-rate-tab="annual" aria-pressed="{{ ((int) $selectedSalaryMode === 0) ? 'true' : 'false' }}">Annual</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 1) ? 'is-active' : '' }}" data-rate-tab="monthly" aria-pressed="{{ ((int) $selectedSalaryMode === 1) ? 'true' : 'false' }}">Monthly</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 2) ? 'is-active' : '' }}" data-rate-tab="hourly" aria-pressed="{{ ((int) $selectedSalaryMode === 2) ? 'true' : 'false' }}">Hourly</button>
                       </div>
-                      <div class="br-rate-field is-active" data-rate-panel="pay-annual">
-                        <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 0) ? 'is-active' : '' }}" data-rate-panel="pay-annual">
+                        <label>Current Salary (Annual) Approx <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
                         </div>
                         <span class="form-text text-muted payrateannual"></span>
                       </div>
-                      <div class="br-rate-field" data-rate-panel="pay-monthly">
-                        <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 1) ? 'is-active' : '' }}" data-rate-panel="pay-monthly">
+                        <label>Current Salary (Monthly) Approx <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
                         </div>
                         <span class="form-text text-muted payratemonthly"></span>
                       </div>
-                      <div class="br-rate-field" data-rate-panel="pay-hourly">
-                        <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 2) ? 'is-active' : '' }}" data-rate-panel="pay-hourly">
+                        <label>Current Salary (Hourly) Approx <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
@@ -1105,33 +1104,33 @@ if($snp_mode== 1){
                       <div class="br-panel-head">
                         <span class="br-panel-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                         <span>
-                          <strong>Client Bill Rate</strong>
-                          <small>What you charge to the client</small>
+                          <strong>Expected Salary</strong>
+                          <small>What the candidate expects to earn.</small>
                         </span>
                       </div>
                       <div class="br-rate-tabs" data-rate-tabs="bill">
-                        <button type="button" class="is-active" data-rate-tab="annual">Annual</button>
-                        <button type="button" data-rate-tab="monthly">Monthly</button>
-                        <button type="button" data-rate-tab="hourly">Hourly</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 0) ? 'is-active' : '' }}" data-rate-tab="annual" aria-pressed="{{ ((int) $selectedSalaryMode === 0) ? 'true' : 'false' }}">Annual</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 1) ? 'is-active' : '' }}" data-rate-tab="monthly" aria-pressed="{{ ((int) $selectedSalaryMode === 1) ? 'true' : 'false' }}">Monthly</button>
+                        <button type="button" class="{{ ((int) $selectedSalaryMode === 2) ? 'is-active' : '' }}" data-rate-tab="hourly" aria-pressed="{{ ((int) $selectedSalaryMode === 2) ? 'true' : 'false' }}">Hourly</button>
                       </div>
-                      <div class="br-rate-field is-active" data-rate-panel="bill-annual">
-                        <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 0) ? 'is-active' : '' }}" data-rate-panel="bill-annual">
+                        <label>Expected Salary (Annual) Approx <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
                         </div>
                         <span class="form-text text-muted billrateannual"></span>
                       </div>
-                      <div class="br-rate-field" data-rate-panel="bill-monthly">
-                        <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 1) ? 'is-active' : '' }}" data-rate-panel="bill-monthly">
+                        <label>Expected Salary (Monthly) Approx <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
                         </div>
                         <span class="form-text text-muted billratemonthly"></span>
                       </div>
-                      <div class="br-rate-field" data-rate-panel="bill-hourly">
-                        <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
+                      <div class="br-rate-field {{ ((int) $selectedSalaryMode === 2) ? 'is-active' : '' }}" data-rate-panel="bill-hourly">
+                        <label>Expected Salary (Hourly) Approx <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
                           <span class="ig-a changeTextCurrency">INR</span>
@@ -1152,29 +1151,35 @@ if($snp_mode== 1){
                       <div class="br-panel-head">
                         <span class="br-panel-icon"><i class="fa-solid fa-chart-simple"></i></span>
                         <span>
-                          <strong>Margin Summary</strong>
-                          <small>Calculated automatically</small>
+                          <strong>Salary Summary</strong>
+                          <small>Calculated from the entered values.</small>
                         </span>
                       </div>
                       <div class="br-margin-list">
-                        <span><em id="br_summary_pay_label">Annual Pay Rate</em><b id="br_summary_pay_annual">0</b></span>
-                        <span><em id="br_summary_bill_label">Annual Bill Rate</em><b id="br_summary_bill_annual">0</b></span>
-                        <span><em id="br_summary_margin_label">Annual Margin</em><b id="br_summary_margin">0</b></span>
-                        <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
+                        <span><em id="br_summary_pay_label">Current Salary (Annual)</em><b id="br_summary_pay_annual">0</b></span>
+                        <span><em id="br_summary_bill_label">Expected Salary (Annual)</em><b id="br_summary_bill_annual">0</b></span>
+                        <span><em id="br_summary_margin_label">Expected Increase</em><b id="br_summary_margin">0%</b></span>
+                      </div>
+                      <div class="fg br-hike-field">
+                        <label for="percentage_hike">Hike Percentage</label>
+                        <div class="ig">
+                          <input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" placeholder="Enter hike percentage" />
+                          <span class="ig-a">%</span>
+                        </div>
+                        <small>Calculated from annual salary.</small>
                       </div>
                       <div class="br-margin-state">
                         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                         <span><strong id="br_margin_status">Healthy Margin</strong><small id="br_margin_note">This margin looks good.</small></span>
                       </div>
-                      <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
                     </div>
                   </div>
                   <div class="br-comments-card">
                     <div class="br-comments-head">
                       <span class="br-comments-icon"><i class="fa-solid fa-comment-dots" aria-hidden="true"></i></span>
-                      <span><strong>Comments (Optional)</strong><small>Add any commercial notes for internal reference.</small></span>
+                      <span><strong>Comments <em>(Optional)</em></strong><small>Add salary expectations or internal compensation notes.</small></span>
                     </div>
-                    <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations, client specific rates or any other details..." rows="3">{{ @$application->comment }}</textarea>
+                    <textarea name="comment" id="comment" maxlength="500" placeholder="Enter comments about salary expectations or any other details..." rows="3">{{ @$application->comment }}</textarea>
                     <div class="cc" id="br_comment_count">0 / 500</div>
                   </div>
                 </div>
@@ -2028,6 +2033,12 @@ $(document).ready(function () {
     const currencyRateschar = @json($currencyKeys);
 
     let isUpdating = false;
+    let activeSalaryRateTab = 'annual';
+    const salaryRateModeValues = {
+        annual: '0',
+        monthly: '1',
+        hourly: '2'
+    };
 
     // Base values (USD)
     let payBase = { hourly: 0 };
@@ -2047,6 +2058,11 @@ $(document).ready(function () {
             maximumFractionDigits: 2
         });
         return suffix ? formatted + suffix : formatted;
+    }
+
+    function commercialMoney(value) {
+        let currency = $.trim($('#pay_rate_currency option:selected').text()) || 'INR';
+        return currency + ' ' + commercialFormat(value);
     }
 
     let commercialSavedPaidValues = null;
@@ -2086,61 +2102,76 @@ $(document).ready(function () {
     }
 
     function syncCommercialRateTab(tab) {
+        if (!salaryRateModeValues.hasOwnProperty(tab)) {
+            tab = 'annual';
+        }
+
+        activeSalaryRateTab = tab;
         $('.br-rate-tabs button').removeClass('is-active');
-        $('.br-rate-tabs button[data-rate-tab="' + tab + '"]').addClass('is-active');
+        $('.br-rate-tabs button').attr('aria-pressed', 'false');
+        $('.br-rate-tabs button[data-rate-tab="' + tab + '"]').addClass('is-active').attr('aria-pressed', 'true');
         $('.br-rate-field').removeClass('is-active');
         $('[data-rate-panel="pay-' + tab + '"], [data-rate-panel="bill-' + tab + '"]').addClass('is-active');
+        $('#pay_rate_mode, #bill_rate_mode').val(salaryRateModeValues[tab]);
     }
 
     function activeCommercialRateTab() {
-        return $('.br-rate-tabs button.is-active').first().data('rate-tab') || 'annual';
+        return activeSalaryRateTab;
+    }
+
+    function salaryTabFromMode(mode) {
+        let selectedMode = (mode === null || typeof mode === 'undefined') ? '2' : mode.toString();
+        let matchingTab = Object.keys(salaryRateModeValues).find(function (tab) {
+            return salaryRateModeValues[tab] === selectedMode;
+        });
+        return matchingTab || 'hourly';
     }
 
     function commercialModeConfig(tab, values) {
         let config = {
             annual: {
-                payLabel: 'Annual Pay Rate',
-                billLabel: 'Annual Bill Rate',
-                marginLabel: 'Annual Margin',
+                payLabel: 'Current Salary (Annual)',
+                billLabel: 'Expected Salary (Annual)',
+                marginLabel: 'Expected Increase',
                 basePay: values.payAnnual,
                 baseBill: values.billAnnual,
-                payAutoOneLabel: 'Monthly Cost',
+                payAutoOneLabel: 'Monthly Salary',
                 payAutoOneValue: values.payMonthly,
-                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoLabel: 'Hourly Salary',
                 payAutoTwoValue: values.payHourly,
-                billAutoOneLabel: 'Monthly Bill Rate',
+                billAutoOneLabel: 'Monthly Salary',
                 billAutoOneValue: values.billMonthly,
-                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoLabel: 'Hourly Salary',
                 billAutoTwoValue: values.billHourly
             },
             monthly: {
-                payLabel: 'Monthly Pay Rate',
-                billLabel: 'Monthly Bill Rate',
-                marginLabel: 'Monthly Margin',
+                payLabel: 'Current Salary (Monthly)',
+                billLabel: 'Expected Salary (Monthly)',
+                marginLabel: 'Expected Increase',
                 basePay: values.payMonthly,
                 baseBill: values.billMonthly,
-                payAutoOneLabel: 'Annual Cost',
+                payAutoOneLabel: 'Annual Salary',
                 payAutoOneValue: values.payAnnual,
-                payAutoTwoLabel: 'Hourly Cost',
+                payAutoTwoLabel: 'Hourly Salary',
                 payAutoTwoValue: values.payHourly,
-                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneLabel: 'Annual Salary',
                 billAutoOneValue: values.billAnnual,
-                billAutoTwoLabel: 'Hourly Bill Rate',
+                billAutoTwoLabel: 'Hourly Salary',
                 billAutoTwoValue: values.billHourly
             },
             hourly: {
-                payLabel: 'Hourly Pay Rate',
-                billLabel: 'Hourly Bill Rate',
-                marginLabel: 'Hourly Margin',
+                payLabel: 'Current Salary (Hourly)',
+                billLabel: 'Expected Salary (Hourly)',
+                marginLabel: 'Expected Increase',
                 basePay: values.payHourly,
                 baseBill: values.billHourly,
-                payAutoOneLabel: 'Annual Cost',
+                payAutoOneLabel: 'Annual Salary',
                 payAutoOneValue: values.payAnnual,
-                payAutoTwoLabel: 'Monthly Cost',
+                payAutoTwoLabel: 'Monthly Salary',
                 payAutoTwoValue: values.payMonthly,
-                billAutoOneLabel: 'Annual Bill Rate',
+                billAutoOneLabel: 'Annual Salary',
                 billAutoOneValue: values.billAnnual,
-                billAutoTwoLabel: 'Monthly Bill Rate',
+                billAutoTwoLabel: 'Monthly Salary',
                 billAutoTwoValue: values.billMonthly
             }
         };
@@ -2190,31 +2221,22 @@ $(document).ready(function () {
         $('#br_bill_auto_label_two').text(modeConfig.billAutoTwoLabel);
         $('#br_pay_monthly_display').text(commercialFormat(modeConfig.payAutoOneValue));
         $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
-        $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
+        $('#br_summary_pay_label').text(modeConfig.payLabel);
+        $('#br_summary_bill_label').text(modeConfig.billLabel);
+        $('#br_summary_margin_label').text(modeConfig.marginLabel);
+        $('#br_summary_pay_annual').text(commercialMoney(modeConfig.basePay));
+        $('#br_summary_bill_annual').text(isFree ? commercialMoney(0) : commercialMoney(modeConfig.baseBill));
+        $('#br_summary_margin').text(isFree ? '0%' : commercialFormat(displayedPercent, '%'));
 
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
             $('#br_bill_hourly_display').text('No billing');
-            $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
-            $('#br_summary_bill_annual').text('Disabled');
-            $('#br_summary_margin').text('Not billed');
-            $('#br_summary_percent').text('Free Service');
             $('.br-margin-state').removeClass('is-low').addClass('is-free');
             $('#br_margin_status').text('Free Service Selected');
             $('#br_margin_note').text('This talent will be offered to clients without commercial billing. Client bill rate is not required.');
         } else {
             $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
             $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
-            $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
-            $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
-            $('#br_summary_margin').text(commercialFormat(margin) + ' (' + commercialFormat(displayedPercent, '%') + ')');
-            $('#br_summary_percent').text('Paid Service');
             $('.br-margin-state').removeClass('is-free').toggleClass('is-low', needsMarginReview);
             $('#br_margin_status').text(needsMarginReview ? 'Review Margin' : 'Paid Service Selected');
             $('#br_margin_note').text(needsMarginReview ? 'Please review the configured bill rate.' : 'Client will be billed. Set pay rate, bill rate and manage margin.');
@@ -2269,10 +2291,15 @@ $(document).ready(function () {
         let tab = $(this).data('rate-tab');
 
         syncCommercialRateTab(tab);
+        refreshCommercialSummary();
         $('[data-rate-panel="' + group + '-' + tab + '"] input').trigger('focus');
     });
 
     $(document).on('change', '#comission_type', applyCommercialMode);
+    $(document).on('change', '#pay_rate_mode, #bill_rate_mode', function () {
+        syncCommercialRateTab(salaryTabFromMode($(this).val()));
+        refreshCommercialSummary();
+    });
     $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment', refreshCommercialSummary);
 
     window.isFreeCommercialMode = isFreeCommercialMode;
@@ -2485,6 +2512,8 @@ $(document).ready(function () {
         updateBillUI();
         updatePayUI();
     });
+    syncCommercialRateTab(salaryTabFromMode($('#pay_rate_mode').val()));
+    refreshCommercialSummary();
     setTimeout(() => {
           applyCommercialMode();
           payRateUpdate();
