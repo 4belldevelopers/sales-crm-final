@@ -418,10 +418,9 @@ if($snp_mode== 1){
                   <span class="bd-hero-icon"><i class="fa-regular fa-user"></i></span>
                   <span>
                     <strong>Candidate Profile</strong>
-                    <small>Basic information to identify and contact this internal talent.</small>
+                    <small>Basic information to identify and contact this candidate.</small>
                   </span>
                 </div>
-                <span class="bd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
               <div class="fsc bd-body">
                 <div class="bd-grid bd-grid--three">
@@ -433,14 +432,14 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Professional Email (Not Disclosed to Client) <span class="rq">*</span></label>
+                    <label>Primary Email <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-envelope"></i>
                       <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Mobile Number (Not Disclosed to Client) <span class="rq">*</span></label>
+                    <label>Primary Contact Number <span class="rq">*</span></label>
                     <div class="bd-phone-control">
                       <i class="fa-solid fa-mobile-screen-button"></i>
                       <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
@@ -490,11 +489,41 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
+                <div class="bd-grid bd-grid--three bd-grid--personal">
+                  <div class="fg fv-row bd-field">
+                    <label>Gender</label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-user"></i>
+                      <select name="gender" id="gender">
+                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row bd-field">
+                    <label>Date of Birth</label>
+                    <div class="bd-control bd-control--date">
+                      <i class="fa-regular fa-calendar-days"></i>
+                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                    </div>
+                  </div>
+                </div>
+
                 @php
                   $hasSecondaryContact = !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile);
                 @endphp
                 <details class="bd-secondary" {{ $hasSecondaryContact ? 'open' : '' }}>
-                  <summary><i class="fa-solid fa-plus"></i> Add Secondary Contact (Optional)</summary>
+                  <summary>
+                    <span class="bd-secondary-title">
+                      <span class="bd-secondary-icon"><i class="fa-solid fa-ellipsis"></i></span>
+                      <span>
+                        <strong>Additional Secondary Contact</strong>
+                        <small>Optional secondary email and contact number for alternate communication.</small>
+                      </span>
+                    </span>
+                    <span class="bd-secondary-action">Show Details <i class="fa-solid fa-chevron-down"></i></span>
+                  </summary>
                   <div class="bd-grid bd-grid--two bd-secondary-grid">
                     <div class="fg fv-row bd-field">
                       <label>Secondary Email</label>
@@ -513,39 +542,6 @@ if($snp_mode== 1){
                     </div>
                   </div>
                 </details>
-
-                <details class="bd-extra" open>
-                  <summary>
-                    <span class="bd-extra-title">
-                      <span class="bd-extra-icon"><i class="fa-solid fa-ellipsis"></i></span>
-                      <span>
-                        <strong>Additional Personal Information</strong>
-                        <small>These details are optional and can be added if required.</small>
-                      </span>
-                    </span>
-                    <span class="bd-extra-action">Show Details <i class="fa-solid fa-chevron-down"></i></span>
-                  </summary>
-                  <div class="bd-grid bd-grid--two bd-extra-grid">
-                    <div class="fg fv-row bd-field">
-                      <label>Gender</label>
-                      <div class="bd-control bd-control--select">
-                        <i class="fa-regular fa-user"></i>
-                        <select name="gender" id="gender">
-                          <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                          <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                          <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="fg fv-row bd-field">
-                      <label>Date of Birth</label>
-                      <div class="bd-control">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
-                      </div>
-                    </div>
-                  </div>
-                </details>
               </div>
             </div>
 
@@ -559,46 +555,40 @@ if($snp_mode== 1){
             </div>
 
             <!-- Professional Details -->
-            <div class="fs pd-card">
+            <div class="fs pd-card pd-card--professional">
               <div class="pd-hero">
                 <div class="pd-hero-title">
                   <span class="pd-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
                   <span>
                     <strong>Professional Profile</strong>
-                    <small>Define the professional experience and role for this talent. This helps position them correctly in the marketplace.</small>
+                    <small>Define the candidate's current professional role and employment type.</small>
                   </span>
                 </div>
-                <span class="pd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
               <div class="fsc pd-body">
-                <div class="pd-info-strip">
-                  <i class="fa-regular fa-circle-info"></i>
-                  <span>Some details may be pre-filled from your internal employee records. Please review and update if needed.</span>
-                </div>
-
-                <div class="pd-field-grid pd-field-grid--two">
+                <div class="pd-field-grid pd-professional-primary">
                   <div class="fg fv-row pd-field">
                     <label>Current Company <span class="rq">*</span></label>
                     <div class="pd-control">
                       <i class="fa-regular fa-building"></i>
                       <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company ?: $account_company_name }}" placeholder="Enter current company" />
+                      <button type="button" class="pd-control-clear" data-clear-target="current_company" aria-label="Clear current company"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
-                    <small>Auto-filled from employee records</small>
+                    <small>e.g. TCS, Infosys, Amazon</small>
                   </div>
                   <div class="fg fv-row pd-field">
                     <label>Current Designation <span class="rq">*</span></label>
                     <div class="pd-control">
                       <i class="fa-solid fa-briefcase"></i>
                       <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
+                      <button type="button" class="pd-control-clear" data-clear-target="current_designation" aria-label="Clear current designation"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                     </div>
+                    <small>e.g. Software Engineer, Product Manager</small>
                   </div>
-                </div>
-
-                <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
                   <div class="fg fv-row pd-field">
                     <label>Employment Type <span class="rq">*</span></label>
                     <div class="pd-control pd-control--select">
-                      <i class="fa-solid fa-users"></i>
+                      <i class="fa-regular fa-building"></i>
                       <select name="employmentType" id="EmploymentType">
                         <option value="">Select employment type</option>
                         <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
@@ -608,6 +598,9 @@ if($snp_mode== 1){
                       </select>
                     </div>
                   </div>
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row pd-professional-secondary">
                   <div class="fg fv-row d-none">
                       <label>Commission Type <span class="rq">*</span></label>
                       @php
@@ -638,20 +631,22 @@ if($snp_mode== 1){
             <div class="fs pd-experience-section-card">
               <div class="pd-experience-hero">
                 <div class="pd-experience-hero-title">
-                  <span class="pd-experience-hero-icon"><i class="fa-solid fa-chart-line"></i></span>
+                  <span class="pd-experience-hero-icon"><i class="fa-solid fa-chart-column"></i></span>
                   <span>
                     <strong>Experience Details</strong>
-                    <small>Capture total and relevant experience for marketplace positioning.</small>
+                    <small>Capture total and relevant experience for this job application.</small>
                   </span>
                 </div>
-                <span class="pd-experience-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
               <div class="fsc pd-experience-body">
                 <div class="pd-experience-grid">
                   <div class="fg fv-row pd-exp-card">
                     <div class="pd-exp-head">
                       <span><i class="fa-regular fa-clock"></i></span>
-                      <strong>Total Experience <span class="rq rq-star" aria-hidden="true"><i class="fa-solid fa-star"></i></span></strong>
+                      <div>
+                        <strong>Total Experience <span class="rq">*</span></strong>
+                        <small>Your overall professional experience.</small>
+                      </div>
                     </div>
                     <div class="ei pd-exp-inputs">
                       @php
@@ -669,55 +664,64 @@ if($snp_mode== 1){
                        }
                       @endphp
 
-                      <select id="total_exp_year" name="total_exp_year">
-                        <option value="">Years</option>
-                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option> 
-                        @php 
-                            for ($i = 1; $i <= 60; $i++) {
-                                  $selected = '';
-                                  $s = 'Year';
-                                  if($i > 1){
-                                      $s = 'Years';
-                                  }
-                                  if(is_null($selected_exp_year)){
+                      <label class="pd-exp-field">
+                        <span>Years</span>
+                        <select id="total_exp_year" name="total_exp_year">
+                          <option value="">Years</option>
+                          <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                          @php
+                              for ($i = 1; $i <= 60; $i++) {
                                     $selected = '';
-                                  }else{
-                                    if($i==$selected_exp_year){
-                                      $selected =  'selected';
+                                    $s = 'Year';
+                                    if($i > 1){
+                                        $s = 'Years';
+                                    }
+                                    if(is_null($selected_exp_year)){
+                                      $selected = '';
+                                    }else{
+                                      if($i==$selected_exp_year){
+                                        $selected =  'selected';
+                                    }
+                                    }
+                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                                   }
-                                  }
-                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                            }
-                          @endphp
-                      </select>
-                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
-                          <option value="">Select Month</option>
-                          @php 
-                                       for ($i = 0; $i <= 11; $i++) {
-                                              $selected = '';
-                                              $s = 'Month';
-                                              if($i > 1){
-                                                 $s = 'Months';
-                                              }
-                                              if(is_null($selected_exp_month)){
-                                                $selected = '';
-                                              }else{
-                                                if($i==$selected_exp_month){
-                                                  $selected =  'selected';
-                                              }
-                                              }
-                                              
-                                            echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                        }
-                          @endphp
+                            @endphp
                         </select>
+                      </label>
+                      <label class="pd-exp-field">
+                        <span>Months</span>
+                        <select class="" aria-label="Select total experience month" id="total_exp_month" name="total_exp_month">
+                            <option value="">Select Month</option>
+                            @php
+                                         for ($i = 0; $i <= 11; $i++) {
+                                                $selected = '';
+                                                $s = 'Month';
+                                                if($i > 1){
+                                                   $s = 'Months';
+                                                }
+                                                if(is_null($selected_exp_month)){
+                                                  $selected = '';
+                                                }else{
+                                                  if($i==$selected_exp_month){
+                                                    $selected =  'selected';
+                                                }
+                                                }
+
+                                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                            @endphp
+                        </select>
+                      </label>
                     </div>
                   </div>
 
-                  <div class="fg fv-row pd-exp-card pd-exp-card--blue">
+                  <div class="fg fv-row pd-exp-card pd-exp-card--relevant">
                     <div class="pd-exp-head">
-                      <span><i class="fa-regular fa-file-lines"></i></span>
-                      <strong>Relevant Experience <span class="rq rq-star" aria-hidden="true"><i class="fa-solid fa-star"></i></span></strong>
+                      <span><i class="fa-solid fa-briefcase"></i></span>
+                      <div>
+                        <strong>Relevant Experience <span class="rq">*</span></strong>
+                        <small>Experience relevant to this job or required skills.</small>
+                      </div>
                     </div>
                     <div class="ei pd-exp-inputs">
                         @php
@@ -741,57 +745,73 @@ if($snp_mode== 1){
                             //  dd($selected_rel_exp_year,$selected_rel_exp_month);
 
                         @endphp
-                      <select id="rel_exp_year" name="rel_exp_year">
-                        <option value="">Years</option>
-                        <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>   
-                        @php 
-                              for ($i = 1; $i <= 60; $i++) {
-                                    $selected = '';
-                                    $s = 'Year';
-                                    if($i > 1){
-                                        $s = 'Years';
-                                    }
-                                    
-                                  if(is_null($selected_rel_exp_year)){
-                                      $selected = '';
-                                    }else{
-                                      if($i==$selected_rel_exp_year){
-                                        $selected =  'selected';
-                                    }
-                                    }
-                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                              }
-                        @endphp
-                      </select>
-                      <select class="" arial-label="Select rel_exp_month" id="rel_exp_month" name="rel_exp_month">
-                          <option value="">Select Month</option>
+                      <label class="pd-exp-field">
+                        <span>Years</span>
+                        <select id="rel_exp_year" name="rel_exp_year">
+                          <option value="">Years</option>
+                          <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>
                           @php 
-                                        for ($i = 0; $i <= 11; $i++) {
-                                             $selected = '';
-                                              $s = 'Month';
-                                              if($i > 1){
-                                                 $s = 'Months';
-                                              }
-                                              if(is_null($selected_rel_exp_month)){
-                                                $selected = '';
-                                              }else{
-                                                if($i==$selected_rel_exp_month){
-                                                  $selected =  'selected';
-                                              }
-                                              }
-                                            echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                                        }
+                                for ($i = 1; $i <= 60; $i++) {
+                                      $selected = '';
+                                      $s = 'Year';
+                                      if($i > 1){
+                                          $s = 'Years';
+                                      }
+
+                                    if(is_null($selected_rel_exp_year)){
+                                        $selected = '';
+                                      }else{
+                                        if($i==$selected_rel_exp_year){
+                                          $selected =  'selected';
+                                      }
+                                      }
+                                    echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                }
                           @endphp
                         </select>
+                      </label>
+                      <label class="pd-exp-field">
+                        <span>Months</span>
+                        <select class="" aria-label="Select relevant experience month" id="rel_exp_month" name="rel_exp_month">
+                            <option value="">Select Month</option>
+                            @php
+                                          for ($i = 0; $i <= 11; $i++) {
+                                               $selected = '';
+                                                $s = 'Month';
+                                                if($i > 1){
+                                                   $s = 'Months';
+                                                }
+                                                if(is_null($selected_rel_exp_month)){
+                                                  $selected = '';
+                                                }else{
+                                                  if($i==$selected_rel_exp_month){
+                                                    $selected =  'selected';
+                                                }
+                                                }
+                                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                            @endphp
+                        </select>
+                      </label>
                     </div>
-                    <small>Relevant experience in the recommended/primary skills.</small>
+                    <div class="pd-exp-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Relevant experience in the recommended or primary skills for this job.</span></div>
                   </div>
 
                   <div class="pd-tip-card">
-                    <span class="pd-tip-icon"><i class="fa-regular fa-lightbulb"></i></span>
-                    <div>
-                      <strong>Tip</strong>
-                      <p>Relevant experience should match the skills you want to position this talent for in the marketplace.</p>
+                    <div class="pd-tip-head">
+                      <span class="pd-tip-icon"><i class="fa-regular fa-lightbulb"></i></span>
+                      <div>
+                        <strong>Tip</strong>
+                        <p>Relevant experience should match the skills required for this job.</p>
+                      </div>
+                    </div>
+                    <div class="pd-tip-examples">
+                      <strong>Examples:</strong>
+                      <ul>
+                        <li>If the job requires Laravel, mention your Laravel experience here.</li>
+                        <li>Exclude unrelated experience.</li>
+                        <li>Freshers can select 0 years.</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -1162,46 +1182,84 @@ if($snp_mode== 1){
             </div>
 
             <!-- Skills Details -->
+            @php
+              $requiredJobSkills = $requiredJobSkills ?? [];
+              $jobSkillMatch = $jobSkillMatch ?? ['percentage' => 0, 'matched_count' => 0, 'total' => 0];
+              $jobSkillPercentage = (int) ($jobSkillMatch['percentage'] ?? 0);
+              $jobSkillRequiredCount = (int) ($jobSkillMatch['total'] ?? count($requiredJobSkills));
+              $jobSkillMatchedCount = (int) ($jobSkillMatch['matched_count'] ?? 0);
+            @endphp
             <div class="fs se-card">
               <div class="se-hero">
                 <div class="se-title">
-                  <span class="se-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                  <span class="se-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
                   <span>
-                    <strong>Skills &amp; Expertise</strong>
-                    <small>Add the skills this talent can be positioned and searched for in the marketplace.</small>
+                    <strong>Primary Skills <span class="rq">*</span></strong>
+                    <small>Add the candidate's strongest skills and specializations.</small>
                   </span>
                 </div>
-                <div class="se-actions">
-                   <span class="se-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
-                </div>
-              </div>
-              <div class="fsc">
-                <div class="se-table-scroll">
-                 <table class="sk">
-                  <thead>
-                    <tr>
-                      <th>Skill <span class="rq">*</span></th>
-                      <th>Experience (Years) <span class="rq">*</span></th>
-                      <th>Experience (Months)</th>
-                      <th>Proficiency Rating <span class="rq">*</span></th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="skillExperienceWrapper">
-                  </tbody>
-                 </table>
-                </div>
-                <datalist id="skillSuggestions"></datalist>
-                <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Skill</button>
-                <div class="se-popular">
-                  <span class="se-popular-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-                  <div class="se-popular-copy"><strong>Popular Skills</strong><small>Click to quickly add common skills</small></div>
-                  <div class="se-popular-list">
-                    @foreach (['Java', 'Python', 'React', 'Node.js', 'AWS', 'Azure', 'SQL', 'DevOps', 'Salesforce'] as $popularSkill)
-                      <button type="button" class="se-popular-skill" data-skill="{{ $popularSkill }}"><i class="fa-solid fa-plus" aria-hidden="true"></i> {{ $popularSkill }}</button>
-                    @endforeach
+                <div class="se-match {{ $jobSkillRequiredCount === 0 ? 'is-empty' : ($jobSkillPercentage === 100 ? 'is-complete' : '') }}" id="skillMatchPanel" aria-live="polite">
+                  <div class="se-match-ring" id="skillMatchRing" style="--match-percent: {{ $jobSkillPercentage }}">
+                    <span id="skillMatchPercentage">{{ $jobSkillRequiredCount > 0 ? $jobSkillPercentage.'%' : '--' }}</span>
+                  </div>
+                  <div class="se-match-copy">
+                    <strong>Job Skills Match</strong>
+                    <small id="skillMatchDetail">
+                      @if ($jobSkillRequiredCount === 0)
+                        No job skills defined
+                      @elseif ($jobSkillPercentage === 100)
+                        All required skills matched
+                      @else
+                        {{ $jobSkillMatchedCount }} of {{ $jobSkillRequiredCount }} required skills matched
+                      @endif
+                    </small>
                   </div>
                 </div>
+              </div>
+              <div class="fsc se-body">
+                <div class="se-skill-entry">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input type="text" id="primarySkillQuickInput" list="skillSuggestions" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" />
+                  <span class="se-skill-entry-divider"></span>
+                  <button type="button" id="primarySkillAddButton"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add</button>
+                </div>
+                <datalist id="skillSuggestions"></datalist>
+                <div class="se-selected-skills" id="primarySkillChips" aria-live="polite"></div>
+                <div class="se-selected-empty" id="primarySkillEmpty">No primary skills added yet.</div>
+
+                <div class="se-suggested" id="suggestedSkillsPanel" hidden>
+                  <div class="se-suggested-head">
+                    <span class="se-suggested-title">
+                      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                      <span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span>
+                    </span>
+                    <span class="se-remaining" id="remainingSkillCount"></span>
+                  </div>
+                  <div class="se-suggested-list" id="suggestedSkillsList"></div>
+                </div>
+
+                <details class="se-experience-details" id="skillExperienceDetails">
+                  <summary>
+                    <span><i class="fa-solid fa-sliders" aria-hidden="true"></i> Skill experience &amp; proficiency</span>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  </summary>
+                  <div class="se-table-scroll">
+                   <table class="sk">
+                    <thead>
+                      <tr>
+                        <th>Skill <span class="rq">*</span></th>
+                        <th>Experience (Years) <span class="rq">*</span></th>
+                        <th>Experience (Months)</th>
+                        <th>Proficiency Rating <span class="rq">*</span></th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="skillExperienceWrapper">
+                    </tbody>
+                   </table>
+                  </div>
+                  <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add another skill</button>
+                </details>
               </div>
             </div>
 
@@ -2448,10 +2506,183 @@ $(document).ready(function () {
     const experienceWrapper = document.getElementById('skillExperienceWrapper');
     const skillSuggestions = document.getElementById('skillSuggestions');
     const popularSkillButtons = document.querySelectorAll('.se-popular-skill');
+    const primarySkillQuickInput = document.getElementById('primarySkillQuickInput');
+    const primarySkillAddButton = document.getElementById('primarySkillAddButton');
+    const primarySkillChips = document.getElementById('primarySkillChips');
+    const primarySkillEmpty = document.getElementById('primarySkillEmpty');
+    const skillExperienceDetails = document.getElementById('skillExperienceDetails');
+    const skillMatchPanel = document.getElementById('skillMatchPanel');
+    const skillMatchRing = document.getElementById('skillMatchRing');
+    const skillMatchPercentage = document.getElementById('skillMatchPercentage');
+    const skillMatchDetail = document.getElementById('skillMatchDetail');
+    const suggestedSkillsPanel = document.getElementById('suggestedSkillsPanel');
+    const suggestedSkillsList = document.getElementById('suggestedSkillsList');
+    const remainingSkillCount = document.getElementById('remainingSkillCount');
+    const requiredJobSkills = @json(array_values($requiredJobSkills ?? []));
     let skillSuggestionTimer;
 
     function skillKey(value) {
         return String(value || '').trim().toLocaleLowerCase();
+    }
+
+    function skillName(value) {
+        if (typeof value === 'string') return value.trim();
+        return String(value && (value.skill_name || value.skill || value.name || value.value) || '').trim();
+    }
+
+    function decomposeSkillAlternatives(value) {
+        const parts = String(value || '').split(/[\/,|]|\bor\b/i).map(part => part.trim()).filter(Boolean);
+        return [...new Set(parts.length ? parts : [String(value || '').trim()])];
+    }
+
+    function normalizeSkillWord(value) {
+        const word = String(value || '').trim().toLocaleLowerCase();
+        const protectedNames = ['cypress', 'express', 'redis', 'kubernetes', 'jenkins', 'nodejs', 'nextjs', 'reactjs', 'vuejs', 'rxjs', 'postgres', 'postgresql', 'canvas', 'pandas', 'devops', 'spring', 'jboss'];
+        if (protectedNames.includes(word)) return word;
+        if (word.length > 3 && word.endsWith('ies')) return `${word.slice(0, -3)}y`;
+        if (word.length > 3 && word.endsWith('s') && !word.endsWith('ss')) return word.slice(0, -1);
+        return word;
+    }
+
+    function singleSkillMatches(requiredTerm, candidateTerm) {
+        const required = skillKey(requiredTerm);
+        const candidate = skillKey(candidateTerm);
+        if (!required || !candidate) return false;
+        if (required === candidate) return true;
+
+        const cleanRequired = required.replace(/[.\-_\s]+/g, '');
+        const cleanCandidate = candidate.replace(/[.\-_\s]+/g, '');
+        if (cleanRequired.length > 1 && cleanRequired === cleanCandidate) return true;
+
+        const normalizeTech = word => {
+            const normalized = normalizeSkillWord(word);
+            const frameworks = ['react', 'node', 'vue', 'angular', 'next', 'nuxt'];
+            return normalized.length > 4 && normalized.endsWith('js') && frameworks.includes(normalized.slice(0, -2))
+                ? normalized.slice(0, -2)
+                : normalized;
+        };
+        const cleanTokens = tokens => tokens.filter((token, index) => !(
+            token === 'js' && index > 0 && ['react', 'node', 'vue', 'angular', 'next', 'nuxt'].includes(tokens[index - 1])
+        ));
+        const requiredWords = cleanTokens(required.split(/[\s\-_.\/]+/).filter(Boolean).map(normalizeTech));
+        const candidateWords = cleanTokens(candidate.split(/[\s\-_.\/]+/).filter(Boolean).map(normalizeTech));
+        if (!requiredWords.length || candidateWords.length < requiredWords.length) return false;
+
+        for (let start = 0; start <= candidateWords.length - requiredWords.length; start++) {
+            if (requiredWords.every((word, offset) => candidateWords[start + offset] === word)) return true;
+        }
+        return false;
+    }
+
+    function skillsMatch(requiredSkill, candidateSkill) {
+        return decomposeSkillAlternatives(requiredSkill).some(requiredAlternative =>
+            decomposeSkillAlternatives(candidateSkill).some(candidateAlternative =>
+                singleSkillMatches(requiredAlternative, candidateAlternative)
+            )
+        );
+    }
+
+    function uniqueRequiredSkills() {
+        const unique = new Map();
+        requiredJobSkills.forEach(skill => {
+            const name = skillName(skill);
+            if (name) unique.set(skillKey(name), name);
+        });
+        return [...unique.values()];
+    }
+
+    function selectedSkillRows() {
+        const unique = new Map();
+        experienceWrapper.querySelectorAll('tr').forEach(row => {
+            const input = row.querySelector('[name="skills[]"]');
+            const name = input ? input.value.trim() : '';
+            if (name && !unique.has(skillKey(name))) unique.set(skillKey(name), { name, row });
+        });
+        return [...unique.values()];
+    }
+
+    function renderPrimarySkillUi() {
+        const selected = selectedSkillRows();
+        const required = uniqueRequiredSkills();
+        const matched = required.filter(requiredSkill => selected.some(candidate => skillsMatch(requiredSkill, candidate.name)));
+        const missing = required.filter(requiredSkill => !selected.some(candidate => skillsMatch(requiredSkill, candidate.name)));
+        const percentage = required.length ? Math.round((matched.length / required.length) * 100) : 0;
+
+        primarySkillChips.replaceChildren();
+        selected.forEach(candidate => {
+            const chip = document.createElement('span');
+            chip.className = 'se-selected-skill';
+
+            const label = document.createElement('button');
+            label.type = 'button';
+            label.className = 'se-selected-skill-label';
+            label.textContent = candidate.name;
+            label.title = 'Edit skill experience and proficiency';
+            label.addEventListener('click', () => {
+                skillExperienceDetails.open = true;
+                candidate.row.querySelector('[name="skills[]"]').focus();
+            });
+
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'se-selected-skill-remove';
+            remove.setAttribute('aria-label', `Remove ${candidate.name}`);
+            remove.title = `Remove ${candidate.name}`;
+            remove.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+            remove.addEventListener('click', () => candidate.row.querySelector('.ab').click());
+
+            chip.append(label, remove);
+            primarySkillChips.appendChild(chip);
+        });
+        primarySkillEmpty.hidden = selected.length > 0;
+
+        skillMatchPanel.classList.toggle('is-empty', required.length === 0);
+        skillMatchPanel.classList.toggle('is-complete', required.length > 0 && percentage === 100);
+        skillMatchRing.style.setProperty('--match-percent', percentage);
+        skillMatchPercentage.textContent = required.length ? `${percentage}%` : '--';
+        if (!required.length) {
+            skillMatchDetail.textContent = 'No job skills defined';
+        } else if (percentage === 100) {
+            skillMatchDetail.textContent = 'All required skills matched';
+        } else {
+            skillMatchDetail.textContent = `${matched.length} of ${required.length} required skills matched`;
+        }
+
+        suggestedSkillsList.replaceChildren();
+        missing.forEach(skill => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'se-suggested-skill';
+            button.dataset.skill = skill;
+            const name = document.createElement('span');
+            name.textContent = skill;
+            const icon = document.createElement('i');
+            icon.className = 'fa-solid fa-plus';
+            icon.setAttribute('aria-hidden', 'true');
+            button.append(name, icon);
+            suggestedSkillsList.appendChild(button);
+        });
+        remainingSkillCount.textContent = `${missing.length} remaining ${missing.length === 1 ? 'skill' : 'skills'}`;
+        suggestedSkillsPanel.hidden = required.length === 0 || missing.length === 0;
+    }
+
+    function queueSkillSuggestions(input) {
+        clearTimeout(skillSuggestionTimer);
+        const query = input.value.trim();
+        if (query.length < 2) return;
+        skillSuggestionTimer = setTimeout(() => {
+            $.get('{{ url('/') }}/skill-suggestions', { q: query }).done(results => {
+                if (document.activeElement !== input || input.value.trim() !== query || !Array.isArray(results)) return;
+                skillSuggestions.replaceChildren();
+                results.forEach(result => {
+                    const value = skillName(result);
+                    if (!value) return;
+                    const option = document.createElement('option');
+                    option.value = value;
+                    skillSuggestions.appendChild(option);
+                });
+            });
+        }, 250);
     }
 
     function findSkillRow(value, except = null) {
@@ -2466,6 +2697,7 @@ $(document).ready(function () {
             button.classList.toggle('is-added', selected);
             button.setAttribute('aria-pressed', String(selected));
         });
+        renderPrimarySkillUi();
     }
 
     // Keep skills and their experience fields in the same submitted row.
@@ -2530,22 +2762,7 @@ $(document).ready(function () {
         });
         input.addEventListener('input', () => {
             updatePopularSkills();
-            clearTimeout(skillSuggestionTimer);
-            const query = input.value.trim();
-            if (query.length < 2) return;
-            skillSuggestionTimer = setTimeout(() => {
-                $.get('{{ url('/') }}/skill-suggestions', { q: query }).done(results => {
-                    if (document.activeElement !== input || input.value.trim() !== query || !Array.isArray(results)) return;
-                    skillSuggestions.replaceChildren();
-                    results.forEach(result => {
-                        const value = typeof result === 'string' ? result : (result.value || result.name || '');
-                        if (!value) return;
-                        const option = document.createElement('option');
-                        option.value = value;
-                        skillSuggestions.appendChild(option);
-                    });
-                });
-            }, 250);
+            queueSkillSuggestions(input);
         });
         row.querySelector('.ab').addEventListener('click', () => {
             if ($.fn.select2) $(row).find('.se-field--select select').select2('destroy');
@@ -2589,11 +2806,38 @@ $(document).ready(function () {
     if (!experienceWrapper.children.length) addSkillExperience();
 
     document.querySelector('.se-card .asb').addEventListener('click', () => {
+        skillExperienceDetails.open = true;
         addSkillExperience().querySelector('[name="skills[]"]').focus();
     });
     popularSkillButtons.forEach(button => button.addEventListener('click', () => {
         addSkillExperience(button.dataset.skill).querySelector('[name="skills[]"]').focus();
     }));
+
+    function addQuickPrimarySkill(value) {
+        const name = String(value || '').trim();
+        if (!name) {
+            primarySkillQuickInput.focus();
+            return;
+        }
+        const row = addSkillExperience(name);
+        primarySkillQuickInput.value = '';
+        updatePopularSkills();
+        skillExperienceDetails.open = true;
+        row.querySelector('[name="skills[]"]').focus();
+    }
+
+    primarySkillAddButton.addEventListener('click', () => addQuickPrimarySkill(primarySkillQuickInput.value));
+    primarySkillQuickInput.addEventListener('keydown', event => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        addQuickPrimarySkill(primarySkillQuickInput.value);
+    });
+    primarySkillQuickInput.addEventListener('input', () => queueSkillSuggestions(primarySkillQuickInput));
+    suggestedSkillsList.addEventListener('click', event => {
+        const button = event.target.closest('.se-suggested-skill');
+        if (button) addQuickPrimarySkill(button.dataset.skill);
+    });
+    renderPrimarySkillUi();
 
 
     var inputloc = document.querySelector("#kt_tagify_work_location");
@@ -3008,6 +3252,19 @@ $(function(){
 document.addEventListener('DOMContentLoaded', function () {
     var today = new Date().toISOString().split('T')[0];
     document.getElementById('dob').setAttribute('max', today);
+
+    document.querySelectorAll('#createForm .pd-control-clear').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var input = document.getElementById(button.getAttribute('data-clear-target'));
+            if (!input) {
+                return;
+            }
+            input.value = '';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.focus();
+        });
+    });
 });
 
 
