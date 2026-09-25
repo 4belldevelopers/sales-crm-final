@@ -56,6 +56,12 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(9)
             ->runInBackground();
 
+        // Forward Resume V4: 5-minute self-healing reconciliation scan
+        $schedule->job(new \App\Jobs\ForwardResumeReconciliationJob)
+            ->everyFiveMinutes()
+            ->withoutOverlapping(4)
+            ->runInBackground();
+
         // Moved from Controller::__construct() — was spawning an artisan subprocess on every HTTP request.
         // Nightly is sufficient; real deployments should run `php artisan migrate --force` explicitly.
         $schedule->call(function () {
