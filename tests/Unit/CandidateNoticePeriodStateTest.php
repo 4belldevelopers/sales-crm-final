@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Services\CandidateNoticePeriodState;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 /**
@@ -63,5 +64,20 @@ class CandidateNoticePeriodStateTest extends TestCase
         $this->assertContains('before_or_equal:today', $immediate['np_id']);
         $this->assertContains('required', $selected['ddl_np_id']);
         $this->assertSame(['nullable'], $selected['np_id']);
+    }
+
+    public function test_notice_period_can_be_left_unselected(): void
+    {
+        $rules = CandidateNoticePeriodState::validationRules('');
+        $validator = Validator::make(['serving_notice_period' => ''], $rules);
+
+        $this->assertTrue($validator->passes());
+        $this->assertSame(['nullable'], $rules['np_id']);
+        $this->assertSame(['nullable'], $rules['ddl_np_id']);
+        $this->assertSame([
+            'serving_notice_period_mode' => 0,
+            'np_id' => null,
+            'last_working_date' => null,
+        ], CandidateNoticePeriodState::normalize('', null, null));
     }
 }
