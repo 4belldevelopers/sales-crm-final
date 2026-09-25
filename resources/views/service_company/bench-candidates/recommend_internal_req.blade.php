@@ -614,8 +614,11 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 .status-pill--hold, .status-pill--onhold{ background:#FEF3C7; color:#A16207; border:1px solid #FDE68A; }
 .status-rec{ font-size:10px; color:#94A3B8; font-weight:500; padding-left:2px; }
 
-/* COL 6 — Actions */
-.jc-col-actions{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+/* COL 5 — Team */
+.jc-col-team{ display:flex; flex-direction:column; min-width:0; }
+
+/* COL 6 — Actions & Agency */
+.jc-col-actions, .jc-col-agency{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:0; }
 .favorite-icon{ cursor:pointer; color:#CBD5E1; font-size:16px; align-self:flex-end; }
 .favorite-icon:hover{ color:#F43F5E; }
 .action-stack{ display:flex; flex-direction:column; gap:5px; width:100%; }
@@ -657,6 +660,157 @@ body > .tagify__dropdown{ z-index:1400 !important; }
 }
 
 @media(max-width:900px){ .bxr-hero{ flex-direction:column; align-items:flex-start; } .bxr-hero-sep{ display:none; } .bxr-kpis{ width:100%; min-width:0; flex-wrap:wrap; } .bxr-sum-row{ grid-template-columns:1fr; } .card-content{ flex-direction:column; } .card-right{ align-items:flex-start; margin-left:0; } }
+
+/* ═══════════════════════════════════════════════
+   TABLE & PIPELINE STAGING STYLES (MATCHING ATTACHMENT)
+   ═══════════════════════════════════════════════ */
+.bxr-tbl-wrap {
+  background: #ffffff;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  margin-top: 16px;
+  overflow: hidden;
+}
+.bxr-tbl-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+.bxr-tbl {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: 'Poppins', sans-serif;
+}
+.bxr-tbl thead {
+  background: #F8FAFC;
+}
+.bxr-tbl thead th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 1px solid #E2E8F0;
+  white-space: nowrap;
+}
+.bxr-tbl tbody tr {
+  border-bottom: 1px solid #F1F5F9;
+  transition: background-color 0.15s ease;
+}
+.bxr-tbl tbody tr:hover {
+  background-color: #FAFCFF;
+}
+.bxr-tbl tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: top;
+}
+.bxr-tbl tbody tr:last-child td {
+  border-bottom: none;
+}
+.pagi-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid #E2E8F0;
+  background: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  width: 100%;
+}
+.pagi-info {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748B;
+}
+.pagi-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pagi-arrow {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all .15s;
+}
+.pagi-arrow:hover:not(.pagi-disabled) {
+  background: #0066FF;
+  color: #ffffff;
+  border-color: #0066FF;
+}
+.pagi-arrow.pagi-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: not-allowed;
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #CBD5E1;
+}
+.pagi-page {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all .15s;
+}
+.pagi-page.pagi-active {
+  background: #0066FF;
+  color: #ffffff;
+  border-color: #0066FF;
+  font-weight: 700;
+}
+.pipeline-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+  font-size: 11.5px;
+  color: #475569;
+}
+.legend-label {
+  font-weight: 700;
+  color: #0F172A;
+  margin-right: 4px;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 11px;
+  color: #334155;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
 </style>
 @endpush
 
@@ -1141,9 +1295,25 @@ body > .tagify__dropdown{ z-index:1400 !important; }
     <div class="spinner-border text-primary" role="status"></div>
   </div>
 
-  <div class="rrj-results-wrap">
-    <div class="agencies-list" id="benchCandidateRecommendedReqAjax"></div>
+  <div class="bxr-tbl-wrap">
+    <div class="bxr-tbl-scroll">
+      <table id="bench_explore_listing" class="bxr-tbl table-custom-class">
+        <thead>
+          <tr>
+            <th style="min-width:220px;">JOB DETAILS</th>
+            <th style="min-width:130px;">EXPERIENCE <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:-1px;margin-left:3px;"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1"/><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M9 12h6"/></svg></th>
+            <th style="min-width:130px;">LOCATION</th>
+            <th style="min-width:150px;">HIRING MANAGER</th>
+            <th style="min-width:105px;">TEAM</th>
+            <th style="min-width:140px;">AGENCY</th>
+          </tr>
+        </thead>
+        <tbody id="benchCandidateRecommendedReqAjax"></tbody>
+      </table>
+    </div>
+
     <div id="paginationbenchCandidateRecommendedReq"></div>
+    @include('sections.service_company.pipeline')
   </div>
 
   </div>{{-- /bxr-page --}}
