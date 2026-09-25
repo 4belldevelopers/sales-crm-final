@@ -352,6 +352,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('cvtracker/test_fwd_resume_data', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_data'])->name('cvtracker.test_fwd_resume_data');
                 Route::match(['get', 'post'], 'cvtracker/fwd_recipients', [ServiceCompanyCvTrackerController::class, 'fwd_recipients'])->name('cvtracker.fwd_recipients');
                 Route::post('cvtracker/test_fwd_resume_intent', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_intent'])->name('cvtracker.test_fwd_resume_intent');
+                Route::post('cvtracker/test_fwd_resume_presigned', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_presigned'])->name('cvtracker.test_fwd_resume_presigned');
+                Route::post('cvtracker/test_fwd_resume_finalize', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_finalize'])->name('cvtracker.test_fwd_resume_finalize');
                 Route::post('cvtracker/test_fwd_resume_send', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_send'])->name('cvtracker.test_fwd_resume_send');
                 Route::post('cvtracker/quick_upload_resume', [ServiceCompanyCvTrackerController::class, 'quick_upload_resume'])->name('cvtracker.quick_upload_resume');
                 Route::post('mass_cvtracker/mass_mail_send', [ServiceCompanyCvTrackerController::class, 'mass_mail_send'])->name('cvtracker.mass_mail_send');

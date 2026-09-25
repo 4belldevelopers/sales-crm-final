@@ -25,22 +25,31 @@ use App\Mail\MassMailingMail;
 use App\Models\AddJobWiseCondidate;
 use App\Models\ApplicationStatus;
 use App\Models\Client;
+use App\Models\CoinReservation;
 use App\Models\Company;
 use App\Models\ForwardAttachment;
 use App\Models\ForwardRequest;
+use App\Models\ForwardResumeEvent;
 use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\JobLocation;
 use App\Models\NoticePeriod;
 use App\Models\OfferJobApplication;
+use App\Models\OutboxEvent;
 use App\Models\Skill;
 use App\Models\User;
+use App\Jobs\ProcessForwardResumeDispatchJob;
 use App\Services\ElasticService;
+use App\Services\ForwardResumeAuthorizationService;
 use App\Services\ForwardResumeUploadService;
+use App\Services\ForwardResume\ForwardResumeCoinService;
+use App\Services\ForwardResume\ForwardResumeState;
+use App\Services\ForwardResume\ForwardResumeStateMachine;
 use App\Services\MailService;
 use App\Services\MassMailService;
 use App\Services\NotificationMailService;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -4390,19 +4399,118 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     }
 
     /**
-     * Isolated Test Forward Resume: Direct-to-R2 Presigned Upload Intent Generator
+     * Isolated Test Forward Resume: Direct-to-R2 Presigned Upload Intent Generator & Authorization
      */
     public function test_fwd_resume_intent(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        // Rate Limiting (Redis Throttle: company 100/min, user 30/min)
+        $companyRateKey = "fwd_rate:comp:{$companyId}";
+        $userRateKey = "fwd_rate:usr:{$userId}";
+        try {
+            $userHits = \Illuminate\Support\Facades\Redis::incr($userRateKey);
+            if ($userHits === 1) {
+                \Illuminate\Support\Facades\Redis::expire($userRateKey, 60);
+            }
+            if ($userHits > 30) {
+                return response()->json(['status' => 'error', 'message' => 'User rate limit exceeded (30 requests/min).'], 429);
+            }
+            $compHits = \Illuminate\Support\Facades\Redis::incr($companyRateKey);
+            if ($compHits === 1) {
+                \Illuminate\Support\Facades\Redis::expire($companyRateKey, 60);
+            }
+            if ($compHits > 100) {
+                return response()->json(['status' => 'error', 'message' => 'Company rate limit exceeded (100 requests/min).'], 429);
+            }
+        } catch (\Throwable $rateErr) {
+            // Non-fatal if Redis throttle throws
+        }
+
+        $candidateIds = $request->input('candidate_ids', []);
+        $files = $request->input('files', []);
+        $forwardRequestId = $request->input('forward_request_id') ?: (string) Str::uuid();
+
+        // Extract candidate IDs from files if not passed directly
+        if (empty($candidateIds) && ! empty($files) && is_array($files)) {
+            foreach ($files as $f) {
+                if (! empty($f['candidate_id'])) {
+                    $candidateIds[] = (int) $f['candidate_id'];
+                }
+            }
+        }
+
+        // Multi-tenant candidate authorization check via ELASTIC_CANDIDATES (0 MySQL reads)
+        if (! empty($candidateIds)) {
+            try {
+                $authService = app(ForwardResumeAuthorizationService::class);
+                $validatedCandidateIds = $authService->authorizeCandidateBatch(auth()->user(), $candidateIds);
+                if (count($validatedCandidateIds) !== count(array_unique($candidateIds))) {
+                    return response()->json(['status' => 'error', 'message' => 'Unauthorized candidate access detected.'], 403);
+                }
+            } catch (\Throwable $authErr) {
+                return response()->json(['status' => 'error', 'message' => $authErr->getMessage()], 403);
+            }
+        }
+
+        $results = [];
+        $uploadService = app(ForwardResumeUploadService::class);
+        if (! empty($files) && is_array($files)) {
+            $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+        }
+
+        // Store intent authorization in Redis with 15-minute TTL
+        try {
+            \Illuminate\Support\Facades\Redis::setex("fwd_intent:{$companyId}:{$forwardRequestId}", 900, json_encode([
+                'forward_request_id' => $forwardRequestId,
+                'company_id' => $companyId,
+                'user_id' => $userId,
+                'candidate_ids' => $candidateIds,
+                'authorized_at' => time(),
+            ]));
+        } catch (\Throwable $e) {}
+
+        return response()->json([
+            'status' => 'success',
+            'intent_id' => $forwardRequestId,
+            'forward_request_id' => $forwardRequestId,
+            'candidate_ids' => $candidateIds,
+            'attachments' => $results,
+            'uploads' => $results,
+        ]);
+    }
+
+    /**
+     * Isolated Test Forward Resume: Direct-to-R2 Presigned Upload URL Minting with Signed Metadata
+     */
+    public function test_fwd_resume_presigned(Request $request)
     {
         $companyId = (int) auth()->user()->company_id;
         $userId = (int) auth()->user()->id;
         $files = $request->input('files', []);
 
         if (empty($files) || ! is_array($files)) {
-            return response()->json(['status' => 'error', 'message' => 'No files provided for upload intent.'], 422);
+            $file = [
+                'candidate_id' => $request->input('candidate_id'),
+                'filename' => $request->input('filename', 'Candidate_Resume.pdf'),
+                'size' => $request->input('expected_size', $request->input('size')),
+                'expected_size' => $request->input('expected_size', $request->input('size')),
+                'expected_sha256' => $request->input('expected_sha256', $request->input('sha256')),
+                'mime' => $request->input('mime', 'application/pdf'),
+            ];
+            $files = [$file];
         }
 
-        $uploadService = app(\App\Services\ForwardResumeUploadService::class);
+        // Scope bounds check: size <= 10MB
+        foreach ($files as $file) {
+            $size = (int) ($file['expected_size'] ?? ($file['size'] ?? 0));
+            if ($size > 10 * 1024 * 1024) {
+                return response()->json(['status' => 'error', 'message' => 'Resume PDF size exceeds maximum allowed 10MB limit.'], 422);
+            }
+        }
+
+        $uploadService = app(ForwardResumeUploadService::class);
         $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
 
         if (empty($results)) {
@@ -4414,8 +4522,41 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         return response()->json([
             'status' => 'success',
-            'attachments' => $results,
             'uploads' => $results,
+            'attachments' => $results,
+        ]);
+    }
+
+    /**
+     * Isolated Test Forward Resume: Byte-Exact Attestation & Cryptographic Verification
+     */
+    public function test_fwd_resume_finalize(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $attachmentUuid = (string) ($request->input('attachment_uuid') ?: $request->input('attachment_id'));
+        $expectedSha256 = $request->input('expected_sha256') ?: $request->input('sha256');
+        $expectedSize = $request->filled('expected_size') ? (int) $request->input('expected_size') : ($request->filled('size') ? (int) $request->input('size') : null);
+
+        if (empty($attachmentUuid)) {
+            return response()->json(['status' => 'error', 'message' => 'attachment_uuid is required.'], 422);
+        }
+
+        $uploadService = app(ForwardResumeUploadService::class);
+        $result = $uploadService->probeAndVerifyAttachment($companyId, $attachmentUuid, $expectedSha256, $expectedSize);
+
+        if (! ($result['verified'] ?? false)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $result['message'] ?? 'Verification failed.',
+                'details' => $result,
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'verified' => true,
+            'attachment_uuid' => $attachmentUuid,
+            'actual_size' => $result['actual_size'] ?? $expectedSize,
         ]);
     }
 
@@ -4434,7 +4575,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             $lockAcquired = \Illuminate\Support\Facades\Redis::set($idemLockKey, 'PROCESSING', 'EX', 120, 'NX');
             if (! $lockAcquired) {
                 $statusVal = \Illuminate\Support\Facades\Redis::get($idemLockKey);
-                if ($statusVal === 'SENT') {
+                if ($statusVal === 'SENT' || $statusVal === 'QUEUED') {
                     return Reply::dataOnly([
                         'status' => 'success',
                         'message' => 'Candidate resumes have been forwarded successfully.',
@@ -4490,17 +4631,18 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'error', 'message' => 'Email message body cannot be blank.']);
         }
 
-        // Coin validation
-        $eventId = 43;
-        $coinsRequ = count($to);
-        $coinsDeductions = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
-        if ($coinsDeductions->status) {
-            return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+        // Canonical forward_request_id minting
+        $fwdRequestUuid = (string) Str::uuid();
+        if (! empty($idempotencyKey)) {
+            $rawUuid = str_replace('fwd_', '', $idempotencyKey);
+            if (Str::isUuid($rawUuid)) {
+                $fwdRequestUuid = $rawUuid;
+            }
         }
 
         // Option 1 fallback: if attached_cv == 1 and no client uploaded UUIDs, attach candidate original resumes
         if ($attachedCv === 1 && empty($attachmentUuids) && $formatId === 1 && ! empty($arr)) {
-            $uploadService = app(\App\Services\ForwardResumeUploadService::class);
+            $uploadService = app(ForwardResumeUploadService::class);
             $candidates = DB::table('job_applications')
                 ->whereIn('id', $arr)
                 ->where(function ($q) use ($companyId) {
@@ -4511,7 +4653,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             foreach ($candidates as $cand) {
                 $resumeFile = $cand->resume;
                 if (! empty($resumeFile)) {
-                    $attUuid = (string) \Illuminate\Support\Str::uuid();
+                    $attUuid = (string) Str::uuid();
                     $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name ?: 'Candidate'));
                     $r2Key = sprintf('temp-forward/%d/%s.pdf', $companyId, $attUuid);
 
@@ -4526,12 +4668,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         }
 
                         if (filter_var($resumeFile, FILTER_VALIDATE_URL)) {
-                            $httpRes = \Illuminate\Support\Facades\Http::timeout(15)->get($resumeFile);
+                            $httpRes = Http::timeout(15)->get($resumeFile);
                             if ($httpRes->successful() && strlen($httpRes->body()) > 50) {
                                 $fileBytes = $httpRes->body();
                             }
-                        } elseif (\Illuminate\Support\Facades\Storage::disk('r2')->exists($resumeFile)) {
-                            $fileBytes = \Illuminate\Support\Facades\Storage::disk('r2')->get($resumeFile);
+                        } elseif (Storage::disk('r2')->exists($resumeFile)) {
+                            $fileBytes = Storage::disk('r2')->get($resumeFile);
                         } elseif (file_exists(public_path('user-uploads/resumes/'.$resumeFile))) {
                             $fileBytes = file_get_contents(public_path('user-uploads/resumes/'.$resumeFile));
                         } elseif (file_exists(public_path('user-uploads/resume/'.$resumeFile))) {
@@ -4541,11 +4683,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         if ($fileBytes !== null && strlen($fileBytes) > 50) {
                             $putSuccess = $uploadService->putR2ObjectBytes($r2Key, $fileBytes, $mimeType);
                             if (! $putSuccess) {
-                                \Illuminate\Support\Facades\Storage::disk('r2')->put($r2Key, $fileBytes);
+                                Storage::disk('r2')->put($r2Key, $fileBytes);
                             }
 
                             $filenameExt = $originalExt ? ('.'.$originalExt) : '.pdf';
-                            \App\Models\ForwardAttachment::create([
+                            ForwardAttachment::create([
                                 'uuid' => $attUuid,
                                 'company_id' => $companyId,
                                 'candidate_id' => $cand->id,
@@ -4553,12 +4695,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                                 'filename' => 'Jeroworks_'.$candName.$filenameExt,
                                 'mime_type' => $mimeType,
                                 'file_size_bytes' => strlen($fileBytes),
-                                'status' => 'PENDING',
+                                'expected_size' => strlen($fileBytes),
+                                'status' => 'VERIFIED',
+                                'verified_at' => now(),
                                 'expires_at' => now()->addMinutes(60),
                             ]);
                             $attachmentUuids[] = $attUuid;
-                        } else {
-                            \Log::warning('[test_fwd_resume_send] Option 1 resume file unreachable or empty for candidate '.$cand->id.': '.$resumeFile);
                         }
                     } catch (\Throwable $e) {
                         \Log::warning('[test_fwd_resume_send] Option 1 fallback attachment error: '.$e->getMessage());
@@ -4567,44 +4709,30 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
 
-        $fwdRequestUuid = (string) \Illuminate\Support\Str::uuid();
-        if (! empty($idempotencyKey)) {
-            $rawUuid = str_replace('fwd_', '', $idempotencyKey);
-            if (\Illuminate\Support\Str::isUuid($rawUuid)) {
-                $fwdRequestUuid = $rawUuid;
+        // Two-Phase Coin Reservation Engine
+        $coinsRequ = count($to);
+        $reservationId = (string) Str::uuid();
+        $coinService = app(ForwardResumeCoinService::class);
+        $resResult = $coinService->reserve($companyId, $userId, $fwdRequestUuid, $reservationId, $coinsRequ);
+
+        if (! ($resResult['success'] ?? false)) {
+            if (($resResult['status'] ?? '') === 'INSUFFICIENT_FUNDS') {
+                return Reply::dataOnly([
+                    'status' => 'coinCheck',
+                    'message' => 'Insufficient coin balance to send candidate resumes.',
+                    'company_coins' => 0.00,
+                ]);
             }
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Coin reservation failed: ' . ($resResult['status'] ?? 'unknown error'),
+            ]);
         }
 
-        // Tier 2: Atomic DB Transaction Barrier for State & Tracking
-        DB::transaction(function () use ($fwdRequestUuid, $companyId, $userId, $attachmentUuids, $to) {
-            if (\Illuminate\Support\Facades\Schema::hasTable('forward_requests')) {
-                $fwdReq = \App\Models\ForwardRequest::where('uuid', $fwdRequestUuid)->first();
-                if (! $fwdReq) {
-                    $fwdReq = \App\Models\ForwardRequest::create([
-                        'uuid' => $fwdRequestUuid,
-                        'company_id' => $companyId,
-                        'user_id' => $userId,
-                        'candidate_count' => count($attachmentUuids),
-                        'recipient_count' => count($to),
-                        'status' => 'SENT',
-                    ]);
-                }
-
-                // Associate uploaded attachments with this forward request
-                if (! empty($attachmentUuids) && \Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
-                    \App\Models\ForwardAttachment::whereIn('uuid', $attachmentUuids)
-                        ->where('company_id', $companyId)
-                        ->update([
-                            'forward_request_id' => $fwdReq->id,
-                            'status' => 'DISPATCHED',
-                        ]);
-                }
-            }
-        });
-
-        if ($idemLockKey) {
-            \Illuminate\Support\Facades\Redis::set($idemLockKey, 'SENT', 'EX', 3600);
-        }
+        $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
+        $replyToEmail = ! empty($request->reply_to_email) ? trim($request->reply_to_email) : $fromAddress;
+        $senderName = auth()->user()->name ?? 'Recruitment Team';
+        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
 
         $companyRow = DB::table('companies')->select('company_name')->where('id', $companyId)->first();
         $companyName = $companyRow ? $companyRow->company_name : 'Hiring Partner';
@@ -4619,31 +4747,133 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'candidate_ids' => $arr,
         ];
 
-        $fromAddress = ! empty($request->from_email) ? trim($request->from_email) : auth()->user()->email;
-        $replyToEmail = ! empty($request->reply_to_email) ? trim($request->reply_to_email) : $fromAddress;
-        $senderName = auth()->user()->name ?? 'Recruitment Team';
-        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
-
-        // Dispatch SendForwardResumeBatchMailJob
-        \App\Jobs\SendForwardResumeBatchMailJob::dispatch(
+        // Tier 2: Atomic DB Transaction (forward_requests + coin_reservations + outbox_events)
+        DB::transaction(function () use (
             $fwdRequestUuid,
+            $companyId,
+            $userId,
+            $attachmentUuids,
+            $to,
+            $reservationId,
+            $coinsRequ,
+            $subject,
+            $message,
+            $fromAddress,
+            $senderName,
+            $cc,
+            $replyToEmail
+        ) {
+            $fwdReq = ForwardRequest::where('uuid', $fwdRequestUuid)->first();
+            if (! $fwdReq) {
+                $fwdReq = ForwardRequest::create([
+                    'uuid' => $fwdRequestUuid,
+                    'company_id' => $companyId,
+                    'user_id' => $userId,
+                    'candidate_count' => count($attachmentUuids),
+                    'recipient_count' => count($to),
+                    'status' => ForwardResumeState::QUEUED,
+                    'coin_reservation_id' => $reservationId,
+                ]);
+            }
+
+            // Create durable coin reservation record in MySQL
+            CoinReservation::create([
+                'reservation_id' => $reservationId,
+                'company_id' => $companyId,
+                'user_id' => $userId,
+                'forward_request_id' => $fwdRequestUuid,
+                'amount' => $coinsRequ,
+                'status' => ForwardResumeState::RESERVED,
+                'expires_at' => now()->addMinutes(30),
+            ]);
+
+            // Create Transactional Outbox Event
+            OutboxEvent::create([
+                'event_id' => (string) Str::uuid(),
+                'aggregate_type' => 'FORWARD_RESUME',
+                'aggregate_id' => $fwdRequestUuid,
+                'event_type' => 'FORWARD_RESUME_DISPATCH_REQUESTED',
+                'payload' => [
+                    'forward_request_uuid' => $fwdRequestUuid,
+                    'company_id' => $companyId,
+                    'user_id' => $userId,
+                    'to' => $to,
+                    'subject' => $subject,
+                    'body' => $message,
+                    'attachment_uuids' => $attachmentUuids,
+                    'from_address' => $fromAddress,
+                    'sender_name' => $senderName,
+                    'cc' => $cc,
+                    'reply_to' => $replyToEmail,
+                    'reservation_id' => $reservationId,
+                    'required_coins' => $coinsRequ,
+                ],
+                'status' => 'PENDING',
+            ]);
+
+            // Forensic event journal
+            if (\Illuminate\Support\Facades\Schema::hasTable('forward_resume_events')) {
+                ForwardResumeEvent::create([
+                    'event_id' => (string) Str::uuid(),
+                    'forward_request_id' => $fwdRequestUuid,
+                    'event_type' => 'FORWARD_RESUME_QUEUED',
+                    'previous_state' => 'READY_TO_SEND',
+                    'new_state' => ForwardResumeState::QUEUED,
+                    'actor_type' => 'USER',
+                    'actor_id' => $userId,
+                    'metadata' => [
+                        'recipient_count' => count($to),
+                        'attachment_count' => count($attachmentUuids),
+                        'reservation_id' => $reservationId,
+                    ],
+                    'created_at' => now(),
+                ]);
+            }
+
+            // Associate uploaded attachments with this forward request
+            if (! empty($attachmentUuids) && \Illuminate\Support\Facades\Schema::hasTable('forward_attachments')) {
+                ForwardAttachment::whereIn('uuid', $attachmentUuids)
+                    ->where('company_id', $companyId)
+                    ->update([
+                        'forward_request_id' => $fwdReq->id,
+                        'status' => 'DISPATCHED',
+                    ]);
+            }
+        });
+
+        // Publish to Horizon emails queue (<2KB micro-payload)
+        ProcessForwardResumeDispatchJob::dispatch(
+            $fwdRequestUuid,
+            $companyId,
+            $userId,
             $to,
             $subject,
-            'email.resume-forward.forward-resume',
-            (object) $data,
+            $message,
             $attachmentUuids,
             $fromAddress,
             $senderName,
             $cc,
-            $companyId,
-            $replyToEmail
+            $replyToEmail,
+            $reservationId,
+            $coinsRequ
         )->onConnection('emails');
 
-        GeneralMethod::coinsDeductions($companyId, $eventId, $userId, $companyId, '', '');
+        // Mark outbox published
+        OutboxEvent::where('aggregate_id', $fwdRequestUuid)
+            ->where('status', 'PENDING')
+            ->update([
+                'status' => 'PUBLISHED',
+                'published_at' => now(),
+            ]);
+
+        if ($idemLockKey) {
+            \Illuminate\Support\Facades\Redis::set($idemLockKey, 'SENT', 'EX', 3600);
+        }
 
         return Reply::dataOnly([
             'status' => 'success',
             'message' => 'Candidate resumes have been forwarded successfully.',
+            'request_id' => $fwdRequestUuid,
         ]);
     }
 
