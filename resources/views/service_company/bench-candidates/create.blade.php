@@ -886,35 +886,56 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                <div class="aw-grid aw-grid--work">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
-                    <div class="aw-work-grid">
-                      <label class="aw-work-option aw-work-option--remote" for="wr">
-                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--office" for="wo">
-                        <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-users" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Work From Office</strong><small>Office location based work.</small></span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
 
+              </div>
+            </div>
+
+            <div class="fs aw-work-mode-card">
+              <div class="aw-work-mode-hero">
+                <div class="aw-work-mode-title">
+                  <span class="aw-work-mode-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span>
+                    <strong>Preferred Work Mode</strong>
+                    <small>Select the candidate's preferred way of working.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="aw-work-mode-body">
+                <div class="fg fv-row aw-work-mode-fieldset" role="radiogroup" aria-label="Preferred Work Mode">
+                  <div class="aw-work-grid">
+                    <label class="aw-work-option aw-work-option--remote" for="wr">
+                      <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                      <span class="aw-radio" aria-hidden="true"></span>
+                      <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                      <span class="aw-work-copy">
+                        <strong>Remote</strong>
+                        <small>Can work from any location.</small>
+                        <span class="aw-work-tag"><i class="fa-solid fa-globe" aria-hidden="true"></i>Any Location</span>
+                      </span>
+                    </label>
+                    <label class="aw-work-option aw-work-option--hybrid" for="wh">
+                      <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
+                      <span class="aw-radio" aria-hidden="true"></span>
+                      <i class="fa-solid fa-building" aria-hidden="true"></i>
+                      <span class="aw-work-copy">
+                        <strong>Hybrid</strong>
+                        <small>Combination of office and remote.</small>
+                        <span class="aw-work-tag"><i class="fa-solid fa-house" aria-hidden="true"></i>Flexible</span>
+                      </span>
+                    </label>
+                    <label class="aw-work-option aw-work-option--office" for="wo">
+                      <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
+                      <span class="aw-radio" aria-hidden="true"></span>
+                      <i class="fa-solid fa-building" aria-hidden="true"></i>
+                      <span class="aw-work-copy">
+                        <strong>Work From Office</strong>
+                        <small>Office location based work.</small>
+                        <span class="aw-work-tag"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Office Location</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1243,28 +1264,39 @@ if($snp_mode== 1){
                   <div class="se-suggested-list" id="suggestedSkillsList"></div>
                 </div>
 
-                <details class="se-experience-details" id="skillExperienceDetails">
-                  <summary>
-                    <span><i class="fa-solid fa-sliders" aria-hidden="true"></i> Skill experience &amp; proficiency</span>
-                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                  </summary>
-                  <div class="se-table-scroll">
-                   <table class="sk">
+              </div>
+            </div>
+
+            <div class="fs jsd-card" id="skillExperienceDetails">
+              <div class="jsd-hero">
+                <div class="jsd-title">
+                  <span class="jsd-icon"><i class="fa-solid fa-list" aria-hidden="true"></i></span>
+                  <span>
+                    <strong>Job Skills Details</strong>
+                    <small>Record experience and proficiency against the job's required skills.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="jsd-body">
+                <div class="jsd-table-scroll">
+                  <table class="sk">
                     <thead>
                       <tr>
                         <th>Skill <span class="rq">*</span></th>
                         <th>Experience (Years) <span class="rq">*</span></th>
                         <th>Experience (Months)</th>
                         <th>Proficiency Rating <span class="rq">*</span></th>
-                        <th>Actions</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody id="skillExperienceWrapper">
                     </tbody>
-                   </table>
-                  </div>
-                  <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add another skill</button>
-                </details>
+                  </table>
+                </div>
+                <div class="jsd-footer">
+                  <button class="asb" type="button"><i class="fa-solid fa-plus" aria-hidden="true"></i> Add Skill</button>
+                  <div class="jsd-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Add key skills relevant to the job with the candidate's experience and proficiency level.</span></div>
+                </div>
               </div>
             </div>
 
@@ -2648,7 +2680,7 @@ $(document).ready(function () {
             label.textContent = candidate.name;
             label.title = 'Edit skill experience and proficiency';
             label.addEventListener('click', () => {
-                skillExperienceDetails.open = true;
+                skillExperienceDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 candidate.row.querySelector('[name="skills[]"]').focus();
             });
 
@@ -2729,6 +2761,27 @@ $(document).ready(function () {
         renderPrimarySkillUi();
     }
 
+    function renderSkillRatingOption(option) {
+        const value = Number.parseInt(option.id, 10) || 0;
+        const wrapper = document.createElement('span');
+        wrapper.className = 'se-rating-option';
+
+        const stars = document.createElement('span');
+        stars.className = 'se-rating-stars';
+        for (let index = 1; index <= 5; index++) {
+            const star = document.createElement('i');
+            star.className = index <= value ? 'fa-solid fa-star is-filled' : 'fa-regular fa-star';
+            star.setAttribute('aria-hidden', 'true');
+            stars.appendChild(star);
+        }
+
+        const label = document.createElement('span');
+        label.className = value ? 'se-rating-value' : 'se-rating-placeholder';
+        label.textContent = value ? `${value} ${value === 1 ? 'Star' : 'Stars'}` : 'Select rating';
+        wrapper.append(stars, label);
+        return $(wrapper);
+    }
+
     // Keep skills and their experience fields in the same submitted row.
     function addSkillExperience(skill = '', data = {}) {
         const name = String(skill || '').trim();
@@ -2758,7 +2811,7 @@ $(document).ready(function () {
             </td>
             <td><label class="se-field se-field--select"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><select class="se-enterprise-native" name="years[]" aria-label="Experience years"></select></label></td>
             <td><label class="se-field se-field--select"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><select class="se-enterprise-native" name="months[]" aria-label="Experience months"></select></label></td>
-            <td><label class="se-field se-field--select"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><select class="se-enterprise-native" name="ratings[]" aria-label="Proficiency rating"></select></label></td>
+            <td><label class="se-field se-field--select se-field--rating"><i class="fa-solid fa-star" aria-hidden="true"></i><select class="se-enterprise-native" name="ratings[]" aria-label="Proficiency rating"></select></label></td>
             <td><button class="ab" type="button" aria-label="Delete skill" title="Delete skill"><i class="fa-regular fa-trash-can" aria-hidden="true"></i></button></td>`;
         const input = row.querySelector('[name="skills[]"]');
         input.value = name;
@@ -2776,7 +2829,7 @@ $(document).ready(function () {
 
         fillOptions(row.querySelector('[name="years[]"]'), 'Select Year', 1, 60, data.year, n => n === 1 ? 'Year' : 'Years');
         fillOptions(row.querySelector('[name="months[]"]'), 'Select Month', 0, 11, data.month, n => n === 1 ? 'Month' : 'Months');
-        fillOptions(row.querySelector('[name="ratings[]"]'), 'Select Rating', 1, 5, data.rating, n => n === 1 ? 'Rating' : 'Ratings');
+        fillOptions(row.querySelector('[name="ratings[]"]'), 'Select Rating', 1, 5, data.rating, n => n === 1 ? 'Star' : 'Stars');
 
         input.addEventListener('change', () => {
             input.value = input.value.trim();
@@ -2803,11 +2856,14 @@ $(document).ready(function () {
         // Enhance only attached rows; the native selects remain usable if Select2 is unavailable.
         if ($.fn.select2) {
             $(row).find('.se-field--select select').each(function () {
+                const isRating = this.name === 'ratings[]';
                 $(this).select2({
                     width: '100%',
                     dropdownParent: $(document.body),
-                    dropdownCssClass: 'se-enterprise-dropdown',
-                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity
+                    dropdownCssClass: isRating ? 'se-enterprise-dropdown se-rating-dropdown' : 'se-enterprise-dropdown',
+                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity,
+                    templateResult: isRating ? renderSkillRatingOption : undefined,
+                    templateSelection: isRating ? renderSkillRatingOption : undefined
                 });
             });
         }
@@ -2834,8 +2890,7 @@ $(document).ready(function () {
     if (storedSkills) addParsedBenchSkills(storedSkills);
     if (!experienceWrapper.children.length) addSkillExperience();
 
-    document.querySelector('.se-card .asb').addEventListener('click', () => {
-        skillExperienceDetails.open = true;
+    document.querySelector('#skillExperienceDetails .asb').addEventListener('click', () => {
         addSkillExperience().querySelector('[name="skills[]"]').focus();
     });
     popularSkillButtons.forEach(button => button.addEventListener('click', () => {
@@ -2851,7 +2906,7 @@ $(document).ready(function () {
         const row = addSkillExperience(name);
         primarySkillQuickInput.value = '';
         updatePopularSkills();
-        skillExperienceDetails.open = true;
+        skillExperienceDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         row.querySelector('[name="skills[]"]').focus();
     }
 
