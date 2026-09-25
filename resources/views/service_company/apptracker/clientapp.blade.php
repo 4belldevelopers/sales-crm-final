@@ -1891,6 +1891,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 </script>
 
 @if(config('feature.fwd_resume_v4_enabled', true))
+	{{-- CandidateSnapshotResolver: canonical zero-fabrication candidate data resolver for Pre-Screen PDF (engine.v4.js depends on this) --}}
+	<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 	<script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
 @endif
 
