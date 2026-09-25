@@ -1696,6 +1696,8 @@
                 $('.custom_hide').removeClass("d-none");
             }
         });
+    </script>
+
     @if(config('feature.fwd_resume_v4_enabled', true))
         <script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
     @endif

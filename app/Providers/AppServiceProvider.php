@@ -25,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->registerActions();
+        $this->app->bind(
+            \App\Services\ForwardResume\Providers\ForwardResumeProvider::class,
+            \App\Services\ForwardResume\Providers\SesForwardResumeProvider::class
+        );
     }
 
     /**

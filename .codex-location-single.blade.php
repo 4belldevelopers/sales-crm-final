@@ -1,0 +1,4208 @@
+@extends('layouts.service_company_layout')
+@push('head-script')
+<script>
+   $( function(){
+     $( "#calender" ).datepicker
+     	({
+			showOn				: "button",
+			buttonImage			: "images/calendar.gif",
+			buttonImageOnly		: true,
+			buttonText			: "Select date"
+       });
+   });	
+</script>
+
+<link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+
+@endpush
+
+@section('content')
+@php 
+      use App\Helper\GeneralMethod;
+      $defaultTimeFormat = GeneralMethod::defaultTimeFormat();
+      $country_code =  GeneralMethod::countryCodeFun();
+      $currency_code =  GeneralMethod::defaultCurrency();
+      // dd($currency_code);
+      $phone_code = $country_code;
+      $second_phone_code = $country_code;
+      $url= '';
+      $resumeCheck = '';
+		  $resume_url				=	'';
+		  $photo  					=	url('public/avatar.png');	
+		  if($page_event == 'ADD'){
+			 $pagetitle			=	'Add Candidate';
+			 $resume_url			=	'';	
+		  }else if($page_event == 'EDIT'){
+        $phone_code = ($application->phone_code) ? $application->phone_code : $phone_code;
+        $second_phone_code = ($application->second_phone_code) ? $application->second_phone_code : $second_phone_code;
+        $pagetitle	=	'Edit Candidate';   
+        //  dd($application);   
+			  if(!empty($application->resume)){
+				$url				=	 $application->resume;
+        // $url = @$application->hashname;
+        $info = pathinfo($url);
+        if($resumeAwsPath){
+           if (!empty($application->resume)) {
+            $resume_url			=	route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]);
+            $resumeCheck = 1;
+           }
+        }else{
+           $resume_url			=	'';
+        }
+			 }else{
+				$resume_url			=	'';	
+			 }
+			 if(!empty($application->photo)){	
+				$photo			=	 $application->photo;
+			 }   
+		  }	
+					
+      $bgTextDecore				=	$strVal	=	'';
+      $str						=	@$jobDetail->title;
+      // dd($str);
+      $firstChar = (!empty($str) && is_string($str)) ? strtolower(substr($str, 0, 1)) : '';
+      $strVal = $firstChar;
+      $str = !empty($firstChar) ? ord($firstChar) : 0;
+      if($str >=97 && $str <=101){
+        $bgTextDecore		=	'fs-3 bg-light-danger text-danger';	
+      }else if($str >=102 && $str <=106){
+        $bgTextDecore		=	'fs-3 bg-light-warning text-warning';	
+      }else if($str >=107 && $str <=111){
+        $bgTextDecore		=	'fs-3 bg-light-primary text-primary';	
+      }else if($str >=112 && $str <=116){
+        $bgTextDecore		=	'fs-3 bg-light-success text-success';	
+      }else if($str >=117 && $str <=121){
+        $bgTextDecore		=	'fs-3 bg-dark text-light';	
+      }else{
+        $bgTextDecore		=	'fs-3 bg-light-secondary text-dark';	
+      }	
+
+      $city			=	$country_id		=	 $country_name	=	$state_name		=	$address		=	'';
+      $address		=	@$jobLocation->address;
+      if(@$jobLocation->country_id == 101){
+        $city			=	@$jobLocation->city_name;
+        $state_name		=	@$jobLocation->state_name;	
+      }else{
+        $city		=	@$jobLocation->city;		
+      }
+      if(@$jobLocation->country_id > 0){
+          $country_name	=	GeneralMethod::getCountryName(@$jobLocation->country_id);	
+          foreach($country_name as $cval){
+          $country_name	=	ucwords($cval['name']);	
+          }				 
+      }
+		
+      $status_class		=	'';
+      if(@$jobDetail->status == 'active'){
+        $status_class	=	'bg-light-success text-success';
+      }else if(@$jobDetail->status == 'hold'){
+        $status_class	=	'bg-light-warning text-warning';
+      }else if(@$jobDetail->status == 'inactive'){
+        $status_class	=	'bg-light-danger text-danger';
+      }
+		
+      $created_at 		=	"";
+      $created_at 		=	@$jobDetail->created_at;
+      $created_at 		=	date("d M, Y", strtotime($created_at));
+		
+      $snp_mode = (int) (@$application->serving_notice_period_mode ?? 0);
+      $snp_last_working = '';
+      if ($snp_mode === 1) {
+        $snp_last_working = @$application->np_id;
+      } elseif ($snp_mode === 2) {
+        $snp_last_working = @$application->last_working_date;
+      }      $jobDetailId = @$jobDetail->id ?? 0;
+      $logos = $jobDetailId ? GeneralMethod::companyDetails($jobDetailId) : null;
+      $logo_path = '';
+      $logo_path = url('public/user-uploads/company-logo/' . @$logos->logo);
+      if (!empty($logos->logo_logical_path)) {
+        $logo_path = url('public/' . @$logos->logo_logical_path);
+      }
+        
+      $company_or_client = $jobDetailId ? GeneralMethod::companyDetailsByClient($jobDetailId) : null;	
+      $Jobcities = $jobDetailId ? GeneralMethod::Jobcities($jobDetailId) : '';	
+      $locations  = explode('`,`',$Jobcities);
+      $salaryModeSelect = GeneralMethod::salaryMode();
+      $currencySymbole = GeneralMethod::currencySymbole();
+      $min_sal_mode = (!empty($jobDetail->min_sal_mode) && isset($salaryModeSelect[$jobDetail->min_sal_mode])) ? strtoupper(substr($salaryModeSelect[$jobDetail->min_sal_mode], 0, 1)) : '';
+      $max_sal_mode = (!empty($jobDetail->max_sal_mode) && isset($salaryModeSelect[$jobDetail->max_sal_mode])) ? strtoupper(substr($salaryModeSelect[$jobDetail->max_sal_mode], 0, 1)) : '';
+      $min_salary_currency = $currencySymbole[@$jobDetail->min_salary_currency] ?? '';
+      $max_salary_currency = $currencySymbole[@$jobDetail->max_salary_currency] ?? '';
+      $max_salary = !empty($jobDetail->max_salary) ? GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary) : '0';
+      $salary_currency = @$jobDetail->max_salary_currency ?? 0;
+@endphp 
+
+<!--begin::Toolbar-->
+<div class="toolbar candidate-top-toolbar" id="kt_toolbar">
+  <!--begin::Container-->
+  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack candidate-toolbar-container">
+    @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
+    <div class="d-flex align-items-center py-1 candidate-header-actions">
+      @php
+          if($page_event == 'EDIT'){
+            echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>';
+          }else{
+            echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Candidate</button>';
+          }
+      @endphp
+    </div>
+  </div>
+  <!--end::Container-->
+</div>
+<!--end::Toolbar-->
+<!--begin::Content-->
+<div class="content d-flex flex-column flex-column-fluid pt-4 job-candidate-create" id="kt_content">
+  <!--begin::Post-->
+  <div class="post d-flex flex-column-fluid" id="kt_post">
+    <!--begin::Container-->
+    <div id="kt_content_container" class="container-fluid px-3">
+      <div class="app">
+       
+        <!-- MAIN -->
+        <main class="mc">
+          <!-- Form -->
+          <form class="ajax-form" method="POST" id="createForm" name="createForm" enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="job_id" value="{{ @$jobId }}" id="job_id" />
+            <input type="hidden" name="appId" value="{{ @$appId }}" id="appId" />
+            <input type="hidden" name="currentPage" value="{{ @$currentPage }}" id="currentPage" />
+            <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
+            <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
+            <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
+            {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
+            <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+          <div class="fc">
+            <!-- Upload + Career Summary -->
+            <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
+                <!-- Resume Upload -->
+                <div class="fs fv-row resume-card candidate-card" style="margin-bottom:0">
+                    <div class="fsh resume-card-header candidate-card-header">
+                        <div class="candidate-card-title">
+                          <span class="resume-card-icon candidate-card-icon"><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></span>
+                          <span><strong>Upload Resume <span class="rq">*</span></strong><small>Upload a PDF or Word resume to parse candidate details.</small></span>
+                        </div>
+                    </div>
+
+                    <div class="fsc resume-card-body candidate-card-body">
+                        <div class="ua" id="uploadBox">
+
+                            <div class="ui">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
+
+                            <div class="ut">Drag & Drop Resume Here</div>
+
+                            <div class="us">or</div>
+
+                            <button class="ub" type="button" id="chooseFileBtn">
+                                Choose File
+                            </button>
+
+                            <input type="file" name="resume" id="resume" accept=".pdf,.doc,.docx" style="display:none;">
+
+                            <div class="uf">
+                                Supports PDF, DOC, DOCX (Max 6 MB)
+                            </div>
+
+                            <!-- Progress bar / pill / success banner -->
+                            <div class="up-wrap" id="upWrap" style="display:none">
+                                <div class="up-row">
+                                    <div class="up-track">
+                                        <div class="up-bar" id="upBar" style="width:0%"></div>
+                                    </div>
+                                    <span class="up-pill" id="upPill" style="display:none">
+                                        <svg class="up-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+                                <div class="up-stats" id="upStats">0% &middot; 0 KB / 0 KB</div>
+                                <div class="up-banner" id="upBanner" style="display:none">
+                                    <svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>
+                                    <span id="upBannerText">Upload complete! Your resume has been uploaded successfully.</span>
+                                </div>
+                            </div>
+
+                            <!-- Selected File -->
+                            @php
+                                // basename() can return just a number when the path uses date-based
+                                // directories (e.g. resumes/2024/07/candidatename.pdf → "07" is wrong).
+                                // Walk the path segments and pick the first one that has a valid extension.
+                                $displayResumeName = '';
+                                if (!empty($application->resume)) {
+                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
+                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
+                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                                        $displayResumeName = 'Resume (uploaded)';
+                                    }
+                                }
+                            @endphp
+                            <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
+                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
+                                @if(!empty($resume_url))
+                                <a href="{{ $resume_url }}"
+                                   target="_blank"
+                                   class="download-file"
+                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
+                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
+                                </a>
+                                @endif
+
+                                <button type="button"
+                                        class="remove-file"
+                                        id="removeFile">
+                                    Remove
+                                </button>
+                            </div>
+
+                        </div>
+
+                            <!-- ==========================
+                                 After-upload Resume Information card
+                                 Outside #uploadBox so hiding the dropzone
+                                 does not hide this card.
+                                 ========================== -->
+                            <div class="up-info" id="upInfo">
+                                <div class="up-info-banner">
+                                    <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="9 12 11 14 16 9"/>
+                                    </svg>
+                                    <span><strong>Resume uploaded successfully!</strong></span>
+                                </div>
+
+                                <div class="up-file-card">
+                                    <span class="up-file-icon">PDF</span>
+                                    <div class="up-file-meta">
+                                        <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                        <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                    </div>
+                                    <span class="up-file-pill">
+                                        <svg class="up-file-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        Uploaded
+                                    </span>
+                                </div>
+
+                                <div class="up-actions">
+                                    <button type="button" id="upReplaceBtn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="23 4 23 10 17 10"/>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                        </svg>
+                                        Replace Resume
+                                    </button>
+                                    <button type="button" id="upRemoveBtn" class="up-remove">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                            <path d="M10 11v6"/><path d="M14 11v6"/>
+                                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <h4 class="up-details-h">Resume Details</h4>
+                                <div class="up-details-grid">
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Uploaded On</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon ok">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Parser Status</div>
+                                            <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                                <line x1="8" y1="13" x2="16" y2="13"/>
+                                                <line x1="8" y1="17" x2="16" y2="17"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Type</div>
+                                            <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail">
+                                        <span class="up-detail-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                                <polyline points="14 2 14 8 20 8"/>
+                                            </svg>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Pages</div>
+                                            <div class="up-detail-val" id="upDetailPages">&mdash;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail" id="upRetryWrap" style="display:none">
+                                        <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">
+                                            Retry Parse
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                    </div>
+                </div>
+                <div class="fs fv-row summary-card candidate-card" style="margin-bottom:0">
+                  <div class="fsh resume-card-header summary-card-header candidate-card-header">
+                    <div class="candidate-card-title summary-title-wrap">
+                      <span class="summary-card-icon candidate-card-icon"><i class="fa-solid fa-align-left" aria-hidden="true"></i></span>
+                      <span><strong>Career Summary <span class="rq">*</span></strong><small>Highlight the candidate's experience, strengths, and suitability.</small></span>
+                    </div>
+                  </div>
+                  <div class="fsc summary-card-body candidate-card-body">
+                    <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <div class="cc">0 / 100</div>
+                    <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg><span>Tip: A good summary helps the client
+                        understand the candidate quickly.</span></div>
+                  </div>
+                </div>
+            </div>
+            
+            <!--begin::Upload Photo-->
+            <div class="form-group row fv-row mb-10 d-none">
+              <div class="col-lg-4 col-xl-4 text-center">
+                <!--begin::Image input-->
+                <div class="image-input image-input-outline" data-kt-image-input="true">
+                  <!--begin::Image preview wrapper-->
+                  <div class="image-input-wrapper w-90px h-90px" style="background-image: url({!! @$photo !!})"></div>
+                  <!--end::Image preview wrapper-->
+                  <!--begin::Edit button-->
+                  <label class="btn btn-icon btn-circle btn-active-color-primary w-20px h-20px bg-white shadow" data-kt-image-input-action="change" data-bs-toggle="tooltip" data-bs-dismiss="click" title="Change avatar"> <i class="bi bi-pencil-fill fs-9"></i>
+                  <!--begin::Inputs-->
+                  <input type="file" name="photo" id="avatar" accept=".png, .jpg, .jpeg" />
+                  <input type="hidden" name="avatar_remove" />
+                  <!--end::Inputs-->
+                  </label>
+                  <!--end::Edit button-->
+                  <!--begin::Cancel button-->
+                  <span class="btn btn-icon btn-circle btn-active-color-primary w-20px h-20px bg-white shadow" data-kt-image-input-action="cancel" data-bs-toggle="tooltip" data-bs-dismiss="click" title="Cancel avatar"> <i class="bi bi-x fs-4"></i> </span>
+                  <!--end::Cancel button-->
+                  <!--begin::Remove button-->
+                  <span class="btn btn-icon btn-circle btn-active-color-primary w-20px h-20px bg-white shadow" data-kt-image-input-action="remove" data-bs-toggle="tooltip" data-bs-dismiss="click" title="Remove avatar"> <i class="bi bi-x fs-4"></i> </span>
+                  <!--end::Remove button-->
+                </div>
+                <span class="form-text text-muted d-block">Allowed file types: png,jpg, jpeg.</span>
+                <!--end::Image input-->
+              </div>
+              <div class="col-lg-8 col-xl-8">
+                {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
+                <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
+                <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
+                <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
+                <!--end::Input group-->
+              </div>
+            </div>
+            <!--end::Upload Photo & Resume/CV-->
+
+            <!-- Candidate Profile -->
+            <div class="fs bd-card candidate-card candidate-profile-card">
+              <div class="fsh candidate-card-header bd-hero">
+                <div class="candidate-card-title bd-hero-title">
+                  <span class="candidate-card-icon bd-hero-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span><strong>Candidate Profile</strong><small>Basic information to identify and contact this candidate.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body bd-body">
+                <div class="candidate-profile-grid">
+                  <div class="fg fv-row">
+                    <label>Full Name <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Primary Email <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Primary Contact Number <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code"></div></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Current Location <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--tagify candidate-field-control--location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" autocomplete="off" aria-label="Search current location" /><i class="fa-solid fa-chevron-down candidate-location-chevron" aria-hidden="true"></i></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Highest Qualification <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><select name="qualification" id="qualification">
+                      <option value="">Select qualification</option>
+                      @foreach($qualification as $data_value)
+                      @php
+                      $sel = '';
+                      if(@$application->qualification == $data_value->id ){
+                      $sel = 'selected="selected"';
+                      }
+                      @endphp
+                      <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
+                      @endforeach
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Nationality</label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-flag" aria-hidden="true"></i><select name="nationality" id="nationality">
+                      <option value="">Select nationality</option>
+                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
+                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
+                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
+                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Gender</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
+                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Date of Birth</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
+                  </div>
+                </div>
+
+                <details class="candidate-secondary-details" {{ (!empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile)) ? 'open' : '' }}>
+                  <summary>
+                    <span class="candidate-secondary-summary"><span class="candidate-secondary-icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span><span><strong>Additional Secondary Contact</strong><small>Optional secondary email and contact number.</small></span></span>
+                    <span class="candidate-secondary-toggle"><span class="candidate-secondary-show">Show Details</span><span class="candidate-secondary-hide">Hide Details</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                  </summary>
+                  <div class="candidate-secondary-grid">
+                    <div class="fg fv-row">
+                      <label>Secondary Email</label>
+                      <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" /></div>
+                    </div>
+                    <div class="fg fv-row">
+                      <label>Secondary Contact Number</label>
+                      <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code"></div></div>
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <!-- Primary Skills -->
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div id="skillTags" class="skill-tags"></div>
+                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
+              </div>
+            </div>
+
+            <!-- Experience Details -->
+            <div class="fs pd-experience-section-card candidate-card experience-details-card">
+              <div class="fsh candidate-card-header pd-experience-hero">
+                <div class="candidate-card-title pd-experience-hero-title">
+                  <span class="candidate-card-icon pd-experience-hero-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                  <span><strong>Experience Details</strong><small>Capture total and relevant experience for this job application.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body pd-experience-body">
+                @php
+                 $value = @$application->total_exp; // Convert to string to preserve decimal
+                 if(!is_null($value)){
+                  $total_exp = GeneralMethod::separateNumberParts($value);
+                  $exp_years = ($total_exp[0]);
+                  $exp_months = ($total_exp[1]);
+                  $selected_exp_year = ($exp_years);
+                  $selected_exp_month = ($exp_months);
+                 }else{
+                  $selected_exp_year = null;
+                  $selected_exp_month = null;
+                 }
+
+                 $valuew = @$application->rel_exp;
+                 if(!is_null($value)){
+                  $total_rel_exp = GeneralMethod::separateNumberParts($valuew);
+                  $rel_exp_years = ($total_rel_exp[0]);
+                  $rel_exp_months = ($total_rel_exp[1]);
+                  $selected_rel_exp_year = ($rel_exp_years);
+                  $selected_rel_exp_month = ($rel_exp_months);
+                 }else{
+                  $selected_rel_exp_year = null;
+                  $selected_rel_exp_month = null;
+                 }
+                @endphp
+                <div class="candidate-experience-grid">
+                  <div class="candidate-experience-panel">
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-clock" aria-hidden="true"></i></span><strong>Total Experience</strong><span class="candidate-required-dot">*</span></div>
+                    <div class="ei">
+                      <select id="total_exp_year" name="total_exp_year">
+                        <option value="">Years</option>
+                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        @php
+                            for ($i = 1; $i <= 60; $i++) {
+                                  $selected = '';
+                                  $s = 'Year';
+                                  if($i > 1){
+                                      $s = 'Years';
+                                  }
+                                  if(is_null($selected_exp_year)){
+                                    $selected = '';
+                                  }else{
+                                    if($i==$selected_exp_year){
+                                      $selected = 'selected';
+                                    }
+                                  }
+                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
+                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
+                        <option value="">Select Month</option>
+                        @php
+                            for ($i = 0; $i <= 11; $i++) {
+                                  $selected = '';
+                                  $s = 'Month';
+                                  if($i > 1){
+                                     $s = 'Months';
+                                  }
+                                  if(is_null($selected_exp_month)){
+                                    $selected = '';
+                                  }else{
+                                    if($i==$selected_exp_month){
+                                      $selected = 'selected';
+                                    }
+                                  }
+                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
+                    </div>
+                  </div>
+                  <div class="candidate-experience-panel candidate-experience-panel--relevant">
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span><strong>Relevant Experience</strong><span class="candidate-required-dot">*</span></div>
+                    <div class="ei">
+                      <select id="rel_exp_year" name="rel_exp_year">
+                        <option value="">Years</option>
+                        <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        @php
+                              for ($i = 1; $i <= 60; $i++) {
+                                    $selected = '';
+                                    $s = 'Year';
+                                    if($i > 1){
+                                        $s = 'Years';
+                                    }
+                                    if(is_null($selected_rel_exp_year)){
+                                      $selected = '';
+                                    }else{
+                                      if($i==$selected_rel_exp_year){
+                                        $selected = 'selected';
+                                      }
+                                    }
+                                  echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                              }
+                        @endphp
+                      </select>
+                      <select class="" arial-label="Select rel_exp_month" id="rel_exp_month" name="rel_exp_month">
+                        <option value="">Select Month</option>
+                        @php
+                            for ($i = 0; $i <= 11; $i++) {
+                                  $selected = '';
+                                  $s = 'Month';
+                                  if($i > 1){
+                                     $s = 'Months';
+                                  }
+                                  if(is_null($selected_rel_exp_month)){
+                                    $selected = '';
+                                  }else{
+                                    if($i==$selected_rel_exp_month){
+                                      $selected = 'selected';
+                                    }
+                                  }
+                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                            }
+                        @endphp
+                      </select>
+                    </div>
+                    <small>Relevant experience in the recommended or primary skills.</small>
+                  </div>
+                  <div class="candidate-experience-tip">
+                    <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
+                    <div><strong>Tip</strong><p>Relevant experience should match the skills required for this job.</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Professional Profile -->
+            <div class="fs pd-card candidate-card professional-profile-card" id="candidateProfessionalProfile">
+              <div class="fsh candidate-card-header pd-hero">
+                <div class="candidate-card-title pd-hero-title">
+                  <span class="candidate-card-icon pd-hero-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Professional Profile</strong><small>Define the candidate's current professional role and employment type.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body pd-body">
+                <div class="professional-profile-grid">
+                  <div class="fg fv-row">
+                    <label>Current Company <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Current Designation <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Employment Type <span class="rq">*</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-people-group" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
+                      <option value="">Select employment type</option>
+                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
+                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
+                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
+                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                    </select></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @php
+              $candidateSalaryMode = (int) (@$application->current_ctc_mode ?? 0);
+              $candidateSalaryMode = in_array($candidateSalaryMode, [0, 1, 2], true) ? $candidateSalaryMode : 0;
+              $candidateSalaryPeriod = [0 => 'annual', 1 => 'monthly', 2 => 'hourly'][$candidateSalaryMode];
+            @endphp
+            <!-- Salary Details -->
+            <div class="fs br-card salary-card candidate-card">
+              <div class="fsh candidate-card-header br-hero">
+                <div class="candidate-card-title br-hero-title">
+                  <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+                  <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
+                </div>
+                <div class="candidate-salary-header-currency">
+                  <label for="current_ctc_cur">Currency</label>
+                  <select id="current_ctc_cur" name="current_ctc_cur">
+                    @php
+                        $current_ctc_cur = "";
+                        $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
+                        foreach($currency as $key=>$val){
+                            $sel = '';
+                            if($current_ctc_cur===null){
+                              if($currency_code==$val){
+                                $sel = 'selected="selected"';
+                              }
+                            }else{
+                              if($current_ctc_cur == $key){
+                                $sel = 'selected="selected"';
+                              }
+                            }
+                            echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                        }
+                    @endphp
+                  </select>
+                  <div class="d-none">
+                    <select name="current_ectc_cur" id="current_ectc_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                    <select name="current_th_cur" id="current_th_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body br-body">
+                <div class="candidate-salary-grid">
+                  <section class="candidate-salary-panel candidate-salary-panel--current">
+                                        <div class="candidate-salary-panel-head">
+                      <span><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                      <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
+
+                    </div>
+                    <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="annual" data-salary-mode="0">Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="annual">
+                      <div class="d-none">
+                        <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="current_ectc_mode" id="current_ectc_mode">
+                          @php
+                              $current_ectc_mode = "";
+                              $current_ectc_mode = @$application->current_ectc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if($candidateSalaryMode==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
+                        </select>
+                        <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
+                          @php
+                              $current_ctc_mode = "";
+                              $current_ctc_mode = @$application->current_ctc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if($candidateSalaryMode==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
+                        </select>
+                      </div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                    </div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-current-auto-label-one">Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-current-auto-label-two">Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div>
+                    </div>
+                  </section>
+
+                  <section class="candidate-salary-panel candidate-salary-panel--expected">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" disabled>Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" disabled>Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" disabled>Hourly</button>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                    </div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-expected-auto-label-one">Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-expected-auto-label-two">Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div>
+                    </div>
+                  </section>
+
+                  <aside class="candidate-salary-panel candidate-salary-summary">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
+                    <div class="candidate-salary-summary-list">
+                      <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
+                      <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
+                      <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
+                      <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
+                    </div>
+                    <div class="candidate-offer-field">
+                      <strong>Offer in Hand</strong>
+                      <div class="rg">
+                        <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
+                        <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+
+                <div class="candidate-salary-comments">
+                  <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
+                  <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
+                  <div class="cc">0 / 500</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Notice Period and Joining Details -->
+            <div class="fs aw-card candidate-card candidate-availability-card notice-joining-card">
+              <div class="fsh candidate-card-header aw-hero">
+                <div class="candidate-card-title aw-hero-title">
+                  <span class="candidate-card-icon aw-hero-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></span>
+                  <span><strong>Notice Period &amp; Joining Details</strong><small>Capture notice period, joining availability, and reason for job change.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body aw-body">
+                <div class="candidate-notice-status-block">
+                  <label>Notice Period <span class="rq">*</span></label>
+                  <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--immediate"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Immediate Joiner</strong><small>Can join within 0-15 days</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
+                    </button>
+                    <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
+                      <span class="candidate-notice-option-radio" aria-hidden="true"></span>
+                      <span class="candidate-notice-option-icon candidate-notice-option-icon--select"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                      <span class="candidate-notice-option-copy"><strong>Select Notice Period</strong><small>Choose a specific notice period</small></span>
+                    </button>
+                  </div>
+                  <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
+                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period</option>
+                    <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
+                  </select>
+                </div>
+
+                <div class="candidate-notice-details-grid">
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ $snp_mode === 0 ? 'hidden' : '' }}>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date' : 'Last Working Date' }} <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                      <div class="candidate-date-picker">
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date' : 'Select last working date' }}" readonly {{ $snp_mode === 0 ? 'disabled' : '' }}>
+                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ $snp_mode === 0 ? 'disabled' : '' }}>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
+                    <label>Notice Period <span class="rq">*</span></label>
+                    <div class="candidate-notice-input-shell">
+                      <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                      <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
+                        <option value="">Select Notice Period</option>
+                        @php
+                            for ($i = 1; $i <= 200; $i++) {
+                                $suffix = $i === 1 ? 'Day' : 'Days';
+                                $selected = ($snp_mode === 0 && $i == @$application->np_id) ? 'selected' : '';
+                                echo '<option value="' . $i . '" ' . $selected . '>' . $i . ' ' . $suffix . '</option>';
+                            }
+                        @endphp
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Reason for Job Change</label>
+                    <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
+                  </div>
+                </div>
+                <input type="text" id="calender" name="calender" hidden>              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-regular fa-building" aria-hidden="true"></i></span><span><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><span><strong>Work From Office</strong><small>Office location based work.</small></span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skills Details -->
+            <div class="fs se-card job-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></span>
+                  <span><strong>Job Skills Details</strong><small>Record experience and proficiency against the job's required skills.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body candidate-table-wrap">
+                <table class="sk">
+                  <thead>
+                    <tr>
+                      <th>Skill <span class="rq">*</span></th>
+                      <th>Experience (Years) <span class="rq">*</span></th>
+                      <th>Experience (Months)</th>
+                      <th>Proficiency Rating <span class="rq">*</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($jobSkill as $skill_val)
+                        @if(!empty($skill_val->skill_name))
+
+                            @php
+                                  $selected_skill_exp_year = null;
+                                  $selected_skill_exp_month = null;
+                                  $selected_skill_rating = null;
+
+                                  if(!empty($skill_val->skill_value)){
+                                    $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
+                                    if($skillValue !== ''){
+                                      $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
+                                      $skill_exp_years = $total_skill_exp[0] ?? null;
+                                      $skill_exp_months = $total_skill_exp[1] ?? null; 
+
+                                      $selected_skill_exp_year = $skill_exp_years;
+                                      $selected_skill_exp_month = $skill_exp_months;
+                                      $selected_skill_rating = $skill_val->rating ?? null;
+                                     }
+                                  }
+                            @endphp
+
+                            <tr>
+                              <td><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></td>
+                              <td>
+                                <select class="form-select form-select-solid" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val->id }}]">
+                                      <option value="0">Select Year</option>
+                                      @php 
+                                          for ($i = 1; $i <= 60; $i++) {
+                                                $selected = '';
+                                                $s = 'Year';
+                                                if($i > 1){
+                                                    $s = 'Years';
+                                                }
+                                                if(!is_null($selected_skill_exp_year) && (string)$i === (string)$selected_skill_exp_year){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                              <td>
+                                <select class="form-select form-select-solid" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val->id }}]">
+                                      <option value="">Select Month</option>
+                                      @php 
+                                          for ($i = 0; $i <= 11; $i++) {
+                                                $selected = '';
+                                                $s = 'Month';
+                                                if($i > 1){
+                                                    $s = 'Months';
+                                                }
+                                                if(!is_null($selected_skill_exp_month) && (string)$i === (string)$selected_skill_exp_month){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                </select>
+                              </td>
+                              <td>
+                                 <select class="form-select form-select-solid" arial-label="Select rating" id="rating" name="rating[{{ $skill_val->id }}]">
+                                      <option value="0">Select rating</option>
+                                      @php 
+                                          for ($i = 1; $i <= 5; $i++) {
+                                                $selected = '';
+                                                $s = 'Star';
+                                                if($i > 1){
+                                                    $s = 'Stars';
+                                                }
+                                                if(!is_null($selected_skill_rating) && (string)$i === (string)$selected_skill_rating){
+                                                    $selected = 'selected';
+                                                }
+                                                echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                                          }
+                                      @endphp
+                                    </select>
+                              </td>
+                            </tr>
+                        @endif
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Screening Questions -->
+            @php
+                $screeningQuestions = collect($job_additional_detail ?? [])->filter(function ($question) {
+                    return is_object($question) && trim((string) ($question->detail_value ?? '')) !== '';
+                });
+            @endphp
+          @if($screeningQuestions->isNotEmpty())
+            <div class="fs candidate-card questions-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--questions"><i class="fa-regular fa-circle-question" aria-hidden="true"></i></span>
+                  <span><strong>Screening Questions</strong><small>Complete the job-specific information required for this submission.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+
+                <!--begin::Custom Details-->
+                <div class="" id="job_additional_detail">
+                  @php 
+                    if(!empty($job_additional_detail)){
+                    
+                    $customTitleId	=	1;
+                    $html			=	'';
+                   
+                    $inc_first		=	0;
+                    $inc_last		=	1;
+                     $html	.=	'<div class="form-group row mb-10">';	
+                    foreach($screeningQuestions as $aDetailArr){
+                      if(!empty($aDetailArr->detail_value)){
+                      
+                      $ans_value	=	'';
+                      if(!empty($application_additional_detail)){
+                        foreach($application_additional_detail as $aval){
+                            if($aDetailArr->id == $aval->question_id){
+                              $ans_value	=	@$aval->application_detail_value;	
+                            }
+                        }
+                      }
+						
+                            // if($inc_first %3 == 0) {
+                             
+                            // }	
+                            $html		.=	'<div class="col-md-4">
+                                      <label class="form-label">'.strtoupper($aDetailArr->detail_value).':</label>
+                                      <input type="hidden" name="job_question[]" value="'.$aDetailArr->id.'">
+                                      <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
+                                      <span class="text-muted form-text">Please enter your details</span>
+                                    </div>';
+                                    
+                            // if(($inc_last %3 == 0)&& $inc_last > 0){
+                              
+                            // }
+                          }
+                            $inc_first++;
+                            $inc_last++;
+                            $customTitleId++;				
+                          }
+                          $html		.='</div>';
+                          echo $html;	
+                          }	
+                                                    
+                  @endphp
+                </div>
+                <!--end::Custom Details-->
+              </div>
+            </div>
+            @endif
+
+
+            <!-- Availability -->
+            <div class="fs candidate-card interview-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--interview"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
+                  <span><strong>Availability for Next 3 Days <span class="rq">*</span></strong><small>Provide three interview windows and the preferred interview mode.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="ag">
+                  <div class="ai">
+                            <div class="ad">Date and Time(Slot-1)</div>
+                             <div class="row">
+                              <div class="col-4 pl-0">
+                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
+                              </div>
+                              <div class="col-3 pl-0">
+                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off">
+                              </div>
+                              <div class="col-5 pl-0">
+                                <select name="interview_mode_one" id="interview_mode_one"
+                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
+                                      class="form-select form-select-solid">
+                                      <option value="">Mode</option>
+                                      @if (!empty(@$interview_mode))
+                                        @foreach (@$interview_mode as $int_mode_val)
+                                            
+                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="ai">
+                            <div class="ad">Date and Time(Slot-2)</div>
+                            <div class="row">
+                              <div class="col-4 pl-0">
+                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" autocomplete="off">
+                              </div>
+                              <div class="col-3 pl-0">
+                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off">
+                              </div>
+                              <div class="col-5 pl-0">
+                                <select name="interview_mode_two" id="interview_mode_two"
+                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
+                                      class="form-select form-select-solid">
+                                      <option value="">Mode</option>
+                                      @if (!empty(@$interview_mode))
+                                        @foreach (@$interview_mode as $int_mode_val)
+                                            
+                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="ai">
+                              <div class="ad">Date and Time(Slot-3)</div>
+                              <div class="row">
+                                <div class="col-4 pl-0">
+                                  <input class="form-control form-control-solid" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
+                                </div>
+                                <div class="col-3 pl-0">
+                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off">
+                                </div>
+                                <div class="col-5 pl-0">
+                                  <select name="interview_mode_three" id="interview_mode_three"
+                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
+                                      class="form-select form-select-solid">
+                                      <option value="">Mode</option>
+                                      @if (!empty(@$interview_mode))
+                                        @foreach (@$interview_mode as $int_mode_val)
+                                            
+                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                  </select>
+                                </div>
+                              </div>
+                          </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Links -->
+            <div class="fs addl-card candidate-card professional-links-card">
+              <div class="fsh candidate-card-header addl-hero">
+                <div class="candidate-card-title addl-hero-title">
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+                  <span><strong>Professional Links</strong><small>Add online profiles that help clients evaluate this candidate.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body addl-body">
+                <div class="candidate-professional-links">
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--linkedin" aria-hidden="true">in</span>
+                    <label for="linkedin">LinkedIn <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" /></div>
+                    <small>e.g. https://www.linkedin.com/in/yourname</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--github" aria-hidden="true">GH</span>
+                    <label for="github">GitHub <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" /></div>
+                    <small>e.g. https://github.com/yourusername</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--behance" aria-hidden="true">Be</span>
+                    <label for="behance">Behance <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" /></div>
+                    <small>e.g. https://www.behance.net/yourname</small>
+                  </div>
+                  <div class="candidate-link-row fv-row">
+                    <span class="candidate-link-brand candidate-link-brand--website" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
+                    <label for="otherLink">Portfolio / Website <span>(Optional)</span></label>
+                    <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" /></div>
+                    <small>e.g. https://yourportfolio.com</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="fs candidate-card additional-details-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--additional"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
+                  <span><strong>Additional Details</strong><small>Provide any other relevant information about the candidate's professional background.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-additional-details-grid">
+                  <div class="fg fv-row">
+                    <label>Current Visa Status (For International)</label>
+                    <select name="visastatu" id="visastatu">
+                      <option value="">Select visa status</option>
+                      <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
+                      <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
+                      <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
+                      <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
+                      <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
+                    </select>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Professional Reference <span class="candidate-optional-label">(Optional)</span></label>
+                    <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
+                    <small class="candidate-field-help">Provide a reference name who can vouch for the candidate's work experience.</small>
+                  </div>
+                </div>
+                <div class="candidate-section-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>All fields in this section are optional. Add relevant details when they apply to this candidate.</span></div>
+              </div>
+            </div>
+
+            <!-- Recruiter Comments -->
+            <div class="fs candidate-card recruiter-note-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
+                  <span><strong>Recruiter Comments</strong><small>Add internal context for the hiring team; this is not shared with the candidate.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
+                  <select id="recruiter_note_template_select" style="width:100%;padding:8px 12px;border:1px solid #e4e6ef;border-radius:6px;font-family:'Poppins',sans-serif;font-size:13px;color:#3f4254;background:#fff;cursor:pointer;">
+                    <option value="">Select Note Template...</option>
+                    @foreach($recruiterNoteTemplates as $tpl)
+                      <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                @endif
+                <div class="fg fv-row" style="grid-column: 1 / -1;">
+                  <label>Internal Note (Optional)</label>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          </form>
+        </main>
+
+      </div>
+     
+    </div>
+    <!--end::Container-->
+  </div>
+  <!--end::Post-->
+</div>
+<!--end::Content--> 
+
+@endsection
+
+@php
+    $rates = $currencyConverter['usd_based_rates'] ?? [
+        'USD' => 1,
+        'INR' => 83,
+        'EUR' => 0.87,
+        'JPY' => 159.65,
+        'GBP' => 0.76,
+        'AED' => 3.67
+    ];
+
+    $currencyKeys = $currencyConverter['getKey'] ?? [
+        'INR',
+        'EUR',
+        'JPY',
+        'GBP',
+        'USD',
+        'AED'
+    ];
+
+@endphp
+
+@push('footer-script')
+<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
+
+<script>
+$(document).ready(function () {
+
+    // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
+    // resume-presign.js is loaded unconditionally; v2 activates only when the
+    // module exists and the server confirms the complete session contract.
+    @if(config('resumes.features.browser_upload')
+        && config('resumes.features.presign_endpoint')
+        && config('resumes.features.finalize_endpoint')
+        && config('resumes.features.submit_with_session')
+        && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
+    window.RESUME_PRESIGN_URL = @json(route('service_company.resume.v2.sessions.store'));
+    @endif
+    var RESUMES_FEATURE_BROWSER_UPLOAD = !!(window.ResumePresign && window.RESUME_PRESIGN_URL);
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+        window.RESUMES_FEATURE_BROWSER_UPLOAD = true;
+        // Phase 6: server-controlled retry config passed to the JS module.
+        window.RESUMES_CONFIG = {
+            maxPutAttempts: @json(config('resumes.network_resilience.max_put_attempts', 3)),
+            putBackoffMs:   @json(config('resumes.network_resilience.put_backoff_ms', 1000)),
+        };
+    }
+
+    // ── v2 state → existing progress bar UI bridge ───────────────────────────
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+        window.ResumePresign.onStateChange(function (data) {
+            if (data.state === 'uploading') {
+                $('#upWrap').show();
+                $('#upBar').css('width', data.progress + '%');
+                $('#upStats').html(data.progress + '% &middot; Uploading to cloud&hellip;');
+            } else if (data.state === 'uploaded') {
+                $('#upBar').css('width', '100%');
+                $('#upStats').html('100% &middot; Upload complete');
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                    + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
+                ).show();
+                $('#uploaded_file_path').val('');   // v2 uses session_uuid, not file path
+                $('#resume_original_name').val('');
+                $('#resumeCheck').val('1');
+                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
+            } else if (data.state === 'failed') {
+                if (typeof _showUploadError === 'function') {
+                    _showUploadError(data.error || 'Upload failed. Please remove and try again.');
+                }
+            }
+        });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Build a unique contextKey for this company + job + application context
+    function getUpContextKey() {
+        var companyId = @json(auth()->user()->company_id ?? 0);
+        var jobId = $('#job_id').val() || '0';
+        var appId = $('#appId').val() || '0';
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+    }
+
+    /**
+     * Intent: Clean resume state initialization for ADD vs EDIT candidate flows.
+     * Prevents previous session resume leakage on page load/refresh for ADD Candidate mode.
+     * In ADD mode ($page_event != 'EDIT' or appId == 0), start with a completely empty resume state,
+     * clear any stale browser-side upload sessions from localStorage, and never auto-recover old sessions.
+     * In EDIT mode ($page_event == 'EDIT' and appId > 0), preserve existing database resume state and
+     * clear uncommitted temporary V2 upload sessions so they do not interfere with saved data.
+     */
+    if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        if (!isEditMode) {
+            // ADD mode: clear stale session for current context & reset form fields & UI
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+            $('#uploaded_file_path').val('');
+            $('#resume_original_name').val('');
+            $('#resumeCheck').val('');
+            $('#upInfo').removeClass('show');
+            $('#uploadBox').show();
+            $('#fileInfo').hide();
+            $('#fileName').text('');
+            var ri = document.getElementById('resume'); if (ri) ri.value = '';
+        } else {
+            // EDIT mode: clear uncommitted temporary V2 session; DB resume is rendered via Blade HTML if present
+            window.ResumePresign.cancelUpload(getUpContextKey());
+            $('#resume_session_uuid').val('');
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const uploadBox = document.getElementById('uploadBox');
+    const resumeInput = document.getElementById('resume');
+    var resumeUploadGeneration = 0;
+
+    /**
+     * Intent: Use the existing same-origin raw-byte uploader as a circuit breaker
+     * when this browser or network cannot complete the direct Cloudflare R2 PUT.
+     */
+    function shouldUseResumeUploadFallback(error) {
+        var message = String((error && error.message) || '');
+
+        return message.indexOf('R2 upload failed') !== -1
+            || message.indexOf('Network error during upload') !== -1
+            || message.indexOf('Upload timed out') !== -1
+            || message.indexOf('Upload feature is not enabled') !== -1
+            || message.indexOf('Presign request failed') !== -1;
+    }
+
+    // ==========================
+    // Common file handler
+    // ==========================
+    function processFile(file, event = null) {
+
+        if (!file) return;
+
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if ($.inArray(ext, ['pdf', 'doc', 'docx']) === -1) {
+            alert('Only PDF, DOC and DOCX files are allowed.');
+            return;
+        }
+
+        const sizeMB = file.size / (1024 * 1024);
+
+        // Server is `max:6048` KB = 6 MB. Keep the JS check in sync.
+        if (sizeMB > 6) {
+            alert('Maximum file size is 6 MB.');
+            return;
+        }
+        var uploadGeneration = ++resumeUploadGeneration;
+
+        // Show human-readable size: KB for small files (avoids "0.07 MB" display)
+        const sizeStr = sizeMB >= 1
+            ? sizeMB.toFixed(2) + ' MB'
+            : Math.round(file.size / 1024) + ' KB';
+
+        $('#fileName').text(file.name + ' (' + sizeStr + ')');
+
+        $('#fileInfo').css('display', 'flex');
+
+        $('#resumeCheck').val('1');
+
+        $('.download-file').addClass('d-none');
+
+        // Upload the file. v2 (presign → R2 PUT) takes priority when the flag
+        // is ON; falls through to the legacy multipart POST otherwise.
+        window.__upXhrChannelClaimed = true;
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+            // v2 path: direct browser → R2, zero PHP bytes.
+            // startUpload() is async; state changes drive the UI via onStateChange.
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
+                if (uploadGeneration !== resumeUploadGeneration
+                    || !shouldUseResumeUploadFallback(error)
+                    || typeof uploadWithProgress !== 'function') {
+                    return;
+                }
+
+                // The direct route failed before a usable upload completed. Clear
+                // its temporary session so candidate submit uses only v1 fields.
+                window.ResumePresign.cancelUpload(getUpContextKey());
+                $('#resume_session_uuid').val('');
+                $('#uploaded_file_path').val('');
+                $('#resume_original_name').val('');
+                $('#upBanner').removeClass('ok err').hide().empty();
+                $('#upStats').text('Direct upload unavailable - retrying securely...');
+                uploadWithProgress(file);
+            });
+        } else if (typeof uploadWithProgress === 'function') {
+            // v1 path: PHP multipart POST (unchanged)
+            uploadWithProgress(file);
+        }
+        if (typeof handleFileInputChange === 'function') {
+            // For drag-drop / paste, no native input-change event exists.
+            // resumeInput.files was already assigned above, so a synthetic
+            // event pointing to it is sufficient for handleFileInputChange.
+            handleFileInputChange(event || { target: resumeInput });
+        }
+        // Reset so the legacy channel is open for the *next* pick.
+        window.__upXhrChannelClaimed = false;
+    }
+
+    // ==========================
+    // XHR progress helpers
+    // ==========================
+    let upXhr = null;
+
+    function fmtKB(b) {
+        return (b / 1024).toFixed(1) + ' KB';
+    }
+
+    function fmtSize(b) {
+        return b >= 1024 * 1024
+            ? (b / (1024 * 1024)).toFixed(1) + ' MB'
+            : Math.round(b / 1024) + ' KB';
+    }
+
+    function extLabel(file) {
+        var e = (file.name.split('.').pop() || '').toUpperCase();
+        if (e !== 'PDF' && e !== 'DOC' && e !== 'DOCX') e = 'PDF';
+        return e;
+    }
+
+    function resetProgress() {
+        if (upXhr) { upXhr.abort(); upXhr = null; }
+        window.__upXhrChannelClaimed = false;
+        $('#upWrap').hide();
+        $('#upBar').css('width', '0%');
+        $('#upStats').text('0% &middot; 0 KB / 0 KB');
+        $('#upPill').hide();
+        const $b = $('#upBanner');
+        $b.hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
+    }
+
+    // Go back to the dropzone / progress-possible state. Called by
+    // the #removeFile button and the card's Replace/Remove buttons.
+    function backToDropzone() {
+        resumeUploadGeneration++;
+        resetProgress();
+        // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
+        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+            window.ResumePresign.cancelUpload(getUpContextKey());
+        }
+        $('#resume_session_uuid').val('');
+        $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
+        $('#upInfo').removeClass('show');
+        $('#uploadBox').show();
+        $('#fileInfo').hide();
+        $('#fileName').text('');
+        $('#resume').val('');
+        $('#resumeCheck').val('');
+        $('.download-file').addClass('d-none');
+        window.__upLoc = null;
+    }
+
+    // Populate the post-upload Resume Information card from the picked
+    // file. Sets the initial details (Uploaded On, File Type, File Size,
+    // Parser Status = Pending). When parserResponse is provided (from
+    // re_test), it refreshes skills count, parser status, and pages.
+    function showUploadedCard(file, parserResponse) {
+        var ext = extLabel(file);
+        var $info = $('#upInfo');
+        $info.find('.up-file-icon').text(ext);
+        $('#upFileName').text(file.name);
+        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+
+        var now = new Date();
+        var day = String(now.getDate()).padStart(2, '0');
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var month = months[now.getMonth()];
+        var year = now.getFullYear();
+        var hh = String(now.getHours()).padStart(2, '0');
+        var mm = String(now.getMinutes()).padStart(2, '0');
+        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm);
+
+        $('#upDetailParserStatus').text('Pending');
+        $('#upDetailFileType').text(ext);
+        $('#upDetailPages').html('&mdash;');
+
+        if (parserResponse) {
+            $('#upDetailParserStatus').text('Completed');
+            if (typeof parserResponse.pages === 'number' && parserResponse.pages > 0) {
+                $('#upDetailPages').text(parserResponse.pages);
+            }
+        }
+
+        // Hide the dropzone + file-info strip and show the new card.
+        $('#uploadBox').hide();
+        $('#fileInfo').hide();
+        $info.addClass('show');
+    }
+
+    // ─── Zero-temp upload pipeline ───────────────────────────────────────────
+    // xhr.send(file) sends raw bytes — PHP reads php://input stream directly
+    // to R2. No multipart = no PHP upload_tmp_dir write. No CORS needed.
+    // Flow: browser → POST raw bytes → Laravel streams to R2 → ParseResumeJob
+    // ─────────────────────────────────────────────────────────────────────────
+
+    var _parseStatusInterval = null;
+    var _resumeUploadId      = null;
+
+    function _showUploadError(msg) {
+        $('#upBanner').removeClass('ok').addClass('err').html(
+            '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<circle cx="12" cy="12" r="10"/>'
+            + '<line x1="15" y1="9" x2="9" y2="15"/>'
+            + '<line x1="9" y1="9" x2="15" y2="15"/>'
+            + '</svg><span><strong>Upload failed:</strong> ' + msg + '</span>'
+        ).show();
+        upXhr = null;
+    }
+
+    function _startParsePoller(uploadId) {
+        _resumeUploadId = uploadId;
+        if (_parseStatusInterval) clearInterval(_parseStatusInterval);
+        _parseStatusInterval = setInterval(function () {
+            $.get('{{ route("service_company.resume.status", ["id" => "__ID__"]) }}'.replace('__ID__', uploadId))
+                .done(function (r) {
+                    var statusMap = {
+                        Queued:     'Queued…',
+                        Processing: 'Parsing resume…',
+                        Completed:  'Parsed ✓',
+                        Failed:     'Parse failed',
+                    };
+                    $('#upDetailParserStatus').text(statusMap[r.status] || r.status);
+                    if (r.status === 'Completed' || r.status === 'Failed') {
+                        clearInterval(_parseStatusInterval);
+                        _parseStatusInterval = null;
+                        if (r.status === 'Failed') {
+                            $('#upDetailParserStatus').css('color', '#f44336');
+                            $('#upRetryWrap').show();
+                        } else {
+                            $('#upRetryWrap').hide();
+                        }
+                    }
+                })
+                .fail(function () { /* silent */ });
+        }, 4000);
+    }
+
+    function uploadWithProgress(file) {
+        window.__upXhrChannelClaimed = true;
+        resetProgress();
+        window.__upXhrChannelClaimed = true;
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        _resumeUploadId = null;
+
+        $('#upWrap').show();
+        $('#upStats').text('0% &middot; ' + fmtKB(0) + ' / ' + fmtKB(file.size));
+        window.__upLoc = { file: file };
+
+        var mimeMap = {
+            pdf:  'application/pdf',
+            doc:  'application/msword',
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        };
+        var ext         = (file.name.split('.').pop() || '').toLowerCase();
+        var contentType = mimeMap[ext] || file.type || 'application/octet-stream';
+
+        // Send raw file bytes — PHP reads php://input, no multipart, no temp file
+        upXhr = new XMLHttpRequest();
+        upXhr.open('POST', '{{ route("service_company.job-applications.uploadresume") }}', true);
+        upXhr.setRequestHeader('Content-Type', contentType);
+        upXhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+        upXhr.setRequestHeader('X-File-Name', encodeURIComponent(file.name));
+        upXhr.setRequestHeader('X-File-Size', file.size);
+        upXhr.setRequestHeader('X-Candidate-Id', $('#appId').val() || '');
+        upXhr.setRequestHeader('X-Job-Id', $('#job_id').val() || '');
+
+        upXhr.upload.onprogress = function (e) {
+            if (!e.lengthComputable) return;
+            var pct = Math.round(e.loaded * 100 / e.total);
+            $('#upBar').css('width', pct + '%');
+            $('#upStats').text(pct + '% &middot; ' + fmtKB(e.loaded) + ' / ' + fmtKB(file.size));
+        };
+
+        upXhr.onload = function () {
+            var r = null;
+            try { r = JSON.parse(upXhr.responseText); } catch (_) {}
+            upXhr = null;
+
+            if (this.status >= 200 && this.status < 300 && r && r.success) {
+                $('#upBar').css('width', '100%');
+                $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
+                $('#upPill').css('display', 'inline-flex');
+                $('#upBanner').removeClass('err').addClass('ok').html(
+                    '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                    + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
+                    + '<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
+                ).show();
+
+                $('#uploaded_file_path').val(r.file_path || '');
+                $('#resume_original_name').val(r.original_name || file.name || '');
+                showUploadedCard(file, null);
+
+                if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
+            } else {
+                _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
+            }
+        };
+
+        upXhr.onerror = function () {
+            _showUploadError('Network error during upload. Click Remove and try again.');
+        };
+
+        upXhr.send(file); // raw bytes → php://input → R2, zero local temp
+    }
+
+    // Replace / Remove buttons inside the post-upload Resume Information card.
+    // Replace = reset state and reopen the OS file picker.
+    // Remove  = reset state and stay on the empty dropzone.
+    // NOTE: `resumeInput.click()` MUST run synchronously inside this
+    // user-gesture handler. Wrapping it in setTimeout() / Promise
+    // .then() breaks the user-gesture chain and modern Chrome silently
+    // refuses to open the file picker for a programmatic .click().
+    $(document).on('click', '#upReplaceBtn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        backToDropzone();
+        resumeInput.click();
+    });
+
+    $(document).on('click', '#upRemoveBtn', function (e) {
+        e.preventDefault();
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        backToDropzone();
+    });
+
+    // Retry parse — re-dispatches ParseResumeJob without re-uploading
+    $(document).on('click', '#upRetryBtn', function (e) {
+        e.preventDefault();
+        if (!_resumeUploadId) return;
+        $('#upDetailParserStatus').text('Re-queuing…');
+        $('#upRetryWrap').hide();
+        $.post(
+            '{{ route("service_company.resume.retry", ["id" => "__ID__"]) }}'.replace('__ID__', _resumeUploadId),
+            { _token: '{{ csrf_token() }}' }
+        ).done(function () {
+            _startParsePoller(_resumeUploadId);
+        }).fail(function () {
+            $('#upDetailParserStatus').text('Retry failed');
+            $('#upRetryWrap').show();
+        });
+    });
+
+    // ==========================
+    // Choose File Button
+    // Direct binding so stopPropagation() fires BEFORE the click reaches
+    // #uploadBox — prevents resumeInput.click() from being called twice.
+    // ==========================
+    document.getElementById('chooseFileBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        resumeInput.click();
+    });
+
+    document.addEventListener('paste', function (e) {
+
+        const files = e.clipboardData?.files;
+
+        if (files && files.length) {
+
+            const file = files[0];
+
+            // Assign to input so form submit sees the file
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            resumeInput.files = dt.files;
+
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
+        }
+    });
+    
+
+    // ==========================
+    // Click Upload Area
+    // ==========================
+    $('#uploadBox').on('click', function (e) {
+
+        if (
+            $(e.target).closest('#chooseFileBtn').length ||
+            $(e.target).closest('#removeFile').length ||
+            $(e.target).closest('.download-file').length
+        ) {
+            return;
+        }
+
+        resumeInput.click();
+    });
+
+    // ==========================
+    // File Input Change
+    // ==========================
+    $('#resume').on('change', function (e) {
+
+        if (this.files.length > 0) {
+
+            processFile(this.files[0], e);
+
+        } else {
+
+            $('#fileInfo').hide();
+            $('#resumeCheck').val('');
+            $('.download-file').addClass('d-none');
+        }
+    });
+
+    // ==========================
+    // Remove File
+    // ==========================
+    $(document).on('click', '#removeFile', function (e) {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (typeof resetProgress === 'function') {
+            resetProgress();
+        }
+
+        $('#resume').val('');
+        $('#resumeCheck').val('');
+
+        $('#fileName').text('');
+        $('#fileInfo').hide();
+
+        $('.download-file').addClass('d-none');
+    });
+
+    // ==========================
+    // Drag & Drop
+    // ==========================
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+
+        uploadBox.addEventListener(eventName, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    uploadBox.addEventListener('dragenter', function () {
+        this.classList.add('dragging');
+    });
+
+    uploadBox.addEventListener('dragover', function () {
+        this.classList.add('dragging');
+    });
+
+    uploadBox.addEventListener('dragleave', function () {
+        this.classList.remove('dragging');
+    });
+
+    uploadBox.addEventListener('drop', function (e) {
+
+        this.classList.remove('dragging');
+
+        const files = e.dataTransfer.files;
+
+        console.log('DROP FIRED', files);
+
+        if (files.length > 0) {
+
+            const file = files[0];
+
+            // Assign to input so form submit sees the file
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            resumeInput.files = dt.files;
+
+            // processFile handles upload — no synthetic change dispatch (would double-fire)
+            processFile(file);
+        }
+    });
+
+});
+</script>
+
+
+<script>
+
+        // stepper
+        document.querySelectorAll('.stp-s').forEach((s) => {
+            s.addEventListener('click', () => {
+                document
+                    .querySelectorAll('.stp-s')
+                    .forEach((x) => x.classList.remove('a'));
+                s.classList.add('a');
+            });
+        });
+        // char counters
+        document.querySelectorAll('textarea').forEach((t) => {
+            const c = t.parentElement.querySelector('.cc');
+            if (c) {
+                const m = c.textContent.includes('1000') ? 1000 : 500;
+                t.addEventListener('input', () => {
+                    c.textContent = t.value.length + ' / ' + m;
+                });
+            }
+        });
+        // star ratings
+        document.querySelectorAll('.sr').forEach((r) => {
+            const stars = r.querySelectorAll('.st');
+            stars.forEach((s, i) => {
+                s.addEventListener('click', () => {
+                    stars.forEach((x, j) => {
+                        if (j <= i) x.classList.remove('e');
+                        else x.classList.add('e');
+                    });
+                });
+            });
+        });
+        // add skill
+        document.querySelector('.asb').addEventListener('click', () => {
+            const tb = document.querySelector('.sk tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML =
+                '<td><input type="text" placeholder="Enter skill"></td><td><input type="number" value="0" style="width:80px"></td><td><input type="number" value="0" style="width:80px"></td><td><select style="width:140px"><option>Currently</option><option>Within 6 Months</option><option>Within 1 Year</option><option>Within 2 Years</option><option>More than 2 Years</option></select></td><td><div class="sr"><span class="st e">★</span><span class="st e">★</span><span class="st e">★</span><span class="st e">★</span><span class="st e">★</span></div></td><td><button class="ab" type="button">🗑️</button></td>';
+            tb.appendChild(tr);
+            tr.querySelectorAll('.sr').forEach((r) => {
+                const s = r.querySelectorAll('.st');
+                s.forEach((x, i) => {
+                    x.addEventListener('click', () => {
+                        s.forEach((y, j) => {
+                            if (j <= i) y.classList.remove('e');
+                            else y.classList.add('e');
+                        });
+                    });
+                });
+            });
+            tr.querySelector('.ab').addEventListener('click', () => tr.remove());
+        });
+        // delete existing
+        document.querySelectorAll('.ab').forEach((b) => {
+            b.addEventListener('click', () => b.closest('tr').remove());
+        });
+</script>
+
+<script>
+
+        const HOURS_PER_MONTH = 160;
+        const MONTHS_PER_YEAR = 12;
+        const currencyRates = @json($rates);
+        const currencyRateschar = @json($currencyKeys);
+
+        let isUpdating = false;
+
+        // Base values (USD)
+        let payBase = { hourly: 0 };
+        let billBase = { hourly: 0 };
+
+        function format(val) {
+            return val ? parseFloat(val).toFixed(2) : '';
+        }
+        
+        function fromUSD(amount, currency) {
+            return amount / currencyRates[currency];
+        }
+
+   
+        // ================= PAY RATE =================
+        $('#ctc').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let hourly = parseFloat($(this).val()) || 0;
+
+            $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
+            $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
+            updatePayUI();
+
+            isUpdating = false;
+        });
+
+        $('#pay_monthly').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let monthly = parseFloat($(this).val()) || 0;
+
+            let hourly = monthly / HOURS_PER_MONTH;
+
+            $('#ctc').val(format(hourly));
+            $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
+            updatePayUI();
+
+            isUpdating = false;
+        });
+
+        $('#pay_annual').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let annual = parseFloat($(this).val()) || 0;
+
+            let monthly = annual / MONTHS_PER_YEAR;
+            let hourly = monthly / HOURS_PER_MONTH;
+
+            $('#ctc').val(format(hourly));
+            $('#pay_monthly').val(format(monthly));
+            updatePayUI();
+
+            isUpdating = false;
+        });
+
+        // ================= BILL RATE =================
+        $('#ectc').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let hourly = parseFloat($(this).val()) || 0;
+
+            $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
+            $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
+            updateBillUI();
+            isUpdating = false;
+        });
+
+        $('#bill_monthly').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let monthly = parseFloat($(this).val()) || 0;
+
+            let hourly = monthly / HOURS_PER_MONTH;
+
+            $('#ectc').val(format(hourly));
+            $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
+            updateBillUI();
+
+            isUpdating = false;
+        });
+
+        $('#bill_annual').on('input', function () {
+            if (isUpdating) return;
+            isUpdating = true;
+
+            let annual = parseFloat($(this).val()) || 0;
+
+            let monthly = annual / MONTHS_PER_YEAR;
+            let hourly = monthly / HOURS_PER_MONTH;
+
+            $('#ectc').val(format(hourly));
+            $('#bill_monthly').val(format(monthly));
+            updateBillUI();
+
+            isUpdating = false;
+        });
+        function updatePayUI() {
+            let currency = $('#current_ctc_cur').val();
+            let pay_rate_amount = $('#ctc').val();
+            let currSet = currencyRateschar[currency];
+            if(currency==4){ 
+              $('#pay_rate_hourly_usd').text('');
+              $('#pay_rate_monthly_usd').text('');
+              $('#pay_rate_annual_usd').text('');
+              updateCTCFields();
+              return false;
+            }
+
+            let hourly = fromUSD(pay_rate_amount, currSet);
+            let monthly = hourly * HOURS_PER_MONTH;
+            let annual = monthly * MONTHS_PER_YEAR;
+            
+            $('#pay_rate_hourly_usd').text('Approx $ '+ format(hourly));
+            $('#pay_rate_monthly_usd').text('Approx $ '+ format(monthly));
+            $('#pay_rate_annual_usd').text('Approx $ '+ format(annual));
+            updateCTCFields();
+        }
+        function updateBillUI() {
+            let currency = $('#current_ctc_cur').val();
+            let bill_rate_amount = $('#ectc').val();
+            let currSet = currencyRateschar[currency];
+            if(currency==4){ 
+              $('#bill_rate_hourly_usd').text('');
+              $('#bill_rate_monthly_usd').text('');
+              $('#bill_rate_annual_usd').text('');
+              updateCTCFields();
+              return false;
+            }
+
+            let hourly = fromUSD(bill_rate_amount, currSet);
+            let monthly = hourly * HOURS_PER_MONTH;
+            let annual = monthly * MONTHS_PER_YEAR;
+
+            $('#bill_rate_hourly_usd').text('Approx $ '+ format(hourly));
+            $('#bill_rate_monthly_usd').text('Approx $ '+ format(monthly));
+            $('#bill_rate_annual_usd').text('Approx $ '+ format(annual));
+            updateCTCFields();
+        }
+
+
+
+        function payRateUpdate(){
+
+          if (isUpdating) return;
+            isUpdating = true;
+           
+
+            updatePayUI();
+
+            isUpdating = false;
+          
+        }
+
+        function billRateUpdate(){
+
+          if (isUpdating) return;
+            isUpdating = true;
+          
+            updateBillUI();
+
+            isUpdating = false;
+          
+        }
+
+
+        
+
+
+
+
+
+        $('#current_ctc_cur').on('change', function () {
+           var textCurrency = $(this).find('option:selected').text();
+           $('.changeTextCurrency').text(textCurrency);
+            updatePayUI();
+            updateBillUI();
+        });
+        $('#current_ectc_cur').on('change', function () {
+           var textCurrency = $(this).find('option:selected').text();
+           $('.changeTextCurrency').text(textCurrency);
+            updateBillUI();
+            updatePayUI();
+        });
+        $('#current_th_cur').on('change', function () {
+           var textCurrency = $(this).find('option:selected').text();
+           $('.changeTextCurrency').text(textCurrency);
+            updateBillUI();
+            updatePayUI();
+        });
+        setTimeout(() => {
+              billRateUpdate();
+              payRateUpdate();
+          }, 1000);
+
+
+
+
+
+
+
+
+    let linkedinRegex = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/i;
+    let githubRegex   = /^(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9_-]+\/?$/i;
+    let behanceRegex  = /^(https?:\/\/)?(www\.)?behance\.net\/[A-Za-z0-9_-]+\/?$/i;
+
+  function validateLink(input, regex, messageId, platform) {
+          let value = $(input).val().trim();
+          if (value === "") {
+              $(messageId).html(""); // Clear if empty
+              return;
+          }
+          if (regex.test(value)) {
+              $(messageId).html("✅ Valid " + platform).css("color", "green");
+          } else {
+              $(messageId).html("❌ Invalid " + platform).css("color", "red");
+          }
+      }
+
+
+    $("#linkedin").on("change", function () {
+        validateLink(this, linkedinRegex, "#linkedin-msg", "LinkedIn");
+    });
+
+    $("#github").on("change", function () {
+        validateLink(this, githubRegex, "#github-msg", "GitHub");
+    });
+
+    $("#behance").on("change", function () {
+        validateLink(this, behanceRegex, "#behance-msg", "Behance");
+    });
+
+
+  localStorage.setItem('currentPage', "{{ @$currentPage }}");
+  
+var inputloc = document.querySelector("#kt_tagify_work_location");
+var cities = @json($cities);
+
+
+    $(document).ready(function () {
+      // Initialize intl-tel-input for Primary and Secondary phone fields
+      const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
+        separateDialCode: true,
+        initialCountry: "{{ $phone_code }}",
+        preferredCountries: ["in", "us", "gb", "ca", "au"],
+      });
+
+      const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
+        separateDialCode: true,
+        initialCountry: "{{ $second_phone_code }}",
+        preferredCountries: ["in", "us", "gb", "ca", "au"],
+      });
+
+        // Function to update hidden country code inputs
+      function updateCountryCode(inputField, hiddenField) {
+        const selectedCountryData = inputField.getSelectedCountryData();
+        //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
+        const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
+        $(hiddenField).val(countryCode);
+
+      }
+      // Update country code on input or country flag selection
+      $("#phone").on("input change", function () {
+        updateCountryCode(primaryPhoneInput, "#primary_country_code");
+      });
+
+      $("#secondary_mobile").on("input change", function () {
+        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
+      });
+      // Update country code dynamically when the user selects a different country flag
+      $(".iti__flag-container").on("click", function (event) {
+        const targetInput = $(event.target).closest(".iti").find("input");
+
+        if (targetInput.is("#phone")) {
+          updateCountryCode(primaryPhoneInput, "#primary_country_code");
+        } else if (targetInput.is("#secondary_mobile")) {
+          updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
+        }
+      });
+
+      setTimeout(function () {	
+        $(".iti__flag-container").click();
+      },500);
+
+    });
+
+
+</script>
+
+<script>
+// Internet connectivity check used by both save and update handlers.
+async function isInternetAvailable() {
+    try {
+        await fetch("https://www.gstatic.com/generate_204", {
+            method: "GET",
+            cache: "no-cache",
+            mode: "no-cors"
+        });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+</script>
+
+@php if($page_event == 'EDIT'){ @endphp
+<script>
+
+//// new code for update  start
+    var KTUPDATECandidate = function () {
+    var form;
+    var submitButton;
+    var validator;
+
+    
+    var handleForm = function (e) {
+      
+        validator = FormValidation.formValidation(
+            form,
+            {
+                fields: {
+					
+                  // 'resume':
+                  //   {
+                  //       validators:
+                  //       {
+                  //           file: {
+                  //               maxSize: 5242880, // 5 MB in bytes
+                  //               message: "The file size must not exceed 5 MB",
+                  //               type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  //               message: "Only PDF, DOC, or DOCX files are allowed"
+                  //           }
+                  //       }
+                  //   },
+                    'photo':
+                    {
+                      validators:
+                        {
+                            file: {
+                                maxSize: 5242880, // 5 MB in bytes
+                                message: "The file size must not exceed 5 MB"
+                            }
+                        }
+                   },
+                    'full_name':
+                    {
+                        validators:
+                        {
+                            notEmpty:{message: "Full name is required"}
+                           
+                        }
+                    },
+					
+                    'current_designation':
+                    {
+                        validators:
+                        {
+                            notEmpty:{ message: "Current designation is required"}
+                           
+                        }
+                    },
+					
+                    'current_company':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: "Current company is required"}
+                            
+                        }
+                    },
+					
+                    'phone':
+                    {
+                        validators:
+                        {
+                            notEmpty:{message: "Primary number is required"},
+                            digits:{ message: "Primary number must contains only digits"},
+                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            
+                        }
+                    },
+                    'secondary_mobile':
+                    {
+                        validators:
+                        {
+                            digits:{ message: "Primary number must contains only digits"},
+                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            
+                        }
+                    },
+					
+                    'email':
+                    {
+                        validators:
+                        {
+                            notEmpty:{ message: 'Primary email is required'},
+                            emailAddress:{message: 'The value is not a valid email address'}
+                            
+                        }
+                    },
+                    'secondrary_email':
+                    {
+                        validators:
+                        {
+                            emailAddress:{message: 'The value is not a valid email address'}
+                            
+                        }
+                    },
+					
+                    'qualification':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: 'Qualification Name is required'}
+                           
+                        }
+                    },
+					
+                    'total_exp':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message:"Total Experience is required"}
+                           
+                        }
+                    },
+					
+                    'rel_exp':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message:"Relevant Experience is required"}
+                           
+                        }
+                    },
+					
+                    'ctc':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: "Current CTC is required"}
+                            
+                        }
+                    },
+					
+                    'ectc':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Exp. CTC is required"}
+                            
+                        }
+                    },
+					
+					
+                    'country':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Country is required"}
+                        }
+                    },
+					
+                    'state':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "State is required"}
+                           
+                        }
+                    },
+					
+                    'pincode':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Pincode is required"},                           
+                            digits:{message: "Pincode must contain digits"},
+                            stringLength:{ min: 1,	max: 1,	message: ""}
+                           
+                        }    
+                    },                    
+                    'skills':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: 'Skills is required'}
+                          
+                        }
+                    },
+                    'specialties':
+                    {
+                        validators:
+                        { notEmpty:{message: "Specialties is required"}
+                           
+                        }
+                    }
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row'
+                    })
+                }
+            }
+        );
+
+       
+        submitButton.addEventListener('click', async function (e) {
+           
+            e.preventDefault();
+            if (submitButton.disabled) {
+                return; // Prevent duplicate submission
+            }
+
+            const connected = await isInternetAvailable();
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: {
+                        confirmButton: "btn btn-warning"
+                    }
+                });
+                return; // ⛔ STOP EXECUTION
+            }
+
+            validator.validate().then(function (status) {
+                if (status == 'Valid') {
+                  $("#update-form").prop("disabled", true);
+                  $("#update-form").html(
+                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                  );
+                    submitButton.setAttribute('data-kt-indicator', 'on');
+                    submitButton.disabled = true;
+                    setTimeout(function () {
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#update-form").prop("disabled", false).html(`Update`);
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            return;
+                        }
+
+												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                                                    CKEDITOR.instances['recruiter_note'].updateElement();
+                                                }
+												var formData = new FormData($('#createForm')[0]);
+												var candidateEditId = '{{ @$application->id ?: @$appId }}';
+												$.ajax({
+													url				: '{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}',
+														   type 			: 'POST',
+														   data 			: formData,
+														   processData		: false,  	// tell jQuery not to process the data
+														   contentType		: false,  	// tell jQuery not to set contentType
+														   redirect			: true,
+														   success			: function (response) {
+
+                                 $("#update-form").prop("disabled", false);
+                                if(response.status == 'mailcheck'){
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+                                   $("#update-form").html(`Update`);
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
+																	});
+                                   return false;
+                                }
+                                if(response.status == 'notauthorized'){
+                                   $("#update-form").html(`Update`);
+                                   submitButton.removeAttribute('data-kt-indicator');
+                                   submitButton.disabled = false;
+                                   Swal.fire("Not Authorized", response.message, "warning");
+                                   return false;
+                                }
+
+
+submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    Swal.fire({
+                                text				: "You have successfully updated",
+                                icon				: "success",
+                                buttonsStyling		: false,
+                                confirmButtonText	: "Ok, got it!",
+                                customClass			: {
+                                              confirmButton: "btn btn-primary"
+                                            }
+                                    }).then(function (result) {
+                                        if (result.isConfirmed) {
+                                            form.querySelector('[name="email1"]').value 		= "";
+                                            form.querySelector('[name="password1"]').value 		= "";
+                                        }
+                                    });
+
+																				window.location = response.url;
+																			},
+															error			: function (xhr, textStatus, errorThrown) {
+                                                                            $("#update-form").prop("disabled", false);
+                                                                            $("#update-form").html(`Update`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                            if (xhr.status === 0 || !navigator.onLine) {
+                                                                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                                                                return;
+                                                                            }
+                                                                            console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                                                            // Try to extract a useful server-side message; fall back to the bare status.
+                                                                            var serverMsg = '';
+                                                                            try {
+                                                                                var body = xhr.responseText || '';
+                                                                                var jsonStart = body.indexOf('{');
+                                                                                if (jsonStart >= 0) {
+                                                                                    var parsed = JSON.parse(body.substring(jsonStart));
+                                                                                    serverMsg = parsed.message || parsed.error || '';
+                                                                                }
+                                                                            } catch (e) {}
+                                                                            var display = serverMsg
+                                                                                ? serverMsg
+                                                                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                                                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                            // Safety net: if the success handler didn't fire (e.g. session timeout, 5xx, or an exception
+                                                                            // thrown mid-redirect), make sure the button doesn't stay stuck on the spinner.
+                                                                            // We re-enable the button only if the page is still here (success handler that
+                                                                            // triggered window.location would have started navigation by now).
+                                                                            if ($("#update-form").length) {
+                                                                                $("#update-form").prop("disabled", false);
+                                                                                $("#update-form").html(`Update`);
+                                                                                submitButton.removeAttribute('data-kt-indicator');
+                                                                                submitButton.disabled = false;
+                                                                            }
+																			}
+													});
+							
+                        
+                    }, 2000);
+                } 
+				else 
+				{
+                   
+                    Swal.fire({
+									text				: "Sorry, looks like there are some errors detected, please try again.",
+									icon				: "error",
+									buttonsStyling		: false,
+									confirmButtonText	: "Ok, got it!",
+									customClass			: {
+																confirmButton: "btn btn-primary"
+														  }
+                    });
+                }
+            });
+        });
+    }
+
+    return {
+				init: function () {
+										form 			=	document.querySelector('#createForm');
+										submitButton 	=	document.querySelector('#update-form');
+										handleForm();
+									}
+    };
+}();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTUPDATECandidate.init();
+});
+
+
+</script>	
+@php } @endphp
+
+<script>
+  var tagifyskill = null;
+  var tagifylocation = null;
+
+  function candidateNormalizeSuggestions(data) {
+      if (!Array.isArray(data)) {
+          return [];
+      }
+
+      return data.map(function (item) {
+          if (typeof item === 'string') {
+              return item.trim();
+          }
+
+          return String((item && (item.value || item.name || item.text)) || '').trim();
+      }).filter(Boolean);
+  }
+
+  function candidateDebounce(callback, delay) {
+      var timer;
+
+      return function () {
+          var context = this;
+          var args = arguments;
+          window.clearTimeout(timer);
+          timer = window.setTimeout(function () {
+              callback.apply(context, args);
+          }, delay);
+      };
+  }
+
+  var candidateSkillInput = document.querySelector('#kt_tagify_2');
+  var candidateLocationInput = document.querySelector('#kt_tagify_work_location');
+
+  if (typeof window.Tagify === 'function' && candidateSkillInput && candidateLocationInput) {
+      tagifyskill = new window.Tagify(candidateSkillInput, {
+          whitelist: [],
+          maxTags: 10,
+          dropdown: {
+              maxItems: 20,
+              enabled: 1,
+              closeOnSelect: true,
+              highlightFirst: true
+          }
+      });
+
+      var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
+          window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
+              .done(function (data) {
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  tagifyskill.settings.whitelist = suggestions;
+                  tagifyskill.dropdown.show(query);
+              });
+      }, 250);
+
+      tagifyskill.on('input', function (event) {
+          var query = String(event.detail.value || '').trim();
+          if (query.length < 1) {
+              tagifyskill.dropdown.hide();
+              return;
+          }
+
+          fetchCandidateSkillSuggestions(query);
+      });
+
+      var initialLocations = candidateNormalizeSuggestions(@json($cities));
+      var defaultLocation = String(@json(@$default_loc) || '').trim();
+      if (defaultLocation && initialLocations.indexOf(defaultLocation) === -1) {
+          initialLocations.push(defaultLocation);
+      }
+
+      tagifylocation = new window.Tagify(candidateLocationInput, {
+          mode: 'select',
+          whitelist: initialLocations,
+          enforceWhitelist: true,
+          maxTags: 1,
+          duplicates: false,
+          editTags: false,
+          skipInvalid: true,
+          dropdown: {
+              classname: 'candidate-location-dropdown',
+              maxItems: 20,
+              enabled: 0,
+              closeOnSelect: true,
+              highlightFirst: true,
+              searchKeys: ['value']
+          }
+      });
+
+      if (tagifylocation.DOM && tagifylocation.DOM.scope) {
+          tagifylocation.DOM.scope.classList.add('candidate-location-tagify');
+          tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
+      }
+
+      function setSingleCandidateLocation(value) {
+          var normalizedValue = String(value || '').trim();
+          tagifylocation.removeAllTags();
+
+          if (normalizedValue) {
+              if (tagifylocation.settings.whitelist.indexOf(normalizedValue) === -1) {
+                  tagifylocation.settings.whitelist.unshift(normalizedValue);
+              }
+              tagifylocation.addTags([normalizedValue]);
+          }
+      }
+
+      var fetchCandidateLocationSuggestions = candidateDebounce(function (query) {
+          window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: query })
+              .done(function (data) {
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  tagifylocation.settings.whitelist = suggestions;
+                  tagifylocation.dropdown.show(query);
+              });
+      }, 250);
+
+      tagifylocation.on('focus', function () {
+          tagifylocation.dropdown.show('');
+      });
+
+      tagifylocation.on('input', function (event) {
+          var query = String(event.detail.value || '').trim();
+          if (query.length < 2) {
+              tagifylocation.dropdown.show(query);
+              return;
+          }
+
+          fetchCandidateLocationSuggestions(query);
+      });
+
+
+      tagifylocation.on('add', function (event) {
+          if (tagifylocation.value.length > 1) {
+              setSingleCandidateLocation(event.detail.data.value);
+          }
+          tagifylocation.dropdown.hide();
+      });
+
+      if (defaultLocation) {
+          setSingleCandidateLocation(defaultLocation);
+          tagifylocation.dropdown.hide();
+      }
+  }
+   $('body').on('change', '#current_ctc_cur', function(){
+   			var	current_ctc_cur		=	$(this).val();
+			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
+			document.getElementById("current_th_cur").selectedIndex = current_ctc_cur;
+   });
+   $('body').on('change', '#current_ectc_cur', function(){
+   			var	current_ectc_cur	=	$(this).val();
+			document.getElementById("current_ctc_cur").selectedIndex = current_ectc_cur;
+			document.getElementById("current_th_cur").selectedIndex = current_ectc_cur;
+   });
+   $('body').on('change', '#current_th_cur', function(){
+   			var	current_th_cur		=	$(this).val();
+			document.getElementById("current_ectc_cur").selectedIndex = current_th_cur;
+			document.getElementById("current_ctc_cur").selectedIndex = current_th_cur;
+   });
+   $('body').on('change', '#current_ctc_mode', function(){
+   			var	current_ctc_mode	=	$(this).val();
+			document.getElementById("current_ectc_mode").value = current_ctc_mode;
+   });
+  
+      setTimeout(() => {
+
+        $('#state option:eq({{ @$state }})').prop('selected', true);
+       
+      }, 1000);
+	
+	$(document).on('change', '.change_state', function() { 
+   				
+				  var country				=	$('#country').val(); 
+   				var state_id			=	this.value;				
+   								
+				if(country == 101){
+					$('#city_id').show();	
+					$('#city').hide();	
+				}else{
+					$('#city').hide();	
+					$('#city_id').show();	
+				}
+								
+				var url 			=	"{{ route('service_company.clients.citylist',':state_id') }}";
+				url 				=	url.replace(':state_id', state_id);
+				$.ajax({
+								type	: 'GET',
+								url		: url,
+								success	: function (response) {		
+																	$('#city_id').html(response.data);
+															   }		
+									   
+				});	
+   								
+   	});
+
+        function numberToIndianWords(num) {
+
+    num = Math.floor(Number(num));
+
+    if (!num || isNaN(num)) return '';
+
+    const ones = [
+        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
+        'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+        'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+        'Seventeen', 'Eighteen', 'Nineteen'
+    ];
+
+    const tens = [
+        '', '', 'Twenty', 'Thirty', 'Forty',
+        'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+    ];
+
+    function convert(n) {
+
+        if (n < 20) {
+            return ones[n];
+        }
+
+        if (n < 100) {
+            return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+        }
+
+        if (n < 1000) {
+            return ones[Math.floor(n / 100)] + ' Hundred ' + convert(n % 100);
+        }
+
+        if (n < 100000) {
+            return convert(Math.floor(n / 1000)) + ' Thousand ' + convert(n % 1000);
+        }
+
+        if (n < 10000000) {
+            return convert(Math.floor(n / 100000)) + ' Lakh ' + convert(n % 100000);
+        }
+
+        if (n < 1000000000) {
+            return convert(Math.floor(n / 10000000)) + ' Crore ' + convert(n % 10000000);
+        }
+
+        return convert(Math.floor(n / 1000000000)) + ' Arab ' + convert(n % 1000000000);
+    }
+
+    return convert(num).replace(/\s+/g, ' ').trim() + ' Rupees';
+}
+
+
+    function updateCTCFields() {
+                // Current CTC
+                
+                let maxLimit = 99999999999;
+                var ctcVal = parseInt($("#ctc").val(), 10);
+                var payMonthly = parseInt($("#pay_monthly").val(), 10);
+                var payAnnual = parseInt($("#pay_annual").val(), 10);
+                var ctcCurrency = $(".currency").val();
+
+                if (Number(payAnnual) > maxLimit) {
+                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
+                    $('#pay_annual').val(maxLimit);
+                    $(".payrateannual").text(numberToIndianWords(maxLimit));
+                    return false;
+                }
+
+                if (!isNaN(payAnnual)) {
+                    var ctcWords = window.numberToWords(ctcVal, ctcCurrency);
+                    var payMonthlyWords = window.numberToWords(payMonthly, ctcCurrency);
+                    var payAnnualWords = window.numberToWords(payAnnual, ctcCurrency);
+                    
+                    
+                    $(".payrateannual").text(numberToIndianWords(payAnnual));
+                    $(".payratemonthly").text(numberToIndianWords(payMonthly));
+                    $(".CurrentCTC").text(numberToIndianWords(ctcVal));
+
+                    // $(".CurrentCTC").text(ctcWords.charAt(0).toUpperCase() + ctcWords.slice(1));
+                    // $(".payratemonthly").text(payMonthlyWords.charAt(0).toUpperCase() + payMonthlyWords.slice(1));
+                    // $(".payrateannual").text(payAnnualWords.charAt(0).toUpperCase() + payAnnualWords.slice(1));
+                }else{
+                    $(".payrateannual").text(' ');
+                    $(".payratemonthly").text(' ');
+                    $(".CurrentCTC").text(' ');
+                }
+
+                // Expected CTC
+                var ectcVal = parseInt($("#ectc").val(), 10);
+                var billMonthly = parseInt($("#bill_monthly").val(), 10);
+                var billAnnual = parseInt($("#bill_annual").val(), 10);
+
+                
+                if (Number(billAnnual) > maxLimit) {
+                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
+                    $('#bill_annual').val(maxLimit);
+                    $(".billrateannual").text(numberToIndianWords(maxLimit));
+                    return false;
+                }
+
+                var ectcCurrency = $(".currency").val();
+                if (!isNaN(billAnnual)) {
+                    var ectcWords = window.numberToWords(ectcVal, ectcCurrency);
+                    var billMonthlyWords = window.numberToWords(billMonthly, ctcCurrency);
+                    var billAnnualWords = window.numberToWords(billAnnual, ctcCurrency);
+                    
+                    $(".billrateannual").text(numberToIndianWords(billAnnual));
+                    $(".billratemonthly").text(numberToIndianWords(billMonthly));
+                    $(".expectedctc").text(numberToIndianWords(ectcVal));
+
+                    // $(".expectedctc").text(ectcWords.charAt(0).toUpperCase() + ectcWords.slice(1));
+                    // $(".billratemonthly").text(billMonthlyWords.charAt(0).toUpperCase() + billMonthlyWords.slice(1));
+                    // $(".billrateannual").text(billAnnualWords.charAt(0).toUpperCase() + billAnnualWords.slice(1));
+                }else{
+                    $(".billrateannual").text('');
+                    $(".billratemonthly").text('');
+                    $(".expectedctc").text('');
+                }
+    }
+    setTimeout(() => {
+          updateCTCFields();
+    }, 500);
+    $(document).on("keyup", "#ctc", updateCTCFields);
+    $(document).on("keyup", "#ectc", updateCTCFields);
+    $(".currency").on("change", updateCTCFields);
+            
+
+     $(document).on('change', '#total_exp, #rel_exp', function() { 
+      total_exp_and_rel_exp();
+     });
+
+
+		
+</script>
+
+
+<script>
+  
+
+@php if($page_event != 'EDIT'){ @endphp
+var KTAddCandidate = function () {
+    var form;
+    var submitButton;
+    var validator;
+
+    
+    var handleForm = function (e) {
+       
+        validator = FormValidation.formValidation(
+            form,
+            {
+                fields: {
+                    
+				       	  // 'resume':
+                  //   {
+                  //     validators:
+                  //       {
+                  //           file: {
+                  //               maxSize: 5242880, // 5 MB in bytes
+                  //               message: "The file size must not exceed 5 MB",
+                  //               type: 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                  //               message: "Only PDF, DOC, or DOCX files are allowed"
+                  //           }
+                  //       }
+                  // },
+                  'photo':
+                    {
+                      validators:
+                        {
+                            file: {
+                                maxSize: 5242880, // 5 MB in bytes
+                                message: "The file size must not exceed 5 MB"
+                            }
+                        }
+                   },
+					
+                    'full_name':
+                    {
+                        validators:
+                        {
+                            notEmpty:{message: "Full name is required"}
+                           
+                        }
+                    },
+					
+                    'current_designation':
+                    {
+                        validators:
+                        {
+                            notEmpty:{ message: "Current designation is required"}
+                           
+                        }
+                    },
+					
+                    'current_company':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: "Current company is required"}
+                            
+                        }
+                    },
+					
+                    'phone':
+                    {
+                        validators:
+                        {
+                            notEmpty:{message: "Primary number is required"},
+                            digits:{ message: "Primary number must contains only digits"},
+                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            
+                        }
+                    },
+                    
+                    'secondary_mobile':
+                    {
+                        validators:
+                        {
+                            digits:{ message: "Primary number must contains only digits"},
+                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            
+                        }
+                    },
+					
+                    'email':
+                    {
+                        validators:
+                        {
+                            notEmpty:{message: "Primary Email is required"},
+                            emailAddress:{message: 'The value is not a valid email address'}
+                            
+                        }
+                    },
+                    
+                    'secondrary_email':
+                    {
+                        validators:
+                        {
+                            emailAddress:{message: 'The value is not a valid email address'}
+                            
+                        }
+                    },
+					
+                    'qualification':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: 'Qualification Name is required'}
+                           
+                        }
+                    },
+					
+                    'total_exp':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message:"Total Experience is required"},                           
+                        }
+                    },
+					
+                    'rel_exp':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message:"Relevant Experience is required"}
+                           
+                        }
+                    },
+					
+                    'ctc':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: "Current CTC is required"}
+                            
+                        }
+                    },
+					
+                    'ectc':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Exp. CTC is required"}
+                            
+                        }
+                    },
+					
+					
+                    'country':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Country is required"}
+                        }
+                    },
+					
+                    'state':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "State is required"}
+                           
+                        }
+                    },
+					
+                    'pincode':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{message: "Pincode is required"},                           
+                            digits:{message: "Pincode must contain digits"},
+                            stringLength:{ min: 1,	max: 1,	message: ""}
+                           
+                        }    
+                    },                    
+                    'skills':
+                    {
+                        validators:
+                        {
+                            // notEmpty:{ message: 'Skills is required'}
+                          
+                        }
+                    },
+                    'specialties':
+                    {
+                        validators:
+                        { notEmpty:{message: "Specialties is required"}
+                           
+                        }
+                    }
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row'
+                    })
+                }
+            }
+        );
+
+       
+        submitButton.addEventListener('click', async function (e) {
+           
+            e.preventDefault();
+            if (submitButton.disabled) {
+                return; // ⛔ Prevent multiple clicks
+            }
+            submitButton.disabled = true;
+
+            const connected = await isInternetAvailable();
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: {
+                        confirmButton: "btn btn-warning"
+                    }
+                });
+                submitButton.disabled = false;
+                return; // ⛔ STOP EXECUTION
+            }
+            validator.validate().then(function (status) {
+                if (status == 'Valid') {
+                  $("#save-form").prop("disabled", true);
+                  $("#save-form").html(
+                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                  );
+                    submitButton.setAttribute('data-kt-indicator', 'on');
+                    submitButton.disabled = true;
+                    setTimeout(function () {					
+                        if (!navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                            $("#save-form").prop("disabled", false).html("Submit");
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            return;
+                        }
+					
+												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                                                    CKEDITOR.instances['recruiter_note'].updateElement();
+                                                }
+												var formData = new FormData($('#createForm')[0]);						
+												$.ajax({
+														   url 				: '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
+														   type 			: 'POST',
+														   data 			: formData,
+														   processData		: false,  	// tell jQuery not to process the data
+														   contentType		: false,  	// tell jQuery not to set contentType
+														   redirect			: true,
+														   success			: function (response) {
+                                $("#save-form").prop("disabled", false);
+                                if(response.status == 'coinCheck'){
+   																	Swal.fire("Success", response.message , "warning").then(function(){
+																		
+																	});	
+                                   return false;
+                                }
+                                if(response.status == 'mailcheck'){
+                                    if (!navigator.onLine) {
+                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                        return;
+                                    }
+
+                                   $("#save-form").html(`Submit`);
+   																	Swal.fire("Warning", response.message , "warning").then(function(){
+																	});
+                                   return false;
+                                }
+
+                                  submitButton.removeAttribute('data-kt-indicator');
+                                  submitButton.disabled = true;
+                                  Swal.fire({
+                                  text				: "You have successfully Submitted",
+                                  icon				: "success",
+                                  buttonsStyling		: false,
+                                  confirmButtonText	: "Ok, got it!",
+                                  customClass			: {
+                                            confirmButton: "btn btn-primary"
+                                          }
+                                  }).then(function (result) {
+                                      if (result.isConfirmed) {
+                                          var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
+                                          var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
+                                      }
+                                  });
+                                  
+                                  // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
+                                  if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { window.ResumePresign.cancelUpload(); }
+                                  if (response.url) {
+                                      window.location.href = response.url;
+                                  }
+
+																			},
+															error			: function (xhr, textStatus, errorThrown) {
+                                $("#save-form").prop("disabled", false);
+                                $("#save-form").html(`Submit`);
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                if (xhr.status === 0 || !navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    return;
+                                }
+                                console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
+                                var serverMsg = '';
+                                try {
+                                    var body = xhr.responseText || '';
+                                    var jsonStart = body.indexOf('{');
+                                    if (jsonStart >= 0) {
+                                        var parsed = JSON.parse(body.substring(jsonStart));
+                                        serverMsg = parsed.message || parsed.error || '';
+                                    }
+                                } catch (e) {}
+                                var display = serverMsg
+                                    ? serverMsg
+                                    : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                                Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+																			},
+                                                            complete       : function () {
+                                                                        // Safety net: if the success handler didn't fire, make sure
+                                                                        // the button doesn't stay stuck on the spinner.
+                                                                        if ($("#save-form").length) {
+                                                                            $("#save-form").prop("disabled", false);
+                                                                            $("#save-form").html(`Submit`);
+                                                                            submitButton.removeAttribute('data-kt-indicator');
+                                                                            submitButton.disabled = false;
+                                                                        }
+																			}
+													});
+							
+                  
+                    }, 2000);
+                } 
+				else 
+				{
+              submitButton.disabled = false;     
+                    Swal.fire({
+									text				: "Sorry, looks like there are some errors detected, please try again.",
+									icon				: "error",
+									buttonsStyling		: false,
+									confirmButtonText	: "Ok, got it!",
+									customClass			: {
+																confirmButton: "btn btn-primary"
+														  }
+                    });
+                }
+            });
+        });
+    }
+
+    return {
+				init: function () {
+										form 			=	document.querySelector('#createForm');
+										submitButton 	=	document.querySelector('#save-form');
+										handleForm();
+									}
+    };
+}();
+
+KTUtil.onDOMContentLoaded(function () {
+    KTAddCandidate.init();
+});
+
+@php } @endphp
+function re_test(text){
+  var jobId = "{{ @$jobId }}";
+  $('.page-loader').css('display', 'flex');
+  var page_event_check = "{{$page_event}}";
+  $.ajax({
+                    type		: 'POST',
+                    url			: "{{ route('service_company.extract.resume-job-applications',':id') }}",
+                    data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'resumeText' : text,'jobId':jobId},
+                    beforeSend	: function() {
+                    },
+                    success 	: function (response) {
+                      $('.page-loader').css('display', 'none');
+                      
+                    if(response.linkedin !=''){
+                      $('#linkedin').val(response.linkedin);
+                    }
+                    if(response.github !=''){
+                       $('#github').val(response.github);
+                    }
+                    if(response.behance !=''){
+                       $('#behance').val(response.behance);
+                    }
+
+                      if(page_event_check != 'EDIT'){
+                      $('#full_name').val(response.name);
+                      $('#careersummary').val(response.careerSummary);
+                      $('#phone').val(response.number);
+                      $('#email').val(response.email);
+                      $('#dob').val(response.dob);
+                      $('#current_company').val(response.currentjob);
+                      $('#qualification').val(response.qualification).change();
+
+                      var parsedSkills = Array.isArray(response.skills)
+                          ? response.skills
+                          : String(response.skills || '').split(',').map(function (skill) {
+                              return skill.trim();
+                          }).filter(Boolean);
+                      if (tagifyskill && parsedSkills.length) {
+                          tagifyskill.removeAllTags();
+                          tagifyskill.addTags(parsedSkills);
+                      }
+                      if (tagifylocation && response.country) {
+                          setSingleCandidateLocation(response.country);
+                      }
+
+                      // Refresh the post-upload Resume Information card
+                      // with the parser's per-file metadata. Skills count +
+                      // Parser Status flip from defaults to actual values.
+                      if (window.__upLoc && window.__upLoc.file) {
+                          try { showUploadedCard(window.__upLoc.file, response); } catch (e) {}
+                      }
+
+                      var resumeText = $('#uploaded_file_path').val();
+                      $.ajax({
+                        type		: 'POST',
+                        url			: "{{ route('service_company.file.unset') }}",
+                        data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'file_path' : resumeText},
+                        success 	: function (response) {
+
+                        }
+
+                      });
+                      
+
+
+                      var countryName = response.country;
+                      var stateName = response.state;
+                      var cityName = response.city;
+                    
+                    var countrydropdown = document.getElementById("country");
+                    for (var i = 0; i < countrydropdown.options.length; i++) {
+                     
+                        if (countrydropdown.options[i].text.trim() === countryName) {
+                            // Set the option as selected
+                            countrydropdown.selectedIndex = i;
+                            var event = new Event('change');
+                            countrydropdown.dispatchEvent(event);
+                            break; // Exit the loop since we found the country
+                        }
+                    }
+                   
+                  setTimeout(() => {
+                    var statedropdown = document.getElementById("state");
+                    for (var ik = 0; ik < statedropdown.options.length; ik++) {
+                        if (statedropdown.options[ik].text.trim() === stateName) {
+                            statedropdown.selectedIndex = ik;
+                            $("#state").change();
+                            break; // Exit the loop since we found the state
+                        }
+                    }   
+                  }, 1000);
+
+                  setTimeout(() => {
+                    $('city').val(cityName);
+                    var city_iddropdown = document.getElementById("city_id");
+                    for (var ik = 0; ik < city_iddropdown.options.length; ik++) {
+                        if (city_iddropdown.options[ik].text.trim() === cityName) {
+                            //Set the option as selected Uttar Pradesh Uttar Pradesh
+                            
+                            city_iddropdown.selectedIndex = ik;
+                            var event = new Event('change');
+                            city_iddropdown.dispatchEvent(event);
+                            break; 
+                        }
+                    }   
+                  }, 2000);
+
+                }
+
+                  
+
+                  // $.each(response.skills, function(index, skill) {
+                  //     console.log(skill); // Output each skill
+                      
+                  //     $('.value_JSON').prepend('<tag title="'+skill+'" contenteditable="false" spellcheck="false" tabindex="-1" class="tagify__tag " value="'+skill+'"><x title="" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span class="tagify__tag-text">'+skill+'</span></div></tag>');
+                  //   });
+
+                      }
+               });	
+
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('dob').setAttribute('max', today);
+});
+
+          
+
+    function total_exp_and_rel_exp(){
+        var total_exp = parseFloat($('#total_exp').val());
+        var rel_exp = parseFloat($('#rel_exp').val());
+        if(rel_exp>total_exp){
+       $('#rel_exp_error').text('Relevant Experience can not be higher then Total Experience');
+       setTimeout(() => {
+        $('#rel_exp').val('');
+       }, 1000);
+         
+    }else{
+      $('#rel_exp_error').text('');
+    }
+             
+    }
+
+    function normalizeResumeText(text) {
+        return text
+            .replace(/[^\x00-\x7F]/g, " ")   // remove broken unicode
+            .replace(/\s+/g, " ")
+            .replace(/\|/g, " ")
+            .trim();
+    }
+
+
+    function handleFileInputChange(event) {
+      const file = event.target.files[0];
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      if (!file) {
+          return;
+      }
+
+      // uploadWithProgress() already POSTed this blob to /uploadresume
+      // with real progress feedback. Skip the redundant jQuery POST.
+      // The PDFjs / mammoth parse path below still runs so Career
+      // Summary fills in.
+      var __skipUpload = !!window.__upXhrChannelClaimed;
+
+      if (!__skipUpload) {
+       let formData = new FormData();
+       formData.append('file', file);
+       formData.append('_token', '{{ csrf_token() }}');
+
+       $.ajax({
+        url: "{{ url('service_company/uploadresume') }}",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        beforeSend: function () {
+
+            $('#fileUploadLoader').show();
+
+        },
+        success: function (response) {
+
+            if(response.success){
+
+                $('#resume_path').val(response.file_path);
+
+                toastr.success('Resume uploaded successfully');
+
+            } else {
+
+                toastr.error(response.message || 'CV upload failed. Please try again.');
+
+            }
+
+        },
+        error: function (xhr) {
+
+            var msg = 'CV upload failed. Please try again.';
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if(res.message) msg = res.message;
+                else if(res.errors && res.errors.file) msg = res.errors.file[0];
+            } catch(e){}
+            toastr.error(msg);
+
+        },
+        complete: function () {
+
+            $('#fileUploadLoader').hide();
+
+        }
+    });
+      } // end if (!__skipUpload)
+
+
+
+      if (file.type === 'application/pdf' || fileExtension === 'pdf') {
+      if (file) {
+          
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+          const typedArray = new Uint8Array(event.target.result);
+          const pdfDocument = await pdfjsLib.getDocument(typedArray).promise;
+          const numPages = pdfDocument.numPages;
+          let resumeText = '';
+          // Loop through each page to extract text
+          for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            const page = await pdfDocument.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join('\n');
+            resumeText += pageText + '\n';
+          }
+          // alert(resumeText);
+          // Display extracted text
+          // document.getElementById('output').textContent = resumeText;
+
+           const cleanText = normalizeResumeText(resumeText);
+         re_test(cleanText);
+
+
+          // Extract name, email, mobile
+
+            // Regular expressions to extract name, mobile number, email
+            const nameRegex = /^[A-Z\s]+/i;
+            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
+            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+
+            // Extracting information
+            const name = resumeText.match(nameRegex)[0].trim();
+            const mobile = resumeText.match(mobileRegex)[0].replace(/\D/g, '');
+            const email = resumeText.match(emailRegex)[0];
+
+            console.log("Name:", name);
+            console.log("Mobile:", mobile);
+            console.log("Email:", email);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }else{
+        if (file) {
+        mammoth.extractRawText({ arrayBuffer: file })
+          .then(function(result) {
+            const resumeText = result.value; // Extracted text
+            // Display extracted text
+            // document.getElementById('output').textContent = resumeText;
+             const cleanText = normalizeResumeText(resumeText);
+            re_test(cleanText);
+
+            // Extract name, email, mobile, and skills (similar to the PDF example)
+            const nameRegex = /([A-Z]+ [A-Z]+) \w+/i;
+            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
+            
+            const nameMatch = resumeText.match(nameRegex);
+            const name = nameMatch ? nameMatch[1].trim() : '';
+
+            const emailMatch = resumeText.match(emailRegex);
+            const email = emailMatch ? emailMatch[0] : '';
+
+            const mobileMatch = resumeText.match(mobileRegex);
+            const mobile = mobileMatch ? `${mobileMatch[1]}-${mobileMatch[2]}-${mobileMatch[3]}` : '';
+
+            var numericDigits = mobile;
+            if(mobile.length > 10){
+              numericDigits = mobile.slice(2);
+            }
+
+             
+
+            console.log('Name:', name);
+            console.log('Email:', email);
+            console.log('Mobile:', mobile);
+          })
+          .catch(function(err) {
+            console.log('Error:', err);
+          });
+      }
+    }
+    }
+
+    // Attach event listener to file input
+    // document.getElementById('resume').addEventListener('change', handleFileInputChange);
+
+    
+$(document).ready(function() {
+        var optionFormat = function(item) {
+            if ( !item.id ) {
+                return item.text;
+            }
+
+            var span = document.createElement('span');
+            var imgUrl = item.element.getAttribute('data-kt-select2-user');
+            var template = '';
+
+            template += '';
+            template += item.text;
+
+            span.innerHTML = template;
+
+            return $(span);
+        }
+
+        $('#city_id').select2({
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+
+        $('#country').select2({
+            templateSelection: optionFormat,
+            templateResult: optionFormat
+        });
+
+        $('#country').change(function(){  
+   				var cid				=	$(this).val() ;
+          var cityId				=	"{{ (@$application->city_id) ? @$application->city_id : 0 }}"; 
+            if(cid == 101){
+              $('#city_id').show();	
+              $('#city').hide();	
+            }else{
+              $('#city').hide();	
+              $('#city_id').show();	
+            }
+              //route('service_company.job-applications.statelist',':cid') 
+              var url 			=	"{{ route('countrycitylist',':cid') }}";
+              url 				=	url.replace(':cid', cid);
+              $.ajax({
+                      type	: 'GET',
+                      url		: url,
+                      success	: function (response) {																		
+                                        $('#city_id').html(response.data);
+                                        setTimeout(() => {
+                                        if(cityId	>=1){
+                                          $('#city_id').val(cityId).change();
+                                        }
+                                      
+                                      }, 500);
+                                      }		
+              });
+        });
+        $('#country').trigger('change');
+			
+   
+   });
+
+
+
+
+
+
+       
+
+
+// Initialize CKEditor for recruiter_note
+if (typeof CKEDITOR !== 'undefined') {
+    CKEDITOR.replace('recruiter_note', { height: 350 });
+
+    // When CKEditor is ready, hook into its iframe paste events.
+    // If the user pastes a file (e.g. a resume) while the editor has focus,
+    // intercept it and route to the resume upload handler instead of letting
+    // CKEditor consume the event (CKEditor's iframe swallows document-level paste).
+    CKEDITOR.instances['recruiter_note'].on('instanceReady', function () {
+        var editorDoc = this.document.$;
+        editorDoc.addEventListener('paste', function (e) {
+            var files = e.clipboardData && e.clipboardData.files;
+            if (files && files.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                var file = files[0];
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                resumeInput.files = dt.files;
+                processFile(file);
+            }
+        }, true);
+    });
+}
+
+// Recruiter note templates keyed by id
+var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+// Template selector → load content into CKEditor
+$(document).on('change', '#recruiter_note_template_select', function () {
+    var id = $(this).val();
+    if (!id || !recruiterNoteTemplates[id]) return;
+    var content = recruiterNoteTemplates[id].content;
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+        CKEDITOR.instances['recruiter_note'].setData(content);
+    } else {
+        $('#recruiter_note').val(content);
+    }
+});
+
+// Add Candidate presentation only: card visibility, salary display tabs, and summaries.
+(function () {
+    'use strict';
+
+    var root = document.querySelector('.job-candidate-create');
+    if (!root) {
+        return;
+    }
+
+    var noticePeriodSelect = root.querySelector('#serving_notice_period');
+    var noticePeriodOptions = root.querySelectorAll('.candidate-notice-option');
+    var noticeDateField = root.querySelector('#candidateNoticeDateField');
+    var noticeDaysField = root.querySelector('#candidateNoticeDaysField');
+    var noticeDateLabel = root.querySelector('#candidateNoticeDateLabel');
+    var noticeDateInput = root.querySelector('#np_id');
+    var noticeDateDisplay = root.querySelector('#np_id_display');
+    var noticeDaysSelect = root.querySelector('#ddl_np_id');
+    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '0';
+
+    function formatNoticeDate(value) {
+        if (!value) {
+            return '';
+        }
+
+        var parts = value.split('-');
+        return parts.length === 3 ? parts[2] + '/' + parts[1] + '/' + parts[0] : value;
+    }
+
+    function syncNoticePeriodComponent(clearPreviousValue) {
+        if (!noticePeriodSelect) {
+            return;
+        }
+
+        var mode = String(noticePeriodSelect.value);
+        var usesDate = mode === '1' || mode === '2';
+        var today = new Date().toISOString().split('T')[0];
+
+        if (clearPreviousValue && mode !== previousNoticeMode) {
+            if (noticeDateInput) noticeDateInput.value = '';
+            if (noticeDateDisplay) noticeDateDisplay.value = '';
+            if (noticeDaysSelect) noticeDaysSelect.value = '';
+        }
+
+        noticePeriodOptions.forEach(function (option) {
+            var selected = option.getAttribute('data-notice-period-value') === mode;
+            option.classList.toggle('is-selected', selected);
+            option.setAttribute('aria-checked', selected ? 'true' : 'false');
+        });
+
+        if (noticeDateField) noticeDateField.hidden = !usesDate;
+        if (noticeDaysField) noticeDaysField.hidden = mode !== '0';
+        if (noticeDateInput) {
+            noticeDateInput.disabled = !usesDate;
+            noticeDateInput.required = usesDate;
+            noticeDateInput.min = mode === '1' ? today : '';
+            noticeDateInput.max = mode === '2' ? today : '';
+        }
+        if (noticeDateDisplay) {
+            noticeDateDisplay.disabled = !usesDate;
+            noticeDateDisplay.placeholder = mode === '1'
+                ? 'Select expected last working date'
+                : 'Select last working date';
+        }
+        if (noticeDaysSelect) {
+            noticeDaysSelect.disabled = mode !== '0';
+            noticeDaysSelect.required = mode === '0';
+        }
+        if (noticeDateLabel) {
+            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date' : 'Last Working Date') + ' <span class="rq">*</span>';
+        }
+
+        previousNoticeMode = mode;
+    }
+
+    noticePeriodOptions.forEach(function (option) {
+        option.addEventListener('click', function () {
+            if (!noticePeriodSelect) {
+                return;
+            }
+
+            noticePeriodSelect.value = option.getAttribute('data-notice-period-value');
+            noticePeriodSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
+    if (noticeDateDisplay && noticeDateInput) {
+        noticeDateDisplay.addEventListener('click', function () {
+            if (typeof noticeDateInput.showPicker === 'function') {
+                noticeDateInput.showPicker();
+            } else {
+                noticeDateInput.click();
+            }
+        });
+        noticeDateInput.addEventListener('change', function () {
+            noticeDateDisplay.value = formatNoticeDate(noticeDateInput.value);
+        });
+    }
+
+    if (noticePeriodSelect) {
+        noticePeriodSelect.addEventListener('change', function () {
+            syncNoticePeriodComponent(true);
+        });
+        syncNoticePeriodComponent(false);
+    }
+    var salaryFieldMap = {
+        current: {
+            annual: 'pay_annual',
+            monthly: 'pay_monthly',
+            hourly: 'ctc'
+        },
+        expected: {
+            annual: 'bill_annual',
+            monthly: 'bill_monthly',
+            hourly: 'ectc'
+        }
+    };
+    var salaryPeriodLabels = {
+        annual: 'Annual',
+        monthly: 'Monthly',
+        hourly: 'Hourly'
+    };
+    var salaryHoursPerMonth = 160;
+    var salaryMonthsPerYear = 12;
+    var salaryCurrencySelect = root.querySelector('#current_ctc_cur');
+    var salaryCurrencyMirrors = [
+        root.querySelector('#current_ectc_cur'),
+        root.querySelector('#current_th_cur')
+    ];
+
+    function fieldValue(id) {
+        var field = root.querySelector('#' + id);
+        var value = field ? parseFloat(field.value) : 0;
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function currencyLabel() {
+        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) {
+            return '';
+        }
+
+        return salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex].text.trim();
+    }
+
+    function formatAmount(value) {
+        return new Intl.NumberFormat('en-IN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).format(value || 0);
+    }
+
+    function activeSalaryPeriod() {
+        var activeButton = root.querySelector('.candidate-salary-tabs button.is-active[data-salary-group="current"]');
+        return activeButton ? activeButton.getAttribute('data-salary-period') : 'annual';
+    }
+
+    function salaryValuesFromPeriod(period, amount) {
+        var values = {
+            annual: 0,
+            monthly: 0,
+            hourly: 0
+        };
+
+        if (period === 'annual') {
+            values.annual = amount;
+            values.monthly = amount / salaryMonthsPerYear;
+            values.hourly = values.monthly / salaryHoursPerMonth;
+        } else if (period === 'monthly') {
+            values.monthly = amount;
+            values.annual = amount * salaryMonthsPerYear;
+            values.hourly = amount / salaryHoursPerMonth;
+        } else {
+            values.hourly = amount;
+            values.monthly = amount * salaryHoursPerMonth;
+            values.annual = values.monthly * salaryMonthsPerYear;
+        }
+
+        return values;
+    }
+
+    function updateSalaryAutoValues(group, activePeriod) {
+        var activeAmount = fieldValue(salaryFieldMap[group][activePeriod]);
+        var values = salaryValuesFromPeriod(activePeriod, activeAmount);
+        var otherPeriods = ['annual', 'monthly', 'hourly'].filter(function (period) {
+            return period !== activePeriod;
+        });
+        var prefix = group === 'current' ? 'candidate-current-' : 'candidate-expected-';
+        var labelOne = root.querySelector('#' + prefix + 'auto-label-one');
+        var labelTwo = root.querySelector('#' + prefix + 'auto-label-two');
+        var outputOne = root.querySelector('#' + prefix + 'monthly-auto');
+        var outputTwo = root.querySelector('#' + prefix + 'hourly-auto');
+
+        if (labelOne) {
+            labelOne.textContent = salaryPeriodLabels[otherPeriods[0]] + ' Salary';
+        }
+        if (labelTwo) {
+            labelTwo.textContent = salaryPeriodLabels[otherPeriods[1]] + ' Salary';
+        }
+        if (outputOne) {
+            outputOne.textContent = formatAmount(values[otherPeriods[0]]);
+        }
+        if (outputTwo) {
+            outputTwo.textContent = formatAmount(values[otherPeriods[1]]);
+        }
+    }
+
+    function updateSalarySummary() {
+        var period = activeSalaryPeriod();
+        var currentAmount = fieldValue(salaryFieldMap.current[period]);
+        var expectedAmount = fieldValue(salaryFieldMap.expected[period]);
+        var currentTarget = root.querySelector('#candidateSalaryCurrentSummary');
+        var expectedTarget = root.querySelector('#candidateSalaryExpectedSummary');
+        var currentLabel = root.querySelector('#candidateSalaryCurrentLabel');
+        var expectedLabel = root.querySelector('#candidateSalaryExpectedLabel');
+        var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
+        var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
+        var currency = currencyLabel();
+        var difference = expectedAmount - currentAmount;
+        var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
+            ? (difference / currentAmount) * 100
+            : 0;
+
+        if (currentTarget) {
+            currentTarget.textContent = currency + ' ' + formatAmount(currentAmount);
+        }
+        if (expectedTarget) {
+            expectedTarget.textContent = currency + ' ' + formatAmount(expectedAmount);
+        }
+        if (currentLabel) {
+            currentLabel.textContent = 'Current Salary (' + salaryPeriodLabels[period] + ')';
+        }
+        if (expectedLabel) {
+            expectedLabel.textContent = 'Expected Salary (' + salaryPeriodLabels[period] + ')';
+        }
+        if (differenceOutput) {
+            differenceOutput.textContent = currency + ' ' + formatAmount(difference);
+        }
+        if (increaseOutput) {
+            increaseOutput.textContent = formatAmount(calculatedIncrease) + '%';
+        }
+
+        updateSalaryAutoValues('current', period);
+        updateSalaryAutoValues('expected', period);
+    }
+
+    function syncSalaryPeriod(period) {
+        var modeByPeriod = {
+            annual: '0',
+            monthly: '1',
+            hourly: '2'
+        };
+        var normalizedPeriod = Object.prototype.hasOwnProperty.call(modeByPeriod, period) ? period : 'annual';
+
+        root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
+            var selected = button.getAttribute('data-salary-period') === normalizedPeriod;
+            button.classList.toggle('is-active', selected);
+            button.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+
+        root.querySelectorAll('.candidate-salary-period').forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.getAttribute('data-salary-period') === normalizedPeriod);
+        });
+
+        var currentMode = root.querySelector('#current_ctc_mode');
+        var expectedMode = root.querySelector('#current_ectc_mode');
+        if (currentMode) {
+            currentMode.value = modeByPeriod[normalizedPeriod];
+        }
+        if (expectedMode) {
+            expectedMode.value = modeByPeriod[normalizedPeriod];
+        }
+
+        updateSalarySummary();
+    }
+
+    function syncSalaryCurrency() {
+        if (!salaryCurrencySelect) {
+            return;
+        }
+
+        salaryCurrencyMirrors.forEach(function (select) {
+            if (select) {
+                select.value = salaryCurrencySelect.value;
+            }
+        });
+
+        root.querySelectorAll('.changeTextCurrency').forEach(function (label) {
+            label.textContent = currencyLabel();
+        });
+
+        updateSalarySummary();
+    }
+
+    root.querySelectorAll('.candidate-salary-tabs button[data-salary-group="current"]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            syncSalaryPeriod(button.getAttribute('data-salary-period'));
+        });
+    });
+
+    [
+        'pay_annual', 'pay_monthly', 'ctc',
+        'bill_annual', 'bill_monthly', 'ectc'
+    ].forEach(function (id) {
+        var field = root.querySelector('#' + id);
+        if (field) {
+            field.addEventListener('input', function () {
+                window.setTimeout(updateSalarySummary, 0);
+            });
+            field.addEventListener('change', function () {
+                window.setTimeout(updateSalarySummary, 0);
+            });
+        }
+    });
+    if (salaryCurrencySelect) {
+        salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
+    }
+
+    syncSalaryPeriod(activeSalaryPeriod());
+    syncSalaryCurrency();
+})();
+</script>
+
+
+<script>
+(function initializeCandidateAvailabilityPickers() {
+    'use strict';
+
+    var dateFields = [
+        { id: 'interviewDateOne', offset: 0 },
+        { id: 'interviewDateTwo', offset: 1 },
+        { id: 'interviewDateThree', offset: 2 }
+    ];
+    var timeFieldIds = ['interviewTimeOne', 'interviewTimeTwo', 'interviewTimeThree'];
+    var timeFormat = @json($defaultTimeFormat == 1 ? 'h:i K' : 'H:i');
+
+    function parseDisplayDate(value) {
+        var match = String(value || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
+    }
+
+    function futureDate(offset) {
+        var date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + offset);
+        return date;
+    }
+
+    function nativeDateValue(date) {
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return date.getFullYear() + '-' + month + '-' + day;
+    }
+
+    function nativeTimeValue(value) {
+        var match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+        if (!match) {
+            return '';
+        }
+
+        var hour = Number(match[1]);
+        var suffix = String(match[3] || '').toUpperCase();
+        if (suffix === 'PM' && hour < 12) {
+            hour += 12;
+        } else if (suffix === 'AM' && hour === 12) {
+            hour = 0;
+        }
+
+        return String(hour).padStart(2, '0') + ':' + match[2];
+    }
+
+    if (typeof window.flatpickr === 'function') {
+        timeFieldIds.forEach(function (id) {
+            var field = document.getElementById(id);
+            if (!field || field._flatpickr) {
+                return;
+            }
+
+            window.flatpickr(field, {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: timeFormat,
+                time_24hr: timeFormat === 'H:i',
+                minuteIncrement: 1,
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: true
+            });
+        });
+
+        dateFields.forEach(function (config) {
+            var field = document.getElementById(config.id);
+            if (!field || field._flatpickr) {
+                return;
+            }
+
+            var savedDate = parseDisplayDate(field.value);
+            window.flatpickr(field, {
+                dateFormat: 'd-m-Y',
+                altInput: true,
+                altFormat: 'd-M-Y',
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: true,
+                defaultDate: savedDate || futureDate(config.offset),
+                minDate: savedDate ? null : 'today',
+                disable: savedDate ? [function (date) {
+                    var today = futureDate(0);
+                    return date < today && date.getTime() !== savedDate.getTime();
+                }] : []
+            });
+        });
+
+        return;
+    }
+
+    dateFields.forEach(function (config) {
+        var field = document.getElementById(config.id);
+        if (!field) {
+            return;
+        }
+
+        var savedDate = parseDisplayDate(field.value);
+        field.type = 'date';
+        field.value = nativeDateValue(savedDate || futureDate(config.offset));
+        if (!savedDate) {
+            field.min = nativeDateValue(futureDate(0));
+        }
+    });
+
+    timeFieldIds.forEach(function (id) {
+        var field = document.getElementById(id);
+        if (!field) {
+            return;
+        }
+
+        var existingValue = nativeTimeValue(field.value);
+        field.type = 'time';
+        field.value = existingValue;
+    });
+})();
+</script>
+@endpush

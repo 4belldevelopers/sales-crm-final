@@ -23,12 +23,16 @@ class ForwardRequest extends Model
         'candidate_count',
         'recipient_count',
         'status',
+        'worker_token',
+        'coin_reservation_id',
+        'processing_started_at',
         'completed_at',
     ];
 
     protected $casts = [
         'candidate_count' => 'integer',
         'recipient_count' => 'integer',
+        'processing_started_at' => 'datetime',
         'completed_at' => 'datetime',
     ];
 
@@ -53,5 +57,15 @@ class ForwardRequest extends Model
     public function deliveryAttempts(): HasMany
     {
         return $this->hasMany(ForwardDeliveryAttempt::class, 'forward_request_id');
+    }
+
+    public function coinReservation()
+    {
+        return $this->hasOne(CoinReservation::class, 'forward_request_id', 'uuid');
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(ForwardResumeEvent::class, 'forward_request_id', 'uuid');
     }
 }

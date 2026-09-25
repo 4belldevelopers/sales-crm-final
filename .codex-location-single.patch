@@ -1,0 +1,68 @@
+--- resources/views/service_company/job-applications/create.blade.php
++++ resources/views/service_company/job-applications/create.blade.php
+@@ -450,7 +450,7 @@
+                   </div>
+                   <div class="fg fv-row">
+                     <label>Current Location <span class="rq">*</span></label>
+-                    <div class="candidate-field-control candidate-field-control--tagify"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" /></div>
++                    <div class="candidate-field-control candidate-field-control--tagify candidate-field-control--location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" autocomplete="off" aria-label="Search current location" /><i class="fa-solid fa-chevron-down candidate-location-chevron" aria-hidden="true"></i></div>
+                   </div>
+                   <div class="fg fv-row">
+                     <label>Highest Qualification <span class="rq">*</span></label>
+@@ -2721,17 +2721,28 @@
+       }
+ 
+       tagifylocation = new window.Tagify(candidateLocationInput, {
++          mode: 'select',
+           whitelist: initialLocations,
+           enforceWhitelist: true,
+           maxTags: 1,
++          duplicates: false,
++          editTags: false,
++          skipInvalid: true,
+           dropdown: {
++              classname: 'candidate-location-dropdown',
+               maxItems: 20,
+               enabled: 0,
+               closeOnSelect: true,
+-              highlightFirst: true
++              highlightFirst: true,
++              searchKeys: ['value']
+           }
+       });
+ 
++      if (tagifylocation.DOM && tagifylocation.DOM.scope) {
++          tagifylocation.DOM.scope.classList.add('candidate-location-tagify');
++          tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
++      }
++
+       function setSingleCandidateLocation(value) {
+           var normalizedValue = String(value || '').trim();
+           tagifylocation.removeAllTags();
+@@ -2753,6 +2764,10 @@
+               });
+       }, 250);
+ 
++      tagifylocation.on('focus', function () {
++          tagifylocation.dropdown.show('');
++      });
++
+       tagifylocation.on('input', function (event) {
+           var query = String(event.detail.value || '').trim();
+           if (query.length < 2) {
+@@ -2763,14 +2778,12 @@
+           fetchCandidateLocationSuggestions(query);
+       });
+ 
+-      tagifylocation.on('dropdown:select', function (event) {
+-          setSingleCandidateLocation(event.detail.data.value);
+-      });
+ 
+       tagifylocation.on('add', function (event) {
+           if (tagifylocation.value.length > 1) {
+               setSingleCandidateLocation(event.detail.data.value);
+           }
++          tagifylocation.dropdown.hide();
+       });
+ 
+       if (defaultLocation) {
