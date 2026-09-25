@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_yellow=20260925" rel="stylesheet" type="text/css" />
 
 @endpush
 
@@ -148,9 +148,9 @@
     <div class="d-flex align-items-center py-1 candidate-header-actions">
       @php
           if($page_event == 'EDIT'){
-            echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>';
+            echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>';
           }else{
-            echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Submit Candidate</button>';
+            echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>';
           }
       @endphp
     </div>
@@ -1129,84 +1129,42 @@
               </div>
               <div class="fsc candidate-card-body">
                 <div class="ag">
-                  <div class="ai">
-                            <div class="ad">Date and Time(Slot-1)</div>
-                             <div class="row">
-                              <div class="col-4 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
-                              </div>
-                              <div class="col-3 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off">
-                              </div>
-                              <div class="col-5 pl-0">
-                                <select name="interview_mode_one" id="interview_mode_one"
-                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
-                                      class="form-select form-select-solid">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="ai">
-                            <div class="ad">Date and Time(Slot-2)</div>
-                            <div class="row">
-                              <div class="col-4 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo)  ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y'): '' }}" type="text" autocomplete="off">
-                              </div>
-                              <div class="col-3 pl-0">
-                                <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ?  \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off">
-                              </div>
-                              <div class="col-5 pl-0">
-                                <select name="interview_mode_two" id="interview_mode_two"
-                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
-                                      class="form-select form-select-solid">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="ai">
-                              <div class="ad">Date and Time(Slot-3)</div>
-                              <div class="row">
-                                <div class="col-4 pl-0">
-                                  <input class="form-control form-control-solid" placeholder="Date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off">
-                                </div>
-                                <div class="col-3 pl-0">
-                                  <input class="form-control form-control-solid" placeholder="Time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ?  \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off">
-                                </div>
-                                <div class="col-5 pl-0">
-                                  <select name="interview_mode_three" id="interview_mode_three"
-                                      onchange="getInterviewModeChild(this.value, {{ $jobId }});"
-                                      class="form-select form-select-solid">
-                                      <option value="">Mode</option>
-                                      @if (!empty(@$interview_mode))
-                                        @foreach (@$interview_mode as $int_mode_val)
-                                            
-                                            <option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                  </select>
-                                </div>
-                              </div>
-                          </div>
+                  <div class="ai candidate-slot candidate-slot--one">
+                    <div class="candidate-slot-head">
+                      <span class="candidate-slot-number">1</span>
+                      <span><strong>Date and Time (Slot-1)</strong><small>Select the first preferred interview window.</small></span>
                     </div>
+                    <div class="candidate-slot-fields">
+                      <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Time <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-clock" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><i class="fa-solid fa-video" aria-hidden="true"></i><select name="interview_mode_one" id="interview_mode_one" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
+                    </div>
+                  </div>
+
+                  <div class="ai candidate-slot candidate-slot--two">
+                    <div class="candidate-slot-head">
+                      <span class="candidate-slot-number">2</span>
+                      <span><strong>Date and Time (Slot-2)</strong><small>Select the second preferred interview window.</small></span>
+                    </div>
+                    <div class="candidate-slot-fields">
+                      <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Time <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-clock" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><i class="fa-solid fa-video" aria-hidden="true"></i><select name="interview_mode_two" id="interview_mode_two" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
+                    </div>
+                  </div>
+
+                  <div class="ai candidate-slot candidate-slot--three">
+                    <div class="candidate-slot-head">
+                      <span class="candidate-slot-number">3</span>
+                      <span><strong>Date and Time (Slot-3)</strong><small>Select the third preferred interview window.</small></span>
+                    </div>
+                    <div class="candidate-slot-fields">
+                      <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Time <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-clock" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span>Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><i class="fa-solid fa-video" aria-hidden="true"></i><select name="interview_mode_three" id="interview_mode_three" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
+                    </div>
+                  </div>
+                </div>
                 </div>
             </div>
 
@@ -1222,27 +1180,27 @@
                 <div class="candidate-professional-links">
                   <div class="candidate-link-row fv-row">
                     <span class="candidate-link-brand candidate-link-brand--linkedin" aria-hidden="true">in</span>
-                    <label for="linkedin">LinkedIn <span>(Optional)</span></label>
+                    <span class="candidate-link-copy"><label for="linkedin">LinkedIn <span>(Optional)</span></label><small>Your professional profile</small></span>
                     <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="linkedin" name="linkedin" value="{{ @$application->linkedin }}" placeholder="Enter LinkedIn profile URL" /></div>
-                    <small>e.g. https://www.linkedin.com/in/yourname</small>
+                    <small class="candidate-link-example">e.g. https://www.linkedin.com/in/yourname</small>
                   </div>
                   <div class="candidate-link-row fv-row">
                     <span class="candidate-link-brand candidate-link-brand--github" aria-hidden="true">GH</span>
-                    <label for="github">GitHub <span>(Optional)</span></label>
+                    <span class="candidate-link-copy"><label for="github">GitHub <span>(Optional)</span></label><small>Your code repositories</small></span>
                     <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->github }}" id="github" name="github" placeholder="Enter GitHub profile URL" /></div>
-                    <small>e.g. https://github.com/yourusername</small>
+                    <small class="candidate-link-example">e.g. https://github.com/yourusername</small>
                   </div>
                   <div class="candidate-link-row fv-row">
                     <span class="candidate-link-brand candidate-link-brand--behance" aria-hidden="true">Be</span>
-                    <label for="behance">Behance <span>(Optional)</span></label>
+                    <span class="candidate-link-copy"><label for="behance">Behance <span>(Optional)</span></label><small>Your design portfolio</small></span>
                     <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" id="behance" name="behance" value="{{ @$application->behance }}" placeholder="Enter Behance profile URL" /></div>
-                    <small>e.g. https://www.behance.net/yourname</small>
+                    <small class="candidate-link-example">e.g. https://www.behance.net/yourname</small>
                   </div>
                   <div class="candidate-link-row fv-row">
                     <span class="candidate-link-brand candidate-link-brand--website" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
-                    <label for="otherLink">Portfolio / Website <span>(Optional)</span></label>
+                    <span class="candidate-link-copy"><label for="otherLink">Portfolio / Website <span>(Optional)</span></label><small>Your personal website</small></span>
                     <div class="candidate-link-control"><i class="fa-solid fa-link" aria-hidden="true"></i><input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter website or portfolio URL" /></div>
-                    <small>e.g. https://yourportfolio.com</small>
+                    <small class="candidate-link-example">e.g. https://yourportfolio.com</small>
                   </div>
                 </div>
               </div>
@@ -1260,18 +1218,11 @@
                 <div class="candidate-additional-details-grid">
                   <div class="fg fv-row">
                     <label>Current Visa Status (For International)</label>
-                    <select name="visastatu" id="visastatu">
-                      <option value="">Select visa status</option>
-                      <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
-                      <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
-                      <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
-                      <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
-                      <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
-                    </select>
+                    <div class="candidate-detail-control candidate-detail-control--select"><span><i class="fa-solid fa-globe" aria-hidden="true"></i></span><select name="visastatu" id="visastatu"><option value="">Select visa status</option><option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option><option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option><option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option><option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option><option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option></select></div>
                   </div>
                   <div class="fg fv-row">
                     <label>Professional Reference <span class="candidate-optional-label">(Optional)</span></label>
-                    <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
+                    <div class="candidate-detail-control"><span><i class="fa-solid fa-user" aria-hidden="true"></i></span><input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" /></div>
                     <small class="candidate-field-help">Provide a reference name who can vouch for the candidate's work experience.</small>
                   </div>
                 </div>
@@ -1289,19 +1240,15 @@
               </div>
               <div class="fsc candidate-card-body">
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
-                <div class="fg fv-row" style="grid-column: 1 / -1;">
-                  <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
-                  <select id="recruiter_note_template_select" style="width:100%;padding:8px 12px;border:1px solid #e4e6ef;border-radius:6px;font-family:'Poppins',sans-serif;font-size:13px;color:#3f4254;background:#fff;cursor:pointer;">
-                    <option value="">Select Note Template...</option>
-                    @foreach($recruiterNoteTemplates as $tpl)
-                      <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
-                    @endforeach
-                  </select>
+                <div class="fg fv-row recruiter-template-field">
+                  <label>Select Template <span>(Optional - loads content into the note below)</span></label>
+                  <div class="recruiter-template-control"><i class="fa-regular fa-file-lines" aria-hidden="true"></i><select id="recruiter_note_template_select"><option value="">Select Note Template...</option>@foreach($recruiterNoteTemplates as $tpl)<option value="{{ $tpl->id }}">{{ $tpl->title }}</option>@endforeach</select></div>
                 </div>
                 @endif
-                <div class="fg fv-row" style="grid-column: 1 / -1;">
-                  <label>Internal Note (Optional)</label>
+                <div class="fg fv-row recruiter-editor-field">
+                  <label>Internal Note <span>(Optional)</span></label>
                   <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
+                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Not visible to candidate</span></div>
                 </div>
               </div>
             </div>
@@ -2518,7 +2465,7 @@ async function isInternetAvailable() {
                     setTimeout(function () {
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#update-form").prop("disabled", false).html(`Update`);
+                            $("#update-form").prop("disabled", false).html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
                             return;
@@ -2542,18 +2489,18 @@ async function isInternetAvailable() {
                                 if(response.status == 'mailcheck'){
                                     if (!navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                                         submitButton.removeAttribute('data-kt-indicator');
                                         submitButton.disabled = false;
                                         return;
                                     }
-                                   $("#update-form").html(`Update`);
+                                   $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
    																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});
                                    return false;
                                 }
                                 if(response.status == 'notauthorized'){
-                                   $("#update-form").html(`Update`);
+                                   $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                                    submitButton.removeAttribute('data-kt-indicator');
                                    submitButton.disabled = false;
                                    Swal.fire("Not Authorized", response.message, "warning");
@@ -2561,7 +2508,7 @@ async function isInternetAvailable() {
                                 }
 
                                 if (response.status !== 'success') {
-                                    $("#update-form").html(`Update`);
+                                    $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                                     submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
                                     Swal.fire("Update Failed", response.message || "The candidate could not be updated. Please try again.", "error");
@@ -2569,7 +2516,7 @@ async function isInternetAvailable() {
                                 }
 
                                 if (typeof response.url !== 'string' || response.url.trim() === '') {
-                                    $("#update-form").html(`Update`);
+                                    $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                                     submitButton.removeAttribute('data-kt-indicator');
                                     submitButton.disabled = false;
                                     Swal.fire("Update Saved", "The candidate was updated, but the return page could not be opened. Please return to the candidate tracker.", "warning");
@@ -2599,7 +2546,7 @@ submitButton.removeAttribute('data-kt-indicator');
 																			},
 															error			: function (xhr, textStatus, errorThrown) {
                                                                             $("#update-form").prop("disabled", false);
-                                                                            $("#update-form").html(`Update`);
+                                                                                            $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                                                                             submitButton.removeAttribute('data-kt-indicator');
                                                                             submitButton.disabled = false;
                                                                             if (xhr.status === 0 || !navigator.onLine) {
@@ -2629,7 +2576,7 @@ submitButton.removeAttribute('data-kt-indicator');
                                                                             // triggered window.location would have started navigation by now).
                                                                             if ($("#update-form").length) {
                                                                                 $("#update-form").prop("disabled", false);
-                                                                                $("#update-form").html(`Update`);
+                                                                                                  $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
                                                                                 submitButton.removeAttribute('data-kt-indicator');
                                                                                 submitButton.disabled = false;
                                                                             }
@@ -3240,7 +3187,7 @@ var KTAddCandidate = function () {
                     setTimeout(function () {					
                         if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false).html("Submit");
+                            $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
                             return;
@@ -3268,13 +3215,13 @@ var KTAddCandidate = function () {
                                 if(response.status == 'mailcheck'){
                                     if (!navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                                         submitButton.removeAttribute('data-kt-indicator');
                                         submitButton.disabled = false;
                                         return;
                                     }
 
-                                   $("#save-form").html(`Submit`);
+                                   $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
    																	Swal.fire("Warning", response.message , "warning").then(function(){
 																	});
                                    return false;
@@ -3306,7 +3253,7 @@ var KTAddCandidate = function () {
 																			},
 															error			: function (xhr, textStatus, errorThrown) {
                                 $("#save-form").prop("disabled", false);
-                                $("#save-form").html(`Submit`);
+                                $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;
                                 if (xhr.status === 0 || !navigator.onLine) {
@@ -3333,7 +3280,7 @@ var KTAddCandidate = function () {
                                                                         // the button doesn't stay stuck on the spinner.
                                                                         if ($("#save-form").length) {
                                                                             $("#save-form").prop("disabled", false);
-                                                                            $("#save-form").html(`Submit`);
+                                                                                                  $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                                                                             submitButton.removeAttribute('data-kt-indicator');
                                                                             submitButton.disabled = false;
                                                                         }
@@ -3751,7 +3698,7 @@ $(document).ready(function() {
 
 // Initialize CKEditor for recruiter_note
 if (typeof CKEDITOR !== 'undefined') {
-    CKEDITOR.replace('recruiter_note', { height: 350 });
+    CKEDITOR.replace('recruiter_note', { height: 150 });
 
     // When CKEditor is ready, hook into its iframe paste events.
     // If the user pastes a file (e.g. a resume) while the editor has focus,
