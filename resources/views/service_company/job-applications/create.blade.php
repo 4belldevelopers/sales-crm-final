@@ -107,7 +107,13 @@
       $created_at 		=	@$jobDetail->created_at;
       $created_at 		=	date("d M, Y", strtotime($created_at));
 		
-      $snp_mode = (int) (@$application->serving_notice_period_mode ?? 0);
+      $snp_mode = null;
+      if (isset($application) && !empty($application->id)) {
+        $stored_snp_mode = (int) ($application->serving_notice_period_mode ?? 0);
+        if (in_array($stored_snp_mode, [1, 2], true) || ($stored_snp_mode === 0 && !empty($application->np_id))) {
+          $snp_mode = $stored_snp_mode;
+        }
+      }
       $snp_last_working = '';
       if ($snp_mode === 1) {
         $snp_last_working = @$application->np_id;
@@ -860,8 +866,8 @@
                 </div>
               </div>
               <div class="fsc candidate-card-body aw-body">
-                <div class="candidate-notice-status-block">
-                  <label>Notice Period <span class="rq">*</span></label>
+                <div class="candidate-notice-status-block fv-row">
+                  <label>Notice Period <span class="candidate-optional-label">(Optional)</span></label>
                   <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
@@ -880,6 +886,7 @@
                     </button>
                   </div>
                   <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
+                    <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
                     <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
                     <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period</option>
                     <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
@@ -887,13 +894,13 @@
                 </div>
 
                 <div class="candidate-notice-details-grid">
-                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ $snp_mode === 0 ? 'hidden' : '' }}>
+                  <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
                     <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date' : 'Last Working Date' }} <span class="rq">*</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                       <div class="candidate-date-picker">
-                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date' : 'Select last working date' }}" readonly {{ $snp_mode === 0 ? 'disabled' : '' }}>
-                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ $snp_mode === 0 ? 'disabled' : '' }}>
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date' : 'Select last working date' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                        <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
                       </div>
                     </div>
                   </div>

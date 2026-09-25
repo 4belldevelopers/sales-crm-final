@@ -67,10 +67,12 @@ final class CandidateNoticePeriodState
     /** @return array<string, array<int, string>> */
     public static function validationRules(mixed $mode): array
     {
-        $normalizedMode = (int) $mode;
+        $modeValue = is_scalar($mode) ? trim((string) $mode) : '';
+        $hasSelectedMode = in_array($modeValue, ['0', '1', '2'], true);
+        $normalizedMode = $hasSelectedMode ? (int) $modeValue : null;
 
         return [
-            'serving_notice_period' => ['required', 'integer', 'in:0,1,2'],
+            'serving_notice_period' => ['nullable', 'integer', 'in:0,1,2'],
             'np_id' => $normalizedMode === self::SERVING_NOTICE
                 ? ['required', 'date', 'after_or_equal:today']
                 : ($normalizedMode === self::IMMEDIATE_JOINER

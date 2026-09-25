@@ -80,11 +80,14 @@ class CandidateCommentsAndNoticePeriodRegressionTest extends TestCase
         $indexJob = $this->source('app/Jobs/ProcessCandidateUpdateJob.php');
 
         $this->assertStringContainsString('aria-label="Notice Period Selection"', $form);
+        $this->assertStringContainsString('Notice Period <span class="candidate-optional-label">(Optional)</span>', $form);
+        $this->assertStringContainsString('<option value="" {{ $snp_mode === null ? \'selected\' : \'\' }}>Choose Notice Period</option>', $form);
+        $this->assertStringContainsString("'serving_notice_period' => ['nullable', 'integer', 'in:0,1,2']", $this->source('app/Services/CandidateNoticePeriodState.php'));
         $this->assertStringContainsString('id="candidateNoticeDateField"', $form);
         $this->assertStringContainsString('id="candidateNoticeDaysField"', $form);
-        $this->assertStringContainsString("noticeDateField.hidden = !usesDate", $form);
+        $this->assertStringContainsString('noticeDateField.hidden = !usesDate', $form);
         $this->assertStringContainsString("noticeDaysField.hidden = mode !== '0'", $form);
-        $this->assertStringContainsString("noticeDateInput.disabled = !usesDate", $form);
+        $this->assertStringContainsString('noticeDateInput.disabled = !usesDate', $form);
         $this->assertStringContainsString("noticeDaysSelect.disabled = mode !== '0'", $form);
         $this->assertStringContainsString("noticeDateInput.value = ''", $form);
         $this->assertStringContainsString("noticeDaysSelect.value = ''", $form);
