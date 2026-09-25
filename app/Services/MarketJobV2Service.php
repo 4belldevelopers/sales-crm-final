@@ -445,8 +445,7 @@ class MarketJobV2Service
     public static function invalidateCacheForCompany(int $companyId): void
     {
         $versionKey = 'allmarketjobs_version_company_'.$companyId;
-        $currentVersion = (int) cache()->get($versionKey, 1);
-        cache()->forever($versionKey, $currentVersion + 1);
+        \App\Helper\GeneralMethod::cacheClean($versionKey);
     }
 
     /**
@@ -455,8 +454,7 @@ class MarketJobV2Service
     public static function invalidateGlobalCache(): void
     {
         $globalVersionKey = 'allmarketjobs_global_version';
-        $currentVersion = (int) cache()->get($globalVersionKey, 1);
-        cache()->forever($globalVersionKey, $currentVersion + 1);
+        \App\Helper\GeneralMethod::cacheClean($globalVersionKey);
     }
 
     /**
