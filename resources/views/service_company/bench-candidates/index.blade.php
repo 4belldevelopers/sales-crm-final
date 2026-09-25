@@ -201,7 +201,7 @@
         /* Clients Pipeline Activity mini-grid */
         .bench-dash .pipe { display: flex; align-items: flex-start; gap: 0; width: 100%; min-width: 0; overflow: hidden; }
         .bench-dash .pipe > div { width: 100%; min-width: 0; }
-        .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(7, minmax(15px, 1fr)); text-align: center; gap: 0; width: 100%; min-width: 0; }
+        .bench-dash .pipe-grid { display: grid; grid-template-columns: repeat(8, minmax(12px, 1fr)); text-align: center; gap: 0; width: 100%; min-width: 0; }
         .bench-dash .pipe-grid .h { font-size: 8.5px !important; color: #a1a5b7; font-weight: 700; overflow: hidden; }
         .bench-dash .pipe-grid .v { font-size: 10px !important; font-weight: 700; color: #181c32; padding-top: 1px; overflow: hidden; }
         .bench-dash .pipe-grid a { font-size: 10px !important; font-weight: 700; }
