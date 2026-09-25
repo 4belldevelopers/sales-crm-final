@@ -965,7 +965,7 @@ if($cc_email_count > 0){
                   $candDisplayName = $cand->full_name ?? ('Candidate #' . ($idx + 1));
                   $candDesignation = $cand->current_designation ?? ($cand->job_title ?? 'Profile');
                 @endphp
-                <div class="fwd-cand-card" id="fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;transition:all 0.2s ease;">
+                <div class="fwd-cand-card" id="fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-candidate-root data-candidate-id="{{ (int)$cand->id }}" data-candidate-field-version="1" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;transition:all 0.2s ease;">
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
                     <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                       {{-- Avatar / Sequence badge --}}

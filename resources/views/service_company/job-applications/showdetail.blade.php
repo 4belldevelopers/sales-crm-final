@@ -893,6 +893,26 @@
     </button>
   </div>
 
+  {{-- ===== SCOPED CANDIDATE ROOT (Strict Isolation & 0% Server Strain) ===== --}}
+  <div id="jw_candidate_root_detail" data-candidate-root data-candidate-id="{{ (int) @$application->id }}" data-candidate-field-version="1" style="display:contents;">
+
+  {{-- Authoritative Scoped Semantic Vault for Client Snapshot Resolution --}}
+  <div class="jw-candidate-semantic-vault" style="display:none;" aria-hidden="true">
+    <span data-candidate-field="candidate_name" data-value="{{ ucwords(@$application->full_name) }}"></span>
+    <span data-candidate-field="current_company" data-value="{{ (@$application->current_company) ? ucwords(@$application->current_company) : ucwords(@$application->cur_company_name ?: '') }}"></span>
+    <span data-candidate-field="total_experience" data-value="{{ $__bdTotalExp }}"></span>
+    <span data-candidate-field="education" data-value="{{ strtoupper(@$application->qualification_name ?: (@$application->qualification ?: '')) }}"></span>
+    <span data-candidate-field="work_mode" data-value="{{ ucwords(@$application->wm ?: '') }}"></span>
+    <span data-candidate-field="location" data-value="{{ trim(($city_name ?? '').' '.($state_name ?? '')) ?: (@$application->current_location ?: '') }}"></span>
+    <span data-candidate-field="notice_period" data-value="{{ $__hdrAvailability }}"></span>
+    <span data-candidate-field="notice_mode" data-value="{{ @$application->serving_notice_period_mode }}"></span>
+    <span data-candidate-field="notice_lwd" data-value="{{ @$application->last_working_date }}"></span>
+    <span data-candidate-field="phone" data-value="{{ @$application->phone }}"></span>
+    <span data-candidate-field="email" data-value="{{ @$application->email }}"></span>
+    <span data-candidate-field="linkedin" data-value="{{ @$application->linkedin }}"></span>
+    <span data-candidate-field="candidate_rating" data-value="{{ (int) @$application->rating }}"></span>
+  </div>
+
   {{-- ===== CARD 1: Hero identity + metrics ===== --}}
   <div class="cdr-outer-card">
   {{-- HERO CARD: identity (left) + 4-row metrics list (right) --}}
@@ -913,7 +933,7 @@
 
         <div class="cdr-id-body">
           <div class="cdr-name-row">
-            <h2 class="cdr-name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
+            <h2 class="cdr-name" data-candidate-field="candidate_name">{{ ucwords(@$application->full_name ?: '—') }}</h2>
             @if($__hdrIsVerified)
               <span class="cdr-verified-v2" title="Verified candidate">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -928,25 +948,25 @@
           @php $__candCityState = trim(($city_name ?? '').' '.($state_name ?? '')); @endphp
           <div class="cdr-meta-grid">
             @if($__bdTotalExp !== '—')
-              <span class="cdr-meta-item">
+              <span class="cdr-meta-item" data-candidate-field="total_experience" data-value="{{ $__bdTotalExp }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                 {{ $__bdTotalExp }} Yrs Experience
               </span>
             @endif
             @if($__candCityState)
-              <span class="cdr-meta-item">
+              <span class="cdr-meta-item" data-candidate-field="location" data-value="{{ $__candCityState }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                 {{ $__candCityState }}
               </span>
             @endif
             @if($__dispCompany)
-              <span class="cdr-meta-item">
+              <span class="cdr-meta-item" data-candidate-field="current_company" data-value="{{ $__dispCompany }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
                 {{ $__dispCompany }}
               </span>
             @endif
             @if($__hdrAvailability !== '—')
-              <span class="cdr-meta-item {{ $__hdrIsImmediate ? 'cmi-green' : '' }}">
+              <span class="cdr-meta-item {{ $__hdrIsImmediate ? 'cmi-green' : '' }}" data-candidate-field="notice_period" data-value="{{ $__hdrAvailability }}">
                 @if($__hdrIsImmediate)
                   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="5"/></svg>
                 @else
@@ -1087,7 +1107,7 @@
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Work Mode</div>
-        <div class="cdr-pipeline-value">{{ ucwords(@$application->wm) ?: '—' }}</div>
+        <div class="cdr-pipeline-value" data-candidate-field="work_mode" data-value="{{ ucwords(@$application->wm ?: '') }}">{{ ucwords(@$application->wm) ?: '—' }}</div>
       </div>
     </div>
 
@@ -1098,7 +1118,7 @@
       </div>
       <div class="cdr-pipeline-info">
         <div class="cdr-pipeline-label">Education</div>
-        <div class="cdr-pipeline-value" title="{{ strtoupper(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(strtoupper(@$application->qualification_name), 10, '…') ?: '—' }}</div>
+        <div class="cdr-pipeline-value" data-candidate-field="education" data-value="{{ strtoupper(@$application->qualification_name ?: (@$application->qualification ?: '')) }}" title="{{ strtoupper(@$application->qualification_name) }}">{{ \Illuminate\Support\Str::limit(strtoupper(@$application->qualification_name), 10, '…') ?: '—' }}</div>
       </div>
     </div>
 
@@ -5328,17 +5348,34 @@ setTimeout(() => {
       $rsNotice = $rsIsBench ? ('Available '.date('d M Y',$rsNpTs)) : ('SNP LWD '.date('d M Y',$rsNpTs));
   }
   else { $rsNotice=$rsNpRaw; }
-  if($rsNotice===''||$rsNotice==='Available '||$rsNotice==='SNP LWD '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='--';
+  if($rsNotice===''||$rsNotice==='Available '||$rsNotice==='SNP LWD '||str_contains($rsNotice,'01 Jan 1970')) $rsNotice='Not Specified';
   $rsIsImmediate=($rsNpMode===2||strtolower($rsNpRaw)==='immediate'||stripos($rsNotice,'Immediate')!==false);
+
+  $candCurLoc = (!empty(@$application->current_location) && !preg_match('/^\d+$/', trim((string) @$application->current_location))) ? trim((string) @$application->current_location) : '';
   $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
-  if($rsLoc==='') $rsLoc=trim($country_name??'');
-  if($rsLoc==='') $rsLoc='--';
+  if($rsLoc==='' || $rsLoc==='--') $rsLoc=$candCurLoc;
+  if($rsLoc==='' || $rsLoc==='--') $rsLoc=trim($country_name??'',', ');
+  if($rsLoc==='') $rsLoc='Not Specified';
+
   $rsTotalExp=trim((string)(@$application->total_exp??''));
   $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");
-  $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s'):'--';
+  if ($rsTotalExp !== '' && (float)$rsTotalExp == 0.0) {
+      $rsExpStr = 'Fresher';
+  } elseif ($rsTotalExp !== '') {
+      $rsExpStr = $rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s');
+  } else {
+      $rsExpStr = 'Not Specified';
+  }
+
+  $rsEdu = strtoupper(trim((string)(@$application->qualification_name ?: (@$application->qualification ?: (@$application->education ?: '')))));
+  if(preg_match('/^\d+$/', $rsEdu)) $rsEdu = '';
+  if($rsEdu==='') $rsEdu = 'Not Specified';
+
   $rsValidation=[];
   if(!empty($application->resume))   $rsValidation[]=['label'=>'RESUME','status'=>'Verified'];
   if(!empty($application->email)||!empty($application->secondrary_email)) $rsValidation[]=['label'=>'EMAIL ID','status'=>'Verified'];
+  if(!empty($application->phone)||!empty($application->secondary_mobile)) $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'Verified'];
+  else $rsValidation[]=['label'=>'PHONE NUMBER','status'=>'-'];
   $hasLinkedin = !empty($application->linkedin) && !in_array(strtolower(trim((string) $application->linkedin)), ['--', '-', 'na', 'n/a', 'null', 'none']);
   if($hasLinkedin) $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'Verified'];
   else $rsValidation[]=['label'=>'LINKEDIN ID','status'=>'-'];
@@ -5363,8 +5400,9 @@ setTimeout(() => {
   data-location="{{ $rsLoc }}"
   data-experience="{{ $rsExpStr }}"
   data-notice="{{ $rsNotice }}"
-  data-education="{{ strtoupper(@$application->qualification_name) }}"
+  data-education="{{ $rsEdu }}"
   data-work-mode="{{ $rsWorkMode }}"
+  data-candidate-rating="{{ (int) @$application->rating }}"
   data-report-id="JR{{ now()->format('Ymd') }}{{ str_pad((string)@$application->id, 6, '0', STR_PAD_LEFT) }}"
   data-report-date="{{ now()->format('d M Y') }}"
   data-recruiter-name="{{ $rsCaptainName }}"
@@ -5382,7 +5420,9 @@ setTimeout(() => {
   data-job-title="{{ ucwords($job->title??'') }}"
   data-skills='@json($rsSkills)'
   data-validation='@json($rsValidation)'></div>
+</div>{{-- /#jw_candidate_root_detail (Scoped Candidate Context) --}}
 
+<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 <script>
 /* buildRecruiterSummary — client-side vector PDF report, no server calls */
 (function(){
@@ -6458,7 +6498,9 @@ function readData(){
   }
 
   var raw = {
+    id: parseInt(g('data-report-id').replace(/[^\d]/g, '').slice(-6), 10) || parseInt(document.getElementById('candidate_core_id') ? document.getElementById('candidate_core_id').value : 0, 10),
     name:g('data-name')||'Candidate',
+    full_name:g('data-name')||'Candidate',
     email:g('data-email'),
     secondaryEmail:g('data-secondary-email'),
     phone:g('data-phone'),
@@ -6467,12 +6509,21 @@ function readData(){
     secondaryPhoneCode:g('data-secondary-phone-code'),
     linkedin:g('data-linkedin'),
     designation:g('data-designation'),
+    current_designation:g('data-designation'),
     company:g('data-company'),
+    current_company:g('data-company'),
     location:finalLoc,
+    current_location:finalLoc,
     experience:finalExp,
+    total_exp:finalExp,
     notice:finalNotice,
+    np_id:finalNotice,
     education:g('data-education'),
+    qualification_name:g('data-education'),
     workMode:g('data-work-mode'),
+    wm:g('data-work-mode'),
+    work_mode:g('data-work-mode'),
+    rating:safeNumber(g('data-candidate-rating'), 0, 5),
     reportId:g('data-report-id'),
     reportDate:g('data-report-date'),
     recruiterName:g('data-recruiter-name'),
@@ -6487,6 +6538,52 @@ function readData(){
     skills:gj('data-skills'),
     validation:gj('data-validation')
   };
+
+  // Authoritative Canonical Snapshot Resolution (Zero Fabrication, Scoped DOM, 0% Server Load)
+  if (typeof CandidateSnapshotResolver !== 'undefined' && typeof CandidateSnapshotResolver.resolveSnapshot === 'function') {
+    try {
+      var rootEl = document.getElementById('jw_candidate_root_detail') || document.querySelector('[data-candidate-root]');
+      var snapshot = CandidateSnapshotResolver.resolveSnapshot({
+        candidateId: raw.id,
+        rootElement: rootEl,
+        rawData: raw
+      });
+      var sf = snapshot.fields;
+      return {
+        id: snapshot.candidateId,
+        name: sf.name,
+        email: sf.email,
+        secondaryEmail: raw.secondaryEmail,
+        phone: sf.phone,
+        secondaryPhone: raw.secondaryPhone,
+        phoneCode: raw.phoneCode,
+        secondaryPhoneCode: raw.secondaryPhoneCode,
+        linkedin: sf.linkedin,
+        designation: sf.designation,
+        company: sf.company,
+        location: sf.location,
+        experience: sf.experience,
+        notice: sf.noticePeriod,
+        education: sf.education,
+        workMode: sf.workMode,
+        reportId: raw.reportId,
+        reportDate: raw.reportDate,
+        recruiterName: raw.recruiterName,
+        reportCompanyName: raw.reportCompanyName,
+        reportCompanyLogo: raw.reportCompanyLogo,
+        aiVersion: raw.aiVersion,
+        match: sf.match,
+        isImmediate: snapshot.noticeDetails ? snapshot.noticeDetails.mode === 'IMMEDIATE' : false,
+        recruiterNote: sf.recruiterNote,
+        careerSummary: sf.careerSummary,
+        jobTitle: raw.jobTitle,
+        skills: sf.skills,
+        validation: sf.validation
+      };
+    } catch (resolverErr) {
+      console.warn('[readData] CandidateSnapshotResolver fallback:', resolverErr);
+    }
+  }
 
   if (window.AgyResumeRenderer && typeof window.AgyResumeRenderer.normalizeCandidateData === 'function') {
     return window.AgyResumeRenderer.normalizeCandidateData(raw, {
@@ -8870,6 +8967,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
 })();
 </script>
 <script src="{{ asset('js/opendoc/AgyWasmEngine.js') }}"></script>
+<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyResumeRenderer.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyBatchExporter.js') }}"></script>
 <script src="{{ asset('js/opendoc/AgyTouchAnnotator.js') }}"></script>

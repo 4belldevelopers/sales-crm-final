@@ -2076,7 +2076,8 @@
     var summary = limitText(data.careerSummary, 560, 'No professional summary available.');
     var noteMissing = isGap(data.recruiterNote);
     var note = noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote, 420, '');
-    var joining = data.isImmediate ? 'Immediate' : clean(data.notice, '--');
+    var rawNotice = data.notice || data.noticePeriod;
+    var joining = data.isImmediate ? 'Immediate' : (clean(rawNotice, 'Not Specified') === '--' ? 'Not Specified' : clean(rawNotice, 'Not Specified'));
     var companyName = clean(data.reportCompanyName, 'Hiring Partner');
     var skillCount = Math.max(1, Math.min(7, (data.skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).length));
     var skillCardHeight = 90 + (skillCount * 31);
@@ -2112,8 +2113,8 @@
         pairedCardRow([
           { text: clean(data.name, 'Candidate'), style: 'candidateName' },
           { text: clean(data.designation || data.jobTitle, '--'), style: 'designation', margin: [0, 3, 0, 8] },
-          labeledIconLine(rsIconExperience, 'EXPERIENCE:', clean(data.experience, '--').toUpperCase(), 'small', '#64748b', 6.5),
-          { stack: [labeledIconLine(rsIconCompany, 'CURRENT COMPANY:', clean(data.company, '--').toUpperCase(), 'small', '#64748b', 6.5)], margin: [0, 3, 0, 0] }
+          labeledIconLine(rsIconExperience, 'EXPERIENCE:', (clean(data.experience, 'Not Specified') === '--' ? 'Not Specified' : clean(data.experience, 'Not Specified')).toUpperCase(), 'small', '#64748b', 6.5),
+          { stack: [labeledIconLine(rsIconCompany, 'CURRENT COMPANY:', (clean(data.company, 'Not Specified') === '--' ? 'Not Specified' : clean(data.company, 'Not Specified')).toUpperCase(), 'small', '#64748b', 6.5)], margin: [0, 3, 0, 0] }
         ], [
           { text: 'HIRING CONFIDENCE', fontSize: 12.4, bold: true, color: '#64748b', alignment: 'center', margin: [0, 8, 0, 0] },
           { text: score + '%', fontSize: 30, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 7, 0, 0] }
@@ -2123,10 +2124,10 @@
             table: {
               widths: [116, 116, 164, 116],
               body: [[
-                metricCell('Education', data.education, rsIconEducation),
+                metricCell('Education', clean(data.education, 'Not Specified') === '--' ? 'Not Specified' : clean(data.education, 'Not Specified'), rsIconEducation),
                 metricCell('Notice Period', joining, rsIconCalendar),
-                metricCell('Location', cityOnly(data.location), rsIconLocation),
-                metricCell('Work Mode', data.workMode, rsIconLaptop)
+                metricCell('Location', clean(data.location, 'Not Specified') === '--' ? 'Not Specified' : clean(data.location, 'Not Specified'), rsIconLocation),
+                metricCell('Work Mode', clean(data.workMode, 'Not Specified') === '--' ? 'Not Specified' : clean(data.workMode, 'Not Specified'), rsIconLaptop)
               ]]
             },
             layout: {
@@ -2667,6 +2668,60 @@
     candidate = candidate || {};
     companyData = companyData || {};
 
+    // Canonical Snapshot Resolver Delegation (Zero-Fabrication & 0% Server Strain)
+    if (typeof CandidateSnapshotResolver !== 'undefined' && typeof CandidateSnapshotResolver.resolveSnapshot === 'function') {
+      try {
+        var cId = parseInt(candidate.id || candidate.candidateId || candidate.reportId || 0, 10);
+        if (cId > 0) {
+          var rootElement = null;
+          if (typeof document !== 'undefined') {
+            rootElement = document.querySelector('[data-candidate-root][data-candidate-id="' + cId + '"]') || document.querySelector('[data-cand-id="' + cId + '"]');
+          }
+          var snapshot = CandidateSnapshotResolver.resolveSnapshot({
+            candidateId: cId,
+            rootElement: rootElement,
+            rawData: candidate
+          });
+          var sf = snapshot.fields;
+          return {
+            id: snapshot.candidateId,
+            name: sf.name,
+            email: sf.email,
+            secondaryEmail: candidate.secondrary_email || candidate.secondaryEmail || '',
+            phone: sf.phone,
+            secondaryPhone: candidate.secondary_mobile || candidate.secondaryPhone || '',
+            phoneCode: candidate.phone_code || candidate.phoneCode || '',
+            secondaryPhoneCode: candidate.second_phone_code || candidate.secondaryPhoneCode || '',
+            linkedin: sf.linkedin,
+            designation: sf.designation,
+            company: sf.company,
+            location: sf.location,
+            experience: sf.experience,
+            notice: sf.noticePeriod,
+            education: sf.education,
+            workMode: sf.workMode,
+            reportId: candidate.report_id || candidate.reportId || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(cId).padStart(6, '0')),
+            reportDate: candidate.report_date || candidate.reportDate || (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            recruiterName: candidate.recruiter_name || candidate.recruiterName || companyData.recruiterName || 'Hiring Team',
+            reportCompanyName: companyData.companyName || candidate.report_company_name || candidate.reportCompanyName || 'Hiring Partner',
+            reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || candidate.reportCompanyLogo || '',
+            aiVersion: 'Live Intelligence',
+            match: sf.match,
+            isImmediate: snapshot.noticeDetails ? snapshot.noticeDetails.mode === 'IMMEDIATE' : false,
+            recruiterNote: sf.recruiterNote || '',
+            careerSummary: sf.careerSummary || '',
+            jobTitle: candidate.job_title || candidate.jobTitle || sf.designation || 'Verified Professional',
+            skills: sf.skills && sf.skills.length ? sf.skills : (candidate.skills || []),
+            validation: sf.validation && sf.validation.length ? sf.validation : (candidate.validation || []),
+            resume: candidate.resume || '',
+            resumeExt: candidate.resumeExt || ''
+          };
+        }
+      } catch (err) {
+        console.warn('[engine.v4.normalizeCandidateData] CandidateSnapshotResolver fallback:', err);
+      }
+    }
+
     var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
       || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
       || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
@@ -2680,16 +2735,20 @@
     var locParts = [cityName, stateName, countryName].filter(function (p) {
       return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
     });
-    var rawLoc = candidate.location ? String(candidate.location).trim() : '';
+    var rawLoc = candidate.current_location || candidate.location ? String(candidate.current_location || candidate.location).trim() : '';
     if (/^\d+$/.test(rawLoc)) rawLoc = '';
-    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : '--');
+    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified');
 
     var exp = candidate.experience;
     if (!exp && candidate.total_exp) {
       var tot = String(candidate.total_exp).trim();
-      exp = tot + ' Year' + (parseFloat(tot) === 1.0 ? '' : 's');
+      if (parseFloat(tot) === 0) {
+        exp = 'Fresher';
+      } else {
+        exp = tot + ' Year' + (parseFloat(tot) === 1.0 ? '' : 's');
+      }
     }
-    exp = exp || '--';
+    exp = exp || 'Not Specified';
 
     var skills = [];
     if (Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length) {
@@ -2699,7 +2758,7 @@
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
       var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
       var defaultRating = candidate.rating ? Math.min(5, Math.max(0, parseInt(candidate.rating, 10))) : 0;
-      var defaultExp = clean(candidate.experience, '--');
+      var defaultExp = clean(candidate.experience, 'Not Specified');
       skills = sList.slice(0, 7).map(function (sName) {
         return {
           name: sName,
@@ -2719,6 +2778,7 @@
       if (candidate.resume) validation.push({ label: 'RESUME', status: 'Verified' });
       if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
       if (candidate.phone || candidate.secondary_mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
+      else validation.push({ label: 'PHONE NUMBER', status: '-' });
       var hasLinkedin = !!(candidate.linkedin && !/^(--|-|na|n\/a|null|none)$/i.test(String(candidate.linkedin).trim()));
       if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
       else validation.push({ label: 'LINKEDIN ID', status: '-' });
@@ -2763,11 +2823,18 @@
         rawNotice = npRaw;
       }
     } else if (!rawNotice) {
-      rawNotice = '--';
+      rawNotice = 'Not Specified';
     }
     if (/01\s*jan\s*1970/i.test(rawNotice)) {
-      rawNotice = candidate.is_immediate ? 'Immediate' : '--';
+      rawNotice = candidate.is_immediate ? 'Immediate' : 'Not Specified';
     }
+
+    var rawEdu = candidate.qualification_name || candidate.qualification || candidate.education || '';
+    if (/^\d+$/.test(String(rawEdu).trim())) rawEdu = '';
+    var eduStr = rawEdu ? String(rawEdu).trim().toUpperCase() : 'Not Specified';
+
+    var rawWm = candidate.work_mode || candidate.wm || '';
+    var wmStr = rawWm ? String(rawWm).trim().replace(/[\s_-]+/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Not Specified';
 
     return {
       id: candidate.id,
@@ -2780,12 +2847,12 @@
       secondaryPhoneCode: candidate.second_phone_code || '',
       linkedin: candidate.linkedin || '',
       designation: candidate.current_designation || candidate.designation || '',
-      company: candidate.current_company || candidate.company || '',
+      company: candidate.current_company || candidate.company || 'Not Specified',
       location: formattedLocation,
       experience: exp,
       notice: rawNotice,
-      education: candidate.qualification_name || candidate.education || 'Graduate',
-      workMode: candidate.work_mode || candidate.wm || 'Hybrid',
+      education: eduStr,
+      workMode: wmStr,
       reportId: reportId,
       reportDate: candidate.report_date || todayDate,
       recruiterName: candidate.recruiter_name || companyData.recruiterName || 'Hiring Team',
@@ -2794,8 +2861,8 @@
       aiVersion: 'Live Intelligence',
       match: matchScore,
       isImmediate: !!candidate.is_immediate,
-      recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || 'Candidate thoroughly pre-screened for technical competency, communication skills, and delivery readiness. Strongly recommended for technical evaluation.',
-      careerSummary: candidate.career_summary || candidate.careersummary || candidate.cover_letter || 'Experienced professional with demonstrated background in designing, developing, and deploying robust software architectures, driving end-to-end delivery and engineering excellence.',
+      recruiterNote: candidate.recruiter_note_text || candidate.recruiter_note || '',
+      careerSummary: candidate.career_summary || candidate.careersummary || candidate.cover_letter || '',
       jobTitle: candidate.job_title || candidate.current_designation || 'Verified Professional',
       skills: skills,
       validation: validation,

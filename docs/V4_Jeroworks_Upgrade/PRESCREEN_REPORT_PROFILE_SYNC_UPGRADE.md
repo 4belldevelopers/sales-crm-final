@@ -1,467 +1,578 @@
-# GOD-Level Architecture Proposal: Pre-Screen Report Profile Data Synchronization
+# GOD-Level Architecture: Pre-Screen Report Canonical Data Contract & Resolution Engine (V6 - Comprehensive All-Elements Specification)
 
 > **Target Module:** Pre-Screen Report Generation Engine (Download Resume Center & Forward Resume)  
-> **Status:** Architecture Proposal & Audit — Awaiting Review  
+> **Status:** Production Specification — Comprehensive All-Elements Baseline  
 > **Author:** Antigravity AI  
 > **Date:** September 2026  
-> **Non-Negotiables:** Zero Business Logic Mutations, Zero Module Regressions, 100% Client/Browser-First Execution (User RAM + WASM), 0% Server/MySQL Read Strain.
+> **Scope:** ALL Pre-Screen Report Elements:
+> 1. Experience & Education
+> 2. Notice Period, Location & Work Mode
+> 3. Skills, Experience on Skills & Skill Ratings
+> 4. Overall Candidate Rating & Match Score
+> 5. Contact Verification: Phone Number, Email ID, LinkedIn ID
+> 6. Current Company & Candidate Name
+> **Core Non-Negotiables:**
+> 1. **Zero Data Fabrication:** A Pre-Screen Report may format known data, but it must NEVER invent candidate data.
+> 2. **Candidate Context Isolation:** A candidate snapshot may only resolve data from its explicitly bound candidate context; zero fallback to document-wide DOM state.
+> 3. **Coherent Source Bundles:** Multi-part entities (Notice Period, Skills) resolve strictly as integrated source bundles; zero mixed-source Frankenstein tuples.
+> 4. **Pure Dumb Renderer:** The renderer MUST NOT resolve, normalize, infer, substitute, or mutate candidate data.
+> 5. **Zero Additional MySQL Reads / 0% Server Strain:** 100% computed in browser User RAM from existing ES projection & scoped DOM state.
+> 6. **Validation-Gated Precedence:** A source only wins if: $\text{Present} \land \text{Valid} \land \text{Semantically Usable}$.
 
 ---
 
-## 1. Executive Summary
+## 1. Comprehensive Audit of ALL Candidate Elements
 
-In the Jeroworks ATS platform, the **Pre-Screened Report (Recruiter Summary Dossier)** is an authoritative, C-level executive candidate summary generated client-side via vector PDF (pdfMake / WASM). It serves as the primary artifact shared with hiring managers, client portals, and staffing partners.
-
-A critical usability gap was identified where **five foundational candidate attributes** were either rendering as fallback placeholders (`--`, `—`) or completely blank, even when updated and clearly visible on the candidate profile:
-1. `EXPERIENCE:`
-2. `EDUCATION`
-3. `NOTICE PERIOD`
-4. `LOCATION`
-5. `WORK MODE`
-
-This document presents a comprehensive audit of the complete data pipeline—from database projection through Blade templating, live browser DOM state, down to client-side vector synthesis—and outlines a **GOD-level, permanent, 3-tier client/browser-first architecture** to guarantee 100% data integrity with zero server strain.
-
----
-
-## 2. Comprehensive Root Cause Audit
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 THE DATA PIPELINE BREAKDOWN                             │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-  Database / ES           Blade Projection         Browser User RAM        Vector PDF Synthesis
-┌──────────────────┐    ┌──────────────────┐    ┌─────────────────────┐    ┌────────────────────┐
-│ MySQL / ES Doc   │───▶│ #rsData (Hidden) │───▶│ readData() JS       │───▶│ pdfMake / WASM     │
-│ job_applications │    │ showdetail.blade │    │ (Client Memory)     │    │ AgyResumeRenderer  │
-└──────────────────┘    └──────────────────┘    └─────────────────────┘    └────────────────────┘
-          │                       │                        │                         │
-          ▼                       ▼                        ▼                         ▼
-   Missing joins /         Variable scope /         Zero DOM harvest       Renders fallback
-   null fallbacks          string trimming          from live cards        dashes (-- / —)
-```
-
-### 2.1 Attribute 1: `EXPERIENCE:`
-- **Current Behavior in Report:** Shows `EXPERIENCE: --` or blank.
-- **Root Cause Analysis:**
-  1. In `resources/views/service_company/job-applications/showdetail.blade.php` (line 5336):
-     ```php
-     $rsTotalExp=trim((string)(@$application->total_exp??''));
-     $rsTotalExp=trim($rsTotalExp," \t\n\r\0\x0B.");
-     $rsExpStr=$rsTotalExp!==''?$rsTotalExp.' Year'.((float)$rsTotalExp==1.0?'':'s'):'--';
-     ```
-     When `total_exp` is stored in MySQL/Elasticsearch as `"0"` or `"0.00"` (e.g. freshers or junior profiles), or when candidates are newly added, `trim` produces `"0"`.
-  2. In line 1231 of `showdetail.blade.php`:
-     ```php
-     $rcvBExp = ($__te !== '' && $__te !== '0') ? $__te . ' Yrs' : '--';
-     ```
-     This explicitly converts `'0'` into `'--'`!
-  3. In `readData()` (line 6445):
-     ```javascript
-     var liveExp = '';
-     if (rcvWrap && rcvWrap.getAttribute('data-b-exp')) {
-       liveExp = rcvWrap.getAttribute('data-b-exp');
-     }
-     var finalExp = liveExp || g('data-experience');
-     ```
-     If `data-b-exp` is `'--'`, `liveExp` is assigned `'--'`, which suppresses any valid value.
-  4. Crucially, the candidate profile already has the fully resolved experience rendered directly in the live DOM in User RAM:
-     - Header Meta: `<span class="cdr-meta-item">{{ $__bdTotalExp }} Yrs Experience</span>`
-     - Pipeline Section: `<div class="cdr-pipeline-label">Total Experience</div><div class="cdr-pipeline-value">{{ $__bdTotalExp }} Yrs</div>`
-     `readData()` never inspected these live DOM nodes, resulting in stale or blank experience strings.
+| Element | Storage & Server Payload | Stale / Missing Root Cause | 0% Server Load / User RAM Solution |
+| :--- | :--- | :--- | :--- |
+| **1. `skills`, `rating`, `experience on skills`** | Stored in `job_metronics_skills`, `candidate_job_skill_exp`, and `application->skills`. Rendered in `.skills-table.job_skill_view`. | When recruiters score skills via drawer, AJAX updates `.skills-table.job_skill_view` HTML, but `#rsData[data-skills]` remains static. Report generates stale or unrated skills. | **Live DOM Skills Harvester (User RAM):** Resolver inspects `.skills-table.job_skill_view .skills-row` (extracting skill name, `.skill-exp-cell` text, and `.star-skill:not(.star-empty)` count). Falls back to modified form `#skillUpdateForm`, then server payload. Zero server requests. |
+| **2. `phone number` & phone verification** | Stored in `application->phone`, `secondary_mobile`, `phone_code`. | **Critical Bug in `showdetail.blade.php`:** Line 5340-5347 omitted `PHONE NUMBER` from `$rsValidation` completely! Consequently, the verification badge always showed `-` (unverified). | **Fix Blade + Resolver:** Add `PHONE NUMBER` to `$rsValidation`. Add `data-candidate-field="phone"`. Resolver validates non-empty phone and marks Phone Number `'Verified'`. |
+| **3. `email id` & email verification** | Stored in `application->email`, `secondrary_email`. | Static in `#rsData[data-email]`. If edited in profile tabs (`input[name="email"]`), `#rsData` was not synchronized. | Add `data-candidate-field="email"`. Resolver checks modified form `input[name="email"]`, semantic DOM, then server payload. Marks Email ID `'Verified'`. |
+| **4. `linkedin` & verification** | Stored in `application->linkedin`. | Static in `#rsData[data-linkedin]`. If updated on candidate tabs (`input[name="linkedin"]`), `#rsData` was not synchronized. | Add `data-candidate-field="linkedin"`. Resolver checks modified form, semantic DOM, then server payload. Validates non-placeholder URL/handle and marks `'Verified'`. |
+| **5. `current company`** | Stored in `application->current_company` or `cur_company_name`. | Static in `#rsData[data-company]`. Not synchronized with live profile changes in `input[name="current_company"]`. | Add `data-candidate-field="current_company"`. Precedence: Live Modified Form $\to$ Scoped Semantic DOM $\to$ Server Projection $\to$ `'Not Specified'`. |
+| **6. `name`** | Stored in `application->full_name`. | Rendered as `data-name`. Not synchronized with live profile edits. | Add `data-candidate-field="candidate_name"`. Mandatory assertion: throws `CandidateResolutionError` if empty. |
+| **7. `overall rating`** | Stored in `application->rating` (1–5). | Static in `#rsData`. Not synchronized if recruiter changes rating in drawer. | Add `data-candidate-field="candidate_rating"`. Normalized strictly to integer $0 \le R \le 5$. |
+| **8. `experience`, `education`, `notice`, `location`, `work_mode`** | Stored in `application->total_exp`, `qualification_master`, `np_id`, `current_location`, `wm`. | Trimming `"0"`, missing joined qualification names, numeric city IDs, em-dash defaults. | **Canonical Contract:** V5 coherent notice bundles, strict integer candidate IDs, canonical work mode dictionary, and contract validation. |
 
 ---
 
-### 2.2 Attribute 2: `EDUCATION`
-- **Current Behavior in Report:** Shows `--` or blank in the Metric Cell.
-- **Root Cause Analysis:**
-  1. In `showdetail.blade.php` (line 5366):
-     ```blade
-     data-education="{{ strtoupper(@$application->qualification_name) }}"
-     ```
-     If the candidate was indexed without a joined `qualification_name`, or if the field is stored as `qualification` (integer ID), `degree`, `education`, or `highest_qualification`, `data-education` is rendered completely empty (`""`).
-  2. In `readData()` (line 6474):
-     ```javascript
-     education: g('data-education'),
-     ```
-     There was **zero live DOM harvest fallback**.
-  3. Meanwhile, on the candidate profile, education is displayed in:
-     - Pipeline Card: `<div class="cdr-pipeline-label">Education</div><div class="cdr-pipeline-value" title="...">...</div>`
-     - Profile Tabs: `#education_details` or `#personal_details`
-  4. In `AgyResumeRenderer.js` (line 2022):
-     ```javascript
-     metricCell('Education', data.education, rsIconEducation)
-     ```
-     Since `data.education` is `""`, `clean(data.education, '--')` evaluates to `'--'`.
+## 2. Formal Source Precedence Matrix (All Elements)
+
+| Field | Priority 1: Live Modified State (`data-dirty="true"`) | Priority 2: Scoped Semantic DOM | Priority 3: Server Projection | Priority 4: Terminal Fallback |
+| :--- | :--- | :--- | :--- | :--- |
+| **`candidate_name`** | `input[name="full_name"][data-dirty="true"]` | Scoped `[data-candidate-field="candidate_name"]` | `rawData.full_name` / `rawData.name` | **Hard Error** (`CANDIDATE_NAME_MISSING`) |
+| **`current_company`** | `input[name="current_company"][data-dirty="true"]` | Scoped `[data-candidate-field="current_company"]` | `rawData.current_company` / `rawData.company` | `'Not Specified'` |
+| **`total_experience`** | `input[name="total_exp"][data-dirty="true"]` | Scoped `[data-candidate-field="total_experience"]` | `rawData.experience` / `rawData.total_exp` | `'Not Specified'` |
+| **`education`** | `select[name="qualification"][data-dirty="true"]` | Scoped `[data-candidate-field="education"]` | `rawData.qualification_name` / `rawData.education` | `'Not Specified'` |
+| **`location`** | `input[name="current_location"][data-dirty="true"]` | Scoped `[data-candidate-field="location"]` | `rawData.current_location` / `city_name` + `state_name` | `'Not Specified'` |
+| **`work_mode`** | `select[name="work_mode"][data-dirty="true"]` | Scoped `[data-candidate-field="work_mode"]` | `rawData.work_mode` / `rawData.wm` | `'Not Specified'` |
+| **`notice_period`** | Notice form bundle with `data-dirty="true"` | Scoped semantic notice bundle | Server notice bundle (`mode`, `np_id`, `lwd`) | `'Not Specified'` bundle |
+| **`phone`** | `input[name="phone"][data-dirty="true"]` | Scoped `[data-candidate-field="phone"]` | `rawData.phone` | `''` |
+| **`email`** | `input[name="email"][data-dirty="true"]` | Scoped `[data-candidate-field="email"]` | `rawData.email` | `''` |
+| **`linkedin`** | `input[name="linkedin"][data-dirty="true"]` | Scoped `[data-candidate-field="linkedin"]` | `rawData.linkedin` | `''` |
+| **`overall_rating`** | Rating controls with `data-dirty="true"` | Scoped `[data-candidate-field="candidate_rating"]` | `rawData.rating` | `0` |
+| **`skills`** | Modified rows in `#skillUpdateForm` | Scoped table `.skills-table.job_skill_view` | `rawData.skills` | `[]` |
 
 ---
 
-### 2.3 Attribute 3: `NOTICE PERIOD`
-- **Current Behavior in Report:** Shows `--` even when notice period is updated.
-- **Root Cause Analysis:**
-  1. In `showdetail.blade.php` (lines 5309–5331):
-     ```php
-     $rsNpMode=(int)(@$application->serving_notice_period_mode??-1);
-     $rsNpRaw=trim((string)@$application->np_id);
-     ```
-     When candidates update notice period on their profile (via inline edit, quick drawer, or tab forms), the `#rsData` element on the page remains static from initial server delivery.
-  2. In `readData()`:
-     ```javascript
-     var liveNotice = '';
-     var rcvWrap = document.querySelector('.rcv-wrap');
-     if (rcvWrap && rcvWrap.getAttribute('data-b-notice')) {
-       liveNotice = rcvWrap.getAttribute('data-b-notice');
-     }
-     var finalNotice = liveNotice || g('data-notice');
-     ```
-     If `rcvWrap` holds `'--'`, `finalNotice` is locked as `'--'`, completely ignoring live updates in:
-     - Header Meta: `<span class="cdr-meta-item">{{ $__hdrAvailability }}</span>`
-     - Quick Edit fields: `select[name="np_id"]`, `input[name="serving_notice_period_mode"]`.
-
----
-
-### 2.4 Attribute 4: `LOCATION`
-- **Current Behavior in Report:** Shows `--` in the Metric Cell.
-- **Root Cause Analysis:**
-  1. In `showdetail.blade.php` (lines 5333–5335):
-     ```php
-     $rsLoc=trim(trim($city_name??'',', ').' '.trim($state_name??'',', '));
-     if($rsLoc==='') $rsLoc=trim($country_name??'');
-     if($rsLoc==='') $rsLoc='--';
-     ```
-  2. Notice how `$city_name` and `$state_name` are computed in lines 560–563:
-     ```php
-     $candRawCity = (!empty(@$application->city_name) && !preg_match('/^\d+$/', trim((string) @$application->city_name)))
-         ? @$application->city_name
-         : ((!empty(@$application->city) && !preg_match('/^\d+$/', trim((string) @$application->city))) ? @$application->city : '');
-     ```
-     - If `city_name` or `city` is numeric (a relational ID where the name was not resolved), it becomes `''`.
-     - Crucially, `$rsLoc` **never checked `@$application->current_location` or `@$application->location`**!
-  3. In `readData()`:
-     It only checks `rcvWrap.getAttribute('data-b-loc')` or `g('data-location')`. If both are `'--'`, `cityOnly(data.location)` returns `'--'`.
-  4. In the live DOM, the location is clearly visible in:
-     - Header Meta: `<span class="cdr-meta-item">{{ $__candCityState }}</span>`
-     - Personal details tab inputs: `[name="city"]`, `[name="current_location"]`.
-
----
-
-### 2.5 Attribute 5: `WORK MODE`
-- **Current Behavior in Report:** Shows `—` (em-dash) or blank.
-- **Root Cause Analysis:**
-  1. In `showdetail.blade.php` (lines 5307–5308):
-     ```php
-     $rsWm=trim((string)(@$application->wm??''));
-     $rsWorkMode=$rsWm!=='' ? ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm))) : '—';
-     ```
-     If `@$application->wm` is empty, it assigns the Unicode em-dash `'—'`.
-     It never checks `@$application->work_mode`, `@$application->workmode`, or `@$application->employmentType`.
-  2. In `readData()` (line 6475):
-     ```javascript
-     workMode: g('data-work-mode'),
-     ```
-     There was **zero live DOM harvest fallback** for work mode!
-  3. Meanwhile, on the candidate profile, work mode is prominently displayed in:
-     - Pipeline Card: `<div class="cdr-pipeline-label">Work Mode</div><div class="cdr-pipeline-value">{{ ucwords(@$application->wm) ?: '—' }}</div>`
-  4. In `AgyResumeRenderer.js` (line 2025):
-     ```javascript
-     metricCell('Work Mode', data.workMode, rsIconLaptop)
-     ```
-     It renders the em-dash `'—'` or fallback `--`.
-
----
-
-## 3. The GOD-Level Architectural Solution: Multi-Tier Resilient Resolution Engine
-
-To permanently eradicate this issue with zero server overhead and 100% reliability, we establish a **3-Tier Multi-Source Resolution Engine** executed in the browser (User RAM):
-
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        3-TIER MULTI-SOURCE RESOLUTION ENGINE                           │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-
-  TIER 1: Authoritative Blade Projection
-  Exhaustive fallbacks across all known database / ES aliases on initial render
-  (total_exp, rel_exp, qualification_name, qualification, current_location, wm, work_mode)
-                             │
-                             ▼ (If blank or placeholder)
-  TIER 2: Real-Time Browser DOM Harvester (User RAM)
-  Active DOM inspection of live candidate profile cards & header badges:
-  - .cdr-pipeline-card (Total Experience, Relevant Exp, Education, Work Mode)
-  - .cdr-meta-item (Experience, Availability/Notice, City/State)
-  - Active form controls & quick-edit inputs (np_id, current_location, etc.)
-                             │
-                             ▼ (If still unformatted)
-  TIER 3: Client-Side Normalization & Intelligent Heuristic Formatter
-  Pure JS vector engine formatter:
-  - Expands "0" -> "Fresher / Entry Level" or numeric years
-  - Capitalizes degrees (B.TECH, MBA, MCA, BE, BSC, GRADUATE)
-  - Formats notice period (SNP LWD, Immediate, X Days)
-  - Filters out raw numeric IDs & extracts authoritative city
-```
-
----
-
-## 4. Concrete Implementation Specifications
-
-### 4.1 Tier 1: Enhanced Blade Projection (`showdetail.blade.php`)
-
-Update lines 5305–5384 in `resources/views/service_company/job-applications/showdetail.blade.php`:
-
-```php
-// 1. Work Mode Multi-Key Fallback
-$rsWm = trim((string)(@$application->wm ?: @$application->work_mode ?: @$application->workmode ?: @$application->employmentType ?: ''));
-$rsWorkMode = $rsWm !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($rsWm))) : '';
-
-// 2. Location Multi-Key Fallback (Handles numeric city IDs gracefully)
-$candCity = trim((string)(@$city_name ?: @$application->city_name ?: @$application->city ?: ''));
-if (preg_match('/^\d+$/', $candCity)) { $candCity = ''; }
-$candState = trim((string)(@$state_name ?: @$application->state_name ?: @$application->state ?: ''));
-if (preg_match('/^\d+$/', $candState)) { $candState = ''; }
-$candCountry = trim((string)(@$country_name ?: @$application->country_name ?: @$application->country ?: ''));
-if (preg_match('/^\d+$/', $candCountry)) { $candCountry = ''; }
-$candCurrentLoc = trim((string)(@$application->current_location ?: @$application->location ?: ''));
-
-$rsLocParts = array_filter([$candCity, $candState], fn($v) => !empty($v) && $v !== '--');
-$rsLoc = !empty($rsLocParts) ? implode(', ', $rsLocParts) : ($candCurrentLoc ?: $candCountry);
-if (empty($rsLoc) || $rsLoc === '--' || preg_match('/^\d+$/', $rsLoc)) { $rsLoc = ''; }
-
-// 3. Experience Multi-Key Fallback (Preserves Freshers and fractional years)
-$rsTotalExp = trim((string)(@$application->total_exp ?? ''));
-$rsTotalExp = trim($rsTotalExp, " \t\n\r\0\x0B.");
-if ($rsTotalExp !== '' && is_numeric($rsTotalExp)) {
-    $expFloat = (float)$rsTotalExp;
-    $rsExpStr = $expFloat === 0.0 ? 'Fresher' : ($expFloat == 1.0 ? '1 Year' : $rsTotalExp . ' Years');
-} elseif ($rsTotalExp !== '') {
-    $rsExpStr = $rsTotalExp;
-} elseif (!empty($application->rel_exp) && is_numeric($application->rel_exp)) {
-    $rsExpStr = (float)$application->rel_exp == 1.0 ? '1 Year' : $application->rel_exp . ' Years';
-} else {
-    $rsExpStr = '';
-}
-
-// 4. Education Multi-Key Fallback
-$rsEdu = trim((string)(@$application->qualification_name ?: @$application->qualification ?: @$application->degree ?: @$application->highest_qualification ?: ''));
-if (preg_match('/^\d+$/', $rsEdu)) { $rsEdu = ''; } // Clean pure relational IDs
-```
-
-In the `<div id="rsData" ...>` container:
-```blade
-data-location="{{ $rsLoc }}"
-data-experience="{{ $rsExpStr }}"
-data-notice="{{ $rsNotice }}"
-data-education="{{ strtoupper($rsEdu) }}"
-data-work-mode="{{ $rsWorkMode }}"
-```
-
----
-
-### 4.2 Tier 2: Real-Time Browser DOM Harvester (`readData()` in `showdetail.blade.php`)
-
-Expand `readData()` in `resources/views/service_company/job-applications/showdetail.blade.php` to actively inspect live DOM cards in User RAM:
+## 3. Production Code Specification (`CandidateSnapshotResolver.js`)
 
 ```javascript
-function readData() {
-  var el = document.getElementById('rsData');
-  if (!el) throw new Error('rsData not found');
-  var g = function(k) { return (el.getAttribute(k) || '').trim(); };
+/**
+ * Canonical Candidate Snapshot Resolver for Jero ATS
+ * Location: public/js/opendoc/CandidateSnapshotResolver.js
+ * 
+ * Strict Zero-Fabrication, Scoped Candidate Context, Deep Immutability,
+ * Coherent Notice Source Bundles, and Contract Validation across ALL elements.
+ */
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+  } else {
+    root.CandidateSnapshotResolver = factory();
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
 
-  // Helper: Extract text from DOM selector if not a placeholder
-  function harvestText(selector, parent) {
-    var root = parent || document;
-    var node = root.querySelector(selector);
-    if (!node) return '';
-    var txt = (node.innerText || node.textContent || '').trim();
-    if (txt === '--' || txt === '—' || txt === '-' || /^\d+$/.test(txt)) return '';
-    return txt;
+  var CURRENT_SCHEMA_VERSION = 1;
+  var MAX_EXPERIENCE_YEARS = 60;
+  var STRICT_EXP_REGEX = /^(\d+(\.\d{1,2})?)\s*(years?|yrs?)?$/i;
+  var CANONICAL_EXP_REGEX = /^(Not Specified|Fresher|1 Year|(\d+(\.\d{1,2})?)\s*Years)$/;
+
+  var NOTICE_MODES = Object.freeze({
+    DAYS: 0,
+    SERVING_NOTICE: 1,
+    IMMEDIATE: 2
+  });
+
+  var INPUT_WORK_MODES = Object.freeze({
+    remote: 'Remote',
+    work_from_home: 'Remote',
+    hybrid: 'Hybrid',
+    office: 'Office',
+    onsite: 'Office'
+  });
+
+  var CANONICAL_WORK_MODE_VALUES = Object.freeze({
+    'Remote': true,
+    'Hybrid': true,
+    'Office': true,
+    'Not Specified': true
+  });
+
+  // Custom Resolution Error Class
+  function CandidateResolutionError(message, code, details) {
+    this.name = 'CandidateResolutionError';
+    this.message = message || 'Candidate resolution failed';
+    this.code = code || 'UNKNOWN_ERROR';
+    this.details = details || null;
+    this.stack = (new Error()).stack;
+  }
+  CandidateResolutionError.prototype = Object.create(Error.prototype);
+  CandidateResolutionError.prototype.constructor = CandidateResolutionError;
+
+  function deepFreeze(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    Object.freeze(obj);
+    Object.keys(obj).forEach(function (key) {
+      if (typeof obj[key] === 'object' && obj[key] !== null && !Object.isFrozen(obj[key])) {
+        deepFreeze(obj[key]);
+      }
+    });
+    return obj;
   }
 
-  // Helper: Harvest pipeline card value by label name
-  function harvestPipelineCard(labelPattern) {
-    var cards = document.querySelectorAll('#kt_activitiesApplication .cdr-pipeline-card, .cdr-pipeline-card');
-    for (var i = 0; i < cards.length; i++) {
-      var lbl = cards[i].querySelector('.cdr-pipeline-label');
-      if (lbl && labelPattern.test(lbl.textContent || '')) {
-        var valEl = cards[i].querySelector('.cdr-pipeline-value');
-        if (valEl) {
-          var titleAttr = valEl.getAttribute('title');
-          var text = (titleAttr || valEl.innerText || valEl.textContent || '').trim();
-          if (text && text !== '--' && text !== '—' && text !== '-') return text;
-        }
+  function cleanString(val) {
+    if (val === null || val === undefined) return '';
+    var s = String(val).trim();
+    if (s === '--' || s === '—' || s === '-' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '';
+    return s;
+  }
+
+  function isNumericId(val) {
+    return /^\d+$/.test(String(val || '').trim());
+  }
+
+  function parseStrictInteger(val) {
+    var s = cleanString(val);
+    if (!/^\d+$/.test(s)) return null;
+    var n = Number(s);
+    return Number.isSafeInteger(n) ? n : null;
+  }
+
+  function parseStrictCandidateId(val) {
+    if (typeof val === 'number') {
+      return Number.isSafeInteger(val) && val > 0 ? val : null;
+    }
+    if (typeof val === 'string') {
+      var s = val.trim();
+      if (!/^\d+$/.test(s)) return null;
+      var n = Number(s);
+      return Number.isSafeInteger(n) && n > 0 ? n : null;
+    }
+    return null;
+  }
+
+  // --- Strict Field Formatters ---
+  function formatExperience(val) {
+    var s = cleanString(val);
+    var match = s.match(STRICT_EXP_REGEX);
+    if (match) {
+      var n = parseFloat(match[1]);
+      if (n === 0) return 'Fresher';
+      if (n === 1) return '1 Year';
+      return (Number.isInteger(n) ? n : n.toFixed(1)) + ' Years';
+    }
+    return 'Not Specified';
+  }
+
+  function formatLocation(val) {
+    var s = cleanString(val);
+    if (!s || isNumericId(s)) return 'Not Specified';
+    var parts = s.split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+    var filtered = parts.filter(function (p) { return !/^india$/i.test(p); });
+    return filtered.length ? filtered.slice(0, 2).join(', ') : (parts[0] || 'Not Specified');
+  }
+
+  function formatWorkMode(val) {
+    var s = cleanString(val).toLowerCase().replace(/[\s_-]+/g, '_');
+    return INPUT_WORK_MODES[s] || 'Not Specified';
+  }
+
+  function parseDateTuple(dateStr) {
+    if (!dateStr) return null;
+    var s = cleanString(dateStr);
+    var m1 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m1) return { year: parseInt(m1[1], 10), month: parseInt(m1[2], 10), day: parseInt(m1[3], 10) };
+    var m2 = s.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
+    if (m2) return { year: parseInt(m2[3], 10), month: parseInt(m2[2], 10), day: parseInt(m2[1], 10) };
+    return null;
+  }
+
+  function formatDateTuple(dObj) {
+    if (!dObj) return '';
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dayStr = dObj.day < 10 ? '0' + dObj.day : '' + dObj.day;
+    return dayStr + ' ' + months[dObj.month - 1] + ' ' + dObj.year;
+  }
+
+  function evaluateNoticeBundle(modeVal, npVal, lwdVal) {
+    var modeInt = parseStrictInteger(modeVal);
+    var npClean = cleanString(npVal);
+    var lwdTuple = parseDateTuple(lwdVal);
+
+    if (modeInt === NOTICE_MODES.IMMEDIATE || npClean.toLowerCase() === 'immediate') {
+      var disp = 'Immediate';
+      if (lwdTuple) disp += ' (LWD ' + formatDateTuple(lwdTuple) + ')';
+      return { mode: 'IMMEDIATE', days: null, lastWorkingDate: lwdTuple ? formatDateTuple(lwdTuple) : null, display: disp };
+    }
+    if (modeInt === NOTICE_MODES.DAYS) {
+      var daysInt = parseStrictInteger(npClean);
+      if (daysInt !== null && daysInt > 0) {
+        return { mode: 'DAYS', days: daysInt, lastWorkingDate: null, display: daysInt + ' Days' };
       }
     }
-    return '';
-  }
-
-  // 1. LIVE EXPERIENCE RESOLUTION
-  var domExp = harvestPipelineCard(/experience/i);
-  if (!domExp) {
-    var metaItems = document.querySelectorAll('.cdr-meta-item');
-    for (var m = 0; m < metaItems.length; m++) {
-      var mTxt = metaItems[m].innerText || metaItems[m].textContent || '';
-      if (/experience/i.test(mTxt)) {
-        domExp = mTxt.replace(/experience/i, '').trim();
-        break;
+    if (modeInt === NOTICE_MODES.SERVING_NOTICE || lwdTuple) {
+      var activeDateTuple = lwdTuple || parseDateTuple(npClean);
+      if (activeDateTuple) {
+        var formatted = formatDateTuple(activeDateTuple);
+        return { mode: 'SERVING_NOTICE', days: null, lastWorkingDate: formatted, display: 'SNP • LWD ' + formatted };
       }
     }
-  }
-  var rawExpAttr = g('data-experience');
-  var finalExp = domExp || (rawExpAttr !== '--' && rawExpAttr !== '—' ? rawExpAttr : '');
-  if (!finalExp && rawExpAttr) finalExp = rawExpAttr;
-
-  // 2. LIVE EDUCATION RESOLUTION
-  var domEdu = harvestPipelineCard(/education|qualification|degree/i);
-  if (!domEdu) {
-    domEdu = harvestText('#education_details .edu-degree, .candidate-qualification-text');
-  }
-  var rawEduAttr = g('data-education');
-  var finalEdu = domEdu || (rawEduAttr !== '--' && rawEduAttr !== '—' ? rawEduAttr : '');
-
-  // 3. LIVE NOTICE PERIOD RESOLUTION
-  var domNotice = '';
-  var metaAvail = document.querySelector('.cdr-meta-item.cmi-green, .cdr-meta-item:has(svg)');
-  var metaItemsAll = document.querySelectorAll('.cdr-meta-item');
-  for (var n = 0; n < metaItemsAll.length; n++) {
-    var nTxt = (metaItemsAll[n].innerText || metaItemsAll[n].textContent || '').trim();
-    if (/immediate|days|available|lwd|snp/i.test(nTxt) && !/experience/i.test(nTxt)) {
-      domNotice = nTxt;
-      break;
+    if (npClean && !isNumericId(npClean)) {
+      return { mode: 'UNSPECIFIED', days: null, lastWorkingDate: null, display: npClean };
     }
+    return null;
   }
-  var rawNoticeAttr = g('data-notice');
-  var finalNotice = domNotice || (rawNoticeAttr !== '--' && rawNoticeAttr !== '—' ? rawNoticeAttr : '');
 
-  // 4. LIVE LOCATION RESOLUTION
-  var domLoc = '';
-  for (var l = 0; l < metaItemsAll.length; l++) {
-    var lTxt = (metaItemsAll[l].innerText || metaItemsAll[l].textContent || '').trim();
-    if (lTxt && !/experience|immediate|days|available|lwd|snp/i.test(lTxt) && metaItemsAll[l].querySelector('svg path[d*="21 10c0 7"]')) {
-      domLoc = lTxt;
-      break;
+  /**
+   * Harvests Skills Table from Scoped DOM (0% Server Load)
+   */
+  function harvestSkillsFromDom(rootEl) {
+    if (!rootEl) return null;
+    var rows = rootEl.querySelectorAll('.skills-table.job_skill_view .skills-row, .skills-table .skills-row');
+    if (!rows || !rows.length) return null;
+
+    var harvested = [];
+    for (var i = 0; i < rows.length; i++) {
+      var nameEl = rows[i].querySelector('.skill-name-cell');
+      var expEl = rows[i].querySelector('.skill-exp-cell');
+      var starEls = rows[i].querySelectorAll('.skill-rating-cell .star-skill:not(.star-empty)');
+
+      var sName = cleanString(nameEl ? (nameEl.innerText || nameEl.textContent) : '');
+      if (!sName) continue;
+
+      var expText = cleanString(expEl ? (expEl.innerText || expEl.textContent) : '');
+      var rating = Math.min(5, Math.max(0, starEls ? starEls.length : 0));
+      var expNum = 0;
+      var match = expText.match(STRICT_EXP_REGEX);
+      if (match) expNum = parseFloat(match[1]);
+
+      harvested.push({
+        name: sName,
+        expText: expText || '--',
+        exp: expNum,
+        rating: rating
+      });
     }
+    return harvested.length ? harvested : null;
   }
-  var rawLocAttr = g('data-location');
-  var finalLoc = domLoc || (rawLocAttr !== '--' && rawLocAttr !== '—' ? rawLocAttr : '');
 
-  // 5. LIVE WORK MODE RESOLUTION
-  var domWorkMode = harvestPipelineCard(/work\s*mode/i);
-  var rawWorkModeAttr = g('data-work-mode');
-  var finalWorkMode = domWorkMode || (rawWorkModeAttr !== '--' && rawWorkModeAttr !== '—' ? rawWorkModeAttr : '');
+  // --- Strict Field Validators ---
+  var FIELD_VALIDATORS = {
+    total_experience: function (val) {
+      var s = cleanString(val);
+      if (!s) return false;
+      var match = s.match(STRICT_EXP_REGEX);
+      if (!match) return false;
+      var n = parseFloat(match[1]);
+      return !isNaN(n) && n >= 0 && n <= MAX_EXPERIENCE_YEARS;
+    },
+    education: function (val) {
+      var s = cleanString(val);
+      return s.length > 0 && !isNumericId(s);
+    },
+    location: function (val) {
+      var s = cleanString(val);
+      return s.length > 0 && !isNumericId(s);
+    },
+    work_mode: function (val) {
+      var s = cleanString(val).toLowerCase().replace(/[\s_-]+/g, '_');
+      return INPUT_WORK_MODES.hasOwnProperty(s);
+    }
+  };
 
-  // Live Recruiter Notes
-  var liveNote = harvestText('#jw_recruiter_note_editor') || harvestText('.po-recruiter-note-text');
-  var finalNote = liveNote || g('data-recruiter-note');
+  function resolveFieldWithPrecedence(fieldName, sources, validator, formatter) {
+    for (var i = 0; i < sources.length; i++) {
+      var src = sources[i];
+      if (!src || typeof src.getter !== 'function') continue;
+      var rawVal = src.getter();
+      var cleaned = cleanString(rawVal);
+      if (!cleaned) continue;
+
+      var isValid = validator ? validator(cleaned) : true;
+      if (isValid) {
+        var formatted = formatter ? formatter(cleaned) : cleaned;
+        return {
+          value: formatted,
+          source: src.name,
+          sourceType: src.type,
+          trust: src.trust
+        };
+      }
+    }
+    return {
+      value: 'Not Specified',
+      source: 'terminal_fallback',
+      sourceType: 'terminal_fallback',
+      trust: 'unspecified'
+    };
+  }
+
+  function validateSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') {
+      throw new CandidateResolutionError('Invalid snapshot: must be an object', 'SNAPSHOT_NULL');
+    }
+    if (snapshot.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+      throw new CandidateResolutionError('Unsupported snapshot schema version', 'SNAPSHOT_SCHEMA_VERSION_UNSUPPORTED', { received: snapshot.schemaVersion, expected: CURRENT_SCHEMA_VERSION });
+    }
+    if (!Number.isSafeInteger(snapshot.candidateId) || snapshot.candidateId <= 0) {
+      throw new CandidateResolutionError('Invalid candidateId: must be a positive integer', 'CANDIDATE_ID_INVALID', { candidateId: snapshot.candidateId });
+    }
+    var f = snapshot.fields;
+    if (!f || typeof f !== 'object') {
+      throw new CandidateResolutionError('Snapshot missing fields object', 'FIELDS_MISSING');
+    }
+
+    if (!CANONICAL_EXP_REGEX.test(f.experience)) {
+      throw new CandidateResolutionError('Experience field not in canonical format', 'EXPERIENCE_NOT_CANONICAL', { experience: f.experience });
+    }
+    if (f.education !== 'Not Specified' && isNumericId(f.education)) {
+      throw new CandidateResolutionError('Education cannot be a numeric ID', 'EDUCATION_NUMERIC_ID', { education: f.education });
+    }
+    if (f.location !== 'Not Specified' && isNumericId(f.location)) {
+      throw new CandidateResolutionError('Location cannot be a numeric ID', 'LOCATION_NUMERIC_ID', { location: f.location });
+    }
+    if (!CANONICAL_WORK_MODE_VALUES[f.workMode]) {
+      throw new CandidateResolutionError('Work mode not in canonical vocabulary', 'WORK_MODE_INVALID', { workMode: f.workMode });
+    }
+
+    var nd = snapshot.noticeDetails;
+    if (!nd || typeof nd !== 'object' || !nd.display || typeof nd.display !== 'string') {
+      throw new CandidateResolutionError('Notice details missing or invalid display', 'NOTICE_DETAILS_INVALID');
+    }
+    if (nd.mode === 'DAYS' && (!Number.isSafeInteger(nd.days) || nd.days <= 0)) {
+      throw new CandidateResolutionError('Notice DAYS mode requires positive integer days', 'NOTICE_DAYS_INVALID');
+    }
+    return true;
+  }
+
+  function resolveSnapshot(context) {
+    context = context || {};
+    var rawData = context.rawData || {};
+    var rootEl = context.rootElement || null;
+
+    var candidateId = parseStrictCandidateId(context.candidateId || rawData.id);
+    if (!candidateId) {
+      throw new CandidateResolutionError('Fatal: valid positive integer candidateId is required.', 'CANDIDATE_ID_INVALID', { candidateId: context.candidateId || rawData.id });
+    }
+
+    if (rootEl) {
+      var domRawId = rootEl.getAttribute('data-candidate-id');
+      if (!domRawId) {
+        throw new CandidateResolutionError('Candidate rootElement is missing data-candidate-id attribute.', 'ROOT_IDENTITY_MISSING');
+      }
+      var domId = parseStrictCandidateId(domRawId);
+      if (!domId) {
+        throw new CandidateResolutionError('Invalid candidate root identity: must be positive integer.', 'ROOT_IDENTITY_INVALID', { domId: domRawId });
+      }
+      if (domId !== candidateId) {
+        throw new CandidateResolutionError('Candidate identity mismatch: rootElement ID (' + domId + ') !== context ID (' + candidateId + ').', 'CANDIDATE_ID_MISMATCH', { domId: domId, candidateId: candidateId });
+      }
+    }
+
+    function getSemantic(fieldName) {
+      if (!rootEl) return null;
+      var target = rootEl.querySelector('[data-candidate-field="' + fieldName + '"]');
+      if (!target) return null;
+      return target.getAttribute('data-value') || target.innerText || target.textContent;
+    }
+
+    function getModifiedFormVal(selector) {
+      if (!rootEl) return null;
+      var el = rootEl.querySelector(selector);
+      if (!el || el.getAttribute('data-dirty') !== 'true') return null;
+      return el.value || el.innerText || '';
+    }
+
+    // 1. Candidate Name
+    var candidateName = cleanString(getModifiedFormVal('input[name="full_name"]')) || cleanString(getSemantic('candidate_name')) || cleanString(rawData.full_name || rawData.name);
+    if (!candidateName) {
+      throw new CandidateResolutionError('Candidate full_name is required.', 'CANDIDATE_NAME_MISSING');
+    }
+
+    // 2. Current Company
+    var company = resolveFieldWithPrecedence('company', [
+      { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () { return getModifiedFormVal('input[name="current_company"]'); } },
+      { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('current_company'); } },
+      { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () { return rawData.current_company || rawData.cur_company_name || rawData.company; } }
+    ], null, function (v) { return v; });
+
+    // 3. Total Experience
+    var exp = resolveFieldWithPrecedence('total_experience', [
+      { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () { return getModifiedFormVal('input[name="total_exp"]'); } },
+      { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('total_experience'); } },
+      { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () { return rawData.experience || rawData.total_exp; } }
+    ], FIELD_VALIDATORS.total_experience, formatExperience);
+
+    // 4. Education
+    var edu = resolveFieldWithPrecedence('education', [
+      { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () {
+        var opt = rootEl ? rootEl.querySelector('select[name="qualification"][data-dirty="true"] option:checked') : null;
+        return opt ? opt.text : null;
+      }},
+      { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('education'); } },
+      { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () { return rawData.qualification_name || rawData.education; } }
+    ], FIELD_VALIDATORS.education, function (val) { return val.toUpperCase(); });
+
+    // 5. Location
+    var loc = resolveFieldWithPrecedence('location', [
+      { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () { return getModifiedFormVal('input[name="current_location"]'); } },
+      { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('location'); } },
+      { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () {
+        if (cleanString(rawData.current_location) && !isNumericId(rawData.current_location)) return rawData.current_location;
+        var p = [cleanString(rawData.city_name || rawData.city), cleanString(rawData.state_name || rawData.state)].filter(function (x) { return x && !isNumericId(x); });
+        return p.length ? p.join(', ') : (rawData.location || '');
+      }}
+    ], FIELD_VALIDATORS.location, formatLocation);
+
+    // 6. Work Mode
+    var wm = resolveFieldWithPrecedence('work_mode', [
+      { name: 'live_modified_form', type: 'editable_state',           trust: 'user_modified', getter: function () {
+        var opt = rootEl ? rootEl.querySelector('select[name="work_mode"][data-dirty="true"] option:checked') : null;
+        return opt ? opt.text : null;
+      }},
+      { name: 'semantic_dom',       type: 'presentation_state',       trust: 'view_derived',  getter: function () { return getSemantic('work_mode'); } },
+      { name: 'server_payload',     type: 'authoritative_projection', trust: 'server_authoritative', getter: function () { return rawData.work_mode || rawData.wm; } }
+    ], FIELD_VALIDATORS.work_mode, formatWorkMode);
+
+    // 7. Notice Period (Coherent Source Bundle Resolution)
+    var canonicalNotice = null;
+    var noticeTrust = 'unspecified';
+
+    var formDirtyMode = getModifiedFormVal('input[name="serving_notice_period_mode"], select[name="serving_notice_period_mode"]');
+    var formDirtyNp = getModifiedFormVal('select[name="np_id"] option:checked') || getModifiedFormVal('input[name="np_id"]');
+    var formDirtyLwd = getModifiedFormVal('input[name="last_working_date"]');
+    if (formDirtyMode !== null || formDirtyNp !== null || formDirtyLwd !== null) {
+      canonicalNotice = evaluateNoticeBundle(formDirtyMode, formDirtyNp, formDirtyLwd);
+      if (canonicalNotice) noticeTrust = 'user_modified';
+    }
+
+    if (!canonicalNotice) {
+      var domNoticeVal = getSemantic('notice_period');
+      if (domNoticeVal) {
+        canonicalNotice = evaluateNoticeBundle(getSemantic('notice_mode'), domNoticeVal, getSemantic('notice_lwd'));
+        if (canonicalNotice) noticeTrust = 'view_derived';
+      }
+    }
+
+    if (!canonicalNotice) {
+      canonicalNotice = evaluateNoticeBundle(rawData.serving_notice_period_mode, rawData.notice || rawData.np_id, rawData.last_working_date);
+      if (canonicalNotice) noticeTrust = 'server_authoritative';
+    }
+
+    if (!canonicalNotice) {
+      canonicalNotice = { mode: 'UNSPECIFIED', days: null, lastWorkingDate: null, display: 'Not Specified' };
+    }
+
+    // 8. Contact Details (Phone, Email, LinkedIn)
+    var phone = cleanString(getModifiedFormVal('input[name="phone"]')) || cleanString(getSemantic('phone')) || cleanString(rawData.phone);
+    var email = cleanString(getModifiedFormVal('input[name="email"]')) || cleanString(getSemantic('email')) || cleanString(rawData.email);
+    var linkedin = cleanString(getModifiedFormVal('input[name="linkedin"]')) || cleanString(getSemantic('linkedin')) || cleanString(rawData.linkedin);
+
+    // 9. Overall Candidate Rating (0 to 5)
+    var rawRating = getModifiedFormVal('input[name="rating"]') || getSemantic('candidate_rating') || rawData.rating;
+    var candidateRating = Math.max(0, Math.min(5, parseInt(rawRating, 10) || 0));
+
+    // 10. Skills (Live DOM Table -> Modified Form -> Server Payload)
+    var skills = harvestSkillsFromDom(rootEl);
+    var skillsTrust = 'view_derived';
+    if (!skills && Array.isArray(rawData.skills) && rawData.skills.length) {
+      skills = rawData.skills;
+      skillsTrust = 'server_authoritative';
+    }
+    if (!skills) {
+      skills = [];
+      skillsTrust = 'unspecified';
+    }
+
+    // 11. Recruiter Notes
+    var recruiterNote = cleanString(rawData.recruiterNote || rawData.recruiter_note);
+    if (!recruiterNote && rootEl) {
+      var editorEl = rootEl.querySelector('#jw_recruiter_note_editor, .po-recruiter-note-text');
+      if (editorEl) recruiterNote = cleanString(editorEl.innerText || editorEl.textContent);
+    }
+
+    // 12. Dynamic Verification Status (Resolves Phone Number omission bug)
+    var validation = [];
+    validation.push({ label: 'RESUME', status: rawData.resume ? 'Verified' : '-' });
+    validation.push({ label: 'EMAIL ID', status: email ? 'Verified' : '-' });
+    validation.push({ label: 'PHONE NUMBER', status: phone ? 'Verified' : '-' });
+    var hasValidLinkedin = linkedin && !/^(na|n\/a|null|none|-|--)$/i.test(linkedin);
+    validation.push({ label: 'LINKEDIN ID', status: hasValidLinkedin ? 'Verified' : '-' });
+    var hasJobContext = cleanString(rawData.current_designation) || company.value !== 'Not Specified';
+    validation.push({ label: 'JOB DESCRIPTION', status: hasJobContext ? 'Shared with candidate' : '-' });
+
+    var matchScore = safeNumber(rawData.match, 0, 100);
+    if (!matchScore && rootEl) {
+      var badgeEl = rootEl.querySelector('.jw-drawer-match-badge, [data-match-pct]');
+      if (badgeEl) {
+        var bAttr = badgeEl.getAttribute('data-match-pct') || badgeEl.innerText || '';
+        var bNum = parseInt(bAttr.replace(/[^\d]/g, ''), 10);
+        if (!isNaN(bNum)) matchScore = bNum;
+      }
+    }
+
+    var snapshot = {
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      candidateId: candidateId,
+      snapshotCreatedAt: (new Date()).toISOString(),
+      provenance: {
+        experience: exp,
+        education: edu,
+        noticePeriod: { value: canonicalNotice.display, source: canonicalNotice.mode !== 'UNSPECIFIED' ? 'canonical_notice_bundle' : 'terminal_fallback', trust: noticeTrust },
+        location: loc,
+        workMode: wm,
+        company: company,
+        skills: { count: skills.length, trust: skillsTrust }
+      },
+      noticeDetails: canonicalNotice,
+      fields: {
+        name: candidateName,
+        designation: cleanString(rawData.current_designation || rawData.designation || rawData.jobTitle) || 'Not Specified',
+        company: company.value,
+        experience: exp.value,
+        education: edu.value,
+        noticePeriod: canonicalNotice.display,
+        location: loc.value,
+        workMode: wm.value,
+        phone: phone,
+        email: email,
+        linkedin: linkedin,
+        rating: candidateRating,
+        match: matchScore,
+        skills: skills,
+        validation: validation,
+        recruiterNote: recruiterNote || null,
+        careerSummary: cleanString(rawData.careerSummary || rawData.careersummary || rawData.cover_letter) || null
+      }
+    };
+
+    validateSnapshot(snapshot);
+
+    if (typeof window !== 'undefined' && (window.__JERO_DEV_MODE__ || (window.localStorage && window.localStorage.getItem('debug_prescreen')))) {
+      console.log('[CandidateSnapshotResolver] Frozen Snapshot #' + candidateId + ':', snapshot);
+    }
+
+    return deepFreeze(snapshot);
+  }
+
+  function safeNumber(v, min, max) {
+    var n = parseInt(v, 10);
+    if (isNaN(n)) return 0;
+    return Math.max(min, Math.min(max, n));
+  }
 
   return {
-    name: g('data-name') || 'Candidate',
-    ...
-    location: finalLoc,
-    experience: finalExp,
-    notice: finalNotice,
-    education: finalEdu,
-    workMode: finalWorkMode,
-    recruiterNote: finalNote,
-    ...
+    CandidateResolutionError: CandidateResolutionError,
+    resolveSnapshot: resolveSnapshot,
+    validateSnapshot: validateSnapshot,
+    harvestSkillsFromDom: harvestSkillsFromDom,
+    formatExperience: formatExperience,
+    formatLocation: formatLocation,
+    formatWorkMode: formatWorkMode
   };
-}
+}));
 ```
-
----
-
-### 4.3 Tier 3: Resilient Client-Side Normalizer & Vector Synthesis
-
-#### In `public/js/opendoc/AgyResumeRenderer.js`:
-Add an intelligent fallback resolver inside `buildDefinition(data, companyName, logoDataUri, options)`:
-
-```javascript
-// Heuristic Cleaners with Intelligent ATS Fallbacks
-var resolvedExp = clean(data.experience, '');
-if (!resolvedExp || resolvedExp === '--' || resolvedExp === '—') {
-  resolvedExp = 'Experienced';
-}
-
-var resolvedEdu = clean(data.education, '');
-if (!resolvedEdu || resolvedEdu === '--' || resolvedEdu === '—') {
-  resolvedEdu = 'Graduate';
-}
-
-var resolvedNotice = clean(joining, '');
-if (!resolvedNotice || resolvedNotice === '--' || resolvedNotice === '—') {
-  resolvedNotice = data.isImmediate ? 'Immediate' : 'Negotiable';
-}
-
-var resolvedLoc = cityOnly(data.location);
-if (!resolvedLoc || resolvedLoc === '--' || resolvedLoc === '—') {
-  resolvedLoc = clean(data.location, 'Open to Relocate');
-}
-
-var resolvedWm = clean(data.workMode, '');
-if (!resolvedWm || resolvedWm === '--' || resolvedWm === '—') {
-  resolvedWm = 'Hybrid / Flexible';
-}
-```
-
-Then in the pdfMake Dossier table:
-```javascript
-roundedFullCard([
-  {
-    table: {
-      widths: [116, 116, 164, 116],
-      body: [[
-        metricCell('Education', resolvedEdu.toUpperCase(), rsIconEducation),
-        metricCell('Notice Period', resolvedNotice, rsIconCalendar),
-        metricCell('Location', resolvedLoc, rsIconLocation),
-        metricCell('Work Mode', resolvedWm, rsIconLaptop)
-      ]]
-    },
-    ...
-  }
-])
-```
-And in the experience header line:
-```javascript
-labeledIconLine(rsIconExperience, 'EXPERIENCE:', resolvedExp.toUpperCase(), 'small', '#64748b', 6.5)
-```
-
-#### In Forward Resume Engine (`_forward_resume_engine.blade.php` & `engine.v4.js`):
-Align `normalizeCandidateData(candidate, companyData)` to use the exact same resilient resolution chain, and ensure `ServiceCompanyCvTrackerController.php::fwd_resume()` selects `job_applications.current_location` and `job_applications.last_working_date`.
-
----
-
-## 5. Architectural Compliance & Tenancy Verification
-
-| AI Rule / Constraint | Compliance Status | Implementation Guarantee |
-| :--- | :--- | :--- |
-| **MySQL strictly for writes (0% read strain)** | ✅ **100% Compliant** | Zero new MySQL queries. Data is resolved from existing ES payload and browser DOM in User RAM. |
-| **Client-First / Browser Execution** | ✅ **100% Compliant** | DOM harvesting and vector normalization run entirely on client browser CPU/memory. |
-| **Zero Stale Pipeline Data** | ✅ **100% Compliant** | Live DOM harvest captures inline recruiter edits instantly without waiting for page refreshes. |
-| **Zero Business Logic Mutations** | ✅ **100% Compliant** | Existing backend controllers, candidate scoring, and ATS pipelines remain 100% untouched. |
-| **Page / Blade Isolation** | ✅ **100% Compliant** | Changes are strictly scoped to `showdetail.blade.php` and the isolated `AgyResumeRenderer` / `fwd_resume` engines. |
-
----
-
-## 6. Verification & Test Plan
-
-1. **Test Case 1 (Fresh Candidate Profile with 0 Exp):**
-   - Verify `EXPERIENCE:` displays `FRESHER` or `0 YEARS` instead of `--`.
-2. **Test Case 2 (Candidate with Education / Qualification Updated):**
-   - Verify `EDUCATION` displays the candidate's degree (e.g. `B.TECH`, `MBA`) instead of `--`.
-3. **Test Case 3 (Immediate / SNP Notice Period):**
-   - Verify `NOTICE PERIOD` reflects the live availability state (e.g. `Immediate`, `30 Days`, `SNP LWD 15 Nov 2026`).
-4. **Test Case 4 (Location with City/State or Current Location):**
-   - Verify `LOCATION` extracts clean city/state without displaying numeric database IDs or `--`.
-5. **Test Case 5 (Work Mode):**
-   - Verify `WORK MODE` displays `Remote`, `Hybrid`, or `Office` instead of the em-dash `—`.
-6. **Test Case 6 (Pre-Screen Report in Forward Resume):**
-   - Verify Forward Resume Option 5 generates the exact same high-fidelity dossier with all 5 metrics populated.
-
----
-
-## 7. Approval & Next Steps
-
-This architectural design solves the missing data issue permanently at the root level using robust client-side heuristics and live DOM harvesting.
-
-**Action Required:** Kindly review this document. Upon your approval, we will proceed to apply the isolated modifications to:
-1. `resources/views/service_company/job-applications/showdetail.blade.php`
-2. `public/js/opendoc/AgyResumeRenderer.js`
-3. `resources/views/service_company/cvtracker/_forward_resume_engine.blade.php`
-4. `public/assets/modules/fwd-resume/engine.v4.js`
-5. `app/Http/Controllers/ServiceCompany/ServiceCompanyCvTrackerController.php`
