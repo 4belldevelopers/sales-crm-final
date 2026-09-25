@@ -19,6 +19,10 @@ final class ForwardResumeState
     public const VERIFY_FAILED        = 'VERIFY_FAILED';
     public const READY_TO_SEND        = 'READY_TO_SEND';
     public const COINS_RESERVED       = 'COINS_RESERVED';
+    public const RESERVED             = 'RESERVED';
+    public const COMMITTING           = 'COMMITTING';
+    public const COMMITTED            = 'COMMITTED';
+    public const RELEASED             = 'RELEASED';
     public const QUEUED               = 'QUEUED';
     public const PROCESSING           = 'PROCESSING';
     public const PROVIDER_SUBMITTING  = 'PROVIDER_SUBMITTING';

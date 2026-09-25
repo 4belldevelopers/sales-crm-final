@@ -60,10 +60,10 @@ class ForwardResumeStateMachine
 
         // CoinReservation transitions
         CoinReservation::class => [
-            ForwardResumeState::RESERVED      => ['COMMITTING', ForwardResumeState::LEDGER_COMMITTED, 'COMMITTED', 'RELEASED', ForwardResumeState::EXPIRED],
-            'COMMITTING'                      => ['COMMITTED', 'RELEASED'],
-            'COMMITTED'                       => [],
-            'RELEASED'                        => [],
+            ForwardResumeState::RESERVED      => [ForwardResumeState::COMMITTING, ForwardResumeState::LEDGER_COMMITTED, ForwardResumeState::COMMITTED, ForwardResumeState::RELEASED, ForwardResumeState::EXPIRED],
+            ForwardResumeState::COMMITTING    => [ForwardResumeState::COMMITTED, ForwardResumeState::RELEASED],
+            ForwardResumeState::COMMITTED     => [],
+            ForwardResumeState::RELEASED      => [],
             ForwardResumeState::EXPIRED       => [],
         ],
     ];
