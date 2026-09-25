@@ -14136,7 +14136,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->where('job_id', $jobId)
             ->where('job_application_id', $condidateId)
             ->first();
-
         if ($existingWise) {
             if ($recomndedId > 0) {
                 DB::table('rec_candidate_assign')
@@ -14222,6 +14221,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // dd($company_id,$jobRow->company_id);
 
         $lastWiseIs = DB::table('add_job_wise_condidates')->insertGetId($insertArr);
+        GeneralMethod::elasticBenchCandidateAddEditIndex($condidateId);
+        GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
 
         $cachekeys = [
             'allcandidatesrequest_version_user_'.$this->user->id,
@@ -14245,7 +14246,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 (int) $lastWiseIs,
                 (int) $company_id
             );
-            GeneralMethod::elasticBenchCandidateAddEditIndex($condidateId);
         }
         $row_data = DB::table('job_applications')->select('*')->where('id', @$condidateId)->first();
         $note = $note_text;
@@ -14316,7 +14316,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         }
 
-        if ($query_update) {
+        if ($lastWiseIs) {
 
             $queryget = DB::table('rec_candidate_assign')->where('id', $recomndedId)->first();
             $detailsVendorSide = GeneralMethod::companyAsVendor($jobRow->company_id, $queryget->source_from_company_id);

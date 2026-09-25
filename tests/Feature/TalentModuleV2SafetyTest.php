@@ -147,6 +147,23 @@ class TalentModuleV2SafetyTest extends TestCase
     }
 
     /**
+     * Test cacheClean safely handles stdClass objects stored in cache without throwing ErrorException.
+     */
+    public function test_cache_clean_handles_stdclass_and_non_numeric_cached_values(): void
+    {
+        $key = 'test_stdclass_cache_key_'.rand(1000, 9999);
+
+        // Scenario 1: Cache key contains a stdClass object (legacy cached entity)
+        \Cache::forever($key, (object) ['foo' => 'bar', 'id' => 123]);
+        \App\Helper\GeneralMethod::cacheClean($key);
+        $this->assertEquals(2, (int) \Cache::get($key), 'cacheClean must safely replace stdClass cached object with integer version 2');
+
+        // Scenario 2: Cache key contains numeric version integer
+        \App\Helper\GeneralMethod::cacheClean($key);
+        $this->assertEquals(3, (int) \Cache::get($key), 'cacheClean must increment numeric version from 2 to 3');
+    }
+
+    /**
      * Test Phase 8 partial view component existence.
      */
     public function test_phase_8_frontend_partial_views_exist(): void
