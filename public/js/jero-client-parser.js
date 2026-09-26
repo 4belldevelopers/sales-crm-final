@@ -1,78 +1,92 @@
 /**
  * jero-client-parser.js — 100% Client-Side Resume Parser Integration Bridge
  *
+ * Production URL: https://parser.jero.works/jero-resume-parser-2tURGwDx.js
+ *
  * Architecture:
  *   Browser (User RAM)
  *     ↓
- *   Loads https://parser.jero.works/ ES bundle (CORS allowed, immutable cache)
+ *   Direct dynamic import of production Cloudflare ES module
  *     ↓
  *   Local WebAssembly / JS execution (pdf.js, mammoth, layout, compromise NLP)
  *     ↓
- *   Structured ATS JSON output
+ *   Structured ATS JSON output (logged to console)
  *     ↓
- *   Autofills Jero ATS Add/Edit Candidate Form in real time
+ *   JeroCandidateFormBridge.populate(result, isEditMode)
  *     ↓
- *   Zero server-side requests (0% Laravel/PHP, 0% MySQL, 0% Elasticsearch)
- *
- * Tenancy & Concurrency:
- *   - 10,000 concurrent recruiters produce 0% CPU strain on Jero ATS backend.
- *   - Candidate data stays strictly in recruiter browser memory until form submission.
- *   - Full graceful degradation: if parser network is blocked, recruiter can manually enter details.
+ *   Zero server-side requests (0% Laravel/PHP, 0% MySQL, 0% Elasticsearch, 0% R2 upload during parsing)
  */
 
 (function (window, document, $) {
     'use strict';
 
-    var PARSER_BASE_URL = 'https://parser.jero.works/';
-    var CANONICAL_BUNDLE_URL = 'https://parser.jero.works/jero-resume-parser-2tURGwDx.js';
-    var LOCAL_FALLBACK_URL = '/vendor/jero-resume-parser/jero-resume-parser-2tURGwDx.js';
-    var DEMO_URL = 'https://parser.jero.works/demo.js';
-    var LOAD_TIMEOUT_MS = 25000;
+    var PRODUCTION_PARSER_URL = 'https://parser.jero.works/jero-resume-parser-2tURGwDx.js';
+    var LOAD_TIMEOUT_MS = 30000;
 
     var _parserModulePromise = null;
     var _activeFile = null;
     var _lastParsedResult = null;
 
     /**
-     * Imports the parser ES module from https://parser.jero.works/ with instant local fallback
+     * Reports an explicit failure per God-Level audit spec.
+     */
+    function reportFailure(stage, err, file) {
+        var errObj = {
+            Stage: stage,
+            Error: err && err.message ? err.message : String(err),
+            Stack: err && err.stack ? err.stack : null,
+            File: file ? (file.name + ' (' + file.size + ' bytes, ' + file.type + ')') : 'None',
+            ParserURL: PRODUCTION_PARSER_URL
+        };
+        console.error('[PARSER FAILED]\n' +
+            'Stage: ' + errObj.Stage + '\n' +
+            'Error: ' + errObj.Error + '\n' +
+            'Stack: ' + (errObj.Stack || 'None') + '\n' +
+            'File: ' + errObj.File + '\n' +
+            'Parser URL: ' + errObj.ParserURL, err);
+        return errObj;
+    }
+
+    /**
+     * Phase 2: Prove dynamic import from https://parser.jero.works/jero-resume-parser-2tURGwDx.js
      */
     function loadParserModule() {
         if (_parserModulePromise) {
             return _parserModulePromise;
         }
 
+        console.log('[PARSER 3] Loading production parser:', PRODUCTION_PARSER_URL);
+        console.log('[PARSER] module loading:', PRODUCTION_PARSER_URL);
+
         _parserModulePromise = new Promise(function (resolve, reject) {
             var timeoutId = setTimeout(function () {
-                reject(new Error('Parser loading timed out after ' + LOAD_TIMEOUT_MS + 'ms'));
+                var timeoutErr = new Error('Parser loading timed out after ' + LOAD_TIMEOUT_MS + 'ms from ' + PRODUCTION_PARSER_URL);
+                reportFailure('Module Loading (Timeout)', timeoutErr, _activeFile);
+                reject(timeoutErr);
             }, LOAD_TIMEOUT_MS);
 
-            function verifyAndResolve(mod, source) {
-                clearTimeout(timeoutId);
-                if (!mod || typeof mod.parseResume !== 'function') {
-                    throw new Error('Invalid parser bundle from ' + source + ': parseResume function not found');
-                }
-                console.log('[JeroClientParser] Parser module loaded successfully from ' + source);
-                resolve(mod);
-            }
-
-            // 1. Primary: Direct import from canonical Cloudflare production URL
-            import(/* @vite-ignore */ CANONICAL_BUNDLE_URL)
+            import(/* @vite-ignore */ PRODUCTION_PARSER_URL)
                 .then(function (mod) {
-                    verifyAndResolve(mod, 'Cloudflare (' + CANONICAL_BUNDLE_URL + ')');
+                    clearTimeout(timeoutId);
+                    console.log('[PARSER 4] Parser module loaded');
+                    console.log('[PARSER] module loaded');
+
+                    var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
+                    if (typeof parseResumeFn !== 'function') {
+                        var missingFnErr = new Error('parseResume function not available on imported module');
+                        reportFailure('Verify parseResume', missingFnErr, _activeFile);
+                        throw missingFnErr;
+                    }
+
+                    console.log('[PARSER 5] parseResume available');
+                    console.log('[PARSER] parseResume available');
+                    resolve(mod);
                 })
-                .catch(function (primaryErr) {
-                    console.warn('[JeroClientParser] Cloudflare bundle load failed, falling back to local vendor copy:', primaryErr);
-                    // 2. Fallback: Instant import from same-origin vendor bundle
-                    return import(/* @vite-ignore */ LOCAL_FALLBACK_URL)
-                        .then(function (localMod) {
-                            verifyAndResolve(localMod, 'Local Vendor (' + LOCAL_FALLBACK_URL + ')');
-                        })
-                        .catch(function (fallbackErr) {
-                            clearTimeout(timeoutId);
-                            _parserModulePromise = null; // allow retry on next attempt
-                            console.error('[JeroClientParser] Both Cloudflare and local parser imports failed:', fallbackErr);
-                            reject(fallbackErr);
-                        });
+                .catch(function (err) {
+                    clearTimeout(timeoutId);
+                    _parserModulePromise = null; // allow retry
+                    reportFailure('Dynamic Import', err, _activeFile);
+                    reject(err);
                 });
         });
 
@@ -80,7 +94,7 @@
     }
 
     /**
-     * Calculates total experience in years and months from experience entries
+     * Calculates total experience in years and months from experience entries.
      * Merges overlapping date intervals to avoid duplicate counting.
      */
     function calculateTotalExperience(experienceList) {
@@ -125,7 +139,6 @@
             return { years: 0, months: 0 };
         }
 
-        // Merge overlapping intervals
         intervals.sort(function (a, b) { return a[0] - b[0]; });
         var merged = [intervals[0]];
         for (var j = 1; j < intervals.length; j++) {
@@ -152,11 +165,54 @@
     }
 
     /**
+     * Phase 10: Normalize DOB output to YYYY-MM-DD for <input type="date" id="dob">
+     */
+    function normalizeDob(raw) {
+        if (!raw) return null;
+        var str = String(raw).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        if (/^\d{4}\/\d{2}\/\d{2}$/.test(str)) return str.replace(/\//g, '-');
+
+        var dmyMatch = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+        if (dmyMatch) {
+            var p1 = parseInt(dmyMatch[1], 10);
+            var p2 = parseInt(dmyMatch[2], 10);
+            var yr = parseInt(dmyMatch[3], 10);
+            var day, month;
+            if (p1 > 12) {
+                day = p1; month = p2;
+            } else if (p2 > 12) {
+                month = p1; day = p2;
+            } else {
+                day = p1; month = p2;
+            }
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                return yr + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+            }
+        }
+
+        var cleanedStr = str.replace(/(st|nd|rd|th)/gi, '');
+        var timestamp = Date.parse(cleanedStr);
+        if (!isNaN(timestamp)) {
+            var d = new Date(timestamp);
+            var y = d.getFullYear();
+            var m = String(d.getMonth() + 1).padStart(2, '0');
+            var dayNum = String(d.getDate()).padStart(2, '0');
+            var maxBirthYear = (new Date()).getFullYear() - 14;
+            if (y >= 1930 && y <= maxBirthYear) {
+                return y + '-' + m + '-' + dayNum;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Fuzzy matches parsed education against available qualification dropdown options.
      */
-    function matchQualification(educationList) {
+    function matchQualification(educationList, selectEl) {
         if (!Array.isArray(educationList) || !educationList.length) return null;
-        var qualSelect = document.getElementById('qualification');
+        var qualSelect = selectEl || document.getElementById('qualification');
         if (!qualSelect || !qualSelect.options) return null;
 
         var options = qualSelect.options;
@@ -175,12 +231,10 @@
                 var optText = opt.textContent.toLowerCase().trim();
                 if (!optText) continue;
 
-                // Direct exact match
                 if (combined === optText || degreeRaw === optText) {
                     return opt.value;
                 }
 
-                // Standard degree token match
                 if (/\bb\.?tech\b/i.test(degreeRaw) && /\bb\.?tech\b/i.test(optText)) return opt.value;
                 if (/\bm\.?tech\b/i.test(degreeRaw) && /\bm\.?tech\b/i.test(optText)) return opt.value;
                 if (/\bmba\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
@@ -190,7 +244,6 @@
                 if (/\bdoctorate\b/i.test(degreeRaw) && /\bdoctor/i.test(optText)) return opt.value;
                 if (/\bdiploma\b/i.test(degreeRaw) && /\bdiploma\b/i.test(optText)) return opt.value;
 
-                // Substring containment
                 if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
                     return opt.value;
                 }
@@ -201,180 +254,224 @@
     }
 
     /**
-     * Maps structured ATS JSON into Jero ATS form inputs.
-     * Safe for EDIT mode: does not overwrite existing values in edit mode unless empty.
+     * Phase 5: Canonical Integration Layer — JeroCandidateFormBridge
      */
-    function mapAndPopulate(atsJson, isEditMode) {
-        if (!atsJson || typeof atsJson !== 'object') return;
+    var JeroCandidateFormBridge = {
+        populate: function (result, isEditMode) {
+            console.log('[PARSER 9] Form mapping started (isEditMode: ' + !!isEditMode + ')');
 
-        console.log('[JeroClientParser] Mapping ATS JSON to form inputs. isEditMode =', isEditMode);
-        var cand = atsJson.candidate || {};
+            if (!result || typeof result !== 'object') {
+                var invalidResultErr = new Error('Cannot map non-object ATS result to form');
+                reportFailure('Form Mapping (Validate Object)', invalidResultErr, _activeFile);
+                return;
+            }
 
-        function setVal(selector, value) {
-            if (value === null || value === undefined) return;
-            var strVal = String(value).trim();
-            if (strVal === '') return;
+            var cand = result.candidate || {};
 
-            var $el = $(selector);
-            if (!$el.length) return;
+            function setVal(selector, value) {
+                if (value === null || value === undefined) return;
+                var strVal = String(value).trim();
+                if (strVal === '') return;
 
-            if (isEditMode) {
-                var cur = $el.val();
-                if (cur !== null && cur !== undefined && String(cur).trim() !== '') {
-                    return; // Preserve existing value in edit mode
+                var $el = $(selector);
+                if (!$el.length) return;
+
+                if (isEditMode) {
+                    var cur = $el.val();
+                    if (cur !== null && cur !== undefined && String(cur).trim() !== '') {
+                        return; // Preserve existing values in edit mode
+                    }
+                }
+
+                $el.val(strVal);
+                $el.trigger('input').trigger('change');
+
+                var domEl = $el[0];
+                if (domEl && typeof domEl.dispatchEvent === 'function') {
+                    try {
+                        domEl.dispatchEvent(new Event('input', { bubbles: true }));
+                        domEl.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (_) {}
                 }
             }
 
-            $el.val(strVal);
-            $el.trigger('input').trigger('change');
-
-            var domEl = $el[0];
-            if (domEl && typeof domEl.dispatchEvent === 'function') {
-                try {
-                    domEl.dispatchEvent(new Event('input', { bubbles: true }));
-                    domEl.dispatchEvent(new Event('change', { bubbles: true }));
-                } catch (_) {}
-            }
-        }
-
-        // 1. Full Name
-        if (cand.name) {
-            setVal('#full_name', cand.name);
-        }
-
-        // 2. Primary Email
-        if (cand.email) {
-            setVal('#email', cand.email);
-        }
-
-        // 3. Primary Mobile & Country Code
-        var phoneVal = cand.mobileNumber || cand.phone;
-        if (phoneVal) {
-            var digitsOnly = String(phoneVal).replace(/\D/g, '');
-            if (digitsOnly.length > 10) {
-                digitsOnly = digitsOnly.slice(-10);
-            }
-            setVal('#phone', digitsOnly);
-        }
-        if (cand.countryCode) {
-            var cc = String(cand.countryCode).replace(/^\+/, '').trim();
-            setVal('#primary_country_code', cc);
-        }
-
-        // 4. Date of Birth
-        if (cand.dob) {
-            setVal('#dob', cand.dob);
-        }
-
-        // 5. Current Location (Tagify & Fallbacks)
-        if (cand.location) {
-            var locStr = '';
-            if (typeof cand.location === 'string') {
-                locStr = cand.location.trim();
-            } else if (typeof cand.location === 'object') {
-                var locParts = [cand.location.city, cand.location.state, cand.location.country].filter(Boolean);
-                locStr = locParts.join(', ');
+            // 1. Full Name
+            if (cand.name) {
+                setVal('#full_name', cand.name);
+                setVal('#name', cand.name);
             }
 
-            if (locStr) {
-                if (typeof window.setSingleCandidateLocation === 'function') {
-                    window.setSingleCandidateLocation(locStr);
-                } else if (window.tagifylocation && typeof window.tagifylocation.addTags === 'function') {
-                    window.tagifylocation.removeAllTags();
-                    if (window.tagifylocation.settings && Array.isArray(window.tagifylocation.settings.whitelist)) {
-                        if (window.tagifylocation.settings.whitelist.indexOf(locStr) === -1) {
-                            window.tagifylocation.settings.whitelist.unshift(locStr);
+            // 2. Primary Email
+            if (cand.email) {
+                setVal('#email', cand.email);
+            }
+
+            // 3. Primary Mobile & Country Code
+            var phoneVal = cand.mobileNumber || cand.phone;
+            if (phoneVal) {
+                var digitsOnly = String(phoneVal).replace(/\D/g, '');
+                if (digitsOnly.length > 10) {
+                    digitsOnly = digitsOnly.slice(-10);
+                }
+                setVal('#phone', digitsOnly);
+            }
+            if (cand.countryCode) {
+                var cc = String(cand.countryCode).replace(/^\+/, '').trim();
+                setVal('#primary_country_code', cc);
+            }
+
+            // 4. Phase 10: Date of Birth (Normalized to YYYY-MM-DD)
+            if (cand.dob) {
+                var normalizedDob = normalizeDob(cand.dob);
+                if (normalizedDob) {
+                    setVal('#dob', normalizedDob);
+                }
+            }
+
+            // 5. Phase 7: Location Population via Canonical Tagify Bridge
+            if (cand.location) {
+                var locStr = '';
+                if (typeof cand.location === 'string') {
+                    locStr = cand.location.trim();
+                } else if (typeof cand.location === 'object') {
+                    var locParts = [cand.location.city, cand.location.state, cand.location.country].filter(Boolean);
+                    locStr = locParts.join(', ');
+                }
+
+                if (locStr) {
+                    var locInput = document.querySelector('#kt_tagify_work_location');
+                    var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
+                    if (tagifyLoc && typeof tagifyLoc.addTags === 'function') {
+                        try {
+                            tagifyLoc.removeAllTags();
+                            if (tagifyLoc.settings && Array.isArray(tagifyLoc.settings.whitelist)) {
+                                if (tagifyLoc.settings.whitelist.indexOf(locStr) === -1) {
+                                    tagifyLoc.settings.whitelist.unshift(locStr);
+                                }
+                            }
+                            tagifyLoc.addTags([locStr]);
+                            if (tagifyLoc.dropdown && typeof tagifyLoc.dropdown.hide === 'function') {
+                                tagifyLoc.dropdown.hide();
+                            }
+                        } catch (locErr) {
+                            console.warn('[JeroCandidateFormBridge] Tagify location error, using fallback:', locErr);
+                            setVal('#kt_tagify_work_location', locStr);
                         }
+                    } else if (typeof window.setSingleCandidateLocation === 'function') {
+                        window.setSingleCandidateLocation(locStr);
+                    } else {
+                        setVal('#kt_tagify_work_location', locStr);
                     }
-                    window.tagifylocation.addTags([locStr]);
+                }
+            }
+
+            // 6. Phase 8: Skills Population via Tagify Bridge
+            var skillsList = Array.isArray(result.skills) ? result.skills : [];
+            if (skillsList.length) {
+                var skillInput = document.querySelector('#kt_tagify_2');
+                var tagifySkill = (skillInput && skillInput.__tagify) || window.tagifyskill;
+
+                var uniqueSkills = [];
+                var seen = new Set();
+                if (isEditMode && tagifySkill && Array.isArray(tagifySkill.value)) {
+                    tagifySkill.value.forEach(function (t) {
+                        var v = (t.value || t.name || '').toLowerCase();
+                        if (v) seen.add(v);
+                    });
+                }
+
+                skillsList.forEach(function (s) {
+                    var name = String(s || '').trim();
+                    var lower = name.toLowerCase();
+                    if (name && !seen.has(lower) && uniqueSkills.length < 15) {
+                        seen.add(lower);
+                        uniqueSkills.push(name);
+                    }
+                });
+
+                if (tagifySkill && typeof tagifySkill.addTags === 'function') {
+                    try {
+                        if (!isEditMode) {
+                            tagifySkill.removeAllTags();
+                        }
+                        if (uniqueSkills.length) {
+                            tagifySkill.addTags(uniqueSkills);
+                        }
+                        if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                            window.refreshCandidatePrimarySkills();
+                        }
+                    } catch (skillErr) {
+                        console.warn('[JeroCandidateFormBridge] Tagify skills error, using fallback:', skillErr);
+                        setVal('#kt_tagify_2', uniqueSkills.join(', '));
+                    }
                 } else {
-                    setVal('#kt_tagify_work_location', locStr);
+                    setVal('#kt_tagify_2', uniqueSkills.join(', '));
                 }
             }
-        }
 
-        // 6. Primary Skills (Tagify + Metronic matching ring)
-        var skills = Array.isArray(atsJson.skills) ? atsJson.skills : [];
-        if (skills.length) {
-            var tagifyInstance = window.tagifyskill
-                || (window.Tagify && document.querySelector('#kt_tagify_2') && document.querySelector('#kt_tagify_2').__tagify);
-
-            if (tagifyInstance && typeof tagifyInstance.addTags === 'function') {
-                var currentTags = tagifyInstance.value || [];
-                if (!isEditMode || currentTags.length === 0) {
-                    tagifyInstance.removeAllTags();
-                    tagifyInstance.addTags(skills);
-                    if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                        window.setTimeout(window.refreshCandidatePrimarySkills, 0);
-                    }
+            // 7. Phase 9: Experience & Fresher Selection
+            var expList = Array.isArray(result.experience) ? result.experience : [];
+            if (expList.length > 0) {
+                var latestJob = expList[0] || {};
+                if (latestJob.company) {
+                    setVal('#current_company', latestJob.company);
                 }
-            } else {
-                setVal('#kt_tagify_2', skills.join(', '));
-            }
-        }
+                if (latestJob.title) {
+                    setVal('#current_designation', latestJob.title);
+                }
 
-        // 7. Career Summary
-        var summary = atsJson.summary || '';
-        if (summary) {
-            setVal('#careersummary', summary);
-            $('.cc').text(summary.length + ' / 100');
-        }
-
-        // 8. Experience Details
-        var expList = Array.isArray(atsJson.experience) ? atsJson.experience : [];
-        if (expList.length) {
-            var latestJob = expList[0] || {};
-            // Current Company
-            if (latestJob.company) {
-                setVal('#current_company', latestJob.company);
-            }
-            // Current Designation
-            if (latestJob.title) {
-                setVal('#current_designation', latestJob.title);
+                var totalExp = calculateTotalExperience(expList);
+                setVal('#total_exp_year', String(totalExp.years));
+                setVal('#total_exp_month', String(totalExp.months));
+                setVal('#rel_exp_year', String(totalExp.years));
+                setVal('#rel_exp_month', String(totalExp.months));
+            } else if (!isEditMode) {
+                // Explicitly select 0 for Fresher
+                setVal('#total_exp_year', '0');
+                setVal('#total_exp_month', '0');
+                setVal('#rel_exp_year', '0');
+                setVal('#rel_exp_month', '0');
             }
 
-            // Total Experience (Years / Months)
-            var totalExp = calculateTotalExperience(expList);
-            var yrStr = String(totalExp.years);
-            var moStr = String(totalExp.months);
+            // 8. Education / Qualification
+            var matchedQualId = matchQualification(result.education, document.getElementById('qualification'));
+            if (matchedQualId) {
+                setVal('#qualification', String(matchedQualId));
+            }
 
-            setVal('#total_exp_year', yrStr);
-            setVal('#total_exp_month', moStr);
-            setVal('#rel_exp_year', yrStr);
-            setVal('#rel_exp_month', moStr);
-        } else if (!isEditMode) {
-            // Fresher fallback for empty experience history
-            setVal('#total_exp_year', '0');
-            setVal('#total_exp_month', '0');
-            setVal('#rel_exp_year', '0');
-            setVal('#rel_exp_month', '0');
-        }
+            // 9. Career Summary
+            var summary = result.summary || '';
+            if (summary) {
+                setVal('#careersummary', summary);
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['recruiter_note']) {
+                    try {
+                        CKEDITOR.instances['recruiter_note'].setData(summary);
+                    } catch (_) {}
+                }
+                $('.cc').text(summary.length + ' / 100');
+            }
 
-        // 9. Qualification / Education
-        var matchedQualId = matchQualification(atsJson.education);
-        if (matchedQualId) {
-            setVal('#qualification', String(matchedQualId));
-        }
+            // 10. Professional Links
+            if (cand.linkedin) {
+                setVal('#linkedin', cand.linkedin);
+            }
+            if (cand.github) {
+                setVal('#github', cand.github);
+            }
 
-        // 10. Professional Links
-        if (cand.linkedin) {
-            setVal('#linkedin', cand.linkedin);
-        }
-        if (cand.github) {
-            setVal('#github', cand.github);
-        }
+            console.log('[PARSER 10] Form mapping completed');
 
-        // Dispatch a custom window event for any observing components
-        try {
-            var evt = new CustomEvent('jero:resume-parsed', {
-                detail: { atsJson: atsJson, isEditMode: isEditMode }
-            });
-            window.dispatchEvent(evt);
-        } catch (_) {}
-    }
+            try {
+                var evt = new CustomEvent('jero:resume-parsed', {
+                    detail: { atsJson: result, isEditMode: isEditMode }
+                });
+                window.dispatchEvent(evt);
+            } catch (_) {}
+        }
+    };
 
     /**
-     * Public API: parseAndPopulate(file, options)
+     * Phase 1 & 3: Selected File -> JeroClientParser -> https://parser.jero.works/ -> ATS JSON
      */
     function parseAndPopulate(file, options) {
         options = options || {};
@@ -386,33 +483,49 @@
         var requiredSkills = options.requiredSkills || [];
         var isEditMode = !!options.isEditMode;
 
-        var startTime = performance.now();
-        console.log('[JeroClientParser] parseAndPopulate called for:', file ? file.name : 'unknown file');
+        // [PARSER 1] File selected
+        console.log('[PARSER 1] File selected:', file ? (file.name + ' (' + file.size + ' bytes, ' + file.type + ')') : 'None');
 
-        onProgress('Initializing parser...', 5);
+        if (!file) {
+            var missingFileErr = new Error('No resume file provided for parsing');
+            reportFailure('File Selection', missingFileErr, file);
+            onError(missingFileErr);
+            return Promise.reject(missingFileErr);
+        }
 
-        // Create an independent snapshot of the file so any concurrent input reset cannot detach the stream
-        var fileToParse = file;
+        // [PARSER 2] File snapshot created (clean reference to avoid detachment)
+        var selectedFile = file;
         try {
             if (typeof File === 'function' && file instanceof File) {
-                fileToParse = new File([file], file.name, {
+                selectedFile = new File([file], file.name, {
                     type: file.type || 'application/pdf',
                     lastModified: file.lastModified || Date.now()
                 });
             }
         } catch (_) {
-            fileToParse = file;
+            selectedFile = file;
         }
+        console.log('[PARSER 2] File snapshot created');
+
+        var startTime = performance.now();
+        onProgress('Initializing parser...', 5);
 
         return loadParserModule()
             .then(function (mod) {
-                console.log('[JeroClientParser] Module loaded. Calling parseResume on', fileToParse.name);
-                onProgress('Parsing resume in browser...', 15);
-                var parserFn = mod.parseResume || (mod.default && mod.default.parseResume);
-                if (typeof parserFn !== 'function') {
-                    throw new Error('parseResume function not available on imported module');
+                var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
+                if (typeof parseResumeFn !== 'function') {
+                    throw new Error('parseResume function not available on module');
                 }
-                return parserFn(fileToParse, {
+
+                // [PARSER 6] Parsing started
+                console.log('[PARSER] file name:', selectedFile.name);
+                console.log('[PARSER] file type:', selectedFile.type);
+                console.log('[PARSER] file size:', selectedFile.size);
+                console.log('[PARSER 6] Parsing started');
+                console.log('[PARSER] parse started');
+                onProgress('Parsing resume in browser...', 15);
+
+                return parseResumeFn(selectedFile, {
                     requiredSkills: requiredSkills,
                     onProgress: function (stage, pct) {
                         onProgress(stage, pct);
@@ -421,37 +534,57 @@
             })
             .then(function (result) {
                 var totalMs = Math.round(performance.now() - startTime);
-                console.log('[JeroClientParser] Parse completed in ' + totalMs + 'ms');
+
+                // [PARSER 7] Parsing completed
+                console.log('[PARSER 7] Parsing completed in ' + totalMs + 'ms');
+                console.log('[PARSER] parse completed in ' + totalMs + 'ms');
+
+                // [PARSER 8] ATS JSON received
+                console.log('[PARSER 8] ATS JSON received:');
+                console.log('[PARSER] result:', result);
+                try {
+                    console.log(JSON.stringify(result, null, 2));
+                } catch (_) {
+                    console.log(result);
+                }
+
+                if (!result || typeof result !== 'object') {
+                    throw new Error('parseResume() returned invalid or empty ATS JSON');
+                }
+
                 _lastParsedResult = result;
-                mapAndPopulate(result, isEditMode);
+
+                // Form mapping via Phase 5 Canonical Form Bridge
+                JeroCandidateFormBridge.populate(result, isEditMode);
+
                 onSuccess(result, totalMs);
                 return result;
             })
             .catch(function (err) {
-                console.error('[JeroClientParser] Client-side parsing encountered an error:', err);
+                reportFailure('parseResume Execution', err, selectedFile);
                 onError(err);
-                // Return null so the promise chain does not crash caller
                 return null;
             });
     }
 
-    // Expose global namespace
+    // Expose global namespaces
+    window.JeroCandidateFormBridge = JeroCandidateFormBridge;
     window.JeroClientParser = {
         load: loadParserModule,
         parseAndPopulate: parseAndPopulate,
         calculateTotalExperience: calculateTotalExperience,
         matchQualification: matchQualification,
+        normalizeDob: normalizeDob,
         getLastResult: function () { return _lastParsedResult; },
         getActiveFile: function () { return _activeFile; },
-        PARSER_BASE_URL: PARSER_BASE_URL,
-        CANONICAL_BUNDLE_URL: CANONICAL_BUNDLE_URL
+        PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL
     };
 
-    // Pre-warm the parser module during idle time so it is ready in RAM when a file is dropped
+    // Pre-warm the parser module during idle time from production URL
     if (typeof window !== 'undefined') {
         var prewarm = function () {
             loadParserModule().catch(function (e) {
-                console.warn('[JeroClientParser] Idle pre-warm deferred:', e && e.message ? e.message : e);
+                console.warn('[PARSER] Idle pre-warm deferred:', e && e.message ? e.message : e);
             });
         };
         if ('requestIdleCallback' in window) {
@@ -462,4 +595,3 @@
     }
 
 })(window, document, window.jQuery || window.$);
-
