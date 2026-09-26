@@ -442,16 +442,22 @@
                 setVal('#qualification', String(matchedQualId));
             }
 
-            // 9. Career Summary
+            // 9. Career Summary (strictly for career summary, limited to 100 words, NEVER fills recruiter internal note)
             var summary = result.summary || '';
             if (summary) {
-                setVal('#careersummary', summary);
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['recruiter_note']) {
-                    try {
-                        CKEDITOR.instances['recruiter_note'].setData(summary);
-                    } catch (_) {}
+                var words = String(summary).trim().split(/\s+/).filter(Boolean);
+                if (words.length > 100) {
+                    summary = words.slice(0, 100).join(' ');
                 }
-                $('.cc').text(summary.length + ' / 100');
+                setVal('#careersummary', summary);
+                var csEl = document.querySelector('#careersummary');
+                if (csEl && csEl.parentElement) {
+                    var csCc = csEl.parentElement.querySelector('.cc');
+                    if (csCc) {
+                        var actualWordCount = summary.trim().split(/\s+/).filter(Boolean).length;
+                        csCc.textContent = actualWordCount + ' / 100';
+                    }
+                }
             }
 
             // 10. Professional Links
