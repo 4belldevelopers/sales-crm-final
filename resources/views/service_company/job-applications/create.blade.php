@@ -438,7 +438,7 @@
                   </div>
                   <div class="fg fv-row">
                     <label>Current Location <span class="rq">*</span></label>
-                    <div class="candidate-field-control candidate-field-control--tagify candidate-field-control--location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" autocomplete="off" aria-label="Search current location" /><i class="fa-solid fa-chevron-down candidate-location-chevron" aria-hidden="true"></i></div>
+                    <div class="candidate-field-control candidate-field-control--tagify candidate-field-control--location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><input type="text" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" autocomplete="off" aria-label="Search current location" /><button type="button" class="candidate-location-clear" aria-label="Clear location" tabindex="-1"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button><i class="fa-solid fa-chevron-down candidate-location-chevron" aria-hidden="true"></i></div>
                   </div>
                   <div class="fg fv-row">
                     <label>Highest Qualification <span class="rq">*</span></label>
@@ -3389,6 +3389,25 @@ KTUtil.onDOMContentLoaded(function () {
           setSingleCandidateLocation(defaultLocation, true);
           tagifylocation.dropdown.hide();
       }
+
+      var candidateLocationClearBtn = document.querySelector('.candidate-location-clear');
+      if (candidateLocationClearBtn) {
+          candidateLocationClearBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              candidateLocationSyncing = true;
+              tagifylocation.removeAllTags();
+              candidateLocationSyncing = false;
+              updateCandidateLocationTagState();
+              tagifylocation.dropdown.hide();
+              if (tagifylocation.DOM && tagifylocation.DOM.input) {
+                  setTimeout(function () {
+                      tagifylocation.DOM.input.focus();
+                  }, 50);
+              }
+          });
+      }
+      updateCandidateLocationTagState();
   }
    $('body').on('change', '#current_ctc_cur', function(){
    			var	current_ctc_cur		=	$(this).val();
