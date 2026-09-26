@@ -3096,6 +3096,11 @@ KTUtil.onDOMContentLoaded(function () {
       if (tagifylocation.DOM && tagifylocation.DOM.scope) {
           tagifylocation.DOM.scope.classList.add('candidate-location-tagify');
           tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
+          tagifylocation.DOM.scope.addEventListener('scroll', function () {
+              if (tagifylocation.DOM.scope.scrollLeft !== 0) {
+                  tagifylocation.DOM.scope.scrollLeft = 0;
+              }
+          });
           tagifylocation.DOM.scope.addEventListener('click', function (e) {
               if (!e.target.closest('.tagify__tag__removeBtn')) {
                   tagifylocation.dropdown.show('');
@@ -3108,24 +3113,198 @@ KTUtil.onDOMContentLoaded(function () {
       var candidateLocationRequestSequence = 0;
       var candidateLocationLatestQuery = '';
 
+      function candidateLocationParent() {
+          return (tagifylocation && tagifylocation.DOM && tagifylocation.DOM.scope)
+              ? tagifylocation.DOM.scope.closest('.candidate-field-control--location')
+              : null;
+      }
+
+      function updateCandidateLocationTagState() {
+          var parentEl = candidateLocationParent();
+          var hasTag = tagifylocation && Array.isArray(tagifylocation.value) && tagifylocation.value.length > 0;
+          if (parentEl) {
+              parentEl.classList.toggle('has-tag', hasTag);
+          }
+          if (tagifylocation && tagifylocation.DOM && tagifylocation.DOM.scope) {
+              tagifylocation.DOM.scope.scrollLeft = 0;
+          }
+      }
+
+      var candidateInvalidCityKeywords = [
+          'remote', 'hybrid', 'onsite', 'on-site', 'india', 'united states', 'usa', 'uk', 'united kingdom',
+          'unknown', 'anywhere', 'work from home', 'wfh', 'telecommute', 'relocate', 'open to relocate',
+          'worldwide', 'global', 'na', 'n/a', 'null', 'undefined'
+      ];
+
+      function findAuthoritativeCityMatch(candidateTerm, suggestions) {
+          if (!candidateTerm || !Array.isArray(suggestions) || !suggestions.length) {
+              return null;
+          }
+
+          var term = String(candidateTerm || '').trim().toLowerCase();
+          if (!term || term.length < 2 || candidateInvalidCityKeywords.indexOf(term) !== -1) {
+              return null;
+          }
+
+          for (var i = 0; i < suggestions.length; i++) {
+              var item = String(suggestions[i] || '').trim();
+              if (!item) continue;
+              var parts = item.split('|').map(function (p) { return p.trim(); });
+              var cityName = (parts[0] || '').toLowerCase();
+
+              // Exact match on city name: e.g. "pune" === "pune"
+              if (cityName === term) {
+                  return item;
+              }
+
+              // Check slash aliases: e.g. "bengaluru / bangalore"
+              var aliases = cityName.split(/[\/\(\)]/).map(function (a) { return a.trim(); }).filter(Boolean);
+              if (aliases.indexOf(term) !== -1) {
+                  return item;
+              }
+          }
+
+          return null;
+      }
+
       function currentCandidateLocation() {
           return String((tagifylocation.value[0] && tagifylocation.value[0].value) || '').trim();
       }
 
-      function setSingleCandidateLocation(value) {
-          var normalizedValue = String(value || '').trim();
+      function resolveAndSetCandidateLocation(rawInput) {
           candidateLocationSyncing = true;
           tagifylocation.removeAllTags();
+          candidateLocationSyncing = false;
+          updateCandidateLocationTagState();
 
-          if (normalizedValue) {
+          if (!rawInput) {
+              return;
+          }
+
+          var candidateTerms = [];
+          if (typeof rawInput === 'object') {
+              if (rawInput.city) candidateTerms.push(String(rawInput.city).trim());
+              if (rawInput.location && typeof rawInput.location === 'string') candidateTerms.push(String(rawInput.location).trim());
+          } else if (typeof rawInput === 'string') {
+              var clean = String(rawInput || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+              var chunks = clean.split(/[,|\/\-]/).map(function (c) {
+                  return c.trim();
+              }).filter(function (c) {
+                  return c.length >= 2 && candidateInvalidCityKeywords.indexOf(c.toLowerCase()) === -1;
+              });
+
+              if (chunks.length > 0) {
+                  candidateTerms = candidateTerms.concat(chunks);
+              } else if (clean.length >= 2 && candidateInvalidCityKeywords.indexOf(clean.toLowerCase()) === -1) {
+                  candidateTerms.push(clean);
+              }
+          }
+
+          if (!candidateTerms.length) {
+              return;
+          }
+
+          // 1. Try matching against current whitelist / initial cities first
+          for (var t = 0; t < candidateTerms.length; t++) {
+              var immediateMatch = findAuthoritativeCityMatch(candidateTerms[t], tagifylocation.settings.whitelist);
+              if (immediateMatch) {
+                  applyVerifiedCity(immediateMatch);
+                  return;
+              }
+          }
+
+          // 2. Query Elasticsearch /city-job-suggestions for candidate terms
+          var primaryQuery = candidateTerms[0];
+          window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: primaryQuery })
+              .done(function (data) {
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  var foundMatch = null;
+
+                  for (var i = 0; i < candidateTerms.length; i++) {
+                      foundMatch = findAuthoritativeCityMatch(candidateTerms[i], suggestions);
+                      if (foundMatch) break;
+                  }
+
+                  if (!foundMatch && candidateTerms.length > 1) {
+                      var secondaryQuery = candidateTerms[1];
+                      window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: secondaryQuery })
+                          .done(function (data2) {
+                              var suggestions2 = candidateNormalizeSuggestions(data2);
+                              var match2 = findAuthoritativeCityMatch(secondaryQuery, suggestions2);
+                              if (match2) {
+                                  applyVerifiedCity(match2);
+                              } else {
+                                  // No city matched: keep box completely blank
+                                  candidateLocationSyncing = true;
+                                  tagifylocation.removeAllTags();
+                                  candidateLocationSyncing = false;
+                                  updateCandidateLocationTagState();
+                              }
+                          })
+                          .fail(function () {
+                              candidateLocationSyncing = true;
+                              tagifylocation.removeAllTags();
+                              candidateLocationSyncing = false;
+                              updateCandidateLocationTagState();
+                          });
+                      return;
+                  }
+
+                  if (foundMatch) {
+                      applyVerifiedCity(foundMatch);
+                  } else {
+                      // No city matched: keep box completely blank
+                      candidateLocationSyncing = true;
+                      tagifylocation.removeAllTags();
+                      candidateLocationSyncing = false;
+                      updateCandidateLocationTagState();
+                  }
+              })
+              .fail(function () {
+                  candidateLocationSyncing = true;
+                  tagifylocation.removeAllTags();
+                  candidateLocationSyncing = false;
+                  updateCandidateLocationTagState();
+              });
+
+          function applyVerifiedCity(verifiedCity) {
+              if (tagifylocation.settings.whitelist.indexOf(verifiedCity) === -1) {
+                  tagifylocation.settings.whitelist.unshift(verifiedCity);
+              }
+              candidateLocationSyncing = true;
+              tagifylocation.removeAllTags();
+              tagifylocation.addTags([verifiedCity]);
+              candidateLocationSyncing = false;
+              updateCandidateLocationTagState();
+              tagifylocation.dropdown.hide();
+          }
+      }
+
+      function setSingleCandidateLocation(value, isVerified) {
+          var normalizedValue = String(value || '').trim();
+          if (!normalizedValue) {
+              candidateLocationSyncing = true;
+              tagifylocation.removeAllTags();
+              candidateLocationSyncing = false;
+              updateCandidateLocationTagState();
+              return;
+          }
+
+          if (isVerified || (Array.isArray(tagifylocation.settings.whitelist) && tagifylocation.settings.whitelist.indexOf(normalizedValue) !== -1)) {
+              candidateLocationSyncing = true;
+              tagifylocation.removeAllTags();
               if (tagifylocation.settings.whitelist.indexOf(normalizedValue) === -1) {
                   tagifylocation.settings.whitelist.unshift(normalizedValue);
               }
               tagifylocation.addTags([normalizedValue]);
+              candidateLocationSyncing = false;
+              updateCandidateLocationTagState();
+          } else {
+              resolveAndSetCandidateLocation(normalizedValue);
           }
-          candidateLocationSyncing = false;
       }
       window.setSingleCandidateLocation = setSingleCandidateLocation;
+      window.resolveAndSetCandidateLocation = resolveAndSetCandidateLocation;
       window.tagifylocation = tagifylocation;
 
       var fetchCandidateLocationSuggestions = candidateDebounce(function (query) {
@@ -3174,7 +3353,6 @@ KTUtil.onDOMContentLoaded(function () {
           fetchCandidateLocationSuggestions(query);
       });
 
-
       tagifylocation.on('add', function (event) {
           var selectedLocation = String((event.detail.data && event.detail.data.value) || '').trim();
           candidateLocationLatestQuery = '';
@@ -3186,8 +3364,9 @@ KTUtil.onDOMContentLoaded(function () {
               tagifylocation.settings.whitelist.unshift(selectedLocation);
           }
           if (!candidateLocationSyncing && (tagifylocation.value.length !== 1 || currentCandidateLocation() !== selectedLocation)) {
-              setSingleCandidateLocation(selectedLocation);
+              setSingleCandidateLocation(selectedLocation, true);
           }
+          updateCandidateLocationTagState();
           tagifylocation.dropdown.hide();
       });
 
@@ -3197,6 +3376,7 @@ KTUtil.onDOMContentLoaded(function () {
               candidateLocationRequest.abort();
           }
           candidateLocationRequestSequence++;
+          updateCandidateLocationTagState();
           tagifylocation.dropdown.hide();
           if (tagifylocation.DOM && tagifylocation.DOM.input) {
               setTimeout(function () {
@@ -3206,7 +3386,7 @@ KTUtil.onDOMContentLoaded(function () {
       });
 
       if (defaultLocation) {
-          setSingleCandidateLocation(defaultLocation);
+          setSingleCandidateLocation(defaultLocation, true);
           tagifylocation.dropdown.hide();
       }
   }
