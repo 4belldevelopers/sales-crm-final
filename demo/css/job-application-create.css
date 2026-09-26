@@ -3897,11 +3897,11 @@
     color: #5f35bd !important;
 }
 
-/* Keep every form-card header identical to the Professional Profile reference. */
+/* Keep every form-card header on the compact 60px candidate-form baseline. */
 .job-candidate-create .candidate-card > .candidate-card-header {
     box-sizing: border-box;
-    min-height: 82px !important;
-    padding: 14px 20px !important;
+    min-height: 60px !important;
+    padding: 9px 20px !important;
     border-bottom: 1px solid #f5e3a0 !important;
     background: #fffbed !important;
 }
@@ -3923,6 +3923,18 @@
     color: #071434 !important;
     background: #ffca0a !important;
     box-shadow: 0 5px 12px rgba(214, 158, 0, .16) !important;
+}
+
+.job-candidate-create .resume-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .summary-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .candidate-profile-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .primary-skills-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .experience-details-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .job-skills-card > .candidate-card-header .candidate-card-icon {
+    flex: 0 0 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
 }
 
 .job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon i {
