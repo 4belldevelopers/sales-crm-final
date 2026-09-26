@@ -2996,6 +2996,7 @@
 
 .job-candidate-create .candidate-primary-skill-combobox {
     position: relative;
+    z-index: 1;
 }
 
 .job-candidate-create .candidate-primary-skill-entry {
@@ -3010,9 +3011,21 @@
     background: #fff;
 }
 
+.job-candidate-create .candidate-primary-skill-entry:focus-within {
+    border-color: #e6b400;
+    box-shadow: 0 0 0 3px rgba(255, 202, 10, .14);
+}
+
 .job-candidate-create .candidate-primary-skill-entry > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
     color: #465575 !important;
     font-size: 15px !important;
+    line-height: 1 !important;
+    pointer-events: none;
 }
 
 .job-candidate-create .candidate-primary-skill-entry > input {
@@ -3020,10 +3033,21 @@
     height: 38px;
     padding: 0 !important;
     border: 0 !important;
-    outline: 0;
+    border-radius: 0 !important;
+    outline: 0 !important;
     color: #071434;
     background: transparent !important;
+    box-shadow: none !important;
     font-size: 12px;
+}
+
+.job-candidate-create .candidate-primary-skill-entry > input:hover,
+.job-candidate-create .candidate-primary-skill-entry > input:focus,
+.job-candidate-create .candidate-primary-skill-entry > input:active {
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .job-candidate-create .candidate-primary-skill-divider {
@@ -3066,6 +3090,16 @@
     border-radius: 7px;
     background: #fff;
     box-shadow: 0 12px 30px rgba(21, 35, 72, .14);
+}
+
+.job-candidate-create .primary-skills-card.has-open-skill-suggestions {
+    position: relative;
+    z-index: 100;
+    overflow: visible !important;
+}
+
+.job-candidate-create .primary-skills-card.has-open-skill-suggestions .candidate-primary-skill-combobox {
+    z-index: 101;
 }
 
 .job-candidate-create .candidate-primary-skill-suggestions[hidden] {
