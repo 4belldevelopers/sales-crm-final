@@ -1167,7 +1167,7 @@
                   <div class="ai candidate-slot candidate-slot--one">
                     <div class="candidate-slot-head">
                       <span class="candidate-slot-number">1</span>
-                      <span><strong>Date and Time (Slot-1)</strong><small>Select the first preferred interview window.</small></span>
+                      <strong class="candidate-slot-title">Slot 1</strong>
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
@@ -1179,7 +1179,7 @@
                   <div class="ai candidate-slot candidate-slot--two">
                     <div class="candidate-slot-head">
                       <span class="candidate-slot-number">2</span>
-                      <span><strong>Date and Time (Slot-2)</strong><small>Select the second preferred interview window.</small></span>
+                      <strong class="candidate-slot-title">Slot 2</strong>
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
@@ -1191,7 +1191,7 @@
                   <div class="ai candidate-slot candidate-slot--three">
                     <div class="candidate-slot-head">
                       <span class="candidate-slot-number">3</span>
-                      <span><strong>Date and Time (Slot-3)</strong><small>Select the third preferred interview window.</small></span>
+                      <strong class="candidate-slot-title">Slot 3</strong>
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span>Date <b>*</b></span><span class="candidate-slot-control"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
