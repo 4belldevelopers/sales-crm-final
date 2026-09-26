@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926" rel="stylesheet" type="text/css" />
 
 @endpush
 
@@ -315,16 +315,6 @@
                                 </div>
 
                                 <div class="up-details-card">
-                                    <div class="up-details-head">
-                                        <span class="up-details-head-icon">
-                                            <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
-                                        </span>
-                                        <div>
-                                            <h4 class="up-details-title">Resume Details</h4>
-                                            <div class="up-details-subtitle">Information extracted from the uploaded resume.</div>
-                                        </div>
-                                    </div>
-
                                     <div class="up-details-grid">
                                         <div class="up-detail-tile">
                                             <span class="up-detail-icon">
@@ -361,11 +351,6 @@
                                                 <div class="up-detail-lbl">File Size</div>
                                                 <div class="up-detail-val" id="upDetailFileSize">&mdash;</div>
                                             </div>
-                                        </div>
-                                        <div class="up-detail-tile" id="upRetryWrap" style="display:none">
-                                            <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">
-                                                Retry Parse
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1784,55 +1769,6 @@ $(document).ready(function () {
     $(document).on('click', '.up-info-banner-close', function (e) {
         e.preventDefault();
         $(this).closest('.up-info-banner').slideUp(180);
-    });
-
-    // Retry parse — re-runs client-side parsing without re-uploading or server requests
-    $(document).on('click', '#upRetryBtn', function (e) {
-        e.preventDefault();
-        var file = (window.JeroClientParser && window.JeroClientParser.getActiveFile())
-            || (window.__upLoc && window.__upLoc.file)
-            || (resumeInput && resumeInput.files && resumeInput.files[0]);
-        if (!file || !window.JeroClientParser) return;
-
-        $('#upDetailParserStatus').html(
-            '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
-            '<span>Retrying client parse&hellip;</span>'
-        );
-        $('#upRetryWrap').hide();
-
-        var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
-        var reqSkills = [];
-        if (typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
-            reqSkills = candidateRequiredSkills.map(function (s) { return s.name; });
-        }
-
-        window._clientParserState = 'parsing';
-
-        window.JeroClientParser.parseAndPopulate(file, {
-            isEditMode: isEditMode,
-            requiredSkills: reqSkills,
-            onProgress: function (stage, pct) {
-                $('#upDetailParserStatus').html(
-                    '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
-                    '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
-                );
-            },
-            onSuccess: function (result, totalMs) {
-                window._clientParserState = 'completed';
-                $('#upDetailParserStatus').html(
-                    '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
-                );
-                toastr.success('Resume parsed successfully (Client-Side)!');
-            },
-            onError: function () {
-                window._clientParserState = 'error';
-                $('#upDetailParserStatus').html(
-                    '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
-                );
-                $('#upRetryWrap').show();
-                toastr.info('Resume parsing unavailable. Please enter candidate details manually.');
-            }
-        });
     });
 
     // ==========================
