@@ -328,42 +328,18 @@
                 }
             }
 
-            // 5. Phase 7: Location Population via Canonical Tagify Bridge
-            if (cand.location) {
-                var locStr = '';
-                if (typeof cand.location === 'string') {
-                    locStr = cand.location.trim();
-                } else if (typeof cand.location === 'object') {
-                    var locParts = [cand.location.city, cand.location.state, cand.location.country].filter(Boolean);
-                    locStr = locParts.join(' | ');
-                }
-
-                if (locStr) {
-                    if (typeof window.setSingleCandidateLocation === 'function') {
-                        window.setSingleCandidateLocation(locStr);
-                    } else {
-                        var locInput = document.querySelector('#kt_tagify_work_location');
-                        var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
-                        if (tagifyLoc && typeof tagifyLoc.addTags === 'function') {
-                            try {
-                                tagifyLoc.removeAllTags();
-                                if (tagifyLoc.settings && Array.isArray(tagifyLoc.settings.whitelist)) {
-                                    if (tagifyLoc.settings.whitelist.indexOf(locStr) === -1) {
-                                        tagifyLoc.settings.whitelist.unshift(locStr);
-                                    }
-                                }
-                                tagifyLoc.addTags([locStr]);
-                                if (tagifyLoc.dropdown && typeof tagifyLoc.dropdown.hide === 'function') {
-                                    tagifyLoc.dropdown.hide();
-                                }
-                            } catch (locErr) {
-                                console.warn('[JeroCandidateFormBridge] Tagify location error, using fallback:', locErr);
-                                setVal('#kt_tagify_work_location', locStr);
-                            }
-                        } else {
-                            setVal('#kt_tagify_work_location', locStr);
-                        }
-                    }
+            // 5. Phase 7: Authoritative City Population via Tagify Bridge
+            // Requirement: Only display the city if it matches an authoritative system city; otherwise remain blank.
+            var parsedLocData = cand.location || cand.city || (result && (result.location || result.city));
+            if (typeof window.resolveAndSetCandidateLocation === 'function') {
+                window.resolveAndSetCandidateLocation(parsedLocData);
+            } else if (typeof window.setSingleCandidateLocation === 'function') {
+                window.setSingleCandidateLocation(parsedLocData);
+            } else {
+                var locInput = document.querySelector('#kt_tagify_work_location');
+                var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
+                if (tagifyLoc && typeof tagifyLoc.removeAllTags === 'function') {
+                    tagifyLoc.removeAllTags();
                 }
             }
 
