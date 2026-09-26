@@ -493,45 +493,46 @@
             return Promise.reject(missingFileErr);
         }
 
-        // [PARSER 2] File snapshot created (clean reference to avoid detachment)
-        var selectedFile = file;
-        try {
-            if (typeof File === 'function' && file instanceof File) {
-                selectedFile = new File([file], file.name, {
-                    type: file.type || 'application/pdf',
-                    lastModified: file.lastModified || Date.now()
-                });
-            }
-        } catch (_) {
-            selectedFile = file;
-        }
-        console.log('[PARSER 2] File snapshot created');
-
         var startTime = performance.now();
         onProgress('Initializing parser...', 5);
 
-        return loadParserModule()
-            .then(function (mod) {
-                var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
-                if (typeof parseResumeFn !== 'function') {
-                    throw new Error('parseResume function not available on module');
+        // [PARSER 2] Fully detached in-memory buffer snapshot
+        return (async function () {
+            var selectedFile = file;
+            try {
+                if (typeof file.arrayBuffer === 'function') {
+                    var rawBuf = await file.arrayBuffer();
+                    selectedFile = new Blob([rawBuf], { type: file.type || 'application/pdf' });
+                    selectedFile.name = file.name;
+                    selectedFile.lastModified = file.lastModified || Date.now();
+                    console.log('[PARSER 2] In-memory buffer snapshot created (' + rawBuf.byteLength + ' bytes)');
                 }
+            } catch (snapErr) {
+                console.warn('[PARSER 2] Buffer snapshot fallback:', snapErr);
+                selectedFile = file;
+            }
 
-                // [PARSER 6] Parsing started
-                console.log('[PARSER] file name:', selectedFile.name);
-                console.log('[PARSER] file type:', selectedFile.type);
-                console.log('[PARSER] file size:', selectedFile.size);
-                console.log('[PARSER 6] Parsing started');
-                console.log('[PARSER] parse started');
-                onProgress('Parsing resume in browser...', 15);
+            var mod = await loadParserModule();
+            var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
+            if (typeof parseResumeFn !== 'function') {
+                throw new Error('parseResume function not available on module');
+            }
 
-                return parseResumeFn(selectedFile, {
-                    requiredSkills: requiredSkills,
-                    onProgress: function (stage, pct) {
-                        onProgress(stage, pct);
-                    }
-                });
-            })
+            // [PARSER 6] Parsing started
+            console.log('[PARSER] file name:', selectedFile.name);
+            console.log('[PARSER] file type:', selectedFile.type);
+            console.log('[PARSER] file size:', selectedFile.size);
+            console.log('[PARSER 6] Parsing started');
+            console.log('[PARSER] parse started');
+            onProgress('Parsing resume in browser...', 15);
+
+            return parseResumeFn(selectedFile, {
+                requiredSkills: requiredSkills,
+                onProgress: function (stage, pct) {
+                    onProgress(stage, pct);
+                }
+            });
+        })()
             .then(function (result) {
                 var totalMs = Math.round(performance.now() - startTime);
 
