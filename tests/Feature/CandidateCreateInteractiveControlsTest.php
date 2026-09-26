@@ -16,10 +16,10 @@ class CandidateCreateInteractiveControlsTest extends TestCase
 
         $this->assertStringContainsString("document.querySelector('#kt_tagify_2')", $form);
         $this->assertStringContainsString('/skill-suggestions', $form);
-        $this->assertStringContainsString('tagifyskill.dropdown.show(query)', $form);
-        $this->assertStringContainsString('var parsedSkills = Array.isArray(response.skills)', $form);
-        $this->assertStringContainsString("String(response.skills || '').split(',')", $form);
-        $this->assertStringContainsString('tagifyskill.addTags(parsedSkills)', $form);
+        $this->assertStringContainsString('fetchCandidateSkillSuggestions', $form);
+        $this->assertStringContainsString('renderCandidateSkillSuggestions', $form);
+        $this->assertStringContainsString('addCandidatePrimarySkill', $form);
+        $this->assertStringContainsString('tagifyskill.addTags', $form);
         $this->assertStringNotContainsString('$.noConflict();', $form);
         $this->assertStringNotContainsString('}else if(cvalue ==2)', $form);
     }
@@ -38,7 +38,7 @@ class CandidateCreateInteractiveControlsTest extends TestCase
         $this->assertStringContainsString('tagifylocation.dropdown.show(query)', $form);
         $this->assertStringContainsString('initialLocations.push(defaultLocation)', $form);
         $this->assertStringContainsString('tagifylocation.settings.whitelist.unshift(normalizedValue)', $form);
-        $this->assertStringContainsString('setSingleCandidateLocation(response.country)', $form);
+        $this->assertStringContainsString('resolveAndSetCandidateLocation', $form);
         $this->assertStringContainsString('.candidate-location-tagify.tagify--hasMaxTags .tagify__input', $css);
         $this->assertStringContainsString('.tagify__dropdown.candidate-location-dropdown', $css);
     }

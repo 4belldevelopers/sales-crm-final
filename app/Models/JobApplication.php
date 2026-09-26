@@ -49,6 +49,11 @@ class JobApplication extends Model
     {
         return $this->morphOne(Document::class, 'documentable')->where('name', 'Resume');
     }
+
+    public function resumeAsset()
+    {
+        return $this->belongsTo(ResumeAsset::class, 'current_resume_id');
+    }
 	
     public function routeNotificationForNexmo($notification)
     {

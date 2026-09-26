@@ -179,6 +179,11 @@
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            {{-- V4 Remediation hidden fields --}}
+            <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
+            <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
+            <input type="hidden" name="resume_version" id="resume_version" value="{{ (int)(@$application->resume_version ?? 1) }}">
+            <input type="hidden" name="resume_intent" id="resume_intent" value="{{ (!empty($application->resume) || !empty($application->current_resume_id)) ? 'KEEP' : 'NONE' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
             <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
@@ -1379,12 +1384,23 @@ $(document).ready(function () {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // Build a unique contextKey for this company + job + application context
+    // Tab-scoped instance ID ensures multiple open tabs never collide or clear each other's upload sessions
+    window.__tabInstanceId = window.__tabInstanceId || (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('tab_' + Math.random().toString(36).slice(2) + Date.now()));
+
+    // Generate submission & update UUIDs on page load if not already set
+    if (!$('#client_submission_uuid').val()) {
+        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+    }
+    if (!$('#client_update_uuid').val()) {
+        $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
+    }
+
+    // Build a unique contextKey for this company + job + application + tab context
     function getUpContextKey() {
         var companyId = @json(auth()->user()->company_id ?? 0);
         var jobId = $('#job_id').val() || '0';
         var appId = $('#appId').val() || '0';
-        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId + '_tab' + window.__tabInstanceId;
     }
 
     /**
@@ -1468,6 +1484,7 @@ $(document).ready(function () {
         $('#fileInfo').css('display', 'flex');
 
         $('#resumeCheck').val('1');
+        $('#resume_intent').val('ATTACH_IF_AVAILABLE');
 
         $('.download-file').addClass('d-none');
 
@@ -1584,6 +1601,10 @@ $(document).ready(function () {
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
+        // Race condition 3 defense: abort any in-flight WASM client parsing
+        if (window.JeroClientParser && typeof window.JeroClientParser.cancelActiveParse === 'function') {
+            window.JeroClientParser.cancelActiveParse();
+        }
         window._clientParserState = null;
         window._currentActiveResumeFile = null;
         $('#resume_session_uuid').val('');
@@ -1596,6 +1617,8 @@ $(document).ready(function () {
         $('#fileName').text('');
         $('#resume').val('');
         $('#resumeCheck').val('');
+        var isEdit = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
+        $('#resume_intent').val(isEdit ? 'REMOVE' : 'NONE');
         $('.download-file').addClass('d-none');
         window.__upLoc = null;
     }
@@ -1821,21 +1844,10 @@ $(document).ready(function () {
     // Remove File
     // ==========================
     $(document).on('click', '#removeFile', function (e) {
-
         e.preventDefault();
         e.stopPropagation();
-
-        if (typeof resetProgress === 'function') {
-            resetProgress();
-        }
-
-        $('#resume').val('');
-        $('#resumeCheck').val('');
-
-        $('#fileName').text('');
-        $('#fileInfo').hide();
-
-        $('.download-file').addClass('d-none');
+        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        backToDropzone();
     });
 
     // ==========================
@@ -2499,135 +2511,143 @@ async function isInternetAvailable() {
 
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
-                  $("#update-form").prop("disabled", true);
-                  $("#update-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
+                    if (!navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        return;
+                    }
+                    $("#update-form").prop("disabled", true);
+                    $("#update-form").html(
+                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                    );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
-                    setTimeout(function () {
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#update-form").prop("disabled", false).html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                        CKEDITOR.instances['recruiter_note'].updateElement();
+                    }
+
+                    // Ensure unique client_update_uuid for idempotency
+                    if (!$('#client_update_uuid').val()) {
+                        $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
+                    }
+
+                    var formData = new FormData($('#createForm')[0]);
+                    var candidateEditId = '{{ @$application->id ?: @$appId }}';
+                    $.ajax({
+                        url         : '{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}',
+                        type        : 'POST',
+                        data        : formData,
+                        processData : false,
+                        contentType : false,
+                        redirect    : true,
+                        success     : function (response) {
+                            $("#update-form").prop("disabled", false);
+                            if (response.status == 'mailcheck') {
+                                if (!navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    return;
+                                }
+                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                                Swal.fire("Warning", response.message , "warning");
+                                return false;
+                            }
+                            if (response.status == 'notauthorized') {
+                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Not Authorized", response.message, "warning");
+                                return false;
+                            }
+
+                            if (response.status !== 'success') {
+                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Update Failed", response.message || "The candidate could not be updated. Please try again.", "error");
+                                return false;
+                            }
+
+                            if (typeof response.url !== 'string' || response.url.trim() === '') {
+                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Update Saved", "The candidate was updated, but the return page could not be opened. Please return to the candidate tracker.", "warning");
+                                return false;
+                            }
+
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
-                            return;
-                        }
+                            Swal.fire({
+                                text: "You have successfully updated",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, got it!",
+                                customClass: {
+                                    confirmButton: "btn btn-primary"
+                                }
+                            }).then(function (result) {
+                                if (result.isConfirmed) {
+                                    var emailField = form.querySelector('[name="email1"]');
+                                    var passwordField = form.querySelector('[name="password1"]');
+                                    if (emailField) emailField.value = "";
+                                    if (passwordField) passwordField.value = "";
+                                    window.location.assign(response.url);
+                                }
+                            });
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            $("#update-form").prop("disabled", false);
+                            $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                            if (xhr.status === 0 || !navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                return;
+                            }
+                            console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
+                            var serverMsg = '';
+                            try {
+                                var body = xhr.responseText || '';
+                                var jsonStart = body.indexOf('{');
+                                if (jsonStart >= 0) {
+                                    var parsed = JSON.parse(body.substring(jsonStart));
+                                    serverMsg = parsed.message || parsed.error || '';
+                                }
+                            } catch (e) {}
 
-												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-                                                    CKEDITOR.instances['recruiter_note'].updateElement();
-                                                }
-												var formData = new FormData($('#createForm')[0]);
-												var candidateEditId = '{{ @$application->id ?: @$appId }}';
-												$.ajax({
-													url				: '{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}',
-														   type 			: 'POST',
-														   data 			: formData,
-														   processData		: false,  	// tell jQuery not to process the data
-														   contentType		: false,  	// tell jQuery not to set contentType
-														   redirect			: true,
-														   success			: function (response) {
-
-                                 $("#update-form").prop("disabled", false);
-                                if(response.status == 'mailcheck'){
-                                    if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
-                                        submitButton.removeAttribute('data-kt-indicator');
-                                        submitButton.disabled = false;
-                                        return;
+                            if (xhr.status === 409) {
+                                Swal.fire({
+                                    title: "Conflict Detected",
+                                    text: serverMsg || "This candidate was modified in another session (or a concurrent update is currently processing). Please refresh the page.",
+                                    icon: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonText: "Refresh Page",
+                                    cancelButtonText: "Stay Here"
+                                }).then(function (res) {
+                                    if (res.isConfirmed) {
+                                        window.location.reload();
                                     }
-                                   $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
-																	});
-                                   return false;
-                                }
-                                if(response.status == 'notauthorized'){
-                                   $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                   submitButton.removeAttribute('data-kt-indicator');
-                                   submitButton.disabled = false;
-                                   Swal.fire("Not Authorized", response.message, "warning");
-                                   return false;
-                                }
+                                });
+                                return;
+                            }
 
-                                if (response.status !== 'success') {
-                                    $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire("Update Failed", response.message || "The candidate could not be updated. Please try again.", "error");
-                                    return false;
-                                }
-
-                                if (typeof response.url !== 'string' || response.url.trim() === '') {
-                                    $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire("Update Saved", "The candidate was updated, but the return page could not be opened. Please return to the candidate tracker.", "warning");
-                                    return false;
-                                }
-
-
-submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                    Swal.fire({
-                                text				: "You have successfully updated",
-                                icon				: "success",
-                                buttonsStyling		: false,
-                                confirmButtonText	: "Ok, got it!",
-                                customClass			: {
-                                              confirmButton: "btn btn-primary"
-                                            }
-                                    }).then(function (result) {
-                                        if (result.isConfirmed) {
-                                            var emailField = form.querySelector('[name="email1"]');
-                                            var passwordField = form.querySelector('[name="password1"]');
-                                            if (emailField) emailField.value = "";
-                                            if (passwordField) passwordField.value = "";
-                                            window.location.assign(response.url);
-                                        }
-                                    });
-																			},
-															error			: function (xhr, textStatus, errorThrown) {
-                                                                            $("#update-form").prop("disabled", false);
-                                                                                            $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                                                            submitButton.removeAttribute('data-kt-indicator');
-                                                                            submitButton.disabled = false;
-                                                                            if (xhr.status === 0 || !navigator.onLine) {
-                                                                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                                                                return;
-                                                                            }
-                                                                            console.error('Update AJAX error:', textStatus, errorThrown, xhr.responseText);
-                                                                            // Try to extract a useful server-side message; fall back to the bare status.
-                                                                            var serverMsg = '';
-                                                                            try {
-                                                                                var body = xhr.responseText || '';
-                                                                                var jsonStart = body.indexOf('{');
-                                                                                if (jsonStart >= 0) {
-                                                                                    var parsed = JSON.parse(body.substring(jsonStart));
-                                                                                    serverMsg = parsed.message || parsed.error || '';
-                                                                                }
-                                                                            } catch (e) {}
-                                                                            var display = serverMsg
-                                                                                ? serverMsg
-                                                                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
-                                                                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
-																			},
-                                                            complete       : function () {
-                                                                            // Safety net: if the success handler didn't fire (e.g. session timeout, 5xx, or an exception
-                                                                            // thrown mid-redirect), make sure the button doesn't stay stuck on the spinner.
-                                                                            // We re-enable the button only if the page is still here (success handler that
-                                                                            // triggered window.location would have started navigation by now).
-                                                                            if ($("#update-form").length) {
-                                                                                $("#update-form").prop("disabled", false);
-                                                                                                  $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                                                                submitButton.removeAttribute('data-kt-indicator');
-                                                                                submitButton.disabled = false;
-                                                                            }
-																			}
-													});
-							
-                        
-                    }, 2000);
+                            var display = serverMsg
+                                ? serverMsg
+                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+                        },
+                        complete: function () {
+                            if ($("#update-form").length) {
+                                $("#update-form").prop("disabled", false);
+                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                            }
+                        }
+                    });
                 } 
 				else 
 				{
@@ -3006,8 +3026,17 @@ KTUtil.onDOMContentLoaded(function () {
           });
       }
 
+      var _candidateSkillCache = new Map();
       var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
           if (!candidatePrimarySkillQuickInput || candidatePrimarySkillQuickInput.value.trim() !== query) {
+              return;
+          }
+
+          var cacheKey = query.toLowerCase();
+          if (_candidateSkillCache.has(cacheKey)) {
+              var cached = _candidateSkillCache.get(cacheKey);
+              tagifyskill.settings.whitelist = cached;
+              renderCandidateSkillSuggestions(cached, 'idle', query);
               return;
           }
 
@@ -3022,6 +3051,7 @@ KTUtil.onDOMContentLoaded(function () {
                       return;
                   }
                   var suggestions = candidateNormalizeSuggestions(data);
+                  _candidateSkillCache.set(cacheKey, suggestions);
                   tagifyskill.settings.whitelist = suggestions;
                   renderCandidateSkillSuggestions(suggestions, 'idle', query);
               })
@@ -3154,6 +3184,26 @@ KTUtil.onDOMContentLoaded(function () {
           return String((tagifylocation.value[0] && tagifylocation.value[0].value) || '').trim();
       }
 
+      var _candidateLocationCache = new Map();
+      function getCandidateLocationSuggestions(term) {
+          var key = String(term || '').toLowerCase().trim();
+          if (!key) return Promise.resolve([]);
+          if (_candidateLocationCache.has(key)) {
+              return Promise.resolve(_candidateLocationCache.get(key));
+          }
+          return new Promise(function (resolve) {
+              window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: term })
+                  .done(function (data) {
+                      var norm = candidateNormalizeSuggestions(data);
+                      _candidateLocationCache.set(key, norm);
+                      resolve(norm);
+                  })
+                  .fail(function () {
+                      resolve([]);
+                  });
+          });
+      }
+
       function resolveAndSetCandidateLocation(rawInput) {
           candidateLocationSyncing = true;
           tagifylocation.removeAllTags();
@@ -3196,59 +3246,40 @@ KTUtil.onDOMContentLoaded(function () {
               }
           }
 
-          // 2. Query Elasticsearch /city-job-suggestions for candidate terms
+          // 2. Query Elasticsearch /city-job-suggestions for candidate terms (using in-memory cache)
           var primaryQuery = candidateTerms[0];
-          window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: primaryQuery })
-              .done(function (data) {
-                  var suggestions = candidateNormalizeSuggestions(data);
-                  var foundMatch = null;
+          getCandidateLocationSuggestions(primaryQuery).then(function (suggestions) {
+              var foundMatch = null;
+              for (var i = 0; i < candidateTerms.length; i++) {
+                  foundMatch = findAuthoritativeCityMatch(candidateTerms[i], suggestions);
+                  if (foundMatch) break;
+              }
 
-                  for (var i = 0; i < candidateTerms.length; i++) {
-                      foundMatch = findAuthoritativeCityMatch(candidateTerms[i], suggestions);
-                      if (foundMatch) break;
-                  }
+              if (!foundMatch && candidateTerms.length > 1) {
+                  var secondaryQuery = candidateTerms[1];
+                  getCandidateLocationSuggestions(secondaryQuery).then(function (suggestions2) {
+                      var match2 = findAuthoritativeCityMatch(secondaryQuery, suggestions2);
+                      if (match2) {
+                          applyVerifiedCity(match2);
+                      } else {
+                          candidateLocationSyncing = true;
+                          tagifylocation.removeAllTags();
+                          candidateLocationSyncing = false;
+                          updateCandidateLocationTagState();
+                      }
+                  });
+                  return;
+              }
 
-                  if (!foundMatch && candidateTerms.length > 1) {
-                      var secondaryQuery = candidateTerms[1];
-                      window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: secondaryQuery })
-                          .done(function (data2) {
-                              var suggestions2 = candidateNormalizeSuggestions(data2);
-                              var match2 = findAuthoritativeCityMatch(secondaryQuery, suggestions2);
-                              if (match2) {
-                                  applyVerifiedCity(match2);
-                              } else {
-                                  // No city matched: keep box completely blank
-                                  candidateLocationSyncing = true;
-                                  tagifylocation.removeAllTags();
-                                  candidateLocationSyncing = false;
-                                  updateCandidateLocationTagState();
-                              }
-                          })
-                          .fail(function () {
-                              candidateLocationSyncing = true;
-                              tagifylocation.removeAllTags();
-                              candidateLocationSyncing = false;
-                              updateCandidateLocationTagState();
-                          });
-                      return;
-                  }
-
-                  if (foundMatch) {
-                      applyVerifiedCity(foundMatch);
-                  } else {
-                      // No city matched: keep box completely blank
-                      candidateLocationSyncing = true;
-                      tagifylocation.removeAllTags();
-                      candidateLocationSyncing = false;
-                      updateCandidateLocationTagState();
-                  }
-              })
-              .fail(function () {
+              if (foundMatch) {
+                  applyVerifiedCity(foundMatch);
+              } else {
                   candidateLocationSyncing = true;
                   tagifylocation.removeAllTags();
                   candidateLocationSyncing = false;
                   updateCandidateLocationTagState();
-              });
+              }
+          });
 
           function applyVerifiedCity(verifiedCity) {
               if (tagifylocation.settings.whitelist.indexOf(verifiedCity) === -1) {
@@ -3295,6 +3326,20 @@ KTUtil.onDOMContentLoaded(function () {
               return;
           }
 
+          var cacheKey = query.toLowerCase();
+          if (_candidateLocationCache.has(cacheKey)) {
+              var cached = _candidateLocationCache.get(cacheKey);
+              var selectedLocation = currentCandidateLocation();
+              if (selectedLocation && cached.indexOf(selectedLocation) === -1) {
+                  cached = [selectedLocation].concat(cached);
+              }
+              tagifylocation.settings.whitelist = cached;
+              if (!selectedLocation) {
+                  tagifylocation.dropdown.show(query);
+              }
+              return;
+          }
+
           if (candidateLocationRequest && candidateLocationRequest.readyState !== 4) {
               candidateLocationRequest.abort();
           }
@@ -3306,6 +3351,7 @@ KTUtil.onDOMContentLoaded(function () {
                       return;
                   }
                   var suggestions = candidateNormalizeSuggestions(data);
+                  _candidateLocationCache.set(cacheKey, suggestions);
                   var selectedLocation = currentCandidateLocation();
                   if (selectedLocation && suggestions.indexOf(selectedLocation) === -1) {
                       suggestions.unshift(selectedLocation);
@@ -3808,117 +3854,121 @@ var KTAddCandidate = function () {
             }
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
-                  $("#save-form").prop("disabled", true);
-                  $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
+                    if (!navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        submitButton.disabled = false;
+                        return;
+                    }
+                    $("#save-form").prop("disabled", true);
+                    $("#save-form").html(
+                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                    );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
-                    setTimeout(function () {					
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
+
+                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
+                        CKEDITOR.instances['recruiter_note'].updateElement();
+                    }
+
+                    // Ensure unique client_submission_uuid for idempotency
+                    if (!$('#client_submission_uuid').val()) {
+                        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+                    }
+
+                    var formData = new FormData($('#createForm')[0]);
+                    $.ajax({
+                        url         : '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                        type        : 'POST',
+                        data        : formData,
+                        processData : false,
+                        contentType : false,
+                        redirect    : true,
+                        success     : function (response) {
+                            $("#save-form").prop("disabled", false);
+                            if (response.status == 'coinCheck') {
+                                Swal.fire("Success", response.message , "warning");
+                                return false;
+                            }
+                            if (response.status == 'mailcheck') {
+                                if (!navigator.onLine) {
+                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                    $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                    return;
+                                }
+
+                                $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
+                                Swal.fire("Warning", response.message , "warning");
+                                return false;
+                            }
+
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = true;
+                            Swal.fire({
+                                text: "You have successfully Submitted",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, got it!",
+                                customClass: {
+                                    confirmButton: "btn btn-primary"
+                                }
+                            }).then(function (result) {
+                                if (result.isConfirmed) {
+                                    var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
+                                    var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
+                                }
+                            });
+
+                            // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
+                            if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { window.ResumePresign.cancelUpload(); }
+
+                            // Rotate client_submission_uuid for any subsequent submission
+                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+
+                            if (response.url) {
+                                window.location.href = response.url;
+                            }
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            $("#save-form").prop("disabled", false);
+                            $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
-                            return;
-                        }
-					
-												if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-                                                    CKEDITOR.instances['recruiter_note'].updateElement();
-                                                }
-												var formData = new FormData($('#createForm')[0]);						
-												$.ajax({
-														   url 				: '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
-														   type 			: 'POST',
-														   data 			: formData,
-														   processData		: false,  	// tell jQuery not to process the data
-														   contentType		: false,  	// tell jQuery not to set contentType
-														   redirect			: true,
-														   success			: function (response) {
-                                $("#save-form").prop("disabled", false);
-                                if(response.status == 'coinCheck'){
-   																	Swal.fire("Success", response.message , "warning").then(function(){
-																		
-																	});	
-                                   return false;
+                            if (xhr.status === 0 || !navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                return;
+                            }
+                            console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
+                            var serverMsg = '';
+                            try {
+                                var body = xhr.responseText || '';
+                                var jsonStart = body.indexOf('{');
+                                if (jsonStart >= 0) {
+                                    var parsed = JSON.parse(body.substring(jsonStart));
+                                    serverMsg = parsed.message || parsed.error || '';
                                 }
-                                if(response.status == 'mailcheck'){
-                                    if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
-                                        submitButton.removeAttribute('data-kt-indicator');
-                                        submitButton.disabled = false;
-                                        return;
-                                    }
+                            } catch (e) {}
 
-                                   $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
-																	});
-                                   return false;
-                                }
+                            if (xhr.status === 409) {
+                                Swal.fire("Concurrent Submission", serverMsg || "This candidate submission is already being processed. Please wait a moment.", "warning");
+                                return;
+                            }
 
-                                  submitButton.removeAttribute('data-kt-indicator');
-                                  submitButton.disabled = true;
-                                  Swal.fire({
-                                  text				: "You have successfully Submitted",
-                                  icon				: "success",
-                                  buttonsStyling		: false,
-                                  confirmButtonText	: "Ok, got it!",
-                                  customClass			: {
-                                            confirmButton: "btn btn-primary"
-                                          }
-                                  }).then(function (result) {
-                                      if (result.isConfirmed) {
-                                          var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
-                                          var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
-                                      }
-                                  });
-                                  
-                                  // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
-                                  if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { window.ResumePresign.cancelUpload(); }
-                                  if (response.url) {
-                                      window.location.href = response.url;
-                                  }
-
-																			},
-															error			: function (xhr, textStatus, errorThrown) {
+                            var display = serverMsg
+                                ? serverMsg
+                                : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                            Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
+                        },
+                        complete: function () {
+                            if ($("#save-form").length) {
                                 $("#save-form").prop("disabled", false);
                                 $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;
-                                if (xhr.status === 0 || !navigator.onLine) {
-                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    return;
-                                }
-                                console.error('Save AJAX error:', textStatus, errorThrown, xhr.responseText);
-                                var serverMsg = '';
-                                try {
-                                    var body = xhr.responseText || '';
-                                    var jsonStart = body.indexOf('{');
-                                    if (jsonStart >= 0) {
-                                        var parsed = JSON.parse(body.substring(jsonStart));
-                                        serverMsg = parsed.message || parsed.error || '';
-                                    }
-                                } catch (e) {}
-                                var display = serverMsg
-                                    ? serverMsg
-                                    : (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
-                                Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
-																			},
-                                                            complete       : function () {
-                                                                        // Safety net: if the success handler didn't fire, make sure
-                                                                        // the button doesn't stay stuck on the spinner.
-                                                                        if ($("#save-form").length) {
-                                                                            $("#save-form").prop("disabled", false);
-                                                                                                  $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
-                                                                            submitButton.removeAttribute('data-kt-indicator');
-                                                                            submitButton.disabled = false;
-                                                                        }
-																			}
-													});
-							
-                  
-                    }, 2000);
+                            }
+                        }
+                    });
                 } 
 				else 
 				{

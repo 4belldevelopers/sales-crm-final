@@ -441,6 +441,33 @@ CREATE TABLE `candidate_job_skill_exp` (
   KEY `idx_cjse_job` (`job_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `candidate_outbox_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `candidate_outbox_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` int(10) unsigned NOT NULL,
+  `dedupe_key` varchar(191) NOT NULL,
+  `aggregate_type` varchar(50) NOT NULL DEFAULT 'Candidate',
+  `aggregate_id` bigint(20) unsigned NOT NULL,
+  `event_type` varchar(50) NOT NULL,
+  `event_version` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`)),
+  `status` enum('pending','processing','completed','failed') NOT NULL DEFAULT 'pending',
+  `retry_count` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `available_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `locked_at` timestamp NULL DEFAULT NULL,
+  `locked_by` varchar(100) DEFAULT NULL,
+  `lock_token` varchar(36) DEFAULT NULL,
+  `last_error` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_outbox_dedupe` (`dedupe_key`),
+  KEY `idx_outbox_claim` (`status`,`available_at`,`locked_at`),
+  KEY `idx_outbox_company_aggregate` (`company_id`,`aggregate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `candidate_skills_value`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -2077,6 +2104,9 @@ CREATE TABLE `job_applications` (
   `skills` varchar(255) DEFAULT NULL,
   `photo` varchar(191) DEFAULT NULL,
   `resume` text DEFAULT NULL,
+  `current_resume_id` bigint(20) unsigned DEFAULT NULL,
+  `resume_version` int(10) unsigned NOT NULL DEFAULT 1,
+  `client_submission_uuid` varchar(36) DEFAULT NULL,
   `rating` enum('1','2','3','4','5') DEFAULT NULL,
   `skype_id` varchar(191) DEFAULT NULL,
   `cover_letter` mediumtext DEFAULT NULL,
@@ -2175,7 +2205,9 @@ CREATE TABLE `job_applications` (
   KEY `idx_japp_email` (`company_id`,`email`(40)),
   KEY `idx_japp_phone` (`company_id`,`phone`(20)),
   KEY `idx_thirdparty_created` (`thirdparty_company_id`,`created_at`),
-  KEY `idx_company_created` (`company_id`,`created_at`)
+  KEY `idx_company_created` (`company_id`,`created_at`),
+  KEY `idx_job_app_current_resume` (`current_resume_id`),
+  UNIQUE KEY `uq_company_submission_uuid` (`company_id`,`client_submission_uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `job_assign`;
@@ -3799,6 +3831,32 @@ CREATE TABLE `recruiter_note_master` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_rnm_company` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `resume_assets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `resume_assets` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `company_id` int(10) unsigned NOT NULL,
+  `candidate_id` int(10) unsigned DEFAULT NULL,
+  `upload_session_id` varchar(64) DEFAULT NULL,
+  `object_key` varchar(500) NOT NULL,
+  `original_filename` varchar(255) NOT NULL,
+  `mime_type` varchar(100) NOT NULL,
+  `file_size` bigint(20) unsigned NOT NULL,
+  `checksum_sha256` char(64) DEFAULT NULL,
+  `version` int(10) unsigned NOT NULL DEFAULT 1,
+  `status` enum('ACTIVE','REMOVAL_PENDING','REMOVED','ORPHANED','CLEANUP_PENDING') NOT NULL DEFAULT 'ACTIVE',
+  `parser_status` enum('PARSED','FAILED','BYPASSED') NOT NULL DEFAULT 'BYPASSED',
+  `parser_version` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `attached_at` timestamp NULL DEFAULT NULL,
+  `removed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_resume_candidate` (`candidate_id`,`status`),
+  KEY `idx_resume_company_session` (`company_id`,`upload_session_id`),
+  KEY `idx_resume_cleanup` (`status`,`removed_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `role_has_permissions`;
