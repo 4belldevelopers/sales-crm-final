@@ -3783,7 +3783,7 @@
 
 .job-candidate-create .job-skills-card .sk {
     width: 100%;
-    min-width: 900px;
+    min-width: 980px;
     table-layout: fixed;
     margin: 0;
     border: 0;
@@ -3792,22 +3792,22 @@
 
 .job-candidate-create .job-skills-card .sk thead th:nth-child(1),
 .job-candidate-create .job-skills-card .sk tbody td:nth-child(1) {
-    width: 34%;
+    width: 28%;
 }
 
 .job-candidate-create .job-skills-card .sk thead th:nth-child(2),
 .job-candidate-create .job-skills-card .sk tbody td:nth-child(2) {
-    width: 22%;
+    width: 18%;
 }
 
 .job-candidate-create .job-skills-card .sk thead th:nth-child(3),
 .job-candidate-create .job-skills-card .sk tbody td:nth-child(3) {
-    width: 22%;
+    width: 18%;
 }
 
 .job-candidate-create .job-skills-card .sk thead th:nth-child(4),
 .job-candidate-create .job-skills-card .sk tbody td:nth-child(4) {
-    width: 22%;
+    width: 36%;
 }
 
 .job-candidate-create .job-skills-card .sk thead th {
@@ -3818,6 +3818,7 @@
     background: #f6f8fc;
     font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .job-candidate-create .job-skills-card .sk tbody td {
@@ -3878,7 +3879,7 @@
     align-items: center;
     height: 40px !important;
     min-height: 40px;
-    padding: 0 34px 0 11px !important;
+    padding: 0 30px 0 11px !important;
     box-sizing: border-box !important;
 }
 
@@ -3892,8 +3893,8 @@
 .candidate-rating-option {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 8px;
     width: 100%;
     min-width: 0;
 }
@@ -3901,19 +3902,20 @@
 .candidate-rating-stars {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     flex: 0 0 auto;
 }
 
 .candidate-rating-star {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     overflow: visible;
     color: #aeb8cb;
     fill: transparent;
     stroke: currentColor;
     stroke-linejoin: round;
     stroke-width: 1.8;
+    flex-shrink: 0;
 }
 
 .candidate-rating-star.is-filled {
@@ -3923,20 +3925,21 @@
 }
 
 .candidate-rating-value {
-    overflow: hidden;
     color: #b78300;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    text-overflow: ellipsis;
     white-space: nowrap;
+    overflow: visible;
+    flex-shrink: 0;
 }
 
 .candidate-rating-placeholder {
-    overflow: hidden;
     color: #8790a6;
-    font-size: 11px;
-    text-overflow: ellipsis;
+    font-size: 12px;
+    font-weight: 500;
     white-space: nowrap;
+    overflow: visible;
+    flex-shrink: 0;
 }
 
 .candidate-rating-dropdown .select2-results__option {
