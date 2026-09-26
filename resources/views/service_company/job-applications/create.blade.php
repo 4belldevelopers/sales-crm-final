@@ -1970,14 +1970,23 @@ $(document).ready(function () {
                 s.classList.add('a');
             });
         });
-        // char counters
+        // char / word counters
         document.querySelectorAll('textarea').forEach((t) => {
-            const c = t.parentElement.querySelector('.cc');
+            const c = t.parentElement ? t.parentElement.querySelector('.cc') : null;
             if (c) {
-                const m = c.textContent.includes('1000') ? 1000 : 500;
-                t.addEventListener('input', () => {
-                    c.textContent = t.value.length + ' / ' + m;
-                });
+                if (t.id === 'careersummary') {
+                    const updateCsCount = () => {
+                        const words = t.value.trim().split(/\s+/).filter(Boolean);
+                        c.textContent = words.length + ' / 100';
+                    };
+                    t.addEventListener('input', updateCsCount);
+                    updateCsCount();
+                } else {
+                    const m = c.textContent.includes('1000') ? 1000 : 500;
+                    t.addEventListener('input', () => {
+                        c.textContent = t.value.length + ' / ' + m;
+                    });
+                }
             }
         });
         // star ratings
@@ -3235,6 +3244,20 @@ KTUtil.onDOMContentLoaded(function () {
               setSingleCandidateLocation(selectedLocation);
           }
           tagifylocation.dropdown.hide();
+      });
+
+      tagifylocation.on('remove', function () {
+          candidateLocationLatestQuery = '';
+          if (candidateLocationRequest && candidateLocationRequest.readyState !== 4) {
+              candidateLocationRequest.abort();
+          }
+          candidateLocationRequestSequence++;
+          tagifylocation.dropdown.hide();
+          if (tagifylocation.DOM && tagifylocation.DOM.input) {
+              setTimeout(function () {
+                  tagifylocation.DOM.input.focus();
+              }, 50);
+          }
       });
 
       if (defaultLocation) {

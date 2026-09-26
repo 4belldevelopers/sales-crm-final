@@ -740,15 +740,23 @@
 
 /* Current Location is a searchable single-select, while preserving Tagify's JSON payload. */
 .job-candidate-create .candidate-field-control--location > .candidate-location-tagify {
+    position: relative;
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
     width: 100%;
     min-width: 0;
+    height: 40px;
     min-height: 40px;
-    padding: 3px 38px 3px 38px !important;
+    padding: 0 46px 0 40px !important;
     overflow: hidden;
-    cursor: text;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.job-candidate-create .candidate-field-control--location:focus-within > .candidate-location-tagify {
+    border-color: #2849a8;
+    box-shadow: 0 0 0 3px rgba(40, 73, 168, .12);
 }
 
 .job-candidate-create .candidate-field-control--location > .candidate-location-chevron {
@@ -760,6 +768,7 @@
     font-size: 10px;
     pointer-events: none;
     transition: color .16s ease, transform .16s ease;
+    z-index: 3;
 }
 
 .job-candidate-create .candidate-field-control--location:focus-within > .candidate-location-chevron {
@@ -771,18 +780,25 @@
     display: none !important;
 }
 
+/* Enterprise-level view: Remove pill/tag appearance, clean transparent single-select view */
 .job-candidate-create .candidate-location-tagify .tagify__tag {
     position: relative !important;
     top: auto !important;
     right: auto !important;
     bottom: auto !important;
-    display: inline-flex !important;
+    left: auto !important;
+    display: flex !important;
     align-items: center !important;
-    flex: 1 1 0;
+    flex: 1 1 auto;
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    margin: 0;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .job-candidate-create .candidate-location-tagify .tagify__tag > div {
@@ -792,20 +808,22 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    min-height: 30px;
-    padding: 5px 27px 5px 9px;
-    border-radius: 5px;
-    color: #2849a8;
-    background: #f3f6ff;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 20px;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 20px 0 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #071434 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 38px !important;
 }
 
 .job-candidate-create .candidate-location-tagify .tagify__tag > div::before {
-    border-radius: 5px !important;
-    background: #f3f6ff !important;
-    box-shadow: inset 0 0 0 1px #cbd7f4 !important;
+    display: none !important;
 }
 
 .job-candidate-create .candidate-location-tagify .tagify__tag-text {
@@ -815,30 +833,53 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: #071434 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
 }
 
+/* Clean circular remove button on the right */
 .job-candidate-create .candidate-location-tagify .tagify__tag__removeBtn {
     position: absolute !important;
-    right: 6px !important;
+    right: -14px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 17px;
-    height: 17px;
-    color: #536494;
-    background: transparent;
-    cursor: pointer;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 50% !important;
+    color: #8790a6 !important;
+    background: #eef2f8 !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    transition: color .15s ease, background-color .15s ease;
+    z-index: 4;
+}
+
+.job-candidate-create .candidate-location-tagify .tagify__tag__removeBtn:hover {
+    color: #fff !important;
+    background: #ea4335 !important;
 }
 
 .job-candidate-create .candidate-location-tagify .tagify__input {
     flex: 1 1 auto;
+    width: 100%;
     min-width: 120px;
+    height: 38px;
+    line-height: 38px;
     margin: 0;
-    padding: 5px 3px;
-    color: var(--jac-text);
+    padding: 0;
+    color: #071434;
     font-family: 'Poppins', sans-serif;
     font-size: 12px;
     font-weight: 500;
-    line-height: 20px;
     white-space: nowrap;
 }
 
@@ -3743,9 +3784,30 @@
 .job-candidate-create .job-skills-card .sk {
     width: 100%;
     min-width: 900px;
+    table-layout: fixed;
     margin: 0;
     border: 0;
     border-collapse: collapse;
+}
+
+.job-candidate-create .job-skills-card .sk thead th:nth-child(1),
+.job-candidate-create .job-skills-card .sk tbody td:nth-child(1) {
+    width: 34%;
+}
+
+.job-candidate-create .job-skills-card .sk thead th:nth-child(2),
+.job-candidate-create .job-skills-card .sk tbody td:nth-child(2) {
+    width: 22%;
+}
+
+.job-candidate-create .job-skills-card .sk thead th:nth-child(3),
+.job-candidate-create .job-skills-card .sk tbody td:nth-child(3) {
+    width: 22%;
+}
+
+.job-candidate-create .job-skills-card .sk thead th:nth-child(4),
+.job-candidate-create .job-skills-card .sk tbody td:nth-child(4) {
+    width: 22%;
 }
 
 .job-candidate-create .job-skills-card .sk thead th {
@@ -3769,14 +3831,16 @@
 }
 
 .job-candidate-create .candidate-job-skill-name {
-    display: block;
+    display: flex;
     align-items: center;
+    height: 42px;
     min-height: 42px;
     margin: 0;
     padding: 4px 12px;
     border: 1px solid #d4ddeb;
     border-radius: 7px;
     background: #fff;
+    box-sizing: border-box;
 }
 
 .job-candidate-create .candidate-job-skill-name > input[readonly] {
@@ -3792,25 +3856,37 @@
 }
 
 .job-candidate-create .job-skills-card .candidate-job-skill-select,
+.job-candidate-create .job-skills-card .candidate-rating-select + .select2-container {
+    width: 100% !important;
+}
+
+.job-candidate-create .job-skills-card .candidate-job-skill-select,
 .job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection--single {
+    width: 100% !important;
+    height: 42px !important;
     min-height: 42px !important;
     border: 1px solid #d4ddeb !important;
     border-radius: 7px !important;
     color: #071434 !important;
     background: #fff !important;
     font-size: 12px !important;
+    box-sizing: border-box !important;
 }
 
 .job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection__rendered {
     display: flex !important;
     align-items: center;
+    height: 40px !important;
     min-height: 40px;
     padding: 0 34px 0 11px !important;
+    box-sizing: border-box !important;
 }
 
 .job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection__arrow {
-    top: 8px !important;
-    right: 7px !important;
+    top: 7px !important;
+    right: 8px !important;
+    width: 18px !important;
+    height: 26px !important;
 }
 
 .candidate-rating-option {
