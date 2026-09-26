@@ -882,7 +882,7 @@
                       <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
                       <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
                     </div>
-                    <label class="candidate-salary-hike" for="percentage_hike"><strong>Hike Percentage</strong><span><input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" readonly aria-readonly="true" /><b>%</b></span><small>Calculated from annual salary.</small></label>
+                    <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
                     <div class="candidate-offer-field">
                       <strong>Offer in Hand</strong>
                       <div class="rg">
@@ -982,9 +982,9 @@
               </div>
               <div class="fsc candidate-card-body">
                 <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--remote"><i class="fa-solid fa-globe" aria-hidden="true"></i>Any Location</em></span></label>
-                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--hybrid"><i class="fa-solid fa-house" aria-hidden="true"></i>Flexible</em></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office</strong><small>Office location based work.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--office"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Office Location</em></span></label>
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -1032,7 +1032,7 @@
                             @endphp
 
                             <tr>
-                              <td><label class="candidate-job-skill-name"><i class="fa-solid fa-code" aria-hidden="true"></i><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
+                              <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
                               <td>
                                 <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val->id }}" name="YearskillId[{{ $skill_val->id }}]">
                                       <option value="0">Select Year</option>
@@ -4313,9 +4313,17 @@ $(function initializeCandidateSkillRatings() {
         stars.className = 'candidate-rating-stars';
 
         for (var index = 1; index <= 5; index++) {
-            var star = document.createElement('i');
-            star.className = index <= value ? 'fa-solid fa-star is-filled' : 'fa-regular fa-star';
+            var star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            var starPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            star.setAttribute('viewBox', '0 0 24 24');
+            star.setAttribute('focusable', 'false');
             star.setAttribute('aria-hidden', 'true');
+            star.classList.add('candidate-rating-star');
+            if (index <= value) {
+                star.classList.add('is-filled');
+            }
+            starPath.setAttribute('d', 'M12 2.75 14.84 8.5l6.35.92-4.59 4.48 1.08 6.32L12 17.23l-5.68 2.99 1.08-6.32-4.59-4.48 6.35-.92L12 2.75Z');
+            star.appendChild(starPath);
             stars.appendChild(star);
         }
 
