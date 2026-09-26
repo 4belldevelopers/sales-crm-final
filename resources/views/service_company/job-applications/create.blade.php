@@ -303,10 +303,6 @@
                                         </div>
                                     </div>
                                     <div class="up-file-actions">
-                                        <button type="button" class="up-btn up-btn-replace" id="upReplaceBtn">
-                                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-                                            <span>Replace</span>
-                                        </button>
                                         <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn">
                                             <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                                             <span>Remove</span>
@@ -1593,6 +1589,7 @@ $(document).ready(function () {
         $('#resume_session_uuid').val('');
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
+        $('.resume-card').removeClass('has-uploaded-resume');
         $('#upInfo').removeClass('show');
         $('#uploadBox').show();
         $('#fileInfo').hide();
@@ -1646,6 +1643,7 @@ $(document).ready(function () {
         // Hide the dropzone + file-info strip and show the new card.
         $('#uploadBox').hide();
         $('#fileInfo').hide();
+        $('.resume-card').addClass('has-uploaded-resume');
         $info.find('.up-info-banner').show();
         $info.addClass('show');
     }
@@ -1743,20 +1741,8 @@ $(document).ready(function () {
         upXhr.send(file); // raw bytes → php://input → R2, zero local temp
     }
 
-    // Replace / Remove buttons inside the post-upload Resume Information card.
-    // Replace = reset state and reopen the OS file picker.
-    // Remove  = reset state and stay on the empty dropzone.
-    // NOTE: `resumeInput.click()` MUST run synchronously inside this
-    // user-gesture handler. Wrapping it in setTimeout() / Promise
-    // .then() breaks the user-gesture chain and modern Chrome silently
-    // refuses to open the file picker for a programmatic .click().
-    $(document).on('click', '#upReplaceBtn', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        backToDropzone();
-        resumeInput.click();
-    });
-
+    // Remove button inside the post-upload Resume Information card.
+    // Remove = reset state and stay on the empty dropzone.
     $(document).on('click', '#upRemoveBtn', function (e) {
         e.preventDefault();
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
