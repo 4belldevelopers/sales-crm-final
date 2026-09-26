@@ -4054,15 +4054,74 @@
 }
 
 .job-candidate-create .resume-card > .candidate-card-header .candidate-card-icon,
-.job-candidate-create .summary-card > .candidate-card-header .candidate-card-icon,
-.job-candidate-create .candidate-profile-card > .candidate-card-header .candidate-card-icon,
-.job-candidate-create .primary-skills-card > .candidate-card-header .candidate-card-icon,
-.job-candidate-create .experience-details-card > .candidate-card-header .candidate-card-icon,
-.job-candidate-create .job-skills-card > .candidate-card-header .candidate-card-icon {
+.job-candidate-create .summary-card > .candidate-card-header .candidate-card-icon {
     flex: 0 0 40px !important;
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
+}
+
+/* Reference card harmonization: match Notice Period & Joining Details card exactly (70px header min-height, #fff background, 46px gold badge icon, 18px glyph). */
+.job-candidate-create .notice-joining-card .candidate-card-header,
+.job-candidate-create .candidate-profile-card > .candidate-card-header,
+.job-candidate-create .professional-profile-card > .candidate-card-header,
+.job-candidate-create .primary-skills-card > .candidate-card-header,
+.job-candidate-create .experience-details-card > .candidate-card-header,
+.job-candidate-create .job-skills-card > .candidate-card-header {
+    box-sizing: border-box;
+    min-height: 70px !important;
+    padding: 12px 20px !important;
+    border-bottom: 1px solid #f5e3a0 !important;
+    background: #fff !important;
+    display: flex;
+    align-items: center;
+}
+
+.job-candidate-create .primary-skills-card > .candidate-card-header {
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.job-candidate-create .notice-joining-card .aw-hero-icon,
+.job-candidate-create .candidate-profile-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .candidate-profile-card > .candidate-card-header .bd-hero-icon,
+.job-candidate-create .professional-profile-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .professional-profile-card > .candidate-card-header .pd-hero-icon,
+.job-candidate-create .primary-skills-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .primary-skills-card > .candidate-card-header .se-icon,
+.job-candidate-create .experience-details-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .experience-details-card > .candidate-card-header .pd-experience-hero-icon,
+.job-candidate-create .job-skills-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .job-skills-card > .candidate-card-header .se-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    flex: 0 0 46px !important;
+    flex-basis: 46px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    color: #111a3f !important;
+    background: #ffc400 !important;
+    box-shadow: 0 8px 18px rgba(255, 196, 0, .2) !important;
+}
+
+.job-candidate-create .notice-joining-card .aw-hero-icon i,
+.job-candidate-create .candidate-profile-card > .candidate-card-header .candidate-card-icon i,
+.job-candidate-create .professional-profile-card > .candidate-card-header .candidate-card-icon i,
+.job-candidate-create .primary-skills-card > .candidate-card-header .candidate-card-icon i,
+.job-candidate-create .experience-details-card > .candidate-card-header .candidate-card-icon i,
+.job-candidate-create .job-skills-card > .candidate-card-header .candidate-card-icon i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: #111a3f !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
 }
 
 .job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon i {
