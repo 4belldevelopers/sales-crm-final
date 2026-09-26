@@ -2763,10 +2763,10 @@ KTUtil.onDOMContentLoaded(function () {
   if (typeof window.Tagify === 'function' && candidateSkillInput) {
       tagifyskill = new window.Tagify(candidateSkillInput, {
           whitelist: [],
-          maxTags: 10,
+          maxTags: Infinity,
           duplicates: false,
           dropdown: {
-              maxItems: 20,
+              maxItems: 50,
               enabled: 1,
               closeOnSelect: true,
               highlightFirst: true
@@ -3142,6 +3142,11 @@ KTUtil.onDOMContentLoaded(function () {
       if (tagifylocation.DOM && tagifylocation.DOM.scope) {
           tagifylocation.DOM.scope.classList.add('candidate-location-tagify');
           tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
+          tagifylocation.DOM.scope.addEventListener('click', function (e) {
+              if (!e.target.closest('.tagify__tag__removeBtn')) {
+                  tagifylocation.dropdown.show('');
+              }
+          });
       }
 
       var candidateLocationSyncing = false;
