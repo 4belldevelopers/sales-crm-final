@@ -2725,6 +2725,7 @@ KTUtil.onDOMContentLoaded(function () {
       var candidatePrimarySkillQuickInput = document.querySelector('#candidatePrimarySkillInput');
       var candidatePrimarySkillAdd = document.querySelector('#candidatePrimarySkillAdd');
       var candidatePrimarySkillSuggestions = document.querySelector('#candidatePrimarySkillSuggestions');
+      var candidatePrimarySkillsCard = document.querySelector('.primary-skills-card');
       var candidatePrimarySkillChips = document.querySelector('#candidatePrimarySkillChips');
       var candidatePrimarySkillEmpty = document.querySelector('#candidatePrimarySkillEmpty');
       var candidateSkillMatch = document.querySelector('#candidateSkillMatch');
@@ -2791,6 +2792,9 @@ KTUtil.onDOMContentLoaded(function () {
 
           candidatePrimarySkillSuggestions.hidden = true;
           candidatePrimarySkillSuggestions.replaceChildren();
+          if (candidatePrimarySkillsCard) {
+              candidatePrimarySkillsCard.classList.remove('has-open-skill-suggestions');
+          }
           candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'false');
           candidatePrimarySkillQuickInput.removeAttribute('aria-activedescendant');
           candidateSkillSuggestionItems = [];
@@ -2873,6 +2877,9 @@ KTUtil.onDOMContentLoaded(function () {
           }
 
           candidatePrimarySkillSuggestions.hidden = false;
+          if (candidatePrimarySkillsCard) {
+              candidatePrimarySkillsCard.classList.add('has-open-skill-suggestions');
+          }
           candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'true');
       }
 
