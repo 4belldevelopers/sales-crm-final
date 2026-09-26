@@ -86,6 +86,7 @@
     letter-spacing: 0;
 }
 
+
 .job-candidate-create {
     background: #f7f9fc;
 }
@@ -2798,5 +2799,1092 @@
 @media (max-width: 680px) {
     .candidate-top-toolbar .candidate-toolbar-container {
         padding: 8px !important;
+    }
+}
+
+/* Candidate form repair: screenshot-aligned yellow cards, scoped to this page only. */
+.job-candidate-create .primary-skills-card,
+.job-candidate-create .experience-details-card,
+.job-candidate-create .professional-profile-card,
+.job-candidate-create .salary-card,
+.job-candidate-create .preferred-work-mode-card,
+.job-candidate-create .job-skills-card {
+    overflow: hidden;
+    border: 1px solid #efd36b !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    box-shadow: 0 8px 22px rgba(78, 65, 20, .07) !important;
+}
+
+.job-candidate-create .primary-skills-card > .candidate-card-header,
+.job-candidate-create .experience-details-card > .candidate-card-header,
+.job-candidate-create .professional-profile-card > .candidate-card-header,
+.job-candidate-create .salary-card > .candidate-card-header,
+.job-candidate-create .preferred-work-mode-card > .candidate-card-header,
+.job-candidate-create .job-skills-card > .candidate-card-header {
+    min-height: 82px;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f5e3a0 !important;
+    background: #fffbed !important;
+}
+
+.job-candidate-create .primary-skills-card .candidate-card-icon,
+.job-candidate-create .experience-details-card .candidate-card-icon,
+.job-candidate-create .professional-profile-card .candidate-card-icon,
+.job-candidate-create .salary-card .candidate-card-icon,
+.job-candidate-create .preferred-work-mode-card .candidate-card-icon,
+.job-candidate-create .job-skills-card .candidate-card-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
+    flex: 0 0 52px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: #ffca0a !important;
+    box-shadow: 0 5px 12px rgba(214, 158, 0, .16);
+}
+
+.job-candidate-create .primary-skills-card .candidate-card-icon i,
+.job-candidate-create .experience-details-card .candidate-card-icon i,
+.job-candidate-create .professional-profile-card .candidate-card-icon i,
+.job-candidate-create .salary-card .candidate-card-icon i,
+.job-candidate-create .preferred-work-mode-card .candidate-card-icon i,
+.job-candidate-create .job-skills-card .candidate-card-icon i {
+    color: #071434 !important;
+    font-size: 20px !important;
+}
+
+.job-candidate-create .primary-skills-card .candidate-card-title > span:last-child > strong,
+.job-candidate-create .experience-details-card .candidate-card-title > span:last-child > strong,
+.job-candidate-create .professional-profile-card .candidate-card-title > span:last-child > strong,
+.job-candidate-create .salary-card .candidate-card-title > span:last-child > strong,
+.job-candidate-create .preferred-work-mode-card .candidate-card-title > span:last-child > strong,
+.job-candidate-create .job-skills-card .candidate-card-title > span:last-child > strong {
+    color: #071434 !important;
+    font-size: 14px !important;
+    line-height: 1.35;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .primary-skills-card .candidate-card-title > span:last-child > small,
+.job-candidate-create .experience-details-card .candidate-card-title > span:last-child > small,
+.job-candidate-create .professional-profile-card .candidate-card-title > span:last-child > small,
+.job-candidate-create .salary-card .candidate-card-title > span:last-child > small,
+.job-candidate-create .preferred-work-mode-card .candidate-card-title > span:last-child > small,
+.job-candidate-create .job-skills-card .candidate-card-title > span:last-child > small {
+    margin-top: 3px;
+    color: #687493 !important;
+    font-size: 11px !important;
+    line-height: 1.45;
+    letter-spacing: 0;
+}
+
+/* Primary Skills and live job match. */
+.job-candidate-create .primary-skills-card > .candidate-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.job-candidate-create .candidate-skill-match {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 252px;
+    padding: 8px 12px;
+    border: 1px solid #caecd3;
+    border-radius: 8px;
+    background: #f0faf3;
+}
+
+.job-candidate-create .candidate-skill-match-ring {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 50%;
+    background: conic-gradient(#1ca347 var(--candidate-skill-match), #d8efde 0);
+    position: relative;
+}
+
+.job-candidate-create .candidate-skill-match-ring::after {
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: #fff;
+    content: '';
+}
+
+.job-candidate-create .candidate-skill-match-ring strong {
+    position: relative;
+    z-index: 1;
+    color: #126b32;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.job-candidate-create .candidate-skill-match.is-empty .candidate-skill-match-ring {
+    background: #e5e9f1;
+}
+
+.job-candidate-create .candidate-skill-match.is-empty .candidate-skill-match-ring strong {
+    color: #7b849a;
+}
+
+.job-candidate-create .candidate-skill-match-copy {
+    display: block;
+    min-width: 0;
+}
+
+.job-candidate-create .candidate-skill-match-copy > strong,
+.job-candidate-create .candidate-skill-match-copy > small {
+    display: block;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-skill-match-copy > strong {
+    color: #071434;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.job-candidate-create .candidate-skill-match-copy > small {
+    margin-top: 2px;
+    color: #64708f;
+    font-size: 10px;
+    line-height: 1.35;
+}
+
+.job-candidate-create .candidate-primary-skills-body {
+    padding: 16px 20px 18px !important;
+}
+
+.job-candidate-create .candidate-primary-skill-entry {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) 1px auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 50px;
+    padding: 5px 8px 5px 14px;
+    border: 1px solid #ced7e8;
+    border-radius: 7px;
+    background: #fff;
+}
+
+.job-candidate-create .candidate-primary-skill-entry > i {
+    color: #465575 !important;
+    font-size: 15px !important;
+}
+
+.job-candidate-create .candidate-primary-skill-entry > input {
+    min-width: 0;
+    height: 38px;
+    padding: 0 !important;
+    border: 0 !important;
+    outline: 0;
+    color: #071434;
+    background: transparent !important;
+    font-size: 12px;
+}
+
+.job-candidate-create .candidate-primary-skill-divider {
+    width: 1px;
+    height: 28px;
+    background: #dce2ed;
+}
+
+.job-candidate-create #candidatePrimarySkillAdd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 106px;
+    height: 38px;
+    padding: 0 17px;
+    border: 1px solid #f2bd00;
+    border-radius: 7px;
+    color: #071434;
+    background: #ffd128;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.job-candidate-create #candidatePrimarySkillAdd:hover,
+.job-candidate-create #candidatePrimarySkillAdd:focus-visible {
+    background: #ffc400;
+}
+
+.job-candidate-create .candidate-primary-skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.job-candidate-create .candidate-primary-skill-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 34px;
+    padding: 5px 7px 5px 12px;
+    border: 1px solid #f0ca42;
+    border-radius: 999px;
+    color: #071434;
+    background: #fff9df;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.job-candidate-create .candidate-primary-skill-chip button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 23px;
+    height: 23px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: #071434;
+    background: #ffefad;
+}
+
+.job-candidate-create .candidate-primary-skill-empty {
+    margin-top: 10px;
+    color: #8690a8;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-suggested-skills {
+    margin-top: 14px;
+    padding: 13px 15px;
+    border: 1px solid #e5eaf3;
+    border-radius: 8px;
+    background: #f8faff;
+}
+
+.job-candidate-create .candidate-suggested-skills-head,
+.job-candidate-create .candidate-suggested-skills-title {
+    display: flex;
+    align-items: center;
+}
+
+.job-candidate-create .candidate-suggested-skills-head {
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.job-candidate-create .candidate-suggested-skills-title {
+    gap: 10px;
+    min-width: 0;
+}
+
+.job-candidate-create .candidate-suggested-skills-title > i {
+    color: #071434 !important;
+    font-size: 16px !important;
+}
+
+.job-candidate-create .candidate-suggested-skills-title strong,
+.job-candidate-create .candidate-suggested-skills-title small {
+    display: block;
+}
+
+.job-candidate-create .candidate-suggested-skills-title strong {
+    color: #071434;
+    font-size: 12px;
+}
+
+.job-candidate-create .candidate-suggested-skills-title small {
+    margin-top: 2px;
+    color: #74809d;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-suggested-skills-count {
+    flex: 0 0 auto;
+    padding: 5px 9px;
+    border-radius: 999px;
+    color: #59637a;
+    background: #e9edf5;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.job-candidate-create .candidate-suggested-skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 11px;
+}
+
+.job-candidate-create .candidate-suggested-skill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 5px 8px 5px 11px;
+    border: 1px solid #d7deeb;
+    border-radius: 999px;
+    color: #071434;
+    background: #fff;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.job-candidate-create .candidate-suggested-skill i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: #071434 !important;
+    background: #f1f4fa;
+}
+
+.job-candidate-create .candidate-primary-skill-tagify-source,
+.job-candidate-create .candidate-primary-skills-source {
+    display: none !important;
+}
+
+/* Experience cards. */
+.job-candidate-create .experience-details-card .candidate-card-body {
+    padding: 16px 20px 18px !important;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr) minmax(270px, .98fr);
+    gap: 14px;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-panel,
+.job-candidate-create .experience-details-card .candidate-experience-tip {
+    min-height: 230px;
+    padding: 15px;
+    border: 1px solid #dbe3f0;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-height: 58px;
+    margin-bottom: 10px;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title > span:first-child,
+.job-candidate-create .experience-details-card .candidate-experience-tip > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 8px;
+    color: #0878db;
+    background: #dff2ff;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-panel--relevant .candidate-panel-title > span:first-child {
+    color: #7541df;
+    background: #eee6ff;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title > span:nth-child(2) {
+    display: block;
+    min-width: 0;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title strong,
+.job-candidate-create .experience-details-card .candidate-panel-title small {
+    display: block;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title strong {
+    color: #071434;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title strong em {
+    color: #f1414f;
+    font-style: normal;
+}
+
+.job-candidate-create .experience-details-card .candidate-panel-title small {
+    margin-top: 4px;
+    color: #687493;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-field {
+    display: block;
+    min-width: 0;
+    margin: 0;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-field > span {
+    display: block;
+    margin-bottom: 6px;
+    color: #071434;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-field select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #d2dbea !important;
+    border-radius: 7px !important;
+    color: #071434 !important;
+    background-color: #fff !important;
+    font-size: 11px !important;
+}
+
+.job-candidate-create .candidate-experience-note {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 48px;
+    margin-top: 13px;
+    padding: 9px 11px;
+    border-radius: 7px;
+    color: #65718f;
+    background: #f1f6ff;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.job-candidate-create .candidate-experience-note i {
+    color: #1678ef !important;
+    font-size: 16px !important;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+}
+
+.job-candidate-create .experience-details-card .candidate-experience-tip > span:first-child {
+    color: #fff;
+    background: #1abc91;
+}
+
+.job-candidate-create .candidate-experience-tip-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.job-candidate-create .candidate-experience-tip-copy > strong {
+    color: #071434;
+    font-size: 12px;
+}
+
+.job-candidate-create .candidate-experience-tip-copy > p {
+    margin: 3px 0 10px;
+    color: #687493;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.job-candidate-create .candidate-experience-examples {
+    padding: 10px 11px;
+    border-left: 3px solid #ffca0a;
+    border-radius: 6px;
+    background: #fffaf0;
+}
+
+.job-candidate-create .candidate-experience-examples > strong {
+    color: #071434;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-experience-examples ul {
+    margin: 6px 0 0;
+    padding-left: 15px;
+}
+
+.job-candidate-create .candidate-experience-examples li {
+    margin: 3px 0;
+    color: #687493;
+    font-size: 9px;
+    line-height: 1.4;
+}
+
+.job-candidate-create .candidate-experience-examples li::marker {
+    color: #efb600;
+}
+
+/* Professional profile. */
+.job-candidate-create .professional-profile-card .candidate-card-body {
+    padding: 16px 20px 18px !important;
+}
+
+.job-candidate-create .professional-profile-card .professional-profile-grid {
+    gap: 20px;
+}
+
+.job-candidate-create .professional-profile-card .candidate-field-control {
+    min-height: 46px;
+    border: 1px solid #d1daea !important;
+    border-radius: 7px !important;
+    background: #fff !important;
+}
+
+.job-candidate-create .professional-profile-card .candidate-field-control > i {
+    color: #697696 !important;
+    font-size: 15px !important;
+}
+
+.job-candidate-create .candidate-professional-help {
+    display: block;
+    margin-top: 6px;
+    color: #7a86a2;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+/* Salary details. */
+.job-candidate-create .salary-card .candidate-card-body {
+    padding: 16px 20px 18px !important;
+}
+
+.job-candidate-create .salary-card .candidate-salary-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, .98fr);
+    gap: 14px;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel {
+    overflow: hidden;
+    min-width: 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--current {
+    border: 1px solid #efd36b;
+    background: #fffef8;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--expected {
+    border: 1px solid #c9dff8;
+    background: #fbfdff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-summary {
+    border: 1px solid #bce7d5;
+    background: #fbfffd;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel-head {
+    margin: -12px -12px 12px;
+    padding: 10px 12px;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--current .candidate-salary-panel-head {
+    background: #fff8dc;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head {
+    background: #f0f7ff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-summary .candidate-salary-panel-head {
+    background: #effbf6;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel-head > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 7px;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--current .candidate-salary-panel-head > span {
+    color: #946b00;
+    background: #ffefad;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span {
+    color: #167ce5;
+    background: #dceeff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-summary .candidate-salary-panel-head > span {
+    color: #0b8b61;
+    background: #d9f5e9;
+}
+
+.job-candidate-create .salary-card .candidate-salary-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin-bottom: 12px;
+}
+
+.job-candidate-create .salary-card .candidate-salary-tabs button {
+    min-width: 0;
+    height: 36px;
+    border: 1px solid #d1d9e7;
+    border-radius: 0;
+    color: #59637f;
+    background: #f8f9fc;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.job-candidate-create .salary-card .candidate-salary-tabs button:first-child {
+    border-radius: 7px 0 0 7px;
+}
+
+.job-candidate-create .salary-card .candidate-salary-tabs button:last-child {
+    border-radius: 0 7px 7px 0;
+}
+
+.job-candidate-create .salary-card .candidate-salary-tabs button.is-active {
+    z-index: 1;
+    border-color: #eeb500;
+    color: #071434;
+    background: #fff0ac;
+}
+
+.job-candidate-create .candidate-salary-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    color: #687493;
+    background: #f0f6ff;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-salary-hint i {
+    color: #176ff2 !important;
+    font-size: 14px !important;
+}
+
+.job-candidate-create .salary-card .candidate-salary-auto {
+    margin-top: 12px;
+    border: 0;
+    border-radius: 7px;
+    background: #fffaf0;
+}
+
+.job-candidate-create .candidate-salary-summary-list {
+    border: 1px solid #cce9dd;
+    border-radius: 7px;
+    background: #f6fdf9;
+}
+
+.job-candidate-create .candidate-salary-hike {
+    display: block;
+    margin-top: 12px;
+}
+
+.job-candidate-create .candidate-salary-hike > strong,
+.job-candidate-create .candidate-salary-hike > small {
+    display: block;
+}
+
+.job-candidate-create .candidate-salary-hike > strong {
+    margin-bottom: 6px;
+    color: #071434;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-salary-hike > span {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    overflow: hidden;
+    min-height: 40px;
+    border: 1px solid #d2dbea;
+    border-radius: 7px;
+    background: #fff;
+}
+
+.job-candidate-create .candidate-salary-hike input {
+    width: 100%;
+    padding: 0 11px;
+    border: 0;
+    outline: 0;
+    color: #071434;
+    background: #fff;
+    font-size: 11px;
+}
+
+.job-candidate-create .candidate-salary-hike b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid #d2dbea;
+    color: #687493;
+    background: #f5f7fb;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-salary-hike > small {
+    margin-top: 5px;
+    color: #78839d;
+    font-size: 9px;
+}
+
+.job-candidate-create .salary-card .candidate-offer-field {
+    margin-top: 12px;
+    border-radius: 7px;
+    background: #f0f7ff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-comments {
+    margin-top: 14px;
+    border: 1px solid #d9e3ef;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.job-candidate-create .salary-card .candidate-salary-comments-head > span:first-child {
+    color: #7044df;
+    background: #eee7ff;
+}
+
+/* Preferred work mode. */
+.job-candidate-create .preferred-work-mode-card .candidate-card-body {
+    padding: 16px 20px 18px !important;
+}
+
+.job-candidate-create .preferred-work-mode-card .candidate-card-icon--work-mode {
+    color: #071434 !important;
+    background: #ffca0a !important;
+}
+
+.job-candidate-create .preferred-work-mode-card .candidate-work-mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.job-candidate-create .preferred-work-mode-card .candidate-work-mode-option {
+    align-items: center;
+    min-height: 120px;
+    padding: 15px 16px;
+    border: 1px solid #d5deec;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.job-candidate-create .preferred-work-mode-card .candidate-work-mode-option:has(input:checked) {
+    border-color: #efb600;
+    background: #fffdf3;
+    box-shadow: inset 0 0 0 1px #efb600;
+}
+
+.job-candidate-create .candidate-work-mode-copy {
+    display: block;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.job-candidate-create .candidate-work-mode-copy > strong,
+.job-candidate-create .candidate-work-mode-copy > small {
+    display: block;
+}
+
+.job-candidate-create .candidate-work-mode-copy > strong {
+    color: #071434;
+    font-size: 12px;
+}
+
+.job-candidate-create .candidate-work-mode-copy > small {
+    margin-top: 4px;
+    color: #687493;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.job-candidate-create .candidate-work-mode-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 27px;
+    margin-top: 9px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.job-candidate-create .candidate-work-mode-tag--remote {
+    color: #08785a;
+    background: #e5f8f1;
+}
+
+.job-candidate-create .candidate-work-mode-tag--hybrid {
+    color: #176bc6;
+    background: #eaf3ff;
+}
+
+.job-candidate-create .candidate-work-mode-tag--office {
+    color: #936a00;
+    background: #fff3c7;
+}
+
+/* Fixed job-skill rows and star-rating dropdown. */
+.job-candidate-create .job-skills-card .candidate-card-body {
+    padding: 14px 20px 16px !important;
+}
+
+.job-candidate-create .candidate-job-skills-scroll {
+    overflow-x: auto;
+    border: 1px solid #dce4f0;
+    border-radius: 8px;
+}
+
+.job-candidate-create .job-skills-card .sk {
+    width: 100%;
+    min-width: 900px;
+    margin: 0;
+    border: 0;
+    border-collapse: collapse;
+}
+
+.job-candidate-create .job-skills-card .sk thead th {
+    height: 44px;
+    padding: 9px 12px;
+    border-bottom: 1px solid #dce4f0;
+    color: #071434;
+    background: #f6f8fc;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.job-candidate-create .job-skills-card .sk tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5eaf2;
+    background: #fff;
+}
+
+.job-candidate-create .job-skills-card .sk tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.job-candidate-create .candidate-job-skill-name {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    margin: 0;
+    padding: 4px 9px;
+    border: 1px solid #d4ddeb;
+    border-radius: 7px;
+    background: #fff;
+}
+
+.job-candidate-create .candidate-job-skill-name > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: #c38e00 !important;
+    background: #fff5d5;
+    font-size: 13px !important;
+}
+
+.job-candidate-create .candidate-job-skill-name > input[readonly] {
+    width: 100%;
+    min-width: 0;
+    height: 32px;
+    padding: 0 !important;
+    border: 0 !important;
+    color: #071434 !important;
+    background: transparent !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
+
+.job-candidate-create .job-skills-card .candidate-job-skill-select,
+.job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection--single {
+    min-height: 42px !important;
+    border: 1px solid #d4ddeb !important;
+    border-radius: 7px !important;
+    color: #071434 !important;
+    background: #fff !important;
+    font-size: 11px !important;
+}
+
+.job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection__rendered {
+    display: flex !important;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 34px 0 11px !important;
+}
+
+.job-candidate-create .job-skills-card .candidate-rating-select + .select2-container .select2-selection__arrow {
+    top: 8px !important;
+    right: 7px !important;
+}
+
+.candidate-rating-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+}
+
+.candidate-rating-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 0 auto;
+}
+
+.candidate-rating-stars i {
+    color: #b9c2d4 !important;
+    font-size: 11px !important;
+}
+
+.candidate-rating-stars i.is-filled {
+    color: #f4b400 !important;
+}
+
+.candidate-rating-value {
+    overflow: hidden;
+    color: #b78300;
+    font-size: 10px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.candidate-rating-placeholder {
+    overflow: hidden;
+    color: #8790a6;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.candidate-rating-dropdown .select2-results__option {
+    padding: 9px 12px !important;
+}
+
+.candidate-rating-dropdown .select2-results__option--highlighted[aria-selected] {
+    color: #071434 !important;
+    background: #fff4c4 !important;
+}
+
+.job-candidate-create .candidate-job-skills-guidance {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-height: 42px;
+    margin-top: 12px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    color: #687493;
+    background: #f3f7ff;
+    font-size: 10px;
+}
+
+.job-candidate-create .candidate-job-skills-guidance i {
+    color: #1680ed !important;
+    font-size: 13px !important;
+}
+
+@media (max-width: 980px) {
+    .job-candidate-create .experience-details-card .candidate-experience-grid,
+    .job-candidate-create .salary-card .candidate-salary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .job-candidate-create .experience-details-card .candidate-experience-tip,
+    .job-candidate-create .salary-card .candidate-salary-summary {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 767px) {
+    .job-candidate-create .primary-skills-card > .candidate-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .job-candidate-create .candidate-skill-match {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .job-candidate-create .experience-details-card .candidate-experience-grid,
+    .job-candidate-create .salary-card .candidate-salary-grid,
+    .job-candidate-create .preferred-work-mode-card .candidate-work-mode-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .job-candidate-create .experience-details-card .candidate-experience-tip,
+    .job-candidate-create .salary-card .candidate-salary-summary {
+        grid-column: auto;
+    }
+
+    .job-candidate-create .candidate-primary-skill-entry {
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+    }
+
+    .job-candidate-create .candidate-primary-skill-divider {
+        display: none;
+    }
+
+    .job-candidate-create #candidatePrimarySkillAdd {
+        min-width: 42px;
+        width: 42px;
+        padding: 0;
+    }
+
+    .job-candidate-create #candidatePrimarySkillAdd span {
+        display: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .job-candidate-create .primary-skills-card > .candidate-card-header,
+    .job-candidate-create .experience-details-card > .candidate-card-header,
+    .job-candidate-create .professional-profile-card > .candidate-card-header,
+    .job-candidate-create .salary-card > .candidate-card-header,
+    .job-candidate-create .preferred-work-mode-card > .candidate-card-header,
+    .job-candidate-create .job-skills-card > .candidate-card-header,
+    .job-candidate-create .primary-skills-card .candidate-card-body,
+    .job-candidate-create .experience-details-card .candidate-card-body,
+    .job-candidate-create .professional-profile-card .candidate-card-body,
+    .job-candidate-create .salary-card .candidate-card-body,
+    .job-candidate-create .preferred-work-mode-card .candidate-card-body,
+    .job-candidate-create .job-skills-card .candidate-card-body {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .job-candidate-create .candidate-suggested-skills-head {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

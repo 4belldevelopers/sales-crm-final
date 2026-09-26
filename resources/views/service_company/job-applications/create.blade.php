@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926" rel="stylesheet" type="text/css" />
 
 @endpush
 
@@ -517,16 +517,53 @@
             </div>
 
             <!-- Primary Skills -->
+            @php
+              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
+                  return is_object($skill) && trim((string) ($skill->skill_name ?? '')) !== '';
+              })->map(function ($skill) {
+                  return [
+                      'id' => (string) ($skill->id ?? ''),
+                      'name' => trim((string) $skill->skill_name),
+                  ];
+              })->unique(function ($skill) {
+                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
+              })->values();
+            @endphp
             <div class="fs fv-row se-card primary-skills-card candidate-card">
               <div class="fsh candidate-card-header se-hero">
                 <div class="candidate-card-title se-title">
                   <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
                   <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
                 </div>
+                <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
+                  <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
+                    <strong id="candidateSkillMatchPercentage">--</strong>
+                  </span>
+                  <span class="candidate-skill-match-copy">
+                    <strong>Job Skills Match</strong>
+                    <small id="candidateSkillMatchDetail">No job skills defined</small>
+                  </span>
+                </div>
               </div>
-              <div class="fsc candidate-card-body">
-                <div id="skillTags" class="skill-tags"></div>
-                <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
+              <div class="fsc candidate-card-body candidate-primary-skills-body">
+                <div class="candidate-primary-skill-entry">
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input type="text" id="candidatePrimarySkillInput" list="candidatePrimarySkillSuggestions" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" />
+                  <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
+                  <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+                </div>
+                <datalist id="candidatePrimarySkillSuggestions"></datalist>
+                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
+                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
+                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
+                  <div class="candidate-suggested-skills-head">
+                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
+                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
+                  </div>
+                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                </div>
+                <div id="skillTags" class="skill-tags" hidden></div>
+                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -566,9 +603,9 @@
                 @endphp
                 <div class="candidate-experience-grid">
                   <div class="candidate-experience-panel">
-                    <div class="candidate-panel-title"><span><i class="fa-solid fa-clock" aria-hidden="true"></i></span><strong>Total Experience</strong><span class="candidate-required-dot">*</span></div>
+                    <div class="candidate-panel-title"><span><i class="fa-regular fa-clock" aria-hidden="true"></i></span><span><strong>Total Experience <em>*</em></strong><small>Your overall professional experience.</small></span></div>
                     <div class="ei">
-                      <select id="total_exp_year" name="total_exp_year">
+                      <label class="candidate-experience-field"><span>Years</span><select id="total_exp_year" name="total_exp_year">
                         <option value="">Years</option>
                         <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
                         @php
@@ -588,8 +625,8 @@
                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                             }
                         @endphp
-                      </select>
-                      <select class="" arial-label="Select total_exp_month" id="total_exp_month" name="total_exp_month">
+                      </select></label>
+                      <label class="candidate-experience-field"><span>Months</span><select class="" aria-label="Select total experience month" id="total_exp_month" name="total_exp_month">
                         <option value="">Select Month</option>
                         @php
                             for ($i = 0; $i <= 11; $i++) {
@@ -608,13 +645,13 @@
                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                             }
                         @endphp
-                      </select>
+                      </select></label>
                     </div>
                   </div>
                   <div class="candidate-experience-panel candidate-experience-panel--relevant">
-                    <div class="candidate-panel-title"><span><i class="fa-solid fa-file-lines" aria-hidden="true"></i></span><strong>Relevant Experience</strong><span class="candidate-required-dot">*</span></div>
+                    <div class="candidate-panel-title"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span><strong>Relevant Experience <em>*</em></strong><small>Experience relevant to this job or required skills.</small></span></div>
                     <div class="ei">
-                      <select id="rel_exp_year" name="rel_exp_year">
+                      <label class="candidate-experience-field"><span>Years</span><select id="rel_exp_year" name="rel_exp_year">
                         <option value="">Years</option>
                         <option value="0" {{ $selected_rel_exp_year==0 ? 'selected' : '' }}>Fresher</option>
                         @php
@@ -634,8 +671,8 @@
                                   echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                               }
                         @endphp
-                      </select>
-                      <select class="" arial-label="Select rel_exp_month" id="rel_exp_month" name="rel_exp_month">
+                      </select></label>
+                      <label class="candidate-experience-field"><span>Months</span><select class="" aria-label="Select relevant experience month" id="rel_exp_month" name="rel_exp_month">
                         <option value="">Select Month</option>
                         @php
                             for ($i = 0; $i <= 11; $i++) {
@@ -654,13 +691,15 @@
                                 echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
                             }
                         @endphp
-                      </select>
+                      </select></label>
                     </div>
-                    <small>Relevant experience in the recommended or primary skills.</small>
+                    <div class="candidate-experience-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Relevant experience in the recommended or primary skills for this job.</span></div>
                   </div>
                   <div class="candidate-experience-tip">
                     <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
-                    <div><strong>Tip</strong><p>Relevant experience should match the skills required for this job.</p></div>
+                    <div class="candidate-experience-tip-copy"><strong>Tip</strong><p>Relevant experience should match the skills required for this job.</p>
+                      <div class="candidate-experience-examples"><strong>Examples:</strong><ul><li>If the job requires Laravel, mention your Laravel experience here.</li><li>Exclude unrelated experience.</li><li>Freshers can select 0 years.</li></ul></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -679,14 +718,16 @@
                   <div class="fg fv-row">
                     <label>Current Company <span class="rq">*</span></label>
                     <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
+                    <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
                   </div>
                   <div class="fg fv-row">
                     <label>Current Designation <span class="rq">*</span></label>
                     <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
+                    <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
                   </div>
                   <div class="fg fv-row">
                     <label>Employment Type <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-people-group" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
+                    <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
                       <option value="">Select employment type</option>
                       <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
                       <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
@@ -754,8 +795,8 @@
               <div class="fsc candidate-card-body br-body">
                 <div class="candidate-salary-grid">
                   <section class="candidate-salary-panel candidate-salary-panel--current">
-                                        <div class="candidate-salary-panel-head">
-                      <span><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                    <div class="candidate-salary-panel-head">
+                      <span><i class="fa-solid fa-coins" aria-hidden="true"></i></span>
                       <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
 
                     </div>
@@ -801,6 +842,7 @@
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
                       <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
                       <div><strong id="candidate-current-auto-label-one">Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
@@ -809,11 +851,11 @@
                   </section>
 
                   <section class="candidate-salary-panel candidate-salary-panel--expected">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
                     <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
-                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" disabled>Annual</button>
-                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" disabled>Monthly</button>
-                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" disabled>Hourly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" data-salary-mode="0">Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
                       <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
@@ -824,6 +866,7 @@
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
                       <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
                       <span>Auto Calculated</span>
                       <div><strong id="candidate-expected-auto-label-one">Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
@@ -832,13 +875,14 @@
                   </section>
 
                   <aside class="candidate-salary-panel candidate-salary-summary">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-calculator" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
                     <div class="candidate-salary-summary-list">
                       <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
                       <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
                       <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
                       <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
                     </div>
+                    <label class="candidate-salary-hike" for="percentage_hike"><strong>Hike Percentage</strong><span><input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" readonly aria-readonly="true" /><b>%</b></span><small>Calculated from annual salary.</small></label>
                     <div class="candidate-offer-field">
                       <strong>Offer in Hand</strong>
                       <div class="rg">
@@ -932,15 +976,15 @@
             <div class="fs candidate-card preferred-work-mode-card">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                   <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
                 <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span><strong>Remote</strong><small>Can work from any location.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-regular fa-building" aria-hidden="true"></i></span><span><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-people-group" aria-hidden="true"></i></span><span><strong>Work From Office</strong><small>Office location based work.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--remote"><i class="fa-solid fa-globe" aria-hidden="true"></i>Any Location</em></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--hybrid"><i class="fa-solid fa-house" aria-hidden="true"></i>Flexible</em></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office</strong><small>Office location based work.</small><em class="candidate-work-mode-tag candidate-work-mode-tag--office"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Office Location</em></span></label>
                 </div>
               </div>
             </div>
@@ -954,6 +998,7 @@
                 </div>
               </div>
               <div class="fsc candidate-card-body candidate-table-wrap">
+                <div class="candidate-job-skills-scroll">
                 <table class="sk">
                   <thead>
                     <tr>
@@ -987,9 +1032,9 @@
                             @endphp
 
                             <tr>
-                              <td><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></td>
+                              <td><label class="candidate-job-skill-name"><i class="fa-solid fa-code" aria-hidden="true"></i><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
                               <td>
-                                <select class="form-select form-select-solid" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val->id }}" name="YearskillId[{{ $skill_val->id }}]">
                                       <option value="0">Select Year</option>
                                       @php 
                                           for ($i = 1; $i <= 60; $i++) {
@@ -1007,7 +1052,7 @@
                                     </select>
                               </td>
                               <td>
-                                <select class="form-select form-select-solid" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val->id }}" name="MonthskillId[{{ $skill_val->id }}]">
                                       <option value="">Select Month</option>
                                       @php 
                                           for ($i = 0; $i <= 11; $i++) {
@@ -1025,7 +1070,7 @@
                                 </select>
                               </td>
                               <td>
-                                 <select class="form-select form-select-solid" arial-label="Select rating" id="rating" name="rating[{{ $skill_val->id }}]">
+                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val->id }}" name="rating[{{ $skill_val->id }}]">
                                       <option value="0">Select rating</option>
                                       @php 
                                           for ($i = 1; $i <= 5; $i++) {
@@ -1047,6 +1092,8 @@
                     @endforeach
                   </tbody>
                 </table>
+                </div>
+                <div class="candidate-job-skills-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Add experience and proficiency for the skills required by this job.</span></div>
               </div>
             </div>
 
@@ -2658,6 +2705,7 @@ KTUtil.onDOMContentLoaded(function () {
       tagifyskill = new window.Tagify(candidateSkillInput, {
           whitelist: [],
           maxTags: 10,
+          duplicates: false,
           dropdown: {
               maxItems: 20,
               enabled: 1,
@@ -2666,12 +2714,180 @@ KTUtil.onDOMContentLoaded(function () {
           }
       });
 
+      // The custom visual layer delegates all mutations to Tagify so the submitted contract stays unchanged.
+      var candidateRequiredSkills = @json($candidateRequiredSkills ?? []);
+      var candidatePrimarySkillQuickInput = document.querySelector('#candidatePrimarySkillInput');
+      var candidatePrimarySkillAdd = document.querySelector('#candidatePrimarySkillAdd');
+      var candidatePrimarySkillDatalist = document.querySelector('#candidatePrimarySkillSuggestions');
+      var candidatePrimarySkillChips = document.querySelector('#candidatePrimarySkillChips');
+      var candidatePrimarySkillEmpty = document.querySelector('#candidatePrimarySkillEmpty');
+      var candidateSkillMatch = document.querySelector('#candidateSkillMatch');
+      var candidateSkillMatchRing = document.querySelector('#candidateSkillMatchRing');
+      var candidateSkillMatchPercentage = document.querySelector('#candidateSkillMatchPercentage');
+      var candidateSkillMatchDetail = document.querySelector('#candidateSkillMatchDetail');
+      var candidateSuggestedSkills = document.querySelector('#candidateSuggestedSkills');
+      var candidateSuggestedSkillsList = document.querySelector('#candidateSuggestedSkillsList');
+      var candidateRemainingSkills = document.querySelector('#candidateRemainingSkills');
+
+      if (tagifyskill.DOM && tagifyskill.DOM.scope) {
+          tagifyskill.DOM.scope.classList.add('candidate-primary-skill-tagify-source');
+          tagifyskill.DOM.scope.setAttribute('aria-hidden', 'true');
+      }
+
+      function candidateSkillKey(value) {
+          return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+      }
+
+      function candidateSkillName(skill) {
+          return String((skill && (skill.name || skill.skill_name || skill.value)) || '').trim();
+      }
+
+      function candidateUniqueSkills(skills) {
+          var unique = new Map();
+          (Array.isArray(skills) ? skills : []).forEach(function (skill) {
+              var name = candidateSkillName(skill);
+              var id = String((skill && skill.id) || '').trim();
+              if (!name) {
+                  return;
+              }
+              var key = 'name:' + candidateSkillKey(name);
+              if (!unique.has(key)) {
+                  unique.set(key, { id: id, name: name, value: name });
+              }
+          });
+          return Array.from(unique.values());
+      }
+
+      function candidateSkillsMatch(requiredSkill, selectedSkill) {
+          var requiredId = String(requiredSkill.id || '').trim();
+          var selectedId = String(selectedSkill.id || '').trim();
+          if (requiredId && selectedId) {
+              return requiredId === selectedId;
+          }
+          return candidateSkillKey(requiredSkill.name) === candidateSkillKey(selectedSkill.name);
+      }
+
+      function renderCandidateSkillDatalist(suggestions) {
+          if (!candidatePrimarySkillDatalist) {
+              return;
+          }
+          var combined = candidateUniqueSkills(candidateRequiredSkills.concat((suggestions || []).map(function (name) {
+              return { name: name };
+          })));
+          candidatePrimarySkillDatalist.replaceChildren();
+          combined.forEach(function (skill) {
+              var option = document.createElement('option');
+              option.value = skill.name;
+              candidatePrimarySkillDatalist.appendChild(option);
+          });
+      }
+
+      function addCandidatePrimarySkill(value) {
+          var name = String(value || '').trim();
+          if (!name) {
+              return;
+          }
+          var requiredSkill = candidateUniqueSkills(candidateRequiredSkills).find(function (skill) {
+              return candidateSkillKey(skill.name) === candidateSkillKey(name);
+          });
+          tagifyskill.addTags([requiredSkill ? { value: requiredSkill.name, id: requiredSkill.id } : name]);
+          if (candidatePrimarySkillQuickInput) {
+              candidatePrimarySkillQuickInput.value = '';
+              candidatePrimarySkillQuickInput.focus();
+          }
+      }
+
+      function refreshCandidatePrimarySkills() {
+          var required = candidateUniqueSkills(candidateRequiredSkills);
+          var selected = candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
+              return { id: skill.id || '', name: skill.value || '' };
+          }));
+          var matched = required.filter(function (requiredSkill) {
+              return selected.some(function (selectedSkill) {
+                  return candidateSkillsMatch(requiredSkill, selectedSkill);
+              });
+          });
+          var missing = required.filter(function (requiredSkill) {
+              return !selected.some(function (selectedSkill) {
+                  return candidateSkillsMatch(requiredSkill, selectedSkill);
+              });
+          });
+          var percentage = required.length ? Math.round((matched.length / required.length) * 100) : 0;
+
+          candidatePrimarySkillChips.replaceChildren();
+          selected.forEach(function (skill) {
+              var chip = document.createElement('span');
+              chip.className = 'candidate-primary-skill-chip';
+              var label = document.createElement('span');
+              label.textContent = skill.name;
+              var remove = document.createElement('button');
+              remove.type = 'button';
+              remove.setAttribute('aria-label', 'Remove ' + skill.name);
+              remove.title = 'Remove ' + skill.name;
+              remove.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+              remove.addEventListener('click', function () {
+                  tagifyskill.removeTag(skill.name);
+              });
+              chip.append(label, remove);
+              candidatePrimarySkillChips.appendChild(chip);
+          });
+          candidatePrimarySkillEmpty.hidden = selected.length > 0;
+
+          candidateSkillMatch.classList.toggle('is-empty', required.length === 0);
+          candidateSkillMatch.classList.toggle('is-complete', required.length > 0 && percentage === 100);
+          candidateSkillMatchRing.style.setProperty('--candidate-skill-match', percentage + '%');
+          candidateSkillMatchPercentage.textContent = required.length ? percentage + '%' : '--';
+          candidateSkillMatchDetail.textContent = !required.length
+              ? 'No job skills defined'
+              : (percentage === 100
+                  ? 'All required skills matched'
+                  : matched.length + ' of ' + required.length + ' required skills matched');
+
+          candidateSuggestedSkillsList.replaceChildren();
+          missing.forEach(function (skill) {
+              var button = document.createElement('button');
+              button.type = 'button';
+              button.className = 'candidate-suggested-skill';
+              var label = document.createElement('span');
+              label.textContent = skill.name;
+              var icon = document.createElement('i');
+              icon.className = 'fa-solid fa-plus';
+              icon.setAttribute('aria-hidden', 'true');
+              button.append(label, icon);
+              button.addEventListener('click', function () {
+                  addCandidatePrimarySkill(skill.name);
+              });
+              candidateSuggestedSkillsList.appendChild(button);
+          });
+          candidateRemainingSkills.textContent = missing.length + ' remaining ' + (missing.length === 1 ? 'skill' : 'skills');
+          candidateSuggestedSkills.hidden = required.length === 0 || missing.length === 0;
+      }
+
+      renderCandidateSkillDatalist([]);
+      tagifyskill.on('add', refreshCandidatePrimarySkills);
+      tagifyskill.on('remove', refreshCandidatePrimarySkills);
+      window.refreshCandidatePrimarySkills = refreshCandidatePrimarySkills;
+
+      if (candidatePrimarySkillAdd) {
+          candidatePrimarySkillAdd.addEventListener('click', function () {
+              addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+          });
+      }
+      if (candidatePrimarySkillQuickInput) {
+          candidatePrimarySkillQuickInput.addEventListener('keydown', function (event) {
+              if (event.key === 'Enter') {
+                  event.preventDefault();
+                  addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+              }
+          });
+      }
+
       var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
           window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
               .done(function (data) {
                   var suggestions = candidateNormalizeSuggestions(data);
                   tagifyskill.settings.whitelist = suggestions;
-                  tagifyskill.dropdown.show(query);
+                  renderCandidateSkillDatalist(suggestions);
               });
       }, 250);
 
@@ -2684,6 +2900,19 @@ KTUtil.onDOMContentLoaded(function () {
 
           fetchCandidateSkillSuggestions(query);
       });
+
+      if (candidatePrimarySkillQuickInput) {
+          candidatePrimarySkillQuickInput.addEventListener('input', function () {
+              var query = candidatePrimarySkillQuickInput.value.trim();
+              if (query.length >= 1) {
+                  fetchCandidateSkillSuggestions(query);
+              } else {
+                  renderCandidateSkillDatalist([]);
+              }
+          });
+      }
+
+      window.setTimeout(refreshCandidatePrimarySkills, 0);
 
       var initialLocations = candidateNormalizeSuggestions(@json($cities));
       var defaultLocation = String(@json(@$default_loc) || '').trim();
@@ -3361,6 +3590,9 @@ function re_test(text){
                       if (tagifyskill && parsedSkills.length) {
                           tagifyskill.removeAllTags();
                           tagifyskill.addTags(parsedSkills);
+                          if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                              window.setTimeout(window.refreshCandidatePrimarySkills, 0);
+                          }
                       }
                       if (tagifylocation && response.country) {
                           setSingleCandidateLocation(response.country);
@@ -3951,6 +4183,7 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         var expectedLabel = root.querySelector('#candidateSalaryExpectedLabel');
         var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
         var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
+        var hikeInput = root.querySelector('#percentage_hike');
         var currency = currencyLabel();
         var difference = expectedAmount - currentAmount;
         var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
@@ -3974,6 +4207,9 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }
         if (increaseOutput) {
             increaseOutput.textContent = formatAmount(calculatedIncrease) + '%';
+        }
+        if (hikeInput) {
+            hikeInput.value = calculatedIncrease ? String(Math.round(calculatedIncrease * 100) / 100) : '0';
         }
 
         updateSalaryAutoValues('current', period);
@@ -4007,6 +4243,15 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             expectedMode.value = modeByPeriod[normalizedPeriod];
         }
 
+        var currentHint = root.querySelector('#candidateCurrentSalaryHint');
+        var expectedHint = root.querySelector('#candidateExpectedSalaryHint');
+        if (currentHint) {
+            currentHint.textContent = 'Enter your current ' + normalizedPeriod + ' salary.';
+        }
+        if (expectedHint) {
+            expectedHint.textContent = 'Enter your expected ' + normalizedPeriod + ' salary.';
+        }
+
         updateSalarySummary();
     }
 
@@ -4028,7 +4273,7 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         updateSalarySummary();
     }
 
-    root.querySelectorAll('.candidate-salary-tabs button[data-salary-group="current"]').forEach(function (button) {
+    root.querySelectorAll('.candidate-salary-tabs button[data-salary-period]').forEach(function (button) {
         button.addEventListener('click', function () {
             syncSalaryPeriod(button.getAttribute('data-salary-period'));
         });
@@ -4055,6 +4300,51 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     syncSalaryPeriod(activeSalaryPeriod());
     syncSalaryCurrency();
 })();
+</script>
+
+<script>
+// Render the existing numeric proficiency values as accessible five-star Select2 options.
+$(function initializeCandidateSkillRatings() {
+    function renderCandidateRating(option) {
+        var value = Number.parseInt(option.id, 10) || 0;
+        var wrapper = document.createElement('span');
+        wrapper.className = 'candidate-rating-option';
+        var stars = document.createElement('span');
+        stars.className = 'candidate-rating-stars';
+
+        for (var index = 1; index <= 5; index++) {
+            var star = document.createElement('i');
+            star.className = index <= value ? 'fa-solid fa-star is-filled' : 'fa-regular fa-star';
+            star.setAttribute('aria-hidden', 'true');
+            stars.appendChild(star);
+        }
+
+        var label = document.createElement('span');
+        label.className = value ? 'candidate-rating-value' : 'candidate-rating-placeholder';
+        label.textContent = value ? value + ' ' + (value === 1 ? 'Star' : 'Stars') : 'Select rating';
+        wrapper.append(stars, label);
+        return $(wrapper);
+    }
+
+    if (!$.fn.select2) {
+        return;
+    }
+
+    $('.job-candidate-create .candidate-rating-select').each(function () {
+        var ratingSelect = $(this);
+        if (ratingSelect.data('select2')) {
+            ratingSelect.select2('destroy');
+        }
+        ratingSelect.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'candidate-rating-dropdown',
+            minimumResultsForSearch: Infinity,
+            templateResult: renderCandidateRating,
+            templateSelection: renderCandidateRating
+        });
+    });
+});
 </script>
 
 
