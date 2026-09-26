@@ -25,6 +25,7 @@
 
     var PARSER_BASE_URL = 'https://parser.jero.works/';
     var CANONICAL_BUNDLE_URL = 'https://parser.jero.works/jero-resume-parser-2tURGwDx.js';
+    var LOCAL_FALLBACK_URL = '/vendor/jero-resume-parser/jero-resume-parser-2tURGwDx.js';
     var DEMO_URL = 'https://parser.jero.works/demo.js';
     var LOAD_TIMEOUT_MS = 25000;
 
@@ -33,7 +34,7 @@
     var _lastParsedResult = null;
 
     /**
-     * Discovers and dynamically imports the parser ES module from https://parser.jero.works/
+     * Imports the parser ES module from https://parser.jero.works/ with instant local fallback
      */
     function loadParserModule() {
         if (_parserModulePromise) {
@@ -45,36 +46,33 @@
                 reject(new Error('Parser loading timed out after ' + LOAD_TIMEOUT_MS + 'ms'));
             }, LOAD_TIMEOUT_MS);
 
-            // Attempt dynamic bundle discovery via demo.js
-            fetch(DEMO_URL, { cache: 'no-cache' })
-                .then(function (res) {
-                    if (!res.ok) {
-                        throw new Error('HTTP ' + res.status + ' fetching demo.js');
-                    }
-                    return res.text();
-                })
-                .then(function (code) {
-                    var match = code.match(/from\s+['"](\.\/jero-resume-parser-[^'"]+\.js)['"]/);
-                    var bundleUrl = match && match[1]
-                        ? new URL(match[1], PARSER_BASE_URL).href
-                        : CANONICAL_BUNDLE_URL;
-                    return import(/* @vite-ignore */ bundleUrl);
-                })
-                .catch(function (err) {
-                    console.warn('[JeroParser] Dynamic bundle discovery failed, trying canonical bundle URL:', err);
-                    return import(/* @vite-ignore */ CANONICAL_BUNDLE_URL);
-                })
+            function verifyAndResolve(mod, source) {
+                clearTimeout(timeoutId);
+                if (!mod || typeof mod.parseResume !== 'function') {
+                    throw new Error('Invalid parser bundle from ' + source + ': parseResume function not found');
+                }
+                console.log('[JeroClientParser] Parser module loaded successfully from ' + source);
+                resolve(mod);
+            }
+
+            // 1. Primary: Direct import from canonical Cloudflare production URL
+            import(/* @vite-ignore */ CANONICAL_BUNDLE_URL)
                 .then(function (mod) {
-                    clearTimeout(timeoutId);
-                    if (!mod || typeof mod.parseResume !== 'function') {
-                        throw new Error('Invalid parser bundle: parseResume function not found');
-                    }
-                    resolve(mod);
+                    verifyAndResolve(mod, 'Cloudflare (' + CANONICAL_BUNDLE_URL + ')');
                 })
-                .catch(function (err) {
-                    clearTimeout(timeoutId);
-                    _parserModulePromise = null; // allow retry on next file pick
-                    reject(err);
+                .catch(function (primaryErr) {
+                    console.warn('[JeroClientParser] Cloudflare bundle load failed, falling back to local vendor copy:', primaryErr);
+                    // 2. Fallback: Instant import from same-origin vendor bundle
+                    return import(/* @vite-ignore */ LOCAL_FALLBACK_URL)
+                        .then(function (localMod) {
+                            verifyAndResolve(localMod, 'Local Vendor (' + LOCAL_FALLBACK_URL + ')');
+                        })
+                        .catch(function (fallbackErr) {
+                            clearTimeout(timeoutId);
+                            _parserModulePromise = null; // allow retry on next attempt
+                            console.error('[JeroClientParser] Both Cloudflare and local parser imports failed:', fallbackErr);
+                            reject(fallbackErr);
+                        });
                 });
         });
 
@@ -449,4 +447,19 @@
         CANONICAL_BUNDLE_URL: CANONICAL_BUNDLE_URL
     };
 
+    // Pre-warm the parser module during idle time so it is ready in RAM when a file is dropped
+    if (typeof window !== 'undefined') {
+        var prewarm = function () {
+            loadParserModule().catch(function (e) {
+                console.warn('[JeroClientParser] Idle pre-warm deferred:', e && e.message ? e.message : e);
+            });
+        };
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(prewarm, { timeout: 3000 });
+        } else {
+            setTimeout(prewarm, 1500);
+        }
+    }
+
 })(window, document, window.jQuery || window.$);
+
