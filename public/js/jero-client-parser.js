@@ -65,7 +65,7 @@
                 reject(timeoutErr);
             }, LOAD_TIMEOUT_MS);
 
-            import(/* @vite-ignore */ PRODUCTION_PARSER_URL)
+            import(PRODUCTION_PARSER_URL)
                 .then(function (mod) {
                     clearTimeout(timeoutId);
                     console.log('[PARSER 4] Parser module loaded');
