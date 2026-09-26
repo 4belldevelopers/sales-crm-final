@@ -1345,7 +1345,7 @@
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
-<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-1"></script>
+<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-2"></script>
 
 <script>
 $(document).ready(function () {
@@ -1391,6 +1391,9 @@ $(document).ready(function () {
                 $('#resume_original_name').val('');
                 $('#resumeCheck').val('1');
                 var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
+                if (window._currentActiveResumeFile) {
+                    showUploadedCard(window._currentActiveResumeFile, null);
+                }
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
@@ -1417,7 +1420,7 @@ $(document).ready(function () {
      * clear uncommitted temporary V2 upload sessions so they do not interfere with saved data.
      */
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         if (!isEditMode) {
             // ADD mode: clear stale session for current context & reset form fields & UI
             window.ResumePresign.cancelUpload(getUpContextKey());
@@ -1495,6 +1498,17 @@ $(document).ready(function () {
         // Upload the file. v2 (presign → R2 PUT) takes priority when the flag
         // is ON; falls through to the legacy multipart POST otherwise.
         window.__upXhrChannelClaimed = true;
+        window._currentActiveResumeFile = file;
+        window._clientParserState = 'parsing';
+
+        // Immediately display the Resume Card so the recruiter sees file info and live parser progress
+        showUploadedCard(file, null);
+
+        $('#upDetailParserStatus').html(
+            '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+            '<span>Parsing in browser&hellip;</span>'
+        );
+
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
             // startUpload() is async; state changes drive the UI via onStateChange.
@@ -1523,16 +1537,11 @@ $(document).ready(function () {
         // ── 100% Client-Side Resume Parsing via https://parser.jero.works/ ──────────
         // Zero PHP/Laravel execution, zero MySQL/ES strain, runs 100% in Recruiter Browser RAM
         if (window.JeroClientParser && typeof window.JeroClientParser.parseAndPopulate === 'function') {
-            var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+            var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
             var reqSkills = [];
             if (typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
                 reqSkills = candidateRequiredSkills.map(function (s) { return s.name; });
             }
-
-            $('#upDetailParserStatus').html(
-                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
-                '<span>Parsing in browser&hellip;</span>'
-            );
 
             window.JeroClientParser.parseAndPopulate(file, {
                 isEditMode: isEditMode,
@@ -1544,13 +1553,15 @@ $(document).ready(function () {
                     );
                 },
                 onSuccess: function (result, totalMs) {
+                    window._clientParserState = 'completed';
                     $('#upDetailParserStatus').html(
                         '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
                     );
                     toastr.success('Resume parsed in browser and fields populated!');
                 },
                 onError: function (err) {
-                    console.warn('[JeroParser] Client-side parse skipped or failed:', err);
+                    window._clientParserState = 'error';
+                    console.warn('[JeroClientParser] Client-side parse skipped or failed:', err);
                     $('#upDetailParserStatus').html(
                         '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
                     );
@@ -1604,6 +1615,8 @@ $(document).ready(function () {
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
+        window._clientParserState = null;
+        window._currentActiveResumeFile = null;
         $('#resume_session_uuid').val('');
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
@@ -1637,11 +1650,14 @@ $(document).ready(function () {
         var mm = String(now.getMinutes()).padStart(2, '0');
         $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm);
 
-        $('#upDetailParserStatus').text('Pending');
+        if (!window._clientParserState) {
+            $('#upDetailParserStatus').text('Pending');
+        }
         $('#upDetailFileType').text(ext);
         $('#upDetailPages').html('&mdash;');
 
         if (parserResponse) {
+            window._clientParserState = 'completed';
             $('#upDetailParserStatus').text('Completed');
             if (typeof parserResponse.pages === 'number' && parserResponse.pages > 0) {
                 $('#upDetailPages').text(parserResponse.pages);
@@ -1781,11 +1797,13 @@ $(document).ready(function () {
         );
         $('#upRetryWrap').hide();
 
-        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         var reqSkills = [];
         if (typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
             reqSkills = candidateRequiredSkills.map(function (s) { return s.name; });
         }
+
+        window._clientParserState = 'parsing';
 
         window.JeroClientParser.parseAndPopulate(file, {
             isEditMode: isEditMode,
@@ -1797,12 +1815,14 @@ $(document).ready(function () {
                 );
             },
             onSuccess: function (result, totalMs) {
+                window._clientParserState = 'completed';
                 $('#upDetailParserStatus').html(
                     '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
                 );
                 toastr.success('Resume parsed successfully (Client-Side)!');
             },
             onError: function () {
+                window._clientParserState = 'error';
                 $('#upDetailParserStatus').html(
                     '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
                 );
@@ -2758,6 +2778,7 @@ KTUtil.onDOMContentLoaded(function () {
               highlightFirst: true
           }
       });
+      window.tagifyskill = tagifyskill;
 
       // The custom visual layer delegates all mutations to Tagify so the submitted contract stays unchanged.
       var candidateRequiredSkills = @json($candidateRequiredSkills ?? []);
@@ -3151,6 +3172,8 @@ KTUtil.onDOMContentLoaded(function () {
           }
           candidateLocationSyncing = false;
       }
+      window.setSingleCandidateLocation = setSingleCandidateLocation;
+      window.tagifylocation = tagifylocation;
 
       var fetchCandidateLocationSuggestions = candidateDebounce(function (query) {
           if (candidateLocationLatestQuery !== query) {

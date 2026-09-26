@@ -209,46 +209,67 @@
     function mapAndPopulate(atsJson, isEditMode) {
         if (!atsJson || typeof atsJson !== 'object') return;
 
+        console.log('[JeroClientParser] Mapping ATS JSON to form inputs. isEditMode =', isEditMode);
         var cand = atsJson.candidate || {};
 
-        function shouldSet(inputEl) {
-            if (!inputEl) return false;
-            if (!isEditMode) return true;
-            var val = $(inputEl).val();
-            return val === null || val === undefined || String(val).trim() === '';
+        function setVal(selector, value) {
+            if (value === null || value === undefined) return;
+            var strVal = String(value).trim();
+            if (strVal === '') return;
+
+            var $el = $(selector);
+            if (!$el.length) return;
+
+            if (isEditMode) {
+                var cur = $el.val();
+                if (cur !== null && cur !== undefined && String(cur).trim() !== '') {
+                    return; // Preserve existing value in edit mode
+                }
+            }
+
+            $el.val(strVal);
+            $el.trigger('input').trigger('change');
+
+            var domEl = $el[0];
+            if (domEl && typeof domEl.dispatchEvent === 'function') {
+                try {
+                    domEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    domEl.dispatchEvent(new Event('change', { bubbles: true }));
+                } catch (_) {}
+            }
         }
 
         // 1. Full Name
-        if (cand.name && shouldSet('#full_name')) {
-            $('#full_name').val(cand.name).trigger('input').trigger('change');
+        if (cand.name) {
+            setVal('#full_name', cand.name);
         }
 
         // 2. Primary Email
-        if (cand.email && shouldSet('#email')) {
-            $('#email').val(cand.email).trigger('input').trigger('change');
+        if (cand.email) {
+            setVal('#email', cand.email);
         }
 
         // 3. Primary Mobile & Country Code
         var phoneVal = cand.mobileNumber || cand.phone;
-        if (phoneVal && shouldSet('#phone')) {
+        if (phoneVal) {
             var digitsOnly = String(phoneVal).replace(/\D/g, '');
             if (digitsOnly.length > 10) {
                 digitsOnly = digitsOnly.slice(-10);
             }
-            $('#phone').val(digitsOnly).trigger('input').trigger('change');
+            setVal('#phone', digitsOnly);
         }
-        if (cand.countryCode && shouldSet('#primary_country_code')) {
+        if (cand.countryCode) {
             var cc = String(cand.countryCode).replace(/^\+/, '').trim();
-            $('#primary_country_code').val(cc);
+            setVal('#primary_country_code', cc);
         }
 
         // 4. Date of Birth
-        if (cand.dob && shouldSet('#dob')) {
-            $('#dob').val(cand.dob).trigger('input').trigger('change');
+        if (cand.dob) {
+            setVal('#dob', cand.dob);
         }
 
-        // 5. Current Location (Tagify)
-        if (cand.location && typeof window.setSingleCandidateLocation === 'function') {
+        // 5. Current Location (Tagify & Fallbacks)
+        if (cand.location) {
             var locStr = '';
             if (typeof cand.location === 'string') {
                 locStr = cand.location.trim();
@@ -256,28 +277,48 @@
                 var locParts = [cand.location.city, cand.location.state, cand.location.country].filter(Boolean);
                 locStr = locParts.join(', ');
             }
-            if (locStr && shouldSet('#kt_tagify_work_location')) {
-                window.setSingleCandidateLocation(locStr);
+
+            if (locStr) {
+                if (typeof window.setSingleCandidateLocation === 'function') {
+                    window.setSingleCandidateLocation(locStr);
+                } else if (window.tagifylocation && typeof window.tagifylocation.addTags === 'function') {
+                    window.tagifylocation.removeAllTags();
+                    if (window.tagifylocation.settings && Array.isArray(window.tagifylocation.settings.whitelist)) {
+                        if (window.tagifylocation.settings.whitelist.indexOf(locStr) === -1) {
+                            window.tagifylocation.settings.whitelist.unshift(locStr);
+                        }
+                    }
+                    window.tagifylocation.addTags([locStr]);
+                } else {
+                    setVal('#kt_tagify_work_location', locStr);
+                }
             }
         }
 
         // 6. Primary Skills (Tagify + Metronic matching ring)
         var skills = Array.isArray(atsJson.skills) ? atsJson.skills : [];
-        if (skills.length && window.tagifyskill) {
-            var currentTags = window.tagifyskill.value || [];
-            if (!isEditMode || currentTags.length === 0) {
-                window.tagifyskill.removeAllTags();
-                window.tagifyskill.addTags(skills);
-                if (typeof window.refreshCandidatePrimarySkills === 'function') {
-                    window.setTimeout(window.refreshCandidatePrimarySkills, 0);
+        if (skills.length) {
+            var tagifyInstance = window.tagifyskill
+                || (window.Tagify && document.querySelector('#kt_tagify_2') && document.querySelector('#kt_tagify_2').__tagify);
+
+            if (tagifyInstance && typeof tagifyInstance.addTags === 'function') {
+                var currentTags = tagifyInstance.value || [];
+                if (!isEditMode || currentTags.length === 0) {
+                    tagifyInstance.removeAllTags();
+                    tagifyInstance.addTags(skills);
+                    if (typeof window.refreshCandidatePrimarySkills === 'function') {
+                        window.setTimeout(window.refreshCandidatePrimarySkills, 0);
+                    }
                 }
+            } else {
+                setVal('#kt_tagify_2', skills.join(', '));
             }
         }
 
         // 7. Career Summary
         var summary = atsJson.summary || '';
-        if (summary && shouldSet('#careersummary')) {
-            $('#careersummary').val(summary).trigger('input').trigger('change');
+        if (summary) {
+            setVal('#careersummary', summary);
             $('.cc').text(summary.length + ' / 100');
         }
 
@@ -286,45 +327,43 @@
         if (expList.length) {
             var latestJob = expList[0] || {};
             // Current Company
-            if (latestJob.company && shouldSet('#current_company')) {
-                $('#current_company').val(latestJob.company).trigger('input').trigger('change');
+            if (latestJob.company) {
+                setVal('#current_company', latestJob.company);
             }
             // Current Designation
-            if (latestJob.title && shouldSet('#current_designation')) {
-                $('#current_designation').val(latestJob.title).trigger('input').trigger('change');
+            if (latestJob.title) {
+                setVal('#current_designation', latestJob.title);
             }
 
             // Total Experience (Years / Months)
             var totalExp = calculateTotalExperience(expList);
-            if (totalExp.years > 0 || totalExp.months > 0) {
-                if (shouldSet('#total_exp_year')) {
-                    $('#total_exp_year').val(totalExp.years).trigger('change');
-                }
-                if (shouldSet('#total_exp_month')) {
-                    $('#total_exp_month').val(totalExp.months).trigger('change');
-                }
-                // Also default relevant experience to total experience if empty
-                if (shouldSet('#rel_exp_year')) {
-                    $('#rel_exp_year').val(totalExp.years).trigger('change');
-                }
-                if (shouldSet('#rel_exp_month')) {
-                    $('#rel_exp_month').val(totalExp.months).trigger('change');
-                }
-            }
+            var yrStr = String(totalExp.years);
+            var moStr = String(totalExp.months);
+
+            setVal('#total_exp_year', yrStr);
+            setVal('#total_exp_month', moStr);
+            setVal('#rel_exp_year', yrStr);
+            setVal('#rel_exp_month', moStr);
+        } else if (!isEditMode) {
+            // Fresher fallback for empty experience history
+            setVal('#total_exp_year', '0');
+            setVal('#total_exp_month', '0');
+            setVal('#rel_exp_year', '0');
+            setVal('#rel_exp_month', '0');
         }
 
         // 9. Qualification / Education
         var matchedQualId = matchQualification(atsJson.education);
-        if (matchedQualId && shouldSet('#qualification')) {
-            $('#qualification').val(matchedQualId).trigger('change');
+        if (matchedQualId) {
+            setVal('#qualification', String(matchedQualId));
         }
 
         // 10. Professional Links
-        if (cand.linkedin && shouldSet('#linkedin')) {
-            $('#linkedin').val(cand.linkedin).trigger('input').trigger('change');
+        if (cand.linkedin) {
+            setVal('#linkedin', cand.linkedin);
         }
-        if (cand.github && shouldSet('#github')) {
-            $('#github').val(cand.github).trigger('input').trigger('change');
+        if (cand.github) {
+            setVal('#github', cand.github);
         }
 
         // Dispatch a custom window event for any observing components
@@ -350,13 +389,32 @@
         var isEditMode = !!options.isEditMode;
 
         var startTime = performance.now();
+        console.log('[JeroClientParser] parseAndPopulate called for:', file ? file.name : 'unknown file');
 
         onProgress('Initializing parser...', 5);
 
+        // Create an independent snapshot of the file so any concurrent input reset cannot detach the stream
+        var fileToParse = file;
+        try {
+            if (typeof File === 'function' && file instanceof File) {
+                fileToParse = new File([file], file.name, {
+                    type: file.type || 'application/pdf',
+                    lastModified: file.lastModified || Date.now()
+                });
+            }
+        } catch (_) {
+            fileToParse = file;
+        }
+
         return loadParserModule()
             .then(function (mod) {
+                console.log('[JeroClientParser] Module loaded. Calling parseResume on', fileToParse.name);
                 onProgress('Parsing resume in browser...', 15);
-                return mod.parseResume(file, {
+                var parserFn = mod.parseResume || (mod.default && mod.default.parseResume);
+                if (typeof parserFn !== 'function') {
+                    throw new Error('parseResume function not available on imported module');
+                }
+                return parserFn(fileToParse, {
                     requiredSkills: requiredSkills,
                     onProgress: function (stage, pct) {
                         onProgress(stage, pct);
@@ -365,13 +423,14 @@
             })
             .then(function (result) {
                 var totalMs = Math.round(performance.now() - startTime);
+                console.log('[JeroClientParser] Parse completed in ' + totalMs + 'ms');
                 _lastParsedResult = result;
                 mapAndPopulate(result, isEditMode);
                 onSuccess(result, totalMs);
                 return result;
             })
             .catch(function (err) {
-                console.error('[JeroParser] Client-side parsing encountered an error:', err);
+                console.error('[JeroClientParser] Client-side parsing encountered an error:', err);
                 onError(err);
                 // Return null so the promise chain does not crash caller
                 return null;
