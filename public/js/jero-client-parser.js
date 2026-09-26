@@ -335,32 +335,34 @@
                     locStr = cand.location.trim();
                 } else if (typeof cand.location === 'object') {
                     var locParts = [cand.location.city, cand.location.state, cand.location.country].filter(Boolean);
-                    locStr = locParts.join(', ');
+                    locStr = locParts.join(' | ');
                 }
 
                 if (locStr) {
-                    var locInput = document.querySelector('#kt_tagify_work_location');
-                    var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
-                    if (tagifyLoc && typeof tagifyLoc.addTags === 'function') {
-                        try {
-                            tagifyLoc.removeAllTags();
-                            if (tagifyLoc.settings && Array.isArray(tagifyLoc.settings.whitelist)) {
-                                if (tagifyLoc.settings.whitelist.indexOf(locStr) === -1) {
-                                    tagifyLoc.settings.whitelist.unshift(locStr);
-                                }
-                            }
-                            tagifyLoc.addTags([locStr]);
-                            if (tagifyLoc.dropdown && typeof tagifyLoc.dropdown.hide === 'function') {
-                                tagifyLoc.dropdown.hide();
-                            }
-                        } catch (locErr) {
-                            console.warn('[JeroCandidateFormBridge] Tagify location error, using fallback:', locErr);
-                            setVal('#kt_tagify_work_location', locStr);
-                        }
-                    } else if (typeof window.setSingleCandidateLocation === 'function') {
+                    if (typeof window.setSingleCandidateLocation === 'function') {
                         window.setSingleCandidateLocation(locStr);
                     } else {
-                        setVal('#kt_tagify_work_location', locStr);
+                        var locInput = document.querySelector('#kt_tagify_work_location');
+                        var tagifyLoc = (locInput && locInput.__tagify) || window.tagifylocation;
+                        if (tagifyLoc && typeof tagifyLoc.addTags === 'function') {
+                            try {
+                                tagifyLoc.removeAllTags();
+                                if (tagifyLoc.settings && Array.isArray(tagifyLoc.settings.whitelist)) {
+                                    if (tagifyLoc.settings.whitelist.indexOf(locStr) === -1) {
+                                        tagifyLoc.settings.whitelist.unshift(locStr);
+                                    }
+                                }
+                                tagifyLoc.addTags([locStr]);
+                                if (tagifyLoc.dropdown && typeof tagifyLoc.dropdown.hide === 'function') {
+                                    tagifyLoc.dropdown.hide();
+                                }
+                            } catch (locErr) {
+                                console.warn('[JeroCandidateFormBridge] Tagify location error, using fallback:', locErr);
+                                setVal('#kt_tagify_work_location', locStr);
+                            }
+                        } else {
+                            setVal('#kt_tagify_work_location', locStr);
+                        }
                     }
                 }
             }
@@ -383,7 +385,7 @@
                 skillsList.forEach(function (s) {
                     var name = String(s || '').trim();
                     var lower = name.toLowerCase();
-                    if (name && !seen.has(lower) && uniqueSkills.length < 15) {
+                    if (name && !seen.has(lower)) {
                         seen.add(lower);
                         uniqueSkills.push(name);
                     }
