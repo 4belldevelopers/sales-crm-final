@@ -502,9 +502,16 @@
             try {
                 if (typeof file.arrayBuffer === 'function') {
                     var rawBuf = await file.arrayBuffer();
-                    selectedFile = new Blob([rawBuf], { type: file.type || 'application/pdf' });
-                    selectedFile.name = file.name;
-                    selectedFile.lastModified = file.lastModified || Date.now();
+                    try {
+                        selectedFile = new File([rawBuf], file.name, {
+                            type: file.type || 'application/pdf',
+                            lastModified: file.lastModified || Date.now()
+                        });
+                    } catch (_) {
+                        selectedFile = new Blob([rawBuf], { type: file.type || 'application/pdf' });
+                        selectedFile.name = file.name;
+                        selectedFile.lastModified = file.lastModified || Date.now();
+                    }
                     console.log('[PARSER 2] In-memory buffer snapshot created (' + rawBuf.byteLength + ' bytes)');
                 }
             } catch (snapErr) {

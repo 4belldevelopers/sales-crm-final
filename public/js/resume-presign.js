@@ -185,19 +185,29 @@ window.ResumePresign = (function () {
         for (var attempt = 0; attempt < 3; attempt++) {
             if (attempt > 0) await _sleep(300 * Math.pow(2, attempt));
 
+            var mimeMap = {
+                pdf:  'application/pdf',
+                doc:  'application/msword',
+                docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            };
+            var fileExt = (file.name.split('.').pop() || '').toLowerCase();
+            var detectedMime = mimeMap[fileExt] || file.type || 'application/octet-stream';
+
             let resp;
             try {
                 resp = await fetch(url, {
                     method:  'POST',
                     headers: {
-                        'Content-Type':    'application/json',
-                        'X-CSRF-TOKEN':    csrfToken,
-                        'Idempotency-Key': idempotencyKey,  // same key on retry (INV-4)
+                        'Content-Type':     'application/json',
+                        'Accept':           'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN':     csrfToken,
+                        'Idempotency-Key':  idempotencyKey,  // same key on retry (INV-4)
                     },
                     body: JSON.stringify({
                         original_filename: file.name,
                         file_size_bytes:   file.size,
-                        mime_type:         file.type || 'application/octet-stream',
+                        mime_type:         detectedMime,
                         sha256_hex:        sha256Hex,
                     }),
                 });
@@ -212,8 +222,8 @@ window.ResumePresign = (function () {
             let body;
             try { body = await resp.json(); } catch (_) { body = {}; }
 
-            if (!resp.ok) {
-                throw new Error(body.message || ('Presign request failed (' + resp.status + ')'));
+            if (!resp.ok || !body || !body.upload_url) {
+                throw new Error((body && body.message) || ('Presign request failed (' + resp.status + ')'));
             }
 
             return body;
@@ -235,6 +245,7 @@ window.ResumePresign = (function () {
         const resp = await fetch(url, {
             method:  'POST',
             headers: {
+                'Accept':           'application/json',
                 'X-CSRF-TOKEN':     csrfToken,
                 'X-Requested-With': 'XMLHttpRequest',
             },
@@ -285,6 +296,13 @@ window.ResumePresign = (function () {
                 var cancelled = new Error('Upload cancelled');
                 cancelled.retryable = false;
                 reject(cancelled);
+                return;
+            }
+
+            if (!uploadUrl || typeof uploadUrl !== 'string') {
+                var invalidUrlErr = new Error('Invalid upload URL');
+                invalidUrlErr.retryable = false;
+                reject(invalidUrlErr);
                 return;
             }
 

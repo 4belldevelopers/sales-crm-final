@@ -1345,7 +1345,7 @@
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
-<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-4"></script>
+@include('service_company.job-applications.jero-client-parser')
 
 <script>
 $(document).ready(function () {
