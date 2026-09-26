@@ -3897,6 +3897,63 @@
     color: #5f35bd !important;
 }
 
+/* Keep every form-card header identical to the Professional Profile reference. */
+.job-candidate-create .candidate-card > .candidate-card-header {
+    box-sizing: border-box;
+    min-height: 82px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f5e3a0 !important;
+    background: #fffbed !important;
+}
+
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-title {
+    gap: 12px;
+}
+
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon {
+    display: inline-flex !important;
+    flex: 0 0 40px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    color: #071434 !important;
+    background: #ffca0a !important;
+    box-shadow: 0 5px 12px rgba(214, 158, 0, .16) !important;
+}
+
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon i {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px;
+    height: 16px;
+    color: #071434 !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+}
+
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-title > span:last-child > strong {
+    margin: 0;
+    color: #071434 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0;
+}
+
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-title > span:last-child > small {
+    margin-top: 3px;
+    color: #687493 !important;
+    font-size: 11px !important;
+    font-weight: 500;
+    line-height: 1.45 !important;
+    letter-spacing: 0;
+}
+
 @media (max-width: 980px) {
     .job-candidate-create .experience-details-card .candidate-experience-grid,
     .job-candidate-create .salary-card .candidate-salary-grid {
