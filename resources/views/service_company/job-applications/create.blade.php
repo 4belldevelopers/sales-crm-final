@@ -1345,10 +1345,14 @@
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
-<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-2"></script>
+<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-3"></script>
 
 <script>
 $(document).ready(function () {
+
+    // Authoritative Edit/Add state directly from Laravel route/view model (Phase 6)
+    var IS_EDIT_MODE = {{ $page_event === 'EDIT' ? 'true' : 'false' }};
+    console.log('[PARSER] IS_EDIT_MODE authoritatively set to:', IS_EDIT_MODE);
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     // resume-presign.js is loaded unconditionally; v2 activates only when the
@@ -1495,56 +1499,30 @@ $(document).ready(function () {
 
         $('.download-file').addClass('d-none');
 
-        // Upload the file. v2 (presign → R2 PUT) takes priority when the flag
-        // is ON; falls through to the legacy multipart POST otherwise.
+        // Phase 1: Capture selected File immediately; decouple R2 / server upload from parsing path
+        const selectedFile = file;
         window.__upXhrChannelClaimed = true;
-        window._currentActiveResumeFile = file;
+        window._currentActiveResumeFile = selectedFile;
         window._clientParserState = 'parsing';
 
         // Immediately display the Resume Card so the recruiter sees file info and live parser progress
-        showUploadedCard(file, null);
+        showUploadedCard(selectedFile, null);
 
         $('#upDetailParserStatus').html(
             '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
             '<span>Parsing in browser&hellip;</span>'
         );
 
-        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-            // v2 path: direct browser → R2, zero PHP bytes.
-            // startUpload() is async; state changes drive the UI via onStateChange.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
-                if (uploadGeneration !== resumeUploadGeneration
-                    || !shouldUseResumeUploadFallback(error)
-                    || typeof uploadWithProgress !== 'function') {
-                    return;
-                }
-
-                // The direct route failed before a usable upload completed. Clear
-                // its temporary session so candidate submit uses only v1 fields.
-                window.ResumePresign.cancelUpload(getUpContextKey());
-                $('#resume_session_uuid').val('');
-                $('#uploaded_file_path').val('');
-                $('#resume_original_name').val('');
-                $('#upBanner').removeClass('ok err').hide().empty();
-                $('#upStats').text('Direct upload unavailable - retrying securely...');
-                uploadWithProgress(file);
-            });
-        } else if (typeof uploadWithProgress === 'function') {
-            // v1 path: PHP multipart POST (unchanged)
-            uploadWithProgress(file);
-        }
-
-        // ── 100% Client-Side Resume Parsing via https://parser.jero.works/ ──────────
-        // Zero PHP/Laravel execution, zero MySQL/ES strain, runs 100% in Recruiter Browser RAM
+        // ── Phase 1-5: 100% Client-Side Resume Parsing via https://parser.jero.works/ ──────────
+        // Zero PHP/Laravel execution, zero MySQL/ES strain, zero R2 during parsing, runs 100% in Recruiter Browser RAM
         if (window.JeroClientParser && typeof window.JeroClientParser.parseAndPopulate === 'function') {
-            var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
             var reqSkills = [];
             if (typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
                 reqSkills = candidateRequiredSkills.map(function (s) { return s.name; });
             }
 
-            window.JeroClientParser.parseAndPopulate(file, {
-                isEditMode: isEditMode,
+            window.JeroClientParser.parseAndPopulate(selectedFile, {
+                isEditMode: IS_EDIT_MODE,
                 requiredSkills: reqSkills,
                 onProgress: function (stage, pct) {
                     $('#upDetailParserStatus').html(
@@ -1561,7 +1539,6 @@ $(document).ready(function () {
                 },
                 onError: function (err) {
                     window._clientParserState = 'error';
-                    console.warn('[JeroClientParser] Client-side parse skipped or failed:', err);
                     $('#upDetailParserStatus').html(
                         '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
                     );
@@ -1569,7 +1546,6 @@ $(document).ready(function () {
                 }
             });
         }
-        // Reset so the legacy channel is open for the *next* pick.
         window.__upXhrChannelClaimed = false;
     }
 
