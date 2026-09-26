@@ -464,6 +464,10 @@
                       <option value="">Select qualification</option>
                       @foreach($qualification as $data_value)
                       @php
+                      $qualificationNameKey = strtolower(preg_replace('/\s+/', ' ', trim((string) @$data_value->name)));
+                      if (in_array($qualificationNameKey, ['any degree', 'any post graduation', 'any graduation'], true)) {
+                        continue;
+                      }
                       $sel = '';
                       if(@$application->qualification == $data_value->id ){
                       $sel = 'selected="selected"';
@@ -546,13 +550,15 @@
                 </div>
               </div>
               <div class="fsc candidate-card-body candidate-primary-skills-body">
-                <div class="candidate-primary-skill-entry">
-                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                  <input type="text" id="candidatePrimarySkillInput" list="candidatePrimarySkillSuggestions" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" />
-                  <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
-                  <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+                <div class="candidate-primary-skill-combobox">
+                  <div class="candidate-primary-skill-entry">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
+                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
+                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+                  </div>
+                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
                 </div>
-                <datalist id="candidatePrimarySkillSuggestions"></datalist>
                 <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
                 <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
                 <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
@@ -2701,7 +2707,7 @@ KTUtil.onDOMContentLoaded(function () {
   var candidateSkillInput = document.querySelector('#kt_tagify_2');
   var candidateLocationInput = document.querySelector('#kt_tagify_work_location');
 
-  if (typeof window.Tagify === 'function' && candidateSkillInput && candidateLocationInput) {
+  if (typeof window.Tagify === 'function' && candidateSkillInput) {
       tagifyskill = new window.Tagify(candidateSkillInput, {
           whitelist: [],
           maxTags: 10,
@@ -2718,7 +2724,7 @@ KTUtil.onDOMContentLoaded(function () {
       var candidateRequiredSkills = @json($candidateRequiredSkills ?? []);
       var candidatePrimarySkillQuickInput = document.querySelector('#candidatePrimarySkillInput');
       var candidatePrimarySkillAdd = document.querySelector('#candidatePrimarySkillAdd');
-      var candidatePrimarySkillDatalist = document.querySelector('#candidatePrimarySkillSuggestions');
+      var candidatePrimarySkillSuggestions = document.querySelector('#candidatePrimarySkillSuggestions');
       var candidatePrimarySkillChips = document.querySelector('#candidatePrimarySkillChips');
       var candidatePrimarySkillEmpty = document.querySelector('#candidatePrimarySkillEmpty');
       var candidateSkillMatch = document.querySelector('#candidateSkillMatch');
@@ -2728,6 +2734,11 @@ KTUtil.onDOMContentLoaded(function () {
       var candidateSuggestedSkills = document.querySelector('#candidateSuggestedSkills');
       var candidateSuggestedSkillsList = document.querySelector('#candidateSuggestedSkillsList');
       var candidateRemainingSkills = document.querySelector('#candidateRemainingSkills');
+      var candidateSkillSuggestionItems = [];
+      var candidateSkillLastSuggestions = [];
+      var candidateSkillActiveIndex = -1;
+      var candidateSkillRequest = null;
+      var candidateSkillRequestSequence = 0;
 
       if (tagifyskill.DOM && tagifyskill.DOM.scope) {
           tagifyskill.DOM.scope.classList.add('candidate-primary-skill-tagify-source');
@@ -2758,6 +2769,12 @@ KTUtil.onDOMContentLoaded(function () {
           return Array.from(unique.values());
       }
 
+      function candidateSelectedSkills() {
+          return candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
+              return { id: skill.id || '', name: skill.value || '' };
+          }));
+      }
+
       function candidateSkillsMatch(requiredSkill, selectedSkill) {
           var requiredId = String(requiredSkill.id || '').trim();
           var selectedId = String(selectedSkill.id || '').trim();
@@ -2767,19 +2784,96 @@ KTUtil.onDOMContentLoaded(function () {
           return candidateSkillKey(requiredSkill.name) === candidateSkillKey(selectedSkill.name);
       }
 
-      function renderCandidateSkillDatalist(suggestions) {
-          if (!candidatePrimarySkillDatalist) {
+      function closeCandidateSkillSuggestions() {
+          if (!candidatePrimarySkillSuggestions || !candidatePrimarySkillQuickInput) {
               return;
           }
-          var combined = candidateUniqueSkills(candidateRequiredSkills.concat((suggestions || []).map(function (name) {
-              return { name: name };
-          })));
-          candidatePrimarySkillDatalist.replaceChildren();
-          combined.forEach(function (skill) {
-              var option = document.createElement('option');
-              option.value = skill.name;
-              candidatePrimarySkillDatalist.appendChild(option);
+
+          candidatePrimarySkillSuggestions.hidden = true;
+          candidatePrimarySkillSuggestions.replaceChildren();
+          candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'false');
+          candidatePrimarySkillQuickInput.removeAttribute('aria-activedescendant');
+          candidateSkillSuggestionItems = [];
+          candidateSkillActiveIndex = -1;
+      }
+
+      function setActiveCandidateSkillSuggestion(index) {
+          if (!candidateSkillSuggestionItems.length || !candidatePrimarySkillQuickInput) {
+              candidateSkillActiveIndex = -1;
+              candidatePrimarySkillQuickInput.removeAttribute('aria-activedescendant');
+              return;
+          }
+
+          candidateSkillActiveIndex = (index + candidateSkillSuggestionItems.length) % candidateSkillSuggestionItems.length;
+          candidateSkillSuggestionItems.forEach(function (item, itemIndex) {
+              var isActive = itemIndex === candidateSkillActiveIndex;
+              item.element.classList.toggle('is-active', isActive);
+              item.element.setAttribute('aria-selected', isActive ? 'true' : 'false');
           });
+
+          var activeItem = candidateSkillSuggestionItems[candidateSkillActiveIndex];
+          candidatePrimarySkillQuickInput.setAttribute('aria-activedescendant', activeItem.element.id);
+          activeItem.element.scrollIntoView({ block: 'nearest' });
+      }
+
+      function renderCandidateSkillSuggestions(suggestions, state, query) {
+          if (!candidatePrimarySkillSuggestions || !candidatePrimarySkillQuickInput) {
+              return;
+          }
+
+          candidateSkillLastSuggestions = Array.isArray(suggestions) ? suggestions : [];
+          var normalizedQuery = candidateSkillKey(query);
+          var selected = candidateSelectedSkills();
+          var combined = candidateUniqueSkills(candidateRequiredSkills.concat(candidateSkillLastSuggestions.map(function (name) {
+              return { name: name };
+          }))).filter(function (skill) {
+              var matchesQuery = !normalizedQuery || candidateSkillKey(skill.name).indexOf(normalizedQuery) !== -1;
+              var isSelected = selected.some(function (selectedSkill) {
+                  return candidateSkillsMatch(skill, selectedSkill);
+              });
+              return matchesQuery && !isSelected;
+          }).slice(0, 20);
+
+          candidatePrimarySkillSuggestions.replaceChildren();
+          candidateSkillSuggestionItems = [];
+          candidateSkillActiveIndex = -1;
+
+          combined.forEach(function (skill, index) {
+              var option = document.createElement('button');
+              option.type = 'button';
+              option.id = 'candidate-primary-skill-option-' + index;
+              option.className = 'candidate-primary-skill-suggestion';
+              option.setAttribute('role', 'option');
+              option.setAttribute('aria-selected', 'false');
+              option.textContent = skill.name;
+              option.addEventListener('mousedown', function (event) {
+                  event.preventDefault();
+              });
+              option.addEventListener('click', function () {
+                  addCandidatePrimarySkill(skill.name);
+                  closeCandidateSkillSuggestions();
+              });
+              candidatePrimarySkillSuggestions.appendChild(option);
+              candidateSkillSuggestionItems.push({ element: option, skill: skill });
+          });
+
+          if (state === 'loading' || state === 'error' || (!combined.length && normalizedQuery)) {
+              var status = document.createElement('div');
+              status.className = 'candidate-primary-skill-suggestion-status';
+              status.setAttribute('role', 'status');
+              status.textContent = state === 'loading'
+                  ? 'Searching skills...'
+                  : (state === 'error' ? 'Unable to load suggestions. You can still add this skill.' : 'No matching skills found.');
+              candidatePrimarySkillSuggestions.appendChild(status);
+          }
+
+          if (!candidatePrimarySkillSuggestions.childElementCount) {
+              closeCandidateSkillSuggestions();
+              return;
+          }
+
+          candidatePrimarySkillSuggestions.hidden = false;
+          candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'true');
       }
 
       function addCandidatePrimarySkill(value) {
@@ -2795,13 +2889,12 @@ KTUtil.onDOMContentLoaded(function () {
               candidatePrimarySkillQuickInput.value = '';
               candidatePrimarySkillQuickInput.focus();
           }
+          closeCandidateSkillSuggestions();
       }
 
       function refreshCandidatePrimarySkills() {
           var required = candidateUniqueSkills(candidateRequiredSkills);
-          var selected = candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
-              return { id: skill.id || '', name: skill.value || '' };
-          }));
+          var selected = candidateSelectedSkills();
           var matched = required.filter(function (requiredSkill) {
               return selected.some(function (selectedSkill) {
                   return candidateSkillsMatch(requiredSkill, selectedSkill);
@@ -2850,9 +2943,10 @@ KTUtil.onDOMContentLoaded(function () {
               button.className = 'candidate-suggested-skill';
               var label = document.createElement('span');
               label.textContent = skill.name;
-              var icon = document.createElement('i');
-              icon.className = 'fa-solid fa-plus';
+              var icon = document.createElement('span');
+              icon.className = 'candidate-suggested-skill-icon';
               icon.setAttribute('aria-hidden', 'true');
+              icon.innerHTML = '<svg viewBox="0 0 20 20" focusable="false" aria-hidden="true"><path d="M10 4.25v11.5M4.25 10h11.5" /></svg>';
               button.append(label, icon);
               button.addEventListener('click', function () {
                   addCandidatePrimarySkill(skill.name);
@@ -2861,9 +2955,12 @@ KTUtil.onDOMContentLoaded(function () {
           });
           candidateRemainingSkills.textContent = missing.length + ' remaining ' + (missing.length === 1 ? 'skill' : 'skills');
           candidateSuggestedSkills.hidden = required.length === 0 || missing.length === 0;
+
+          if (candidatePrimarySkillQuickInput && document.activeElement === candidatePrimarySkillQuickInput) {
+              renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', candidatePrimarySkillQuickInput.value);
+          }
       }
 
-      renderCandidateSkillDatalist([]);
       tagifyskill.on('add', refreshCandidatePrimarySkills);
       tagifyskill.on('remove', refreshCandidatePrimarySkills);
       window.refreshCandidatePrimarySkills = refreshCandidatePrimarySkills;
@@ -2871,49 +2968,92 @@ KTUtil.onDOMContentLoaded(function () {
       if (candidatePrimarySkillAdd) {
           candidatePrimarySkillAdd.addEventListener('click', function () {
               addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+              closeCandidateSkillSuggestions();
           });
       }
       if (candidatePrimarySkillQuickInput) {
           candidatePrimarySkillQuickInput.addEventListener('keydown', function (event) {
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                  event.preventDefault();
+                  if (candidatePrimarySkillSuggestions.hidden) {
+                      renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', candidatePrimarySkillQuickInput.value);
+                  }
+                  setActiveCandidateSkillSuggestion(candidateSkillActiveIndex + (event.key === 'ArrowDown' ? 1 : -1));
+                  return;
+              }
+
+              if (event.key === 'Escape') {
+                  event.preventDefault();
+                  closeCandidateSkillSuggestions();
+                  return;
+              }
+
               if (event.key === 'Enter') {
                   event.preventDefault();
-                  addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+                  if (candidateSkillActiveIndex >= 0 && candidateSkillSuggestionItems[candidateSkillActiveIndex]) {
+                      addCandidatePrimarySkill(candidateSkillSuggestionItems[candidateSkillActiveIndex].skill.name);
+                  } else {
+                      addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+                  }
               }
+          });
+
+          candidatePrimarySkillQuickInput.addEventListener('focus', function () {
+              var query = candidatePrimarySkillQuickInput.value.trim();
+              renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', query);
+          });
+
+          candidatePrimarySkillQuickInput.addEventListener('blur', function () {
+              window.setTimeout(closeCandidateSkillSuggestions, 120);
           });
       }
 
       var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
-          window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
-              .done(function (data) {
-                  var suggestions = candidateNormalizeSuggestions(data);
-                  tagifyskill.settings.whitelist = suggestions;
-                  renderCandidateSkillDatalist(suggestions);
-              });
-      }, 250);
-
-      tagifyskill.on('input', function (event) {
-          var query = String(event.detail.value || '').trim();
-          if (query.length < 1) {
-              tagifyskill.dropdown.hide();
+          if (!candidatePrimarySkillQuickInput || candidatePrimarySkillQuickInput.value.trim() !== query) {
               return;
           }
 
-          fetchCandidateSkillSuggestions(query);
-      });
+          if (candidateSkillRequest && candidateSkillRequest.readyState !== 4) {
+              candidateSkillRequest.abort();
+          }
+
+          var requestSequence = ++candidateSkillRequestSequence;
+          candidateSkillRequest = window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
+              .done(function (data) {
+                  if (requestSequence !== candidateSkillRequestSequence || candidatePrimarySkillQuickInput.value.trim() !== query) {
+                      return;
+                  }
+                  var suggestions = candidateNormalizeSuggestions(data);
+                  tagifyskill.settings.whitelist = suggestions;
+                  renderCandidateSkillSuggestions(suggestions, 'idle', query);
+              })
+              .fail(function (_xhr, status) {
+                  if (status !== 'abort' && requestSequence === candidateSkillRequestSequence && candidatePrimarySkillQuickInput.value.trim() === query) {
+                      renderCandidateSkillSuggestions([], 'error', query);
+                  }
+              });
+      }, 250);
 
       if (candidatePrimarySkillQuickInput) {
           candidatePrimarySkillQuickInput.addEventListener('input', function () {
               var query = candidatePrimarySkillQuickInput.value.trim();
               if (query.length >= 1) {
+                  renderCandidateSkillSuggestions([], 'loading', query);
                   fetchCandidateSkillSuggestions(query);
               } else {
-                  renderCandidateSkillDatalist([]);
+                  if (candidateSkillRequest && candidateSkillRequest.readyState !== 4) {
+                      candidateSkillRequest.abort();
+                  }
+                  candidateSkillRequestSequence++;
+                  renderCandidateSkillSuggestions([], 'idle', '');
               }
           });
       }
 
       window.setTimeout(refreshCandidatePrimarySkills, 0);
+  }
 
+  if (typeof window.Tagify === 'function' && candidateLocationInput) {
       var initialLocations = candidateNormalizeSuggestions(@json($cities));
       var defaultLocation = String(@json(@$default_loc) || '').trim();
       if (defaultLocation && initialLocations.indexOf(defaultLocation) === -1) {
@@ -2943,8 +3083,18 @@ KTUtil.onDOMContentLoaded(function () {
           tagifylocation.DOM.scope.setAttribute('aria-label', 'Current Location');
       }
 
+      var candidateLocationSyncing = false;
+      var candidateLocationRequest = null;
+      var candidateLocationRequestSequence = 0;
+      var candidateLocationLatestQuery = '';
+
+      function currentCandidateLocation() {
+          return String((tagifylocation.value[0] && tagifylocation.value[0].value) || '').trim();
+      }
+
       function setSingleCandidateLocation(value) {
           var normalizedValue = String(value || '').trim();
+          candidateLocationSyncing = true;
           tagifylocation.removeAllTags();
 
           if (normalizedValue) {
@@ -2953,14 +3103,33 @@ KTUtil.onDOMContentLoaded(function () {
               }
               tagifylocation.addTags([normalizedValue]);
           }
+          candidateLocationSyncing = false;
       }
 
       var fetchCandidateLocationSuggestions = candidateDebounce(function (query) {
-          window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: query })
+          if (candidateLocationLatestQuery !== query) {
+              return;
+          }
+
+          if (candidateLocationRequest && candidateLocationRequest.readyState !== 4) {
+              candidateLocationRequest.abort();
+          }
+
+          var requestSequence = ++candidateLocationRequestSequence;
+          candidateLocationRequest = window.jQuery.get("{{ url('/') }}/city-job-suggestions", { q: query })
               .done(function (data) {
+                  if (requestSequence !== candidateLocationRequestSequence || candidateLocationLatestQuery !== query) {
+                      return;
+                  }
                   var suggestions = candidateNormalizeSuggestions(data);
+                  var selectedLocation = currentCandidateLocation();
+                  if (selectedLocation && suggestions.indexOf(selectedLocation) === -1) {
+                      suggestions.unshift(selectedLocation);
+                  }
                   tagifylocation.settings.whitelist = suggestions;
-                  tagifylocation.dropdown.show(query);
+                  if (!selectedLocation) {
+                      tagifylocation.dropdown.show(query);
+                  }
               });
       }, 250);
 
@@ -2970,7 +3139,12 @@ KTUtil.onDOMContentLoaded(function () {
 
       tagifylocation.on('input', function (event) {
           var query = String(event.detail.value || '').trim();
+          candidateLocationLatestQuery = query;
           if (query.length < 2) {
+              if (candidateLocationRequest && candidateLocationRequest.readyState !== 4) {
+                  candidateLocationRequest.abort();
+              }
+              candidateLocationRequestSequence++;
               tagifylocation.dropdown.show(query);
               return;
           }
@@ -2980,8 +3154,17 @@ KTUtil.onDOMContentLoaded(function () {
 
 
       tagifylocation.on('add', function (event) {
-          if (tagifylocation.value.length > 1) {
-              setSingleCandidateLocation(event.detail.data.value);
+          var selectedLocation = String((event.detail.data && event.detail.data.value) || '').trim();
+          candidateLocationLatestQuery = '';
+          if (candidateLocationRequest && candidateLocationRequest.readyState !== 4) {
+              candidateLocationRequest.abort();
+          }
+          candidateLocationRequestSequence++;
+          if (selectedLocation && tagifylocation.settings.whitelist.indexOf(selectedLocation) === -1) {
+              tagifylocation.settings.whitelist.unshift(selectedLocation);
+          }
+          if (!candidateLocationSyncing && (tagifylocation.value.length !== 1 || currentCandidateLocation() !== selectedLocation)) {
+              setSingleCandidateLocation(selectedLocation);
           }
           tagifylocation.dropdown.hide();
       });

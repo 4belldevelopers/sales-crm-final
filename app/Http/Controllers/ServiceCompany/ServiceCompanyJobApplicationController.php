@@ -2847,7 +2847,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->cities = GeneralMethod::allCities();
 
-        $this->default_loc = GeneralMethod::allCitiesSelected([]);
+        $selectedCityIds = ! empty($this->application) && ! empty($this->application->city_id)
+            ? [(int) $this->application->city_id]
+            : [];
+        $this->default_loc = GeneralMethod::allCitiesSelected($selectedCityIds);
 
         $candidateId = ! empty($appId) ? (int) $appId : (! empty($this->appId) ? (int) $this->appId : 0);
         $this->jobSkill = DB::table('job_metronics_skills')
