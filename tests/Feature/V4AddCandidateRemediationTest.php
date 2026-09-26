@@ -24,7 +24,7 @@ class V4AddCandidateRemediationTest extends TestCase
     private function source(string $relativePath): string
     {
         $source = file_get_contents(base_path($relativePath));
-        $this->assertNotFalse($source, 'Unable to read ' . $relativePath);
+        $this->assertNotFalse($source, 'Unable to read '.$relativePath);
 
         return $source;
     }
@@ -129,5 +129,19 @@ class V4AddCandidateRemediationTest extends TestCase
         $this->assertStringContainsString('resume_intent', $controller);
         $this->assertStringContainsString('REMOVAL_PENDING', $controller);
         $this->assertStringContainsString('resume.removed', $controller);
+
+        // Verify elimination of nonexistent job-applications.table route
+        $this->assertStringNotContainsString('service_company.job-applications.table', $controller);
+        $this->assertStringContainsString('service_company.cvtracker.index', $controller);
+    }
+
+    public function test_form_submission_redirects_to_candidate_listing_page(): void
+    {
+        $blade = $this->source('resources/views/service_company/job-applications/create.blade.php');
+
+        // Confirm save-form redirect logic
+        $this->assertStringContainsString('executeSaveRedirect', $blade);
+        $this->assertStringContainsString('service_company.cvtracker.index', $blade);
+        $this->assertStringContainsString('executeUpdateRedirect', $blade);
     }
 }

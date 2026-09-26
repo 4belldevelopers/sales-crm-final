@@ -2539,8 +2539,12 @@ async function isInternetAvailable() {
                         data        : formData,
                         processData : false,
                         contentType : false,
+                        dataType    : 'json',
                         redirect    : true,
                         success     : function (response) {
+                            if (typeof response === 'string') {
+                                try { response = JSON.parse(response); } catch (e) {}
+                            }
                             $("#update-form").prop("disabled", false);
                             if (response.status == 'mailcheck') {
                                 if (!navigator.onLine) {
@@ -2570,16 +2574,23 @@ async function isInternetAvailable() {
                                 return false;
                             }
 
-                            if (typeof response.url !== 'string' || response.url.trim() === '') {
-                                $("#update-form").html('<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span>');
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = false;
-                                Swal.fire("Update Saved", "The candidate was updated, but the return page could not be opened. Please return to the candidate tracker.", "warning");
-                                return false;
-                            }
+                            var fallbackUrl = '{{ route('service_company.cvtracker.index') }}';
+                            var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
 
                             submitButton.removeAttribute('data-kt-indicator');
-                            submitButton.disabled = false;
+                            submitButton.disabled = true;
+
+                            var updateRedirected = false;
+                            function executeUpdateRedirect() {
+                                if (updateRedirected) return;
+                                updateRedirected = true;
+                                var emailField = form.querySelector('[name="email1"]');
+                                var passwordField = form.querySelector('[name="password1"]');
+                                if (emailField) emailField.value = "";
+                                if (passwordField) passwordField.value = "";
+                                window.location.assign(targetUrl);
+                            }
+
                             Swal.fire({
                                 text: "You have successfully updated",
                                 icon: "success",
@@ -2587,16 +2598,14 @@ async function isInternetAvailable() {
                                 confirmButtonText: "Ok, got it!",
                                 customClass: {
                                     confirmButton: "btn btn-primary"
-                                }
-                            }).then(function (result) {
-                                if (result.isConfirmed) {
-                                    var emailField = form.querySelector('[name="email1"]');
-                                    var passwordField = form.querySelector('[name="password1"]');
-                                    if (emailField) emailField.value = "";
-                                    if (passwordField) passwordField.value = "";
-                                    window.location.assign(response.url);
-                                }
+                                },
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(function () {
+                                executeUpdateRedirect();
                             });
+
+                            setTimeout(executeUpdateRedirect, 2200);
                         },
                         error: function (xhr, textStatus, errorThrown) {
                             $("#update-form").prop("disabled", false);
@@ -3882,11 +3891,15 @@ var KTAddCandidate = function () {
                         data        : formData,
                         processData : false,
                         contentType : false,
+                        dataType    : 'json',
                         redirect    : true,
                         success     : function (response) {
+                            if (typeof response === 'string') {
+                                try { response = JSON.parse(response); } catch (e) {}
+                            }
                             $("#save-form").prop("disabled", false);
                             if (response.status == 'coinCheck') {
-                                Swal.fire("Success", response.message , "warning");
+                                Swal.fire("Notice", response.message , "warning");
                                 return false;
                             }
                             if (response.status == 'mailcheck') {
@@ -3903,8 +3916,37 @@ var KTAddCandidate = function () {
                                 return false;
                             }
 
+                            if (response.status !== 'success') {
+                                $("#save-form").html('<i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span>');
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                                Swal.fire("Submission Failed", response.message || "The candidate could not be saved. Please try again.", "error");
+                                return false;
+                            }
+
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = true;
+
+                            var fallbackUrl = '{{ route('service_company.cvtracker.index') }}';
+                            var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
+
+                            // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
+                            if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { 
+                                window.ResumePresign.cancelUpload(); 
+                            }
+
+                            // Rotate client_submission_uuid for any subsequent submission
+                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+
+                            var saveRedirected = false;
+                            function executeSaveRedirect() {
+                                if (saveRedirected) return;
+                                saveRedirected = true;
+                                var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
+                                var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
+                                window.location.assign(targetUrl);
+                            }
+
                             Swal.fire({
                                 text: "You have successfully Submitted",
                                 icon: "success",
@@ -3912,23 +3954,14 @@ var KTAddCandidate = function () {
                                 confirmButtonText: "Ok, got it!",
                                 customClass: {
                                     confirmButton: "btn btn-primary"
-                                }
-                            }).then(function (result) {
-                                if (result.isConfirmed) {
-                                    var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
-                                    var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
-                                }
+                                },
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(function () {
+                                executeSaveRedirect();
                             });
 
-                            // Clear v2 session from localStorage so the next ADD form does not recover this already-completed session.
-                            if (typeof RESUMES_FEATURE_BROWSER_UPLOAD !== 'undefined' && RESUMES_FEATURE_BROWSER_UPLOAD && window.ResumePresign) { window.ResumePresign.cancelUpload(); }
-
-                            // Rotate client_submission_uuid for any subsequent submission
-                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
-
-                            if (response.url) {
-                                window.location.href = response.url;
-                            }
+                            setTimeout(executeSaveRedirect, 2200);
                         },
                         error: function (xhr, textStatus, errorThrown) {
                             $("#save-form").prop("disabled", false);
