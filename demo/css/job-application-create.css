@@ -3444,7 +3444,7 @@
 
 .job-candidate-create .experience-details-card .candidate-experience-panel,
 .job-candidate-create .experience-details-card .candidate-experience-tip {
-    min-height: 230px;
+    min-height: 180px;
     padding: 15px;
     border: 1px solid #dbe3f0;
     border-radius: 8px;
