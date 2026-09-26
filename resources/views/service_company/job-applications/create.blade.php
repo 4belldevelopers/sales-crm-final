@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926" rel="stylesheet" type="text/css" />
 
 @endpush
 
@@ -277,99 +277,96 @@
                                  ========================== -->
                             <div class="up-info" id="upInfo">
                                 <div class="up-info-banner">
-                                    <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <polyline points="9 12 11 14 16 9"/>
-                                    </svg>
-                                    <span><strong>Resume uploaded successfully!</strong></span>
+                                    <div class="up-info-banner-left">
+                                        <span class="up-info-banner-check">
+                                            <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                        </span>
+                                        <div class="up-info-banner-text">
+                                            <strong>Resume uploaded successfully!</strong>
+                                            <small>Your resume has been uploaded and parsed.</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
+                                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                    </button>
                                 </div>
 
                                 <div class="up-file-card">
-                                    <span class="up-file-icon">PDF</span>
-                                    <div class="up-file-meta">
-                                        <div class="up-file-name" id="upFileName">&nbsp;</div>
-                                        <div class="up-file-sub" id="upFileSub">&nbsp;</div>
-                                    </div>
-                                    <span class="up-file-pill">
-                                        <svg class="up-file-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                        Uploaded
-                                    </span>
-                                </div>
-
-                                <div class="up-actions">
-                                    <button type="button" id="upReplaceBtn">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <polyline points="23 4 23 10 17 10"/>
-                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                                        </svg>
-                                        Replace Resume
-                                    </button>
-                                    <button type="button" id="upRemoveBtn" class="up-remove">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <polyline points="3 6 5 6 21 6"/>
-                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                            <path d="M10 11v6"/><path d="M14 11v6"/>
-                                            <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
-                                        </svg>
-                                        Remove
-                                    </button>
-                                </div>
-
-                                <h4 class="up-details-h">Resume Details</h4>
-                                <div class="up-details-grid">
-                                    <div class="up-detail">
-                                        <span class="up-detail-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <polyline points="12 6 12 12 16 14"/>
-                                            </svg>
-                                        </span>
-                                        <div>
-                                            <div class="up-detail-lbl">Uploaded On</div>
-                                            <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                    <div class="up-file-card-left">
+                                        <div class="up-file-badge">
+                                            <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
+                                            <span class="up-file-badge-ext" id="upFileBadgeExt">PDF</span>
+                                        </div>
+                                        <div class="up-file-meta">
+                                            <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                            <div class="up-file-sub" id="upFileSub">&nbsp;</div>
                                         </div>
                                     </div>
-                                    <div class="up-detail">
-                                        <span class="up-detail-icon ok">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <polyline points="20 6 9 17 4 12"/>
-                                            </svg>
-                                        </span>
-                                        <div>
-                                            <div class="up-detail-lbl">Parser Status</div>
-                                            <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
-                                        </div>
-                                    </div>
-                                    <div class="up-detail">
-                                        <span class="up-detail-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                                <polyline points="14 2 14 8 20 8"/>
-                                                <line x1="8" y1="13" x2="16" y2="13"/>
-                                                <line x1="8" y1="17" x2="16" y2="17"/>
-                                            </svg>
-                                        </span>
-                                        <div>
-                                            <div class="up-detail-lbl">File Type</div>
-                                            <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
-                                        </div>
-                                    </div>
-                                    <div class="up-detail">
-                                        <span class="up-detail-icon">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                                <polyline points="14 2 14 8 20 8"/>
-                                            </svg>
-                                        </span>
-                                        <div>
-                                            <div class="up-detail-lbl">Pages</div>
-                                            <div class="up-detail-val" id="upDetailPages">&mdash;</div>
-                                        </div>
-                                    </div>
-                                    <div class="up-detail" id="upRetryWrap" style="display:none">
-                                        <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">
-                                            Retry Parse
+                                    <div class="up-file-actions">
+                                        <button type="button" class="up-btn up-btn-replace" id="upReplaceBtn">
+                                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+                                            <span>Replace</span>
                                         </button>
+                                        <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn">
+                                            <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                            <span>Remove</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="up-details-card">
+                                    <div class="up-details-head">
+                                        <span class="up-details-head-icon">
+                                            <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <h4 class="up-details-title">Resume Details</h4>
+                                            <div class="up-details-subtitle">Information extracted from the uploaded resume.</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="up-details-grid">
+                                        <div class="up-detail-tile">
+                                            <span class="up-detail-icon">
+                                                <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                            </span>
+                                            <div>
+                                                <div class="up-detail-lbl">Uploaded On</div>
+                                                <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                            </div>
+                                        </div>
+                                        <div class="up-detail-tile">
+                                            <span class="up-detail-icon">
+                                                <i class="fa-regular fa-square-check" aria-hidden="true"></i>
+                                            </span>
+                                            <div>
+                                                <div class="up-detail-lbl">Parser Status</div>
+                                                <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                            </div>
+                                        </div>
+                                        <div class="up-detail-tile">
+                                            <span class="up-detail-icon">
+                                                <i class="fa-regular fa-file" aria-hidden="true"></i>
+                                            </span>
+                                            <div>
+                                                <div class="up-detail-lbl">File Type</div>
+                                                <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                            </div>
+                                        </div>
+                                        <div class="up-detail-tile">
+                                            <span class="up-detail-icon">
+                                                <i class="fa-solid fa-database" aria-hidden="true"></i>
+                                            </span>
+                                            <div>
+                                                <div class="up-detail-lbl">File Size</div>
+                                                <div class="up-detail-val" id="upDetailFileSize">&mdash;</div>
+                                            </div>
+                                        </div>
+                                        <div class="up-detail-tile" id="upRetryWrap" style="display:none">
+                                            <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">
+                                                Retry Parse
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1631,9 +1628,18 @@ $(document).ready(function () {
     function showUploadedCard(file, parserResponse) {
         var ext = extLabel(file);
         var $info = $('#upInfo');
-        $info.find('.up-file-icon').text(ext);
+        $('#upFileBadgeExt').text(ext);
+        if (ext === 'DOC' || ext === 'DOCX') {
+            $('.up-file-badge').css({'background': '#dbeafe', 'color': '#2563eb'});
+            $('.up-file-badge i').attr('class', 'fa-regular fa-file-word').css('color', '#2563eb');
+            $('#upFileBadgeExt').css('color', '#2563eb');
+        } else {
+            $('.up-file-badge').css({'background': '#fee2e2', 'color': '#dc2626'});
+            $('.up-file-badge i').attr('class', 'fa-regular fa-file-pdf').css('color', '#dc2626');
+            $('#upFileBadgeExt').css('color', '#dc2626');
+        }
         $('#upFileName').text(file.name);
-        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+        $('#upFileSub').html(fmtSize(file.size) + ' &bull; ' + ext);
 
         var now = new Date();
         var day = String(now.getDate()).padStart(2, '0');
@@ -1648,19 +1654,17 @@ $(document).ready(function () {
             $('#upDetailParserStatus').text('Pending');
         }
         $('#upDetailFileType').text(ext);
-        $('#upDetailPages').html('&mdash;');
+        $('#upDetailFileSize').text(fmtSize(file.size));
 
         if (parserResponse) {
             window._clientParserState = 'completed';
-            $('#upDetailParserStatus').text('Completed');
-            if (typeof parserResponse.pages === 'number' && parserResponse.pages > 0) {
-                $('#upDetailPages').text(parserResponse.pages);
-            }
+            $('#upDetailParserStatus').html('<span style="color: #059669; font-weight: 700;">✓ Parsed</span>');
         }
 
         // Hide the dropzone + file-info strip and show the new card.
         $('#uploadBox').hide();
         $('#fileInfo').hide();
+        $info.find('.up-info-banner').show();
         $info.addClass('show');
     }
 
@@ -1775,6 +1779,11 @@ $(document).ready(function () {
         e.preventDefault();
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         backToDropzone();
+    });
+
+    $(document).on('click', '.up-info-banner-close', function (e) {
+        e.preventDefault();
+        $(this).closest('.up-info-banner').slideUp(180);
     });
 
     // Retry parse — re-runs client-side parsing without re-uploading or server requests
