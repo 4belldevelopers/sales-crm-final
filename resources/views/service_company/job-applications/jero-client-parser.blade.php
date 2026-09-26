@@ -27,6 +27,16 @@
     var _parserModulePromise = null;
     var _activeFile = null;
     var _lastParsedResult = null;
+    var _currentParserRunId = 0;
+
+    /**
+     * Cancels active parse run and increments run ID so any in-flight WASM resolution is discarded.
+     */
+    function cancelActiveParse() {
+        _currentParserRunId++;
+        _activeFile = null;
+        console.log('[PARSER] Active parse cancelled (runId now ' + _currentParserRunId + ')');
+    }
 
     /**
      * Reports an explicit failure per God-Level audit spec.
@@ -460,6 +470,7 @@
      */
     function parseAndPopulate(file, options) {
         options = options || {};
+        var thisRunId = ++_currentParserRunId;
         _activeFile = file;
 
         var onProgress = options.onProgress || function () {};
@@ -469,7 +480,7 @@
         var isEditMode = !!options.isEditMode;
 
         // [PARSER 1] File selected
-        console.log('[PARSER 1] File selected:', file ? (file.name + ' (' + file.size + ' bytes, ' + file.type + ')') : 'None');
+        console.log('[PARSER 1] File selected (run ' + thisRunId + '):', file ? (file.name + ' (' + file.size + ' bytes, ' + file.type + ')') : 'None');
 
         if (!file) {
             var missingFileErr = new Error('No resume file provided for parsing');
@@ -504,28 +515,45 @@
                 selectedFile = file;
             }
 
+            if (thisRunId !== _currentParserRunId) {
+                console.log('[PARSER] Stale run ' + thisRunId + ' cancelled before module load');
+                return null;
+            }
+
             var mod = await loadParserModule();
             var parseResumeFn = mod.parseResume || (mod.default && mod.default.parseResume);
             if (typeof parseResumeFn !== 'function') {
                 throw new Error('parseResume function not available on module');
             }
 
+            if (thisRunId !== _currentParserRunId) {
+                console.log('[PARSER] Stale run ' + thisRunId + ' cancelled before parse execution');
+                return null;
+            }
+
             // [PARSER 6] Parsing started
             console.log('[PARSER] file name:', selectedFile.name);
             console.log('[PARSER] file type:', selectedFile.type);
             console.log('[PARSER] file size:', selectedFile.size);
-            console.log('[PARSER 6] Parsing started');
+            console.log('[PARSER 6] Parsing started (run ' + thisRunId + ')');
             console.log('[PARSER] parse started');
             onProgress('Parsing resume in browser...', 15);
 
             return parseResumeFn(selectedFile, {
                 requiredSkills: requiredSkills,
                 onProgress: function (stage, pct) {
-                    onProgress(stage, pct);
+                    if (thisRunId === _currentParserRunId) {
+                        onProgress(stage, pct);
+                    }
                 }
             });
         })()
             .then(function (result) {
+                if (thisRunId !== _currentParserRunId) {
+                    console.log('[PARSER] Stale run ' + thisRunId + ' ignored after parse completion (current run: ' + _currentParserRunId + ')');
+                    return null;
+                }
+
                 var totalMs = Math.round(performance.now() - startTime);
 
                 // [PARSER 7] Parsing completed
@@ -550,10 +578,18 @@
                 // Form mapping via Phase 5 Canonical Form Bridge
                 JeroCandidateFormBridge.populate(result, isEditMode);
 
+                if (thisRunId !== _currentParserRunId) {
+                    return null;
+                }
+
                 onSuccess(result, totalMs);
                 return result;
             })
             .catch(function (err) {
+                if (thisRunId !== _currentParserRunId) {
+                    console.log('[PARSER] Suppressing error for cancelled run ' + thisRunId);
+                    return null;
+                }
                 reportFailure('parseResume Execution', err, selectedFile);
                 onError(err);
                 return null;
@@ -565,11 +601,13 @@
     window.JeroClientParser = {
         load: loadParserModule,
         parseAndPopulate: parseAndPopulate,
+        cancelActiveParse: cancelActiveParse,
         calculateTotalExperience: calculateTotalExperience,
         matchQualification: matchQualification,
         normalizeDob: normalizeDob,
         getLastResult: function () { return _lastParsedResult; },
         getActiveFile: function () { return _activeFile; },
+        getCurrentRunId: function () { return _currentParserRunId; },
         PRODUCTION_PARSER_URL: PRODUCTION_PARSER_URL
     };
 

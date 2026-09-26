@@ -24,10 +24,15 @@ use App\Imports\JobApplicationImport;
 use App\Jobs\ConvertResumeToPdfJob;
 use App\Jobs\ProcessCandidateSubmissionJob;
 use App\Jobs\ProcessCandidateUpdateJob;
+use App\Jobs\ProcessOutboxEventJob;
+use App\Jobs\PurgeRemovedResumeAssetsJob;
 use App\Jobs\QueueCandidateNotificationJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\UploadResumeToTestRTwo;
+use App\Models\CandidateOutboxEvent;
+use App\Models\ResumeAsset;
+use Illuminate\Support\Facades\Redis;
 use App\Mail\AddCandidateMail;
 use App\Mail\ChangeStatusMail;
 use App\Mail\InterviewTrackerMail;
@@ -2942,14 +2947,48 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $company_id = '';
         $company_id = auth()->user()->company_id;
 
+        $clientSubmissionUuid = $request->input('client_submission_uuid');
+        $redisLockKey = null;
+        $redisLockAcquired = false;
+
+        if (! empty($clientSubmissionUuid)) {
+            $redisLockKey = "idemp:cand:{$company_id}:{$clientSubmissionUuid}";
+            try {
+                $lockStatus = Redis::get($redisLockKey);
+                if ($lockStatus === 'PROCESSING') {
+                    return response()->json([
+                        'status' => 'error',
+                        'msgType' => 'warning',
+                        'message' => 'Candidate submission is currently processing. Please wait...',
+                    ], 409);
+                } elseif ($lockStatus && str_starts_with($lockStatus, 'COMPLETED:')) {
+                    $cachedResponse = json_decode(substr($lockStatus, 10), true);
+                    if (is_array($cachedResponse)) {
+                        return Reply::successWithData(__('messages.createdSuccessfully'), $cachedResponse);
+                    }
+                }
+                $acquired = Redis::set($redisLockKey, 'PROCESSING', 'EX', 120, 'NX');
+                if ($acquired) {
+                    $redisLockAcquired = true;
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('store(): Redis idempotency lock failed open: ' . $e->getMessage());
+            }
+        }
+
         $eventId = 4;
         $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
         if ($coinsDeductions->status) {
+            if ($redisLockKey && $redisLockAcquired) {
+                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+            }
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
         $applicationStatus = ApplicationStatus::first();
         $jobApplication = new JobApplication;
+        $jobApplication->client_submission_uuid = $clientSubmissionUuid ?: null;
+        $jobApplication->resume_version = 1;
         $jobApplication->full_name = ucwords(strtolower($request->full_name));
         $jobApplication->job_id = $request->job_id;
         // $jobApplication->status_id 			=	$applicationStatus->id;
@@ -3244,40 +3283,139 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $jobApplication->save();
 
-            // ── v2 atomic claim — must run inside the existing transaction ────────────
-            // Conditional UPDATE (Uploaded → Completed) is the source of truth.
-            // Two concurrent submits race on this; only the one that gets rows=1 proceeds.
-            // R2 existence was pre-checked above; only the claim itself runs under lock.
-            if ($resumeSession) {
-                $claimed = ResumeUpload::where('id', $resumeSession->id)
-                    ->where('company_id', $company_id)
-                    ->where('status', ResumeUploadStatus::Uploaded->value)
-                    ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+            $finalResumeUrl = null;
+            $resumeAssetId = null;
+            $resumeIntent = $request->input('resume_intent', 'NONE');
 
-                if ($claimed === 0) {
-                    // Another request already claimed this session.
-                    DB::rollBack();
-                    $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
-                    if ($existing && $existing->linked_candidate_id) {
-                        return Reply::redirect(
-                            url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all'),
-                            'Candidate already saved from this upload.'
-                        );
+            // ── v2 atomic claim / resume asset creation ──────────────────────────────
+            if ($resumeIntent === 'DISCARD') {
+                if ($resumeSession) {
+                    ResumeUpload::where('id', $resumeSession->id)
+                        ->where('company_id', $company_id)
+                        ->update(['status' => ResumeUploadStatus::Cancelled->value, 'updated_at' => now()]);
+                }
+                $jobApplication->current_resume_id = null;
+                $jobApplication->resume = '';
+                $jobApplication->save();
+            } else {
+                if ($resumeSession) {
+                    $claimed = ResumeUpload::where('id', $resumeSession->id)
+                        ->where('company_id', $company_id)
+                        ->where('status', ResumeUploadStatus::Uploaded->value)
+                        ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
+
+                    if ($claimed === 0) {
+                        DB::rollBack();
+                        if ($redisLockKey && $redisLockAcquired) {
+                            try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                        }
+                        $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
+                        if ($existing && $existing->linked_candidate_id) {
+                            return Reply::redirect(
+                                url('/service_company/apptracker/'.GeneralMethod::value_encrypt($request->job_id).'/all'),
+                                'Candidate already saved from this upload.'
+                            );
+                        }
+
+                        return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                            'message' => 'Resume upload session is no longer valid. Please upload again.']);
                     }
 
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume upload session is no longer valid. Please upload again.']);
+                    $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+                    $r2ResumeUrl = $finalResumeUrl;
+
+                    $resumeAssetId = DB::table('resume_assets')->insertGetId([
+                        'company_id'        => (int) $company_id,
+                        'candidate_id'      => (int) $jobApplication->id,
+                        'upload_session_id' => $resumeSession->uuid,
+                        'object_key'        => (string) $finalResumeUrl,
+                        'original_filename' => (string) ($request->input('resume_original_name') ?: ($resumeSession->original_filename ?: 'resume.pdf')),
+                        'mime_type'         => (string) ($resumeSession->mime_type ?: 'application/pdf'),
+                        'file_size'         => (int) ($resumeSession->file_size_bytes ?: 0),
+                        'checksum_sha256'   => $resumeSession->sha256_hex ?: null,
+                        'version'           => 1,
+                        'status'            => 'ACTIVE',
+                        'parser_status'     => $request->input('parser_status', 'BYPASSED'),
+                        'parser_version'    => $request->input('parser_version', null),
+                        'created_at'        => now(),
+                        'attached_at'       => now(),
+                    ]);
+
+                    $jobApplication->current_resume_id = $resumeAssetId;
+                    $jobApplication->resume = $r2ResumeUrl;
+                    $jobApplication->save();
+
+                    ResumeUpload::where('id', $resumeSession->id)
+                        ->where('company_id', $company_id)
+                        ->where('status', ResumeUploadStatus::Completed->value)
+                        ->update([
+                            'linked_candidate_id' => $jobApplication->id,
+                            'r2_url'              => $finalResumeUrl,
+                            'updated_at'          => now(),
+                        ]);
+                    UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
+                        'candidate_id'    => $jobApplication->id,
+                        'resume_asset_id' => $resumeAssetId,
+                    ], $company_id, $submitted_by);
+                } elseif ($request->hasFile('resume')) {
+                    $companyNameR2 = DB::table('companies')
+                        ->where('id', auth()->user()->company_id)
+                        ->value('company_name');
+                    $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                    $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                    $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
+                    $year = date('Y');
+                    $month = date('m');
+
+                    $tempPath = $request->input('uploaded_file_path');
+                    $full_name = $request->input('resume_original_name');
+                    if ($tempPath && $full_name) {
+                        $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                        $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                        $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                        $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                        $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                        $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
+
+                        $resumeAssetId = DB::table('resume_assets')->insertGetId([
+                            'company_id'        => (int) $company_id,
+                            'candidate_id'      => (int) $jobApplication->id,
+                            'upload_session_id' => null,
+                            'object_key'        => (string) $fileUrl,
+                            'original_filename' => (string) $full_name,
+                            'mime_type'         => 'application/pdf',
+                            'file_size'         => 0,
+                            'checksum_sha256'   => null,
+                            'version'           => 1,
+                            'status'            => 'ACTIVE',
+                            'parser_status'     => $request->input('parser_status', 'BYPASSED'),
+                            'parser_version'    => $request->input('parser_version', null),
+                            'created_at'        => now(),
+                            'attached_at'       => now(),
+                        ]);
+
+                        $jobApplication->current_resume_id = $resumeAssetId;
+                        $jobApplication->resume = $fileUrl;
+                        $jobApplication->save();
+                    } else {
+                        \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
+                            'company_id' => auth()->user()->company_id,
+                            'job_application_id' => $jobApplication->id ?? null,
+                        ]);
+                    }
                 }
-
-                // File confirmed by pre-flight; move to company-structured CDN path.
-                $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
             }
-            // ── end v2 atomic claim ───────────────────────────────────────────────────
 
-            // Skills ES indexing, job_application_skills inserts, skillsAddElastic, and
-            // teamRankElastic are all handled by ProcessCandidateSubmissionJob after commit.
-            // Only skill_match_percentage stays synchronous — its result is required for the
-            // add_job_wise_condidates insert below (V2 Steps 2–4).
+            // Guard: do not wipe the resume URL when v2 or file upload already set it above.
+            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
+                $jobApplication->current_resume_id = null;
+                $jobApplication->resume = '';
+                $jobApplication->save();
+            }
+
             // Insert job_application_skills synchronously so primary ES indexer has skill rows available
             if (! empty($parsedSkillList)) {
                 foreach ($parsedSkillList as $skillVal) {
@@ -3288,7 +3426,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             ->exists()) {
                             DB::table('job_application_skills')->insert([
                                 'job_application_id' => $jobApplication->id,
-                                'skills' => $skillVal,
+                                'skills'             => $skillVal,
                             ]);
                         }
                     }
@@ -3298,109 +3436,75 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $percentage = GeneralMethod::skill_match_percentage($request->job_id, $parsedSkillList);
 
             $now = now();
-            $insertArr = ['job_id' => $request->job_id, 'job_application_id' => $jobApplication->id, 'status_id' => $jobApplication->status_id, 'master_status_id' => $jobApplication->master_status_id, 'child_status_id' => $jobApplication->child_status_id, 'company_id' => $company_id, 'submitted_by' => $submitted_by, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
+            $insertArr = [
+                'job_id'             => $request->job_id,
+                'job_application_id' => $jobApplication->id,
+                'status_id'          => $jobApplication->status_id,
+                'master_status_id'   => $jobApplication->master_status_id,
+                'child_status_id'    => $jobApplication->child_status_id,
+                'company_id'         => $company_id,
+                'submitted_by'       => $submitted_by,
+                'skill_match'        => $percentage,
+                'created_at'         => $now,
+                'updated_at'         => $now,
+            ];
             $add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastInsertedId = DB::getPdo()->lastInsertId();
 
-            // ── v2 session link — runs inside the same transaction ────────────────────
-            // Sets linked_candidate_id so the session row points at the new candidate.
-            // Conditional UPDATE on Completed guards against any unexpected double-insert.
-            if ($resumeSession) {
-                ResumeUpload::where('id', $resumeSession->id)
-                    ->where('company_id', $company_id)
-                    ->where('status', ResumeUploadStatus::Completed->value)
-                    ->update([
-                        'linked_candidate_id' => $jobApplication->id,
-                        'r2_url' => $finalResumeUrl,
-                        'updated_at' => now(),
-                    ]);
-                UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
-                    'candidate_id' => $jobApplication->id,
-                ], $company_id, $submitted_by);
-            }
-            // ─────────────────────────────────────────────────────────────────────────
-
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'alljobslist_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-            // teamRankElastic, email prep JOINs, email dispatch, and job_assign are handled
-            // by async jobs after commit (V2 Steps 4, 6). Capture submitter email now
-            // while auth() is available in the HTTP context.
             $submittedByEmail = auth()->user()->email;
 
-            if ($resumeSession) {
-                // v2 path: file moved to company CDN path in the claim block above.
-                $r2ResumeUrl = $finalResumeUrl;
-                DB::table('job_applications')
-                    ->where('id', $jobApplication->id)
-                    ->update(['resume' => $r2ResumeUrl]);
-            } elseif ($request->hasFile('resume')) {
+            // ── Transactional Outbox: candidate.created event ─────────────────────────
+            DB::table('candidate_outbox_events')->insert([
+                'company_id'     => (int) $company_id,
+                'dedupe_key'     => "candidate:{$jobApplication->id}:created",
+                'aggregate_type' => 'Candidate',
+                'aggregate_id'   => (int) $jobApplication->id,
+                'event_type'     => 'candidate.created',
+                'event_version'  => 1,
+                'payload'        => json_encode([
+                    'candidate_id'    => (int) $jobApplication->id,
+                    'job_id'          => (int) $request->job_id,
+                    'company_id'      => (int) $company_id,
+                    'submitted_by'    => (int) $submitted_by,
+                    'resume_asset_id' => $resumeAssetId,
+                ]),
+                'status'         => 'pending',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
 
-                $companyNameR2 = DB::table('companies')
-                    ->where('id', auth()->user()->company_id)
-                    ->value('company_name');   // change column if needed
-                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-                $year = date('Y');
-                $month = date('m');
+            // Commit MySQL transaction — pure local database writes with zero remote network calls
+            DB::commit();
 
-                $tempPath = $request->input('uploaded_file_path');
-                $full_name = $request->input('resume_original_name');
-                if ($tempPath && $full_name) {
-                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
-                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
-                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
-                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
-                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
-                    $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
-                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
-                    $fileUrl = "https://file.jero.works/{$r2Path}";
-
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
-                    DB::table('job_applications')
-                        ->where('id', $jobApplication->id)
-                        ->update(['resume' => $fileUrl]);
-                } else {
-                    \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
-                        'company_id' => auth()->user()->company_id,
-                        'job_application_id' => $jobApplication->id ?? null,
-                    ]);
-                }
+            // ── Post-Commit Operations (0% DB lock holding time) ──────────────────────
+            // Primary ES indexing runs post-commit: guarantees ES failures never rollback MySQL candidate
+            try {
+                GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
+            } catch (\Throwable $e) {
+                \Log::warning('store(): Post-commit primary ES indexing failed: '.$e->getMessage());
             }
 
-            // Guard: do not wipe the resume URL when v2 or file upload already set it above.
-            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
-                DB::table('job_applications')
-                    ->where('id', $jobApplication->id)
-                    ->update(['resume' => '']);
-            }
-
-            // candidate_skills_value, timeline, tb_ranks, JobApplicationAnswer,
-            // job_additional_detail+ES, and packageRedeem are all handled by
-            // ProcessCandidateSubmissionJob dispatched after commit (V2 Steps 2–4).
-
-            // Primary ES indexing kept synchronous — guarantees the candidate row is
-            // visible on the AppTracker grid the moment the HTTP redirect fires (V2 Step 1).
-            GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
-
+            // Post-commit atomic cache invalidation
             $cachekeys = [
                 'alljobslist_version_user_'.$this->user->id,
                 'allcvtracker_version_user_'.$this->user->id,
                 'allapptracker_version_user_'.$this->user->id,
+                'candidate:'.$jobApplication->id,
+                'candidate:'.$jobApplication->id.':resume',
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
             }
             $this->currencyConverter = GeneralMethod::currencyConverter();
 
-            DB::commit();
+            // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
+            try {
+                ProcessOutboxEventJob::dispatch()->onQueue('candidate-index');
+            } catch (\Throwable $e) {
+                \Log::warning('store(): ProcessOutboxEventJob dispatch warning: '.$e->getMessage());
+            }
 
-            // ── V2 async secondary jobs — dispatched after commit so MySQL rows are visible ──
+            // V2 async secondary jobs — dispatched after commit so MySQL rows are visible
             $requestData = array_filter(
                 $request->except(['resume', 'photo', 'documents', 'file', 'files']),
                 fn ($val) => ! ($val instanceof \Illuminate\Http\UploadedFile)
@@ -3424,7 +3528,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 (int) $company_id,
                 (string) $submittedByEmail
             )->onConnection('emails');
-            // ─────────────────────────────────────────────────────────────────────────────
 
             $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             if (! empty($rawJobId)) {
@@ -3433,15 +3536,59 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $redirectUrl = route('service_company.job-applications.table');
             }
 
-            return Reply::successWithData(__('messages.createdSuccessfully'), [
-                'action' => 'redirect',
-                'url' => $redirectUrl,
+            $responseData = [
+                'action'       => 'redirect',
+                'url'          => $redirectUrl,
                 'candidate_id' => (int) $jobApplication->id,
-                'resume' => (string) ($jobApplication->resume ?? ''),
-            ]);
+                'resume'       => (string) ($jobApplication->resume ?? ''),
+            ];
 
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::set($redisLockKey, 'COMPLETED:' . json_encode($responseData), 'EX', 300);
+                } catch (\Throwable) {}
+            }
+
+            return Reply::successWithData(__('messages.createdSuccessfully'), $responseData);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            if ($redisLockKey && $redisLockAcquired) {
+                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+            }
+
+            // Layer 3 Idempotent replay on duplicate submission UUID (MySQL error 1062)
+            if ((isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) || str_contains($e->getMessage(), '1062 Duplicate entry')) {
+                if (! empty($clientSubmissionUuid)) {
+                    $existing = DB::table('job_applications')
+                        ->where('company_id', $company_id)
+                        ->where('client_submission_uuid', $clientSubmissionUuid)
+                        ->first();
+
+                    if ($existing) {
+                        $rawJobId = GeneralMethod::value_decrypt($request->job_id);
+                        $redirectUrl = ! empty($rawJobId)
+                            ? url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all')
+                            : route('service_company.job-applications.table');
+
+                        return Reply::successWithData(__('messages.createdSuccessfully'), [
+                            'action'       => 'redirect',
+                            'url'          => $redirectUrl,
+                            'candidate_id' => (int) $existing->id,
+                            'resume'       => (string) ($existing->resume ?? ''),
+                        ]);
+                    }
+                }
+            }
+
+            \Log::error('store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
+
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         } catch (\Throwable $e) {
             DB::rollBack();
+            if ($redisLockKey && $redisLockAcquired) {
+                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+            }
             \Log::error('store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
@@ -6935,13 +7082,56 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         // ─────────────────────────────────────────────────────────────────────────────
 
+        $clientResumeVersion = (int) $request->input('resume_version', $jobApplication->resume_version ?? 1);
+        $currentResumeVersion = (int) ($jobApplication->resume_version ?? 1);
+        if ($currentResumeVersion > $clientResumeVersion) {
+            return Reply::dataOnly([
+                'status'  => 'error',
+                'msgType' => 'warning',
+                'message' => 'Concurrent update detected. This candidate was updated in another session. Please refresh.',
+            ]);
+        }
+
         DB::beginTransaction();
         try {
 
             $jobApplication->save();
 
-            // ── v2 atomic claim ───────────────────────────────────────────────────────
-            if ($resumeSession) {
+            $resumeIntent = $request->input('resume_intent');
+            $oldResumeId = $jobApplication->current_resume_id;
+
+            if ($resumeIntent === 'REMOVE') {
+                if ($oldResumeId) {
+                    DB::table('resume_assets')
+                        ->where('id', $oldResumeId)
+                        ->where('company_id', $company_id)
+                        ->update([
+                            'status'     => 'REMOVAL_PENDING',
+                            'removed_at' => now(),
+                        ]);
+                }
+                $jobApplication->current_resume_id = null;
+                $jobApplication->resume = '';
+                $jobApplication->resume_version = $currentResumeVersion + 1;
+                $jobApplication->save();
+
+                DB::table('candidate_outbox_events')->insert([
+                    'company_id'     => (int) $company_id,
+                    'dedupe_key'     => "candidate:{$jobApplication->id}:resume_removed:v{$currentResumeVersion}",
+                    'aggregate_type' => 'Candidate',
+                    'aggregate_id'   => (int) $jobApplication->id,
+                    'event_type'     => 'resume.removed',
+                    'event_version'  => 1,
+                    'payload'        => json_encode([
+                        'candidate_id'  => (int) $jobApplication->id,
+                        'old_resume_id' => $oldResumeId,
+                    ]),
+                    'status'         => 'pending',
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+            } elseif ($resumeSession) {
+                // ── v2 atomic claim ───────────────────────────────────────────────────────
                 $claimed = ResumeUpload::where('id', $resumeSession->id)
                     ->where('company_id', $company_id)
                     ->where('status', ResumeUploadStatus::Uploaded->value)
@@ -6967,52 +7157,49 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'message' => 'Uploaded file not found in storage. Please upload the resume again.']);
                 }
                 $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
-            }
-            // ─────────────────────────────────────────────────────────────────────────────
 
-            // Recalculate skill match for ALL jobs this candidate is linked to, ensuring complete synchronization across App Tracker, Client App Tracker, and Candidate Drawer.
-            $allWiseCandidates = DB::table('add_job_wise_condidates')
-                ->where('job_application_id', $jobApplication->id)
-                ->get(['id', 'job_id', 'company_id']);
-
-            $updatedWiseIds = [];
-            $primaryMatchPct = null;
-            $candSkillsStr = (string) ($jobApplication->skills ?? '');
-
-            foreach ($allWiseCandidates as $wiseRow) {
-                $calc = GeneralMethod::calculateSkillMatch((int) $wiseRow->job_id, $candSkillsStr);
-                $pct = (int) ($calc['percentage'] ?? 0);
-                DB::table('add_job_wise_condidates')->where('id', $wiseRow->id)->update([
-                    'skill_match' => $pct,
-                    'skills' => $candSkillsStr,
-                    'updated_at' => now(),
-                ]);
-                $updatedWiseIds[] = (int) $wiseRow->id;
-                if ((int) ($request->AddJobWiseCondidateRankRow ?? 0) === (int) $wiseRow->id || (int) ($request->job_id ?? 0) === (int) $wiseRow->job_id) {
-                    $primaryMatchPct = $pct;
+                if ($oldResumeId) {
+                    DB::table('resume_assets')
+                        ->where('id', $oldResumeId)
+                        ->where('company_id', $company_id)
+                        ->update([
+                            'status'     => 'REMOVAL_PENDING',
+                            'removed_at' => now(),
+                        ]);
                 }
-            }
 
-            if ($primaryMatchPct === null && ! empty($request->job_id)) {
-                $calc = GeneralMethod::calculateSkillMatch((int) $request->job_id, $candSkillsStr);
-                $primaryMatchPct = (int) ($calc['percentage'] ?? 0);
-            }
+                $newAssetId = DB::table('resume_assets')->insertGetId([
+                    'company_id'        => (int) $company_id,
+                    'candidate_id'      => (int) $jobApplication->id,
+                    'upload_session_id' => $resumeSession->uuid,
+                    'object_key'        => (string) $finalResumeUrl,
+                    'original_filename' => (string) ($request->input('resume_original_name') ?: ($resumeSession->original_filename ?: 'resume.pdf')),
+                    'mime_type'         => (string) ($resumeSession->mime_type ?: 'application/pdf'),
+                    'file_size'         => (int) ($resumeSession->file_size_bytes ?: 0),
+                    'checksum_sha256'   => $resumeSession->sha256_hex ?: null,
+                    'version'           => 1,
+                    'status'            => 'ACTIVE',
+                    'parser_status'     => $request->input('parser_status', 'BYPASSED'),
+                    'created_at'        => now(),
+                    'attached_at'       => now(),
+                ]);
 
-            // Resume handling on UPDATE: v2 session takes priority over v1 file upload.
-            if ($resumeSession) {
-                DB::table('job_applications')
-                    ->where('id', $jobApplication->id)
-                    ->update(['resume' => $finalResumeUrl]);
+                $jobApplication->current_resume_id = $newAssetId;
+                $jobApplication->resume = $finalResumeUrl;
+                $jobApplication->resume_version = $currentResumeVersion + 1;
+                $jobApplication->save();
+
                 ResumeUpload::where('id', $resumeSession->id)
                     ->where('company_id', $company_id)
                     ->where('status', ResumeUploadStatus::Completed->value)
                     ->update([
                         'linked_candidate_id' => $jobApplication->id,
-                        'r2_url' => $finalResumeUrl,
-                        'updated_at' => now(),
+                        'r2_url'              => $finalResumeUrl,
+                        'updated_at'          => now(),
                     ]);
                 UploadSessionAudit::record($resumeSession->id, 'ActionUpdateLinked', [
-                    'candidate_id' => $jobApplication->id,
+                    'candidate_id'    => $jobApplication->id,
+                    'resume_asset_id' => $newAssetId,
                 ], $company_id, auth()->id());
             } elseif ($request->hasFile('resume')) {
                 $companyNameR2 = DB::table('companies')
@@ -7027,7 +7214,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $tempPath = $request->input('uploaded_file_path');
                 $full_name = $request->input('resume_original_name');
                 if ($tempPath && $full_name) {
-                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
                     $baseName = pathinfo($full_name, PATHINFO_FILENAME);
                     $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
                     $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
@@ -7037,24 +7223,105 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $fileUrl = "https://file.jero.works/{$r2Path}";
 
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
-                    DB::table('job_applications')
-                        ->where('id', $jobApplication->id)
-                        ->update(['resume' => $fileUrl]);
+
+                    if ($oldResumeId) {
+                        DB::table('resume_assets')
+                            ->where('id', $oldResumeId)
+                            ->where('company_id', $company_id)
+                            ->update([
+                                'status'     => 'REMOVAL_PENDING',
+                                'removed_at' => now(),
+                            ]);
+                    }
+
+                    $newAssetId = DB::table('resume_assets')->insertGetId([
+                        'company_id'        => (int) $company_id,
+                        'candidate_id'      => (int) $jobApplication->id,
+                        'upload_session_id' => null,
+                        'object_key'        => (string) $fileUrl,
+                        'original_filename' => (string) $full_name,
+                        'mime_type'         => 'application/pdf',
+                        'file_size'         => 0,
+                        'checksum_sha256'   => null,
+                        'version'           => 1,
+                        'status'            => 'ACTIVE',
+                        'parser_status'     => $request->input('parser_status', 'BYPASSED'),
+                        'parser_version'    => $request->input('parser_version', null),
+                        'created_at'        => now(),
+                        'attached_at'       => now(),
+                    ]);
+
+                    $jobApplication->current_resume_id = $newAssetId;
+                    $jobApplication->resume = $fileUrl;
+                    $jobApplication->resume_version = $currentResumeVersion + 1;
+                    $jobApplication->save();
                 } else {
                     \Log::warning('v1 upload: missing tempPath or filename on form submit — resume not saved', [
                         'company_id' => auth()->user()->company_id,
                         'job_application_id' => $jobApplication->id ?? null,
                     ]);
                 }
+            } else {
+                if (empty($request->resumeCheck)) {
+                    $jobApplication->current_resume_id = null;
+                    $jobApplication->resume = '';
+                }
+                $jobApplication->resume_version = $currentResumeVersion + 1;
+                $jobApplication->save();
             }
 
-            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
-                DB::table('job_applications')
-                    ->where('id', $jobApplication->id)
-                    ->update(['resume' => '']);
+            // Recalculate skill match for ALL jobs this candidate is linked to
+            $allWiseCandidates = DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $jobApplication->id)
+                ->get(['id', 'job_id', 'company_id']);
+
+            $updatedWiseIds = [];
+            $primaryMatchPct = null;
+            $candSkillsStr = (string) ($jobApplication->skills ?? '');
+
+            foreach ($allWiseCandidates as $wiseRow) {
+                $calc = GeneralMethod::calculateSkillMatch((int) $wiseRow->job_id, $candSkillsStr);
+                $pct = (int) ($calc['percentage'] ?? 0);
+                DB::table('add_job_wise_condidates')->where('id', $wiseRow->id)->update([
+                    'skill_match' => $pct,
+                    'skills'      => $candSkillsStr,
+                    'updated_at'  => now(),
+                ]);
+                $updatedWiseIds[] = (int) $wiseRow->id;
+                if ((int) ($request->AddJobWiseCondidateRankRow ?? 0) === (int) $wiseRow->id || (int) ($request->job_id ?? 0) === (int) $wiseRow->job_id) {
+                    $primaryMatchPct = $pct;
+                }
             }
 
-            // Primary ES candidate update — sync every linked job-wise row so searches and trackers update immediately.
+            if ($primaryMatchPct === null && ! empty($request->job_id)) {
+                $calc = GeneralMethod::calculateSkillMatch((int) $request->job_id, $candSkillsStr);
+                $primaryMatchPct = (int) ($calc['percentage'] ?? 0);
+            }
+
+            // Insert outbox event for candidate.updated
+            DB::table('candidate_outbox_events')->insert([
+                'company_id'     => (int) $company_id,
+                'dedupe_key'     => "candidate:{$jobApplication->id}:updated:v{$jobApplication->resume_version}",
+                'aggregate_type' => 'Candidate',
+                'aggregate_id'   => (int) $jobApplication->id,
+                'event_type'     => 'candidate.updated',
+                'event_version'  => 1,
+                'payload'        => json_encode([
+                    'candidate_id' => (int) $jobApplication->id,
+                    'job_id'       => (int) ($request->job_id ?? 0),
+                    'company_id'   => (int) $company_id,
+                    'submitted_by' => (int) auth()->id(),
+                ]),
+                'status'         => 'pending',
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            // Commit MySQL transaction — pure local database writes with zero remote network calls
+            DB::commit();
+
+            // ── Post-Commit Operations (0% DB lock holding time) ──────────────────────
+            // Primary ES candidate update — sync every linked job-wise row so searches and trackers update immediately
             foreach ($updatedWiseIds as $wId) {
                 GeneralMethod::JobApplicationsAddEditUpload($wId);
             }
@@ -7074,11 +7341,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Log::warning('ELASTIC_CANDIDATES refresh in update() failed: '.$e->getMessage());
             }
 
+            // Post-commit cache clean
             $cachekeys = [
                 'allcvtracker_version_user_'.$this->user->id,
                 'allapptracker_version_user_'.$this->user->id,
                 'allclientapp_version_user_'.$this->user->id,
                 'candidateDetails_version_user_'.$this->user->id,
+                'candidate:'.$jobApplication->id,
+                'candidate:'.$jobApplication->id.':resume',
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
@@ -7115,7 +7385,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Log::warning('CandidateDrawerUpdated dispatch in update() failed: '.$e->getMessage());
             }
 
-            DB::commit();
+            // Dispatch ProcessOutboxEventJob to dedicated queue
+            try {
+                ProcessOutboxEventJob::dispatch()->onQueue('candidate-index');
+            } catch (\Throwable $e) {
+                \Log::warning('update(): ProcessOutboxEventJob dispatch warning: '.$e->getMessage());
+            }
 
             // ── V2 async candidate update job — dispatched post-commit ─────────────
             // Handles secondary ES indexing (skills experience, answers, job questions, bench candidate indexes).
