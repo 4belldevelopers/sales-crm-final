@@ -681,7 +681,6 @@
                         @endphp
                       </select></label>
                     </div>
-                    <div class="candidate-experience-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Relevant experience in the recommended or primary skills for this job.</span></div>
                   </div>
                   <div class="candidate-experience-tip">
                     <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
@@ -1081,7 +1080,6 @@
                   </tbody>
                 </table>
                 </div>
-                <div class="candidate-job-skills-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Add experience and proficiency for the skills required by this job.</span></div>
               </div>
             </div>
 
@@ -1261,7 +1259,6 @@
                     <small class="candidate-field-help">Provide a reference name who can vouch for the candidate's work experience.</small>
                   </div>
                 </div>
-                <div class="candidate-section-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>All fields in this section are optional. Add relevant details when they apply to this candidate.</span></div>
               </div>
             </div>
 
