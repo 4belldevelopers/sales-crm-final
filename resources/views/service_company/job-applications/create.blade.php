@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926" rel="stylesheet" type="text/css" />
 
 @endpush
 
