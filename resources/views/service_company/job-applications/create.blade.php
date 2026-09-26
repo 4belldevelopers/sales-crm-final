@@ -1345,7 +1345,7 @@
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
-<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-3"></script>
+<script src="{{ asset('js/jero-client-parser.js') }}?v=20260926-4"></script>
 
 <script>
 $(document).ready(function () {
@@ -1389,15 +1389,12 @@ $(document).ready(function () {
                     '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
                     + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                     + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
+                    + '<span><strong>Upload complete!</strong> Resume file stored securely.</span>'
                 ).show();
                 $('#uploaded_file_path').val('');   // v2 uses session_uuid, not file path
                 $('#resume_original_name').val('');
                 $('#resumeCheck').val('1');
-                var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
-                if (window._currentActiveResumeFile) {
-                    showUploadedCard(window._currentActiveResumeFile, null);
-                }
+                // Storage upload is isolated: do NOT clear ri.value or re-call showUploadedCard to avoid parser conflicts
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
@@ -1546,6 +1543,27 @@ $(document).ready(function () {
                 }
             });
         }
+
+        // ── PIPELINE 2: Independent Background Storage Upload ──────────
+        setTimeout(function () {
+            var uploadGeneration = ++resumeUploadGeneration;
+            if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+                // v2 path: direct browser → R2 storage (runs independently in background)
+                window.ResumePresign.startUpload(selectedFile, getUpContextKey()).catch(function (error) {
+                    if (uploadGeneration !== resumeUploadGeneration
+                        || !shouldUseResumeUploadFallback(error)
+                        || typeof uploadWithProgress !== 'function') {
+                        return;
+                    }
+                    window.ResumePresign.cancelUpload(getUpContextKey());
+                    uploadWithProgress(selectedFile);
+                });
+            } else if (typeof uploadWithProgress === 'function') {
+                // v1 path: same-origin multipart POST fallback
+                uploadWithProgress(selectedFile);
+            }
+        }, 30);
+
         window.__upXhrChannelClaimed = false;
     }
 
@@ -1724,7 +1742,7 @@ $(document).ready(function () {
 
                 $('#uploaded_file_path').val(r.file_path || '');
                 $('#resume_original_name').val(r.original_name || file.name || '');
-                showUploadedCard(file, null);
+                // showUploadedCard already invoked on initial selection; do not re-invoke here to keep parser isolated
 
                 // Zero server polling: 100% of resume parsing runs client-side
             } else {
