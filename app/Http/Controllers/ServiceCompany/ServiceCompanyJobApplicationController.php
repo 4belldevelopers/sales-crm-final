@@ -2815,6 +2815,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->qualification = ReferenceDataCache::qualifications();
         $this->jobId = $jobId;
         $this->appId = $appId;
+        $this->currentSlug = request()->get('currentSlug') ?: request()->get('slug') ?: '';
 
         if (! empty($appId) && (int) $appId !== 0) {
             $this->application = JobApplication::withoutGlobalScopes()->find($appId);
@@ -3530,10 +3531,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             )->onConnection('emails');
 
             $rawJobId = GeneralMethod::value_decrypt($request->job_id);
-            if (! empty($rawJobId)) {
-                $redirectUrl = url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all');
+            $currentSlug = (string) ($request->input('currentSlug') ?: $request->input('slug') ?: '');
+            if ($currentSlug === 'cvtracker' || empty($rawJobId)) {
+                $redirectUrl = route('service_company.cvtracker.index');
+            } elseif ($currentSlug === 'clientapp') {
+                $redirectUrl = route('service_company.apptracker.clientapp', [
+                    'id' => GeneralMethod::value_encrypt($rawJobId),
+                    'mstatus_id' => 'all',
+                ]);
             } else {
-                $redirectUrl = route('service_company.job-applications.table');
+                $redirectUrl = route('service_company.apptracker.index', [
+                    'id' => GeneralMethod::value_encrypt($rawJobId),
+                    'mstatus_id' => 'all',
+                ]);
             }
 
             $responseData = [
@@ -3567,9 +3577,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                     if ($existing) {
                         $rawJobId = GeneralMethod::value_decrypt($request->job_id);
-                        $redirectUrl = ! empty($rawJobId)
-                            ? url('/service_company/apptracker/'.GeneralMethod::value_encrypt($rawJobId).'/all')
-                            : route('service_company.job-applications.table');
+                        $currentSlug = (string) ($request->input('currentSlug') ?: $request->input('slug') ?: '');
+                        if ($currentSlug === 'cvtracker' || empty($rawJobId)) {
+                            $redirectUrl = route('service_company.cvtracker.index');
+                        } elseif ($currentSlug === 'clientapp') {
+                            $redirectUrl = route('service_company.apptracker.clientapp', [
+                                'id' => GeneralMethod::value_encrypt($rawJobId),
+                                'mstatus_id' => 'all',
+                            ]);
+                        } else {
+                            $redirectUrl = route('service_company.apptracker.index', [
+                                'id' => GeneralMethod::value_encrypt($rawJobId),
+                                'mstatus_id' => 'all',
+                            ]);
+                        }
 
                         return Reply::successWithData(__('messages.createdSuccessfully'), [
                             'action'       => 'redirect',
@@ -4028,7 +4049,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if (! empty($request->job_id)) {
             return Reply::redirect(url('/service_company/apptracker/'.$request->job_id.'/all'), __('menu.jobApplications').' '.__($message));
         } else {
-            return Reply::redirect(route('service_company.job-applications.table'), __('menu.jobApplications').' '.__($message));
+            return Reply::redirect(route('service_company.cvtracker.index'), __('menu.jobApplications').' '.__($message));
         }
     }
 
@@ -11523,9 +11544,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             if (! empty($rawJobId)) {
-                $redirectUrl = url('/service_company/apptracker/clientapp/'.GeneralMethod::value_encrypt($rawJobId).'/all');
+                $redirectUrl = route('service_company.apptracker.clientapp', [
+                    'id' => GeneralMethod::value_encrypt($rawJobId),
+                    'mstatus_id' => 'all',
+                ]);
             } else {
-                $redirectUrl = route('service_company.job-applications.table');
+                $redirectUrl = route('service_company.cvtracker.index');
             }
 
             return Reply::successWithData(__('messages.createdSuccessfully'), [
