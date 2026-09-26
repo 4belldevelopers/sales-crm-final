@@ -2051,7 +2051,6 @@
     box-shadow: 0 9px 24px rgba(100, 75, 0, .08) !important;
 }
 
-.job-candidate-create .interview-card .candidate-card-header,
 .job-candidate-create .professional-links-card .candidate-card-header,
 .job-candidate-create .additional-details-card .candidate-card-header,
 .job-candidate-create .recruiter-note-card .candidate-card-header {
@@ -2061,7 +2060,6 @@
     background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
 }
 
-.job-candidate-create .interview-card .candidate-card-icon,
 .job-candidate-create .professional-links-card .candidate-card-icon,
 .job-candidate-create .additional-details-card .candidate-card-icon,
 .job-candidate-create .recruiter-note-card .candidate-card-icon {
@@ -2076,7 +2074,6 @@
     font-size: 16px !important;
 }
 
-.job-candidate-create .interview-card .candidate-card-title strong,
 .job-candidate-create .professional-links-card .candidate-card-title strong,
 .job-candidate-create .additional-details-card .candidate-card-title strong,
 .job-candidate-create .recruiter-note-card .candidate-card-title strong {
@@ -2085,7 +2082,6 @@
     font-weight: 700 !important;
 }
 
-.job-candidate-create .interview-card .candidate-card-title small,
 .job-candidate-create .professional-links-card .candidate-card-title small,
 .job-candidate-create .additional-details-card .candidate-card-title small,
 .job-candidate-create .recruiter-note-card .candidate-card-title small {
@@ -2095,7 +2091,6 @@
     line-height: 1.45;
 }
 
-.job-candidate-create .interview-card .candidate-card-body,
 .job-candidate-create .professional-links-card .candidate-card-body,
 .job-candidate-create .additional-details-card .candidate-card-body,
 .job-candidate-create .recruiter-note-card .candidate-card-body {
@@ -2103,142 +2098,209 @@
     background: #ffffff !important;
 }
 
-/* Availability for Next 3 Days */
+/* Availability for Next 3 Days — Compact Enterprise Layout */
+.job-candidate-create .interview-card .candidate-card-header {
+    min-height: 52px !important;
+    height: auto !important;
+    padding: 8px 16px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: #fffdf2 !important;
+}
+
+.job-candidate-create .interview-card .candidate-card-icon {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    flex-basis: 32px !important;
+    border: 1px solid #f3c719 !important;
+    border-radius: 6px !important;
+    color: #946b00 !important;
+    background: #fff4c4 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+}
+
+.job-candidate-create .interview-card .candidate-card-title strong {
+    color: #071434 !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.1px;
+}
+
+.job-candidate-create .interview-card .candidate-card-title strong .rq {
+    color: #dc2626 !important;
+    font-weight: 700 !important;
+    margin-left: 2px;
+}
+
+.job-candidate-create .interview-card .candidate-card-title small {
+    display: block !important;
+    color: #65708e !important;
+    font-size: 11px !important;
+    line-height: 1.35;
+    margin-top: 1px !important;
+}
+
+.job-candidate-create .interview-card .candidate-card-body {
+    padding: 12px 14px !important;
+    background: #ffffff !important;
+}
+
 .job-candidate-create .interview-card .ag {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
 }
 
 .job-candidate-create .interview-card .candidate-slot {
-    min-width: 0;
-    padding: 12px;
-    border: 1px solid #eadfba;
-    border-radius: 8px;
-    background: #fffefa;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+    border: 1px solid #ebdca8 !important;
+    border-radius: 8px !important;
+    background: #fffefb !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .03) !important;
 }
 
 .job-candidate-create .candidate-slot-head {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    min-height: 48px;
-    margin-bottom: 10px;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-height: 24px !important;
+    margin-bottom: 8px !important;
 }
 
 .job-candidate-create .candidate-slot-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    border-radius: 8px;
-    color: #946b00;
-    background: #fff4c4;
-    font-size: 14px;
-    font-weight: 700;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 5px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+.job-candidate-create .candidate-slot--one .candidate-slot-number {
+    color: #946b00 !important;
+    background: #fff4c4 !important;
+    border: 1px solid #fae69d !important;
 }
 
 .job-candidate-create .candidate-slot--two .candidate-slot-number {
-    color: #1769aa;
-    background: #e9f4ff;
+    color: #1769aa !important;
+    background: #e9f4ff !important;
+    border: 1px solid #cde4fa !important;
 }
 
 .job-candidate-create .candidate-slot--three .candidate-slot-number {
-    color: #087762;
-    background: #e6f7ef;
+    color: #087762 !important;
+    background: #e6f7ef !important;
+    border: 1px solid #b8edd5 !important;
 }
 
 .job-candidate-create .candidate-slot-head strong,
-.job-candidate-create .candidate-slot-head small {
-    display: block;
-    letter-spacing: 0;
-}
-
-.job-candidate-create .candidate-slot-head strong {
-    color: #071434;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1.35;
-}
-
-.job-candidate-create .candidate-slot-head small {
-    margin-top: 2px;
-    color: #6f7895;
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1.4;
+.job-candidate-create .candidate-slot-title {
+    display: inline-block !important;
+    color: #071434 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
 }
 
 .job-candidate-create .candidate-slot-fields {
-    display: grid;
-    grid-template-columns: minmax(92px, .92fr) minmax(100px, 1fr) minmax(116px, 1.14fr);
-    gap: 6px;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr) minmax(0, 1.15fr) !important;
+    gap: 5px !important;
+    align-items: end !important;
+    width: 100% !important;
+    min-width: 0 !important;
 }
 
 .job-candidate-create .candidate-slot-field {
-    display: block;
-    min-width: 0;
-    margin: 0;
+    display: block !important;
+    min-width: 0 !important;
+    margin: 0 !important;
 }
 
 .job-candidate-create .candidate-slot-field > span:first-child {
-    display: block;
-    margin-bottom: 5px;
-    color: #071434;
-    font-size: 11px;
-    font-weight: 700;
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    margin-bottom: 4px !important;
+    color: #374151 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
 }
 
 .job-candidate-create .candidate-slot-field > span:first-child b {
-    color: #e4aa00;
-    font-weight: 700;
+    color: #dc2626 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
 }
 
 .job-candidate-create .candidate-slot-control {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-width: 0;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
 }
 
 .job-candidate-create .candidate-slot-control > i {
-    position: absolute;
-    z-index: 2;
-    top: 50%;
-    left: 8px;
+    position: absolute !important;
+    z-index: 2 !important;
+    top: 50% !important;
+    left: 7px !important;
     color: #7c86a3 !important;
-    font-size: 11px !important;
-    transform: translateY(-50%);
-    pointer-events: none;
+    font-size: 10.5px !important;
+    transform: translateY(-50%) !important;
+    pointer-events: none !important;
 }
 
 .job-candidate-create .candidate-slot-control input,
 .job-candidate-create .candidate-slot-control select {
-    width: 100%;
-    height: 42px !important;
-    min-height: 42px !important;
-    padding: 0 6px 0 26px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    padding: 0 4px 0 21px !important;
     border: 1px solid #e3d69f !important;
-    border-radius: 8px !important;
+    border-radius: 6px !important;
     color: #071434 !important;
     background: #ffffff !important;
     box-shadow: none !important;
+    font-family: 'Poppins', sans-serif !important;
     font-size: 11px !important;
-    text-overflow: clip;
-    white-space: nowrap;
+    font-weight: 500 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
 }
 
 .job-candidate-create .candidate-slot-control select {
-    padding-right: 24px !important;
-    cursor: pointer;
+    padding-right: 17px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%237180a6' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 4px center !important;
+    background-size: 8px 8px !important;
+    cursor: pointer !important;
 }
 
 .job-candidate-create .candidate-slot-control input:focus,
 .job-candidate-create .candidate-slot-control select:focus {
     border-color: #dca600 !important;
-    box-shadow: 0 0 0 3px rgba(255, 196, 0, .14) !important;
+    box-shadow: 0 0 0 2px rgba(255, 196, 0, .14) !important;
 }
 
 /* Professional Links */
@@ -2561,9 +2623,9 @@
     font-size: 11px !important;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 860px) {
     .job-candidate-create .interview-card .ag {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 }
 
