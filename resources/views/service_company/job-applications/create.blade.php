@@ -1612,7 +1612,7 @@ $(document).ready(function () {
         $('#resume_original_name').val('');
         $('.resume-card').removeClass('has-uploaded-resume');
         $('#upInfo').removeClass('show');
-        $('#uploadBox').show();
+        $('#uploadBox').removeClass('d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
@@ -1664,7 +1664,7 @@ $(document).ready(function () {
         }
 
         // Hide the dropzone + file-info strip and show the new card.
-        $('#uploadBox').hide();
+        $('#uploadBox').attr('style', 'display: none !important').addClass('d-none');
         $('#fileInfo').hide();
         $('.resume-card').addClass('has-uploaded-resume');
         $info.find('.up-info-banner').show();
@@ -1749,7 +1749,10 @@ $(document).ready(function () {
 
                 $('#uploaded_file_path').val(r.file_path || '');
                 $('#resume_original_name').val(r.original_name || file.name || '');
-                // showUploadedCard already invoked on initial selection; do not re-invoke here to keep parser isolated
+                // Ensure uploadBox remains completely hidden and upInfo remains shown
+                $('#uploadBox').attr('style', 'display: none !important').addClass('d-none');
+                $('.resume-card').addClass('has-uploaded-resume');
+                $('#upInfo').addClass('show');
 
                 // Zero server polling: 100% of resume parsing runs client-side
             } else {

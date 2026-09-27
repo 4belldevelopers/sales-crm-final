@@ -249,17 +249,25 @@
 }
 
 .job-candidate-create .resume-card .ua {
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    flex: 1 1 auto !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1 1 auto;
     min-height: 220px;
-    height: 100% !important;
+    height: 100%;
     border-color: #cfd8eb !important;
     border-radius: 8px !important;
     background: #fbfcff !important;
     box-sizing: border-box !important;
+}
+
+.job-candidate-create .resume-card.has-uploaded-resume .ua,
+.job-candidate-create .candidate-intro-grid:has(.up-info.show) .ua,
+.job-candidate-create .resume-card .ua[style*="display: none"],
+.job-candidate-create .resume-card .ua[style*="display:none"],
+.job-candidate-create .resume-card .ua.d-none {
+    display: none !important;
 }
 
 .job-candidate-create .resume-card .ua:hover,
@@ -4359,6 +4367,7 @@
     flex-direction: column !important;
     flex: 1 1 auto !important;
     height: 100% !important;
+    gap: 12px !important;
 }
 
 /* 1. Green Success Banner */
@@ -4368,11 +4377,12 @@
     align-items: center !important;
     justify-content: space-between !important;
     padding: 10px 14px !important;
-    background: #ecfdf3 !important;
+    background: #ecfdf5 !important;
     border: 1px solid #a7f3d0 !important;
     border-radius: 8px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0 !important;
     color: #065f46 !important;
+    flex-shrink: 0 !important;
 }
 
 .job-candidate-create .up-info-banner-left {
@@ -4442,11 +4452,12 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 10px 16px !important;
+    padding: 12px 18px !important;
     background: #fff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0 !important;
+    flex-shrink: 0 !important;
 }
 
 .job-candidate-create .up-file-card-left {
@@ -4547,13 +4558,22 @@
 
 .job-candidate-create .up-btn-remove {
     background: #fff !important;
-    border: 1px solid #ffccd5 !important;
+    border: 1px solid #fca5a5 !important;
+    border-radius: 6px !important;
     color: #dc2626 !important;
+    padding: 7px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    transition: all .15s ease !important;
 }
 
 .job-candidate-create .up-btn-remove:hover {
     background: #fff1f2 !important;
-    border-color: #fca5a5 !important;
+    border-color: #f87171 !important;
 }
 
 .job-candidate-create .up-btn-remove i {
@@ -4561,22 +4581,24 @@
     color: #dc2626 !important;
 }
 
-/* 3. Resume Details Card (2x2 Grid with Yellow Badges) */
+/* 3. Resume Details Card (2x2 Grid with Yellow Badges matching Image 2) */
 .job-candidate-create .up-details-card {
     flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
-    background: #fbfcfe !important;
-    border: 1px solid #e8edf5 !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 10px !important;
-    padding: 14px 18px !important;
+    padding: 16px 20px !important;
+    margin-bottom: 0 !important;
 }
 
 .job-candidate-create .up-details-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px 16px !important;
+    grid-template-columns: 1fr 1fr !important;
+    column-gap: 0 !important;
+    row-gap: 16px !important;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -4585,25 +4607,31 @@
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
-    padding: 0 !important;
+    padding: 4px 16px 4px 0 !important;
+}
+
+.job-candidate-create .up-details-grid > .up-detail-tile:nth-child(even) {
+    border-left: 1px solid #edf2f7 !important;
+    padding-left: 20px !important;
+    padding-right: 0 !important;
 }
 
 .job-candidate-create .up-detail-tile .up-detail-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
     border-radius: 8px !important;
     background: #fff0a8 !important;
     color: #854d0e !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     flex-shrink: 0 !important;
 }
 
 .job-candidate-create .up-detail-tile .up-detail-icon i {
     color: #854d0e !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
 }
 
 .job-candidate-create .up-detail-lbl {
