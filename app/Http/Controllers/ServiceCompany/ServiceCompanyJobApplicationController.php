@@ -301,29 +301,43 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_id = (int) $request->job_id;
         $companyId = (int) auth()->user()->company_id;
 
+        // TENANCY NOTE: Verify candidate application belongs to current tenant, thirdparty company, or active pipeline
+        $app = DB::table('job_applications')->where('id', $appId)->first();
+        if (! $app) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
+        }
+
+        if ($job_id <= 0) {
+            $job_id = (int) (DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->value('job_id') ?? ($app->job_id ?? 0));
+        }
+
+        $isAuthorized = auth()->user()->hasRole('admin')
+            || (int) $app->company_id === $companyId
+            || (int) ($app->thirdparty_company_id ?? 0) === $companyId
+            || DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
+                })->exists()
+            || ($job_id > 0 && DB::table('jobs')->where('id', $job_id)->where('company_id', $companyId)->exists())
+            || DB::table('rec_candidate_assign')
+                ->where('source_application_id', $appId)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('source_company_id', $companyId)->orWhere('source_from_company_id', $companyId);
+                })->exists();
+
+        if (! $isAuthorized) {
+            return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
+        }
+
+        // Initialize output variables; populated inside YearskillId block if present
+        $insertedSkills = [];
+        $html = '';
+
         if ($request->has('YearskillId') && is_array($request->input('YearskillId'))) {
             $YearskillId = $request->input('YearskillId');
             $MonthskillId = $request->input('MonthskillId');
             $ratingId = $request->input('rating');
-
-            // TENANCY NOTE: Verify candidate application belongs to current tenant, thirdparty company, or active pipeline
-            $app = DB::table('job_applications')->where('id', $appId)->first();
-            if (! $app) {
-                return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
-            }
-
-            $isAuthorized = auth()->user()->hasRole('admin')
-                || (int) $app->company_id === $companyId
-                || (int) ($app->thirdparty_company_id ?? 0) === $companyId
-                || DB::table('add_job_wise_condidates')
-                    ->where('job_application_id', $appId)
-                    ->where(function ($q) use ($companyId) {
-                        $q->where('company_id', $companyId)->orWhere('thirdparty_company_id', $companyId);
-                    })->exists();
-
-            if (! $isAuthorized) {
-                return response()->json(['status' => false, 'message' => 'Unauthorized or application not found.'], 403);
-            }
 
             // 1. Transactional MySQL Write (SSOT)
             $insertedSkills = [];
@@ -332,6 +346,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 DB::table('candidate_job_skill_exp')->where('candidate_id', $appId)->where('job_id', $job_id)->delete();
 
                 foreach ($YearskillId as $skillId => $value) {
+                    $skillIdInt = (int) $skillId;
+                    if ($skillIdInt <= 0) {
+                        continue;
+                    }
                     $ss = 'Year';
                     if ($value >= 1) {
                         $ss = 'Years';
@@ -341,7 +359,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $rating = (int) ($ratingId[$skillId] ?? 0);
 
                     $values = [
-                        'job_skill_id' => (int) $skillId,
+                        'job_skill_id' => $skillIdInt,
                         'skill_value' => $skill_value,
                         'job_id' => $job_id,
                         'rating' => $rating,
@@ -350,11 +368,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     DB::table('candidate_job_skill_exp')->insert($values);
                     $expId = DB::getPdo()->lastInsertId();
 
-                    $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillId)->first();
+                    $skills = DB::table('job_metronics_skills')->select('skill_name')->where('id', '=', $skillIdInt)->first();
                     $insertedSkills[] = [
                         'expId' => $expId,
                         'skill_name' => $skills->skill_name ?? '',
-                        'skillId' => (int) $skillId,
+                        'skillId' => $skillIdInt,
                         'skill_value' => $skill_value,
                         'rating' => $rating,
                     ];
@@ -413,8 +431,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
                         ->where('candidate_job_skill_exp.candidate_id', '=', $appId);
                 })
-                ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+                ->select(
+                    DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade/form consistency
+                    'job_metronics_skills.skill_name',
+                    DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                    DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+                )
                 ->where('job_metronics_skills.job_id', '=', $job_id)
+                ->whereNotNull('job_metronics_skills.skill_name')
+                ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+                ->groupBy('job_metronics_skills.skill_name')
                 ->get();
 
             $skillShow = true;
@@ -426,6 +452,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (! empty($jobSkill)) {
                 $html .= '<div class="row">';
                 foreach ($jobSkill as $skill_val) {
+                    if (empty($skill_val->skill_name) || trim((string) $skill_val->skill_name) === '') {
+                        continue;
+                    }
                     $skillShowView = '';
                     if ($skillShow) {
                         $skillShowView = $skill_val->skill_value ?? '';
@@ -441,7 +470,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.ucwords(strtolower((string) $skill_val->skill_name)).'
+                            '.ucwords(strtolower(trim((string) $skill_val->skill_name))).'
                           </div>
                           <div class="skill-exp-cell">'.$skillShowView.'</div>
                           <div class="skill-rating-cell">
@@ -487,21 +516,32 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
         }
 
-        $calc = GeneralMethod::calculateSkillMatch((int) $job_id, $candSkills);
-        $matchPct = (int) ($calc['percentage'] ?? 0);
+        $matchPct = 0;
+        try {
+            $calc = GeneralMethod::calculateSkillMatch((int) $job_id, $candSkills);
+            $matchPct = (int) ($calc['percentage'] ?? 0);
+        } catch (\Throwable $e) {
+            \Log::warning('skillExperienceUpdate calculateSkillMatch failed: '.$e->getMessage());
+        }
 
-        DB::table('add_job_wise_condidates')
-            ->where('job_application_id', $appId)
-            ->where('job_id', $job_id)
-            ->update([
-                'skill_match' => $matchPct,
-                'skills' => $candSkills,
-                'updated_at' => now(),
-            ]);
+        if ($job_id > 0) {
+            DB::table('add_job_wise_condidates')
+                ->where('job_application_id', $appId)
+                ->where('job_id', $job_id)
+                ->update([
+                    'skill_match' => $matchPct,
+                    'skills' => $candSkills,
+                    'updated_at' => now(),
+                ]);
+        }
 
         $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
-        foreach ($wiseIds as $wId) {
-            GeneralMethod::JobApplicationsAddEditUpload($wId);
+        try {
+            foreach ($wiseIds as $wId) {
+                GeneralMethod::JobApplicationsAddEditUpload($wId);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('skillExperienceUpdate JobApplicationsAddEditUpload failed: '.$e->getMessage());
         }
 
         try {
@@ -5514,13 +5554,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
             })
             ->select(
-                DB::raw('MIN(job_metronics_skills.id) as id'), // 👈 pick one id
+                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
                 'job_metronics_skills.skill_name',
                 DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
-                DB::raw('MAX(candidate_job_skill_exp.rating)  as rating')
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
             )
             ->where('job_metronics_skills.job_id', $this->jobId)
-            ->groupBy('job_metronics_skills.skill_name') // 👈 KEY FIX
+            ->whereNotNull('job_metronics_skills.skill_name')
+            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+            ->groupBy('job_metronics_skills.skill_name')
             ->get();
 
         $this->skillShow = true;
@@ -11087,13 +11129,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->where('candidate_job_skill_exp.candidate_id', '=', $candidateId);
             })
             ->select(
-                DB::raw('MIN(job_metronics_skills.id) as id'), // 👈 pick one id
+                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
                 'job_metronics_skills.skill_name',
                 DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
                 DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
             )
             ->where('job_metronics_skills.job_id', $this->jobId)
-            ->groupBy('job_metronics_skills.skill_name') // 👈 KEY FIX
+            ->whereNotNull('job_metronics_skills.skill_name')
+            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+            ->groupBy('job_metronics_skills.skill_name')
             ->get();
 
         $this->skillShow = false;

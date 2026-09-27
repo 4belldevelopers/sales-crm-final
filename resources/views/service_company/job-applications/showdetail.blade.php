@@ -4676,11 +4676,11 @@ setTimeout(() => {
                             var currentSkills = JSON.parse(rsDataEl.getAttribute('data-skills') || '[]');
                             response.data.forEach(function(item) {
                                 var found = currentSkills.find(function(s) {
-                                    return (s.id && s.id == item.skillId) || (s.name && item.skillName && s.name.toLowerCase() === item.skillName.toLowerCase());
+                                    return (s.id && s.id == item.skillId) || (s.name && item.skill_name && s.name.toLowerCase() === item.skill_name.toLowerCase());
                                 });
                                 if (found) {
                                     if (typeof item.rating !== 'undefined') found.rating = parseInt(item.rating, 10) || 0;
-                                    if (typeof item.experience !== 'undefined') found.expText = item.experience;
+                                    if (typeof item.skill_value !== 'undefined') found.expText = item.skill_value;
                                 }
                             });
                             rsDataEl.setAttribute('data-skills', JSON.stringify(currentSkills));
