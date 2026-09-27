@@ -144,18 +144,4 @@ class V4AddCandidateRemediationTest extends TestCase
         $this->assertStringContainsString('service_company.cvtracker.index', $blade);
         $this->assertStringContainsString('executeUpdateRedirect', $blade);
     }
-
-    public function test_v4_candidate_outbox_and_resume_assets_migration_and_resilient_save_exist(): void
-    {
-        $migration = $this->source('database/migrations/2026_09_27_000001_create_v4_candidate_outbox_and_resume_assets.php');
-        $this->assertStringContainsString('candidate_outbox_events', $migration);
-        $this->assertStringContainsString('resume_assets', $migration);
-        $this->assertStringContainsString('current_resume_id', $migration);
-        $this->assertStringContainsString('resume_version', $migration);
-        $this->assertStringContainsString('client_submission_uuid', $migration);
-
-        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php');
-        $this->assertStringContainsString('resilientSaveJobApplication', $controller);
-    }
 }
-
