@@ -114,7 +114,7 @@ if($snp_mode== 1){
         <div class="talent-topbar-title-row">
           <h1>Add In-House Talent</h1>
         </div>
-        <p>Add your in-house talent and keep your best people ready for the right opportunities.</p>
+        <p>Keep your best people ready for the right opportunities.</p>
       </div>
       @if(@$page_event != 'EDIT')
       <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
