@@ -1325,6 +1325,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ]);
 
         if ($validator->fails()) {
+            try {
+                Redis::connection('default')->del($idempotencyKey);
+            } catch (\Throwable $e) {
+            }
+
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
         }
 
@@ -1335,25 +1340,48 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
                 ->forCompany($companyId)->first();
             if (! $resumeSession) {
-                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                    'message' => 'Resume upload session not found. Please upload the resume again.']);
-            }
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
-                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                    'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
-            }
-            if ($resumeSession->linked_candidate_id && $request->filled('edit_token') && (int) $resumeSession->linked_candidate_id !== (int) $request->edit_token) {
-                return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                    'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
+                if (! ($request->filled('uploaded_file_path') || $request->hasFile('resume'))) {
+                    try {
+                        Redis::connection('default')->del($idempotencyKey);
+                    } catch (\Throwable $e) {
+                    }
+
+                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                        'message' => 'Resume upload session not found. Please upload the resume again.']);
+                }
+            } elseif ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
+                if (! ($request->filled('uploaded_file_path') || $request->hasFile('resume'))) {
+                    try {
+                        Redis::connection('default')->del($idempotencyKey);
+                    } catch (\Throwable $e) {
+                    }
+
+                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                        'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
+                }
+                $resumeSession = null;
+            } elseif ($resumeSession->linked_candidate_id && $request->filled('edit_token') && (int) $resumeSession->linked_candidate_id !== (int) $request->edit_token) {
+                if (! ($request->filled('uploaded_file_path') || $request->hasFile('resume'))) {
+                    try {
+                        Redis::connection('default')->del($idempotencyKey);
+                    } catch (\Throwable $e) {
+                    }
+
+                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
+                        'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
+                }
+                $resumeSession = null;
             }
 
-            if ($resumeSession->status === ResumeUploadStatus::Completed->value && $resumeSession->r2_url) {
-                $finalResumeUrl = $resumeSession->r2_url;
-            } else {
-                try {
-                    $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
-                } catch (\Throwable $r2Ex) {
-                    Log::warning('ResumeUploadSession moveToCompanyPath failed: '.$r2Ex->getMessage());
+            if ($resumeSession) {
+                if ($resumeSession->status === ResumeUploadStatus::Completed->value && $resumeSession->r2_url) {
+                    $finalResumeUrl = $resumeSession->r2_url;
+                } else {
+                    try {
+                        $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+                    } catch (\Throwable $r2Ex) {
+                        Log::warning('ResumeUploadSession moveToCompanyPath failed: '.$r2Ex->getMessage());
+                    }
                 }
             }
         }
@@ -1702,7 +1730,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
                     'candidate_id' => $benchApplication->id,
                 ], $companyId, auth()->user()->id);
-            } elseif ($request->hasFile('resume')) {
+            } elseif ($request->filled('uploaded_file_path') || $request->hasFile('resume')) {
                 $companyNameR2 = DB::table('companies')
                     ->where('id', $companyId)
                     ->value('company_name');
@@ -1714,7 +1742,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
                 $tempPath = $request->input('uploaded_file_path');
                 $full_name = $request->input('resume_original_name');
-                if ($tempPath && $full_name) {
+
+                if (! $tempPath && $request->hasFile('resume')) {
+                    $resumeFile = $request->file('resume');
+                    $full_name = $full_name ?: $resumeFile->getClientOriginalName();
+                    $tempPath = $resumeFile->store('temp_resumes');
+                }
+
+                if ($tempPath) {
+                    $full_name = $full_name ?: basename($tempPath);
                     $baseName = pathinfo($full_name, PATHINFO_FILENAME);
                     $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
                     $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
@@ -1726,7 +1762,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
                     $benchApplication->resume = $fileUrl;
                 }
-            } elseif (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
+            } elseif (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
                 $benchApplication->resume = '';
             }
 
@@ -1808,6 +1844,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
 
             try {
+                GeneralMethod::elasticBenchCandidateAddEditIndex($benchApplication->id);
+            } catch (\Throwable $esEx) {
+                Log::warning('Sync ES indexing notice (queued worker will index): '.$esEx->getMessage());
+            }
+
+            try {
                 Redis::connection('default')->setex("talent:idempotency:{$companyId}:{$clientUuid}", 86400, json_encode($responsePayload));
                 Redis::connection('default')->sadd('bench:dirty_tenants', $companyId);
                 Redis::connection('default')->del("bench:hero:total:{$companyId}");
@@ -1823,6 +1865,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
+            try {
+                Redis::connection('default')->del($idempotencyKey);
+            } catch (\Throwable $re) {
+            }
             // Duplicate key 1062 on uq_company_submission_uuid
             if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1062) {
                 $completedRecord = SysIdempotencyKey::where('tenant_id', $companyId)
@@ -1843,6 +1889,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         } catch (\Throwable $e) {
             DB::rollBack();
+            try {
+                Redis::connection('default')->del($idempotencyKey);
+            } catch (\Throwable $re) {
+            }
             Log::error('bench-candidates store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);

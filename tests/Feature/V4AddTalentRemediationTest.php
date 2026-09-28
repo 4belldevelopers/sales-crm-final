@@ -156,4 +156,29 @@ class V4AddTalentRemediationTest extends TestCase
         $this->assertStringContainsString('postMessage', $workerJs);
         $this->assertStringContainsString('JeroResumeParser', $workerJs);
     }
+
+    public function test_resume_upload_fallback_and_submission_integrity(): void
+    {
+        $blade = $this->source('resources/views/service_company/bench-candidates/create.blade.php');
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php');
+
+        // 1. Blade must have circuit breaker fallback check
+        $this->assertStringContainsString('shouldUseResumeUploadFallback', $blade);
+        $this->assertStringContainsString('405', $blade);
+        $this->assertStringContainsString('R2 upload failed', $blade);
+
+        // 2. Blade handleTalentSubmissionSuccess must strictly reject non-success responses
+        $this->assertStringContainsString("response.status !== 'success'", $blade);
+        $this->assertStringContainsString("response.msgType === 'danger'", $blade);
+        $this->assertStringContainsString("response.msgType === 'warning'", $blade);
+
+        // 3. Controller store() must support uploaded_file_path fallback
+        $this->assertStringContainsString("\$request->filled('uploaded_file_path') || \$request->hasFile('resume')", $controller);
+
+        // 4. Controller store() must synchronously index into Elasticsearch post-commit
+        $this->assertStringContainsString('GeneralMethod::elasticBenchCandidateAddEditIndex($benchApplication->id)', $controller);
+
+        // 5. Controller store() must clear idempotency Redis lock on exception/validation failure
+        $this->assertStringContainsString("Redis::connection('default')->del(\$idempotencyKey)", $controller);
+    }
 }

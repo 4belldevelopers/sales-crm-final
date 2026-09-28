@@ -1544,6 +1544,10 @@ $(document).ready(function () {
                 $('#resume_original_name').val('');
                 var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
+                if (typeof shouldUseResumeUploadFallback === 'function' && shouldUseResumeUploadFallback(data.error)) {
+                    // Suppress failure banner because automatic circuit breaker fallback takes over smoothly
+                    return;
+                }
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
                 }
@@ -1584,6 +1588,21 @@ $(document).ready(function () {
 
     const uploadBox  = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
+    var resumeUploadGeneration = 0;
+
+    /**
+     * Intent: Use same-origin raw-byte uploader as circuit breaker fallback
+     * when the browser or network cannot complete direct Cloudflare R2 PUT (e.g. 405/CORS).
+     */
+    function shouldUseResumeUploadFallback(error) {
+        var message = String((error && error.message) || error || '');
+        return message.indexOf('R2 upload failed') !== -1
+            || message.indexOf('Network error during upload') !== -1
+            || message.indexOf('Upload timed out') !== -1
+            || message.indexOf('Upload feature is not enabled') !== -1
+            || message.indexOf('Presign request failed') !== -1
+            || message.indexOf('405') !== -1;
+    }
 
     // ─── Zero-temp upload pipeline ───────────────────────────────────────────
     // xhr.send(file) → raw bytes → Laravel php://input → streamed to R2
@@ -1609,6 +1628,7 @@ $(document).ready(function () {
     }
 
     function backToDropzone() {
+        resumeUploadGeneration++;
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
@@ -1621,6 +1641,7 @@ $(document).ready(function () {
         $('#fileName').text('');
         $('#resume').val('');
         $('#resumeCheck').val('');
+        $('#resume_session_uuid').val('');
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
         $('.download-file').addClass('d-none');
@@ -1744,10 +1765,18 @@ $(document).ready(function () {
 
         // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
         window.__upXhrChannelClaimed = true;
+        var uploadGeneration = ++resumeUploadGeneration;
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
-                // error already surfaced via onStateChange 'failed'
+            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
+                if (uploadGeneration !== resumeUploadGeneration
+                    || !shouldUseResumeUploadFallback(error)
+                    || typeof uploadWithProgress !== 'function') {
+                    return;
+                }
+                window.ResumePresign.cancelUpload(getUpContextKey());
+                $('#resume_session_uuid').val('');
+                uploadWithProgress(file);
             });
         } else if (typeof uploadWithProgress === 'function') {
             // v1 path: PHP multipart POST (unchanged)
@@ -3130,6 +3159,29 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>   
 
 function handleTalentSubmissionSuccess(response) {
+    if (!response || response.status !== 'success' || response.msgType === 'danger' || response.msgType === 'warning') {
+        Swal.fire({
+            title: response && response.msgType === 'warning' ? "Warning" : "Error",
+            text: (response && response.message) || "Submission failed. Please check the form and try again.",
+            icon: response && response.msgType === 'warning' ? "warning" : "error",
+            buttonsStyling: false,
+            confirmButtonText: "Ok, got it!",
+            customClass: { confirmButton: "btn btn-primary btn-sm" }
+        });
+        $("#save-form, #edit-form").prop("disabled", false);
+        if ($("#edit-form").length) {
+            $("#edit-form").html("Update");
+        }
+        if (typeof window.syncTalentStageAction === 'function') {
+            window.syncTalentStageAction();
+        }
+        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+        $('#client_submission_uuid').val(freshUuid);
+        return false;
+    }
+
     const redirectUrl = response.redirect_url || response.url || '{{ route("service_company.bench-candidates.index") }}';
     let redirectExecuted = false;
 
@@ -3248,14 +3300,19 @@ var KTAddCandidate = function () {
 															   redirect			: true,
 																success			: function (response) {
                                   $("#save-form").prop("disabled", false);
+                                  submitButton.disabled = false;
                                   if(response.status == 'coinCheck'){
                                     window.syncTalentStageAction();
+                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                                    $('#client_submission_uuid').val(freshUuid);
    																	Swal.fire("Warning",` ${response.message}` , "warning");	
                                     return false;
    																}
 
                                   
                                 if(response.status == 'mailcheck'){
+                                  const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                                  $('#client_submission_uuid').val(freshUuid);
                                   if (!navigator.onLine) {
                                       Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                                       $("#save-form").prop("disabled", false);
@@ -3265,7 +3322,7 @@ var KTAddCandidate = function () {
                                   }
                                    window.syncTalentStageAction();
    																	Swal.fire("Warning", response.message , "warning").then(function(){
-																	});	
+ 																	});	
                                    return false;
                                 }
                                 
@@ -3276,6 +3333,8 @@ var KTAddCandidate = function () {
                                     $("#save-form").prop("disabled", false);
                                     window.syncTalentStageAction();
                                     submitButton.disabled = false;
+                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                                    $('#client_submission_uuid').val(freshUuid);
                                     if (xhr.status === 0 || !navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                                     } else {
@@ -3306,7 +3365,7 @@ var KTAddCandidate = function () {
 										submitButton 	=	document.querySelector('#save-form');
 										handleForm();
 								  }
-    	   };
+     	   };
 }();
 
 KTUtil.onDOMContentLoaded(function () {
@@ -3338,7 +3397,7 @@ var KTEditCandidate = function () {
                         'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
                         'recruiter'					:	{validators:{ notEmpty: { message: "Assign internal team/recruiter is required" } }  },
                         // 'skills'				:	{ validators: { notEmpty: {  message: 'Skills is required' } }},
-                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}},
+                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -3386,17 +3445,20 @@ var KTEditCandidate = function () {
 															   contentType		: false,  	
 															   redirect			: true,
 																success			: function (response) {
-                                  $("#edit-form").prop("disabled", false);
+                                  $("#edit-form").prop("disabled", false).html("Update");
+                                  submitButton.disabled = false;
                                   if(response.status == 'mailcheck'){
+                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                                    $('#client_submission_uuid').val(freshUuid);
                                     if (!navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#save-form").prop("disabled", false).html("Submit");
+                                        $("#edit-form").prop("disabled", false).html("Update");
                                         submitButton.disabled = false;
                                         return;
                                     }
                                    $("#edit-form").html(`Update`);
    																	Swal.fire("Warning", response.message , "warning").then(function(){
-																	});	
+ 																	});	
                                    return false;
                                 }
                                 
@@ -3406,6 +3468,8 @@ var KTEditCandidate = function () {
 															error			: function (xhr) {
                                     $("#edit-form").prop("disabled", false).html("Update");
                                     submitButton.disabled = false;
+                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                                    $('#client_submission_uuid').val(freshUuid);
                                     if (xhr.status === 0 || !navigator.onLine) {
                                         Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                                     } else {
