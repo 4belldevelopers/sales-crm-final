@@ -2106,6 +2106,7 @@ CREATE TABLE `job_applications` (
   `resume` text DEFAULT NULL,
   `current_resume_id` bigint(20) unsigned DEFAULT NULL,
   `resume_version` int(10) unsigned NOT NULL DEFAULT 1,
+  `aggregate_version` int(10) unsigned NOT NULL DEFAULT 1,
   `client_submission_uuid` varchar(36) DEFAULT NULL,
   `rating` enum('1','2','3','4','5') DEFAULT NULL,
   `skype_id` varchar(191) DEFAULT NULL,
@@ -4158,6 +4159,52 @@ CREATE TABLE `subscriptions` (
   `stripe_status` varchar(191) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `subscriptions_company_id` (`company_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `sys_idempotency_keys`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sys_idempotency_keys` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tenant_id` int(11) NOT NULL,
+  `idempotency_key` varchar(64) NOT NULL,
+  `request_hash` varchar(64) NOT NULL,
+  `status` enum('PROCESSING','COMPLETED','FAILED_FINAL','FAILED_RETRYABLE') NOT NULL DEFAULT 'PROCESSING',
+  `response_status` int(11) DEFAULT NULL,
+  `response_body` longtext DEFAULT NULL,
+  `last_error` text DEFAULT NULL,
+  `expires_at` timestamp NOT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_idempotency_tenant_key` (`tenant_id`, `idempotency_key`),
+  KEY `idx_idempotency_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `sys_outbox_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sys_outbox_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tenant_id` int(11) NOT NULL,
+  `idempotency_key` varchar(64) DEFAULT NULL,
+  `aggregate_type` varchar(64) NOT NULL,
+  `aggregate_id` bigint(20) unsigned NOT NULL,
+  `aggregate_version` int(10) unsigned NOT NULL,
+  `event_type` varchar(64) NOT NULL,
+  `payload` json NOT NULL,
+  `status` enum('PENDING','PROCESSING','COMPLETED','FAILED','DEAD_LETTER') NOT NULL DEFAULT 'PENDING',
+  `attempts` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `available_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `processed_at` timestamp NULL DEFAULT NULL,
+  `last_error` text DEFAULT NULL,
+  `locked_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_outbox_tenant_idempotency` (`tenant_id`, `idempotency_key`),
+  KEY `idx_outbox_status_available` (`status`, `available_at`),
+  KEY `idx_outbox_aggregate` (`aggregate_type`, `aggregate_id`, `aggregate_version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `table 99`;

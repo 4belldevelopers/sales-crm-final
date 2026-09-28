@@ -95,7 +95,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" />
 @endif
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+@php
+    try {
+        echo app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+    } catch (\Throwable $e) {
+        try {
+            echo app(\Illuminate\Foundation\Vite::class)(['resources/js/app.js']);
+        } catch (\Throwable) {
+            // Graceful resilience fallback if Vite assets have not been built on the server
+        }
+    }
+@endphp
 <link rel="preload" href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
 <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
@@ -3020,13 +3030,16 @@ $( document ).ready(function() {
 
   // Intent: V4/V5 Zero-Read-Path Candidate Drawer Engine (L1 Browser RAM Cache + L2 Scoped IndexedDB + Cross-Tab Lifecycle)
   window.__candidateDrawerCache = window.__candidateDrawerCache || new Map();
+  window.__candidateSensitiveMap = window.__candidateSensitiveMap || new Map();
   window.__candidateDrawerInFlight = window.__candidateDrawerInFlight || new Set();
-  var prefetchAbortControllers = new Map();
+  var drawerAbortControllers = new Map();
 
   @php
     $atsTenantId = auth()->check() ? (int) auth()->user()->company_id : 0;
     $atsUserId   = auth()->check() ? (int) auth()->user()->id : 0;
+    $atsAuthContextHash = auth()->check() ? (new \App\Services\CandidateDrawerSecurityService())->getAuthContextForUser(auth()->user())['auth_context_hash'] ?? '' : '';
   @endphp
+  window.__atsAuthContextHash = "{{ $atsAuthContextHash }}";
 
   // Phase 5: L2 Scoped IndexedDB Cache Engine (LRU cap 200 items, scoped to tenant & user)
   var AtsCandidateL2DB = (function() {
@@ -3160,8 +3173,40 @@ $( document ).ready(function() {
               window.JWRealtimeSync.updateRecruiterNote(e.data.candidate_id, e.data.note, false);
           } else if (e.data.type === 'tracker_stage_updated' && window.JWRealtimeSync) {
               window.JWRealtimeSync.updateTrackerStage(e.data.candidate_id, e.data.wise_ids, e.data.new_stage_id, e.data.old_stage_id, e.data.job_id, false);
+          } else if (e.data.type === 'SECURITY_CONTEXT_CHANGED' || e.data.event === 'SECURITY_CONTEXT_CHANGED') {
+              // Invariant: Mid-Session Immediate Salary Redaction Protocol (docs/drawer_candidate.md)
+              if (window.__candidateSensitiveMap) {
+                  window.__candidateSensitiveMap.clear();
+              }
+              // Redact salary and compensation elements in currently open drawer DOM immediately
+              $('#application_show_right_bar').find('.candidate-salary-field, [data-salary-field], .salary-item, .ctc-display, .current-ctc, .expected-ctc, .offer-amount').each(function() {
+                  $(this).text('[Confidential]');
+              });
+              if (e.data.auth_context_hash) {
+                  window.__atsAuthContextHash = e.data.auth_context_hash;
+              }
+              // Invalidate old IndexedDB partitions
+              if (window.__atsCandidateL2DB) {
+                  window.__atsCandidateL2DB.clear();
+              }
           }
       };
+  }
+
+  // Realtime Security Context listener via Laravel Echo / Reverb
+  if (typeof window.Echo !== 'undefined' && {{ $atsTenantId }} > 0) {
+      try {
+          window.Echo.private('jero_ats_candidate_lifecycle_{{ $atsTenantId }}')
+              .listen('.SECURITY_CONTEXT_CHANGED', function(data) {
+                  if (candidateBroadcastChannel) {
+                      candidateBroadcastChannel.postMessage(data);
+                  }
+                  if (window.__candidateSensitiveMap) window.__candidateSensitiveMap.clear();
+                  $('#application_show_right_bar').find('.candidate-salary-field, [data-salary-field], .salary-item, .ctc-display, .current-ctc, .expected-ctc, .offer-amount').text('[Confidential]');
+                  if (data && data.auth_context_hash) window.__atsAuthContextHash = data.auth_context_hash;
+                  if (window.__atsCandidateL2DB) window.__atsCandidateL2DB.clear();
+              });
+      } catch(err) {}
   }
 
   window.__candidateDrawerPromises = window.__candidateDrawerPromises || new Map();
@@ -3218,7 +3263,7 @@ $( document ).ready(function() {
       url = url.replace(':id', sid);
 
       var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      if (controller) prefetchAbortControllers.set(sid, controller);
+      if (controller) drawerAbortControllers.set(sid, controller);
 
       window.__candidateDrawerInFlight.add(sid);
 
@@ -3230,7 +3275,7 @@ $( document ).ready(function() {
               success: function(response) {
                   window.__candidateDrawerInFlight.delete(sid);
                   window.__candidateDrawerPromises.delete(sid);
-                  prefetchAbortControllers.delete(sid);
+                  drawerAbortControllers.delete(sid);
                   if (response && (response.view || typeof response === 'string')) {
                       window.__candidateDrawerCache.set(sid, response);
                       if (window.__atsCandidateL2DB) {
@@ -3243,7 +3288,7 @@ $( document ).ready(function() {
               error: function(xhr, status, error) {
                   window.__candidateDrawerInFlight.delete(sid);
                   window.__candidateDrawerPromises.delete(sid);
-                  prefetchAbortControllers.delete(sid);
+                  drawerAbortControllers.delete(sid);
                   if (callback) callback(xhr);
                   reject(xhr);
               }
@@ -3566,42 +3611,7 @@ $( document ).ready(function() {
       }
   });
 
-  // Throttled Hover Prefetch (Debounced 120ms, max 2 concurrent)
-  var prefetchHoverTimer = null;
-  $(document).on('mouseenter', '.show-application-detail, .custom-show-application-detail', function() {
-      if (navigator.connection && (navigator.connection.saveData || navigator.connection.effectiveType === '2g')) {
-          return;
-      }
-      var id = $(this).attr('data-row-id') || $(this).data('row-id') ||
-               $(this).attr('data-wise-id') || $(this).data('wise-id') ||
-               $(this).attr('data-id') || $(this).data('id');
-      if (!id) return;
-      var sid = String(id);
-      if (window.__candidateDrawerCache.has(sid) || window.__candidateDrawerInFlight.has(sid) || window.__candidateDrawerPromises.has(sid)) {
-          return;
-      }
-      if (window.__candidateDrawerInFlight.size >= 2) {
-          return;
-      }
-      clearTimeout(prefetchHoverTimer);
-      prefetchHoverTimer = setTimeout(function() {
-          if (window.__atsCandidateL2DB) {
-              window.__atsCandidateL2DB.get(sid).then(function(cached) {
-                  if (cached) {
-                      window.__candidateDrawerCache.set(sid, cached);
-                  } else {
-                      fetchCandidateDrawerPayload(sid, "{{ $currentSlug ?? '' }}", null);
-                  }
-              });
-          } else {
-              fetchCandidateDrawerPayload(sid, "{{ $currentSlug ?? '' }}", null);
-          }
-      }, 120);
-  });
-
-  $(document).on('mouseleave', '.show-application-detail, .custom-show-application-detail', function() {
-      clearTimeout(prefetchHoverTimer);
-  });
+  // Note: Hover prefetch / pre-warming intentionally removed to prevent unwanted background network I/O and PII exposure
 
   $(document).on('click', '.show-application-detail, .custom-show-application-detail', async function(e){
       // Prevent bubbling so nested candidate containers don't trigger duplicate execution
@@ -3666,7 +3676,7 @@ $( document ).ready(function() {
           $('#application_show_right_bar').html(getCandidateDrawerLoader());
       }
 
-      // 4. Fetch or attach to in-flight promise (deduplicating hover prefetch)
+      // 4. Fetch or attach to in-flight promise
       try {
           var response = await fetchCandidateDrawerPayload(id, "{{ $currentSlug ?? '' }}");
           renderCandidateDrawerView(response, id);
