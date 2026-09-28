@@ -1004,6 +1004,7 @@
                                   $selected_skill_exp_year = null;
                                   $selected_skill_exp_month = null;
                                   $selected_skill_rating = null;
+                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
 
                                   if(!empty($skill_val->skill_value)){
                                     $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
@@ -1022,7 +1023,7 @@
                             <tr>
                               <td><label class="candidate-job-skill-name"><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></label></td>
                               <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val->id }}" name="YearskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience year" id="job_skill_year_{{ $skill_val_id }}" name="YearskillId[{{ $skill_val_id }}]">
                                       <option value="0">Select Year</option>
                                       @php 
                                           for ($i = 1; $i <= 60; $i++) {
@@ -1040,7 +1041,7 @@
                                     </select>
                               </td>
                               <td>
-                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val->id }}" name="MonthskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid candidate-job-skill-select" aria-label="Select skill experience month" id="job_skill_month_{{ $skill_val_id }}" name="MonthskillId[{{ $skill_val_id }}]">
                                       <option value="">Select Month</option>
                                       @php 
                                           for ($i = 0; $i <= 11; $i++) {
@@ -1058,7 +1059,7 @@
                                 </select>
                               </td>
                               <td>
-                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val->id }}" name="rating[{{ $skill_val->id }}]">
+                                 <select class="form-select form-select-solid candidate-rating-select" aria-label="Select proficiency rating" id="job_skill_rating_{{ $skill_val_id }}" name="rating[{{ $skill_val_id }}]">
                                       <option value="0">Select rating</option>
                                       @php 
                                           for ($i = 1; $i <= 5; $i++) {
