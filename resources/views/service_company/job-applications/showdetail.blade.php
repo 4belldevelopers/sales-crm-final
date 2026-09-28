@@ -4709,11 +4709,16 @@ setTimeout(() => {
                     }
                     Swal.fire("Success", 'Candidate Skill Experience updated successfully !',"success");
                   },
-                error			: function (response) {
+                error : function (xhr) {
                   $btn.html('Save Changes');
                   $btn.prop('disabled', false);
                   $("#skill-update-form").html('Save Changes');
-                  Swal.fire("Warning", 'Something went wrong. Please try again.',"warning");
+                  var msg = 'Something went wrong. Please try again.';
+                  try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp && resp.message) msg = resp.message;
+                  } catch(e) {}
+                  Swal.fire("Warning", msg, "warning");
                 }
             });
 
@@ -4947,7 +4952,10 @@ setTimeout(() => {
     $(document).on('click', '.editRecruiterNote', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        // Open: add class to outer drawer for reliable pointer-events + transform trigger
+        $('#jw-recruiter-note-drawer').addClass('jw-drawer-open');
         $('.rn-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
 
         if (!rnTemplatesLoaded) {
             $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
@@ -4968,7 +4976,10 @@ setTimeout(() => {
     $(document).on('click', '.editRecruiterNoteCancel', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        // Close: remove class and reset drawer state
+        $('#jw-recruiter-note-drawer').removeClass('jw-drawer-open');
         $('.rn-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
     });
 
     $(document).on('change', '#rn_template_select', function() {
@@ -5031,9 +5042,10 @@ setTimeout(() => {
                         if (cId) window.invalidateCandidateDrawerCache(cId);
                     }
 
-                    // Close drawer first; blur active element so focus-restore
-                    // cannot re-trigger the Edit button after Swal closes
+                    // Close drawer first; remove open class; blur active element
+                    $('#jw-recruiter-note-drawer').removeClass('jw-drawer-open');
                     $('.rn-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
                     if (document.activeElement) { document.activeElement.blur(); }
                     // Wait for drawer slide-out transition (280ms) before re-enabling
                     // button and firing Swal — prevents Swal-close click from landing
@@ -5048,10 +5060,12 @@ setTimeout(() => {
                     $btn.prop('disabled', false);
                 }
             },
-            error   : function() {
+            error   : function(xhr) {
                 $btn.html('Save Changes');
                 $btn.prop('disabled', false);
-                Swal.fire('Warning', 'Something went wrong. Please try again.', 'warning');
+                var msg = 'Something went wrong. Please try again.';
+                try { var r = JSON.parse(xhr.responseText); if (r && r.message) msg = r.message; } catch(e) {}
+                Swal.fire('Warning', msg, 'warning');
             }
         });
     });
