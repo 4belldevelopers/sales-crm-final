@@ -242,23 +242,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // The file_path and original_name are returned in JSON response to the client for explicit form submission.
 
         // Create metadata record and dispatch ParseResumeJob
+        // Intent: Honor client-first execution (Rule 3 & 4). If client performs parsing in browser RAM,
+        // no backend ParseResumeJob is queued, preventing server/Horizon queue strain.
         $resumeUploadId = null;
-        try {
-            $user = auth()->user();
-            $record = \App\Models\CandidateResumeUpload::create([
-                'candidate_id' => $request->header('X-Candidate-Id') ?: null,
-                'company_id' => $user?->company_id,
-                'object_key' => $objectKey,
-                'original_filename' => $originalName,
-                'mime_type' => $request->header('Content-Type', 'application/octet-stream'),
-                'file_size' => $fileSize,
-                'uploaded_by' => $user?->id,
-                'status' => 'Queued',
-            ]);
-            \App\Jobs\ParseResumeJob::dispatch($record->id)->onQueue('default');
-            $resumeUploadId = $record->id;
-        } catch (\Throwable $e) {
-            \Log::warning('uploadresume: could not queue parse job', ['error' => $e->getMessage()]);
+        $skipBackendParse = (bool) ($request->header('X-Skip-Backend-Parse') || $request->boolean('skip_backend_parse'));
+        if (! $skipBackendParse) {
+            try {
+                $user = auth()->user();
+                $record = \App\Models\CandidateResumeUpload::create([
+                    'candidate_id' => $request->header('X-Candidate-Id') ?: null,
+                    'company_id' => $user?->company_id,
+                    'object_key' => $objectKey,
+                    'original_filename' => $originalName,
+                    'mime_type' => $request->header('Content-Type', 'application/octet-stream'),
+                    'file_size' => $fileSize,
+                    'uploaded_by' => $user?->id,
+                    'status' => 'Queued',
+                ]);
+                \App\Jobs\ParseResumeJob::dispatch($record->id)->onQueue('default');
+                $resumeUploadId = $record->id;
+            } catch (\Throwable $e) {
+                \Log::warning('uploadresume: could not queue parse job', ['error' => $e->getMessage()]);
+            }
         }
 
         return response()->json([

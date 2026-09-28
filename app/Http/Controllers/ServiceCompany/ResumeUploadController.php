@@ -92,6 +92,9 @@ class ResumeUploadController extends Controller
 
         try {
             $user   = Auth::user();
+            $skipBackendParse = (bool) ($request->header('X-Skip-Backend-Parse') || $request->boolean('skip_backend_parse'));
+            $status = $skipBackendParse ? 'Uploaded' : 'Queued';
+
             $record = CandidateResumeUpload::create([
                 'candidate_id'      => $request->candidate_id ?: null,
                 'company_id'        => $user?->company_id,
@@ -100,15 +103,17 @@ class ResumeUploadController extends Controller
                 'mime_type'         => $request->mime_type,
                 'file_size'         => (int) $request->file_size,
                 'uploaded_by'       => $user?->id,
-                'status'            => 'Queued',
+                'status'            => $status,
             ]);
 
-            ParseResumeJob::dispatch($record->id)->onQueue('default');
+            if (! $skipBackendParse) {
+                ParseResumeJob::dispatch($record->id)->onQueue('default');
+            }
 
             return response()->json([
                 'success'          => true,
                 'resume_upload_id' => $record->id,
-                'message'          => 'Resume queued for parsing.',
+                'message'          => $skipBackendParse ? 'Resume uploaded successfully.' : 'Resume queued for parsing.',
             ]);
         } catch (\Throwable $e) {
             Log::error('ResumeUploadController::store failed', ['error' => $e->getMessage()]);
