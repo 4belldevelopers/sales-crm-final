@@ -1525,21 +1525,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $benchApplication->resume_version = 1;
                 $added = true;
 
-                // Idempotent Coin Deduction (Event 5) Protected by Transaction
-                $coinAlreadyDeducted = DB::table('company_coins_deductions')
-                    ->where('company_id', $companyId)
-                    ->where('transaction_reference', $clientUuid)
-                    ->exists();
+                // Coin Deduction (Event 5) Protected by Transaction
+                $eventId = 5;
+                $coinsDeductions = GeneralMethod::coinsDeductions((int) $companyId, $eventId, auth()->user()->id, $companyId, '', '');
+                if ($coinsDeductions->status) {
+                    SysIdempotencyKey::where('tenant_id', $companyId)->where('idempotency_key', $clientUuid)->delete();
+                    DB::rollBack();
 
-                if (! $coinAlreadyDeducted) {
-                    $eventId = 5;
-                    $coinsDeductions = GeneralMethod::coinsDeductions((int) $companyId, $eventId, auth()->user()->id, $companyId, '', '');
-                    if ($coinsDeductions->status) {
-                        SysIdempotencyKey::where('tenant_id', $companyId)->where('idempotency_key', $clientUuid)->delete();
-                        DB::rollBack();
-
-                        return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-                    }
+                    return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 }
             }
 
@@ -1886,7 +1879,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'uuid' => $clientUuid,
             ]);
 
-            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed: '.$e->getMessage()]);
         } catch (\Throwable $e) {
             DB::rollBack();
             try {
@@ -1895,7 +1888,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
             Log::error('bench-candidates store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
-            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed: '.$e->getMessage()]);
         }
     }
 
@@ -1904,27 +1897,28 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
      */
     protected function resilientSaveTalentApplication(JobApplication $candidate): void
     {
-        try {
-            $candidate->save();
-        } catch (\Illuminate\Database\QueryException $e) {
-            if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1054) {
-                preg_match("/Unknown column '([^']+)'/", $e->getMessage(), $matches);
-                $failedColumn = $matches[1] ?? null;
+        while (true) {
+            try {
+                $candidate->save();
+                return;
+            } catch (\Illuminate\Database\QueryException $e) {
+                if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1054) {
+                    preg_match("/Unknown column '([^']+)'/", $e->getMessage(), $matches);
+                    $failedColumn = $matches[1] ?? null;
 
-                if ($failedColumn && array_key_exists($failedColumn, $candidate->getAttributes())) {
-                    Log::warning('EMERGENCY_SCHEMA_GUARD_TRIGGERED: unmigrated column dropped during rolling deploy', [
-                        'column' => $failedColumn,
-                        'model' => get_class($candidate),
-                        'candidate_email' => $candidate->email,
-                    ]);
+                    if ($failedColumn && array_key_exists($failedColumn, $candidate->getAttributes())) {
+                        Log::warning('EMERGENCY_SCHEMA_GUARD_TRIGGERED: unmigrated column dropped during rolling deploy', [
+                            'column' => $failedColumn,
+                            'model' => get_class($candidate),
+                            'candidate_email' => $candidate->email,
+                        ]);
 
-                    unset($candidate->{$failedColumn});
-                    $candidate->save();
-
-                    return;
+                        unset($candidate->{$failedColumn});
+                        continue;
+                    }
                 }
+                throw $e;
             }
-            throw $e;
         }
     }
 
