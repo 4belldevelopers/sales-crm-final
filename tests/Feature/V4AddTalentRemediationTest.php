@@ -181,4 +181,25 @@ class V4AddTalentRemediationTest extends TestCase
         // 5. Controller store() must clear idempotency Redis lock on exception/validation failure
         $this->assertStringContainsString("Redis::connection('default')->del(\$idempotencyKey)", $controller);
     }
+
+    public function test_frontend_only_parsing_enforcement(): void
+    {
+        $blade = $this->source('resources/views/service_company/bench-candidates/create.blade.php');
+        $jobAppController = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php');
+        $resumeUploadController = $this->source('app/Http/Controllers/ServiceCompany/ResumeUploadController.php');
+
+        // 1. Blade must specify client-side parse status and skip backend parse header
+        $this->assertStringContainsString('X-Skip-Backend-Parse', $blade);
+        $this->assertStringContainsString('✓ Parsed in Browser', $blade);
+
+        // 2. Legacy backend parse poller must be completely eliminated
+        $this->assertStringNotContainsString('_startParsePoller', $blade);
+
+        // 3. Backend controllers must honor X-Skip-Backend-Parse to eliminate server CPU / Horizon queue strain
+        $this->assertStringContainsString('X-Skip-Backend-Parse', $jobAppController);
+        $this->assertStringContainsString('$skipBackendParse', $jobAppController);
+        $this->assertStringContainsString('X-Skip-Backend-Parse', $resumeUploadController);
+        $this->assertStringContainsString('$skipBackendParse', $resumeUploadController);
+    }
 }
+
