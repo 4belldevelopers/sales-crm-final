@@ -88,6 +88,17 @@ Route::group(['middleware' => 'auth'], function () {
             });
             // ─────────────────────────────────────────────────────────────────────────
 
+            // ─── ATS Candidate Drawer God-Level 0-MySQL-Read Architecture Routes (docs/drawer_candidate.md) ─
+            Route::prefix('job-applications')->name('job-applications.')->group(function () {
+                Route::get('{id}/core-json', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'coreJson'])->name('core-json');
+                Route::get('{id}/interviews', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'interviews'])->name('interviews');
+                Route::get('{id}/questions', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'questions'])->name('questions');
+                Route::get('{id}/timeline', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'timeline'])->name('timeline-api');
+                Route::get('{id}/resume-meta', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'resumeMeta'])->name('resume-meta-api');
+                Route::post('{id}/mutate', [\App\Http\Controllers\ServiceCompany\CandidateDrawerApiController::class, 'mutate'])->name('mutate');
+            });
+            // ─────────────────────────────────────────────────────────────────────────
+
             Route::group(['middleware' => ['custom-package']], function () {
                 Route::get('/dashboard', [ServiceCompanyDashboardController::class, 'index'])->name('dashboard');
                 Route::get('meetingstoreScheduleList', [ServiceCompanyDashboardController::class, 'meetingScheduleList'])->name('dashboard.meeting-schedule-list');
@@ -206,8 +217,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('apptracker/show-interviews/{id?}', [ServiceCompanyAppTrackerController::class, 'showInterviews'])->name('apptracker.show-interviews');
                 Route::get('job-applications/create/{jobId?}/{appId?}', [ServiceCompanyJobApplicationController::class, 'create'])->name('job-applications.create');
                 Route::get('job-applications/getAdditionalDetail/{job_id?}', [ServiceCompanyJobApplicationController::class, 'getAdditionalDetail'])->name('job-applications.getAdditionalDetail');
-                Route::get('job-applications/question/{jobID?}/{applicationId?}', [ServiceCompanyJobApplicationController::class, 'jobQuestion'])->name('job-applications.question');
-                Route::get('job-applications/clientcreate/{jobId?}/{appId?}', [ServiceCompanyJobApplicationController::class, 'clientcreate'])->name('job-applications.clientcreate');
+
                 Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
                 Route::post('job-applications/update/{id}', [ServiceCompanyJobApplicationController::class, 'update'])->name('job-applications.update');
                 Route::post('uploadresume', [ServiceCompanyJobApplicationController::class, 'uploadresume'])->name('job-applications.uploadresume');
