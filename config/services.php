@@ -79,4 +79,11 @@ return [
 
     'custom_encryption_key' => env('CUSTOM_ENCRYPTION_KEY'),
 
+    'bench_v4' => [
+        'enabled' => env('BENCH_V4_ENABLED', true),
+        'use_data_v2' => env('BENCH_USE_DATA_V2', true),
+        'enforce_durable_idempotency' => env('BENCH_DURABLE_IDEMPOTENCY', true),
+        'enable_worker_parser' => env('BENCH_ENABLE_WORKER_PARSER', true),
+    ],
+
 ];

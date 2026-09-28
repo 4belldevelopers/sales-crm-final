@@ -87,6 +87,17 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Kolkata')
             ->withoutOverlapping(50)
             ->runInBackground();
+
+        // V4 Bench Candidates: reconcile hero counters (0% full table scan strain)
+        $schedule->command('talents:reconcile-hero-counters')
+            ->everyTenMinutes()
+            ->withoutOverlapping(9)
+            ->runInBackground();
+
+        $schedule->command('talents:reconcile-hero-counters --all')
+            ->dailyAt('02:00')
+            ->withoutOverlapping(50)
+            ->runInBackground();
     }
 
     protected function commands()

@@ -180,11 +180,46 @@ class ProcessOutboxEventJob implements ShouldQueue
                     }
                     break;
 
+                case 'talent.bench.created':
+                case 'talent.bench.updated':
+                case 'talent.bench.stage_changed':
+                    if ($candidateId > 0) {
+                        try {
+                            GeneralMethod::elasticBenchCandidateAddEditIndex($candidateId);
+                        } catch (\Throwable $esEx) {
+                            Log::warning('ProcessOutboxEventJob: elasticBenchCandidateAddEditIndex warning', [
+                                'candidate_id' => $candidateId,
+                                'error' => $esEx->getMessage(),
+                            ]);
+                        }
+
+                        $companyId = (int) ($event->company_id ?: ($payload['company_id'] ?? 0));
+                        if ($companyId > 0) {
+                            $this->invalidateBenchCaches($candidateId, $companyId);
+                        }
+                    }
+                    break;
+
                 default:
-                    Log::info('ProcessOutboxEventJob: Unknown event_type skipped', [
-                        'event_id' => $eventId,
-                        'event_type' => $event->event_type,
-                    ]);
+                    if ($event->aggregate_type === 'bench_candidate' && $candidateId > 0) {
+                        try {
+                            GeneralMethod::elasticBenchCandidateAddEditIndex($candidateId);
+                        } catch (\Throwable $esEx) {
+                            Log::warning('ProcessOutboxEventJob: bench_candidate fallback index error', [
+                                'candidate_id' => $candidateId,
+                                'error' => $esEx->getMessage(),
+                            ]);
+                        }
+                        $companyId = (int) ($event->company_id ?: ($payload['company_id'] ?? 0));
+                        if ($companyId > 0) {
+                            $this->invalidateBenchCaches($candidateId, $companyId);
+                        }
+                    } else {
+                        Log::info('ProcessOutboxEventJob: Unknown event_type skipped', [
+                            'event_id' => $eventId,
+                            'event_type' => $event->event_type,
+                        ]);
+                    }
                     break;
             }
 
@@ -212,7 +247,14 @@ class ProcessOutboxEventJob implements ShouldQueue
 
             $retryCount = (int) $event->retry_count + 1;
             $newStatus = $retryCount >= 5 ? 'failed' : 'pending';
-            $backoffSeconds = (int) (pow(2, min($retryCount, 6)) * 10);
+            $jitterSchedule = [
+                1 => 5 + rand(0, 2),
+                2 => 15 + rand(0, 5),
+                3 => 60 + rand(0, 15),
+                4 => 300 + rand(0, 30),
+                5 => 900 + rand(0, 60),
+            ];
+            $backoffSeconds = $jitterSchedule[$retryCount] ?? 900;
 
             DB::table('candidate_outbox_events')
                 ->where('id', $eventId)
@@ -244,6 +286,22 @@ class ProcessOutboxEventJob implements ShouldQueue
             }
         } catch (\Throwable $e) {
             Log::warning('ProcessOutboxEventJob: Cache invalidation warning', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function invalidateBenchCaches(int $candidateId, int $companyId): void
+    {
+        try {
+            \Illuminate\Support\Facades\Redis::sadd('bench:dirty_tenants', $companyId);
+            \Illuminate\Support\Facades\Redis::del("bench:hero:total:{$companyId}");
+            \Illuminate\Support\Facades\Redis::del("bench:hero:bench:{$companyId}");
+            \Illuminate\Support\Facades\Redis::del("bench:hero:pool:{$companyId}");
+            \Illuminate\Support\Facades\Redis::del("bench:hero:hold:{$companyId}");
+            \Illuminate\Support\Facades\Redis::del("ats:allbenchcandidates:{$companyId}");
+            GeneralMethod::cacheClean("candidate:{$candidateId}");
+            GeneralMethod::cacheClean("allbenchcandidates_version_company_{$companyId}");
+        } catch (\Throwable $e) {
+            Log::warning('ProcessOutboxEventJob: Bench cache invalidation warning', ['error' => $e->getMessage()]);
         }
     }
 }
