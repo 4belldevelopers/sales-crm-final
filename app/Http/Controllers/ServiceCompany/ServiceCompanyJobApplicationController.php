@@ -25,14 +25,10 @@ use App\Jobs\ConvertResumeToPdfJob;
 use App\Jobs\ProcessCandidateSubmissionJob;
 use App\Jobs\ProcessCandidateUpdateJob;
 use App\Jobs\ProcessOutboxEventJob;
-use App\Jobs\PurgeRemovedResumeAssetsJob;
 use App\Jobs\QueueCandidateNotificationJob;
 use App\Jobs\QueueMailService;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\UploadResumeToTestRTwo;
-use App\Models\CandidateOutboxEvent;
-use App\Models\ResumeAsset;
-use Illuminate\Support\Facades\Redis;
 use App\Mail\AddCandidateMail;
 use App\Mail\ChangeStatusMail;
 use App\Mail\InterviewTrackerMail;
@@ -77,6 +73,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\Process\Process;
@@ -531,7 +528,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('job_id', $job_id)
                 ->update([
                     'skill_match' => $matchPct,
-                    'updated_at'  => now(),
+                    'updated_at' => now(),
                 ]);
         }
 
@@ -2465,9 +2462,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     {
         try {
             $companyId = (int) auth()->user()->company_id;
-            $userId    = (int) auth()->user()->id;
+            $userId = (int) auth()->user()->id;
 
-            $filename    = (string) $request->input('filename', 'Jeroworks_Resume.pdf');
+            $filename = (string) $request->input('filename', 'Jeroworks_Resume.pdf');
             $contentType = (string) $request->input('contentType', 'application/pdf');
             $candidateId = (int) $request->input('candidate_id', 0);
 
@@ -2486,7 +2483,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $result = $r2PresignService->generateUploadUrl($sanitizedFilename, $contentType, 900);
 
             return response()->json([
-                'status'     => 'success',
+                'status' => 'success',
                 'upload_url' => $result['upload_url'],
                 'object_key' => $result['object_key'],
                 'public_url' => $result['public_url'],
@@ -2496,7 +2493,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             \Log::warning('[rdc_attachment_initiate] Cloud initiation fallback: '.$e->getMessage());
 
             return response()->json([
-                'status'  => 'fallback',
+                'status' => 'fallback',
                 'message' => 'Cloud storage initiation unavailable: '.$e->getMessage(),
             ]);
         }
@@ -2883,12 +2880,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application = JobApplication::withoutGlobalScopes()->find($appId);
         }
 
-        $this->jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
-            // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-            ->join('clients', 'clients.id', 'jobs.client_id')
+        $this->jobDetail = Job::withoutGlobalScopes()
+            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
             ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
             ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('jobs.id', '=', $jobId)->where('jobs.company_id', '=', $this->user->company_id)
+            ->where('jobs.id', '=', $jobId)
             ->first();
 
         $this->page_event = 'ADD';
@@ -3035,7 +3032,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $redisLockAcquired = true;
                 }
             } catch (\Throwable $e) {
-                \Log::warning('store(): Redis idempotency lock failed open: ' . $e->getMessage());
+                \Log::warning('store(): Redis idempotency lock failed open: '.$e->getMessage());
             }
         }
 
@@ -3043,8 +3040,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
         if ($coinsDeductions->status) {
             if ($redisLockKey && $redisLockAcquired) {
-                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
             }
+
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
@@ -3370,7 +3371,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if ($claimed === 0) {
                         DB::rollBack();
                         if ($redisLockKey && $redisLockAcquired) {
-                            try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                            try {
+                                Redis::del($redisLockKey);
+                            } catch (\Throwable) {
+                            }
                         }
                         $existing = ResumeUpload::byUuid($resumeSession->uuid)->forCompany($company_id)->first();
                         if ($existing && $existing->linked_candidate_id) {
@@ -3389,23 +3393,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                     try {
                         $resumeAssetId = DB::table('resume_assets')->insertGetId([
-                            'company_id'        => (int) $company_id,
-                            'candidate_id'      => (int) $jobApplication->id,
+                            'company_id' => (int) $company_id,
+                            'candidate_id' => (int) $jobApplication->id,
                             'upload_session_id' => $resumeSession->uuid,
-                            'object_key'        => (string) $finalResumeUrl,
+                            'object_key' => (string) $finalResumeUrl,
                             'original_filename' => (string) ($request->input('resume_original_name') ?: ($resumeSession->original_filename ?: 'resume.pdf')),
-                            'mime_type'         => (string) ($resumeSession->mime_type ?: 'application/pdf'),
-                            'file_size'         => (int) ($resumeSession->file_size_bytes ?: 0),
-                            'checksum_sha256'   => $resumeSession->sha256_hex ?: null,
-                            'version'           => 1,
-                            'status'            => 'ACTIVE',
-                            'parser_status'     => $request->input('parser_status', 'BYPASSED'),
-                            'parser_version'    => $request->input('parser_version', null),
-                            'created_at'        => now(),
-                            'attached_at'       => now(),
+                            'mime_type' => (string) ($resumeSession->mime_type ?: 'application/pdf'),
+                            'file_size' => (int) ($resumeSession->file_size_bytes ?: 0),
+                            'checksum_sha256' => $resumeSession->sha256_hex ?: null,
+                            'version' => 1,
+                            'status' => 'ACTIVE',
+                            'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                            'parser_version' => $request->input('parser_version', null),
+                            'created_at' => now(),
+                            'attached_at' => now(),
                         ]);
                     } catch (\Throwable $rae) {
-                        \Log::warning('store(): resume_assets insert fallback: ' . $rae->getMessage());
+                        \Log::warning('store(): resume_assets insert fallback: '.$rae->getMessage());
                     }
 
                     if ($resumeAssetId) {
@@ -3419,11 +3423,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ->where('status', ResumeUploadStatus::Completed->value)
                         ->update([
                             'linked_candidate_id' => $jobApplication->id,
-                            'r2_url'              => $finalResumeUrl,
-                            'updated_at'          => now(),
+                            'r2_url' => $finalResumeUrl,
+                            'updated_at' => now(),
                         ]);
                     UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
-                        'candidate_id'    => $jobApplication->id,
+                        'candidate_id' => $jobApplication->id,
                         'resume_asset_id' => $resumeAssetId,
                     ], $company_id, $submitted_by);
                 } elseif ($request->hasFile('resume')) {
@@ -3451,23 +3455,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                         try {
                             $resumeAssetId = DB::table('resume_assets')->insertGetId([
-                                'company_id'        => (int) $company_id,
-                                'candidate_id'      => (int) $jobApplication->id,
+                                'company_id' => (int) $company_id,
+                                'candidate_id' => (int) $jobApplication->id,
                                 'upload_session_id' => null,
-                                'object_key'        => (string) $fileUrl,
+                                'object_key' => (string) $fileUrl,
                                 'original_filename' => (string) $full_name,
-                                'mime_type'         => 'application/pdf',
-                                'file_size'         => 0,
-                                'checksum_sha256'   => null,
-                                'version'           => 1,
-                                'status'            => 'ACTIVE',
-                                'parser_status'     => $request->input('parser_status', 'BYPASSED'),
-                                'parser_version'    => $request->input('parser_version', null),
-                                'created_at'        => now(),
-                                'attached_at'       => now(),
+                                'mime_type' => 'application/pdf',
+                                'file_size' => 0,
+                                'checksum_sha256' => null,
+                                'version' => 1,
+                                'status' => 'ACTIVE',
+                                'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                                'parser_version' => $request->input('parser_version', null),
+                                'created_at' => now(),
+                                'attached_at' => now(),
                             ]);
                         } catch (\Throwable $rae) {
-                            \Log::warning('store(): resume_assets insert fallback (v1): ' . $rae->getMessage());
+                            \Log::warning('store(): resume_assets insert fallback (v1): '.$rae->getMessage());
                         }
 
                         if ($resumeAssetId) {
@@ -3501,7 +3505,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             ->exists()) {
                             DB::table('job_application_skills')->insert([
                                 'job_application_id' => $jobApplication->id,
-                                'skills'             => $skillVal,
+                                'skills' => $skillVal,
                             ]);
                         }
                     }
@@ -3512,16 +3516,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             $now = now();
             $insertArr = [
-                'job_id'             => $request->job_id,
+                'job_id' => $request->job_id,
                 'job_application_id' => $jobApplication->id,
-                'status_id'          => $jobApplication->status_id,
-                'master_status_id'   => $jobApplication->master_status_id,
-                'child_status_id'    => $jobApplication->child_status_id,
-                'company_id'         => $company_id,
-                'submitted_by'       => $submitted_by,
-                'skill_match'        => $percentage,
-                'created_at'         => $now,
-                'updated_at'         => $now,
+                'status_id' => $jobApplication->status_id,
+                'master_status_id' => $jobApplication->master_status_id,
+                'child_status_id' => $jobApplication->child_status_id,
+                'company_id' => $company_id,
+                'submitted_by' => $submitted_by,
+                'skill_match' => $percentage,
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
             $add_job_wise_condidates = DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastInsertedId = DB::getPdo()->lastInsertId();
@@ -3531,22 +3535,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // ── Transactional Outbox: candidate.created event ─────────────────────────
             try {
                 DB::table('candidate_outbox_events')->insert([
-                    'company_id'     => (int) $company_id,
-                    'dedupe_key'     => "candidate:{$jobApplication->id}:created",
+                    'company_id' => (int) $company_id,
+                    'dedupe_key' => "candidate:{$jobApplication->id}:created",
                     'aggregate_type' => 'Candidate',
-                    'aggregate_id'   => (int) $jobApplication->id,
-                    'event_type'     => 'candidate.created',
-                    'event_version'  => 1,
-                    'payload'        => json_encode([
-                        'candidate_id'    => (int) $jobApplication->id,
-                        'job_id'          => (int) $request->job_id,
-                        'company_id'      => (int) $company_id,
-                        'submitted_by'    => (int) $submitted_by,
+                    'aggregate_id' => (int) $jobApplication->id,
+                    'event_type' => 'candidate.created',
+                    'event_version' => 1,
+                    'payload' => json_encode([
+                        'candidate_id' => (int) $jobApplication->id,
+                        'job_id' => (int) $request->job_id,
+                        'company_id' => (int) $company_id,
+                        'submitted_by' => (int) $submitted_by,
                         'resume_asset_id' => $resumeAssetId,
                     ]),
-                    'status'         => 'pending',
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'status' => 'pending',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             } catch (\Throwable $oe) {
                 \Log::warning('store(): candidate_outbox_events insert fallback: '.$oe->getMessage());
@@ -3629,16 +3633,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             $responseData = [
-                'action'       => 'redirect',
-                'url'          => $redirectUrl,
+                'action' => 'redirect',
+                'url' => $redirectUrl,
                 'candidate_id' => (int) $jobApplication->id,
-                'resume'       => (string) ($jobApplication->resume ?? ''),
+                'resume' => (string) ($jobApplication->resume ?? ''),
             ];
 
             if ($redisLockKey && $redisLockAcquired) {
                 try {
-                    Redis::set($redisLockKey, 'COMPLETED:' . json_encode($responseData), 'EX', 300);
-                } catch (\Throwable) {}
+                    Redis::set($redisLockKey, 'COMPLETED:'.json_encode($responseData), 'EX', 300);
+                } catch (\Throwable) {
+                }
             }
 
             return Reply::successWithData(__('messages.createdSuccessfully'), $responseData);
@@ -3646,7 +3651,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
             if ($redisLockKey && $redisLockAcquired) {
-                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
             }
 
             // Layer 3 Idempotent replay on duplicate submission UUID (MySQL error 1062)
@@ -3675,10 +3683,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         }
 
                         return Reply::successWithData(__('messages.createdSuccessfully'), [
-                            'action'       => 'redirect',
-                            'url'          => $redirectUrl,
+                            'action' => 'redirect',
+                            'url' => $redirectUrl,
                             'candidate_id' => (int) $existing->id,
-                            'resume'       => (string) ($existing->resume ?? ''),
+                            'resume' => (string) ($existing->resume ?? ''),
                         ]);
                     }
                 }
@@ -3690,7 +3698,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         } catch (\Throwable $e) {
             DB::rollBack();
             if ($redisLockKey && $redisLockAcquired) {
-                try { Redis::del($redisLockKey); } catch (\Throwable) {}
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
             }
             \Log::error('store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
@@ -5512,11 +5523,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($id);
+        if (! $AddJobWiseCondidate) {
+            abort(404);
+        }
         $this->AddJobWiseCondidateRankRow = $id;
         // dd($AddJobWiseCondidate->job_id);
         $this->statuses = ReferenceDataCache::applicationStatuses();
         $this->application = JobApplication::withoutGlobalScopes()->find($AddJobWiseCondidate->job_application_id);
-        $this->jobQuestion = $this->application->job->questions;
+        if (! $this->application) {
+            abort(404);
+        }
+        $this->jobQuestion = $this->application->job?->questions ?? collect();
         $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->where('company_id', $this->user->company_id)->get();
         $this->noticeperiod = \Illuminate\Support\Facades\Cache::remember('notice_periods', 86400, fn () => \App\Models\NoticePeriod::orderBy('np_id')->get());
         $this->qualification = ReferenceDataCache::qualifications();
@@ -5540,9 +5557,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->application_add_detail = $this->application_additional_detail;
         $this->application_add_detail_cnt = $this->application_additional_detail->count();
 
-        $this->jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
-            // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-            ->join('clients', 'clients.id', 'jobs.client_id')
+        $this->jobDetail = Job::withoutGlobalScopes()
+            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
             ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
             ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
             ->where('jobs.id', '=', $this->jobId)
@@ -7201,7 +7218,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $currentResumeVersion = (int) ($jobApplication->resume_version ?? 1);
         if ($currentResumeVersion > $clientResumeVersion) {
             return Reply::dataOnly([
-                'status'  => 'error',
+                'status' => 'error',
                 'msgType' => 'warning',
                 'message' => 'Concurrent update detected. This candidate was updated in another session. Please refresh.',
             ]);
@@ -7221,7 +7238,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ->where('id', $oldResumeId)
                         ->where('company_id', $company_id)
                         ->update([
-                            'status'     => 'REMOVAL_PENDING',
+                            'status' => 'REMOVAL_PENDING',
                             'removed_at' => now(),
                         ]);
                 }
@@ -7231,19 +7248,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $jobApplication->save();
 
                 DB::table('candidate_outbox_events')->insert([
-                    'company_id'     => (int) $company_id,
-                    'dedupe_key'     => "candidate:{$jobApplication->id}:resume_removed:v{$currentResumeVersion}",
+                    'company_id' => (int) $company_id,
+                    'dedupe_key' => "candidate:{$jobApplication->id}:resume_removed:v{$currentResumeVersion}",
                     'aggregate_type' => 'Candidate',
-                    'aggregate_id'   => (int) $jobApplication->id,
-                    'event_type'     => 'resume.removed',
-                    'event_version'  => 1,
-                    'payload'        => json_encode([
-                        'candidate_id'  => (int) $jobApplication->id,
+                    'aggregate_id' => (int) $jobApplication->id,
+                    'event_type' => 'resume.removed',
+                    'event_version' => 1,
+                    'payload' => json_encode([
+                        'candidate_id' => (int) $jobApplication->id,
                         'old_resume_id' => $oldResumeId,
                     ]),
-                    'status'         => 'pending',
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'status' => 'pending',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             } elseif ($resumeSession) {
                 // ── v2 atomic claim ───────────────────────────────────────────────────────
@@ -7279,7 +7296,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             ->where('id', $oldResumeId)
                             ->where('company_id', $company_id)
                             ->update([
-                                'status'     => 'REMOVAL_PENDING',
+                                'status' => 'REMOVAL_PENDING',
                                 'removed_at' => now(),
                             ]);
                     } catch (\Throwable $re) {
@@ -7290,19 +7307,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $newAssetId = null;
                 try {
                     $newAssetId = DB::table('resume_assets')->insertGetId([
-                        'company_id'        => (int) $company_id,
-                        'candidate_id'      => (int) $jobApplication->id,
+                        'company_id' => (int) $company_id,
+                        'candidate_id' => (int) $jobApplication->id,
                         'upload_session_id' => $resumeSession->uuid,
-                        'object_key'        => (string) $finalResumeUrl,
+                        'object_key' => (string) $finalResumeUrl,
                         'original_filename' => (string) ($request->input('resume_original_name') ?: ($resumeSession->original_filename ?: 'resume.pdf')),
-                        'mime_type'         => (string) ($resumeSession->mime_type ?: 'application/pdf'),
-                        'file_size'         => (int) ($resumeSession->file_size_bytes ?: 0),
-                        'checksum_sha256'   => $resumeSession->sha256_hex ?: null,
-                        'version'           => 1,
-                        'status'            => 'ACTIVE',
-                        'parser_status'     => $request->input('parser_status', 'BYPASSED'),
-                        'created_at'        => now(),
-                        'attached_at'       => now(),
+                        'mime_type' => (string) ($resumeSession->mime_type ?: 'application/pdf'),
+                        'file_size' => (int) ($resumeSession->file_size_bytes ?: 0),
+                        'checksum_sha256' => $resumeSession->sha256_hex ?: null,
+                        'version' => 1,
+                        'status' => 'ACTIVE',
+                        'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                        'created_at' => now(),
+                        'attached_at' => now(),
                     ]);
                 } catch (\Throwable $re) {
                     \Log::warning('update(): resume_assets insert fallback: '.$re->getMessage());
@@ -7320,11 +7337,11 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ->where('status', ResumeUploadStatus::Completed->value)
                     ->update([
                         'linked_candidate_id' => $jobApplication->id,
-                        'r2_url'              => $finalResumeUrl,
-                        'updated_at'          => now(),
+                        'r2_url' => $finalResumeUrl,
+                        'updated_at' => now(),
                     ]);
                 UploadSessionAudit::record($resumeSession->id, 'ActionUpdateLinked', [
-                    'candidate_id'    => $jobApplication->id,
+                    'candidate_id' => $jobApplication->id,
                     'resume_asset_id' => $newAssetId,
                 ], $company_id, auth()->id());
             } elseif ($request->hasFile('resume')) {
@@ -7356,7 +7373,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 ->where('id', $oldResumeId)
                                 ->where('company_id', $company_id)
                                 ->update([
-                                    'status'     => 'REMOVAL_PENDING',
+                                    'status' => 'REMOVAL_PENDING',
                                     'removed_at' => now(),
                                 ]);
                         } catch (\Throwable $re) {
@@ -7367,20 +7384,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $newAssetId = null;
                     try {
                         $newAssetId = DB::table('resume_assets')->insertGetId([
-                            'company_id'        => (int) $company_id,
-                            'candidate_id'      => (int) $jobApplication->id,
+                            'company_id' => (int) $company_id,
+                            'candidate_id' => (int) $jobApplication->id,
                             'upload_session_id' => null,
-                            'object_key'        => (string) $fileUrl,
+                            'object_key' => (string) $fileUrl,
                             'original_filename' => (string) $full_name,
-                            'mime_type'         => 'application/pdf',
-                            'file_size'         => 0,
-                            'checksum_sha256'   => null,
-                            'version'           => 1,
-                            'status'            => 'ACTIVE',
-                            'parser_status'     => $request->input('parser_status', 'BYPASSED'),
-                            'parser_version'    => $request->input('parser_version', null),
-                            'created_at'        => now(),
-                            'attached_at'       => now(),
+                            'mime_type' => 'application/pdf',
+                            'file_size' => 0,
+                            'checksum_sha256' => null,
+                            'version' => 1,
+                            'status' => 'ACTIVE',
+                            'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                            'parser_version' => $request->input('parser_version', null),
+                            'created_at' => now(),
+                            'attached_at' => now(),
                         ]);
                     } catch (\Throwable $re) {
                         \Log::warning('update(): resume_assets insert fallback (v1): '.$re->getMessage());
@@ -7406,7 +7423,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $jobApplication->resume_version = $currentResumeVersion + 1;
                 $this->resilientSaveJobApplication($jobApplication);
             }
-           
+
             // Recalculate skill match for ALL jobs this candidate is linked to
             $allWiseCandidates = DB::table('add_job_wise_condidates')
                 ->where('job_application_id', $jobApplication->id)
@@ -7422,7 +7439,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 DB::table('add_job_wise_condidates')->where('id', $wiseRow->id)->update([
                     'skill_match' => $pct,
                     // 'skills'      => $candSkillsStr,
-                    'updated_at'  => now(),
+                    'updated_at' => now(),
                 ]);
                 $updatedWiseIds[] = (int) $wiseRow->id;
                 if ((int) ($request->AddJobWiseCondidateRankRow ?? 0) === (int) $wiseRow->id || (int) ($request->job_id ?? 0) === (int) $wiseRow->job_id) {
@@ -7437,26 +7454,26 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Insert outbox event for candidate.updated
             try {
                 DB::table('candidate_outbox_events')->insert([
-                    'company_id'     => (int) $company_id,
-                    'dedupe_key'     => "candidate:{$jobApplication->id}:updated:v{$jobApplication->resume_version}",
+                    'company_id' => (int) $company_id,
+                    'dedupe_key' => "candidate:{$jobApplication->id}:updated:v{$jobApplication->resume_version}",
                     'aggregate_type' => 'Candidate',
-                    'aggregate_id'   => (int) $jobApplication->id,
-                    'event_type'     => 'candidate.updated',
-                    'event_version'  => 1,
-                    'payload'        => json_encode([
+                    'aggregate_id' => (int) $jobApplication->id,
+                    'event_type' => 'candidate.updated',
+                    'event_version' => 1,
+                    'payload' => json_encode([
                         'candidate_id' => (int) $jobApplication->id,
-                        'job_id'       => (int) ($request->job_id ?? 0),
-                        'company_id'   => (int) $company_id,
+                        'job_id' => (int) ($request->job_id ?? 0),
+                        'company_id' => (int) $company_id,
                         'submitted_by' => (int) auth()->id(),
                     ]),
-                    'status'         => 'pending',
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'status' => 'pending',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             } catch (\Throwable $oe) {
                 \Log::warning('update(): candidate_outbox_events insert fallback: '.$oe->getMessage());
             }
-            
+
             // Commit MySQL transaction — pure local database writes with zero remote network calls
             DB::commit();
 
@@ -7481,7 +7498,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             } catch (\Throwable $e) {
                 \Log::warning('ELASTIC_CANDIDATES refresh in update() failed: '.$e->getMessage());
             }
-            
+
             // Post-commit cache clean
             $cachekeys = [
                 'allcvtracker_version_user_'.$this->user->id,

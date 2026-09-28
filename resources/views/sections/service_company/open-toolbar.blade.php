@@ -14,7 +14,7 @@
                     $bgTextDecore = $strVal = '';
 				
                     $str = trim(@$jobtitle);
-                    $str = $strVal = strtolower($str[0]);
+                    $str = $strVal = strtolower($str[0] ?? '');
                     $str = ord($str);
                     if ($str >= 97 && $str <= 101) {
                         $bgTextDecore = 'fs-3 bg-light-danger text-danger';
@@ -30,17 +30,17 @@
                         $bgTextDecore = 'fs-3 bg-light-secondary text-dark';
                     }
 
-                    $statusName = ucwords(substr(@$job->status, 0, 10));
+                    $statusName = ucwords(substr((string) @$job->status, 0, 10));
                     $statusClass = 'joined-bg';
                     $final_status = @$job->final_status;
                     if ($final_status == 2) {
                         $statusName = 'REMOVED';
                         $statusClass = 'closed-bg';
-                    }elseif($job->status==='active'){
+                    }elseif(@$job->status==='active'){
                             $statusClass = 'joined-bg';
-                    }elseif($job->status==='inactive'){
+                    }elseif(@$job->status==='inactive'){
                             $statusClass = 'closed-bg';
-                    }elseif($job->status==='hold'){
+                    }elseif(@$job->status==='hold'){
                             $statusClass = 'hold-bg';
                     }
 
@@ -92,7 +92,7 @@
                 <!--begin::Requisitions=-->
                 
 
-                    <?php  if (!empty($logo_path)) { ?>
+                    <?php if (! empty($logo_path)) { ?>
                     <div data-row-id="' . $row->id . '"
                         class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2  ' . $profile_detail_class . ' border-radius-5" data-id="{{$id}}">
                         <a href="javascript:void(0);">
@@ -102,14 +102,14 @@
                             </div>
                         </a>
                     </div>
-                    <?php	}else{ ?>
+                    <?php	} else { ?>
                     <div class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" data-id="{{$id}}"> <a
                             href="javascript:void(0);">
                             <div class="symbol-label {{ @$bgTextDecore }} border-radius-5">{{ strtoupper(@$strVal) }}</div>
                         </a>
                     </div>
 
-                    <?php  } ?>
+                    <?php } ?>
 
 
                     <!--end::Avatar-->
