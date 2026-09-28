@@ -71,7 +71,7 @@
                     $created_at 		=	date("d M, Y", strtotime($created_at));
                     $jobClientInfo = \DB::table('jobs')
                         ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-                        ->select('jobs.company_id', 'clients.self_company')
+                        ->select('jobs.company_id', 'clients.self_company', 'clients.name as client_name')
                         ->where('jobs.id', $id)
                         ->first();
 
@@ -85,6 +85,13 @@
                         $tagsType = __('messages.internal_tag');
                     } else {
                         $tagsType = 'Internal Client';
+                    }
+
+                    if ($tagsType === 'Internal Client') {
+                        $internalClientName = ! empty($jobClientInfo->client_name) ? $jobClientInfo->client_name : (@$job->client_name ?? '');
+                        if (! empty($internalClientName)) {
+                            $company_or_client = $internalClientName;
+                        }
                     }
 					
 
