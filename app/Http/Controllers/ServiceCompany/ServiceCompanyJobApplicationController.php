@@ -531,8 +531,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('job_id', $job_id)
                 ->update([
                     'skill_match' => $matchPct,
-                    'skills' => $candSkills,
-                    'updated_at' => now(),
+                    'updated_at'  => now(),
                 ]);
         }
 
@@ -4309,19 +4308,31 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
                     ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id); // Add the candidate condition
             })
+<<<<<<< HEAD
             ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.id as id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+=======
+            ->select(
+                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
+                'job_metronics_skills.skill_name',
+                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+            )
+>>>>>>> 6d1d2ca418f91a3693d3c64e86bf32d011c14b16
             ->where('job_metronics_skills.job_id', '=', $this->job_id)
+            ->whereNotNull('job_metronics_skills.skill_name')
+            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+            ->groupBy('job_metronics_skills.skill_name')
             ->get();
 
-        // Intent: V4 CQRS - Virtual in-memory defaults for non-evaluated skills to preserve exact UI parity without SQL writes.
+        // Intent: Virtual in-memory defaults for non-evaluated skills (V4 CQRS read path — no DB write on GET).
+        // Use string defaults so the blade's if($skill_val->skill_value) check correctly detects no experience.
         if ($this->jobSkill) {
             foreach ($this->jobSkill as $sk) {
                 if ($sk->rating === null) {
                     $sk->rating = 0;
                 }
-                if ($sk->skill_value === null) {
-                    $sk->skill_value = 0;
-                }
+                // Keep skill_value as null (not int 0) so blade falsy check works correctly
+                // Blade uses: if($skill_val->skill_value) — null is falsy, 0 is falsy, both work
             }
         }
         // dd($this->jobSkill);
