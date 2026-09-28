@@ -433,6 +433,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 })
                 ->select(
                     DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade/form consistency
+                    DB::raw('MIN(job_metronics_skills.id) as id'),
                     'job_metronics_skills.skill_name',
                     DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
                     DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
@@ -4308,7 +4309,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
                     ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id); // Add the candidate condition
             })
-            ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+            ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.id as id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
             ->where('job_metronics_skills.job_id', '=', $this->job_id)
             ->get();
 
@@ -5459,7 +5460,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
                         ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
                 })
-                ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
+                ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.id as id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
                 ->where('job_metronics_skills.job_id', '=', $_wsJobId)
                 ->get();
         }
@@ -5555,6 +5556,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             })
             ->select(
                 DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
+                DB::raw('MIN(job_metronics_skills.id) as id'),
                 'job_metronics_skills.skill_name',
                 DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
                 DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
@@ -7396,7 +7398,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $jobApplication->resume_version = $currentResumeVersion + 1;
                 $this->resilientSaveJobApplication($jobApplication);
             }
-
+           
             // Recalculate skill match for ALL jobs this candidate is linked to
             $allWiseCandidates = DB::table('add_job_wise_condidates')
                 ->where('job_application_id', $jobApplication->id)
@@ -7411,7 +7413,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $pct = (int) ($calc['percentage'] ?? 0);
                 DB::table('add_job_wise_condidates')->where('id', $wiseRow->id)->update([
                     'skill_match' => $pct,
-                    'skills'      => $candSkillsStr,
+                    // 'skills'      => $candSkillsStr,
                     'updated_at'  => now(),
                 ]);
                 $updatedWiseIds[] = (int) $wiseRow->id;
@@ -7419,7 +7421,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $primaryMatchPct = $pct;
                 }
             }
-
             if ($primaryMatchPct === null && ! empty($request->job_id)) {
                 $calc = GeneralMethod::calculateSkillMatch((int) $request->job_id, $candSkillsStr);
                 $primaryMatchPct = (int) ($calc['percentage'] ?? 0);
@@ -7447,7 +7448,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             } catch (\Throwable $oe) {
                 \Log::warning('update(): candidate_outbox_events insert fallback: '.$oe->getMessage());
             }
-
+            
             // Commit MySQL transaction — pure local database writes with zero remote network calls
             DB::commit();
 
@@ -7456,6 +7457,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             foreach ($updatedWiseIds as $wId) {
                 GeneralMethod::JobApplicationsAddEditUpload($wId);
             }
+            $addJobWiseCandidateId = (int) ($request->AddJobWiseCondidateRankRow ?? 0);
             if (empty($updatedWiseIds)) {
                 $addJobWiseCandidateId = (int) ($request->AddJobWiseCondidateRankRow ?? 0);
                 if ($addJobWiseCandidateId > 0) {
@@ -7471,7 +7473,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             } catch (\Throwable $e) {
                 \Log::warning('ELASTIC_CANDIDATES refresh in update() failed: '.$e->getMessage());
             }
-
+            
             // Post-commit cache clean
             $cachekeys = [
                 'allcvtracker_version_user_'.$this->user->id,
@@ -11130,6 +11132,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             })
             ->select(
                 DB::raw('MIN(job_metronics_skills.id) as job_skill_id'), // alias as job_skill_id for blade form name keys
+                DB::raw('MIN(job_metronics_skills.id) as id'),
                 'job_metronics_skills.skill_name',
                 DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
                 DB::raw('MAX(candidate_job_skill_exp.rating) as rating')

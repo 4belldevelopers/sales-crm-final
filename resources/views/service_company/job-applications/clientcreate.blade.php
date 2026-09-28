@@ -876,6 +876,7 @@ body {overflow-x:hidden; }
                                   $selected_skill_exp_year = null;
                                   $selected_skill_exp_month = null;
                                   $selected_skill_rating = null;
+                                  $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
 
                                   if(!empty($skill_val->skill_value)){
                                     $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
@@ -894,7 +895,7 @@ body {overflow-x:hidden; }
                             <tr>
                               <td><input type="text" value="{{ strtoupper($skill_val->skill_name) }}" placeholder="Enter skill" readonly /></td>
                               <td>
-                                <select class="form-select form-select-solid" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid" arial-label="Select rel_exp_year" id="rel_exp_year" name="YearskillId[{{ $skill_val_id }}]">
                                       <option value="0">Select Year</option>
                                       @php 
                                           for ($i = 1; $i <= 60; $i++) {
@@ -912,7 +913,7 @@ body {overflow-x:hidden; }
                                     </select>
                               </td>
                               <td>
-                                <select class="form-select form-select-solid" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val->id }}]">
+                                <select class="form-select form-select-solid" arial-label="Select rel_exp_month" id="rel_exp_month" name="MonthskillId[{{ $skill_val_id }}]">
                                       <option value="">Select Month</option>
                                       @php 
                                           for ($i = 0; $i <= 11; $i++) {
@@ -930,7 +931,7 @@ body {overflow-x:hidden; }
                                 </select>
                               </td>
                               <td>
-                                 <select class="form-select form-select-solid" arial-label="Select rating" id="rating" name="rating[{{ $skill_val->id }}]">
+                                 <select class="form-select form-select-solid" arial-label="Select rating" id="rating" name="rating[{{ $skill_val_id }}]">
                                       <option value="0">Select rating</option>
                                       @php 
                                           for ($i = 1; $i <= 5; $i++) {
