@@ -95,7 +95,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" />
 @endif
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+@php
+    try {
+        echo app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
+    } catch (\Throwable $e) {
+        try {
+            echo app(\Illuminate\Foundation\Vite::class)(['resources/js/app.js']);
+        } catch (\Throwable) {
+            // Graceful resilience fallback if Vite assets have not been built on the server
+        }
+    }
+@endphp
 <link rel="preload" href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="{{ asset('demo/plugins/custom/fullcalendar/fullcalendar.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet"></noscript>
 <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
