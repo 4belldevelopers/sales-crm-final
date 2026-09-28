@@ -194,12 +194,12 @@
 #kt_activitiesApplication #personal_details .skill-logo{display:none!important;}
 /* ===== SIDE DRAWERS (CSS :has() driven) ===== */
 .jw-side-drawer{position:fixed;inset:0;z-index:1055;pointer-events:none;overflow:hidden;}
-.jw-side-drawer:has(.jw-drawer-body:not(.d-none)){pointer-events:auto;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)),.jw-side-drawer.jw-drawer-open{pointer-events:auto;}
 .jw-drawer-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;cursor:pointer;transition:opacity .28s;}
-.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop{opacity:1;}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-backdrop,.jw-side-drawer.jw-drawer-open .jw-drawer-backdrop{opacity:1;}
 .jw-drawer-panel{position:absolute;right:0;top:0;bottom:0;width:480px;max-width:96vw;background:#fff;display:flex;flex-direction:column;box-shadow:-4px 0 32px rgba(15,23,42,.14);border-left:1px solid #e2e8f0;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
 #jw-skill-drawer .jw-drawer-panel{width:576px;}
-.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel{transform:translateX(0);}
+.jw-side-drawer:has(.jw-drawer-body:not(.d-none)) .jw-drawer-panel,.jw-side-drawer.jw-drawer-open .jw-drawer-panel{transform:translateX(0);}
 .jw-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0;gap:12px;}
 .jw-drawer-icon-wrap{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .jw-drawer-icon-wrap svg{width:15px;height:15px;}
@@ -4602,22 +4602,27 @@ setTimeout(() => {
    $(document).on('click', '.editSkill', function(e) { 
        e.preventDefault();
        e.stopPropagation();
+       // Open: add class to outer drawer for reliable pointer-events + transform trigger
+       $('#jw-skill-drawer').addClass('jw-drawer-open');
        $('.editSkillUpdate').removeClass('d-none');
        $('.editSkillCancel').removeClass('d-none');
        $('.editSkill').addClass('d-none');
        $('.job_skill_edit').removeClass('d-none');
        $('.job_skill_view').addClass('d-none');
-
+       // Prevent body scroll while drawer is open
+       $('body').addClass('jw-drawer-active');
     });
     $(document).on('click', '.editSkillCancel', function(e) { 
        e.preventDefault();
        e.stopPropagation();
+       // Close: remove class and restore all states
+       $('#jw-skill-drawer').removeClass('jw-drawer-open');
        $('.editSkillUpdate').addClass('d-none');
        $('.editSkillCancel').addClass('d-none');
        $('.editSkill').removeClass('d-none');
        $('.job_skill_edit').addClass('d-none');
        $('.job_skill_view').removeClass('d-none');
-
+       $('body').removeClass('jw-drawer-active');
     });
 
 
@@ -4645,6 +4650,9 @@ setTimeout(() => {
                     $btn.html('Save Changes');
                     $btn.prop('disabled', false); // Re-enable after success
                     $("#skill-update-form").html('Save Changes');
+                    // Close drawer: remove open class and restore default states
+                    $('#jw-skill-drawer').removeClass('jw-drawer-open');
+                    $('body').removeClass('jw-drawer-active');
                     $('.editSkillUpdate').addClass('d-none');
                     $('.editSkillCancel').addClass('d-none');
                     $('.job_skill_edit').addClass('d-none');
@@ -4701,11 +4709,16 @@ setTimeout(() => {
                     }
                     Swal.fire("Success", 'Candidate Skill Experience updated successfully !',"success");
                   },
-                error			: function (response) {
+                error : function (xhr) {
                   $btn.html('Save Changes');
                   $btn.prop('disabled', false);
                   $("#skill-update-form").html('Save Changes');
-                  Swal.fire("Warning", 'Something went wrong. Please try again.',"warning");
+                  var msg = 'Something went wrong. Please try again.';
+                  try {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp && resp.message) msg = resp.message;
+                  } catch(e) {}
+                  Swal.fire("Warning", msg, "warning");
                 }
             });
 
@@ -4782,15 +4795,20 @@ setTimeout(() => {
     $(document).on('click', '.editSlots', function(e) {
        e.preventDefault();
        e.stopPropagation();
+       // Open: add class to outer drawer for reliable pointer-events + transform
+       $('#jw-slots-drawer').addClass('jw-drawer-open');
        $('.editSlots').addClass('d-none');
        $('.job_slots_edit').removeClass('d-none');
        // Hide whichever display state is currently showing
        $('.job_slots_view').addClass('d-none');
        $('.po-slots-empty').addClass('d-none');
+       $('body').addClass('jw-drawer-active');
     });
     $(document).on('click', '.editSlotsCancel', function(e) {
        e.preventDefault();
        e.stopPropagation();
+       // Close: remove class and restore all states
+       $('#jw-slots-drawer').removeClass('jw-drawer-open');
        $('.editSlots').removeClass('d-none');
        $('.job_slots_edit').addClass('d-none');
        // Restore whichever display state is appropriate
@@ -4799,6 +4817,7 @@ setTimeout(() => {
        } else {
            $('.po-slots-empty').removeClass('d-none');
        }
+       $('body').removeClass('jw-drawer-active');
     });
 
 
@@ -4933,7 +4952,10 @@ setTimeout(() => {
     $(document).on('click', '.editRecruiterNote', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        // Open: add class to outer drawer for reliable pointer-events + transform trigger
+        $('#jw-recruiter-note-drawer').addClass('jw-drawer-open');
         $('.rn-drawer-body').removeClass('d-none');
+        $('body').addClass('jw-drawer-active');
 
         if (!rnTemplatesLoaded) {
             $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
@@ -4954,7 +4976,10 @@ setTimeout(() => {
     $(document).on('click', '.editRecruiterNoteCancel', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        // Close: remove class and reset drawer state
+        $('#jw-recruiter-note-drawer').removeClass('jw-drawer-open');
         $('.rn-drawer-body').addClass('d-none');
+        $('body').removeClass('jw-drawer-active');
     });
 
     $(document).on('change', '#rn_template_select', function() {
@@ -5017,9 +5042,10 @@ setTimeout(() => {
                         if (cId) window.invalidateCandidateDrawerCache(cId);
                     }
 
-                    // Close drawer first; blur active element so focus-restore
-                    // cannot re-trigger the Edit button after Swal closes
+                    // Close drawer first; remove open class; blur active element
+                    $('#jw-recruiter-note-drawer').removeClass('jw-drawer-open');
                     $('.rn-drawer-body').addClass('d-none');
+                    $('body').removeClass('jw-drawer-active');
                     if (document.activeElement) { document.activeElement.blur(); }
                     // Wait for drawer slide-out transition (280ms) before re-enabling
                     // button and firing Swal — prevents Swal-close click from landing
@@ -5034,10 +5060,12 @@ setTimeout(() => {
                     $btn.prop('disabled', false);
                 }
             },
-            error   : function() {
+            error   : function(xhr) {
                 $btn.html('Save Changes');
                 $btn.prop('disabled', false);
-                Swal.fire('Warning', 'Something went wrong. Please try again.', 'warning');
+                var msg = 'Something went wrong. Please try again.';
+                try { var r = JSON.parse(xhr.responseText); if (r && r.message) msg = r.message; } catch(e) {}
+                Swal.fire('Warning', msg, 'warning');
             }
         });
     });
