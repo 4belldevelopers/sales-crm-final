@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
@@ -12,7 +13,7 @@ use Stripe\Invoice as StripeInvoice;
 
 class Company extends Model
 {
-    use Billable, Notifiable;
+    use Billable, HasFactory, Notifiable;
 
     protected $appends = [
         'logo_url',
