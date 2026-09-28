@@ -352,6 +352,10 @@ if($snp_mode== 1){
                                     <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
                                     <div><div class="up-detail-lbl">File Type</div><div class="up-detail-val" id="upDetailFileType">&nbsp;</div></div>
                                 </div>
+                                <div class="up-detail">
+                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+                                    <div><div class="up-detail-lbl">Upload Channel</div><div class="up-detail-val" id="upDetailUploadMethod">&nbsp;</div></div>
+                                </div>
                                 <div class="up-detail" id="upRetryWrap" style="display:none">
                                     <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
                                 </div>
@@ -416,6 +420,7 @@ if($snp_mode== 1){
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
                 <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
                 <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
+                <input type="hidden" name="resume_upload_pipeline" id="resume_upload_pipeline" value="">
                 <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
@@ -1538,10 +1543,13 @@ $(document).ready(function () {
                     '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
                     + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                     + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Upload complete!</strong> Resume ready — fill in the form and save.</span>'
+                    + '<span><strong>Upload complete! (Method A: Direct R2)</strong> Resume ready — fill in the form and save.</span>'
                 ).show();
                 $('#uploaded_file_path').val('');
                 $('#resume_original_name').val('');
+                $('#resume_upload_pipeline').val('METHOD_A_DIRECT_R2');
+                $('#upDetailUploadMethod').html('<span class="badge badge-light-success fw-bold" style="font-size:11px;padding:3px 8px;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;">Method A (Direct R2)</span>');
+                console.info('[Resume Pipeline] Completed via Method A: Direct Browser-to-Cloudflare R2 Upload');
                 var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
                 if (typeof shouldUseResumeUploadFallback === 'function' && shouldUseResumeUploadFallback(data.error)) {
@@ -1644,6 +1652,8 @@ $(document).ready(function () {
         $('#resume_session_uuid').val('');
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
+        $('#resume_upload_pipeline').val('');
+        $('#upDetailUploadMethod').html('&nbsp;');
         $('.download-file').addClass('d-none');
     }
 
@@ -1660,6 +1670,14 @@ $(document).ready(function () {
         );
         $('#upDetailParserStatus').text('Pending').css('color','');
         $('#upDetailFileType').text(ext);
+        var pipe = $('#resume_upload_pipeline').val();
+        if (pipe === 'METHOD_B_SERVER_UPLOAD' || $('#uploaded_file_path').val()) {
+            $('#upDetailUploadMethod').html('<span class="badge badge-light-primary fw-bold" style="font-size:11px;padding:3px 8px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;">Method B (Server Upload)</span>');
+        } else if (pipe === 'METHOD_A_DIRECT_R2' || $('#resume_session_uuid').val()) {
+            $('#upDetailUploadMethod').html('<span class="badge badge-light-success fw-bold" style="font-size:11px;padding:3px 8px;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;">Method A (Direct R2)</span>');
+        } else {
+            $('#upDetailUploadMethod').html('<span class="badge badge-light fw-bold" style="font-size:11px;padding:3px 8px;color:#6b7280;background:#f3f4f6;border-radius:4px;">Processing...</span>');
+        }
         $('#upRetryWrap').hide();
         $('#uploadBox').addClass('has-file').hide();
         $('#fileInfo').hide();
@@ -1833,10 +1851,13 @@ $(document).ready(function () {
                 $('#upBanner').removeClass('err').addClass('ok').html(
                     '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                     +'<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    +'<span><strong>Upload complete!</strong> Resume uploaded &amp; queued for parsing.</span>'
+                    +'<span><strong>Upload complete! (Method B: Server Upload)</strong> Resume uploaded &amp; queued for parsing.</span>'
                 ).show();
                 $('#uploaded_file_path').val(r.file_path || '');
                 $('#resume_original_name').val(r.original_name || file.name || '');
+                $('#resume_upload_pipeline').val('METHOD_B_SERVER_UPLOAD');
+                $('#upDetailUploadMethod').html('<span class="badge badge-light-primary fw-bold" style="font-size:11px;padding:3px 8px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;">Method B (Server Upload)</span>');
+                console.info('[Resume Pipeline] Completed via Method B: Server Application Upload (Fallback Stream)');
                 $('#resumeCheck').val('1');
                 showUploadedCard(file);
                 if (r.resume_upload_id) _startParsePoller(r.resume_upload_id);
