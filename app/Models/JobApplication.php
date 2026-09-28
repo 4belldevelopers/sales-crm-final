@@ -8,11 +8,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JobApplication extends Model
 {
-    use Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
+
+    protected $casts = [
+        'aggregate_version' => 'integer',
+        'resume_version' => 'integer',
+    ];
 
 	// BUG-12 fix: removed from $appends to stop N+1 on every hydration (accessors still callable explicitly).
 	protected $appends = [];
@@ -27,6 +33,10 @@ class JobApplication extends Model
             if (auth()->check() && !auth()->user()->is_superadmin) {
                 $builder->where('job_applications.company_id', auth()->user()->company_id);
             }
+        });
+
+        static::saved(function ($model) {
+            \App\Services\CandidateDrawerReadService::recordCandidateProjection($model);
         });
     }
 
