@@ -530,8 +530,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ->where('job_id', $job_id)
                 ->update([
                     'skill_match' => $matchPct,
-                    'skills' => $candSkills,
-                    'updated_at' => now(),
+                    'updated_at'  => now(),
                 ]);
         }
 
