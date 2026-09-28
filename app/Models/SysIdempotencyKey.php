@@ -20,6 +20,7 @@ class SysIdempotencyKey extends Model
     protected $casts = [
         'tenant_id' => 'integer',
         'response_status' => 'integer',
+        'processing_until' => 'datetime',
         'expires_at' => 'datetime',
         'completed_at' => 'datetime',
         'created_at' => 'datetime',

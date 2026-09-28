@@ -11,10 +11,10 @@ Date			:	28-JUNE-2022
 namespace App\Http\Controllers\ServiceCompany;
 
 use App\Enums\ResumeUploadStatus;
-use App\Helper\Files;
 use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\ElasticBenchCandidateIndex;
+use App\Jobs\ProcessOutboxEventJob;
 use App\Jobs\QueueNotificationMailService;
 use App\Jobs\RecordBenchResumeDownloadJob;
 use App\Jobs\UploadResumeToTestRTwo;
@@ -25,6 +25,7 @@ use App\Models\Job;
 use App\Models\JobApplication;
 use App\Models\NoticePeriod;
 use App\Models\ResumeUpload;
+use App\Models\SysIdempotencyKey;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
 use App\Services\BenchTalentHeroAnalytics;
@@ -36,8 +37,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Validator;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -1255,16 +1259,53 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     public function store(Request $request)
     {
-        // Phase 9 Optimization: Idempotency lock check to prevent duplicate submission writes
-        if (config('feature.talents_v2_enabled')) {
-            $idempotencyKey = $request->header('X-Idempotency-Key') ?: $request->input('_idempotency_token');
-            if (! empty($idempotencyKey)) {
-                $lockKey = 'idempotency_lock:talent:'.$idempotencyKey;
-                $acquired = Cache::lock($lockKey, 10)->get();
-                if (! $acquired) {
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'A submission is already in progress. Please wait.']);
+        $companyId = (int) auth()->user()->company_id;
+        $clientUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: (string) Str::uuid());
+        $requestPayloadForHash = $request->except(['_token', 'resume', 'client_submission_uuid', '_idempotency_token']);
+        $requestHash = hash('xxh128', json_encode($requestPayloadForHash));
+        $idempotencyKey = "talent:idempotency:{$companyId}:{$clientUuid}";
+
+        // Step 1: Layer 2 - Redis Fast Intercept (50ms timeout bounded)
+        try {
+            $redisAcquired = Redis::connection('default')->set($idempotencyKey, 'LOCKED', 'EX', 120, 'NX');
+            if (! $redisAcquired) {
+                $existingRecord = SysIdempotencyKey::where('tenant_id', $companyId)
+                    ->where('idempotency_key', $clientUuid)
+                    ->first();
+
+                // INVARIANT G-53: Request Hash Mismatch Defense
+                if ($existingRecord && $existingRecord->request_hash !== $requestHash) {
+                    return response()->json([
+                        'status' => 'conflict',
+                        'error' => 'IDEMPOTENCY_KEY_REUSE',
+                        'message' => 'Idempotency key has already been used for a conflicting payload.',
+                    ], 409);
+                }
+
+                if ($existingRecord && $existingRecord->status === 'COMPLETED') {
+                    $body = json_decode($existingRecord->response_body, true) ?? [];
+
+                    return response()->json($body, $existingRecord->response_status ?? 200);
+                }
+
+                // Check if lease has expired (Gate G-52)
+                if ($existingRecord && $existingRecord->status === 'PROCESSING' && $existingRecord->processing_until < now()) {
+                    // Lease expired -> fall through to MySQL lease recovery
+                } else {
+                    return response()->json([
+                        'status' => 'conflict',
+                        'error' => 'IN_FLIGHT',
+                        'message' => 'A submission with this UUID is currently being processed. Please wait.',
+                    ], 409);
                 }
             }
+        } catch (\Throwable $e) {
+            // Redis down or timed out -> Fail open safely to Layer 3 (MySQL durable table)
+            Log::warning('REDIS_IDEMPOTENCY_FAIL_OPEN: falling back to MySQL sys_idempotency_keys', [
+                'error' => $e->getMessage(),
+                'company_id' => $companyId,
+                'uuid' => $clientUuid,
+            ]);
         }
 
         $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
@@ -1287,804 +1328,665 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
         }
 
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
-        if ($request->edit_token != '') {
-            $benchApplication = JobApplication::withoutGlobalScopes()->find((int) $request->edit_token);
-            $added = false;
-        } else {
-            $benchApplication = new JobApplication;
-            // Create-form stage selection uses the existing bench status IDs; older clients default to Bench.
-            $benchApplication->status = $request->filled('talent_stage') ? (int) $request->input('talent_stage') : 2;
-            $added = true;
-            $eventId = 5;
-            $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
-            if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-            }
-
-        }
-        // new BenchApplication();
-        $outsourcing_type = 1;
-        if (@$request->phone == 'Full Time') {
-            $outsourcing_type = 1;
-        } elseif (@$request->phone == 'Contract') {
-            $outsourcing_type = 2;
-        } elseif (@$request->phone == 'Part Time') {
-            $outsourcing_type = 3;
-        } elseif (@$request->phone == 'Freelance') {
-            $outsourcing_type = 4;
-        }
-
-        $benchApplication->company_id = $company_id;
-        $benchApplication->submitted_by = auth()->user()->id;
-        $benchApplication->full_name = ucwords(strtolower(@$request->full_name));
-        $benchApplication->current_designation = @$request->current_designation;
-        $benchApplication->outsourcing_type = @$outsourcing_type;
-
-        $benchApplication->careersummary = $request->careersummary;
-        $benchApplication->nationality = $request->nationality;
-        $benchApplication->wm = $request->wm;
-        $benchApplication->employmentType = $request->employmentType;
-        $benchApplication->oh = $request->oh;
-        $benchApplication->visastatu = $request->visastatu;
-        $benchApplication->referencename = $request->referencename;
-
-        $benchApplication->phone = @$request->phone;
-        $benchApplication->secondary_mobile = @$request->secondary_mobile;
-        $benchApplication->dob = @$request->dob;
-        $benchApplication->email = @$request->email;
-        $benchApplication->secondrary_email = @$request->secondrary_email;
-        $benchApplication->gender = $request->gender;
-        $benchApplication->qualification = @$request->qualification;
-
-        $benchApplication->phone_code = ($request->primary_country_code) ? @$request->primary_country_code : null;
-        $benchApplication->second_phone_code = ($request->secondary_country_code) ? @$request->secondary_country_code : null;
-
-        // $total_exp = @$request->total_exp_year.'.'.@$request->total_exp_month;
-
-        $total_exp = (isset($request->total_exp_year) && $request->total_exp_year !== '' || isset($request->total_exp_month) && $request->total_exp_month !== '') ? $request->total_exp_year.'.'.$request->total_exp_month : null;
-
-        $rel_exp = (isset($request->rel_exp_year) && $request->rel_exp_year !== '' || isset($request->rel_exp_month) && $request->rel_exp_month !== '') ? $request->rel_exp_year.'.'.$request->rel_exp_month : null;
-
-        // $rel_exp = @$request->rel_exp_year.'.'.@$request->rel_exp_month;
-
-        $benchApplication->total_exp = $total_exp; // @$request->total_exp;
-        $benchApplication->rel_exp = $rel_exp; // @$request->rel_exp;
-        $benchApplication->serving_notice_period_mode = @$request->serving_notice_period;
-        $serving_notice_period = $request->serving_notice_period;
-        $benchApplication->gender = @$request->gender;
-        $benchApplication->percentage_hike = @$request->percentage_hike;
-
-        if ($serving_notice_period == 0) {
-            $benchApplication->np_id = $request->ddl_np_id;
-        } elseif ($serving_notice_period == 1) {
-            $np_id_date = $request->np_id;
-            if (! empty($request->np_id_display)) {
-                $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
-            }
-            $benchApplication->np_id = $np_id_date;
-        } elseif ($serving_notice_period == 2) {
-            $benchApplication->np_id = 'Immediate';
-            $np_id_date = $request->np_id;
-            if (! empty($request->np_id_display)) {
-                $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
-            }
-            $benchApplication->last_working_date = $np_id_date;
-        }
-        $benchApplication->pay_rate_currency = @$request->pay_rate_currency;
-        $benchApplication->pay_rate_amount = @$request->pay_rate_amount;
-        $benchApplication->pay_rate_mode = @$request->pay_rate_mode;
-        $benchApplication->bill_rate_currency = @$request->bill_rate_currency;
-        $benchApplication->bill_rate_amount = @$request->bill_rate_amount;
-        $benchApplication->bill_rate_mode = @$request->bill_rate_mode;
-
-        $currency = GeneralMethod::currency();  // Currency code
-
-        $ecurrency = $currency[$request->bill_rate_currency];
-        $econvertedAmount = $request->bill_annual;
-        if ($request->bill_rate_currency > 0) {
-            $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
-        }
-
-        $ectcdivided = GeneralMethod::salaryDividedByMode(0, $econvertedAmount);
-        $benchApplication->ectc_yearly = @$ectcdivided->yearly;
-        $benchApplication->ectc_monthly = @$ectcdivided->monthly;
-        $benchApplication->ectc_hourly = @$ectcdivided->hourly;
-
-        $currency = $currency[$request->pay_rate_currency];
-        $convertedAmount = $request->pay_annual;
-        if ($request->pay_rate_currency > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
-        }
-
-        $ctcdivided = GeneralMethod::salaryDividedByMode(0, $convertedAmount);
-        $benchApplication->ctc_yearly = @$ctcdivided->yearly;
-        $benchApplication->ctc_monthly = @$ctcdivided->monthly;
-        $benchApplication->ctc_hourly = @$ctcdivided->hourly;
-
-        $benchApplication->comission_type = @$request->comission_type;
-
-        $stateId = '';
-        $cityID = '';
-        $countryID = '';
-        $work_city = request('kt_tagify_work_location');
-        $work_city_all = json_decode($work_city, true);
-        if (\request('kt_tagify_work_location') != '') {
-            foreach ($work_city_all as $cityVal) {
-                $parts = explode('|', $cityVal['value']);
-                // Trim to remove any leading or trailing whitespace
-                $cityName = trim($parts[0]);
-                $countrName = trim($parts[2]);
-
-                // dd($cityName);
-                // Debugging line
-                $city_row = DB::table('city_list')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city_id', 'countries.id as country_id')
-                    ->where('city_list.city', '!=', '')
-                    ->where('city_list.city', '=', $cityName)
-                    ->where('countries.country_name', '=', $countrName)
-                    ->first();
-
-                if ($city_row) {
-                    $cityID = (@$city_row) ? $city_row->city_id : '';
-                    $countryID = (@$city_row) ? $city_row->country_id : '';
-                    $stateId = GeneralMethod::stateId($cityID);
-                }
-
-            }
-        }
-
-        $benchApplication->country = $countryID;
-        $benchApplication->state = $stateId;
-
-        if ($benchApplication->country == 101) {
-            $benchApplication->city_id = $cityID;
-        } else {
-            $benchApplication->city_id = $cityID;
-        }
-
-        $benchApplication->employee_number = @$request->employee_number;
-        $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
-        $benchApplication->pincode = $experienceGet; // (@$request->pincode) ? @$request->pincode :'';
-        $cnt = 0;
-        $skillStr = '';
-        $skillsAddElastic = $request->skills;
-        $skillArr = array_map(function ($skill) {
-            return ['value' => $skill];
-        }, array_filter($skillsAddElastic));
-
-        // $skillArr = json_decode($request->skills, true);
-        if (! empty($skillArr)) {
-            foreach ($skillArr as $sval) {
-                if ($cnt == 0) {
-                    $skillStr .= $sval['value'];
-                } else {
-                    $skillStr .= ' , '.$sval['value'];
-                }
-                $cnt++;
-            }
-        }
-        // dd($skillStr);
-        $benchApplication->skills = $skillStr;
-        if ($request->hasFile('photo')) {
-
-            $file = $request->file('photo');
-            $filename = time().'.'.$file->getClientOriginalExtension();
-            $filePath = 'Images/'.$filename;
-
-            Storage::disk('s3')->put($filePath, file_get_contents($file));
-
-            $fileUrl = Storage::disk('s3')->url($filePath);
-            $benchApplication->photo = $fileUrl;
-
-            // $benchApplication->photo = Files::upload($request->photo, 'bench_photos');
-        }
-
-        // if ($request->hasFile('resume')) {
-
-        // 	$benchApplication->resume = Files::upload($request->resume, 'bench_resume', null, null, false);
-        // }
-        $benchApplication->condidate_type = 'bench_condidate';
-        $bench_status = DB::table('global_settings')->select('bench_status')->first();
-        $superadminstatus = 0;
-        if ($bench_status) {
-            if ($bench_status->bench_status) {
-                $superadminstatus = 1;
-            }
-        }
-        $benchApplication->superadminstatus = $superadminstatus;
-
-        $benchApplication->linkedin = $request->linkedin;
-        $benchApplication->github = $request->github;
-        $benchApplication->behance = $request->behance;
-        $benchApplication->otherLink = $request->otherLink;
-
-        // ── v2 pre-flight: validate resume_session_uuid before opening the transaction ──
+        // v2 pre-flight: validate resume_session_uuid before opening transaction
         $resumeSession = null;
-        $finalResumeUrl = null;  // set in claim block; reused in resume URL block
+        $finalResumeUrl = null;
         if (config('resumes.features.submit_with_session') && $request->filled('resume_session_uuid')) {
             $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
-                ->forCompany($company_id)->first();
+                ->forCompany($companyId)->first();
             if (! $resumeSession) {
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session not found. Please upload the resume again.']);
             }
-            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value) {
+            if ($resumeSession->status !== ResumeUploadStatus::Uploaded->value && $resumeSession->status !== ResumeUploadStatus::Completed->value) {
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload is not yet complete. Please wait for the upload to finish and try again.']);
             }
-            if ($resumeSession->linked_candidate_id && (int) $resumeSession->linked_candidate_id !== (int) $benchApplication->id) {
+            if ($resumeSession->linked_candidate_id && $request->filled('edit_token') && (int) $resumeSession->linked_candidate_id !== (int) $request->edit_token) {
                 return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                     'message' => 'Resume upload session has already been associated with another application. Please upload the resume again.']);
             }
-        }
-        // ─────────────────────────────────────────────────────────────────────────────
 
+            if ($resumeSession->status === ResumeUploadStatus::Completed->value && $resumeSession->r2_url) {
+                $finalResumeUrl = $resumeSession->r2_url;
+            } else {
+                try {
+                    $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+                } catch (\Throwable $r2Ex) {
+                    Log::warning('ResumeUploadSession moveToCompanyPath failed: '.$r2Ex->getMessage());
+                }
+            }
+        }
+
+        // Step 2: Layer 3 - Durable MySQL Persistence inside Transaction with Lease Recovery
         DB::beginTransaction();
         try {
+            $idempotencyRow = SysIdempotencyKey::where('tenant_id', $companyId)
+                ->where('idempotency_key', $clientUuid)
+                ->lockForUpdate()
+                ->first();
 
-            $benchApplication->save();
+            if ($idempotencyRow) {
+                // INVARIANT G-53: Reject Key Reuse with Different Payload
+                if ($idempotencyRow->request_hash !== $requestHash) {
+                    DB::rollBack();
 
-            // ── v2 session: atomic claim + R2 HEAD check + link (inside transaction) ──
+                    return response()->json([
+                        'status' => 'conflict',
+                        'error' => 'IDEMPOTENCY_KEY_REUSE',
+                        'message' => 'Idempotency key has already been used for a conflicting payload.',
+                    ], 409);
+                }
+
+                // Return Completed Cached Response
+                if ($idempotencyRow->status === 'COMPLETED') {
+                    DB::rollBack();
+                    $body = json_decode($idempotencyRow->response_body, true) ?? [];
+
+                    return response()->json($body, $idempotencyRow->response_status ?? 200);
+                }
+
+                // Active In-Flight Lease Check
+                if ($idempotencyRow->status === 'PROCESSING' && $idempotencyRow->processing_until >= now()) {
+                    DB::rollBack();
+
+                    return response()->json([
+                        'status' => 'conflict',
+                        'error' => 'IN_FLIGHT',
+                        'message' => 'Submission actively being processed in another session.',
+                    ], 409);
+                }
+
+                // INVARIANT G-52: Crashed Worker Lease Auto-Recovery
+                if ($idempotencyRow->status === 'PROCESSING' && $idempotencyRow->processing_until < now()) {
+                    Log::notice('IDEMPOTENCY_LEASE_RECLAIMED', ['tenant_id' => $companyId, 'uuid' => $clientUuid]);
+                    $idempotencyRow->update([
+                        'processing_until' => now()->addSeconds(60),
+                    ]);
+
+                    $existingCandidate = JobApplication::withoutGlobalScopes()
+                        ->where('company_id', $companyId)
+                        ->where('client_submission_uuid', $clientUuid)
+                        ->first();
+
+                    if ($existingCandidate) {
+                        $recoveredResponse = [
+                            'status' => 'success',
+                            'message' => 'Talent profile created successfully',
+                            'candidate_id' => $existingCandidate->id,
+                            'action' => 'created',
+                            'url' => url('service_company/bench-candidates'),
+                            'redirect_url' => url('service_company/bench-candidates'),
+                            'idempotency_uuid' => $clientUuid,
+                        ];
+                        $idempotencyRow->update([
+                            'status' => 'COMPLETED',
+                            'response_status' => 200,
+                            'response_body' => json_encode($recoveredResponse),
+                            'completed_at' => now(),
+                            'processing_until' => null,
+                        ]);
+                        DB::commit();
+
+                        return response()->json($recoveredResponse, 200);
+                    }
+                }
+            } else {
+                SysIdempotencyKey::create([
+                    'tenant_id' => $companyId,
+                    'idempotency_key' => $clientUuid,
+                    'request_hash' => $requestHash,
+                    'status' => 'PROCESSING',
+                    'processing_until' => now()->addSeconds(60),
+                    'created_at' => now(),
+                    'expires_at' => now()->addHours(24),
+                ]);
+            }
+
+            // Step 3: Handle Create vs Edit
+            if ($request->filled('edit_token')) {
+                $benchApplication = JobApplication::withoutGlobalScopes()
+                    ->where('company_id', $companyId)
+                    ->find((int) $request->edit_token);
+
+                if (! $benchApplication) {
+                    DB::rollBack();
+
+                    return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate profile not found or unauthorized.'], 404);
+                }
+                $added = false;
+
+                // Optimistic Concurrency Control (Dual-versioning)
+                if ($request->filled('expected_aggregate_version')) {
+                    $expectedAgg = (int) $request->input('expected_aggregate_version');
+                    $currentAgg = (int) ($benchApplication->aggregate_version ?? 1);
+                    if ($expectedAgg !== $currentAgg) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'VERSION_CONFLICT',
+                            'message' => 'Candidate profile was updated by another session. Please refresh and try again.',
+                        ], 409);
+                    }
+                }
+
+                if ($request->filled('expected_resume_version') && ($resumeSession || $request->hasFile('resume') || empty($request->resumeCheck))) {
+                    $expectedResume = (int) $request->input('expected_resume_version');
+                    $currentResume = (int) ($benchApplication->resume_version ?? 1);
+                    if ($expectedResume !== $currentResume) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'RESUME_VERSION_CONFLICT',
+                            'message' => 'Candidate resume was updated by another session. Please refresh and try again.',
+                        ], 409);
+                    }
+                }
+
+                $benchApplication->aggregate_version = ((int) ($benchApplication->aggregate_version ?? 1)) + 1;
+                if ($resumeSession || $request->hasFile('resume')) {
+                    $benchApplication->resume_version = ((int) ($benchApplication->resume_version ?? 1)) + 1;
+                }
+            } else {
+                $benchApplication = new JobApplication;
+                $benchApplication->status = $request->filled('talent_stage') ? (int) $request->input('talent_stage') : 2;
+                $benchApplication->client_submission_uuid = $clientUuid;
+                $benchApplication->aggregate_version = 1;
+                $benchApplication->resume_version = 1;
+                $added = true;
+
+                // Idempotent Coin Deduction (Event 5) Protected by Transaction
+                $coinAlreadyDeducted = DB::table('company_coins_deductions')
+                    ->where('company_id', $companyId)
+                    ->where('transaction_reference', $clientUuid)
+                    ->exists();
+
+                if (! $coinAlreadyDeducted) {
+                    $eventId = 5;
+                    $coinsDeductions = GeneralMethod::coinsDeductions((int) $companyId, $eventId, auth()->user()->id, $companyId, '', '');
+                    if ($coinsDeductions->status) {
+                        SysIdempotencyKey::where('tenant_id', $companyId)->where('idempotency_key', $clientUuid)->delete();
+                        DB::rollBack();
+
+                        return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                    }
+                }
+            }
+
+            $outsourcing_type = 1;
+            if (@$request->phone == 'Full Time') {
+                $outsourcing_type = 1;
+            } elseif (@$request->phone == 'Contract') {
+                $outsourcing_type = 2;
+            } elseif (@$request->phone == 'Part Time') {
+                $outsourcing_type = 3;
+            } elseif (@$request->phone == 'Freelance') {
+                $outsourcing_type = 4;
+            }
+
+            $benchApplication->company_id = $companyId;
+            $benchApplication->submitted_by = auth()->user()->id;
+            $benchApplication->full_name = ucwords(strtolower(@$request->full_name));
+            $benchApplication->current_designation = @$request->current_designation;
+            $benchApplication->outsourcing_type = @$outsourcing_type;
+
+            $benchApplication->careersummary = $request->careersummary;
+            $benchApplication->nationality = $request->nationality;
+            $benchApplication->wm = $request->wm;
+            $benchApplication->employmentType = $request->employmentType;
+            $benchApplication->oh = $request->oh;
+            $benchApplication->visastatu = $request->visastatu;
+            $benchApplication->referencename = $request->referencename;
+
+            $benchApplication->phone = @$request->phone;
+            $benchApplication->secondary_mobile = @$request->secondary_mobile;
+            $benchApplication->dob = @$request->dob;
+            $benchApplication->email = @$request->email;
+            $benchApplication->secondrary_email = @$request->secondrary_email;
+            $benchApplication->gender = $request->gender;
+            $benchApplication->qualification = @$request->qualification;
+
+            $benchApplication->phone_code = ($request->primary_country_code) ? @$request->primary_country_code : null;
+            $benchApplication->second_phone_code = ($request->secondary_country_code) ? @$request->secondary_country_code : null;
+
+            $total_exp = (isset($request->total_exp_year) && $request->total_exp_year !== '' || isset($request->total_exp_month) && $request->total_exp_month !== '') ? $request->total_exp_year.'.'.$request->total_exp_month : null;
+            $rel_exp = (isset($request->rel_exp_year) && $request->rel_exp_year !== '' || isset($request->rel_exp_month) && $request->rel_exp_month !== '') ? $request->rel_exp_year.'.'.$request->rel_exp_month : null;
+
+            $benchApplication->total_exp = $total_exp;
+            $benchApplication->rel_exp = $rel_exp;
+            $benchApplication->serving_notice_period_mode = @$request->serving_notice_period;
+            $serving_notice_period = $request->serving_notice_period;
+            $benchApplication->percentage_hike = @$request->percentage_hike;
+
+            if ($serving_notice_period == 0) {
+                $benchApplication->np_id = $request->ddl_np_id;
+            } elseif ($serving_notice_period == 1) {
+                $np_id_date = $request->np_id;
+                if (! empty($request->np_id_display)) {
+                    $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
+                }
+                $benchApplication->np_id = $np_id_date;
+            } elseif ($serving_notice_period == 2) {
+                $benchApplication->np_id = 'Immediate';
+                $np_id_date = $request->np_id;
+                if (! empty($request->np_id_display)) {
+                    $np_id_date = ($request->np_id) ? $request->np_id : (Carbon::createFromFormat('d/M/Y', $request->np_id_display, 'UTC')->format('Y-m-d') ?? null);
+                }
+                $benchApplication->last_working_date = $np_id_date;
+            }
+
+            $benchApplication->pay_rate_currency = @$request->pay_rate_currency;
+            $benchApplication->pay_rate_amount = @$request->pay_rate_amount;
+            $benchApplication->pay_rate_mode = @$request->pay_rate_mode;
+            $benchApplication->bill_rate_currency = @$request->bill_rate_currency;
+            $benchApplication->bill_rate_amount = @$request->bill_rate_amount;
+            $benchApplication->bill_rate_mode = @$request->bill_rate_mode;
+
+            $currency = GeneralMethod::currency();
+
+            $ecurrency = $currency[$request->bill_rate_currency] ?? 'INR';
+            $econvertedAmount = $request->bill_annual;
+            if ($request->bill_rate_currency > 0) {
+                $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
+            }
+
+            $ectcdivided = GeneralMethod::salaryDividedByMode(0, $econvertedAmount);
+            $benchApplication->ectc_yearly = @$ectcdivided->yearly;
+            $benchApplication->ectc_monthly = @$ectcdivided->monthly;
+            $benchApplication->ectc_hourly = @$ectcdivided->hourly;
+
+            $currency = $currency[$request->pay_rate_currency] ?? 'INR';
+            $convertedAmount = $request->pay_annual;
+            if ($request->pay_rate_currency > 0) {
+                $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+            }
+
+            $ctcdivided = GeneralMethod::salaryDividedByMode(0, $convertedAmount);
+            $benchApplication->ctc_yearly = @$ctcdivided->yearly;
+            $benchApplication->ctc_monthly = @$ctcdivided->monthly;
+            $benchApplication->ctc_hourly = @$ctcdivided->hourly;
+
+            $benchApplication->comission_type = @$request->comission_type;
+
+            $stateId = '';
+            $cityID = '';
+            $countryID = '';
+            $work_city = request('kt_tagify_work_location');
+            $work_city_all = json_decode($work_city, true);
+            if (\request('kt_tagify_work_location') != '' && is_array($work_city_all)) {
+                foreach ($work_city_all as $cityVal) {
+                    $parts = explode('|', $cityVal['value']);
+                    $cityName = trim($parts[0] ?? '');
+                    $countrName = trim($parts[2] ?? '');
+
+                    $city_row = DB::table('city_list')
+                        ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                        ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                        ->select('city_list.city_id', 'countries.id as country_id')
+                        ->where('city_list.city', '!=', '')
+                        ->where('city_list.city', '=', $cityName)
+                        ->where('countries.country_name', '=', $countrName)
+                        ->first();
+
+                    if ($city_row) {
+                        $cityID = (@$city_row) ? $city_row->city_id : '';
+                        $countryID = (@$city_row) ? $city_row->country_id : '';
+                        $stateId = GeneralMethod::stateId($cityID);
+                    }
+                }
+            }
+
+            $benchApplication->country = $countryID;
+            $benchApplication->state = $stateId;
+            $benchApplication->city_id = $cityID;
+
+            $benchApplication->employee_number = @$request->employee_number;
+            $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
+            $benchApplication->pincode = $experienceGet;
+
+            $cnt = 0;
+            $skillStr = '';
+            $skillsAddElastic = (array) $request->skills;
+            $skillArr = array_map(function ($skill) {
+                return ['value' => is_array($skill) ? ($skill['value'] ?? '') : (string) $skill];
+            }, array_filter($skillsAddElastic));
+
+            if (! empty($skillArr)) {
+                foreach ($skillArr as $sval) {
+                    if ($cnt == 0) {
+                        $skillStr .= $sval['value'];
+                    } else {
+                        $skillStr .= ' , '.$sval['value'];
+                    }
+                    $cnt++;
+                }
+            }
+            $benchApplication->skills = $skillStr;
+
+            if ($request->hasFile('photo')) {
+                $file = $request->file('photo');
+                $filename = time().'.'.$file->getClientOriginalExtension();
+                $filePath = 'Images/'.$filename;
+                Storage::disk('s3')->put($filePath, file_get_contents($file));
+                $fileUrl = Storage::disk('s3')->url($filePath);
+                $benchApplication->photo = $fileUrl;
+            }
+
+            $benchApplication->condidate_type = 'bench_condidate';
+            $bench_status = DB::table('global_settings')->select('bench_status')->first();
+            $superadminstatus = 0;
+            if ($bench_status && $bench_status->bench_status) {
+                $superadminstatus = 1;
+            }
+            $benchApplication->superadminstatus = $superadminstatus;
+
+            $benchApplication->linkedin = $request->linkedin;
+            $benchApplication->github = $request->github;
+            $benchApplication->behance = $request->behance;
+            $benchApplication->otherLink = $request->otherLink;
+
+            // Handle resume attachment
             if ($resumeSession) {
-                $claimed = ResumeUpload::where('id', $resumeSession->id)
-                    ->where('company_id', $company_id)
-                    ->where('status', ResumeUploadStatus::Uploaded->value)
-                    ->update(['status' => ResumeUploadStatus::Completed->value, 'updated_at' => now()]);
-                if ($claimed === 0) {
-                    DB::rollBack();
-
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume session was already claimed. Please upload the resume again.']);
-                }
-                $r2Exists = false;
-                try {
-                    $r2Exists = Storage::disk('r2')->exists('resumes/'.$resumeSession->uuid);
-                } catch (\Throwable) {
-                }
-                if (! $r2Exists) {
-                    ResumeUpload::where('id', $resumeSession->id)
-                        ->where('status', ResumeUploadStatus::Completed->value)
-                        ->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
-                    DB::rollBack();
-
-                    return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
-                        'message' => 'Resume file not found in storage. Please upload the resume again.']);
-                }
-                // Move file to company-structured CDN path (mirrors v1 storage convention).
-                $finalResumeUrl = app(\App\Services\ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+                $r2ResumeUrl = $finalResumeUrl ?: $resumeSession->r2_url;
+                $benchApplication->resume = $r2ResumeUrl;
                 ResumeUpload::where('id', $resumeSession->id)
-                    ->where('company_id', $company_id)
-                    ->where('status', ResumeUploadStatus::Completed->value)
+                    ->where('company_id', $companyId)
                     ->update([
+                        'status' => ResumeUploadStatus::Completed->value,
                         'linked_candidate_id' => $benchApplication->id,
-                        'r2_url' => $finalResumeUrl,
+                        'r2_url' => $r2ResumeUrl,
                         'updated_at' => now(),
                     ]);
                 UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
                     'candidate_id' => $benchApplication->id,
-                ], $company_id, auth()->user()->id);
-            }
-            // ─────────────────────────────────────────────────────────────────────────
+                ], $companyId, auth()->user()->id);
+            } elseif ($request->hasFile('resume')) {
+                $companyNameR2 = DB::table('companies')
+                    ->where('id', $companyId)
+                    ->value('company_name');
+                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                $companyNameRTwo = $companyNameR2.'_'.$companyId;
+                $year = date('Y');
+                $month = date('m');
 
-            // if($added){
-            // 	$eventId = 5;
-            // 	GeneralMethod::coinsDeductions((int) $company_id,$eventId,auth()->user()->id,$company_id,'','');
-            // }
-            if (! empty($skillArr)) {
-                $skillsAddElastic = array_column($skillArr, 'value');
-                if (count($skillsAddElastic) > 0) {
-                    GeneralMethod::skillsAddElastic($skillsAddElastic);
+                $tempPath = $request->input('uploaded_file_path');
+                $full_name = $request->input('resume_original_name');
+                if ($tempPath && $full_name) {
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) Str::uuid();
+                    $uniqueFileName = "{$benchApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
+                    $benchApplication->resume = $fileUrl;
                 }
+            } elseif (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
+                $benchApplication->resume = '';
             }
 
-            // Phase 3 Optimization: Bulk insertion for job_application_skills to eliminate N+1 DB queries
-            if (config('feature.talents_v2_enabled')) {
-                if (! empty($skillArr) || ! empty($request->current_designation)) {
-                    DB::table('job_application_skills')->where('job_application_id', $benchApplication->id)->delete();
-                    $insertSkills = [];
-                    $seenSkills = [];
-                    if (! empty($skillArr)) {
-                        foreach ($skillArr as $sval) {
-                            $skillName = trim($sval['value']);
-                            if ($skillName !== '' && ! isset($seenSkills[strtolower($skillName)])) {
-                                $seenSkills[strtolower($skillName)] = true;
-                                $insertSkills[] = [
-                                    'job_application_id' => $benchApplication->id,
-                                    'skills' => $skillName,
-                                ];
-                            }
-                        }
-                    }
-                    if (! empty($request->current_designation)) {
-                        $desigName = trim($request->current_designation);
-                        if ($desigName !== '' && ! isset($seenSkills[strtolower($desigName)])) {
-                            $seenSkills[strtolower($desigName)] = true;
-                            $insertSkills[] = [
-                                'job_application_id' => $benchApplication->id,
-                                'skills' => $desigName,
-                            ];
-                        }
-                    }
-                    if (! empty($insertSkills)) {
-                        DB::table('job_application_skills')->insert($insertSkills);
-                    }
-                }
+            // Save candidate defensively via emergency schema guard
+            $this->resilientSaveTalentApplication($benchApplication);
+
+            // Batch relational persistence (zero N+1 queries, zero ES in transaction)
+            $this->batchPersistTalentRelations($benchApplication->id, $companyId, $request);
+
+            // Package redemption & company association
+            if ($added && @$benchApplication->id > 0) {
+                $event_name = 'CVACCESS';
+                $event_table_name = 'job_applications';
+                $event_table_id = @$benchApplication->id;
+                GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
             } else {
-                if (! empty($skillArr)) {
-                    if (DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->exists()) {
-                        DB::table('job_application_skills')->where('job_application_id', '=', @$benchApplication->id)->delete();
-                    }
-                    foreach ($skillArr as $sval) {
-                        $values = [
-                            'job_application_id' => $benchApplication->id,
-                            'skills' => $sval['value'],
-                        ];
-                        if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.$sval['value'].'%')->exists()) {
-                            DB::table('job_application_skills')->insert($values);
-                        }
-                    }
-                }
-
-                if (! DB::table('job_application_skills')->where('job_application_id', '=', $benchApplication->id)->where('skills', 'LIKE', '%'.@$request->current_designation.'%')->exists()) {
-                    DB::table('job_application_skills')->insert(['job_application_id' => $benchApplication->id, 'skills' => @$request->current_designation]);
-                }
+                GeneralMethod::addCompanyBenchCandidate($companyId, $benchApplication->id);
             }
 
-            if (! is_null($request->recruiter)) {
+            // Step 4: Atomic Outbox Event Persistence
+            $recruiterIds = $request->input('recruiter_id') ?: $request->input('assigned_recruiters');
+            $recruiterArrId = is_array($recruiterIds) ? $recruiterIds : explode(',', (string) $recruiterIds);
+            $assignedRecruiters = array_values(array_unique(array_filter(array_map('intval', $recruiterArrId))));
 
-                DB::table('bench_assign')->where('bench_applications_id', $benchApplication->id)->delete();
+            $outboxPayload = [
+                'candidate_id' => $benchApplication->id,
+                'company_id' => $companyId,
+                'client_uuid' => $clientUuid,
+                'aggregate_version' => $benchApplication->aggregate_version ?? 1,
+                'resume_version' => $benchApplication->resume_version ?? 1,
+                'action' => $added ? 'created' : 'updated',
+                'status' => (int) ($benchApplication->status ?? 2),
+                'commercial_model' => (int) $request->input('commercial_model', 1),
+                'assigned_recruiters' => $assignedRecruiters,
+                'timestamp' => now()->toIso8601String(),
+            ];
 
-                $this->elasticService->getClient()->deleteByQuery([
-                    'index' => ELASTIC_BENCH_ASSIGN,
-                    'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                    'body' => [
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['bench_applications_id' => (int) $benchApplication->id]],
-                                ],
-                            ],
-                        ],
-                    ],
+            DB::table('candidate_outbox_events')->insert([
+                'company_id' => $companyId,
+                'dedupe_key' => "bench_candidate:{$benchApplication->id}:v".($benchApplication->aggregate_version ?? 1),
+                'aggregate_type' => 'bench_candidate',
+                'aggregate_id' => (int) $benchApplication->id,
+                'event_type' => $added ? 'talent.bench.created' : 'talent.bench.updated',
+                'event_version' => 1,
+                'payload' => json_encode($outboxPayload),
+                'status' => 'pending',
+                'retry_count' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Build standardized JSON response
+            $responsePayload = [
+                'status' => 'success',
+                'message' => __('menu.jobApplications').' '.($added ? __('messages.createdSuccessfully') : __('messages.updatedSuccessfully')),
+                'candidate_id' => $benchApplication->id,
+                'action' => $added ? 'created' : 'updated',
+                'url' => url('service_company/bench-candidates'),
+                'redirect_url' => url('service_company/bench-candidates'),
+                'idempotency_uuid' => $clientUuid,
+            ];
+
+            // Finalize Idempotency Key to COMPLETED
+            SysIdempotencyKey::where('tenant_id', $companyId)
+                ->where('idempotency_key', $clientUuid)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($responsePayload),
+                    'completed_at' => now(),
+                    'processing_until' => null,
                 ]);
-
-                $recruiterArr = '';
-                $recruiterArr = explode(',', $request->recruiter);
-                $recruiterArrId = explode(',', $request->recruiter_id);
-                foreach ($recruiterArrId as $recArr) {
-
-                    // $recRow = DB::table('users')->select('users.id')->where('company_id', $this->user->company_id)->where('name', trim($recArr))->first();
-
-                    $params = [
-                        'index' => ELASTIC_USERS_LIST,
-                        'id' => (int) $recArr,
-                    ];
-
-                    $response = $this->elasticService->getClient()->get($params);
-                    $recRow = (object) $response['_source'];
-
-                    if (! empty(@$recRow->id) && @$recRow->id > 0) {
-                        $values = ['company_id' => $this->user->company_id, 'user_id' => $recRow->id, 'bench_applications_id' => $benchApplication->id];
-                        $insertGetId = DB::table('bench_assign')->insertGetId($values);
-
-                        // dd( (int) $recArr,$recRow);
-
-                        $response = $this->elasticService->getClient()->update([
-                            'index' => ELASTIC_BENCH_ASSIGN,
-                            'id' => $insertGetId,
-                            'retry_on_conflict' => 5,
-                            'body' => [
-                                'doc' => [
-                                    'id' => $insertGetId,
-                                    'users_id' => $recRow->id,
-                                    'name' => $recRow->name,
-                                    'calling_code' => $recRow->calling_code,
-                                    'email' => $recRow->email,
-                                    'mobile' => $recRow->mobile,
-                                    'bench_applications_id' => (int) $benchApplication->id,
-                                    'designation' => $recRow->designation,
-                                    'updated_at' => now()->toIso8601String(),
-                                    'created_at' => now()->toIso8601String(),
-                                ],
-                                'doc_as_upsert' => true,
-                                'detect_noop' => false,
-                            ],
-                        ]);
-
-                    }
-
-                }
-            }
-
-            if ($request->edit_token != '') {
-                if ($resumeSession) {
-                    // v2 path (edit): file moved to company CDN path in the claim block above.
-                    $r2ResumeUrl = $finalResumeUrl;
-                    DB::table('job_applications')
-                        ->where('id', $benchApplication->id)
-                        ->update(['resume' => $r2ResumeUrl]);
-                } elseif ($request->hasFile('resume')) {
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id', auth()->user()->company_id)
-                        ->value('company_name');   // change column if needed
-                    $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                    $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                    $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-                    $year = date('Y');
-                    $month = date('m');
-
-                    $tempPath = $request->input('uploaded_file_path');
-                    $full_name = $request->input('resume_original_name');
-                    if ($tempPath && $full_name) {
-                        // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
-                        $baseName = pathinfo($full_name, PATHINFO_FILENAME);
-                        $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
-                        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
-                        $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
-                        $uniqueFileName = "{$benchApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
-                        $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
-                        $fileUrl = "https://file.jero.works/{$r2Path}";
-
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
-                        DB::table('job_applications')
-                            ->where('id', $benchApplication->id)
-                            ->update(['resume' => $fileUrl]);
-                    } else {
-                        \Log::warning('v1 upload (edit): missing tempPath or filename', ['id' => $benchApplication->id]);
-                    }
-                }
-            } else {
-                if ($resumeSession) {
-                    // v2 path (add): file moved to company CDN path in the claim block above.
-                    $r2ResumeUrl = $finalResumeUrl;
-                    DB::table('job_applications')
-                        ->where('id', $benchApplication->id)
-                        ->update(['resume' => $r2ResumeUrl]);
-                } elseif ($request->hasFile('resume')) {
-
-                    $companyNameR2 = DB::table('companies')
-                        ->where('id', auth()->user()->company_id)
-                        ->value('company_name');   // change column if needed
-                    $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
-                    $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
-                    $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
-                    $year = date('Y');
-                    $month = date('m');
-
-                    $tempPath = $request->input('uploaded_file_path');
-                    $full_name = $request->input('resume_original_name');
-                    if ($tempPath && $full_name) {
-                        // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
-                        $baseName = pathinfo($full_name, PATHINFO_FILENAME);
-                        $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
-                        $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
-                        $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
-                        $uniqueFileName = "{$benchApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
-                        $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
-                        $fileUrl = "https://file.jero.works/{$r2Path}";
-
-                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $benchApplication->id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
-                        DB::table('job_applications')
-                            ->where('id', $benchApplication->id)
-                            ->update(['resume' => $fileUrl]);
-                    } else {
-                        \Log::warning('v1 upload (add): missing tempPath or filename', ['id' => $benchApplication->id]);
-                    }
-                }
-            }
-
-            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
-                DB::table('job_applications')
-                    ->where('id', $benchApplication->id)
-                    ->update(['resume' => '']);
-            }
-
-            $customDetailsQuestion = @$request->customDetailsQuestion;
-            $customDetailsAnswer = @$request->customDetailsAnswer;
-
-            if ($customDetailsQuestion > 0) {
-                if ($request->edit_token != '') {
-                    DB::table('bench_additional_detail')->where('bench_id', $benchApplication->id)->delete();
-                    $this->elasticService->getClient()->deleteByQuery([
-                        'index' => ELASTIC_BENCH_ADDITIONAL_DETAIL,
-                        'conflicts' => 'proceed',   // ⭐ THIS LINE FIXES YOUR ERROR
-                        'body' => [
-                            'query' => [
-                                'bool' => [
-                                    'must' => [
-                                        ['term' => ['bench_id' => (int) $benchApplication->id]],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ]);
-                }
-                $inc = 0;
-                foreach ($customDetailsQuestion as $question) {
-                    $values = ['bench_id' => @$benchApplication->id, 'custom_keys' => @$question, 'custom_keys_value' => @$customDetailsAnswer[$inc]];
-                    $insertGetIdAdd = DB::table('bench_additional_detail')->insertGetId($values);
-
-                    $response = $this->elasticService->getClient()->update([
-                        'index' => ELASTIC_BENCH_ADDITIONAL_DETAIL,
-                        'id' => $insertGetIdAdd,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'id' => $insertGetIdAdd,
-                                'bench_id' => (int) @$benchApplication->id,
-                                'custom_keys' => @$question,
-                                'custom_keys_value' => @$customDetailsAnswer[$inc],
-                                'create_at' => now()->toIso8601String(),
-                                'update_at' => now()->toIso8601String(),
-                            ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
-
-                    $inc++;
-
-                }
-            }
-
-            if ($request->edit_token == '') {
-
-                // Phase 3 & 10 Optimization: Offload candidate indexing to background Horizon queue after DB commit
-                if (config('feature.talents_v2_enabled')) {
-                    ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
-                } else {
-                    GeneralMethod::elasticBenchCandidateAddEditIndex($benchApplication->id);
-                }
-
-                $skills = $request->input('skills', []);
-                $years = $request->input('years', []);
-                $months = $request->input('months', []);
-                $ratings = $request->input('ratings', []);
-                if (count($skillArr) > 0) {
-                    foreach ($skills as $skillKey => $exp) {
-                        if (! empty($exp)) {
-
-                            DB::table('bench_candidate_skill_experience')->updateOrInsert([
-                                'candidate_id' => $benchApplication->id,
-                                'skill_key' => $exp, ],
-                                [
-                                    'year' => filled($years[$skillKey]) ? (int) $years[$skillKey] : null,
-                                    'month' => filled($months[$skillKey]) ? (int) $months[$skillKey] : null,
-                                    'rating' => filled($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
-                                    'updated_at' => now(),
-                                ]
-                            );
-                        }
-
-                    }
-                }
-
-                if (@$benchApplication->id > 0) {
-                    $event_name = 'CVACCESS';
-                    $event_table_name = 'job_applications';
-                    $event_table_id = @$benchApplication->id;
-                    $packageStatus = GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
-                }
-            } else {
-                // Phase 4 & 10 Optimization: Offload candidate update indexing to Horizon queue after DB commit
-                if (config('feature.talents_v2_enabled')) {
-                    ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
-                    GeneralMethod::addCompanyBenchCandidate($company_id, $benchApplication->id);
-
-                    $skills = $request->input('skills', []);
-                    $years = $request->input('years', []);
-                    $months = $request->input('months', []);
-                    $ratings = $request->input('ratings', []);
-
-                    if (count($skillArr) > 0) {
-                        foreach ($skills as $skillKey => $exp) {
-                            if (! empty($exp)) {
-                                DB::table('bench_candidate_skill_experience')->updateOrInsert(
-                                    [
-                                        'candidate_id' => $benchApplication->id,
-                                        'skill_key' => $exp,
-                                    ],
-                                    [
-                                        'year' => filled($years[$skillKey]) ? (int) $years[$skillKey] : null,
-                                        'month' => filled($months[$skillKey]) ? (int) $months[$skillKey] : null,
-                                        'rating' => filled($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
-                                        'updated_at' => now(),
-                                    ]
-                                );
-                            }
-                        }
-                    }
-                } else {
-                    $exists = $this->elasticService->getClient()->exists([
-                        'index' => ELASTIC_CANDIDATES_BENCH,
-                        'id' => $benchApplication->id,
-                    ]);
-                    if ($exists) {
-                        // dd($benchApplication->id);
-                        $applications_up = JobApplication::select(
-                            'job_applications.*',
-                            'state_list.state as state_name',
-                            'city_list.city as city_name',
-                            'countries.country_name',
-                            'qualification_master.name as qualification_name')
-                            ->join('bench_master_status', 'bench_master_status.id', 'job_applications.status')
-                            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-                            ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
-                            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-                            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-                            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-                            ->where('job_applications.id', $benchApplication->id)
-                            ->where('condidate_type', '=', 'bench_condidate')
-                            ->first();
-                        $job_application_skills = DB::table('job_application_skills')
-                            ->where('job_application_id', $benchApplication->id)
-                            ->get()
-                            ->map(fn ($s) => [
-                                'id' => $s->id,
-                                'job_application_id' => $s->id,
-                                'skills' => strtolower($s->skills),
-                            ])
-                            ->toArray();
-                        // dd($job_application_skills);
-                        $updateParams = [
-                            'index' => ELASTIC_CANDIDATES_BENCH,
-                            'id' => $benchApplication->id,
-                            'body' => [
-                                'doc' => [
-                                    'thirdparty_company_id' => $applications_up->thirdparty_company_id,
-                                    'full_name' => $applications_up->full_name,
-                                    'email' => $applications_up->email,
-                                    'phone' => $applications_up->phone,
-                                    'np_id' => $applications_up->np_id,
-                                    'serving_notice_period_mode' => $applications_up->serving_notice_period_mode,
-                                    'country' => $applications_up->country,
-                                    'state' => $applications_up->state,
-                                    'city' => $applications_up->city,
-                                    'gender' => $applications_up->gender,
-                                    'careersummary' => $applications_up->careersummary,
-                                    'nationality' => $applications_up->nationality,
-                                    'wm' => $applications_up->wm,
-                                    'employmentType' => $applications_up->employmentType,
-                                    'oh' => $applications_up->oh,
-                                    'visastatu' => $applications_up->visastatu,
-                                    'referencename' => $applications_up->referencename,
-                                    'city_id' => $applications_up->city_id,
-                                    'skills' => $applications_up->skills,
-                                    'photo' => $applications_up->photo,
-                                    'job_id' => $applications_up->job_id,
-                                    'total_exp' => $applications_up->total_exp,
-                                    'rel_exp' => $applications_up->rel_exp,
-                                    'ctc' => $applications_up->ctc,
-                                    'job_application_skills' => $job_application_skills,
-                                    'current_ctc_cur' => $applications_up->current_ctc_cur,
-                                    'current_ctc_mode' => $applications_up->current_ctc_mode,
-                                    'current_designation' => $applications_up->current_designation,
-                                    'ectc' => $applications_up->ectc,
-                                    'current_ectc_cur' => $applications_up->current_ectc_cur,
-                                    'current_ectc_mode' => $applications_up->current_ectc_mode,
-                                    'current_company' => $applications_up->current_company,
-                                    'ctc_hourly' => $applications_up->ctc_hourly,
-                                    'ctc_monthly' => $applications_up->ctc_monthly,
-                                    'ctc_yearly' => $applications_up->ctc_yearly,
-                                    'ectc_hourly' => $applications_up->ectc_hourly,
-                                    'ectc_monthly' => $applications_up->ectc_monthly,
-                                    'ectc_yearly' => $applications_up->ectc_yearly,
-                                    'status' => $applications_up->status,
-                                    'duplicate' => (int) ($applications_up->duplicate ?? 0),
-                                    'is_duplicate' => (bool) (($applications_up->duplicate ?? 0) == 1),
-                                    'pay_rate_currency' => $applications_up->pay_rate_currency,
-                                    'pay_rate_amount' => $applications_up->pay_rate_amount,
-                                    'pay_rate_mode' => $applications_up->pay_rate_mode,
-                                    'bill_rate_currency' => $applications_up->bill_rate_currency,
-                                    'bill_rate_amount' => $applications_up->bill_rate_amount,
-                                    'bill_rate_mode' => $applications_up->bill_rate_mode,
-                                    'condidate_type' => $applications_up->condidate_type,
-                                    'master_status_id' => $applications_up->master_status_id,
-                                    'is_viewed' => $applications_up->is_viewed,
-                                    'column_priority' => $applications_up->column_priority,
-                                    'phone_code' => $applications_up->phone_code,
-                                    'second_phone_code' => $applications_up->second_phone_code,
-                                    'secondary_mobile' => $applications_up->secondary_mobile,
-                                    'resume' => $applications_up->resume,
-                                    'qualification_name' => $applications_up->qualification_name,
-                                    'country_name' => $applications_up->country_name,
-                                    'state_name' => $applications_up->state_name,
-                                    'city_name' => $applications_up->city_name,
-                                    'dob' => $applications_up->dob,
-                                    'linkedin' => $applications_up->linkedin,
-                                    'github' => $applications_up->github,
-                                    'behance' => $applications_up->behance,
-                                    'otherLink' => $applications_up->otherLink,
-                                ],
-                                'doc_as_upsert' => false, // Changed to false since we verified existence
-                            ],
-                            'refresh' => false, // Eventual consistency for 10K concurrent scale
-                        ];
-
-                        $this->elasticService->getClient()->update($updateParams);
-
-                        GeneralMethod::addCompanyBenchCandidate($company_id, $benchApplication->id);
-
-                        $skills = $request->input('skills', []);
-                        $years = $request->input('years', []);
-                        $months = $request->input('months', []);
-                        $ratings = $request->input('ratings', []);
-
-                        if (count($skillArr) > 0) {
-
-                            foreach ($skills as $skillKey => $exp) {
-                                if (! empty($exp)) {
-                                    DB::table('bench_candidate_skill_experience')->updateOrInsert([
-                                        'candidate_id' => $benchApplication->id,
-                                        'skill_key' => $exp],
-                                        [
-                                            'year' => ($years[$skillKey]) ? (int) $years[$skillKey] : null,
-                                            'month' => ($months[$skillKey]) ? (int) $months[$skillKey] : null,
-                                            'rating' => ($ratings[$skillKey]) ? (int) $ratings[$skillKey] : null,
-                                            'updated_at' => now(),
-                                        ]
-                                    );
-                                }
-
-                            }
-                        }
-
-                    }
-                }
-            }
-
-            // Phase 7 Optimization: Invalidate company-wide candidate cache keys and flush Redis tags
-            if (config('feature.talents_v2_enabled')) {
-                $cachekeys = [
-                    'allbenchcandidates_version_user_'.$this->user->id,
-                    'benchviewmore_version_user_'.$this->user->id,
-                    'allbenchcandidates_version_company_'.$company_id,
-                    'benchcandidates_stats_company_'.$company_id,
-                ];
-                foreach ($cachekeys as $key) {
-                    GeneralMethod::cacheClean($key);
-                }
-                try {
-                    Cache::tags(['company_'.$company_id, 'bench_candidates'])->flush();
-                } catch (\BadMethodCallException) {
-                    // Fallback when Cache store driver does not support tagging
-                }
-            } else {
-                $cachekeys = [
-                    'allbenchcandidates_version_user_'.$this->user->id,
-                    'benchviewmore_version_user_'.$this->user->id,
-                ];
-                foreach ($cachekeys as $key) {
-                    GeneralMethod::cacheClean($key);
-                }
-            }
 
             DB::commit();
 
-            // Phase 6 Optimization: Standardized JSON response payload contract with metadata
-            if (config('feature.talents_v2_enabled')) {
-                return Reply::successWithData(__('menu.jobApplications').' '.($added ? __('messages.createdSuccessfully') : __('messages.updatedSuccessfully')), [
-                    'candidate_id' => $benchApplication->id,
-                    'action' => $added ? 'created' : 'updated',
-                    'url' => url('service_company/bench-candidates'),
-                ]);
+            // Step 5: Post-Commit Background Dispatches & Cache Invalidation
+            ProcessOutboxEventJob::dispatch()->onQueue('candidate-index')->afterCommit();
+            ElasticBenchCandidateIndex::dispatch($benchApplication->id)->afterCommit();
+
+            try {
+                Redis::connection('default')->setex("talent:idempotency:{$companyId}:{$clientUuid}", 86400, json_encode($responsePayload));
+                Redis::connection('default')->sadd('bench:dirty_tenants', $companyId);
+                Redis::connection('default')->del("bench:hero:total:{$companyId}");
+                Redis::connection('default')->del("bench:hero:bench:{$companyId}");
+                Redis::connection('default')->del("bench:hero:pool:{$companyId}");
+                Redis::connection('default')->del("bench:hero:hold:{$companyId}");
+                Redis::connection('default')->del("ats:allbenchcandidates:{$companyId}");
+            } catch (\Throwable $e) {
+                Log::warning('POST_COMMIT_CACHE_CLEAR_FAILED', ['error' => $e->getMessage()]);
             }
 
-            return Reply::redirect(url('service_company/bench-candidates'), __('menu.jobApplications').' '.__('messages.createdSuccessfully'));
+            return Reply::successWithData($responsePayload['message'], $responsePayload);
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            // Duplicate key 1062 on uq_company_submission_uuid
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1062) {
+                $completedRecord = SysIdempotencyKey::where('tenant_id', $companyId)
+                    ->where('idempotency_key', $clientUuid)
+                    ->first();
+                if ($completedRecord && $completedRecord->response_body) {
+                    $body = json_decode($completedRecord->response_body, true) ?? [];
+
+                    return response()->json($body, 200);
+                }
+            }
+            Log::error('TALENT_SUBMIT_QUERY_EXCEPTION', [
+                'error' => $e->getMessage(),
+                'company_id' => $companyId,
+                'uuid' => $clientUuid,
+            ]);
+
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('bench-candidates store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
+            Log::error('bench-candidates store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         }
+    }
 
+    /**
+     * Emergency schema guard catching MySQL 1054 Unknown Column errors during rolling deploys.
+     */
+    protected function resilientSaveTalentApplication(JobApplication $candidate): void
+    {
+        try {
+            $candidate->save();
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1054) {
+                preg_match("/Unknown column '([^']+)'/", $e->getMessage(), $matches);
+                $failedColumn = $matches[1] ?? null;
+
+                if ($failedColumn && array_key_exists($failedColumn, $candidate->getAttributes())) {
+                    Log::warning('EMERGENCY_SCHEMA_GUARD_TRIGGERED: unmigrated column dropped during rolling deploy', [
+                        'column' => $failedColumn,
+                        'model' => get_class($candidate),
+                        'candidate_email' => $candidate->email,
+                    ]);
+
+                    unset($candidate->{$failedColumn});
+                    $candidate->save();
+
+                    return;
+                }
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Batch persist relational records (skills, recruiter assignments, additional details).
+     * Eliminates N+1 loops and synchronous Elasticsearch calls inside the transaction.
+     */
+    protected function batchPersistTalentRelations(int $candidateId, int $companyId, Request $request): void
+    {
+        // 1. Bulk Insert Skills into job_application_skills
+        $skillsRaw = (array) $request->input('skills', []);
+        $skillArr = array_map(function ($skill) {
+            return is_array($skill) ? ($skill['value'] ?? '') : (string) $skill;
+        }, array_filter($skillsRaw));
+
+        DB::table('job_application_skills')->where('job_application_id', $candidateId)->delete();
+        $insertSkills = [];
+        $seenSkills = [];
+        foreach ($skillArr as $skillName) {
+            $skillName = trim($skillName);
+            if ($skillName !== '' && ! isset($seenSkills[strtolower($skillName)])) {
+                $seenSkills[strtolower($skillName)] = true;
+                $insertSkills[] = [
+                    'job_application_id' => $candidateId,
+                    'skills' => $skillName,
+                ];
+            }
+        }
+        if (! empty($request->current_designation)) {
+            $desigName = trim($request->current_designation);
+            if ($desigName !== '' && ! isset($seenSkills[strtolower($desigName)])) {
+                $seenSkills[strtolower($desigName)] = true;
+                $insertSkills[] = [
+                    'job_application_id' => $candidateId,
+                    'skills' => $desigName,
+                ];
+            }
+        }
+        if (! empty($insertSkills)) {
+            DB::table('job_application_skills')->insert($insertSkills);
+        }
+
+        // 2. Bench Candidate Skill Experience (bench_candidate_skill_experience)
+        $skills = (array) $request->input('skills', []);
+        $years = (array) $request->input('years', []);
+        $months = (array) $request->input('months', []);
+        $ratings = (array) $request->input('ratings', []);
+        if (! empty($skills)) {
+            foreach ($skills as $skillKey => $exp) {
+                $expStr = is_array($exp) ? ($exp['value'] ?? '') : (string) $exp;
+                if (! empty($expStr)) {
+                    DB::table('bench_candidate_skill_experience')->updateOrInsert(
+                        [
+                            'candidate_id' => $candidateId,
+                            'skill_key' => $expStr,
+                        ],
+                        [
+                            'year' => filled($years[$skillKey] ?? null) ? (int) $years[$skillKey] : null,
+                            'month' => filled($months[$skillKey] ?? null) ? (int) $months[$skillKey] : null,
+                            'rating' => filled($ratings[$skillKey] ?? null) ? (int) $ratings[$skillKey] : null,
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
+            }
+        }
+
+        // 3. Bulk Insert Recruiter Assignments (bench_assign) - Zero ES inside transaction!
+        $recruiterIds = $request->input('recruiter_id') ?: $request->input('assigned_recruiters');
+        if (! is_null($recruiterIds)) {
+            DB::table('bench_assign')->where('bench_applications_id', $candidateId)->delete();
+            $recruiterArrId = is_array($recruiterIds) ? $recruiterIds : explode(',', (string) $recruiterIds);
+            $assignRows = [];
+            $now = now();
+            foreach (array_unique(array_filter(array_map('intval', $recruiterArrId))) as $recId) {
+                if ($recId > 0) {
+                    $assignRows[] = [
+                        'company_id' => $companyId,
+                        'user_id' => $recId,
+                        'bench_applications_id' => $candidateId,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+            }
+            if (! empty($assignRows)) {
+                DB::table('bench_assign')->insert($assignRows);
+            }
+        }
+
+        // 4. Custom Additional Details (bench_additional_detail) - Zero ES inside transaction!
+        $customDetailsQuestion = $request->input('customDetailsQuestion');
+        $customDetailsAnswer = $request->input('customDetailsAnswer');
+        if (! empty($customDetailsQuestion) && is_array($customDetailsQuestion)) {
+            DB::table('bench_additional_detail')->where('bench_id', $candidateId)->delete();
+            $detailRows = [];
+            $now = now();
+            foreach ($customDetailsQuestion as $inc => $question) {
+                if (filled($question)) {
+                    $detailRows[] = [
+                        'bench_id' => $candidateId,
+                        'custom_keys' => (string) $question,
+                        'custom_keys_value' => (string) ($customDetailsAnswer[$inc] ?? ''),
+                        'create_at' => $now,
+                        'update_at' => $now,
+                    ];
+                }
+            }
+            if (! empty($detailRows)) {
+                DB::table('bench_additional_detail')->insert($detailRows);
+            }
+        }
     }
 
     public function edit($id)
@@ -7200,7 +7102,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             try {
                 GeneralMethod::candidateRequestIndexElastic((int) $rec_id);
             } catch (\Throwable $e) {
-                \Log::error('candidateRequestIndexElastic direct call failed: ' . $e->getMessage());
+                \Log::error('candidateRequestIndexElastic direct call failed: '.$e->getMessage());
             }
 
             /**

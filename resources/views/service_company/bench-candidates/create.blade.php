@@ -143,7 +143,7 @@ if($snp_mode== 1){
 <div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <div id="kt_content_container" class="container-fluid px-3">
-      <div class="app">
+      <div class="app" id="talent_create_app">
        
         <!-- MAIN -->
         <main class="mc">
@@ -156,6 +156,18 @@ if($snp_mode== 1){
             <input type="hidden" name="avatar_remove" />
             <input type="hidden" name="resumeCheck" value="{{ @$resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
+            <input type="hidden" name="expected_aggregate_version" id="expected_aggregate_version" value="{{ @$application->aggregate_version ?? 1 }}">
+            <input type="hidden" name="expected_resume_version" id="expected_resume_version" value="{{ @$application->resume_version ?? 1 }}">
+            {{-- CRITICAL: 8 Synchronized Commercial Inputs (Defense against commit 16b825d5 regression) --}}
+            <input type="hidden" name="hidden_pay_annual" id="hidden_pay_annual" value="{{ @$application->ctc_yearly }}">
+            <input type="hidden" name="hidden_pay_monthly" id="hidden_pay_monthly" value="{{ @$application->ctc_monthly }}">
+            <input type="hidden" name="hidden_pay_rate_amount" id="hidden_pay_rate_amount" value="{{ @$application->ctc_hourly }}">
+            <input type="hidden" name="hidden_bill_annual" id="hidden_bill_annual" value="{{ @$application->ectc_yearly }}">
+            <input type="hidden" name="hidden_bill_monthly" id="hidden_bill_monthly" value="{{ @$application->ectc_monthly }}">
+            <input type="hidden" name="hidden_bill_rate_amount" id="hidden_bill_rate_amount" value="{{ @$application->ectc_hourly }}">
+            <input type="hidden" name="hidden_percentage_hike" id="hidden_percentage_hike" value="{{ @$application->percentage_hike }}">
+            <input type="hidden" name="hidden_comission_type" id="hidden_comission_type" value="{{ @$application->comission_type ?? 2 }}">
           <div class="fc">
             @if(@$page_event != 'EDIT')
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
@@ -1604,7 +1616,7 @@ $(document).ready(function () {
         }
         resetProgress();
         $('#upInfo').removeClass('show');
-        $('#uploadBox').show();
+        $('#uploadBox').removeClass('has-file').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
@@ -1628,7 +1640,7 @@ $(document).ready(function () {
         $('#upDetailParserStatus').text('Pending').css('color','');
         $('#upDetailFileType').text(ext);
         $('#upRetryWrap').hide();
-        $('#uploadBox').hide();
+        $('#uploadBox').addClass('has-file').hide();
         $('#fileInfo').hide();
         $('#upInfo').addClass('show');
     }
@@ -1685,7 +1697,50 @@ $(document).ready(function () {
         $('#fileName').text(file.name + ' (' + sizeStr + ')');
         $('#fileInfo').css('display', 'flex');
         $('#resumeCheck').val('1');
+        $('#uploadBox').addClass('has-file');
         $('.download-file').addClass('d-none');
+
+        // Client-first Web Worker parser invocation (0% server CPU strain, Rule 3 & Gate G-04)
+        if (window.Worker) {
+            try {
+                const parseWorker = new Worker('{{ asset("js/talent-parser-worker.js") }}');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    parseWorker.postMessage({
+                        action: 'PARSE_RESUME',
+                        fileData: e.target.result,
+                        fileName: file.name,
+                        mimeType: file.type,
+                        runId: Date.now()
+                    });
+                };
+                parseWorker.onmessage = function(ev) {
+                    const res = ev.data || {};
+                    if (res.type === 'PARSER_SUCCESS' && res.data) {
+                        const parsed = res.data;
+                        // Non-destructive auto-fill: never overwrites already typed inputs
+                        if (parsed.name && !$('#full_name').val()) {
+                            $('#full_name').val(parsed.name).trigger('change');
+                        }
+                        if (parsed.email && !$('#email').val()) {
+                            $('#email').val(parsed.email).trigger('change');
+                        }
+                        if (parsed.phone && !$('#phone').val()) {
+                            $('#phone').val(parsed.phone).trigger('change');
+                        }
+                        if (parsed.summary && !$('#careersummary').val()) {
+                            $('#careersummary').val(parsed.summary).trigger('change');
+                        }
+                        if (parsed.skills && Array.isArray(parsed.skills) && typeof window.addParsedBenchSkills === 'function') {
+                            window.addParsedBenchSkills(parsed.skills);
+                        }
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (wErr) {
+                console.warn('Parser worker execution notice:', wErr);
+            }
+        }
 
         // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
         window.__upXhrChannelClaimed = true;
@@ -2162,6 +2217,16 @@ $(document).ready(function () {
         }
 
         $('#br_comment_count').text(($('#comment').val() || '').length + ' / 500');
+
+        // CRITICAL: Synchronize all 8 hidden inputs (Commit 16b825d5 defense)
+        $('#hidden_pay_annual').val($('#pay_annual').val() || '0');
+        $('#hidden_pay_monthly').val($('#pay_monthly').val() || '0');
+        $('#hidden_pay_rate_amount').val($('#pay_rate_amount').val() || '0');
+        $('#hidden_bill_annual').val($('#bill_annual').val() || '0');
+        $('#hidden_bill_monthly').val($('#bill_monthly').val() || '0');
+        $('#hidden_bill_rate_amount').val($('#bill_rate_amount').val() || '0');
+        $('#hidden_percentage_hike').val($('#percentage_hike').val() || '0');
+        $('#hidden_comission_type').val($('#comission_type').val() || '2');
     }
 
     function syncCommercialCards() {
@@ -2220,6 +2285,15 @@ $(document).ready(function () {
     window.refreshCommercialSummary = refreshCommercialSummary;
     window.syncBillFieldsFromAnnual = syncBillFieldsFromAnnual;
     window.applyCommercialMode = applyCommercialMode;
+
+    // Window JeroTalent namespace initialization (Rule 17 page isolation)
+    window.JeroTalent = window.JeroTalent || {};
+    window.JeroTalent.tabInstanceId = window.JeroTalent.tabInstanceId || ((typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('tab_' + Math.random().toString(36).substring(2, 9)));
+    window.JeroTalent.commercial = {
+        recalculate: refreshCommercialSummary,
+        syncMode: applyCommercialMode,
+        isFree: isFreeCommercialMode
+    };
 
     function format(val) {
         return val ? parseFloat(val).toFixed(2) : '';
@@ -3055,6 +3129,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>   
 
+function handleTalentSubmissionSuccess(response) {
+    const redirectUrl = response.redirect_url || response.url || '{{ route("service_company.bench-candidates.index") }}';
+    let redirectExecuted = false;
+
+    function executeRedirect() {
+        if (!redirectExecuted) {
+            redirectExecuted = true;
+            window.location.href = redirectUrl;
+        }
+    }
+
+    // 1. Primary: SweetAlert confirmation button
+    Swal.fire({
+        text: response.message || "Talent profile saved successfully!",
+        icon: "success",
+        buttonsStyling: false,
+        confirmButtonText: "View Bench Listing",
+        customClass: { confirmButton: "btn btn-primary btn-sm" }
+    }).then(function(result) {
+        executeRedirect();
+    });
+
+    // 2. Secondary: Guaranteed hard timer fallback (2,200ms)
+    setTimeout(executeRedirect, 2200);
+
+    // 3. Tertiary: Window unload insurance
+    window.addEventListener('beforeunload', function() {
+        redirectExecuted = true;
+    });
+}
+
 @php if(@$page_event != 'EDIT'){  @endphp
 var KTAddCandidate = function () {
     var form;
@@ -3125,6 +3230,12 @@ var KTAddCandidate = function () {
                             return;
                         }
 
+                          // Layer 1: Client-Generated Idempotency UUID
+                          let clientUuid = $('#client_submission_uuid').val();
+                          if (!clientUuid) {
+                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                              $('#client_submission_uuid').val(clientUuid);
+                          }
 
                           window.normalizeCreateTalentPhones();
 													var formData 	=	new FormData($('#createForm')[0]);							
@@ -3158,24 +3269,9 @@ var KTAddCandidate = function () {
                                    return false;
                                 }
                                 
-                                  
-																
-																					 Swal.fire({
-                            text: "You have successfully Submitted",
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                form.querySelector('[name="email1"]').value 	= "";
-                                form.querySelector('[name="password1"]').value 	= "";
-                            }
-                        });
-																					window.location = response.url;
-																				},
+                                  // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                                  handleTalentSubmissionSuccess(response);
+                                },
 																error			: function (xhr) {
                                     $("#save-form").prop("disabled", false);
                                     window.syncTalentStageAction();
@@ -3273,6 +3369,13 @@ var KTEditCandidate = function () {
                         }
 
 
+                          // Layer 1: Client-Generated Idempotency UUID
+                          let clientUuid = $('#client_submission_uuid').val();
+                          if (!clientUuid) {
+                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                              $('#client_submission_uuid').val(clientUuid);
+                          }
+
                           window.normalizeCreateTalentPhones();
 													var formData 	=	new FormData($('#createForm')[0]);							
 													$.ajax({
@@ -3297,22 +3400,9 @@ var KTEditCandidate = function () {
                                    return false;
                                 }
                                 
-																					 Swal.fire({
-                            text: "You have successfully Submitted",
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                form.querySelector('[name="email1"]').value 	= "";
-                                form.querySelector('[name="password1"]').value 	= "";
-                            }
-                        });
-																					window.location = response.url;
-																				},
+                                 // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                                 handleTalentSubmissionSuccess(response);
+                              },
 															error			: function (xhr) {
                                     $("#edit-form").prop("disabled", false).html("Update");
                                     submitButton.disabled = false;

@@ -20,6 +20,67 @@ body { overflow-x: hidden; }
 .tagify .tagify__tag div .tagify__tag-text { color: #0c0c0c !important; font-family: 'Poppins', sans-serif !important; font-weight: 500 !important; font-size: 13px !important; }
 .tagify { height: 38px !important; font-family: 'Poppins', sans-serif !important; }
 .disablesectionOn.setOpacity { cursor: not-allowed; background: #8a878d; opacity: 0.5; }
+
+/* 15.6" Screen Optimization Scoped to Bench Candidates Module (Rule 17) */
+#talent_create_app {
+    max-width: 100%;
+}
+
+/* Equal Height Flex Pairing for Resume Upload and Career Summary */
+#talent_create_app .equal-height-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#talent_create_app .equal-height-row > [class*='col-'] {
+    display: flex;
+    flex-direction: column;
+}
+
+#talent_create_app .equal-height-row .card {
+    flex: 1 1 auto;
+    margin-bottom: 1.25rem;
+}
+
+/* Dropzone Collapse: Completely Hide Upload Area When File Present */
+#talent_create_app .dropzone.has-file,
+.dropzone.has-file {
+    display: none !important;
+}
+
+/* Single Unified Remove Action Badge */
+#talent_create_app .uploaded-file-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f4f6fa;
+    border: 1px solid #e1e3ea;
+    border-radius: 0.475rem;
+}
+
+/* 10% Vertical Height Compression on Enterprise Displays (1366x768 & 1920x1080) */
+#talent_create_app .form-group,
+#talent_create_app .fv-row {
+    margin-bottom: 0.85rem !important;
+}
+
+#talent_create_app .form-control,
+#talent_create_app .form-select {
+    font-size: 13px !important;
+    padding-top: 0.45rem !important;
+    padding-bottom: 0.45rem !important;
+    height: calc(1.5em + 0.9rem + 2px);
+}
+
+#talent_create_app .card-header {
+    min-height: 48px !important;
+    padding: 0.5rem 1.25rem !important;
+}
+
+#talent_create_app .card-body {
+    padding: 1.25rem !important;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />
