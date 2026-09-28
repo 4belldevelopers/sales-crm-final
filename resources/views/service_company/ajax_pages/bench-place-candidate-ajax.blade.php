@@ -138,7 +138,7 @@
                     $hasBench = !empty($benchRaw);
 
                     // Denormalized offer release date from ES document
-                    $offerRaw = @$row->offer_released_at;
+                    $offerRaw = @$row->offer_released_at ?: @$row->of_created_date ?: @$row->of_offer_release ?: @$row->of_offer_approved ?: @$row->of_offer_acceptance ?: @$row->send_accept_date_time ?: $joinedRaw;
                     $hasOffer = !empty($offerRaw);
 
                     $dateFmt = 'd M y';
@@ -192,10 +192,10 @@
                     } else {
                         // Non-bench candidates: 4-node timeline — Sourcing → Evaluation → Offer → Joined
                         // Read stage dates directly from ES denormalized document fields
-                        $sourcingRaw  = @$row->sourcing_date;
-                        $evalRaw      = @$row->evaluation_date;
-                        $tlOfferRaw   = @$row->offer_released_at ?: $offerRaw;
-                        $tlJoinedRaw  = $joinedRaw;
+                        $sourcingRaw = !empty(@$row->sourcing_date) ? @$row->sourcing_date : (!empty(@$row->created_at) ? @$row->created_at : null);
+                        $evalRaw     = !empty(@$row->evaluation_date) ? @$row->evaluation_date : (!empty(@$row->schedule_date) ? @$row->schedule_date : (!empty(@$row->interview_schedule_date) ? @$row->interview_schedule_date : null));
+                        $tlOfferRaw  = !empty(@$row->offer_released_at) ? @$row->offer_released_at : (!empty(@$row->of_created_date) ? @$row->of_created_date : (!empty(@$row->of_offer_release) ? @$row->of_offer_release : (!empty(@$row->of_offer_approved) ? @$row->of_offer_approved : (!empty(@$row->of_offer_acceptance) ? @$row->of_offer_acceptance : null))));
+                        $tlJoinedRaw = !empty($joinedRaw) ? $joinedRaw : (!empty(@$row->of_joined_date) ? @$row->of_joined_date : null);
 
                         $hasSourcing  = !empty($sourcingRaw);
                         $hasEval      = !empty($evalRaw);
@@ -259,15 +259,24 @@
                     $client_title_name = @$row->client_name;
                     $client_name = ucwords(mb_substr($client_title_name, 0, 18));
 
-                    $recommendation_id = @$row->recommendation_id;
+                    $recommendation_id = (int) @$row->recommendation_id;
+                    $fromCompanyId = (int) @$row->from_company_id;
+                    $userCompanyId = (int) @$company_id;
 
-                    $recommendation_text = __('messages.direct_clinet_tag');
-                    $recommendation_icon = 'fa-handshake';
-                    $recommendation_cls = 'text-warning';
-                    if (
-                        ($recommendation_id > 0 && @$row->client_comapny_id == auth()->user()->company_id) ||
-                        @$row->client_comapny_id == auth()->user()->company_id
-                    ) {
+                    // Direct Client tag applies when a job is shared/recommended from an external company
+                    $isDirectClient = ($recommendation_id > 0 && $fromCompanyId > 0 && $fromCompanyId != $userCompanyId);
+
+                    if ($isDirectClient) {
+                        $recommendation_text = __('messages.direct_clinet_tag');
+                        $recommendation_icon = 'fa-handshake';
+                        $recommendation_cls = 'text-warning';
+                    } elseif (isset($row->client_self_company) && $row->client_self_company == 1) {
+                        // client_self_company == 1 → Internal
+                        $recommendation_text = __('messages.internal_tag');
+                        $recommendation_icon = 'fa-building-shield';
+                        $recommendation_cls = 'text-primary';
+                    } else {
+                        // client_self_company == 0 → Internal Client
                         $recommendation_text = __('messages.internal_client_tag');
                         $recommendation_icon = 'fa-building-shield';
                         $recommendation_cls = 'text-primary';
@@ -292,14 +301,33 @@
                           </div>';
                 @endphp
             </td>
-            {{-- Recruiter: read pre-indexed spokperson_name directly from ES document _source --}}
+            {{-- Recruiter: read agency root/owner (Varsha Sharma) for agency candidates, or submitter name --}}
             <td>
                 @php
-                    $rowpostedby = !empty(@$row->spokperson_name) ? @$row->spokperson_name : @$row->posted_by;
+                    $agency_company_name = !empty(@$row->submitted_by_company_name) ? @$row->submitted_by_company_name : (!empty(@$row->post_company_name) ? @$row->post_company_name : (!empty(@$row->from_company_name) ? @$row->from_company_name : (!empty(@$row->uc_company_name) ? @$row->uc_company_name : '')));
+                    
+                    $agencyCompId = @$row->thirdparty_company_id ?: (@$row->other_company ?: 0);
+                    $isAgencyCandidate = ($agencyCompId > 0 && $agencyCompId != @$company_id) || !empty($agency_company_name);
+
+                    if ($isAgencyCandidate) {
+                        $agencyRootName = !empty(@$row->agency_root_name) ? @$row->agency_root_name : null;
+                        if (empty($agencyRootName) && $agencyCompId > 0 && $agencyCompId != @$company_id) {
+                            $agencyRootName = DB::table('users')->where('company_id', $agencyCompId)->orderByDesc('root_user')->orderBy('id', 'asc')->value('name');
+                        }
+                        $rowpostedby = !empty($agencyRootName) ? $agencyRootName : (!empty(@$row->posted_by) ? @$row->posted_by : (!empty(@$row->submitted_by_name) ? @$row->submitted_by_name : 'Recruiter'));
+                    } else {
+                        $rowpostedby = !empty(@$row->posted_by) ? @$row->posted_by : (!empty(@$row->submitted_by_name) ? @$row->submitted_by_name : (!empty(@$row->spokperson_name) ? @$row->spokperson_name : 'Recruiter'));
+                    }
+                    
+                    if ($isAgencyCandidate) {
+                        $recruiterSubText = !empty($agency_company_name) ? $agency_company_name : (@$row->company_name ?: 'Recruiter');
+                    } else {
+                        $recruiterSubText = 'Recruiter';
+                    }
 
                     echo '<div class="d-flex flex-column">
-                            <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' . @$rowpostedby . '">' . ucfirst(mb_substr($rowpostedby, 0, 16)) . '</span>
-                            <span class="text-muted fw-semibold d-block fs-9">Recruiter</span>
+                            <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="' . e(@$rowpostedby) . '">' . e(ucfirst(mb_substr($rowpostedby, 0, 20))) . '</span>
+                            <span class="text-muted fw-semibold d-block fs-9" data-toggle="tooltip" title="' . e(@$recruiterSubText) . '">' . e(ucwords(mb_substr($recruiterSubText, 0, 20))) . '</span>
                           </div>';
                 @endphp
             </td>
