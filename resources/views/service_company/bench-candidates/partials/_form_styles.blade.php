@@ -1,4 +1,5 @@
 {{-- Phase 8 Frontend Optimization: Modular Form Styles Partial --}}
+<link rel="stylesheet" href="{{ asset('assets/node_modules/select2/dist/css/select2.min.css') }}">
 <style>
 body { overflow-x: hidden; }
 .dropzone { padding: 1.8rem 1.75rem !important; border: 2px dashed #e6e7e8 !important; background: transparent !important; text-align: inherit !important; }
@@ -1418,19 +1419,35 @@ textarea.has-validation-error:focus,
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
+    background: #ffffff !important;
 }
+.jero-adaptive-dropdown .select2-search,
 .jero-adaptive-dropdown .select2-search--dropdown {
-    padding: 8px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding: 8px 10px !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
 }
+.jero-adaptive-dropdown.select2-search--hide,
+.jero-adaptive-dropdown .select2-search--hide {
+    display: block !important;
+}
 .jero-adaptive-dropdown .select2-search__field {
+    display: block !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    box-sizing: border-box !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
-    padding: 7px 10px !important;
+    padding: 7px 12px !important;
     font-size: 13px !important;
+    font-family: 'Poppins', sans-serif !important;
     color: #0f172a !important;
+    background-color: #ffffff !important;
     outline: none !important;
 }
 .jero-adaptive-dropdown .select2-search__field:focus {
@@ -1446,6 +1463,10 @@ textarea.has-validation-error:focus,
     border-top: 1px solid #e2e8f0;
     border-bottom: 1px solid #e2e8f0;
     letter-spacing: 0.3px;
+}
+.jero-adaptive-dropdown .select2-results__options {
+    max-height: 280px !important;
+    overflow-y: auto !important;
 }
 .jero-adaptive-dropdown .select2-results__option {
     font-size: 13px !important;
