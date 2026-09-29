@@ -660,14 +660,74 @@ body { overflow-x: hidden; }
     background-color: rgba(239, 246, 255, 0.4) !important;
 }
 
-@media (max-width: 480px) {
-    .rf-modal-box {
-        padding: 24px 18px 20px;
-        max-width: calc(100% - 24px);
-    }
-    .rf-modal-title {
-        font-size: 18px;
-    }
+/* Free Service Client Bill Rate Hover Notification & Locked State */
+.br-rate-panel.br-bill-panel {
+    position: relative;
+}
+
+.br-free-bill-hover-notice {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #0f172a;
+    color: #ffffff;
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+    z-index: 60;
+    max-width: 320px;
+    width: 88%;
+    text-align: left;
+    pointer-events: none;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.br-free-bill-hover-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.br-free-bill-hover-inner i {
+    color: #38bdf8;
+    font-size: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.br-free-bill-hover-text strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 4px;
+    line-height: 1.25;
+}
+
+.br-free-bill-hover-text span {
+    display: block;
+    font-size: 11.5px;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+.br-card.is-free-service .br-bill-panel {
+    cursor: not-allowed;
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    position: relative;
+    opacity: 0.85;
+}
+
+.br-card.is-free-service .br-bill-panel * {
+    cursor: not-allowed;
+}
+
+.br-card.is-free-service .br-bill-panel:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
