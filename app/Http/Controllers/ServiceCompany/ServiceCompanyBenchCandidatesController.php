@@ -1811,7 +1811,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             // Build standardized JSON response
             $responsePayload = [
                 'status' => 'success',
-                'message' => __('menu.jobApplications').' '.($added ? __('messages.createdSuccessfully') : __('messages.updatedSuccessfully')),
+                'message' => $added ? 'Inhouse Talent Added Successfully' : 'Inhouse Talent Updated Successfully',
                 'candidate_id' => $benchApplication->id,
                 'action' => $added ? 'created' : 'updated',
                 'url' => url('service_company/bench-candidates'),
