@@ -526,63 +526,33 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                @php
-                  $hasSecondaryContact = !empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile);
-                @endphp
-                <details class="bd-secondary" {{ $hasSecondaryContact ? 'open' : '' }}>
-                  <summary><i class="fa-solid fa-plus"></i> Add Secondary Contact (Optional)</summary>
-                  <div class="bd-grid bd-grid--two bd-secondary-grid">
-                    <div class="fg fv-row bd-field">
-                      <label>Secondary Email</label>
-                      <div class="bd-control">
-                        <i class="fa-regular fa-envelope"></i>
-                        <input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
-                      </div>
-                    </div>
-                    <div class="fg fv-row bd-field">
-                      <label>Secondary Number</label>
-                      <div class="bd-phone-control">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                        <input type="tel" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" inputmode="tel" autocomplete="tel" />
-                        <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
-                      </div>
-                    </div>
-                  </div>
-                </details>
+                {{-- Hidden secondary contact inputs preserved for data integrity (fields removed from UI per UX decision) --}}
+                <input type="hidden" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" />
+                <input type="hidden" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" />
+                <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
 
-                <details class="bd-extra" open>
-                  <summary>
-                    <span class="bd-extra-title">
-                      <span class="bd-extra-icon"><i class="fa-solid fa-ellipsis"></i></span>
-                      <span>
-                        <strong>Additional Personal Information</strong>
-                        <small>These details are optional and can be added if required.</small>
-                      </span>
-                    </span>
-                    <span class="bd-extra-action">Show Details <i class="fa-solid fa-chevron-down"></i></span>
-                  </summary>
-                  <div class="bd-grid bd-grid--two bd-extra-grid">
-                    <div class="fg fv-row bd-field">
-                      <label>Gender <span class="rq">*</span></label>
-                      <div class="bd-control bd-control--select">
-                        <i class="fa-regular fa-user"></i>
-                        <select name="gender" id="gender">
-                          <option value="">Select gender</option>
-                          <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                          <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                          <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="fg fv-row bd-field">
-                      <label>Date of Birth</label>
-                      <div class="bd-control">
-                        <i class="fa-regular fa-calendar-days"></i>
-                        <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
-                      </div>
+                {{-- Gender & Date of Birth: moved into main Candidate Profile card --}}
+                <div class="bd-grid bd-grid--two">
+                  <div class="fg fv-row bd-field">
+                    <label>Gender <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-user"></i>
+                      <select name="gender" id="gender">
+                        <option value="">Select gender</option>
+                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                      </select>
                     </div>
                   </div>
-                </details>
+                  <div class="fg fv-row bd-field">
+                    <label>Date of Birth</label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-calendar-days"></i>
+                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1311,7 +1281,7 @@ if($snp_mode== 1){
                   </span>
                 </div>
                 <div class="se-actions">
-                   <span class="se-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
+                   <span class="se-badge se-badge--req"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Min. 3 Skills Required &mdash; Each with Name, Experience &amp; Rating</span>
                 </div>
               </div>
               <div class="fsc">
@@ -1322,7 +1292,7 @@ if($snp_mode== 1){
                       <th>Skill <span class="rq">*</span></th>
                       <th>Experience (Years) <span class="rq">*</span></th>
                       <th>Experience (Months)</th>
-                      <th>Proficiency Rating <span class="rq">*</span></th>
+                      <th><i class="fa-solid fa-star" aria-hidden="true" style="color:#f59e0b;"></i> Proficiency Rating <span class="rq">*</span></th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1489,13 +1459,9 @@ if($snp_mode== 1){
                     </div>
                     <small>Select your current visa or work authorization status, if applicable.</small>
                   </div>
-
-                  <div class="addl-wide-field fv-row">
-                    <label><i class="fa-solid fa-user-tie"></i> Professional Reference <span>(Optional)</span></label>
-                    <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
-                    <small>You can provide a reference name who can vouch for your work experience.</small>
-                  </div>
-                </section>
+                  {{-- Professional Reference removed from UI (data preserved via hidden input) --}}
+                  <input type="hidden" name="referencename" id="referencename" value="{{ @$application->referencename }}" />
+                 </section>
 
                 <div class="addl-info-strip">
                   <span><i class="fa-solid fa-info"></i></span>
@@ -2863,7 +2829,28 @@ $(document).ready(function () {
 
         fillOptions(row.querySelector('[name="years[]"]'), 'Select Year', 1, 60, data.year, n => n === 1 ? 'Year' : 'Years');
         fillOptions(row.querySelector('[name="months[]"]'), 'Select Month', 0, 11, data.month, n => n === 1 ? 'Month' : 'Months');
-        fillOptions(row.querySelector('[name="ratings[]"]'), 'Select Rating', 1, 5, data.rating, n => n === 1 ? 'Rating' : 'Ratings');
+
+        // Star-based proficiency rating — enterprise-grade UX (★ icons in select labels)
+        (function buildRatingOptions(select, selected) {
+            const ratingLabels = [
+                '',
+                '★ Beginner',
+                '★★ Elementary',
+                '★★★ Intermediate',
+                '★★★★ Advanced',
+                '★★★★★ Expert'
+            ];
+            const ratingTitles = ['Select Rating', 'Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
+            select.add(new Option('Select Rating', ''));
+            for (let v = 1; v <= 5; v++) {
+                const opt = new Option(ratingLabels[v], String(v));
+                opt.title = ratingTitles[v];
+                select.add(opt);
+            }
+            if (selected !== null && selected !== undefined && selected !== '') {
+                select.value = String(selected);
+            }
+        })(row.querySelector('[name="ratings[]"]'), data.rating);
 
         input.addEventListener('change', () => {
             input.value = input.value.trim();
@@ -2934,7 +2921,8 @@ $(document).ready(function () {
     });
     const storedSkills = document.getElementById('skills').value;
     if (storedSkills) addParsedBenchSkills(storedSkills);
-    if (!experienceWrapper.children.length) addSkillExperience();
+    // Load minimum 3 empty rows by default so users immediately understand the requirement
+    while (experienceWrapper.children.length < 3) addSkillExperience();
 
     document.querySelector('.se-card .asb').addEventListener('click', () => {
         addSkillExperience().querySelector('[name="skills[]"]').focus();
