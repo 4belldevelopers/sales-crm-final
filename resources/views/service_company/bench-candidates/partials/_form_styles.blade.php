@@ -1355,6 +1355,113 @@ textarea.has-validation-error:focus,
 .se-field--select .fa-star {
     color: #f59e0b !important;
 }
+
+/* ── Categorized Highest Qualification & Nationality Dropdown Styling ── */
+#nationality optgroup,
+#qualification optgroup {
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    color: #1e40af !important;
+    background: #f1f5f9 !important;
+    padding: 7px 10px !important;
+    letter-spacing: 0.25px;
+}
+#nationality option,
+#qualification option {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    padding: 6px 14px !important;
+}
+
+/* ── Adaptive Qualification & Nationality Select2 Styling ── */
+.bd-control--select .select2-container {
+    width: 100% !important;
+    display: block !important;
+}
+.bd-control--select .select2-container .select2-selection--single {
+    min-height: 42px !important;
+    height: 42px !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    background-color: #ffffff !important;
+    padding-left: 42px !important;
+    padding-right: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: none !important;
+}
+.bd-control--select .select2-container .select2-selection--single:focus,
+.bd-control--select .select2-container--open .select2-selection--single {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+.bd-control--select .select2-container .select2-selection__rendered {
+    color: #0b1545 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    padding: 0 !important;
+    line-height: normal !important;
+}
+.bd-control--select .select2-container .select2-selection__arrow {
+    height: 40px !important;
+    right: 12px !important;
+}
+.bd-control--select .select2-container .select2-selection__placeholder {
+    color: #94a3b8 !important;
+    font-weight: 400 !important;
+}
+
+/* Custom Dropdown Menu for Adaptive Select2 */
+.jero-adaptive-dropdown {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
+    z-index: 9999 !important;
+}
+.jero-adaptive-dropdown .select2-search--dropdown {
+    padding: 8px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+.jero-adaptive-dropdown .select2-search__field {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 7px 10px !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    outline: none !important;
+}
+.jero-adaptive-dropdown .select2-search__field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+.jero-adaptive-dropdown .select2-results__group {
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    color: #1e40af !important;
+    background: #f1f5f9 !important;
+    padding: 7px 12px !important;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    letter-spacing: 0.3px;
+}
+.jero-adaptive-dropdown .select2-results__option {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    padding: 7px 14px !important;
+}
+.jero-adaptive-dropdown .select2-results__option--highlighted {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+.jero-adaptive-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #e0e7ff !important;
+    color: #312e81 !important;
+    font-weight: 600 !important;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />
