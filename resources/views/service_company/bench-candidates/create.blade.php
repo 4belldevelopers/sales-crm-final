@@ -3232,20 +3232,34 @@ $(document).ready(function () {
         // GLOBAL UNLOCK: Searches 100% of qualifications and synonym aliases!
         if (cleanTerm.length > 0) {
             var optText = (child.text || '').toLowerCase().replace(/[.\/]/g, '');
-            if (optText.indexOf(cleanTerm) !== -1) return true;
+            var isMatch = (optText.indexOf(cleanTerm) !== -1);
 
-            var aliases = '';
-            if (child.element) {
-                aliases = $(child.element).attr('data-aliases') || '';
-            }
-            if (aliases) {
-                var aliasParts = aliases.toLowerCase().replace(/[.\/]/g, '').split(',');
-                for (var a = 0; a < aliasParts.length; a++) {
-                    var ap = aliasParts[a].trim();
-                    if (ap && (ap.indexOf(cleanTerm) !== -1 || cleanTerm.indexOf(ap) !== -1)) {
-                        return true;
+            if (!isMatch) {
+                var aliases = '';
+                if (child.element) {
+                    aliases = $(child.element).attr('data-aliases') || '';
+                } else if (child.id) {
+                    var $elemOpt = $('#qualification option[value="' + child.id + '"]');
+                    if ($elemOpt.length) aliases = $elemOpt.attr('data-aliases') || '';
+                }
+                if (aliases) {
+                    var aliasParts = aliases.toLowerCase().replace(/[.\/]/g, '').split(',');
+                    for (var a = 0; a < aliasParts.length; a++) {
+                        var ap = aliasParts[a].trim();
+                        if (ap && (ap.indexOf(cleanTerm) !== -1 || cleanTerm.indexOf(ap) !== -1)) {
+                            isMatch = true;
+                            break;
+                        }
                     }
                 }
+            }
+
+            if (isMatch) {
+                child.disabled = false;
+                if (child.element) {
+                    $(child.element).prop('disabled', false);
+                }
+                return true;
             }
             return false;
         }
@@ -3253,6 +3267,8 @@ $(document).ready(function () {
         // Case 2: Idle state (no search query)
         // CRITICAL: Always keep currently selected option visible!
         if (selectedQualId && String(child.id) === String(selectedQualId)) {
+            child.disabled = false;
+            if (child.element) $(child.element).prop('disabled', false);
             return true;
         }
 
@@ -3264,6 +3280,9 @@ $(document).ready(function () {
         var regions = '';
         if (child.element) {
             regions = $(child.element).attr('data-regions') || '';
+        } else if (child.id) {
+            var $elemOpt2 = $('#qualification option[value="' + child.id + '"]');
+            if ($elemOpt2.length) regions = $elemOpt2.attr('data-regions') || '';
         }
         var regionList = regions.split(',').map(function(r) { return r.trim(); });
         if (regionList.indexOf('Global') !== -1) {
@@ -3287,6 +3306,10 @@ $(document).ready(function () {
             for (var i = 0; i < data.children.length; i++) {
                 var child = data.children[i];
                 if (matchesChild(child, params.term, selectedNat, selectedQualId)) {
+                    if (params.term && params.term.trim().length > 0) {
+                        child.disabled = false;
+                        if (child.element) $(child.element).prop('disabled', false);
+                    }
                     matchChildren.push(child);
                 }
             }
@@ -3300,6 +3323,10 @@ $(document).ready(function () {
 
         // Handle Single Option
         if (matchesChild(data, params.term, selectedNat, selectedQualId)) {
+            if (params.term && params.term.trim().length > 0) {
+                data.disabled = false;
+                if (data.element) $(data.element).prop('disabled', false);
+            }
             return data;
         }
         return null;
@@ -3352,6 +3379,22 @@ $(document).ready(function () {
                 if (syn && (syn.indexOf(cleanTerm) !== -1 || cleanTerm.indexOf(syn) !== -1)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    function isQualInBucket(qualId, nationality) {
+        if (!qualId) return true;
+        var $opt = $('#qualification option[value="' + qualId + '"]');
+        if (!$opt.length) return true;
+        var bucket = getRegionalBucket(nationality);
+        if (bucket.indexOf('all') !== -1) return true;
+        var regions = ($opt.attr('data-regions') || '').split(',').map(function(r) { return r.trim(); });
+        if (regions.indexOf('Global') !== -1) return true;
+        for (var k = 0; k < bucket.length; k++) {
+            if (regions.indexOf(bucket[k]) !== -1) {
+                return true;
             }
         }
         return false;
@@ -3459,25 +3502,38 @@ $(document).ready(function () {
 
         // 3. React to Nationality change: Dynamically Re-Scope Highest Qualification Dropdown List
         $('#nationality').on('change', function() {
+            var newNat = ($(this).val() || '').trim();
             var curQual = $('#qualification').val();
+
+            // If the currently selected qualification does not belong to the new regional bucket, clear it
+            if (curQual && !isQualInBucket(curQual, newNat)) {
+                $('#qualification').val('');
+                curQual = '';
+            }
+
             syncNativeOptions();
+
             if ($.fn.select2 && $('#qualification').hasClass('select2-hidden-accessible')) {
                 $('#qualification').select2('destroy');
                 initQualificationSelect2();
-                var $selectedOpt = $('#qualification option:selected');
-                if ($selectedOpt.length && $selectedOpt.prop('disabled')) {
-                    $('#qualification').val('').trigger('change.select2');
-                } else {
-                    $('#qualification').val(curQual);
-                }
+                $('#qualification').val(curQual).trigger('change.select2');
             }
             if (typeof fv !== 'undefined' && fv.revalidateField) {
                 fv.revalidateField('nationality');
+                fv.revalidateField('qualification');
             }
         });
 
         // 4. React to Qualification change
         $('#qualification').on('change', function() {
+            var selVal = $(this).val();
+            if (selVal) {
+                var $opt = $('#qualification option[value="' + selVal + '"]');
+                if ($opt.length) {
+                    $opt.prop('disabled', false).show();
+                    $opt.closest('optgroup').prop('disabled', false).show();
+                }
+            }
             syncNativeOptions();
             if (typeof fv !== 'undefined' && fv.revalidateField) {
                 fv.revalidateField('qualification');
