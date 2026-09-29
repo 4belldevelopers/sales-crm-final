@@ -1055,72 +1055,24 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="pay-annual">
                         <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payrateannual"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="pay-monthly">
                         <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payratemonthly"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="pay-hourly">
                         <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payratehourly"></span>
                       </div>
@@ -1161,72 +1113,24 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="bill-annual">
                         <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billrateannual"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="bill-monthly">
                         <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billratemonthly"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="bill-hourly">
                         <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billratehourly"></span>
                       </div>
@@ -2614,65 +2518,53 @@ $(document).ready(function () {
     });
     /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Pay Rate input using the CORRECT currency code read directly from the
-     * selected option text. Fixes the broken currencyRateschar[currency_id] index
-     * mismatch (DB IDs are 1-based, array is 0-indexed).
+     * active Pay Rate input using the currency code read from #pay_rate_currency.
      */
     function updatePayUI() {
-        // Get currency code directly from selected option text (e.g. "INR", "USD")
-        let currencyCode = ($('.br-pay-currency-select option:selected').first().text().trim() ||
-                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
-        // Read the active annual value (most common tab); hourly is always synced
         let payAnnual  = parseFloat($('#pay_annual').val()) || 0;
         let payMonthly = parseFloat($('#pay_monthly').val()) || 0;
         let payHourly  = parseFloat($('#pay_rate_amount').val()) || 0;
 
-        // If no direct values, derive from whichever field has data
         if (!payHourly && payAnnual) payHourly = payAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
         if (!payHourly && payMonthly) payHourly = payMonthly / HOURS_PER_MONTH;
+        if (!payMonthly && payHourly) payMonthly = payHourly * HOURS_PER_MONTH;
+        if (!payAnnual && payMonthly) payAnnual = payMonthly * MONTHS_PER_YEAR;
 
-        // Update the visible currency prefix symbol in all pay-rate .ig boxes
-        let paySymbol = getCurrencySymbol(currencyCode);
-        $('.br-pay-panel .ig-prefix').text(paySymbol);
-
-        if (isUSD || !currencyRate || !payHourly) {
-            // USD selected — no conversion needed, clear USD spans
+        if (isUSD) {
             $('#pay_rate_hourly_usd').text('');
             $('#pay_rate_monthly_usd').text('');
             $('#pay_rate_annual_usd').text('');
         } else {
-            // Convert from local currency to USD: local / rate = USD
             let hourlyUSD  = payHourly / currencyRate;
-            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
-            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
-            $('#pay_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
-            $('#pay_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
-            $('#pay_rate_annual_usd').text('≈ $' + format(annualUSD));
+            let monthlyUSD = payMonthly / currencyRate;
+            let annualUSD  = payAnnual / currencyRate;
+
+            $('#pay_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
+            $('#pay_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
+            $('#pay_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
         }
         updateCTCFields();
         refreshCommercialSummary();
     }
 
     /**
-     * updateBillUI — Same fix applied to the Bill Rate USD conversion labels.
-     * Reads currency code from option text, not broken currencyRateschar[id] lookup.
+     * updateBillUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
+     * active Bill Rate input using the currency code read from #pay_rate_currency.
      */
     function updateBillUI() {
         if (isFreeCommercialMode()) {
             $('#bill_rate_hourly_usd').text('');
             $('#bill_rate_monthly_usd').text('');
             $('#bill_rate_annual_usd').text('');
-            $('.br-bill-panel .ig-prefix').text('');
             refreshCommercialSummary();
             return false;
         }
 
-        let currencyCode = ($('.br-bill-currency-select option:selected').first().text().trim() ||
-                           $('.br-pay-currency-select option:selected').first().text().trim() ||
-                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2682,30 +2574,24 @@ $(document).ready(function () {
 
         if (!billHourly && billAnnual) billHourly = billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
         if (!billHourly && billMonthly) billHourly = billMonthly / HOURS_PER_MONTH;
+        if (!billMonthly && billHourly) billMonthly = billHourly * HOURS_PER_MONTH;
+        if (!billAnnual && billMonthly) billAnnual = billMonthly * MONTHS_PER_YEAR;
 
-        let billSymbol = getCurrencySymbol(currencyCode);
-        $('.br-bill-panel .ig-prefix').text(billSymbol);
-
-        if (isUSD || !currencyRate || !billHourly) {
+        if (isUSD) {
             $('#bill_rate_hourly_usd').text('');
             $('#bill_rate_monthly_usd').text('');
             $('#bill_rate_annual_usd').text('');
         } else {
             let hourlyUSD  = billHourly / currencyRate;
-            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
-            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
-            $('#bill_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
-            $('#bill_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
-            $('#bill_rate_annual_usd').text('≈ $' + format(annualUSD));
+            let monthlyUSD = billMonthly / currencyRate;
+            let annualUSD  = billAnnual / currencyRate;
+
+            $('#bill_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
+            $('#bill_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
+            $('#bill_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
         }
         updateCTCFields();
         refreshCommercialSummary();
-    }
-
-    /** getCurrencySymbol — Maps currency code to a display symbol for the prefix box */
-    function getCurrencySymbol(code) {
-        var map = { USD: '$', INR: '₹', EUR: '€', GBP: '£', JPY: '¥', AED: 'د.إ' };
-        return map[code] || code || '$';
     }
 
     $('#pay_rate_amount').on('input', function () {
@@ -2717,13 +2603,7 @@ $(document).ready(function () {
 
        if (isUpdating) return;
         isUpdating = true;
-        // var payamount = $('#pay_rate_amount').val();
-        // let hourly = parseFloat(payamount) || 0;
-        // $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
-        // $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-
         updatePayUI();
-
         isUpdating = false;
       
     }
@@ -2732,13 +2612,7 @@ $(document).ready(function () {
 
        if (isUpdating) return;
         isUpdating = true;
-        // var payamount = $('#bill_rate_amount').val();
-        // let hourly = parseFloat(payamount) || 0;
-
-        // $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
-        // $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
         updateBillUI();
-
         isUpdating = false;
       
     }
@@ -2747,23 +2621,13 @@ $(document).ready(function () {
     function syncAllCommercialCurrencies(currencyVal) {
         if (!currencyVal) return;
 
-        // 1. Sync header currency
+        // 1. Sync header currency & hidden selects
         $('#pay_rate_currency').val(currencyVal);
-
-        // 2. Sync hidden selects
         $('#bill_rate_currency').val(currencyVal);
         $('#current_th_cur').val(currencyVal);
 
-        // 3. Sync Pay Rate currency dropdowns
-        $('.br-pay-currency-select').val(currencyVal);
-
-        // 4. Sync Bill Rate currency dropdowns
-        $('.br-bill-currency-select').val(currencyVal);
-
-        // 5. Update text for any legacy badge/spans
-        let selectedText = $('#pay_rate_currency option:selected').text().trim() ||
-                           $('.br-pay-currency-select option:selected').first().text().trim() ||
-                           '';
+        // 2. Update text for all integrated rate currency badges
+        let selectedText = $('#pay_rate_currency option:selected').text().trim() || 'INR';
         if (selectedText) {
             $('.changeTextCurrency').text(selectedText);
         }
@@ -2773,13 +2637,17 @@ $(document).ready(function () {
         refreshCommercialSummary();
     }
 
-    $(document).on('change', '#pay_rate_currency, #bill_rate_currency, .br-pay-currency-select, .br-bill-currency-select', function () {
+    $(document).on('change', '#pay_rate_currency, #bill_rate_currency', function () {
         let val = $(this).val();
         syncAllCommercialCurrencies(val);
     });
 
+    $(document).on('click', '.br-rate-field .changeTextCurrency, .br-rate-field .ig-a', function () {
+        $('#pay_rate_currency').focus();
+    });
+
     setTimeout(() => {
-        let initCurr = $('#pay_rate_currency').val() || $('.br-pay-currency-select').first().val();
+        let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
         }
@@ -2787,7 +2655,7 @@ $(document).ready(function () {
         payRateUpdate();
         billRateUpdate();
         refreshCommercialSummary();
-    }, 1000);
+    }, 500);
 
     
 
