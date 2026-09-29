@@ -730,60 +730,36 @@ body { overflow-x: hidden; }
     background: #f1f5f9;
 }
 
-/* Currency dropdown in commercial rate fields */
-.br-rate-field .ig {
-    display: flex;
-    position: relative;
-    width: 100%;
+/* ── Restored USD Conversion label (Approx $ X.XX) floating right on label ── */
+.br-rate-field label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-bottom: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
 }
 
-/* ── Currency Symbol Prefix inside input box (enterprise-grade ig-prefix) ── */
-.ig-prefix {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    min-width: 36px;
-    height: 38px;
-    padding: 0 10px;
-    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fb 100%);
-    border: 1px solid #d1d5db;
-    border-right: none;
-    border-radius: 6px 0 0 6px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e3a5f;
-    letter-spacing: 0;
-    white-space: nowrap;
-    user-select: none;
-    transition: background 0.15s ease, color 0.15s ease;
+.br-rate-field label .rq {
+    margin-left: 2px !important;
+    margin-right: auto !important;
+    color: #ef4444 !important;
 }
 
-/* When input is focused, prefix box highlights too */
-.br-rate-field .ig:focus-within .ig-prefix {
-    background: linear-gradient(135deg, #e0eaff 0%, #dbeafe 100%);
-    color: #1d4ed8;
-    border-color: #3b82f6;
-}
-
-/* When prefix is present, remove border-radius from input left side */
-.ig-prefix ~ input {
-    border-radius: 0 !important;
-    padding-left: 10px !important;
-}
-
-/* ── USD Conversion label (≈ $X.XX) — enterprise light style ── */
+.br-rate-field label span[id$="_usd"],
 label span[id$="_usd"] {
-    display: inline-block;
-    margin-left: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #0369a1;
-    background: #e0f2fe;
-    border-radius: 4px;
-    padding: 1px 6px;
-    line-height: 1.6;
-    vertical-align: middle;
+    float: right !important;
+    margin-left: auto !important;
+    color: #EF560A !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    line-height: normal !important;
+    white-space: nowrap !important;
 }
 
 /* ── br-panel-icon: Fix icon box sizing and alignment ── */
@@ -806,78 +782,79 @@ label span[id$="_usd"] {
     display: block !important;
 }
 
+/* ── Commercial Rate Input Group (.ig + .ig-a integrated seamless design) ── */
+.br-rate-field .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    position: relative !important;
+    width: 100% !important;
+    gap: 0 !important;
+}
+
 .br-rate-field .ig input {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 38px;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 38px !important;
     border-radius: 6px 0 0 6px !important;
     border: 1px solid #d1d5db !important;
     border-right: none !important;
-    padding: 8px 12px;
-    font-size: 0.95rem;
-    color: #0f172a;
-    background: #ffffff;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    padding: 8px 12px !important;
+    font-size: 0.95rem !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .br-rate-field .ig input:focus {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-    z-index: 2;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
-.ig-currency-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8fafc;
-    border: 1px solid #d1d5db;
-    border-radius: 0 6px 6px 0;
-    flex: 0 0 auto;
-    transition: border-color 0.15s ease, background 0.15s ease;
+.br-rate-field .ig .ig-a,
+.br-rate-field .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 54px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    background: #f8fafc !important;
+    border: 1px solid #d1d5db !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 6px 6px 0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease !important;
 }
 
-.br-rate-field .ig:focus-within .ig-currency-box {
-    border-color: #3b82f6;
+.br-rate-field .ig:focus-within .ig-a,
+.br-rate-field .ig:focus-within .changeTextCurrency {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
 }
 
-.ig-currency-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: transparent;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1e293b;
-    padding: 0 26px 0 12px;
-    height: 100%;
-    min-height: 38px;
-    cursor: pointer;
-    line-height: normal;
+.br-card.is-free-service .br-bill-panel .ig input {
+    background-color: #f1f5f9 !important;
+    cursor: not-allowed !important;
 }
 
-.ig-currency-chevron {
-    position: absolute;
-    right: 9px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: #64748b;
-    pointer-events: none;
-}
-
-.br-card.is-free-service .br-bill-panel .ig-currency-box {
-    opacity: 0.6;
-    background: #f1f5f9;
-    cursor: not-allowed;
-}
-
-.br-card.is-free-service .br-bill-panel .ig-currency-select {
-    cursor: not-allowed;
+.br-card.is-free-service .br-bill-panel .ig-a,
+.br-card.is-free-service .br-bill-panel .changeTextCurrency {
+    opacity: 0.6 !important;
+    background: #f1f5f9 !important;
+    cursor: not-allowed !important;
 }
 
 /* Margin Summary dynamic difference amount */
@@ -1200,9 +1177,11 @@ textarea.has-validation-error:focus,
     background-color: #fef2f2 !important;
 }
 
-.br-rate-field.has-validation-error .ig .ig-currency-box {
+.br-rate-field.has-validation-error .ig .ig-a,
+.br-rate-field.has-validation-error .ig .changeTextCurrency {
     border: 1.5px solid #ef4444 !important;
     background-color: #fee2e2 !important;
+    color: #dc2626 !important;
 }
 
 #skillExperienceWrapper tr.has-validation-error input,
@@ -1246,15 +1225,6 @@ textarea.has-validation-error:focus,
     }
 }
 
-/* ── Scope ig-prefix strictly to rate field panels — prevent leaking elsewhere ── */
-.br-rate-field .ig-prefix {
-    /* intentionally inherit; already defined above */
-}
-/* Ensure ig-prefix is ONLY inside rate panels — no leakage */
-.fg .ig-prefix, .bd-field .ig-prefix, .addl-input-wrap .ig-prefix,
-.rm-picker-wrap .ig-prefix, form label .ig-prefix:not(.br-rate-field .ig-prefix) {
-    display: none !important;
-}
 
 /* ── Fix ITI phone flag floating over Gender label ── */
 /* The .iti__flag-container is position:absolute — contain it strictly inside the phone field */
