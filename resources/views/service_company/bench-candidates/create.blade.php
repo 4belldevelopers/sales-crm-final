@@ -578,7 +578,7 @@ if($snp_mode== 1){
                             'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
                         ];
                       @endphp
-                      <select name="nationality" id="nationality">
+                      <select name="nationality" id="nationality" data-minimum-results-for-search="0">
                         <option value="">Select nationality</option>
                         <optgroup label="⭐ Top 10 Popular Nationalities">
                           @foreach($topPopularNationalities as $natKey => $natItem)
@@ -599,7 +599,7 @@ if($snp_mode== 1){
                     <label>Highest Qualification <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
                       <i class="fa-solid fa-graduation-cap"></i>
-                      <select name="qualification" id="qualification">
+                      <select name="qualification" id="qualification" data-minimum-results-for-search="0">
                         <option value="">Select qualification</option>
                         @php
                           // Map incoming database qualification records by ID
@@ -3399,23 +3399,25 @@ $(document).ready(function () {
 
     $(document).ready(function() {
         if ($.fn.select2) {
-            // 1. Initialize Nationality Select2 with Country Synonym Search
+            // 1. Initialize Nationality Select2 with Guaranteed Search Box & Country Synonyms
             $('#nationality').select2({
                 width: '100%',
                 dropdownParent: $(document.body),
                 dropdownCssClass: 'jero-adaptive-dropdown',
                 placeholder: 'Select nationality',
                 allowClear: false,
+                minimumResultsForSearch: 0,
                 matcher: nationalityMatcher
             });
 
-            // 2. Initialize Highest Qualification Select2 with Adaptive Matcher & Origin Badges
+            // 2. Initialize Highest Qualification Select2 with Guaranteed Search Box, Adaptive Matcher & Badges
             $('#qualification').select2({
                 width: '100%',
                 dropdownParent: $(document.body),
                 dropdownCssClass: 'jero-adaptive-dropdown',
                 placeholder: 'Select qualification',
                 allowClear: false,
+                minimumResultsForSearch: 0,
                 matcher: adaptiveQualificationMatcher,
                 templateResult: function(data) {
                     if (!data.id) return data.text;
@@ -3433,6 +3435,16 @@ $(document).ready(function () {
                 },
                 templateSelection: function(data) {
                     return data.text;
+                }
+            });
+
+            // 2b. Auto-focus search input field when either dropdown is opened
+            $('#nationality, #qualification').on('select2:open', function() {
+                var searchField = document.querySelector('.select2-container--open .select2-search__field');
+                if (searchField) {
+                    setTimeout(function() {
+                        searchField.focus();
+                    }, 20);
                 }
             });
         }
