@@ -587,7 +587,7 @@ if($snp_mode== 1){
                         </optgroup>
                         <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
                           @foreach($allNationalities as $demonym => $countrySynonyms)
-                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
+                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
                           @endforeach
                         </optgroup>
                       </select>
@@ -732,7 +732,7 @@ if($snp_mode== 1){
                 <div class="bd-grid bd-grid--two">
                   <div class="fg fv-row bd-field">
                     <label>Gender <span class="rq">*</span></label>
-                    <div class="bd-control bd-control--select">
+                    <div class="bd-control">
                       <i class="fa-regular fa-user"></i>
                       <select name="gender" id="gender">
                         <option value="">Select gender</option>
@@ -3242,6 +3242,18 @@ $(document).ready(function () {
     function closeAllComboboxes() {
         $('.jero-custom-select').removeClass('is-open open-up');
         $('.jero-cs-trigger').attr('aria-expanded', 'false');
+        $('.bd-card').removeClass('has-active-combobox');
+    }
+
+    // Token-based, accent-insensitive and punctuation-insensitive string cleaner
+    function jeroCleanStr(str) {
+        if (!str) return '';
+        return str.toString()
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 
     // Build the Nationality Custom Combobox
@@ -3254,7 +3266,7 @@ $(document).ready(function () {
         var currentVal = ($select.val() || '').trim();
         var currentLabel = placeholder;
         if (currentVal) {
-            var $selOpt = $select.find('option:selected');
+            var $selOpt = $select.find('option:selected').first();
             if ($selOpt.length && $selOpt.val()) {
                 currentLabel = $selOpt.text();
             }
@@ -3283,6 +3295,7 @@ $(document).ready(function () {
 
         var $cs = $(html);
         var $list = $cs.find('.jero-cs-list');
+        var selectedItemDone = false;
 
         $select.children().each(function() {
             var $node = $(this);
@@ -3295,7 +3308,8 @@ $(document).ready(function () {
                     if (!val) return;
                     var text = $opt.text();
                     var synonyms = $opt.attr('data-synonyms') || '';
-                    var isSelected = (val === currentVal);
+                    var isSelected = (val === currentVal && !selectedItemDone);
+                    if (isSelected) selectedItemDone = true;
                     var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
                         '<span class="jero-cs-item-text">' + text + '</span>' +
                     '</div>');
@@ -3306,7 +3320,8 @@ $(document).ready(function () {
                 var val = $node.val();
                 var text = $node.text();
                 var synonyms = $node.attr('data-synonyms') || '';
-                var isSelected = (val === currentVal);
+                var isSelected = (val === currentVal && !selectedItemDone);
+                if (isSelected) selectedItemDone = true;
                 var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
                     '<span class="jero-cs-item-text">' + text + '</span>' +
                 '</div>');
@@ -3314,6 +3329,7 @@ $(document).ready(function () {
             }
         });
 
+        $select.closest('.bd-control').addClass('bd-control--has-combobox');
         $select.after($cs);
     }
 
@@ -3328,7 +3344,7 @@ $(document).ready(function () {
         var currentLabel = placeholder;
         var currentBadge = '';
         if (currentVal) {
-            var $selOpt = $select.find('option:selected');
+            var $selOpt = $select.find('option:selected').first();
             if ($selOpt.length && $selOpt.val()) {
                 currentLabel = $selOpt.text();
                 currentBadge = $selOpt.attr('data-badge') || '';
@@ -3359,6 +3375,7 @@ $(document).ready(function () {
 
         var $cs = $(html);
         var $list = $cs.find('.jero-cs-list');
+        var selectedItemDone = false;
 
         $select.children().each(function() {
             var $node = $(this);
@@ -3373,7 +3390,8 @@ $(document).ready(function () {
                     var regions = $opt.attr('data-regions') || 'Global';
                     var aliases = $opt.attr('data-aliases') || '';
                     var badge = $opt.attr('data-badge') || '';
-                    var isSelected = (val === currentVal);
+                    var isSelected = (val === currentVal && !selectedItemDone);
+                    if (isSelected) selectedItemDone = true;
                     var badgeHtml = badge ? '<span class="jero-cs-item-badge">' + badge + '</span>' : '';
                     var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-regions="' + regions + '" data-aliases="' + aliases + '" data-badge="' + badge + '">' +
                         '<span class="jero-cs-item-text">' + text + '</span>' +
@@ -3385,6 +3403,7 @@ $(document).ready(function () {
             }
         });
 
+        $select.closest('.bd-control').addClass('bd-control--has-combobox');
         $select.after($cs);
     }
 
@@ -3395,7 +3414,10 @@ $(document).ready(function () {
         var selectedNat = ($('#nationality').val() || '').trim();
         var selectedQual = ($('#qualification').val() || '').trim();
         var bucket = getRegionalBucket(selectedNat);
-        var query = ($cs.find('.jero-cs-search-input').val() || '').trim().toLowerCase().replace(/[.\/]/g, '');
+        var rawQuery = $cs.find('.jero-cs-search-input').val() || '';
+        var cleanQ = jeroCleanStr(rawQuery);
+        var compactQ = cleanQ.replace(/\s+/g, '');
+        var queryWords = cleanQ.split(' ').filter(Boolean);
         var totalVisible = 0;
 
         $cs.find('.jero-cs-group').each(function() {
@@ -3405,28 +3427,37 @@ $(document).ready(function () {
             $group.find('.jero-cs-item').each(function() {
                 var $item = $(this);
                 var val = String($item.attr('data-val') || '');
-                var text = ($item.find('.jero-cs-item-text').text() || '').toLowerCase().replace(/[.\/]/g, '');
-                var aliases = ($item.attr('data-aliases') || '').toLowerCase().replace(/[.\/]/g, '');
+                var text = $item.find('.jero-cs-item-text').text() || '';
+                var aliases = $item.attr('data-aliases') || '';
+                var badge = $item.attr('data-badge') || '';
                 var regions = ($item.attr('data-regions') || 'Global').split(',').map(function(r) { return r.trim(); });
 
                 var isMatch = false;
 
-                if (query.length > 0) {
-                    // Active search state: Global Unlock across 100% of degrees + aliases
-                    if (text.indexOf(query) !== -1) {
+                if (cleanQ.length > 0) {
+                    var cleanText = jeroCleanStr(text);
+                    var cleanAliases = jeroCleanStr(aliases);
+                    var cleanBadge = jeroCleanStr(badge);
+                    var combined = cleanText + ' ' + cleanAliases + ' ' + cleanBadge;
+                    var combinedCompact = combined.replace(/\s+/g, '');
+
+                    if (cleanText.indexOf(cleanQ) !== -1 || cleanAliases.indexOf(cleanQ) !== -1 || cleanBadge.indexOf(cleanQ) !== -1) {
                         isMatch = true;
-                    } else if (aliases) {
-                        var aliasParts = aliases.split(',');
-                        for (var i = 0; i < aliasParts.length; i++) {
-                            var ap = aliasParts[i].trim();
-                            if (ap && (ap.indexOf(query) !== -1 || query.indexOf(ap) !== -1)) {
-                                isMatch = true;
+                    } else if (combinedCompact.indexOf(compactQ) !== -1) {
+                        isMatch = true;
+                    } else if (queryWords.length > 0) {
+                        var allWordsMatch = true;
+                        for (var w = 0; w < queryWords.length; w++) {
+                            if (combined.indexOf(queryWords[w]) === -1 && combinedCompact.indexOf(queryWords[w]) === -1) {
+                                allWordsMatch = false;
                                 break;
                             }
                         }
+                        if (allWordsMatch) {
+                            isMatch = true;
+                        }
                     }
                 } else {
-                    // Idle state: Filter by Regional Bucket (Preserve current selection if selected)
                     if (selectedQual && val === selectedQual) {
                         isMatch = true;
                     } else if (bucket.indexOf('all') !== -1 || regions.indexOf('Global') !== -1) {
@@ -3442,25 +3473,25 @@ $(document).ready(function () {
                 }
 
                 if (isMatch) {
-                    $item.show();
+                    $item.removeClass('is-hidden').show();
                     groupVisible++;
                     totalVisible++;
                 } else {
-                    $item.hide();
+                    $item.addClass('is-hidden').hide();
                 }
             });
 
             if (groupVisible > 0) {
-                $group.show();
+                $group.removeClass('is-hidden').show();
             } else {
-                $group.hide();
+                $group.addClass('is-hidden').hide();
             }
         });
 
         if (totalVisible === 0) {
-            $cs.find('.jero-cs-empty').show();
+            $cs.find('.jero-cs-empty').removeClass('is-hidden').show();
         } else {
-            $cs.find('.jero-cs-empty').hide();
+            $cs.find('.jero-cs-empty').addClass('is-hidden').hide();
         }
     }
 
@@ -3468,7 +3499,10 @@ $(document).ready(function () {
     function filterNationalityItems() {
         var $cs = $('#jero-cs-nationality');
         if (!$cs.length) return;
-        var query = ($cs.find('.jero-cs-search-input').val() || '').trim().toLowerCase();
+        var rawQuery = $cs.find('.jero-cs-search-input').val() || '';
+        var cleanQ = jeroCleanStr(rawQuery);
+        var compactQ = cleanQ.replace(/\s+/g, '');
+        var queryWords = cleanQ.split(' ').filter(Boolean);
         var totalVisible = 0;
 
         $cs.find('.jero-cs-group').each(function() {
@@ -3477,45 +3511,58 @@ $(document).ready(function () {
 
             $group.find('.jero-cs-item').each(function() {
                 var $item = $(this);
-                var text = ($item.find('.jero-cs-item-text').text() || '').toLowerCase();
-                var synonyms = ($item.attr('data-synonyms') || '').toLowerCase();
+                var text = $item.find('.jero-cs-item-text').text() || '';
+                var synonyms = $item.attr('data-synonyms') || '';
+                var val = $item.attr('data-val') || '';
 
                 var isMatch = false;
-                if (!query) {
+                if (!cleanQ) {
                     isMatch = true;
-                } else if (text.indexOf(query) !== -1) {
-                    isMatch = true;
-                } else if (synonyms) {
-                    var synList = synonyms.split(',');
-                    for (var s = 0; s < synList.length; s++) {
-                        var syn = synList[s].trim();
-                        if (syn && (syn.indexOf(query) !== -1 || query.indexOf(syn) !== -1)) {
+                } else {
+                    var cleanText = jeroCleanStr(text);
+                    var cleanSynonyms = jeroCleanStr(synonyms);
+                    var cleanVal = jeroCleanStr(val);
+                    var combined = cleanText + ' ' + cleanSynonyms + ' ' + cleanVal;
+                    var combinedCompact = combined.replace(/\s+/g, '');
+
+                    if (cleanText.indexOf(cleanQ) !== -1 || cleanSynonyms.indexOf(cleanQ) !== -1 || cleanVal.indexOf(cleanQ) !== -1) {
+                        isMatch = true;
+                    } else if (combinedCompact.indexOf(compactQ) !== -1) {
+                        isMatch = true;
+                    } else if (queryWords.length > 0) {
+                        var allWordsMatch = true;
+                        for (var w = 0; w < queryWords.length; w++) {
+                            if (combined.indexOf(queryWords[w]) === -1 && combinedCompact.indexOf(queryWords[w]) === -1) {
+                                allWordsMatch = false;
+                                break;
+                            }
+                        }
+                        if (allWordsMatch) {
                             isMatch = true;
-                            break;
                         }
                     }
                 }
 
                 if (isMatch) {
-                    $item.show();
+                    $item.removeClass('is-hidden').show();
                     groupVisible++;
                     totalVisible++;
                 } else {
-                    $item.hide();
+                    $item.addClass('is-hidden').hide();
                 }
             });
 
             if (groupVisible > 0) {
-                $group.show();
+                $group.removeClass('is-hidden').show();
             } else {
-                $group.hide();
+                $group.addClass('is-hidden').hide();
             }
         });
 
         if (totalVisible === 0) {
-            $cs.find('.jero-cs-empty').show();
+            $cs.find('.jero-cs-empty').removeClass('is-hidden').show();
         } else {
-            $cs.find('.jero-cs-empty').hide();
+            $cs.find('.jero-cs-empty').addClass('is-hidden').hide();
         }
     }
 
@@ -3528,7 +3575,6 @@ $(document).ready(function () {
         closeAllComboboxes();
 
         if (!wasOpen) {
-            // Position check: check if near viewport bottom
             var rect = this.getBoundingClientRect();
             var spaceBelow = window.innerHeight - rect.bottom;
             if (spaceBelow < 340 && rect.top > 340) {
@@ -3539,8 +3585,8 @@ $(document).ready(function () {
 
             $combobox.addClass('is-open');
             $(this).attr('aria-expanded', 'true');
+            $combobox.closest('.bd-card').addClass('has-active-combobox');
 
-            // Reset and focus search input
             var $search = $combobox.find('.jero-cs-search-input');
             $search.val('');
             $combobox.find('.jero-cs-search-clear').hide();
@@ -3552,13 +3598,23 @@ $(document).ready(function () {
             }
 
             setTimeout(function() {
-                $search.focus();
-            }, 50);
+                $search.focus().select();
+            }, 60);
         }
     });
 
+    // Prevent clicks inside dropdown from bubbling and closing
+    $(document).on('click', '.jero-cs-dropdown', function(e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('click', '.jero-cs-search-box', function(e) {
+        e.stopPropagation();
+        $(this).find('.jero-cs-search-input').focus();
+    });
+
     // Search Input Typing Handler
-    $(document).on('input keyup', '.jero-cs-search-input', function(e) {
+    $(document).on('input keyup change', '.jero-cs-search-input', function(e) {
         if (e.which === 27 || e.which === 13 || e.which === 38 || e.which === 40) return;
         var $input = $(this);
         var val = $input.val();
@@ -3594,36 +3650,44 @@ $(document).ready(function () {
     // Keyboard Navigation: Escape, Arrows, Enter
     $(document).on('keydown', '.jero-custom-select.is-open', function(e) {
         var $combobox = $(this);
+        var $visibleItems = $combobox.find('.jero-cs-item:not(.is-hidden):visible');
+
         if (e.which === 27) { // Escape
             closeAllComboboxes();
             $combobox.find('.jero-cs-trigger').focus();
             e.preventDefault();
         } else if (e.which === 40) { // Arrow Down
-            var $visibleItems = $combobox.find('.jero-cs-item:visible');
             var $curr = $visibleItems.filter('.is-highlighted');
             var idx = $visibleItems.index($curr);
             $visibleItems.removeClass('is-highlighted');
             if (idx === -1 || idx >= $visibleItems.length - 1) {
-                $visibleItems.first().addClass('is-highlighted');
+                var $target = $visibleItems.first();
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
             } else {
-                $visibleItems.eq(idx + 1).addClass('is-highlighted');
+                var $target = $visibleItems.eq(idx + 1);
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
             }
             e.preventDefault();
         } else if (e.which === 38) { // Arrow Up
-            var $visibleItems = $combobox.find('.jero-cs-item:visible');
             var $curr = $visibleItems.filter('.is-highlighted');
             var idx = $visibleItems.index($curr);
             $visibleItems.removeClass('is-highlighted');
             if (idx <= 0) {
-                $visibleItems.last().addClass('is-highlighted');
+                var $target = $visibleItems.last();
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
             } else {
-                $visibleItems.eq(idx - 1).addClass('is-highlighted');
+                var $target = $visibleItems.eq(idx - 1);
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
             }
             e.preventDefault();
         } else if (e.which === 13) { // Enter
-            var $target = $combobox.find('.jero-cs-item:visible.is-highlighted');
+            var $target = $visibleItems.filter('.is-highlighted');
             if (!$target.length) {
-                $target = $combobox.find('.jero-cs-item:visible').first();
+                $target = $visibleItems.first();
             }
             if ($target.length) {
                 $target.trigger('click');
@@ -3648,11 +3712,9 @@ $(document).ready(function () {
         $('[data-field-error="nationality"]').remove();
         closeAllComboboxes();
 
-        // Authoritative synchronization with native select
         var $nativeNat = $('#nationality');
         $nativeNat.val(val).trigger('change');
 
-        // Check if currently selected qualification is invalid in new bucket
         var curQual = ($('#qualification').val() || '').trim();
         if (curQual && !isQualInBucket(curQual, val)) {
             $('#qualification').val('').trigger('change');
@@ -3711,13 +3773,12 @@ $(document).ready(function () {
         var val = $(this).val();
         var $cs = $('#jero-cs-nationality');
         if ($cs.length) {
-            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]');
+            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]').first();
+            $cs.find('.jero-cs-item').removeClass('is-selected');
             if ($item.length) {
-                $cs.find('.jero-cs-item').removeClass('is-selected');
                 $item.addClass('is-selected');
                 $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text());
             } else if (!val) {
-                $cs.find('.jero-cs-item').removeClass('is-selected');
                 $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select nationality');
             }
             filterQualificationItems();
@@ -3728,9 +3789,9 @@ $(document).ready(function () {
         var val = $(this).val();
         var $cs = $('#jero-cs-qualification');
         if ($cs.length) {
-            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]');
+            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]').first();
+            $cs.find('.jero-cs-item').removeClass('is-selected');
             if ($item.length) {
-                $cs.find('.jero-cs-item').removeClass('is-selected');
                 $item.addClass('is-selected');
                 $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text());
                 var badge = $item.attr('data-badge') || '';
@@ -3740,7 +3801,6 @@ $(document).ready(function () {
                     $cs.find('.jero-cs-badge').hide().text('');
                 }
             } else if (!val) {
-                $cs.find('.jero-cs-item').removeClass('is-selected');
                 $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select qualification');
                 $cs.find('.jero-cs-badge').hide().text('');
             }
