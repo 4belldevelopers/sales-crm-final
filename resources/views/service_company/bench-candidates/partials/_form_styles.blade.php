@@ -1245,6 +1245,138 @@ textarea.has-validation-error:focus,
         transform: translateY(0);
     }
 }
+
+/* ── Scope ig-prefix strictly to rate field panels — prevent leaking elsewhere ── */
+.br-rate-field .ig-prefix {
+    /* intentionally inherit; already defined above */
+}
+/* Ensure ig-prefix is ONLY inside rate panels — no leakage */
+.fg .ig-prefix, .bd-field .ig-prefix, .addl-input-wrap .ig-prefix,
+.rm-picker-wrap .ig-prefix, form label .ig-prefix:not(.br-rate-field .ig-prefix) {
+    display: none !important;
+}
+
+/* ── Fix ITI phone flag floating over Gender label ── */
+/* The .iti__flag-container is position:absolute — contain it strictly inside the phone field */
+.bd-phone-control,
+.fg.fv-row .bd-phone-control {
+    position: relative;
+    overflow: visible; /* allow ITI dropdown to show */
+}
+/* The ITI flag button must be contained within its own input wrapper */
+.bd-phone-control .iti {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+/* Force the gender/dob row label area above the ITI phone widget */
+.bd-grid--two .fg:first-child label,
+.bd-grid--two .fg:last-child label {
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+/* Ensure ITI stays in its grid cell — do NOT bleed into sibling cells */
+.bd-grid .bd-field:has(.iti__flag-container) {
+    overflow: clip;
+}
+
+/* ── Clean Single Relationship Manager Search Box (Removes inner box-in-box) ── */
+.rm-picker {
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 16px !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    cursor: pointer !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.rm-picker:hover,
+.rm-picker:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+.rm-picker .rm-search-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+    margin-right: 10px !important;
+    flex: 0 0 auto !important;
+}
+.rm-picker input#recruiter_display,
+.rm-picker input[type="text"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    font-size: 13.5px !important;
+    color: #0f172a !important;
+    cursor: pointer !important;
+}
+.rm-picker input#recruiter_display::placeholder {
+    color: #94a3b8 !important;
+    font-size: 13.5px !important;
+    font-weight: 400 !important;
+}
+.rm-picker .rm-input-placeholder {
+    display: none !important;
+}
+.rm-picker .rm-picker-divider {
+    display: none !important;
+}
+.rm-picker .rm-picker-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    color: #2563eb !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+    padding-left: 12px !important;
+    cursor: pointer !important;
+}
+.rm-picker .rm-picker-chevron {
+    display: none !important;
+}
+
+/* ── RM Drawer Sizing & Scrollability ── */
+#kt_activitiesRecruiter {
+    background: #ffffff !important;
+}
+#kt_activitiesRecruiter_body {
+    height: calc(100vh - 65px) !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+}
+#kt_activities_scroll {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: visible !important;
+}
+
+/* ── Save to Bench Stage button — ensure it re-enables after error ── */
+#save-form:not([data-kt-indicator="on"]) {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+#save-form[disabled]:not([data-kt-indicator="on"]) {
+    pointer-events: auto !important;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />
