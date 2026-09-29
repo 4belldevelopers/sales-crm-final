@@ -6111,7 +6111,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         // Merge both collections
         $this->team = $topUsers->merge($remainingUsers);
 
-        if (strpos(url()->previous(), 'bench-candidates') !== false) {
+        if (strpos(url()->previous(), 'bench-candidates') !== false || request('from') === 'bench-candidates') {
             $view = view('service_company.jobs.relationship-manager', $this->data)->render();
         } else {
             $view = view('service_company.jobs.recruiter', $this->data)->render();

@@ -737,6 +737,75 @@ body { overflow-x: hidden; }
     width: 100%;
 }
 
+/* ── Currency Symbol Prefix inside input box (enterprise-grade ig-prefix) ── */
+.ig-prefix {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 36px;
+    height: 38px;
+    padding: 0 10px;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fb 100%);
+    border: 1px solid #d1d5db;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a5f;
+    letter-spacing: 0;
+    white-space: nowrap;
+    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* When input is focused, prefix box highlights too */
+.br-rate-field .ig:focus-within .ig-prefix {
+    background: linear-gradient(135deg, #e0eaff 0%, #dbeafe 100%);
+    color: #1d4ed8;
+    border-color: #3b82f6;
+}
+
+/* When prefix is present, remove border-radius from input left side */
+.ig-prefix ~ input {
+    border-radius: 0 !important;
+    padding-left: 10px !important;
+}
+
+/* ── USD Conversion label (≈ $X.XX) — enterprise light style ── */
+label span[id$="_usd"] {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0369a1;
+    background: #e0f2fe;
+    border-radius: 4px;
+    padding: 1px 6px;
+    line-height: 1.6;
+    vertical-align: middle;
+}
+
+/* ── br-panel-icon: Fix icon box sizing and alignment ── */
+.br-panel-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 10px !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+}
+.br-panel-icon i {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+
 .br-rate-field .ig input {
     flex: 1 1 auto;
     min-width: 0;
@@ -1175,6 +1244,146 @@ textarea.has-validation-error:focus,
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* ── Scope ig-prefix strictly to rate field panels — prevent leaking elsewhere ── */
+.br-rate-field .ig-prefix {
+    /* intentionally inherit; already defined above */
+}
+/* Ensure ig-prefix is ONLY inside rate panels — no leakage */
+.fg .ig-prefix, .bd-field .ig-prefix, .addl-input-wrap .ig-prefix,
+.rm-picker-wrap .ig-prefix, form label .ig-prefix:not(.br-rate-field .ig-prefix) {
+    display: none !important;
+}
+
+/* ── Fix ITI phone flag floating over Gender label ── */
+/* The .iti__flag-container is position:absolute — contain it strictly inside the phone field */
+.bd-phone-control,
+.fg.fv-row .bd-phone-control {
+    position: relative;
+    overflow: visible; /* allow ITI dropdown to show */
+}
+/* The ITI flag button must be contained within its own input wrapper */
+.bd-phone-control .iti {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+/* Force the gender/dob row label area above the ITI phone widget */
+.bd-grid--two .fg:first-child label,
+.bd-grid--two .fg:last-child label {
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+/* Ensure ITI stays in its grid cell — do NOT bleed into sibling cells */
+.bd-grid .bd-field:has(.iti__flag-container) {
+    overflow: clip;
+}
+
+/* ── Clean Single Relationship Manager Search Box (Removes inner box-in-box) ── */
+.rm-picker {
+    display: flex !important;
+    align-items: center !important;
+    position: relative !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 16px !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    cursor: pointer !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.rm-picker:hover,
+.rm-picker:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+.rm-picker .rm-search-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94a3b8 !important;
+    font-size: 14px !important;
+    margin-right: 10px !important;
+    flex: 0 0 auto !important;
+}
+.rm-picker input#recruiter_display,
+.rm-picker input[type="text"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    font-size: 13.5px !important;
+    color: #0f172a !important;
+    cursor: pointer !important;
+}
+.rm-picker input#recruiter_display::placeholder {
+    color: #94a3b8 !important;
+    font-size: 13.5px !important;
+    font-weight: 400 !important;
+}
+.rm-picker .rm-input-placeholder {
+    display: none !important;
+}
+.rm-picker .rm-picker-divider {
+    display: none !important;
+}
+.rm-picker .rm-picker-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    color: #2563eb !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+    padding-left: 12px !important;
+    cursor: pointer !important;
+}
+.rm-picker .rm-picker-chevron {
+    display: none !important;
+}
+
+/* ── RM Drawer Sizing & Scrollability ── */
+#kt_activitiesRecruiter {
+    background: #ffffff !important;
+}
+#kt_activitiesRecruiter_body {
+    height: calc(100vh - 65px) !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+}
+#kt_activities_scroll {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: visible !important;
+}
+
+/* ── Save to Bench Stage button — ensure it re-enables after error ── */
+#save-form:not([data-kt-indicator="on"]) {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+#save-form[disabled]:not([data-kt-indicator="on"]) {
+    pointer-events: auto !important;
+}
+
+/* ── Proficiency Rating Yellow Star Icons ── */
+.se-enterprise-dropdown .fa-star,
+.select2-results__option .fa-star,
+.select2-selection__rendered .fa-star,
+.se-field--select .fa-star {
+    color: #f59e0b !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
