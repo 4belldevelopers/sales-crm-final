@@ -169,6 +169,16 @@ if($snp_mode== 1){
             <input type="hidden" name="hidden_percentage_hike" id="hidden_percentage_hike" value="{{ @$application->percentage_hike }}">
             <input type="hidden" name="hidden_comission_type" id="hidden_comission_type" value="{{ @$application->comission_type ?? 2 }}">
           <div class="fc">
+            <!-- Enterprise Pre-Submit Validation Notification Box -->
+            <div id="formValidationNotificationBox" class="alert alert-danger d-none mb-4" role="alert" style="border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; padding: 14px 18px;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fa-solid fa-triangle-exclamation me-2 fs-5 text-danger" aria-hidden="true"></i>
+                    <strong style="font-size: 13.5px;">Please correct the following fields before submission:</strong>
+                    <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#formValidationNotificationBox').addClass('d-none');" style="font-size: 10px;"></button>
+                </div>
+                <ul id="formValidationNotificationList" class="mb-0 ps-4" style="font-size: 12.5px; line-height: 1.7; font-weight: 500;">
+                </ul>
+            </div>
             @if(@$page_event != 'EDIT')
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
@@ -3214,6 +3224,9 @@ function handleTalentSubmissionSuccess(response) {
         return false;
     }
 
+    // Hide any previous in-page validation alert
+    $('#formValidationNotificationBox').addClass('d-none');
+
     const redirectUrl = response.redirect_url || response.url || '{{ route("service_company.bench-candidates.index") }}';
     let redirectExecuted = false;
 
@@ -3224,9 +3237,18 @@ function handleTalentSubmissionSuccess(response) {
         }
     }
 
+    var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT';
+    var defaultSuccess = isEditMode ? "Inhouse Talent Updated Successfully" : "Inhouse Talent Added Successfully";
+    var successTitle = (response && response.message) ? response.message : defaultSuccess;
+    // Map legacy 'Job Application' text if present in any cached response
+    if (successTitle.toLowerCase().indexOf('job application') !== -1) {
+        successTitle = defaultSuccess;
+    }
+
     // 1. Primary: SweetAlert confirmation button
     Swal.fire({
-        text: response.message || "Talent profile saved successfully!",
+        title: successTitle,
+        text: isEditMode ? "Talent details have been updated successfully." : "Inhouse talent profile has been added successfully.",
         icon: "success",
         buttonsStyling: false,
         confirmButtonText: "View Bench Listing",
@@ -3235,6 +3257,10 @@ function handleTalentSubmissionSuccess(response) {
         executeRedirect();
     });
 
+    if (typeof toastr !== 'undefined') {
+        toastr.success(successTitle);
+    }
+
     // 2. Secondary: Guaranteed hard timer fallback (2,200ms)
     setTimeout(executeRedirect, 2200);
 
@@ -3242,6 +3268,121 @@ function handleTalentSubmissionSuccess(response) {
     window.addEventListener('beforeunload', function() {
         redirectExecuted = true;
     });
+}
+
+/**
+ * Collects specific failed validation messages from FormValidation and DOM
+ */
+function collectFormValidationErrors(formEl, validatorInstance) {
+    var errorList = [];
+    var fieldLabelMap = {
+        'full_name': 'Full name',
+        'kt_tagify_work_location': 'Current Location',
+        'current_designation': 'Current designation',
+        'employmentType': 'Employment Type',
+        'phone': 'Primary mobile number',
+        'secondary_mobile': 'Secondary mobile number',
+        'email': 'Primary email',
+        'qualification': 'Qualification',
+        'total_exp': 'Total Experience',
+        'rel_exp': 'Relevant Experience',
+        'pay_rate': 'Pay rate',
+        'bill_rate': 'Bill rate',
+        'comission_type': 'Comission type',
+        'recruiter': 'Internal team / recruiter',
+        'specialties': 'Specialties'
+    };
+
+    if (formEl) {
+        // Collect rendered messages from FormValidation
+        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block, .fv-plugins-message-container [data-validator], .fv-plugins-message-container.invalid-feedback');
+        msgEls.forEach(function (el) {
+            var txt = (el.innerText || el.textContent || '').trim();
+            if (txt && txt !== '' && errorList.indexOf(txt) === -1) {
+                errorList.push(txt);
+            }
+        });
+    }
+
+    // Direct inspect if FormValidation messages are not yet in DOM
+    if (errorList.length === 0 && formEl) {
+        Object.keys(fieldLabelMap).forEach(function (fieldName) {
+            var el = formEl.querySelector('[name="' + fieldName + '"]');
+            if (el) {
+                var val = $(el).val();
+                if (fieldName === 'phone') {
+                    if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
+                        errorList.push('Primary number is required and must be valid for the selected country');
+                    }
+                } else if (fieldName === 'email') {
+                    if (!val || !val.trim() || !/\S+@\S+\.\S+/.test(val)) {
+                        errorList.push('A valid Primary email is required');
+                    }
+                } else if (!val || !String(val).trim()) {
+                    errorList.push(fieldLabelMap[fieldName] + ' is required');
+                }
+            }
+        });
+    }
+
+    return errorList;
+}
+
+/**
+ * Enterprise Notification Box on Validation Failure
+ */
+function displayValidationErrorsNotification(errorList, formEl) {
+    if (!errorList || !errorList.length) {
+        errorList = ['Please check all mandatory fields marked with an asterisk (*) and provide valid details.'];
+    }
+
+    // 1. In-page notification box at top of form
+    var box = $('#formValidationNotificationBox');
+    var list = $('#formValidationNotificationList');
+    if (box.length && list.length) {
+        list.empty();
+        errorList.forEach(function (msg) {
+            list.append('<li class="mb-1"><i class="fa-solid fa-circle-exclamation me-1" style="color: #ef4444; font-size: 11px;"></i> ' + $('<div>').text(msg).html() + '</li>');
+        });
+        box.removeClass('d-none');
+    }
+
+    // 2. Enterprise modal notification box
+    var alertHtml = '<div style="text-align: left; max-height: 250px; overflow-y: auto; padding: 4px 6px; font-size: 13px;">';
+    alertHtml += '<p style="margin-bottom: 10px; font-weight: 600; color: #1e293b;">The following validation' + (errorList.length > 1 ? 's' : '') + ' failed before submission:</p>';
+    alertHtml += '<ul style="margin: 0; padding-left: 18px; color: #dc2626; line-height: 1.6;">';
+    errorList.forEach(function (err) {
+        alertHtml += '<li style="margin-bottom: 4px;"><strong>' + $('<div>').text(err).html() + '</strong></li>';
+    });
+    alertHtml += '</ul>';
+    alertHtml += '<p style="margin-top: 10px; margin-bottom: 0; font-size: 11.5px; color: #64748b;">Please resolve these fields and click submit again.</p>';
+    alertHtml += '</div>';
+
+    Swal.fire({
+        title: "Validation Incomplete",
+        html: alertHtml,
+        icon: "warning",
+        buttonsStyling: false,
+        confirmButtonText: "Review & Fix",
+        customClass: {
+            confirmButton: "btn btn-primary btn-sm"
+        }
+    }).then(function () {
+        // Scroll to first invalid field or top notification box
+        var firstInvalid = formEl ? formEl.querySelector('.is-invalid, .fv-plugins-message-container:not(:empty)') : null;
+        if (firstInvalid) {
+            var fvRow = firstInvalid.closest('.fv-row') || firstInvalid;
+            fvRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var inp = fvRow.querySelector('input, select, textarea');
+            if (inp) inp.focus();
+        } else if (box.length) {
+            box[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    if (typeof toastr !== 'undefined') {
+        toastr.error('Validation failed: ' + errorList.length + ' field' + (errorList.length > 1 ? 's' : '') + ' require attention.');
+    }
 }
 
 @php if(@$page_event != 'EDIT'){  @endphp
@@ -3378,15 +3519,8 @@ var KTAddCandidate = function () {
                        
                     }, 500);
                 } else {
-							Swal.fire({
-										text				: "Sorry, looks like there are some errors detected, please try again.",
-										icon				: "error",
-										buttonsStyling		: false,
-										confirmButtonText	: "Ok, got it!",
-										customClass			: {
-																	confirmButton: "btn btn-primary"
-															  }
-							});
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form);
                 }
             });
         });
@@ -3512,15 +3646,8 @@ var KTEditCandidate = function () {
 
                     }, 500);
                 } else {
-							Swal.fire({
-										text				: "Sorry, looks like there are some errors detected, please try again.",
-										icon				: "error",
-										buttonsStyling		: false,
-										confirmButtonText	: "Ok, got it!",
-										customClass			: {
-																	confirmButton: "btn btn-primary"
-															  }
-							});
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form);
                 }
             });
         });
