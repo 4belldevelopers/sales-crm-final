@@ -169,16 +169,6 @@ if($snp_mode== 1){
             <input type="hidden" name="hidden_percentage_hike" id="hidden_percentage_hike" value="{{ @$application->percentage_hike }}">
             <input type="hidden" name="hidden_comission_type" id="hidden_comission_type" value="{{ @$application->comission_type ?? 2 }}">
           <div class="fc">
-            <!-- Enterprise Pre-Submit Validation Notification Box -->
-            <div id="formValidationNotificationBox" class="alert alert-danger d-none mb-4" role="alert" style="border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; padding: 14px 18px;">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="fa-solid fa-triangle-exclamation me-2 fs-5 text-danger" aria-hidden="true"></i>
-                    <strong style="font-size: 13.5px;">Please correct the following fields before submission:</strong>
-                    <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#formValidationNotificationBox').addClass('d-none');" style="font-size: 10px;"></button>
-                </div>
-                <ul id="formValidationNotificationList" class="mb-0 ps-4" style="font-size: 12.5px; line-height: 1.7; font-weight: 500;">
-                </ul>
-            </div>
             @if(@$page_event != 'EDIT')
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
@@ -522,7 +512,7 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Nationality</label>
+                    <label>Nationality <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
                       <i class="fa-regular fa-flag"></i>
                       <select name="nationality" id="nationality">
@@ -573,10 +563,11 @@ if($snp_mode== 1){
                   </summary>
                   <div class="bd-grid bd-grid--two bd-extra-grid">
                     <div class="fg fv-row bd-field">
-                      <label>Gender</label>
+                      <label>Gender <span class="rq">*</span></label>
                       <div class="bd-control bd-control--select">
                         <i class="fa-regular fa-user"></i>
                         <select name="gender" id="gender">
+                          <option value="">Select gender</option>
                           <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
                           <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
                           <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
@@ -1097,7 +1088,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payrateannual"></span>
                       </div>
@@ -1105,7 +1111,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payratemonthly"></span>
                       </div>
@@ -1113,7 +1134,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payratehourly"></span>
                       </div>
@@ -1128,6 +1164,17 @@ if($snp_mode== 1){
                     </div>
 
                     <div class="br-rate-panel br-bill-panel">
+                      <!-- Free Service Bill Rate Hover Notification -->
+                      <div class="br-free-bill-hover-notice" id="brFreeBillHoverNotice" style="display:none;" role="status" aria-live="polite">
+                        <div class="br-free-bill-hover-inner">
+                          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                          <div class="br-free-bill-hover-text">
+                            <strong>Client Bill Rate Not Applicable</strong>
+                            <span>Free Service is selected for this talent. Under this commercial tier, client billing is completely waived and no charges are applied.</span>
+                          </div>
+                        </div>
+                      </div>
+
                       <div class="br-panel-head">
                         <span class="br-panel-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                         <span>
@@ -1144,7 +1191,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billrateannual"></span>
                       </div>
@@ -1152,7 +1214,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billratemonthly"></span>
                       </div>
@@ -1160,7 +1237,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billratehourly"></span>
                       </div>
@@ -1185,8 +1277,9 @@ if($snp_mode== 1){
                       <div class="br-margin-list">
                         <span><em id="br_summary_pay_label">Annual Pay Rate</em><b id="br_summary_pay_annual">0</b></span>
                         <span><em id="br_summary_bill_label">Annual Bill Rate</em><b id="br_summary_bill_annual">0</b></span>
-                        <span><em id="br_summary_margin_label">Annual Margin</em><b id="br_summary_margin">0</b></span>
+                        <span><em id="br_summary_diff_label">Margin Difference Amount</em><b id="br_summary_margin_diff">0</b></span>
                         <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
+                        <span><em id="br_summary_model_label">Commercial Model</em><b id="br_summary_model">Paid Service</b></span>
                       </div>
                       <div class="br-margin-state">
                         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
@@ -1464,6 +1557,46 @@ if($snp_mode== 1){
   </div>
 </div>
 
+<!-- Enterprise Complete Required Fields Modal (media_1790668032103.png) -->
+<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+    <div class="rf-modal-box">
+        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+
+        <!-- Warning Icon (Yellow circle with exclamation) -->
+        <div class="rf-warning-icon-wrap" aria-hidden="true">
+            <span class="rf-warning-icon">!</span>
+        </div>
+
+        <!-- Title -->
+        <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+
+        <!-- Description -->
+        <p class="rf-modal-desc" id="rfModalDesc">
+            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
+        </p>
+
+        <!-- Section Heading -->
+        <div class="rf-section-header">REQUIRED FIELDS</div>
+
+        <!-- Interactive Fields List -->
+        <div class="rf-fields-list" id="rfFieldsList">
+        </div>
+
+        <!-- Helper text -->
+        <div class="rf-helper-text">
+            <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+            <span>Click a field above to jump directly to it.</span>
+        </div>
+
+        <!-- Primary CTA -->
+        <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+            <span>Review Required Fields</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
 
 @endsection
 
@@ -2262,16 +2395,21 @@ $(document).ready(function () {
         $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
         $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
 
+        let activeCurrName = $('#pay_rate_currency option:selected').text().trim() || 
+                             $('.br-pay-currency-select option:selected').first().text().trim() || '';
+
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
             $('#br_bill_hourly_display').text('No billing');
             $('#br_summary_pay_label').text(modeConfig.payLabel);
             $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_diff_label').text('Margin Difference Amount');
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_model_label').text('Commercial Model');
             $('#br_summary_bill_annual').text('Disabled');
-            $('#br_summary_margin').text('Not billed');
-            $('#br_summary_percent').text('Free Service');
+            $('#br_summary_margin_diff').text('Not Applicable (Free Service)').removeClass('is-positive is-negative is-neutral').addClass('is-free');
+            $('#br_summary_percent').text('0.00%');
+            $('#br_summary_model').text('Free Service');
             $('.br-margin-state').removeClass('is-low').addClass('is-free');
             $('#br_margin_status').text('Free Service Selected');
             $('#br_margin_note').text('This talent will be offered to clients without commercial billing. Client bill rate is not required.');
@@ -2279,12 +2417,24 @@ $(document).ready(function () {
             $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
             $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
             $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_bill_label').text(modeConfig.billLabel);
+            $('#br_summary_diff_label').text('Margin Difference Amount');
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_model_label').text('Commercial Model');
             $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
-            $('#br_summary_margin').text(commercialFormat(margin) + ' (' + commercialFormat(displayedPercent, '%') + ')');
-            $('#br_summary_percent').text('Paid Service');
+
+            let diffSign = margin > 0 ? '+' : '';
+            let formattedDiff = (modeConfig.baseBill > 0 || modeConfig.basePay > 0)
+                ? (diffSign + commercialFormat(margin) + (activeCurrName ? ' ' + activeCurrName : ''))
+                : '0.00' + (activeCurrName ? ' ' + activeCurrName : '');
+
+            $('#br_summary_margin_diff')
+                .text(formattedDiff)
+                .removeClass('is-positive is-negative is-free is-neutral')
+                .addClass(margin > 0 ? 'is-positive' : (margin < 0 ? 'is-negative' : 'is-neutral'));
+
+            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
+            $('#br_summary_model').text('Paid Service');
             $('.br-margin-state').removeClass('is-free').toggleClass('is-low', needsMarginReview);
             $('#br_margin_status').text(needsMarginReview ? 'Review Margin' : 'Paid Service Selected');
             $('#br_margin_note').text(needsMarginReview ? 'Please review the configured bill rate.' : 'Client will be billed. Set pay rate, bill rate and manage margin.');
@@ -2333,6 +2483,7 @@ $(document).ready(function () {
         }
 
         billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
+        $('.br-bill-currency-select').prop('disabled', isFree);
         $('.br-card').toggleClass('is-free-service', isFree).toggleClass('is-paid-service', !isFree);
         $('.br-bill-panel').toggleClass('is-locked', isFree);
         syncCommercialCards();
@@ -2354,6 +2505,23 @@ $(document).ready(function () {
 
     $(document).on('change', '#comission_type', applyCommercialMode);
     $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment', refreshCommercialSummary);
+
+    // Free Service Client Bill Rate Hover Interaction (Enterprise feedback)
+    $(document).on('mouseenter', '.br-bill-panel', function () {
+        if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) {
+            $('#brFreeBillHoverNotice').stop(true, true).fadeIn(150);
+        }
+    });
+
+    $(document).on('mouseleave', '.br-bill-panel', function () {
+        $('#brFreeBillHoverNotice').stop(true, true).fadeOut(120);
+    });
+
+    $(document).on('click', '.br-card.is-free-service .br-bill-panel', function () {
+        if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) {
+            $('#brFreeBillHoverNotice').stop(true, true).fadeIn(120).delay(2200).fadeOut(200);
+        }
+    });
 
     window.isFreeCommercialMode = isFreeCommercialMode;
     window.refreshCommercialSummary = refreshCommercialSummary;
@@ -2566,20 +2734,50 @@ $(document).ready(function () {
     }
 
 
-    $('#pay_rate_currency').on('change', function () {
+    function syncAllCommercialCurrencies(currencyVal) {
+        if (!currencyVal) return;
+
+        // 1. Sync header currency
+        $('#pay_rate_currency').val(currencyVal);
+
+        // 2. Sync hidden selects
+        $('#bill_rate_currency').val(currencyVal);
+        $('#current_th_cur').val(currencyVal);
+
+        // 3. Sync Pay Rate currency dropdowns
+        $('.br-pay-currency-select').val(currencyVal);
+
+        // 4. Sync Bill Rate currency dropdowns
+        $('.br-bill-currency-select').val(currencyVal);
+
+        // 5. Update text for any legacy badge/spans
+        let selectedText = $('#pay_rate_currency option:selected').text().trim() ||
+                           $('.br-pay-currency-select option:selected').first().text().trim() ||
+                           '';
+        if (selectedText) {
+            $('.changeTextCurrency').text(selectedText);
+        }
+
         updatePayUI();
         updateBillUI();
+        refreshCommercialSummary();
+    }
+
+    $(document).on('change', '#pay_rate_currency, #bill_rate_currency, .br-pay-currency-select, .br-bill-currency-select', function () {
+        let val = $(this).val();
+        syncAllCommercialCurrencies(val);
     });
-    $('#bill_rate_currency').on('change', function () {
-        updateBillUI();
-        updatePayUI();
-    });
+
     setTimeout(() => {
-          applyCommercialMode();
-          payRateUpdate();
-          billRateUpdate();
-          refreshCommercialSummary();
-      }, 1000);
+        let initCurr = $('#pay_rate_currency').val() || $('.br-pay-currency-select').first().val();
+        if (initCurr) {
+            syncAllCommercialCurrencies(initCurr);
+        }
+        applyCommercialMode();
+        payRateUpdate();
+        billRateUpdate();
+        refreshCommercialSummary();
+    }, 1000);
 
     
 
@@ -3180,12 +3378,18 @@ document.addEventListener('DOMContentLoaded', function () {
   });  		
   
   $('body').on('change', '#pay_rate_currency', function(){
-   			var	pay_rate_currency		=	$(this).val();
-			document.getElementById("bill_rate_currency").selectedIndex = pay_rate_currency;
+      if (typeof syncAllCommercialCurrencies === 'function') {
+          syncAllCommercialCurrencies($(this).val());
+      } else {
+          $('#bill_rate_currency').val($(this).val());
+      }
    });
    $('body').on('change', '#bill_rate_currency', function(){
-   			var	bill_rate_currency		=	$(this).val();
-			document.getElementById("pay_rate_currency").selectedIndex = bill_rate_currency;
+      if (typeof syncAllCommercialCurrencies === 'function') {
+          syncAllCommercialCurrencies($(this).val());
+      } else {
+          $('#pay_rate_currency').val($(this).val());
+      }
    });
    $('body').on('change', '#pay_rate_mode', function(){
    			var	pay_rate_mode	=	$(this).val();
@@ -3270,119 +3474,454 @@ function handleTalentSubmissionSuccess(response) {
     });
 }
 
-/**
- * Collects specific failed validation messages from FormValidation and DOM
- */
-function collectFormValidationErrors(formEl, validatorInstance) {
-    var errorList = [];
-    var fieldLabelMap = {
-        'full_name': 'Full name',
-        'kt_tagify_work_location': 'Current Location',
-        'current_designation': 'Current designation',
-        'employmentType': 'Employment Type',
-        'phone': 'Primary mobile number',
-        'secondary_mobile': 'Secondary mobile number',
-        'email': 'Primary email',
-        'qualification': 'Qualification',
-        'total_exp': 'Total Experience',
-        'rel_exp': 'Relevant Experience',
-        'pay_rate': 'Pay rate',
-        'bill_rate': 'Bill rate',
-        'comission_type': 'Comission type',
-        'recruiter': 'Internal team / recruiter',
-        'specialties': 'Specialties'
-    };
+var fieldConfigMap = {
+    'resume': { label: 'Upload Resume', selector: '#uploadBox' },
+    'careersummary': { label: 'Professional Summary', selector: '#careersummary' },
+    'full_name': { label: 'Full Name', selector: '#full_name' },
+    'email': { label: 'Primary Email', selector: '#email' },
+    'phone': { label: 'Primary Phone', selector: '#phone' },
+    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location' },
+    'qualification': { label: 'Highest Qualification', selector: '#qualification' },
+    'nationality': { label: 'Nationality', selector: '#nationality' },
+    'gender': { label: 'Gender', selector: '#gender' },
+    'current_company': { label: 'Current Company', selector: '#current_company' },
+    'current_designation': { label: 'Current Designation', selector: '#current_designation' },
+    'employmentType': { label: 'Employment Type', selector: '#EmploymentType' },
+    'total_exp': { label: 'Total Experience', selector: '#total_exp_year' },
+    'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year' },
+    'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period' },
+    'np_id': { label: 'Available From Date', selector: '#np_id_display' },
+    'wm': { label: 'Preferred Work Mode', selector: '#wr' },
+    'pay_rate': { label: 'Candidate Cost (Pay Rate)', selector: '#pay_annual' },
+    'bill_rate': { label: 'Client Bill Rate', selector: '#bill_annual' },
+    'skills': { label: 'Skills & Expertise (Min. 3 Complete Skills)', selector: '#skillExperienceWrapper' },
+    'recruiter': { label: 'Relationship Manager', selector: '#recruiter' }
+};
 
+window.__currentMissingFields = [];
+
+function collectFormValidationErrors(formEl, validatorInstance) {
+    var errors = [];
     if (formEl) {
-        // Collect rendered messages from FormValidation
-        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block, .fv-plugins-message-container [data-validator], .fv-plugins-message-container.invalid-feedback');
+        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block');
         msgEls.forEach(function (el) {
             var txt = (el.innerText || el.textContent || '').trim();
-            if (txt && txt !== '' && errorList.indexOf(txt) === -1) {
-                errorList.push(txt);
+            if (txt && errors.indexOf(txt) === -1) {
+                errors.push(txt);
             }
         });
     }
-
-    // Direct inspect if FormValidation messages are not yet in DOM
-    if (errorList.length === 0 && formEl) {
-        Object.keys(fieldLabelMap).forEach(function (fieldName) {
-            var el = formEl.querySelector('[name="' + fieldName + '"]');
-            if (el) {
-                var val = $(el).val();
-                if (fieldName === 'phone') {
-                    if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
-                        errorList.push('Primary number is required and must be valid for the selected country');
-                    }
-                } else if (fieldName === 'email') {
-                    if (!val || !val.trim() || !/\S+@\S+\.\S+/.test(val)) {
-                        errorList.push('A valid Primary email is required');
-                    }
-                } else if (!val || !String(val).trim()) {
-                    errorList.push(fieldLabelMap[fieldName] + ' is required');
-                }
-            }
-        });
-    }
-
-    return errorList;
+    return errors;
 }
 
-/**
- * Enterprise Notification Box on Validation Failure
- */
-function displayValidationErrorsNotification(errorList, formEl) {
-    if (!errorList || !errorList.length) {
-        errorList = ['Please check all mandatory fields marked with an asterisk (*) and provide valid details.'];
+function validateSkillsAndExpertise() {
+    var $rows = $('#skillExperienceWrapper tr');
+    var completeSkills = [];
+    var incompleteRows = [];
+
+    $rows.each(function (idx, tr) {
+        var $tr = $(tr);
+        var skillName = ($tr.find('input[name="skills[]"]').val() || '').trim();
+        var years = $tr.find('select[name="years[]"]').val();
+        var rating = $tr.find('select[name="ratings[]"]').val();
+
+        var hasSkill = skillName !== '';
+        var hasYears = (years !== '' && years !== null && years !== undefined);
+        var hasRating = (rating !== '' && rating !== null && rating !== undefined);
+
+        var hasAnyDetail = hasSkill || hasYears || hasRating;
+
+        if (hasAnyDetail) {
+            if (hasSkill && hasYears && hasRating) {
+                completeSkills.push({
+                    rowEl: tr,
+                    index: idx,
+                    skillName: skillName,
+                    years: years,
+                    rating: rating
+                });
+            } else {
+                incompleteRows.push({
+                    rowEl: tr,
+                    index: idx,
+                    skillName: skillName,
+                    missingSkill: !hasSkill,
+                    missingYears: !hasYears,
+                    missingRating: !hasRating
+                });
+            }
+        }
+    });
+
+    if (incompleteRows.length > 0) {
+        var firstInc = incompleteRows[0];
+        var detailDesc = [];
+        if (firstInc.missingSkill) detailDesc.push('Skill Name');
+        if (firstInc.missingYears) detailDesc.push('Experience');
+        if (firstInc.missingRating) detailDesc.push('Rating');
+
+        return {
+            valid: false,
+            type: 'incomplete',
+            label: 'Skills & Expertise (Provide ' + detailDesc.join(', ') + ' or delete row)',
+            targetRow: firstInc.rowEl,
+            missingDetail: detailDesc.join(', '),
+            count: completeSkills.length
+        };
     }
 
-    // 1. In-page notification box at top of form
-    var box = $('#formValidationNotificationBox');
-    var list = $('#formValidationNotificationList');
-    if (box.length && list.length) {
-        list.empty();
-        errorList.forEach(function (msg) {
-            list.append('<li class="mb-1"><i class="fa-solid fa-circle-exclamation me-1" style="color: #ef4444; font-size: 11px;"></i> ' + $('<div>').text(msg).html() + '</li>');
+    if (completeSkills.length < 3) {
+        return {
+            valid: false,
+            type: 'min_count',
+            label: 'Skills & Expertise (Minimum 3 Complete Skills Required &mdash; ' + completeSkills.length + '/3 Added)',
+            targetRow: null,
+            count: completeSkills.length
+        };
+    }
+
+    return {
+        valid: true,
+        count: completeSkills.length
+    };
+}
+
+function detectMissingFields(formEl, validatorInstance) {
+    var missing = [];
+    var seenKeys = {};
+
+    function addMissing(key, customLabel, customSelector) {
+        if (!seenKeys[key]) {
+            seenKeys[key] = true;
+            var cfg = fieldConfigMap[key] || {};
+            missing.push({
+                key: key,
+                label: customLabel || cfg.label || key,
+                selector: customSelector || cfg.selector || ('#' + key)
+            });
+        }
+    }
+
+    // 1. Upload Resume (Mandatory)
+    var hasResume = false;
+    if ($('#resumeCheck').val() === '1' || ($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) || ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim())) {
+        hasResume = true;
+    } else {
+        var ri = document.getElementById('resume');
+        if (ri && ri.files && ri.files.length > 0) {
+            hasResume = true;
+        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+            hasResume = true;
+        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+            hasResume = true;
+        }
+    }
+    if (!hasResume) {
+        addMissing('resume', 'Upload Resume', '#uploadBox');
+    }
+
+    // 2. Professional Summary (Mandatory)
+    var cs = ($('#careersummary').val() || '').trim();
+    if (!cs) {
+        addMissing('careersummary', 'Professional Summary', '#careersummary');
+    }
+
+    // 3. Candidate Profile: all fields including gender, only ignore date of birth
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn) addMissing('full_name', 'Full Name', '#full_name');
+
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/\S+@\S+\.\S+/.test(em)) addMissing('email', 'Primary Email', '#email');
+
+    if (typeof window.validateCreateTalentPhone === 'function') {
+        if (!window.validateCreateTalentPhone('phone', true)) {
+            addMissing('phone', 'Primary Phone', '#phone');
+        }
+    } else {
+        var ph = ($('#phone').val() || '').trim();
+        if (!ph) addMissing('phone', 'Primary Phone', '#phone');
+    }
+
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    if (!loc) addMissing('kt_tagify_work_location', 'Current Location', '#kt_tagify_work_location');
+
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification', 'Highest Qualification', '#qualification');
+
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality', 'Nationality', '#nationality');
+
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender', 'Gender', '#gender');
+
+    // 4. Professional Profile: except Employee ID (Optional)
+    var cc = ($('#current_company').val() || '').trim();
+    if (!cc) addMissing('current_company', 'Current Company', '#current_company');
+
+    var cd = ($('#current_designation').val() || '').trim();
+    if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation');
+
+    var et = ($('#EmploymentType').val() || '').trim();
+    if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType');
+
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp', 'Relevant Experience', '#rel_exp_year');
+
+    var snp = $('#serving_notice_period').val();
+    if (!snp || snp === '0') {
+        addMissing('serving_notice_period', 'Availability', '#serving_notice_period');
+    } else if (snp === '1') {
+        var npDate = ($('#np_id').val() || $('#np_id_display').val() || '').trim();
+        if (!npDate) {
+            addMissing('np_id', 'Available From Date', '#np_id_display');
+        }
+    }
+
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm', 'Preferred Work Mode', '#wr');
+
+    // 5. Candidate Cost (Pay Rate) & Client Bill Rate
+    var payVal = $('#pay_annual').val() || $('#hidden_pay_annual').val();
+    if (!payVal || isNaN(payVal) || parseFloat(payVal) <= 0) {
+        addMissing('pay_rate', 'Candidate Cost (Pay Rate)', '#pay_annual');
+    }
+
+    // Client Bill Rate: ignored if Free Service is selected
+    var isFree = typeof isFreeCommercialMode === 'function' ? isFreeCommercialMode() : (($('#comission_type').val() || '2').toString() === '1');
+    if (!isFree) {
+        var billVal = $('#bill_annual').val() || $('#hidden_bill_annual').val();
+        if (!billVal || isNaN(billVal) || parseFloat(billVal) <= 0) {
+            addMissing('bill_rate', 'Client Bill Rate', '#bill_annual');
+        }
+    }
+
+    // 6. Skills & Expertise: at least 3 skills with complete details
+    var skillsCheck = validateSkillsAndExpertise();
+    if (!skillsCheck.valid) {
+        addMissing('skills', skillsCheck.label, '#skillExperienceWrapper');
+    }
+
+    // 7. Relationship Manager
+    var rec = ($('#recruiter').val() || '').trim();
+    var recId = ($('#recruiter_id').val() || '').trim();
+    if (!rec || !recId) {
+        addMissing('recruiter', 'Relationship Manager', '#recruiter');
+    }
+
+    return missing;
+}
+
+function jumpToField(fieldKey) {
+    closeRequiredFieldsModal();
+
+    if (fieldKey === 'skills') {
+        var check = validateSkillsAndExpertise();
+        if (check && check.targetRow) {
+            check.targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $(check.targetRow).addClass('field-attention-highlight');
+            setTimeout(function () {
+                $(check.targetRow).removeClass('field-attention-highlight');
+            }, 3000);
+            setTimeout(function () {
+                var $target = $(check.targetRow);
+                if (!$target.find('input[name="skills[]"]').val().trim()) {
+                    $target.find('input[name="skills[]"]').focus();
+                } else if (!$target.find('select[name="years[]"]').val()) {
+                    $target.find('select[name="years[]"]').focus();
+                } else {
+                    $target.find('select[name="ratings[]"]').focus();
+                }
+            }, 350);
+            return;
+        } else {
+            var wrapper = document.getElementById('skillExperienceWrapper');
+            if (wrapper) {
+                var card = wrapper.closest('.se-card') || wrapper;
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $(card).addClass('field-attention-highlight');
+                setTimeout(function () {
+                    $(card).removeClass('field-attention-highlight');
+                }, 3000);
+                setTimeout(function () {
+                    var emptySkillInput = $('#skillExperienceWrapper tr input[name="skills[]"]').filter(function() {
+                        return !this.value.trim();
+                    }).first();
+                    if (emptySkillInput.length) {
+                        emptySkillInput.focus();
+                    } else if ($('.asb').length) {
+                        $('.asb').trigger('click');
+                        setTimeout(function() {
+                            $('#skillExperienceWrapper tr:last-child input[name="skills[]"]').focus();
+                        }, 100);
+                    }
+                }, 350);
+            }
+            return;
+        }
+    }
+
+    var cfg = fieldConfigMap[fieldKey];
+    var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
+    if (!targetEl) {
+        targetEl = document.querySelector('[name="' + fieldKey + '"]');
+    }
+
+    if (targetEl) {
+        var parentDetails = targetEl.closest('details');
+        if (parentDetails && !parentDetails.open) {
+            parentDetails.open = true;
+        }
+
+        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs') || targetEl;
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body, .br-rate-field, .bd-field, .pd-field, .pd-exp-card, .resume-card') || targetEl;
+        $(highlightEl).addClass('field-attention-highlight');
+        setTimeout(function () {
+            $(highlightEl).removeClass('field-attention-highlight');
+        }, 3000);
+
+        setTimeout(function () {
+            if (fieldKey === 'resume') {
+                $('#chooseFileBtn').focus();
+            } else if (fieldKey === 'recruiter') {
+                $('#kt_activitiesRecruiter_toggle').trigger('click');
+            } else if (fieldKey === 'kt_tagify_work_location') {
+                var tagifyInput = document.querySelector('.tagify__input');
+                if (tagifyInput) tagifyInput.focus();
+                else targetEl.focus();
+            } else if (fieldKey === 'serving_notice_period') {
+                $('.aw-option-grid button').first().focus();
+            } else if (typeof targetEl.focus === 'function') {
+                targetEl.focus();
+            }
+        }, 350);
+    }
+}
+
+function showRequiredFieldsModal(missingFields) {
+    if (!missingFields || !missingFields.length) {
+        missingFields = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
+    }
+
+    window.__currentMissingFields = missingFields;
+
+    var count = missingFields.length;
+    var countText = count === 1 ? '1 required field' : (count + ' required fields');
+    var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can submit this candidate.';
+
+    $('#rfMissingCountText').text(countText);
+    $('#rfModalDesc').text(descText);
+
+    var $list = $('#rfFieldsList');
+    $list.empty();
+
+    missingFields.forEach(function (f) {
+        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">'
+            + '<div class="rf-field-row-left">'
+            + '<span class="rf-field-badge" aria-hidden="true">!</span>'
+            + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
+            + '</div>'
+            + '<i class="fa-solid fa-chevron-right rf-field-chevron" aria-hidden="true"></i>'
+            + '</div>';
+        $list.append(rowHtml);
+    });
+
+    var $modal = $('#requiredFieldsModal');
+    $modal.fadeIn(150, function () {
+        $('#rfPrimaryCta').focus();
+    });
+}
+
+function closeRequiredFieldsModal() {
+    $('#requiredFieldsModal').fadeOut(120);
+}
+
+// Modal event listeners
+$(document).on('click', '#rfModalClose', function (e) {
+    e.preventDefault();
+    closeRequiredFieldsModal();
+});
+
+$(document).on('click', '#requiredFieldsModal', function (e) {
+    if (e.target === this) {
+        closeRequiredFieldsModal();
+    }
+});
+
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+        closeRequiredFieldsModal();
+    }
+});
+
+$(document).on('click', '.rf-field-row', function (e) {
+    e.preventDefault();
+    var key = $(this).data('field-key');
+    if (key) {
+        jumpToField(key);
+    }
+});
+
+$(document).on('keydown', '.rf-field-row', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var key = $(this).data('field-key');
+        if (key) {
+            jumpToField(key);
+        }
+    }
+});
+
+$(document).on('click', '#rfPrimaryCta', function (e) {
+    e.preventDefault();
+    if (window.__currentMissingFields && window.__currentMissingFields.length) {
+        jumpToField(window.__currentMissingFields[0].key);
+    } else {
+        closeRequiredFieldsModal();
+    }
+});
+
+function displayValidationErrorsNotification(errorList, formEl, validatorInstance) {
+    var missing = detectMissingFields(formEl, validatorInstance);
+    if (!missing.length && errorList && errorList.length) {
+        errorList.forEach(function (err) {
+            var foundKey = null;
+            Object.keys(fieldConfigMap).forEach(function (k) {
+                if (err.toLowerCase().indexOf(fieldConfigMap[k].label.toLowerCase()) !== -1 || err.toLowerCase().indexOf(k.toLowerCase()) !== -1) {
+                    foundKey = k;
+                }
+            });
+            if (foundKey) {
+                missing.push({
+                    key: foundKey,
+                    label: fieldConfigMap[foundKey].label,
+                    selector: fieldConfigMap[foundKey].selector
+                });
+            } else {
+                missing.push({
+                    key: 'generic',
+                    label: err.replace(/^(the|please|a)\s+/i, '').replace(/\s+(is required|is invalid|must contain.*)$/i, ''),
+                    selector: null
+                });
+            }
         });
-        box.removeClass('d-none');
     }
 
-    // 2. Enterprise modal notification box
-    var alertHtml = '<div style="text-align: left; max-height: 250px; overflow-y: auto; padding: 4px 6px; font-size: 13px;">';
-    alertHtml += '<p style="margin-bottom: 10px; font-weight: 600; color: #1e293b;">The following validation' + (errorList.length > 1 ? 's' : '') + ' failed before submission:</p>';
-    alertHtml += '<ul style="margin: 0; padding-left: 18px; color: #dc2626; line-height: 1.6;">';
-    errorList.forEach(function (err) {
-        alertHtml += '<li style="margin-bottom: 4px;"><strong>' + $('<div>').text(err).html() + '</strong></li>';
-    });
-    alertHtml += '</ul>';
-    alertHtml += '<p style="margin-top: 10px; margin-bottom: 0; font-size: 11.5px; color: #64748b;">Please resolve these fields and click submit again.</p>';
-    alertHtml += '</div>';
-
-    Swal.fire({
-        title: "Validation Incomplete",
-        html: alertHtml,
-        icon: "warning",
-        buttonsStyling: false,
-        confirmButtonText: "Review & Fix",
-        customClass: {
-            confirmButton: "btn btn-primary btn-sm"
-        }
-    }).then(function () {
-        // Scroll to first invalid field or top notification box
-        var firstInvalid = formEl ? formEl.querySelector('.is-invalid, .fv-plugins-message-container:not(:empty)') : null;
-        if (firstInvalid) {
-            var fvRow = firstInvalid.closest('.fv-row') || firstInvalid;
-            fvRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            var inp = fvRow.querySelector('input, select, textarea');
-            if (inp) inp.focus();
-        } else if (box.length) {
-            box[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    });
-
-    if (typeof toastr !== 'undefined') {
-        toastr.error('Validation failed: ' + errorList.length + ' field' + (errorList.length > 1 ? 's' : '') + ' require attention.');
+    if (!missing.length) {
+        missing = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
     }
+
+    showRequiredFieldsModal(missing);
 }
 
 @php if(@$page_event != 'EDIT'){  @endphp
@@ -3395,22 +3934,24 @@ var KTAddCandidate = function () {
             form,
             {
                 fields: {					
-                    		'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
-                        'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
-                    		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
-                    		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
-							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
-							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
-                    		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
-                        'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"},digits:{message: "Relevant Experience must contain only digits"}}},
-                        'pay_rate' 				:	{validators:{notEmpty:{message: "Pay rate is required"},digits:{message: "Pay rate must containts only digits"}}},
-                        'bill_rate' 			:	{validators:{notEmpty:{message: "Bill rate is required"},digits:{message: "Bill rate must contains only digits"}}},
-                        'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                        'recruiter'					:	{validators:{ notEmpty: { message: "Assign internal team/recruiter is required" } }  },
-                        // 'skills'				:	{ validators: { notEmpty: {  message: 'Skills is required' } }},
-                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}}
+                    'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
+                    'careersummary'			:	{validators:{notEmpty: {message: "Professional summary is required"}} },
+                    'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
+                    'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
+                    'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
+                    'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
+                    'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+                    'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
+                    'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
+                    'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
+                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
+                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
+                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
+                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -3437,8 +3978,14 @@ var KTAddCandidate = function () {
               }
 
             validator.validate().then(function (status) {
-                if (status == 'Valid') {
-                  $("#save-form").prop("disabled", true);
+                var missing = detectMissingFields(form, validator);
+                if (status !== 'Valid' || (missing && missing.length > 0)) {
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form, validator);
+                    return;
+                }
+                closeRequiredFieldsModal();
+                $("#save-form").prop("disabled", true);
                   $("#save-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
                   );
@@ -3520,7 +4067,7 @@ var KTAddCandidate = function () {
                     }, 500);
                 } else {
                     var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form);
+                    displayValidationErrorsNotification(errors, form, validator);
                 }
             });
         });
@@ -3548,22 +4095,24 @@ var KTEditCandidate = function () {
             form,
             {
                 fields: {					
-                    		'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
-                        'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
-                    		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
-                    		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
-							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
-							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
-                    		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
-                        'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"},digits:{message: "Relevant Experience must contain only digits"}}},
-                        'pay_rate' 				:	{validators:{notEmpty:{message: "Pay rate is required"},digits:{message: "Pay rate must containts only digits"}}},
-                        'bill_rate' 			:	{validators:{notEmpty:{message: "Bill rate is required"},digits:{message: "Bill rate must contains only digits"}}},
-                        'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                        'recruiter'					:	{validators:{ notEmpty: { message: "Assign internal team/recruiter is required" } }  },
-                        // 'skills'				:	{ validators: { notEmpty: {  message: 'Skills is required' } }},
-                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}}
+                    'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
+                    'careersummary'			:	{validators:{notEmpty: {message: "Professional summary is required"}} },
+                    'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
+                    'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
+                    'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
+                    'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
+                    'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+                    'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
+                    'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
+                    'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
+                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
+                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
+                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
+                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -3576,8 +4125,14 @@ var KTEditCandidate = function () {
         submitButton.addEventListener('click', function (e) {
             e.preventDefault();
             validator.validate().then(function (status) {
-                if (status == 'Valid') {
-                  $("#edit-form").prop("disabled", true);
+                var missing = detectMissingFields(form, validator);
+                if (status !== 'Valid' || (missing && missing.length > 0)) {
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form, validator);
+                    return;
+                }
+                closeRequiredFieldsModal();
+                $("#edit-form").prop("disabled", true);
                   $("#edit-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
                   );
@@ -3647,7 +4202,7 @@ var KTEditCandidate = function () {
                     }, 500);
                 } else {
                     var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form);
+                    displayValidationErrorsNotification(errors, form, validator);
                 }
             });
         });
