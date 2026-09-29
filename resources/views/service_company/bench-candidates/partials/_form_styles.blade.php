@@ -729,6 +729,107 @@ body { overflow-x: hidden; }
     border-color: #94a3b8;
     background: #f1f5f9;
 }
+
+/* Currency dropdown in commercial rate fields */
+.br-rate-field .ig {
+    display: flex;
+    position: relative;
+    width: 100%;
+}
+
+.br-rate-field .ig input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 38px;
+    border-radius: 6px 0 0 6px !important;
+    border: 1px solid #d1d5db !important;
+    border-right: none !important;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.br-rate-field .ig input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    z-index: 2;
+}
+
+.ig-currency-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #d1d5db;
+    border-radius: 0 6px 6px 0;
+    flex: 0 0 auto;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.br-rate-field .ig:focus-within .ig-currency-box {
+    border-color: #3b82f6;
+}
+
+.ig-currency-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    padding: 0 26px 0 12px;
+    height: 100%;
+    min-height: 38px;
+    cursor: pointer;
+    line-height: normal;
+}
+
+.ig-currency-chevron {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #64748b;
+    pointer-events: none;
+}
+
+.br-card.is-free-service .br-bill-panel .ig-currency-box {
+    opacity: 0.6;
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+.br-card.is-free-service .br-bill-panel .ig-currency-select {
+    cursor: not-allowed;
+}
+
+/* Margin Summary dynamic difference amount */
+#br_summary_margin_diff.is-positive {
+    color: #0AA65D !important;
+}
+
+#br_summary_margin_diff.is-negative {
+    color: #E11D48 !important;
+}
+
+#br_summary_margin_diff.is-free,
+#br_summary_margin_diff.is-neutral {
+    color: #64748b !important;
+    font-size: 0.95rem !important;
+}
+
+#br_summary_model {
+    font-weight: 700 !important;
+    color: #2563eb !important;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />

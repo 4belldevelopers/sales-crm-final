@@ -1088,7 +1088,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payrateannual"></span>
                       </div>
@@ -1096,7 +1111,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payratemonthly"></span>
                       </div>
@@ -1104,7 +1134,22 @@ if($snp_mode== 1){
                         <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted payratehourly"></span>
                       </div>
@@ -1146,7 +1191,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billrateannual"></span>
                       </div>
@@ -1154,7 +1214,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billratemonthly"></span>
                       </div>
@@ -1162,7 +1237,22 @@ if($snp_mode== 1){
                         <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                          <span class="ig-a changeTextCurrency">INR</span>
+                          <div class="ig-currency-box">
+                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
+                              @foreach($currency as $key=>$val)
+                                @php
+                                  $sel = '';
+                                  if($current_ctc_cur===null){
+                                    if($currency_code==$val) $sel = 'selected="selected"';
+                                  }else{
+                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
+                                  }
+                                @endphp
+                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
+                              @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
+                          </div>
                         </div>
                         <span class="form-text text-muted billratehourly"></span>
                       </div>
@@ -1187,8 +1277,9 @@ if($snp_mode== 1){
                       <div class="br-margin-list">
                         <span><em id="br_summary_pay_label">Annual Pay Rate</em><b id="br_summary_pay_annual">0</b></span>
                         <span><em id="br_summary_bill_label">Annual Bill Rate</em><b id="br_summary_bill_annual">0</b></span>
-                        <span><em id="br_summary_margin_label">Annual Margin</em><b id="br_summary_margin">0</b></span>
+                        <span><em id="br_summary_diff_label">Margin Difference Amount</em><b id="br_summary_margin_diff">0</b></span>
                         <span><em id="br_summary_percent_label">Margin Percentage</em><b id="br_summary_percent">0%</b></span>
+                        <span><em id="br_summary_model_label">Commercial Model</em><b id="br_summary_model">Paid Service</b></span>
                       </div>
                       <div class="br-margin-state">
                         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
@@ -2304,16 +2395,21 @@ $(document).ready(function () {
         $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
         $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
 
+        let activeCurrName = $('#pay_rate_currency option:selected').text().trim() || 
+                             $('.br-pay-currency-select option:selected').first().text().trim() || '';
+
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
             $('#br_bill_hourly_display').text('No billing');
             $('#br_summary_pay_label').text(modeConfig.payLabel);
             $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_diff_label').text('Margin Difference Amount');
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_model_label').text('Commercial Model');
             $('#br_summary_bill_annual').text('Disabled');
-            $('#br_summary_margin').text('Not billed');
-            $('#br_summary_percent').text('Free Service');
+            $('#br_summary_margin_diff').text('Not Applicable (Free Service)').removeClass('is-positive is-negative is-neutral').addClass('is-free');
+            $('#br_summary_percent').text('0.00%');
+            $('#br_summary_model').text('Free Service');
             $('.br-margin-state').removeClass('is-low').addClass('is-free');
             $('#br_margin_status').text('Free Service Selected');
             $('#br_margin_note').text('This talent will be offered to clients without commercial billing. Client bill rate is not required.');
@@ -2321,12 +2417,24 @@ $(document).ready(function () {
             $('#br_bill_monthly_display').text(commercialFormat(modeConfig.billAutoOneValue));
             $('#br_bill_hourly_display').text(commercialFormat(modeConfig.billAutoTwoValue));
             $('#br_summary_pay_label').text(modeConfig.payLabel);
-            $('#br_summary_bill_label').text('Client Billing');
-            $('#br_summary_margin_label').text('Commercial Margin');
-            $('#br_summary_percent_label').text('Selected Model');
+            $('#br_summary_bill_label').text(modeConfig.billLabel);
+            $('#br_summary_diff_label').text('Margin Difference Amount');
+            $('#br_summary_percent_label').text('Margin Percentage');
+            $('#br_summary_model_label').text('Commercial Model');
             $('#br_summary_bill_annual').text(commercialFormat(modeConfig.baseBill));
-            $('#br_summary_margin').text(commercialFormat(margin) + ' (' + commercialFormat(displayedPercent, '%') + ')');
-            $('#br_summary_percent').text('Paid Service');
+
+            let diffSign = margin > 0 ? '+' : '';
+            let formattedDiff = (modeConfig.baseBill > 0 || modeConfig.basePay > 0)
+                ? (diffSign + commercialFormat(margin) + (activeCurrName ? ' ' + activeCurrName : ''))
+                : '0.00' + (activeCurrName ? ' ' + activeCurrName : '');
+
+            $('#br_summary_margin_diff')
+                .text(formattedDiff)
+                .removeClass('is-positive is-negative is-free is-neutral')
+                .addClass(margin > 0 ? 'is-positive' : (margin < 0 ? 'is-negative' : 'is-neutral'));
+
+            $('#br_summary_percent').text(commercialFormat(displayedPercent, '%'));
+            $('#br_summary_model').text('Paid Service');
             $('.br-margin-state').removeClass('is-free').toggleClass('is-low', needsMarginReview);
             $('#br_margin_status').text(needsMarginReview ? 'Review Margin' : 'Paid Service Selected');
             $('#br_margin_note').text(needsMarginReview ? 'Please review the configured bill rate.' : 'Client will be billed. Set pay rate, bill rate and manage margin.');
@@ -2375,6 +2483,7 @@ $(document).ready(function () {
         }
 
         billFields.prop('readonly', isFree).attr('aria-readonly', isFree ? 'true' : 'false');
+        $('.br-bill-currency-select').prop('disabled', isFree);
         $('.br-card').toggleClass('is-free-service', isFree).toggleClass('is-paid-service', !isFree);
         $('.br-bill-panel').toggleClass('is-locked', isFree);
         syncCommercialCards();
@@ -2625,20 +2734,50 @@ $(document).ready(function () {
     }
 
 
-    $('#pay_rate_currency').on('change', function () {
+    function syncAllCommercialCurrencies(currencyVal) {
+        if (!currencyVal) return;
+
+        // 1. Sync header currency
+        $('#pay_rate_currency').val(currencyVal);
+
+        // 2. Sync hidden selects
+        $('#bill_rate_currency').val(currencyVal);
+        $('#current_th_cur').val(currencyVal);
+
+        // 3. Sync Pay Rate currency dropdowns
+        $('.br-pay-currency-select').val(currencyVal);
+
+        // 4. Sync Bill Rate currency dropdowns
+        $('.br-bill-currency-select').val(currencyVal);
+
+        // 5. Update text for any legacy badge/spans
+        let selectedText = $('#pay_rate_currency option:selected').text().trim() ||
+                           $('.br-pay-currency-select option:selected').first().text().trim() ||
+                           '';
+        if (selectedText) {
+            $('.changeTextCurrency').text(selectedText);
+        }
+
         updatePayUI();
         updateBillUI();
+        refreshCommercialSummary();
+    }
+
+    $(document).on('change', '#pay_rate_currency, #bill_rate_currency, .br-pay-currency-select, .br-bill-currency-select', function () {
+        let val = $(this).val();
+        syncAllCommercialCurrencies(val);
     });
-    $('#bill_rate_currency').on('change', function () {
-        updateBillUI();
-        updatePayUI();
-    });
+
     setTimeout(() => {
-          applyCommercialMode();
-          payRateUpdate();
-          billRateUpdate();
-          refreshCommercialSummary();
-      }, 1000);
+        let initCurr = $('#pay_rate_currency').val() || $('.br-pay-currency-select').first().val();
+        if (initCurr) {
+            syncAllCommercialCurrencies(initCurr);
+        }
+        applyCommercialMode();
+        payRateUpdate();
+        billRateUpdate();
+        refreshCommercialSummary();
+    }, 1000);
 
     
 
@@ -3239,12 +3378,18 @@ document.addEventListener('DOMContentLoaded', function () {
   });  		
   
   $('body').on('change', '#pay_rate_currency', function(){
-   			var	pay_rate_currency		=	$(this).val();
-			document.getElementById("bill_rate_currency").selectedIndex = pay_rate_currency;
+      if (typeof syncAllCommercialCurrencies === 'function') {
+          syncAllCommercialCurrencies($(this).val());
+      } else {
+          $('#bill_rate_currency').val($(this).val());
+      }
    });
    $('body').on('change', '#bill_rate_currency', function(){
-   			var	bill_rate_currency		=	$(this).val();
-			document.getElementById("pay_rate_currency").selectedIndex = bill_rate_currency;
+      if (typeof syncAllCommercialCurrencies === 'function') {
+          syncAllCommercialCurrencies($(this).val());
+      } else {
+          $('#pay_rate_currency').val($(this).val());
+      }
    });
    $('body').on('change', '#pay_rate_mode', function(){
    			var	pay_rate_mode	=	$(this).val();
