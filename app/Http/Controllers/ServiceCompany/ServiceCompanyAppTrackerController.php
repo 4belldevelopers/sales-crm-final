@@ -5936,15 +5936,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->default_loc = $jobDefaults->default_loc;
         $this->qualification = GeneralMethod::allQualificationSelected($id);
-        $this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
-        $this->max_exp = $jobDefaults->max_exp + 1;
+        $this->min_exp = '';
+        $this->max_exp = '';
         $this->min_salary_currency = $jobDefaults->min_salary_currency;
-        // Every AppTracker filter drawer defaults Min Salary to 0, not the
-        // job's own min_salary (see custome_count_all()'s salary-floor
-        // comments) — the header counter and this page have to agree on
-        // the same floor or their candidate counts disagree on load.
-        $this->min_salary = 0;
-        $this->max_salary = $jobDefaults->max_salary;
+        $this->min_salary = '';
+        $this->max_salary = '';
         $this->min_sal_mode = $jobDefaults->min_sal_mode;
         $this->default_skill = $jobDefaults->default_skill;
 
@@ -5998,8 +5994,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
-        $sal_mode = request('sal_mode') ?? $job->max_sal_mode;
-        $min_salary_currency = request('min_salary_currency') ?? $job->max_salary_currency;
+        $sal_mode = (\request('sal_mode') !== null && \request('sal_mode') !== '') ? \request('sal_mode') : ($job->min_sal_mode ?? 0);
+        $min_salary_currency = (\request('min_salary_currency') !== null && \request('min_salary_currency') !== '') ? \request('min_salary_currency') : ($job->min_salary_currency ?? 0);
         $app_int_outsource = request('app_int_outsource');
 
         $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -6016,61 +6012,47 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $symbolsFilter = $symbolsValue[$currencyFilter] ?? 'INR';
 
         $title = $job->title;
-        if (\request('min_exp') != '' && \request('max_exp') != '') {
+        if (\request('min_exp') != '' || \request('max_exp') != '') {
             $min_exp = request('min_exp');
             $max_exp = request('max_exp');
         } else {
-            $min_exp = 0; // $job->min_exp;
-            $max_exp = $job->max_exp;
+            $min_exp = '';
+            $max_exp = '';
         }
 
         $currency = GeneralMethod::currency();  // Currency code
-        $currencyCheck = $currency[$request->min_salary_currency];
+        $currencyCheck = $currency[$request->min_salary_currency] ?? 'INR';
 
-        if (\request('min_sal') != '' && \request('max_sal') != '') {
+        if (\request('min_sal') != '' || \request('max_sal') != '') {
             $AmountMin = request('min_sal');
             $AmountMax = request('max_sal');
             if ($request->min_salary_currency > 0) {
-                $AmountMin = GeneralMethod::convertToINR($AmountMin, $currencyCheck);
-                $AmountMax = GeneralMethod::convertToINR($AmountMax, $currencyCheck);
+                if ($AmountMin != '') {
+                    $AmountMin = GeneralMethod::convertToINR($AmountMin, $currencyCheck);
+                }
+                if ($AmountMax != '') {
+                    $AmountMax = GeneralMethod::convertToINR($AmountMax, $currencyCheck);
+                }
             }
-            $ctcdividedMin = GeneralMethod::salaryDividedByMode($sal_mode, $AmountMin);
-            $ctcdividedMax = GeneralMethod::salaryDividedByMode($sal_mode, $AmountMax);
+            $ctcdividedMin = ($AmountMin != '') ? GeneralMethod::salaryDividedByMode($sal_mode, $AmountMin) : null;
+            $ctcdividedMax = ($AmountMax != '') ? GeneralMethod::salaryDividedByMode($sal_mode, $AmountMax) : null;
             if ($sal_mode == 0) {
-                $min_salary = $ctcdividedMin->yearly;
-                $max_salary = $ctcdividedMax->yearly;
+                $min_salary = $ctcdividedMin ? $ctcdividedMin->yearly : null;
+                $max_salary = $ctcdividedMax ? $ctcdividedMax->yearly : null;
 
             } elseif ($sal_mode == 1) {
-                $min_salary = $ctcdividedMin->monthly;
-                $max_salary = $ctcdividedMax->monthly;
+                $min_salary = $ctcdividedMin ? $ctcdividedMin->monthly : null;
+                $max_salary = $ctcdividedMax ? $ctcdividedMax->monthly : null;
 
             } elseif ($sal_mode == 2) {
-                $min_salary = $ctcdividedMin->hourly;
-                $max_salary = $ctcdividedMax->hourly;
+                $min_salary = $ctcdividedMin ? $ctcdividedMin->hourly : null;
+                $max_salary = $ctcdividedMax ? $ctcdividedMax->hourly : null;
 
             }
 
         } else {
-
-            $convertedAmount = request('max_sal'); // $job->max_salary;
-            if ($request->min_salary_currency > 0) {
-                $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currencyCheck);
-            }
-            $ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
-            $min_salary = 0; // $job->min_salary;
-            // $max_salary = $job->max_salary;
-
-            if ($sal_mode == 0) {
-                $max_salary = $ectcdivided->yearly;
-
-            } elseif ($sal_mode == 1) {
-                $max_salary = $ectcdivided->monthly;
-
-            } elseif ($sal_mode == 2) {
-                $max_salary = $ectcdivided->hourly;
-
-            }
-
+            $min_salary = '';
+            $max_salary = '';
         }
 
         // dd($min_salary,$max_salary);
