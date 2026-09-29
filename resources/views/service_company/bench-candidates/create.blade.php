@@ -1251,7 +1251,7 @@ if($snp_mode== 1){
               </div>
               <div class="fsc fv-row rm-body">
 
-                <!--begin::Relationship Manager Section (media_1790669427546.png)-->
+                <!--begin::Relationship Manager Section (media_1790683314858.png)-->
                 <div class="rm-content" id="job_additional_detail">
                   <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
 
@@ -1259,23 +1259,16 @@ if($snp_mode== 1){
                   <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" />
                   <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" />
 
-                  <!-- Dynamic Multi-Manager Cards List -->
-                  <div class="rm-chips-container" id="rmChipsContainer"></div>
-
-                  <!-- Add Another Manager Button (active when at least 1 manager is selected) -->
-                  <div class="rm-add-more-wrap" id="rmAddMoreWrap" style="display: none;">
-                    <button type="button" class="rm-add-more-btn" id="rmAddMoreBtn">
-                      <i class="fa-solid fa-plus" aria-hidden="true"></i> Add Relationship Manager
-                    </button>
-                  </div>
-
-                  <!-- Empty State Picker Box (active when no manager is selected) -->
+                  <!-- Relationship Manager Search Bar (Always at top, directly under label) -->
                   <div class="rm-picker" id="rmPicker">
                     <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                     <input type="text" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
                     <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
                   </div>
                   <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
+
+                  <!-- Dynamic Multi-Manager Cards Listing (Displayed BELOW the search bar) -->
+                  <div class="rm-chips-container" id="rmChipsContainer" style="display: none;"></div>
                 </div>
                 <!--end::Relationship Manager Section-->
               </div>
@@ -3095,6 +3088,10 @@ $(document).ready(function() {
                   $body.html('<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;"><i class="fa-solid fa-circle-exclamation" style="color:#f87171;"></i> Failed to load team. Please try again.</div>');
               }
           });
+      } else {
+          if (typeof crmRenderSelected === 'function') {
+              crmRenderSelected();
+          }
       }
   });
 
@@ -3197,21 +3194,22 @@ function renderRelationshipManagerCards() {
     var managers = getRmSelectedList();
     var $container = $('#rmChipsContainer');
     var $picker = $('#rmPicker');
-    var $addMore = $('#rmAddMoreWrap');
 
     if (!managers || !managers.length) {
         $container.empty().hide();
-        $addMore.hide();
-        $picker.css('display', 'flex');
+        $picker.removeClass('has-selection');
+        $('#recruiter_display').val('').attr('placeholder', 'Search by name or email...');
+        $('#rmPickerAction').text('Select Relationship Manager');
         $('#job_additional_detail').removeClass('rm-has-selection');
         return;
     }
 
-    $picker.hide();
+    $picker.addClass('has-selection');
     $picker.removeClass('has-validation-error');
     $('[data-field-error="recruiter"]').remove();
-    $addMore.show();
     $('#job_additional_detail').addClass('rm-has-selection');
+    $('#recruiter_display').val('').attr('placeholder', 'Search by name or email...');
+    $('#rmPickerAction').text('Select Relationship Manager');
 
     var html = '';
     managers.forEach(function(m) {
@@ -3984,7 +3982,11 @@ function applyFieldValidationErrors(missingFields) {
             var $picker = $('#rmPicker');
             $picker.addClass('has-validation-error');
             if (!$('[data-field-error="recruiter"]').length) {
-                $picker.after(errorHtml);
+                if ($('#rmHelpText').length) {
+                    $('#rmHelpText').after(errorHtml);
+                } else {
+                    $picker.after(errorHtml);
+                }
             }
         } else if (key === 'resume') {
             var $up = $('#uploadBox');

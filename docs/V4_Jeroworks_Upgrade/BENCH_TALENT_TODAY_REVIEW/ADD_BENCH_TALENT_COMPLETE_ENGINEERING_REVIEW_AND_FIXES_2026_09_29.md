@@ -318,6 +318,35 @@ Below is the exhaustive, chronological log of every commit applied today to the 
   4. **Multi-Currency Tenancy Synchronization:**
      - Selecting a currency from the header dropdown instantly synchronizes the ISO badge text across all 6 fields, updates hidden bill currency inputs, and recalculates USD approximations in real time.
 
+### 4.9. Relationship Manager Drawer Selected List Recovery
+- **Scope:** `resources/views/service_company/jobs/relationship-manager.blade.php` and `resources/views/service_company/bench-candidates/create.blade.php`
+- **Features & Fixes:**
+  1. **Fixed Selected RM Card Rendering at Top of Drawer:**
+     - Resolved the bug where `crmRenderSelected()` relied on checking `$(this).data('assign') === '1'`. Because jQuery cached `0` and did not update its internal cache on `.attr('data-assign', 1)`, the selected list always evaluated to empty (`ids.length === 0`).
+     - Upgraded `crmRenderSelected()` to read directly from authoritative inputs (`#recruiter_id`, `#recruiter`), memory cache (`window.__rmSelectedManagers`), and active table buttons, guaranteeing reliable rendering.
+  2. **Bi-Directional Drawer & Table Synchronization:**
+     - Adding or removing an RM in the table immediately generates their card at the top, updates the header counter `(X)`, hides the empty state, and synchronizes the main form chip cards.
+     - Card remove button (`.crm-card-remove`) seamlessly toggles the table button or triggers `DeleteEvent` directly with fallback safety.
+  3. **Event Listener Hygiene & Reactive Watcher:**
+     - Applied `$(document).off('click', ...).on('click', ...)` scoping across all table buttons and card actions to eliminate double-firing from repeated AJAX drawer opens.
+     - Installed a 300ms continuous reactive watcher (`__crmWatcherInterval`) to auto-sync the drawer if RMs are removed from the main page chip cards.
+  4. **Corrected Drawer Scroll Behavior:**
+     - Updated `#crmScrollToTable` to scroll the inner `#kt_activities_scroll` container instead of the outer `html, body`.
+
+### 4.10. Relationship Manager Search Bar & Selected Listing Layout Alignment
+- **Scope:** `resources/views/service_company/bench-candidates/create.blade.php` and `resources/views/service_company/bench-candidates/partials/_form_styles.blade.php`
+- **Features & Fixes:**
+  1. **Clean Visual Hierarchy (Search Bar on Top, Selected Listing Below):**
+     - Aligned the layout with user UX requirements so the Relationship Manager search bar (`.rm-picker`: `[🔍 Search by name or email...] Select Relationship Manager`) sits directly beneath the section label.
+     - Positioned the selected Relationship Manager row/listing (`#rmChipsContainer`) directly **BELOW** the search bar and its supporting guidance text, eliminating the awkward inverted stacking.
+  2. **Eliminated Redundant Intermediate Buttons:**
+     - Removed the separate dashed `+ Add Relationship Manager` button (`#rmAddMoreWrap`), consolidating the trigger directly into the primary search bar and its right-side action link (`Select Relationship Manager`).
+  3. **Seamless Multi-Manager Row Stacking:**
+     - When managers are selected, their cards (`.rm-chip-card`) stack cleanly beneath the search bar with `margin-top: 10px; gap: 10px;`.
+     - When empty, the cards container cleanly hides, and the search bar resets to default empty state.
+  4. **Validation Error Alignment:**
+     - Positioned inline validation error notices cleanly below the search bar and help text, providing immediate red outline and message guidance upon empty form submission.
+
 ---
 
 ## 5. Architectural Alignment & Tenancy Rules Verification
@@ -352,4 +381,4 @@ Every modification made today strictly adheres to the core rules stipulated in `
 - [x] **Submission Flow:** Stage selection ("Save to Bench Stage", "Save to Pool", "Save to Hold", "Save to Exited") submits cleanly with durable UUID idempotency and displays "Inhouse Talent Added Successfully".
 
 ---
-*Document saved in: `docs/BENCH_TALENT_TODAY_REVIEW/ADD_BENCH_TALENT_COMPLETE_ENGINEERING_REVIEW_AND_FIXES_2026_09_29.md`*
+*Document saved in: `docs/V4_Jeroworks_Upgrade/BENCH_TALENT_TODAY_REVIEW/ADD_BENCH_TALENT_COMPLETE_ENGINEERING_REVIEW_AND_FIXES_2026_09_29.md`*

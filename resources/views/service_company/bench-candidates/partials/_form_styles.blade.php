@@ -877,13 +877,13 @@ label span[id$="_usd"] {
     color: #2563eb !important;
 }
 
-/* ── Redesigned Enterprise Relationship Manager Chip Card (media_1790669427546.png) ── */
+/* ── Redesigned Enterprise Relationship Manager Chip Card (media_1790683314858.png) ── */
 .rm-chips-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-top: 6px;
+    margin-top: 10px;
     margin-bottom: 8px;
 }
 
