@@ -1376,6 +1376,65 @@ textarea.has-validation-error:focus,
     padding: 6px 14px !important;
 }
 
+/* ── Ensure Candidate Profile Card & Grid Never Clip Floating Dropdowns ── */
+.fs.bd-card,
+.bd-card,
+.bd-card .bd-body,
+.bd-card .fsc,
+.bd-card .bd-grid,
+.bd-card .bd-field,
+.bd-card .bd-control,
+.bd-card .bd-control--select {
+    overflow: visible !important;
+}
+
+.bd-grid .bd-field:has(#nationality),
+.bd-grid .bd-field:has(#qualification),
+.bd-grid .bd-field:has(.jero-custom-select) {
+    overflow: visible !important;
+}
+
+/* Base stacking context: Candidate Profile sits above subsequent cards */
+.bd-card {
+    position: relative;
+    z-index: 30;
+}
+
+/* Active Stacking Elevation when Combobox is open */
+.bd-card.has-active-combobox,
+.bd-card:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1050 !important;
+    overflow: visible !important;
+}
+
+.bd-grid:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1051 !important;
+}
+
+.bd-field:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1052 !important;
+}
+
+.bd-control:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1053 !important;
+}
+
+.jero-custom-select.is-open {
+    position: relative !important;
+    z-index: 1054 !important;
+}
+
+/* Subsequent card sits lower in the stack so dropdown renders cleanly on top of it */
+.fs.pd-card,
+.pd-card {
+    position: relative;
+    z-index: 10;
+}
+
 /* ── JERO Enterprise Custom Combobox Engine (Adaptive Nationality & Education) ── */
 .jero-custom-select {
     position: relative;
@@ -1388,8 +1447,9 @@ textarea.has-validation-error:focus,
     position: relative;
 }
 
-/* Hide native select visually while keeping it fully present for FormData & validator */
-.bd-control--select > select {
+/* Hide native select visually ONLY when a custom combobox engine is present */
+.bd-control--has-combobox > select,
+.bd-control--select:has(.jero-custom-select) > select {
     position: absolute !important;
     opacity: 0 !important;
     pointer-events: none !important;
@@ -1401,9 +1461,63 @@ textarea.has-validation-error:focus,
     z-index: -1 !important;
 }
 
-/* Hide static icon inside bd-control--select because custom select trigger includes its own */
-.bd-control--select > i {
+/* Hide static icon inside bd-control ONLY when custom select trigger includes its own */
+.bd-control--has-combobox > i,
+.bd-control--select:has(.jero-custom-select) > i {
     display: none !important;
+}
+
+/* Explicit styling for native Gender select */
+.bd-control select#gender {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 38px 0 42px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 7px !important;
+    color: #0b1545 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    outline: none !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 12px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+
+.bd-control:has(select#gender) > i {
+    display: inline-flex !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #5d6681 !important;
+    font-size: 14px !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+
+.bd-control select#gender:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+.bd-control select#gender.has-validation-error,
+.bd-control.has-validation-error select#gender {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
 }
 
 /* Trigger Button */
@@ -1515,7 +1629,7 @@ textarea.has-validation-error:focus,
     background: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.22), 0 10px 18px -6px rgba(15, 23, 42, 0.14) !important;
     z-index: 999999 !important;
     overflow: hidden !important;
     display: none;
@@ -1639,6 +1753,26 @@ textarea.has-validation-error:focus,
     font-weight: 600 !important;
 }
 
+/* Bulletproof hiding of non-matching items and groups */
+.jero-cs-item.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-group.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-empty.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-item-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+}
+
 .jero-cs-item-badge {
     font-size: 10px !important;
     font-weight: 600 !important;
@@ -1648,6 +1782,7 @@ textarea.has-validation-error:focus,
     border-radius: 4px !important;
     white-space: nowrap !important;
     margin-left: 8px !important;
+    flex-shrink: 0 !important;
 }
 
 .jero-cs-item.is-selected .jero-cs-item-badge {
