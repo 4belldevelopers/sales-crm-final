@@ -169,16 +169,6 @@ if($snp_mode== 1){
             <input type="hidden" name="hidden_percentage_hike" id="hidden_percentage_hike" value="{{ @$application->percentage_hike }}">
             <input type="hidden" name="hidden_comission_type" id="hidden_comission_type" value="{{ @$application->comission_type ?? 2 }}">
           <div class="fc">
-            <!-- Enterprise Pre-Submit Validation Notification Box -->
-            <div id="formValidationNotificationBox" class="alert alert-danger d-none mb-4" role="alert" style="border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; padding: 14px 18px;">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="fa-solid fa-triangle-exclamation me-2 fs-5 text-danger" aria-hidden="true"></i>
-                    <strong style="font-size: 13.5px;">Please correct the following fields before submission:</strong>
-                    <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#formValidationNotificationBox').addClass('d-none');" style="font-size: 10px;"></button>
-                </div>
-                <ul id="formValidationNotificationList" class="mb-0 ps-4" style="font-size: 12.5px; line-height: 1.7; font-weight: 500;">
-                </ul>
-            </div>
             @if(@$page_event != 'EDIT')
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
@@ -1464,6 +1454,46 @@ if($snp_mode== 1){
   </div>
 </div>
 
+<!-- Enterprise Complete Required Fields Modal (media_1790668032103.png) -->
+<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+    <div class="rf-modal-box">
+        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+
+        <!-- Warning Icon (Yellow circle with exclamation) -->
+        <div class="rf-warning-icon-wrap" aria-hidden="true">
+            <span class="rf-warning-icon">!</span>
+        </div>
+
+        <!-- Title -->
+        <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+
+        <!-- Description -->
+        <p class="rf-modal-desc" id="rfModalDesc">
+            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
+        </p>
+
+        <!-- Section Heading -->
+        <div class="rf-section-header">REQUIRED FIELDS</div>
+
+        <!-- Interactive Fields List -->
+        <div class="rf-fields-list" id="rfFieldsList">
+        </div>
+
+        <!-- Helper text -->
+        <div class="rf-helper-text">
+            <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+            <span>Click a field above to jump directly to it.</span>
+        </div>
+
+        <!-- Primary CTA -->
+        <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+            <span>Review Required Fields</span>
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
 
 @endsection
 
@@ -3270,119 +3300,286 @@ function handleTalentSubmissionSuccess(response) {
     });
 }
 
-/**
- * Collects specific failed validation messages from FormValidation and DOM
- */
-function collectFormValidationErrors(formEl, validatorInstance) {
-    var errorList = [];
-    var fieldLabelMap = {
-        'full_name': 'Full name',
-        'kt_tagify_work_location': 'Current Location',
-        'current_designation': 'Current designation',
-        'employmentType': 'Employment Type',
-        'phone': 'Primary mobile number',
-        'secondary_mobile': 'Secondary mobile number',
-        'email': 'Primary email',
-        'qualification': 'Qualification',
-        'total_exp': 'Total Experience',
-        'rel_exp': 'Relevant Experience',
-        'pay_rate': 'Pay rate',
-        'bill_rate': 'Bill rate',
-        'comission_type': 'Comission type',
-        'recruiter': 'Internal team / recruiter',
-        'specialties': 'Specialties'
-    };
+var fieldConfigMap = {
+    'full_name': { label: 'Full Name', selector: '#full_name' },
+    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location' },
+    'current_designation': { label: 'Current Designation', selector: '#current_designation' },
+    'employmentType': { label: 'Employment Type', selector: '#employmentType' },
+    'phone': { label: 'Primary Phone', selector: '#phone' },
+    'secondary_mobile': { label: 'Secondary Phone', selector: '#secondary_mobile' },
+    'email': { label: 'Primary Email', selector: '#email' },
+    'qualification': { label: 'Qualification', selector: '#qualification' },
+    'total_exp': { label: 'Total Experience', selector: '#total_exp_year' },
+    'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year' },
+    'pay_rate': { label: 'Pay Rate', selector: '#pay_rate' },
+    'bill_rate': { label: 'Bill Rate', selector: '#bill_rate' },
+    'comission_type': { label: 'Commission Type', selector: '#comission_type' },
+    'recruiter': { label: 'Relationship Manager', selector: '#recruiter' },
+    'specialties': { label: 'Specialties', selector: '#specialties' }
+};
 
+window.__currentMissingFields = [];
+
+function collectFormValidationErrors(formEl, validatorInstance) {
+    var errors = [];
     if (formEl) {
-        // Collect rendered messages from FormValidation
-        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block, .fv-plugins-message-container [data-validator], .fv-plugins-message-container.invalid-feedback');
+        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block');
         msgEls.forEach(function (el) {
             var txt = (el.innerText || el.textContent || '').trim();
-            if (txt && txt !== '' && errorList.indexOf(txt) === -1) {
-                errorList.push(txt);
+            if (txt && errors.indexOf(txt) === -1) {
+                errors.push(txt);
             }
         });
     }
-
-    // Direct inspect if FormValidation messages are not yet in DOM
-    if (errorList.length === 0 && formEl) {
-        Object.keys(fieldLabelMap).forEach(function (fieldName) {
-            var el = formEl.querySelector('[name="' + fieldName + '"]');
-            if (el) {
-                var val = $(el).val();
-                if (fieldName === 'phone') {
-                    if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
-                        errorList.push('Primary number is required and must be valid for the selected country');
-                    }
-                } else if (fieldName === 'email') {
-                    if (!val || !val.trim() || !/\S+@\S+\.\S+/.test(val)) {
-                        errorList.push('A valid Primary email is required');
-                    }
-                } else if (!val || !String(val).trim()) {
-                    errorList.push(fieldLabelMap[fieldName] + ' is required');
-                }
-            }
-        });
-    }
-
-    return errorList;
+    return errors;
 }
 
-/**
- * Enterprise Notification Box on Validation Failure
- */
-function displayValidationErrorsNotification(errorList, formEl) {
-    if (!errorList || !errorList.length) {
-        errorList = ['Please check all mandatory fields marked with an asterisk (*) and provide valid details.'];
+function detectMissingFields(formEl, validatorInstance) {
+    var missing = [];
+    var seenKeys = {};
+
+    function addMissing(key) {
+        if (!seenKeys[key] && fieldConfigMap[key]) {
+            seenKeys[key] = true;
+            missing.push({
+                key: key,
+                label: fieldConfigMap[key].label,
+                selector: fieldConfigMap[key].selector
+            });
+        }
     }
 
-    // 1. In-page notification box at top of form
-    var box = $('#formValidationNotificationBox');
-    var list = $('#formValidationNotificationList');
-    if (box.length && list.length) {
-        list.empty();
-        errorList.forEach(function (msg) {
-            list.append('<li class="mb-1"><i class="fa-solid fa-circle-exclamation me-1" style="color: #ef4444; font-size: 11px;"></i> ' + $('<div>').text(msg).html() + '</li>');
+    // 1. Inspect FormValidation rendered error containers in DOM
+    if (formEl) {
+        var msgContainers = formEl.querySelectorAll('.fv-plugins-message-container [data-field]');
+        msgContainers.forEach(function (el) {
+            var fName = el.getAttribute('data-field');
+            if (fName && fieldConfigMap[fName]) {
+                addMissing(fName);
+            }
         });
-        box.removeClass('d-none');
+
+        var invalidInputs = formEl.querySelectorAll('.is-invalid, [aria-invalid="true"]');
+        invalidInputs.forEach(function (inp) {
+            var fName = inp.getAttribute('name');
+            if (fName && fieldConfigMap[fName]) {
+                addMissing(fName);
+            }
+        });
     }
 
-    // 2. Enterprise modal notification box
-    var alertHtml = '<div style="text-align: left; max-height: 250px; overflow-y: auto; padding: 4px 6px; font-size: 13px;">';
-    alertHtml += '<p style="margin-bottom: 10px; font-weight: 600; color: #1e293b;">The following validation' + (errorList.length > 1 ? 's' : '') + ' failed before submission:</p>';
-    alertHtml += '<ul style="margin: 0; padding-left: 18px; color: #dc2626; line-height: 1.6;">';
-    errorList.forEach(function (err) {
-        alertHtml += '<li style="margin-bottom: 4px;"><strong>' + $('<div>').text(err).html() + '</strong></li>';
-    });
-    alertHtml += '</ul>';
-    alertHtml += '<p style="margin-top: 10px; margin-bottom: 0; font-size: 11.5px; color: #64748b;">Please resolve these fields and click submit again.</p>';
-    alertHtml += '</div>';
+    // 2. Direct validation check for all required fields
+    Object.keys(fieldConfigMap).forEach(function (key) {
+        if (seenKeys[key]) return;
+        var el = formEl ? formEl.querySelector(fieldConfigMap[key].selector || '[name="' + key + '"]') : null;
+        if (!el) el = formEl ? formEl.querySelector('[name="' + key + '"]') : null;
 
-    Swal.fire({
-        title: "Validation Incomplete",
-        html: alertHtml,
-        icon: "warning",
-        buttonsStyling: false,
-        confirmButtonText: "Review & Fix",
-        customClass: {
-            confirmButton: "btn btn-primary btn-sm"
-        }
-    }).then(function () {
-        // Scroll to first invalid field or top notification box
-        var firstInvalid = formEl ? formEl.querySelector('.is-invalid, .fv-plugins-message-container:not(:empty)') : null;
-        if (firstInvalid) {
-            var fvRow = firstInvalid.closest('.fv-row') || firstInvalid;
-            fvRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            var inp = fvRow.querySelector('input, select, textarea');
-            if (inp) inp.focus();
-        } else if (box.length) {
-            box[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (key === 'phone') {
+            if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
+                addMissing('phone');
+            }
+        } else if (key === 'secondary_mobile') {
+            var sVal = $(el).val();
+            if (sVal && String(sVal).trim() && typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('secondary_mobile', false)) {
+                addMissing('secondary_mobile');
+            }
+        } else if (key === 'email') {
+            var emailVal = el ? $(el).val() : '';
+            if (!emailVal || !emailVal.trim() || !/\S+@\S+\.\S+/.test(emailVal)) {
+                addMissing('email');
+            }
+        } else if (key === 'kt_tagify_work_location') {
+            var locVal = el ? $(el).val() : '';
+            if (!locVal || !String(locVal).trim()) {
+                addMissing('kt_tagify_work_location');
+            }
+        } else if (key === 'recruiter') {
+            var recVal = el ? $(el).val() : '';
+            var recId = $('#recruiter_id').val();
+            if (!recVal || !String(recVal).trim() || !recId) {
+                addMissing('recruiter');
+            }
+        } else if (key === 'total_exp') {
+            var yr = $('#total_exp_year').val();
+            if (!yr && yr !== '0') {
+                addMissing('total_exp');
+            }
+        } else if (key === 'rel_exp') {
+            var rYr = $('#rel_exp_year').val();
+            if (!rYr && rYr !== '0') {
+                addMissing('rel_exp');
+            }
+        } else if (key === 'comission_type') {
+            var ct = $('#comission_type').val() || $('#hidden_comission_type').val();
+            if (!ct) {
+                addMissing('comission_type');
+            }
+        } else {
+            var val = el ? $(el).val() : '';
+            if (!val || !String(val).trim()) {
+                addMissing(key);
+            }
         }
     });
 
-    if (typeof toastr !== 'undefined') {
-        toastr.error('Validation failed: ' + errorList.length + ' field' + (errorList.length > 1 ? 's' : '') + ' require attention.');
+    return missing;
+}
+
+function jumpToField(fieldKey) {
+    closeRequiredFieldsModal();
+
+    var cfg = fieldConfigMap[fieldKey];
+    var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
+    if (!targetEl) {
+        targetEl = document.querySelector('[name="' + fieldKey + '"]');
     }
+
+    if (targetEl) {
+        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group') || targetEl;
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Add temporary visual highlight ring around that field
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body') || targetEl;
+        $(highlightEl).addClass('field-attention-highlight');
+        setTimeout(function () {
+            $(highlightEl).removeClass('field-attention-highlight');
+        }, 3000);
+
+        // Automatically focus the field
+        setTimeout(function () {
+            if (fieldKey === 'recruiter') {
+                $('#kt_activitiesRecruiter_toggle').trigger('click');
+            } else if (fieldKey === 'kt_tagify_work_location') {
+                var tagifyInput = document.querySelector('.tagify__input');
+                if (tagifyInput) tagifyInput.focus();
+                else targetEl.focus();
+            } else if (typeof targetEl.focus === 'function') {
+                targetEl.focus();
+            }
+        }, 350);
+    }
+}
+
+function showRequiredFieldsModal(missingFields) {
+    if (!missingFields || !missingFields.length) {
+        missingFields = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
+    }
+
+    window.__currentMissingFields = missingFields;
+
+    var count = missingFields.length;
+    var countText = count === 1 ? '1 required field' : (count + ' required fields');
+    var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can submit this candidate.';
+
+    $('#rfMissingCountText').text(countText);
+    $('#rfModalDesc').text(descText);
+
+    var $list = $('#rfFieldsList');
+    $list.empty();
+
+    missingFields.forEach(function (f) {
+        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">'
+            + '<div class="rf-field-row-left">'
+            + '<span class="rf-field-badge" aria-hidden="true">!</span>'
+            + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
+            + '</div>'
+            + '<i class="fa-solid fa-chevron-right rf-field-chevron" aria-hidden="true"></i>'
+            + '</div>';
+        $list.append(rowHtml);
+    });
+
+    var $modal = $('#requiredFieldsModal');
+    $modal.fadeIn(150, function () {
+        $('#rfPrimaryCta').focus();
+    });
+}
+
+function closeRequiredFieldsModal() {
+    $('#requiredFieldsModal').fadeOut(120);
+}
+
+// Modal event listeners
+$(document).on('click', '#rfModalClose', function (e) {
+    e.preventDefault();
+    closeRequiredFieldsModal();
+});
+
+$(document).on('click', '#requiredFieldsModal', function (e) {
+    if (e.target === this) {
+        closeRequiredFieldsModal();
+    }
+});
+
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+        closeRequiredFieldsModal();
+    }
+});
+
+$(document).on('click', '.rf-field-row', function (e) {
+    e.preventDefault();
+    var key = $(this).data('field-key');
+    if (key) {
+        jumpToField(key);
+    }
+});
+
+$(document).on('keydown', '.rf-field-row', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var key = $(this).data('field-key');
+        if (key) {
+            jumpToField(key);
+        }
+    }
+});
+
+$(document).on('click', '#rfPrimaryCta', function (e) {
+    e.preventDefault();
+    if (window.__currentMissingFields && window.__currentMissingFields.length) {
+        jumpToField(window.__currentMissingFields[0].key);
+    } else {
+        closeRequiredFieldsModal();
+    }
+});
+
+function displayValidationErrorsNotification(errorList, formEl, validatorInstance) {
+    var missing = detectMissingFields(formEl, validatorInstance);
+    if (!missing.length && errorList && errorList.length) {
+        errorList.forEach(function (err) {
+            var foundKey = null;
+            Object.keys(fieldConfigMap).forEach(function (k) {
+                if (err.toLowerCase().indexOf(fieldConfigMap[k].label.toLowerCase()) !== -1 || err.toLowerCase().indexOf(k.toLowerCase()) !== -1) {
+                    foundKey = k;
+                }
+            });
+            if (foundKey) {
+                missing.push({
+                    key: foundKey,
+                    label: fieldConfigMap[foundKey].label,
+                    selector: fieldConfigMap[foundKey].selector
+                });
+            } else {
+                missing.push({
+                    key: 'generic',
+                    label: err.replace(/^(the|please|a)\s+/i, '').replace(/\s+(is required|is invalid|must contain.*)$/i, ''),
+                    selector: null
+                });
+            }
+        });
+    }
+
+    if (!missing.length) {
+        missing = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
+    }
+
+    showRequiredFieldsModal(missing);
 }
 
 @php if(@$page_event != 'EDIT'){  @endphp
@@ -3438,6 +3635,7 @@ var KTAddCandidate = function () {
 
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
+                  closeRequiredFieldsModal();
                   $("#save-form").prop("disabled", true);
                   $("#save-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
@@ -3520,7 +3718,7 @@ var KTAddCandidate = function () {
                     }, 500);
                 } else {
                     var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form);
+                    displayValidationErrorsNotification(errors, form, validator);
                 }
             });
         });
@@ -3577,6 +3775,7 @@ var KTEditCandidate = function () {
             e.preventDefault();
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
+                  closeRequiredFieldsModal();
                   $("#edit-form").prop("disabled", true);
                   $("#edit-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
@@ -3647,7 +3846,7 @@ var KTEditCandidate = function () {
                     }, 500);
                 } else {
                     var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form);
+                    displayValidationErrorsNotification(errors, form, validator);
                 }
             });
         });
