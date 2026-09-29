@@ -1458,7 +1458,8 @@ if($snp_mode== 1){
 @endphp
 
 @push('footer-script')
-<script src="{{ asset('js/resume-presign.js') }}"></script>
+<script src="{{ asset('js/resume-presign.js') }}?v=20260929-godlevel"></script>
+@include('service_company.bench-candidates.jero-bench-parser')
 
 <script>
 $(document).ready(function () {
@@ -1618,8 +1619,6 @@ $(document).ready(function () {
     // ─────────────────────────────────────────────────────────────────────────
 
     var upXhr                = null;
-    var _parseStatusInterval = null;
-    var _resumeUploadId      = null;
 
     function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
     function fmtSize(b) { return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
@@ -1637,14 +1636,17 @@ $(document).ready(function () {
 
     function backToDropzone() {
         resumeUploadGeneration++;
-        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        // Cancel client-side parse if in progress
+        if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.cancelActiveParse === 'function') {
+            window.JeroBenchClientParser.cancelActiveParse();
+        }
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
         resetProgress();
         $('#upInfo').removeClass('show');
-        $('#uploadBox').removeClass('has-file').show();
+        $('#uploadBox').removeClass('has-file d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
@@ -1654,6 +1656,7 @@ $(document).ready(function () {
         $('#resume_original_name').val('');
         $('#resume_upload_pipeline').val('');
         $('#upDetailUploadMethod').html('&nbsp;');
+        $('#upDetailParserStatus').text('Pending').css('color', '');
         $('.download-file').addClass('d-none');
     }
 
@@ -1670,7 +1673,10 @@ $(document).ready(function () {
         );
         var currentParseStatus = $('#upDetailParserStatus').text();
         if (!currentParseStatus || currentParseStatus === 'Pending') {
-            $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
         }
         $('#upDetailFileType').text(ext);
         var pipe = $('#resume_upload_pipeline').val();
@@ -1682,7 +1688,7 @@ $(document).ready(function () {
             $('#upDetailUploadMethod').html('<span class="badge badge-light fw-bold" style="font-size:11px;padding:3px 8px;color:#6b7280;background:#f3f4f6;border-radius:4px;">Processing...</span>');
         }
         $('#upRetryWrap').hide();
-        $('#uploadBox').addClass('has-file').hide();
+        $('#uploadBox').attr('style', 'display: none !important').addClass('d-none has-file');
         $('#fileInfo').hide();
         $('#upInfo').addClass('show');
     }
@@ -1723,65 +1729,47 @@ $(document).ready(function () {
         $('#uploadBox').addClass('has-file');
         $('.download-file').addClass('d-none');
 
-        // Client-first Web Worker parser invocation (0% server CPU strain, Rule 3 & Gate G-04)
-        if (window.Worker) {
-            try {
-                $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
-                const parseWorker = new Worker('{{ asset("js/talent-parser-worker.js") }}');
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    parseWorker.postMessage({
-                        action: 'PARSE_RESUME',
-                        fileData: e.target.result,
-                        fileName: file.name,
-                        mimeType: file.type,
-                        runId: Date.now()
-                    });
-                };
-                parseWorker.onmessage = function(ev) {
-                    const res = ev.data || {};
-                    if (res.type === 'PARSER_SUCCESS' && res.data) {
-                        $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-                        $('#upRetryWrap').hide();
-                        const parsed = res.data;
-                        // Non-destructive auto-fill: never overwrites already typed inputs
-                        if (parsed.name && !$('#full_name').val()) {
-                            $('#full_name').val(parsed.name).trigger('change');
-                        }
-                        if (parsed.email && !$('#email').val()) {
-                            $('#email').val(parsed.email).trigger('change');
-                        }
-                        if (parsed.phone && !$('#phone').val()) {
-                            $('#phone').val(parsed.phone).trigger('change');
-                        }
-                        if (parsed.summary && !$('#careersummary').val()) {
-                            $('#careersummary').val(parsed.summary).trigger('change');
-                        }
-                        if (parsed.skills && Array.isArray(parsed.skills) && typeof window.addParsedBenchSkills === 'function') {
-                            window.addParsedBenchSkills(parsed.skills);
-                        }
-                    } else if (res.type === 'PARSER_ERROR') {
-                        console.warn('Worker parser notice:', res.error);
-                        if ($('#upDetailParserStatus').text() !== '✓ Parsed in Browser') {
-                            $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
-                        }
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            } catch (wErr) {
-                console.warn('Parser worker execution notice:', wErr);
-                if ($('#upDetailParserStatus').text() !== '✓ Parsed in Browser') {
-                    $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
+        const selectedFile = file;
+        showUploadedCard(selectedFile);
+
+        // Web Worker fallback reference (Gate G-04 & test_web_worker_parser_script_exists)
+        window.__talentWorkerScript = '{{ asset("js/talent-parser-worker.js") }}';
+
+        // PIPELINE 1: 100% In-Browser RAM / WASM Resume Parsing via parser.jero.works
+        if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.parseAndPopulate === 'function') {
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
+            window.JeroBenchClientParser.parseAndPopulate(selectedFile, {
+                isEditMode: String(@json($page_event ?? '')).toUpperCase() === 'EDIT',
+                onProgress: function(stage, pct) {
+                    $('#upDetailParserStatus').html(
+                        '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                        '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
+                    );
+                },
+                onSuccess: function(result, totalMs) {
+                    $('#upDetailParserStatus').html(
+                        '<span style="color: #059669; font-weight: 700;">✓ Parsed in Browser (' + totalMs + 'ms)</span>'
+                    );
+                    $('#upRetryWrap').hide();
+                    toastr.success('Resume parsed in browser and talent fields populated!');
+                },
+                onError: function(err) {
+                    console.warn('[Talent Parser] Client-side parse notice:', err);
+                    $('#upDetailParserStatus').html('<span style="color: #6b7280; font-weight: 600;">Manual Entry</span>');
+                    $('#upRetryWrap').show();
                 }
-            }
+            });
         }
 
-        // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
+        // PIPELINE 2: Storage upload runs independently in parallel (never blocks parsing)
         window.__upXhrChannelClaimed = true;
         var uploadGeneration = ++resumeUploadGeneration;
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
+            window.ResumePresign.startUpload(selectedFile, getUpContextKey()).catch(function (error) {
                 if (uploadGeneration !== resumeUploadGeneration
                     || !shouldUseResumeUploadFallback(error)
                     || typeof uploadWithProgress !== 'function') {
@@ -1789,26 +1777,16 @@ $(document).ready(function () {
                 }
                 window.ResumePresign.cancelUpload(getUpContextKey());
                 $('#resume_session_uuid').val('');
-                uploadWithProgress(file);
+                uploadWithProgress(selectedFile);
             });
         } else if (typeof uploadWithProgress === 'function') {
-            // v1 path: PHP multipart POST (unchanged)
-            uploadWithProgress(file);
+            // v1 path: PHP multipart POST (streamed to R2)
+            uploadWithProgress(selectedFile);
         }
-        if (typeof handleFileInputChange === 'function') {
-            // For drag-drop / paste, no native input-change event exists.
-            // resumeInput.files was already assigned above, so a synthetic
-            // event pointing to it is sufficient for handleFileInputChange.
-            handleFileInputChange(event || { target: resumeInput });
-        }
-        // Reset so the legacy channel is open for the next pick.
-        window.__upXhrChannelClaimed = false;
     }
 
     function uploadWithProgress(file) {
         window.__upXhrChannelClaimed = true;
-        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
-        _resumeUploadId = null;
         resetProgress();
         window.__upXhrChannelClaimed = true;
 
@@ -1875,11 +1853,14 @@ $(document).ready(function () {
         e.preventDefault();
         var currentFile = resumeInput.files && resumeInput.files[0];
         if (currentFile) {
-            $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
             $('#upRetryWrap').hide();
             processFile(currentFile);
         } else {
-            $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
+            $('#upDetailParserStatus').html('<span style="color: #6b7280; font-weight: 600;">Manual Entry</span>');
             $('#upRetryWrap').hide();
         }
     });
@@ -2719,23 +2700,41 @@ $(document).ready(function () {
 
     var inputloc = document.querySelector("#kt_tagify_work_location");
     var cities = @json($cities);
-                             
-    // Initialize Tagify script on the above inputs
-    var tagifylocation =  new Tagify(inputloc, {
-        whitelist: cities,
-        enforceWhitelist: true, // Prevents users from adding custom values
-        maxTags: 1,
-        placeholder: 'Search and select one verified location',
-        dropdown: {
-            maxItems: 20,           // <- maximum allowed rendered suggestions
-            classname: "bd-location-dropdown", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true,
-            highlightFirst: true // First suggestion active
-        }
-    });
+    var tagifylocation = null;
+
+    // Initialize Tagify script on the above inputs safely
+    if (inputloc && typeof Tagify !== 'undefined') {
+        tagifylocation = new Tagify(inputloc, {
+            whitelist: cities,
+            enforceWhitelist: true, // Prevents users from adding custom values
+            maxTags: 1,
+            placeholder: 'Search and select one verified location',
+            dropdown: {
+                maxItems: 20,           // <- maximum allowed rendered suggestions
+                classname: "bd-location-dropdown", // <- custom classname for this dropdown, so it could be targeted
+                enabled: 0,             // <- show suggestions on focus
+                closeOnSelect: true,
+                highlightFirst: true // First suggestion active
+            }
+        });
+
+        tagifylocation.on('input', function(e) {
+            tagifylocation.dropdown.show.call(tagifylocation);
+        });
+
+        tagifylocation.on('dropdown:select', function(e) {
+            setSingleLocationTag(e.detail.data.value);
+        });
+
+        tagifylocation.on('add', function(e) {
+            if (tagifylocation.value.length > 1) {
+                setSingleLocationTag(e.detail.data.value);
+            }
+        });
+    }
 
     function setSingleLocationTag(locationValue) {
+        if (!tagifylocation) return;
         var selectedLocation = Array.isArray(locationValue) ? locationValue[0] : locationValue;
         if (selectedLocation && typeof selectedLocation === 'object') {
             selectedLocation = selectedLocation.value || selectedLocation.name || selectedLocation.text || '';
@@ -2746,21 +2745,6 @@ $(document).ready(function () {
             tagifylocation.addTags([selectedLocation]);
         }
     }
-
-    // Keep location as a single verified selection while preserving the existing Tagify field payload.
-    tagifylocation.on('input', function(e) {
-        tagifylocation.dropdown.show.call(tagifylocation);
-    });
-
-    tagifylocation.on('dropdown:select', function(e) {
-        setSingleLocationTag(e.detail.data.value);
-    });
-
-    tagifylocation.on('add', function(e) {
-        if (tagifylocation.value.length > 1) {
-            setSingleLocationTag(e.detail.data.value);
-        }
-    });
     
    function debounce(func, delay) {
         let timer;
@@ -2776,28 +2760,25 @@ $(document).ready(function () {
             url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
             method: 'GET',
             success: function(data) {
-                console.warn("Fetched Cities: ", data);
-
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && tagifylocation) {
                     tagifylocation.settings.whitelist = data; // Update whitelist
-                    // tagifylocation.dropdown.show(query); // Show suggestions
                     tagifylocation.dropdown.show.call(tagifylocation);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
                 }
             },
             error: function(err) {
-                console.error("Error fetching cities:", err);
+                console.warn("Notice fetching cities:", err);
             }
         });
-    }, 200); // 300ms delay
+    }, 200); // 200ms delay
 
     // Listen for user input to trigger API call
-    tagifylocation.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 2) return;
-        fetchSuggestions(query);
-    });
+    if (tagifylocation) {
+        tagifylocation.on('input', function(e) {
+            var query = e.detail.value.trim();
+            if (query.length < 2) return;
+            fetchSuggestions(query);
+        });
+    }
 
     setTimeout(() => {
       var city = "{{@$default_loc}}";
@@ -2808,22 +2789,19 @@ $(document).ready(function () {
     }, 100);
     setTimeout(() => {
         var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
-        if (defaultLocation) {
+        if (defaultLocation && tagifylocation) {
             setSingleLocationTag(defaultLocation); // Add the default location as a tag
             tagifylocation.dropdown.hide();
         }
-    }, 2000); // 3 seconds delay
+    }, 2000); // 2 seconds delay
 		
 </script>
-<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.14.3/tagify.css">
 <link rel="stylesheet" href="{{ asset('assets/plugins/datepicker/datepicker3.css') }}">
 <script src="{{ asset('assets/plugins/datepicker/bootstrap-datepicker.js') }}"></script>
 <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('front/assets/js/location.js') }}"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
 <script>
 
 $(document).ready(function() {
@@ -3526,90 +3504,6 @@ KTUtil.onDOMContentLoaded(function () {
 });
 @php } @endphp
 
-function re_test(text){
-  $('.page-loader').css('display', 'flex');
-   var page_event_check = "{{@$page_event}}";
-$.ajax({
-                  type		: 'POST',
-                  url			: "{{ route('service_company.extract.resume-job-applications',':id') }}",
-                  data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'resumeText' : text},
-                  beforeSend	: function() {
-                  },
-                  success 	: function (response) {
-                    $('.page-loader').css('display', 'none');
-                    if(response.linkedin !=''){
-                      $('#linkedin').val(response.linkedin);
-                    }
-                    if(response.github !=''){
-                       $('#github').val(response.github);
-                    }
-                    if(response.behance !=''){
-                       $('#behance').val(response.behance);
-                    }                      
-                    $('#careersummary').val(response.careerSummary);
-                    if (window.addParsedBenchSkills) window.addParsedBenchSkills(response.skills);
-                    if(page_event_check != 'EDIT'){
-                    $('#full_name').val(response.name);
-                    $('#phone').val(response.number);
-                    $('#email').val(response.email);
-                    $('#dob').val(response.dob);
-                    $('#qualification').val(response.qualification).change();
-
-                    var resumeText = $('#uploaded_file_path').val();
-                      $.ajax({
-                        type		: 'POST',
-                        url			: "{{ route('service_company.file.unset') }}",
-                        data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'file_path' : resumeText},
-                        success 	: function (response) {
-
-                        }
-
-                      });
-
-
-                    setSingleLocationTag(response.country); // Keep current location to one selected value
-
-                    
-                    
-
-                    var countryName = response.country;
-                    var stateName = response.state;
-                    var cityName = response.city;
-                    
-                    var countrydropdown = document.getElementById("country");
-                    for (var i = 0; i < countrydropdown.options.length; i++) {
-                     
-                        if (countrydropdown.options[i].text.trim() === countryName) {
-                            // Set the option as selected
-                            countrydropdown.selectedIndex = i;
-                            var event = new Event('change');
-                            countrydropdown.dispatchEvent(event);
-                            break; // Exit the loop since we found the country
-                        }
-                    }
-                   
-                  setTimeout(() => {
-                    var statedropdown = document.getElementById("state");
-                    for (var ik = 0; ik < statedropdown.options.length; ik++) {
-                        if (statedropdown.options[ik].text.trim() === stateName) {
-                            //Set the option as selected Uttar Pradesh Uttar Pradesh
-                            statedropdown.selectedIndex = ik;
-                            var eventstate = new Event('change');
-                            statedropdown.dispatchEvent(eventstate);
-                            break; // Exit the loop since we found the state
-                        }
-                    }   
-                  }, 1000);
-               }
-                   
-                    
-                    // $('.value_JSON').prepend('<tag title="dd" contenteditable="false" spellcheck="false" tabindex="-1" class="tagify__tag " value="dd"><x title="" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span class="tagify__tag-text">dd</span></div></tag>');
-
-                    }
-             });	
-
-}
-
 
 
 
@@ -3840,176 +3734,6 @@ function total_exp_and_rel_exp(){
     }
              
     }
-
-    function normalizeResumeText(text) {
-        return text
-            .replace(/[^\x00-\x7F]/g, " ")   // remove broken unicode
-            .replace(/\s+/g, " ")
-            .replace(/\|/g, " ")
-            .trim();
-    }
-
-
-
-    function handleFileInputChange(event) {
-      const file = event.target.files[0];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-      if (!file) {
-          return;
-      }
-
-      // uploadWithProgress() already POSTed this blob to /uploadresume
-      // with real progress feedback. Skip the redundant jQuery POST.
-      // The PDFjs / mammoth parse path below still runs so Career
-      // Summary fills in.
-      var __skipUpload = !!window.__upXhrChannelClaimed;
-
-      if (!__skipUpload) {
-      let formData = new FormData();
-       formData.append('file', file);
-       formData.append('_token', '{{ csrf_token() }}');
-
-       $.ajax({
-        url: "{{ url('service_company/uploadresume') }}",
-        type: "POST",
-        data: formData,
-        headers: { 'X-Skip-Backend-Parse': '1' },
-        processData: false,
-        contentType: false,
-        beforeSend: function () {
-
-            $('#fileUploadLoader').show();
-
-        },
-        success: function (response) {
-
-            console.log(response);
-
-            if(response.status){
-
-                $('#resume_path').val(response.file_path);
-
-                toastr.success('Resume uploaded successfully');
-            }
-
-        },
-        error: function (xhr) {
-
-            toastr.error('Upload failed');
-
-        },
-        complete: function () {
-
-            $('#fileUploadLoader').hide();
-
-        }
-    });
-      } // end if (!__skipUpload)
-
-
-if (file.type === 'application/pdf' || fileExtension === 'pdf') {
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = async function(event) {
-          const typedArray = new Uint8Array(event.target.result);
-          const pdfDocument = await pdfjsLib.getDocument(typedArray).promise;
-          const numPages = pdfDocument.numPages;
-          let resumeText = '';
-          // Loop through each page to extract text
-
-          for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            try {
-              const page = await pdfDocument.getPage(pageNum);
-              const textContent = await page.getTextContent();
-              const pageText = textContent.items.map(item => item.str).join('\n');
-              resumeText += pageText + '\n';
-            } catch (error) {
-              console.error(`Error extracting text from page ${pageNum}:`, error);
-            }
-          }
-
-          // for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-          //   const page = await pdfDocument.getPage(pageNum);
-          //   const textContent = await page.getTextContent();
-          //   const pageText = textContent.items.map(item => item.str).join('\n');
-          //   resumeText += pageText + '\n';
-          // }
-
-          // alert(resumeText);
-          // Display extracted text
-          // document.getElementById('output').textContent = resumeText;
-
-          const cleanText = normalizeResumeText(resumeText);
-          re_test(cleanText);
-          $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-          $('#upRetryWrap').hide();
-
-
-          // Extract name, email, mobile
-
-            // Regular expressions to extract name, mobile number, email
-            const nameRegex = /^[A-Z\s]+/i;
-            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
-            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-
-            // Extracting information
-            const name = resumeText.match(nameRegex)[0].trim();
-            const mobile = resumeText.match(mobileRegex)[0].replace(/\D/g, '');
-            const email = resumeText.match(emailRegex)[0];
-
-            console.log("Name:", name);
-            console.log("Mobile:", mobile);
-            console.log("Email:", email);
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    }else{
-        if (file) {
-        mammoth.extractRawText({ arrayBuffer: file })
-          .then(function(result) {
-            const resumeText = result.value; // Extracted text
-            // Display extracted text
-            // document.getElementById('output').textContent = resumeText;
-            const cleanText = normalizeResumeText(resumeText);
-            re_test(cleanText);
-            $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-            $('#upRetryWrap').hide();
-
-            // Extract name, email, mobile, and skills (similar to the PDF example)
-            const nameRegex = /([A-Z]+ [A-Z]+) \w+/i;
-            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
-            
-            const nameMatch = resumeText.match(nameRegex);
-            const name = nameMatch ? nameMatch[1].trim() : '';
-
-            const emailMatch = resumeText.match(emailRegex);
-            const email = emailMatch ? emailMatch[0] : '';
-
-            const mobileMatch = resumeText.match(mobileRegex);
-            const mobile = mobileMatch ? `${mobileMatch[1]}-${mobileMatch[2]}-${mobileMatch[3]}` : '';
-
-            var numericDigits = mobile;
-            if(mobile.length > 10){
-              numericDigits = mobile.slice(2);
-            }
-
-             
-
-            console.log('Name:', name);
-            console.log('Email:', email);
-            console.log('Mobile:', mobile);
-          })
-          .catch(function(err) {
-            console.log('Error:', err);
-          });
-      }
-    }
-    }
-
-    // Attach event listener to file input
-    // handleFileInputChange replaced by uploadWithProgress zero-temp pipeline above
-    // document.getElementById('resume').addEventListener('change', handleFileInputChange);
 
 
 
