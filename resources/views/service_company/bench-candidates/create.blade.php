@@ -613,71 +613,71 @@ if($snp_mode== 1){
                           // 7-Category Global Education Standard with Regional Prov & Global Alias Taxonomy
                           $educationCategories = [
                               "🎓 Bachelor's / Undergraduate Degrees" => [
-                                  13 => ['label' => 'B.Tech / B.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian,American,British,Global', 'aliases' => 'btech,b.tech,b tech,be,b.e,bachelor of technology,bachelor of engineering,beng,b.eng,bse'],
-                                  12 => ['label' => 'B.S. / B.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,British,Canadian,Australian,German,French,European,Global', 'aliases' => 'bs,b.s.,bsc,b.sc,bachelor of science,bachelor science,bs cs,bsc cs,b sc'],
-                                  16 => ['label' => 'BCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian,Global', 'aliases' => 'bca,b.c.a.,bachelor of computer applications,bachelor computer applications'],
-                                  5  => ['label' => 'BBA / BMS (Business Administration)', 'badge' => 'Business / Global', 'regions' => 'Indian,American,British,Canadian,Australian,Global', 'aliases' => 'bba,b.b.a.,bms,b.m.s.,bachelor of business administration,bachelor business'],
-                                  6  => ['label' => 'B.Com (Commerce & Finance)', 'badge' => 'Commerce / Global', 'regions' => 'Indian,British,Australian,Canadian,Global', 'aliases' => 'bcom,b.com,bachelor of commerce,bachelor commerce'],
-                                  3  => ['label' => 'B.A (Arts & Humanities)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,British,Canadian,Australian,European,Global', 'aliases' => 'ba,b.a.,bachelor of arts,bachelor arts'],
-                                  7  => ['label' => 'B.Des (Design)', 'badge' => 'Design / Global', 'regions' => 'Indian,American,British,Global', 'aliases' => 'bdes,b.des,bachelor of design,bachelor design'],
-                                  18 => ['label' => 'BFA (Fine Arts)', 'badge' => 'Arts / Global', 'regions' => 'Indian,American,British,Global', 'aliases' => 'bfa,b.f.a.,bachelor of fine arts'],
-                                  4  => ['label' => 'B.Arch (Architecture)', 'badge' => 'Architecture / Global', 'regions' => 'Indian,American,British,Global', 'aliases' => 'barch,b.arch,bachelor of architecture'],
-                                  11 => ['label' => 'B.Pharma (Pharmacy)', 'badge' => 'Pharma / Global', 'regions' => 'Indian,American,British,Global', 'aliases' => 'bpharma,b.pharma,b pharm,b.pharm,bachelor of pharmacy'],
-                                  19 => ['label' => 'BHM (Hotel Management)', 'badge' => 'Hospitality', 'regions' => 'Indian,Global', 'aliases' => 'bhm,b.h.m.,bachelor of hotel management'],
-                                  8  => ['label' => 'B.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian,British,Global', 'aliases' => 'bed,b.ed,bachelor of education'],
-                                  9  => ['label' => 'B.El.Ed (Elementary Education)', 'badge' => 'Education', 'regions' => 'Indian,Global', 'aliases' => 'beled,b.el.ed,bachelor of elementary education'],
-                                  10 => ['label' => 'B.P.Ed (Physical Education)', 'badge' => 'Sports & Phys', 'regions' => 'Indian,Global', 'aliases' => 'bped,b.p.ed,bachelor of physical education'],
-                                  21 => ['label' => 'BVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Global', 'aliases' => 'bvsc,b.v.sc,bachelor of veterinary science'],
+                                  13 => ['label' => 'B.Tech / B.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian,Commonwealth', 'aliases' => 'btech,b.tech,b tech,be,b.e,bachelor of technology,bachelor of engineering,beng,b.eng,bse'],
+                                  12 => ['label' => 'B.S. / B.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,Canadian,British,Australian,European,Indian', 'aliases' => 'bs,b.s.,bsc,b.sc,bachelor of science,bachelor science,bs cs,bsc cs,b sc'],
+                                  16 => ['label' => 'BCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'bca,b.c.a.,bachelor of computer applications,bachelor computer applications'],
+                                  5  => ['label' => 'BBA / BMS (Business Administration)', 'badge' => 'Business / Global', 'regions' => 'Indian,American,Canadian,British,Australian', 'aliases' => 'bba,b.b.a.,bms,b.m.s.,bachelor of business administration,bachelor business'],
+                                  6  => ['label' => 'B.Com (Commerce & Finance)', 'badge' => 'Commerce / Global', 'regions' => 'Indian,British,Canadian,Australian,Commonwealth', 'aliases' => 'bcom,b.com,bachelor of commerce,bachelor commerce'],
+                                  3  => ['label' => 'B.A (Arts & Humanities)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'ba,b.a.,bachelor of arts,bachelor arts'],
+                                  7  => ['label' => 'B.Des (Design)', 'badge' => 'Design / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bdes,b.des,bachelor of design,bachelor design'],
+                                  18 => ['label' => 'BFA (Fine Arts)', 'badge' => 'Arts / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bfa,b.f.a.,bachelor of fine arts'],
+                                  4  => ['label' => 'B.Arch (Architecture)', 'badge' => 'Architecture / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'barch,b.arch,bachelor of architecture'],
+                                  11 => ['label' => 'B.Pharma (Pharmacy)', 'badge' => 'Pharma / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bpharma,b.pharma,b pharm,b.pharm,bachelor of pharmacy'],
+                                  19 => ['label' => 'BHM (Hotel Management)', 'badge' => 'Hospitality', 'regions' => 'Indian', 'aliases' => 'bhm,b.h.m.,bachelor of hotel management'],
+                                  8  => ['label' => 'B.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bed,b.ed,bachelor of education'],
+                                  9  => ['label' => 'B.El.Ed (Elementary Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'beled,b.el.ed,bachelor of elementary education'],
+                                  10 => ['label' => 'B.P.Ed (Physical Education)', 'badge' => 'Sports & Phys', 'regions' => 'Indian', 'aliases' => 'bped,b.p.ed,bachelor of physical education'],
+                                  21 => ['label' => 'BVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bvsc,b.v.sc,bachelor of veterinary science'],
                               ],
                               "🎓 Master's / Postgraduate Degrees" => [
-                                  39 => ['label' => 'M.S. / M.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,British,Canadian,Australian,German,French,European,Global', 'aliases' => 'ms,m.s.,msc,m.sc,master of science,master science,ms cs,msc cs,m s,m sc,stanford ms,mit ms'],
-                                  40 => ['label' => 'M.Tech / M.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian,Global', 'aliases' => 'mtech,m.tech,m tech,me,m.e,master of technology,master of engineering,meng,m.eng'],
-                                  41 => ['label' => 'MBA / PGDM (Business Administration)', 'badge' => 'Management / Global', 'regions' => 'Indian,American,British,Canadian,Australian,German,French,Global', 'aliases' => 'mba,m.b.a.,pgdm,p.g.d.m.,master of business administration,master business administration,executive mba'],
-                                  42 => ['label' => 'MCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian,Global', 'aliases' => 'mca,m.c.a.,master of computer applications,master computer applications'],
-                                  43 => ['label' => 'MCM (Computer Management)', 'badge' => 'Management', 'regions' => 'Indian,Global', 'aliases' => 'mcm,m.c.m.,master of computer management'],
-                                  35 => ['label' => 'M.Com (Commerce & Finance)', 'badge' => 'Commerce', 'regions' => 'Indian,British,Global', 'aliases' => 'mcom,m.com,master of commerce'],
-                                  32 => ['label' => 'M.A (Arts & Humanities)', 'badge' => 'Humanities', 'regions' => 'Indian,American,British,Canadian,Australian,European,Global', 'aliases' => 'ma,m.a.,master of arts'],
-                                  36 => ['label' => 'M.Des. (Design)', 'badge' => 'Design', 'regions' => 'Indian,American,British,Global', 'aliases' => 'mdes,m.des,master of design'],
-                                  45 => ['label' => 'MFA (Fine Arts)', 'badge' => 'Fine Arts', 'regions' => 'Indian,American,British,Global', 'aliases' => 'mfa,m.f.a.,master of fine arts'],
-                                  33 => ['label' => 'M.Arch (Architecture)', 'badge' => 'Architecture', 'regions' => 'Indian,American,British,Global', 'aliases' => 'march,m.arch,master of architecture'],
-                                  38 => ['label' => 'M.Pharma (Pharmacy)', 'badge' => 'Pharma', 'regions' => 'Indian,American,British,Global', 'aliases' => 'mpharma,m.pharma,m pharm,m.pharm,master of pharmacy'],
-                                  37 => ['label' => 'M.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian,Global', 'aliases' => 'med,m.ed,master of education'],
-                                  47 => ['label' => 'MVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Global', 'aliases' => 'mvsc,m.v.sc,master of veterinary science'],
-                                  30 => ['label' => 'Integrated PG (Dual Degree)', 'badge' => 'Integrated / Dual', 'regions' => 'Indian,European,American,Global', 'aliases' => 'integrated pg,dual degree,integrated mtech,integrated btech mtech,5 year integrated'],
+                                  39 => ['label' => 'M.S. / M.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,Canadian,British,Australian,European,Indian', 'aliases' => 'ms,m.s.,msc,m.sc,master of science,master science,ms cs,msc cs,m s,m sc,stanford ms,mit ms'],
+                                  40 => ['label' => 'M.Tech / M.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'mtech,m.tech,m tech,me,m.e,master of technology,master of engineering,meng,m.eng'],
+                                  41 => ['label' => 'MBA / PGDM (Business Administration)', 'badge' => 'Management / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'mba,m.b.a.,pgdm,p.g.d.m.,master of business administration,master business administration,executive mba'],
+                                  42 => ['label' => 'MCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'mca,m.c.a.,master of computer applications,master computer applications'],
+                                  43 => ['label' => 'MCM (Computer Management)', 'badge' => 'Management', 'regions' => 'Indian', 'aliases' => 'mcm,m.c.m.,master of computer management'],
+                                  35 => ['label' => 'M.Com (Commerce & Finance)', 'badge' => 'Commerce', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mcom,m.com,master of commerce'],
+                                  32 => ['label' => 'M.A (Arts & Humanities)', 'badge' => 'Humanities', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'ma,m.a.,master of arts'],
+                                  36 => ['label' => 'M.Des. (Design)', 'badge' => 'Design', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mdes,m.des,master of design'],
+                                  45 => ['label' => 'MFA (Fine Arts)', 'badge' => 'Fine Arts', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mfa,m.f.a.,master of fine arts'],
+                                  33 => ['label' => 'M.Arch (Architecture)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'march,m.arch,master of architecture'],
+                                  38 => ['label' => 'M.Pharma (Pharmacy)', 'badge' => 'Pharma', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mpharma,m.pharma,m pharm,m.pharm,master of pharmacy'],
+                                  37 => ['label' => 'M.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'med,m.ed,master of education'],
+                                  47 => ['label' => 'MVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mvsc,m.v.sc,master of veterinary science'],
+                                  30 => ['label' => 'Integrated PG (Dual Degree)', 'badge' => 'Integrated / Dual', 'regions' => 'Indian,European', 'aliases' => 'integrated pg,dual degree,integrated mtech,integrated btech mtech,5 year integrated'],
                               ],
                               "🏛️ Doctorate & Research Degrees" => [
-                                  52 => ['label' => 'Ph.D. / Doctorate (Doctor of Philosophy)', 'badge' => 'Doctorate / Global', 'regions' => 'Indian,American,British,Canadian,Australian,German,French,European,Global', 'aliases' => 'phd,ph.d.,ph.d,doctorate,doctor of philosophy,dphil,d.phil'],
+                                  52 => ['label' => 'Ph.D. / Doctorate (Doctor of Philosophy)', 'badge' => 'Doctorate / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'phd,ph.d.,ph.d,doctorate,doctor of philosophy,dphil,d.phil'],
                               ],
                               "📜 Associate Degrees & Diplomas" => [
-                                  22 => ['label' => 'Diploma / Associate Degree (Technical & Polytechnic)', 'badge' => 'Polytechnic / Assoc', 'regions' => 'Indian,American,Canadian,Australian,Global', 'aliases' => 'diploma,polytechnic,associate degree,aa,a.a.,as,a.s.,aas,a.a.s.,associate of science,associate of arts'],
-                                  48 => ['label' => 'PG Diploma (Post Graduate Diploma)', 'badge' => 'PG Diploma', 'regions' => 'Indian,Canadian,British,Global', 'aliases' => 'pg diploma,pgd,pgdiploma,post graduate diploma'],
-                                  25 => ['label' => 'HND / HNC (Higher National Diploma/Certificate)', 'badge' => 'UK / Commonwealth', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'hnd,hnc,higher national diploma,higher national certificate'],
+                                  22 => ['label' => 'Diploma / Associate Degree (Technical & Polytechnic)', 'badge' => 'Polytechnic / Assoc', 'regions' => 'Indian,American,Canadian,Australian', 'aliases' => 'diploma,polytechnic,associate degree,aa,a.a.,as,a.s.,aas,a.a.s.,associate of science,associate of arts'],
+                                  48 => ['label' => 'PG Diploma (Post Graduate Diploma)', 'badge' => 'PG Diploma', 'regions' => 'Indian,Canadian,British,Commonwealth', 'aliases' => 'pg diploma,pgd,pgdiploma,post graduate diploma'],
+                                  25 => ['label' => 'HND / HNC (Higher National Diploma/Certificate)', 'badge' => 'UK / Commonwealth', 'regions' => 'British,Commonwealth', 'aliases' => 'hnd,hnc,higher national diploma,higher national certificate'],
                               ],
                               "⚖️ Professional, Legal & Medical Degrees" => [
-                                  26 => ['label' => 'CA / CPA (Chartered Accounting)', 'badge' => 'Finance / Global', 'regions' => 'Indian,American,British,Canadian,Australian,Global', 'aliases' => 'ca,cpa,chartered accountant,chartered accountancy,certified public accountant'],
-                                  27 => ['label' => 'CS (Company Secretary)', 'badge' => 'Corporate Law', 'regions' => 'Indian,British,Global', 'aliases' => 'cs,c.s.,company secretary,company secretaryship'],
-                                  29 => ['label' => 'ICWA / CMA (Cost & Management Accounting)', 'badge' => 'Cost Accounting', 'regions' => 'Indian,American,British,Global', 'aliases' => 'icwa,cma,cost accountant,cost and management accountant'],
-                                  23 => ['label' => 'LLB (Law Degree)', 'badge' => 'Legal / Global', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'llb,l.l.b.,bachelor of laws,jd,j.d.,juris doctor,law degree'],
-                                  31 => ['label' => 'LLM (Master of Laws)', 'badge' => 'Legal / Postgrad', 'regions' => 'Indian,American,British,European,Global', 'aliases' => 'llm,l.l.m.,master of laws'],
-                                  24 => ['label' => 'MBBS (Bachelor of Medicine & Surgery)', 'badge' => 'Medical / Surgery', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mbbs,m.b.b.s.,bachelor of medicine,md,doctor of medicine'],
-                                  46 => ['label' => 'MD / MS (Doctor of Medicine / Surgery)', 'badge' => 'Medical Specialty', 'regions' => 'Indian,American,British,Global', 'aliases' => 'md,m.d.,ms general surgery,master of surgery,doctor of medicine'],
-                                  28 => ['label' => 'DM (Doctor of Medicine - Super Specialty)', 'badge' => 'Super Specialty', 'regions' => 'Indian,Global', 'aliases' => 'dm,d.m.,super specialty'],
-                                  34 => ['label' => 'M.Ch (Surgical Super Specialty)', 'badge' => 'Surgical Specialty', 'regions' => 'Indian,Global', 'aliases' => 'mch,m.ch,magister chirurgiae'],
-                                  17 => ['label' => 'BDS (Dental Surgery)', 'badge' => 'Dental', 'regions' => 'Indian,British,Global', 'aliases' => 'bds,b.d.s.,dental surgery,dentist'],
-                                  44 => ['label' => 'MDS (Master of Dental Surgery)', 'badge' => 'Dental Postgrad', 'regions' => 'Indian,British,Global', 'aliases' => 'mds,m.d.s.,master dental surgery'],
-                                  15 => ['label' => 'BAMS (Ayurvedic Medicine)', 'badge' => 'Ayurveda', 'regions' => 'Indian,Global', 'aliases' => 'bams,b.a.m.s.,ayurveda'],
-                                  20 => ['label' => 'BHMS (Homeopathic Medicine)', 'badge' => 'Homeopathy', 'regions' => 'Indian,Global', 'aliases' => 'bhms,b.h.m.s.,homeopathy'],
-                                  14 => ['label' => 'B.U.M.S (Unani Medicine)', 'badge' => 'Unani', 'regions' => 'Indian,Global', 'aliases' => 'bums,b.u.m.s.,unani'],
+                                  26 => ['label' => 'CA / CPA (Chartered Accounting)', 'badge' => 'Finance / Global', 'regions' => 'Indian,American,Canadian,British,Australian', 'aliases' => 'ca,cpa,chartered accountant,chartered accountancy,certified public accountant'],
+                                  27 => ['label' => 'CS (Company Secretary)', 'badge' => 'Corporate Law', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'cs,c.s.,company secretary,company secretaryship'],
+                                  29 => ['label' => 'ICWA / CMA (Cost & Management Accounting)', 'badge' => 'Cost Accounting', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'icwa,cma,cost accountant,cost and management accountant'],
+                                  23 => ['label' => 'LLB (Law Degree)', 'badge' => 'Legal / Global', 'regions' => 'Indian,British,American,Commonwealth', 'aliases' => 'llb,l.l.b.,bachelor of laws,jd,j.d.,juris doctor,law degree'],
+                                  31 => ['label' => 'LLM (Master of Laws)', 'badge' => 'Legal / Postgrad', 'regions' => 'Indian,American,Canadian,British,European,Commonwealth', 'aliases' => 'llm,l.l.m.,master of laws'],
+                                  24 => ['label' => 'MBBS (Bachelor of Medicine & Surgery)', 'badge' => 'Medical / Surgery', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mbbs,m.b.b.s.,bachelor of medicine,md,doctor of medicine'],
+                                  46 => ['label' => 'MD / MS (Doctor of Medicine / Surgery)', 'badge' => 'Medical Specialty', 'regions' => 'Indian,American,Canadian,British,Commonwealth', 'aliases' => 'md,m.d.,ms general surgery,master of surgery,doctor of medicine'],
+                                  28 => ['label' => 'DM (Doctor of Medicine - Super Specialty)', 'badge' => 'Super Specialty', 'regions' => 'Indian', 'aliases' => 'dm,d.m.,super specialty'],
+                                  34 => ['label' => 'M.Ch (Surgical Super Specialty)', 'badge' => 'Surgical Specialty', 'regions' => 'Indian', 'aliases' => 'mch,m.ch,magister chirurgiae'],
+                                  17 => ['label' => 'BDS (Dental Surgery)', 'badge' => 'Dental', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bds,b.d.s.,dental surgery,dentist'],
+                                  44 => ['label' => 'MDS (Master of Dental Surgery)', 'badge' => 'Dental Postgrad', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mds,m.d.s.,master dental surgery'],
+                                  15 => ['label' => 'BAMS (Ayurvedic Medicine)', 'badge' => 'Ayurveda', 'regions' => 'Indian', 'aliases' => 'bams,b.a.m.s.,ayurveda'],
+                                  20 => ['label' => 'BHMS (Homeopathic Medicine)', 'badge' => 'Homeopathy', 'regions' => 'Indian', 'aliases' => 'bhms,b.h.m.s.,homeopathy'],
+                                  14 => ['label' => 'B.U.M.S (Unani Medicine)', 'badge' => 'Unani', 'regions' => 'Indian', 'aliases' => 'bums,b.u.m.s.,unani'],
                               ],
                               "🏫 Secondary & High School" => [
-                                  2  => ['label' => '12th Standard / High School Diploma / A-Levels', 'badge' => 'High School', 'regions' => 'Indian,American,Canadian,Global', 'aliases' => '12th,12th standard,hsc,intermediate,high school,high school diploma,ged'],
-                                  1  => ['label' => '10th Standard / GCSE / O-Levels', 'badge' => 'Secondary', 'regions' => 'Indian,Global', 'aliases' => '10th,10th standard,ssc,matric,matriculation'],
-                                  49 => ['label' => 'A levels / Advanced (UK/International)', 'badge' => 'UK A-Levels', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'a levels,a-levels,alevel,advanced level'],
-                                  51 => ['label' => 'GCSE / O-Levels (UK/International)', 'badge' => 'UK GCSE', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gcse,o-levels,o levels,olevel'],
-                                  50 => ['label' => 'GNVQ / Vocational Secondary', 'badge' => 'Vocational', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gnvq,vocational secondary'],
+                                  2  => ['label' => '12th Standard / High School Diploma / A-Levels', 'badge' => 'High School', 'regions' => 'Indian,American,Canadian', 'aliases' => '12th,12th standard,hsc,intermediate,high school,high school diploma,ged'],
+                                  1  => ['label' => '10th Standard / GCSE / O-Levels', 'badge' => 'Secondary', 'regions' => 'Indian', 'aliases' => '10th,10th standard,ssc,matric,matriculation'],
+                                  49 => ['label' => 'A levels / Advanced (UK/International)', 'badge' => 'UK A-Levels', 'regions' => 'British,Commonwealth', 'aliases' => 'a levels,a-levels,alevel,advanced level'],
+                                  51 => ['label' => 'GCSE / O-Levels (UK/International)', 'badge' => 'UK GCSE', 'regions' => 'British,Commonwealth', 'aliases' => 'gcse,o-levels,o levels,olevel'],
+                                  50 => ['label' => 'GNVQ / Vocational Secondary', 'badge' => 'Vocational', 'regions' => 'British,Commonwealth', 'aliases' => 'gnvq,vocational secondary'],
                               ],
                               "🌐 Other Qualifications" => [
-                                  60 => ['label' => 'Others / Non-Disclosed', 'badge' => 'Other', 'regions' => 'Global', 'aliases' => 'other,others,non disclosed'],
+                                  60 => ['label' => 'Others / Non-Disclosed', 'badge' => 'Other', 'regions' => 'Global,Indian,American,Canadian,British,Australian,European', 'aliases' => 'other,others,non disclosed'],
                               ],
                           ];
 
@@ -3208,18 +3208,19 @@ $(document).ready(function () {
 
     function getRegionalBucket(nationality) {
         var nat = (nationality || '').trim();
-        if (!nat) return ['all'];
-        if (nat === 'Indian') return ['Indian', 'Global'];
-        if (nat === 'American' || nat === 'Canadian') return ['American', 'Global'];
-        if (nat === 'British' || nat === 'Australian') return ['British', 'Commonwealth', 'Global'];
+        if (!nat || nat === 'Indian') return ['Indian'];
+        if (nat === 'American') return ['American'];
+        if (nat === 'Canadian') return ['Canadian', 'American'];
+        if (nat === 'British') return ['British', 'Commonwealth'];
+        if (nat === 'Australian') return ['Australian', 'Commonwealth', 'British'];
         if (['German', 'French', 'Dutch', 'Irish', 'Italian', 'Spanish', 'Swedish', 'Swiss', 'Austrian', 'Belgian', 'Polish'].indexOf(nat) !== -1) {
-            return ['European', 'American', 'British', 'Global'];
+            return ['European'];
         }
         if (['Emirati', 'Saudi', 'Qatari', 'Kuwaiti', 'Bahraini', 'Omani'].indexOf(nat) !== -1) {
-            return ['Indian', 'British', 'American', 'Global'];
+            return ['Indian', 'British', 'American'];
         }
         if (nat === 'Other') return ['all'];
-        return ['all']; // Fallback to full global degrees for any other sovereign nation
+        return ['all']; // Fallback to full global degrees for unclassified nationalities
     }
 
     function matchesChild(child, term, selectedNat, selectedQualId) {
@@ -3262,11 +3263,12 @@ $(document).ready(function () {
 
         var regions = '';
         if (child.element) {
-            regions = $(child.element).attr('data-regions') || 'Global';
-        } else {
-            regions = 'Global';
+            regions = $(child.element).attr('data-regions') || '';
         }
         var regionList = regions.split(',').map(function(r) { return r.trim(); });
+        if (regionList.indexOf('Global') !== -1) {
+            return true;
+        }
         for (var k = 0; k < bucket.length; k++) {
             if (regionList.indexOf(bucket[k]) !== -1) {
                 return true;
@@ -3369,9 +3371,9 @@ $(document).ready(function () {
                 if (!qId) return;
 
                 var isSelected = (selectedQualId && String(qId) === String(selectedQualId));
-                var regions = ($opt.attr('data-regions') || 'Global').split(',').map(function(r) { return r.trim(); });
+                var regions = ($opt.attr('data-regions') || '').split(',').map(function(r) { return r.trim(); });
 
-                var inBucket = (bucket.indexOf('all') !== -1);
+                var inBucket = (bucket.indexOf('all') !== -1 || regions.indexOf('Global') !== -1);
                 if (!inBucket) {
                     for (var b = 0; b < bucket.length; b++) {
                         if (regions.indexOf(bucket[b]) !== -1) {
@@ -3390,9 +3392,39 @@ $(document).ready(function () {
             });
 
             if (visibleCount > 0) {
-                $group.show();
+                $group.prop('disabled', false).show();
             } else {
-                $group.hide();
+                $group.prop('disabled', true).hide();
+            }
+        });
+    }
+
+    function initQualificationSelect2() {
+        if (!$.fn.select2) return;
+        $('#qualification').select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'jero-adaptive-dropdown',
+            placeholder: 'Select qualification',
+            allowClear: false,
+            minimumResultsForSearch: 0,
+            matcher: adaptiveQualificationMatcher,
+            templateResult: function(data) {
+                if (!data.id) return data.text;
+                var badge = '';
+                if (data.element) {
+                    badge = $(data.element).attr('data-badge') || '';
+                }
+                if (badge) {
+                    var $wrapper = $('<div class="d-flex align-items-center justify-content-between w-100" style="width: 100%;"></div>');
+                    $wrapper.append('<span>' + data.text + '</span>');
+                    $wrapper.append('<span class="badge badge-light-primary ms-2" style="font-size: 10px !important; font-weight: 600; padding: 2px 7px; background: #e0e7ff; color: #3730a3; border-radius: 4px; white-space: nowrap;">' + badge + '</span>');
+                    return $wrapper;
+                }
+                return data.text;
+            },
+            templateSelection: function(data) {
+                return data.text;
             }
         });
     }
@@ -3410,33 +3442,9 @@ $(document).ready(function () {
                 matcher: nationalityMatcher
             });
 
-            // 2. Initialize Highest Qualification Select2 with Guaranteed Search Box, Adaptive Matcher & Badges
-            $('#qualification').select2({
-                width: '100%',
-                dropdownParent: $(document.body),
-                dropdownCssClass: 'jero-adaptive-dropdown',
-                placeholder: 'Select qualification',
-                allowClear: false,
-                minimumResultsForSearch: 0,
-                matcher: adaptiveQualificationMatcher,
-                templateResult: function(data) {
-                    if (!data.id) return data.text;
-                    var badge = '';
-                    if (data.element) {
-                        badge = $(data.element).attr('data-badge') || '';
-                    }
-                    if (badge) {
-                        var $wrapper = $('<div class="d-flex align-items-center justify-content-between w-100" style="width: 100%;"></div>');
-                        $wrapper.append('<span>' + data.text + '</span>');
-                        $wrapper.append('<span class="badge badge-light-primary ms-2" style="font-size: 10px !important; font-weight: 600; padding: 2px 7px; background: #e0e7ff; color: #3730a3; border-radius: 4px; white-space: nowrap;">' + badge + '</span>');
-                        return $wrapper;
-                    }
-                    return data.text;
-                },
-                templateSelection: function(data) {
-                    return data.text;
-                }
-            });
+            // 2. Initial sync & Qualification Select2 mount
+            syncNativeOptions();
+            initQualificationSelect2();
 
             // 2b. Auto-focus search input field when either dropdown is opened
             $('#nationality, #qualification').on('select2:open', function() {
@@ -3449,12 +3457,20 @@ $(document).ready(function () {
             });
         }
 
-        // 3. React to Nationality change
+        // 3. React to Nationality change: Dynamically Re-Scope Highest Qualification Dropdown List
         $('#nationality').on('change', function() {
-            if ($.fn.select2 && $('#qualification').hasClass('select2-hidden-accessible')) {
-                $('#qualification').trigger('change.select2');
-            }
+            var curQual = $('#qualification').val();
             syncNativeOptions();
+            if ($.fn.select2 && $('#qualification').hasClass('select2-hidden-accessible')) {
+                $('#qualification').select2('destroy');
+                initQualificationSelect2();
+                var $selectedOpt = $('#qualification option:selected');
+                if ($selectedOpt.length && $selectedOpt.prop('disabled')) {
+                    $('#qualification').val('').trigger('change.select2');
+                } else {
+                    $('#qualification').val(curQual);
+                }
+            }
             if (typeof fv !== 'undefined' && fv.revalidateField) {
                 fv.revalidateField('nationality');
             }
@@ -3467,9 +3483,6 @@ $(document).ready(function () {
                 fv.revalidateField('qualification');
             }
         });
-
-        // Initial sync on mount
-        syncNativeOptions();
     });
 })(jQuery);
 </script>
