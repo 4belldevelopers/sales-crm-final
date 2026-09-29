@@ -169,6 +169,16 @@ if($snp_mode== 1){
             <input type="hidden" name="hidden_percentage_hike" id="hidden_percentage_hike" value="{{ @$application->percentage_hike }}">
             <input type="hidden" name="hidden_comission_type" id="hidden_comission_type" value="{{ @$application->comission_type ?? 2 }}">
           <div class="fc">
+            <!-- Enterprise Pre-Submit Validation Notification Box -->
+            <div id="formValidationNotificationBox" class="alert alert-danger d-none mb-4" role="alert" style="border-radius: 8px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; padding: 14px 18px;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fa-solid fa-triangle-exclamation me-2 fs-5 text-danger" aria-hidden="true"></i>
+                    <strong style="font-size: 13.5px;">Please correct the following fields before submission:</strong>
+                    <button type="button" class="btn-close ms-auto" aria-label="Close" onclick="$('#formValidationNotificationBox').addClass('d-none');" style="font-size: 10px;"></button>
+                </div>
+                <ul id="formValidationNotificationList" class="mb-0 ps-4" style="font-size: 12.5px; line-height: 1.7; font-weight: 500;">
+                </ul>
+            </div>
             @if(@$page_event != 'EDIT')
             {{-- The selected stage is submitted with the existing candidate form; placement requires its separate client workflow. --}}
             <section class="fs talent-stage-card" aria-labelledby="talent-stage-title">
@@ -304,61 +314,81 @@ if($snp_mode== 1){
                         <!-- After-upload Resume Information card -->
                         <div class="up-info" id="upInfo">
                             <div class="up-info-banner">
-                                <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/>
-                                </svg>
-                                <span><strong>Resume uploaded successfully!</strong></span>
+                                <div class="up-info-banner-left">
+                                    <span class="up-info-banner-check">
+                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                    </span>
+                                    <div class="up-info-banner-text">
+                                        <strong id="upInfoBannerTitle">Resume Uploaded Successfully using method A</strong>
+                                        <small>We have parsed the resume and extracted the talent details.</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
+                                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                </button>
                             </div>
+
                             <div class="up-file-card">
-                                <span class="up-file-icon">PDF</span>
-                                <div class="up-file-meta">
-                                    <div class="up-file-name" id="upFileName">&nbsp;</div>
-                                    <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                <div class="up-file-card-left">
+                                    <div class="up-file-badge">
+                                        <i class="fa-regular fa-file-pdf" id="upFileBadgeIcon" aria-hidden="true"></i>
+                                        <span class="up-file-badge-ext" id="upFileBadgeExt">PDF</span>
+                                    </div>
+                                    <div class="up-file-meta">
+                                        <div class="up-file-name" id="upFileName">&nbsp;</div>
+                                        <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                    </div>
                                 </div>
-                                <span class="up-file-pill">
-                                    <svg class="up-file-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Uploaded
-                                </span>
+                                <div class="up-file-actions">
+                                    <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn">
+                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                        <span>Delete</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="up-actions">
-                                <button type="button" id="upReplaceBtn">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polyline points="23 4 23 10 17 10"/>
-                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                                    </svg>
-                                    Replace Resume
-                                </button>
-                                <button type="button" id="upRemoveBtn" class="up-remove">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                        <path d="M10 11v6"/><path d="M14 11v6"/>
-                                        <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                    Remove
-                                </button>
+
+                            <div class="up-details-card">
+                                <div class="up-details-grid">
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Uploaded On</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-square-check" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Parser Status</div>
+                                            <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-file" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Type</div>
+                                            <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-solid fa-database" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Size</div>
+                                            <div class="up-detail-val" id="upDetailFileSize">&mdash;</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h4 class="up-details-h">Resume Details</h4>
-                            <div class="up-details-grid">
-                                <div class="up-detail">
-                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-                                    <div><div class="up-detail-lbl">Uploaded On</div><div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div></div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                    <div><div class="up-detail-lbl">Parser Status</div><div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div></div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-                                    <div><div class="up-detail-lbl">File Type</div><div class="up-detail-val" id="upDetailFileType">&nbsp;</div></div>
-                                </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
-                                    <div><div class="up-detail-lbl">Upload Channel</div><div class="up-detail-val" id="upDetailUploadMethod">&nbsp;</div></div>
-                                </div>
-                                <div class="up-detail" id="upRetryWrap" style="display:none">
-                                    <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
-                                </div>
+                            <div class="up-detail" id="upRetryWrap" style="display:none;margin-top:8px;">
+                                <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
                             </div>
                         </div>
                     </div>
@@ -1549,7 +1579,7 @@ $(document).ready(function () {
                 $('#uploaded_file_path').val('');
                 $('#resume_original_name').val('');
                 $('#resume_upload_pipeline').val('METHOD_A_DIRECT_R2');
-                $('#upDetailUploadMethod').html('<span class="badge badge-light-success fw-bold" style="font-size:11px;padding:3px 8px;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;">Method A (Direct R2)</span>');
+                $('#upInfoBannerTitle').text('Resume Uploaded Successfully using method A');
                 console.info('[Resume Pipeline] Completed via Method A: Direct Browser-to-Cloudflare R2 Upload');
                 var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
@@ -1655,13 +1685,23 @@ $(document).ready(function () {
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
         $('#resume_upload_pipeline').val('');
-        $('#upDetailUploadMethod').html('&nbsp;');
+        $('#upDetailFileSize').html('&mdash;');
         $('#upDetailParserStatus').text('Pending').css('color', '');
         $('.download-file').addClass('d-none');
     }
 
     function showUploadedCard(file) {
         var ext = extLabel(file);
+        $('#upFileBadgeExt').text(ext);
+        var badgeIcon = $('#upFileBadgeIcon');
+        if (badgeIcon.length) {
+            badgeIcon.removeClass('fa-file-pdf fa-file-word fa-file-lines');
+            if (ext === 'DOC' || ext === 'DOCX') {
+                badgeIcon.addClass('fa-file-word');
+            } else {
+                badgeIcon.addClass('fa-file-pdf');
+            }
+        }
         $('#upInfo .up-file-icon').text(ext);
         $('#upFileName').text(file.name);
         $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
@@ -1679,17 +1719,16 @@ $(document).ready(function () {
             );
         }
         $('#upDetailFileType').text(ext);
+        $('#upDetailFileSize').text(fmtSize(file.size));
+
         var pipe = $('#resume_upload_pipeline').val();
-        if (pipe === 'METHOD_B_SERVER_UPLOAD' || $('#uploaded_file_path').val()) {
-            $('#upDetailUploadMethod').html('<span class="badge badge-light-primary fw-bold" style="font-size:11px;padding:3px 8px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;">Method B (Server Upload)</span>');
-        } else if (pipe === 'METHOD_A_DIRECT_R2' || $('#resume_session_uuid').val()) {
-            $('#upDetailUploadMethod').html('<span class="badge badge-light-success fw-bold" style="font-size:11px;padding:3px 8px;color:#059669;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:4px;">Method A (Direct R2)</span>');
-        } else {
-            $('#upDetailUploadMethod').html('<span class="badge badge-light fw-bold" style="font-size:11px;padding:3px 8px;color:#6b7280;background:#f3f4f6;border-radius:4px;">Processing...</span>');
-        }
+        var methodLabel = (pipe === 'METHOD_B_SERVER_UPLOAD' || $('#uploaded_file_path').val()) ? 'method B' : 'method A';
+        $('#upInfoBannerTitle').text('Resume Uploaded Successfully using ' + methodLabel);
+
         $('#upRetryWrap').hide();
         $('#uploadBox').attr('style', 'display: none !important').addClass('d-none has-file');
         $('#fileInfo').hide();
+        $('#upInfo').find('.up-info-banner').show();
         $('#upInfo').addClass('show');
     }
 
@@ -1830,7 +1869,7 @@ $(document).ready(function () {
                 $('#uploaded_file_path').val(r.file_path || '');
                 $('#resume_original_name').val(r.original_name || file.name || '');
                 $('#resume_upload_pipeline').val('METHOD_B_SERVER_UPLOAD');
-                $('#upDetailUploadMethod').html('<span class="badge badge-light-primary fw-bold" style="font-size:11px;padding:3px 8px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:4px;">Method B (Server Upload)</span>');
+                $('#upInfoBannerTitle').text('Resume Uploaded Successfully using method B');
                 console.info('[Resume Pipeline] Completed via Method B: Server Application Upload (Fallback Stream)');
                 $('#resumeCheck').val('1');
                 showUploadedCard(file);
@@ -1844,7 +1883,13 @@ $(document).ready(function () {
         upXhr.send(file);
     }
 
-    // Replace / Remove inside info card
+    // Dismiss banner
+    $(document).on('click', '.up-info-banner-close', function (e) {
+        e.preventDefault();
+        $(this).closest('.up-info-banner').slideUp(180);
+    });
+
+    // Replace / Delete inside info card
     $(document).on('click', '#upReplaceBtn', function (e) { e.preventDefault(); backToDropzone(); resumeInput.click(); });
     $(document).on('click', '#upRemoveBtn',  function (e) { e.preventDefault(); backToDropzone(); });
 
@@ -3179,6 +3224,9 @@ function handleTalentSubmissionSuccess(response) {
         return false;
     }
 
+    // Hide any previous in-page validation alert
+    $('#formValidationNotificationBox').addClass('d-none');
+
     const redirectUrl = response.redirect_url || response.url || '{{ route("service_company.bench-candidates.index") }}';
     let redirectExecuted = false;
 
@@ -3189,9 +3237,18 @@ function handleTalentSubmissionSuccess(response) {
         }
     }
 
+    var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT';
+    var defaultSuccess = isEditMode ? "Inhouse Talent Updated Successfully" : "Inhouse Talent Added Successfully";
+    var successTitle = (response && response.message) ? response.message : defaultSuccess;
+    // Map legacy 'Job Application' text if present in any cached response
+    if (successTitle.toLowerCase().indexOf('job application') !== -1) {
+        successTitle = defaultSuccess;
+    }
+
     // 1. Primary: SweetAlert confirmation button
     Swal.fire({
-        text: response.message || "Talent profile saved successfully!",
+        title: successTitle,
+        text: isEditMode ? "Talent details have been updated successfully." : "Inhouse talent profile has been added successfully.",
         icon: "success",
         buttonsStyling: false,
         confirmButtonText: "View Bench Listing",
@@ -3200,6 +3257,10 @@ function handleTalentSubmissionSuccess(response) {
         executeRedirect();
     });
 
+    if (typeof toastr !== 'undefined') {
+        toastr.success(successTitle);
+    }
+
     // 2. Secondary: Guaranteed hard timer fallback (2,200ms)
     setTimeout(executeRedirect, 2200);
 
@@ -3207,6 +3268,121 @@ function handleTalentSubmissionSuccess(response) {
     window.addEventListener('beforeunload', function() {
         redirectExecuted = true;
     });
+}
+
+/**
+ * Collects specific failed validation messages from FormValidation and DOM
+ */
+function collectFormValidationErrors(formEl, validatorInstance) {
+    var errorList = [];
+    var fieldLabelMap = {
+        'full_name': 'Full name',
+        'kt_tagify_work_location': 'Current Location',
+        'current_designation': 'Current designation',
+        'employmentType': 'Employment Type',
+        'phone': 'Primary mobile number',
+        'secondary_mobile': 'Secondary mobile number',
+        'email': 'Primary email',
+        'qualification': 'Qualification',
+        'total_exp': 'Total Experience',
+        'rel_exp': 'Relevant Experience',
+        'pay_rate': 'Pay rate',
+        'bill_rate': 'Bill rate',
+        'comission_type': 'Comission type',
+        'recruiter': 'Internal team / recruiter',
+        'specialties': 'Specialties'
+    };
+
+    if (formEl) {
+        // Collect rendered messages from FormValidation
+        var msgEls = formEl.querySelectorAll('.fv-plugins-message-container .fv-help-block, .fv-plugins-message-container [data-validator], .fv-plugins-message-container.invalid-feedback');
+        msgEls.forEach(function (el) {
+            var txt = (el.innerText || el.textContent || '').trim();
+            if (txt && txt !== '' && errorList.indexOf(txt) === -1) {
+                errorList.push(txt);
+            }
+        });
+    }
+
+    // Direct inspect if FormValidation messages are not yet in DOM
+    if (errorList.length === 0 && formEl) {
+        Object.keys(fieldLabelMap).forEach(function (fieldName) {
+            var el = formEl.querySelector('[name="' + fieldName + '"]');
+            if (el) {
+                var val = $(el).val();
+                if (fieldName === 'phone') {
+                    if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
+                        errorList.push('Primary number is required and must be valid for the selected country');
+                    }
+                } else if (fieldName === 'email') {
+                    if (!val || !val.trim() || !/\S+@\S+\.\S+/.test(val)) {
+                        errorList.push('A valid Primary email is required');
+                    }
+                } else if (!val || !String(val).trim()) {
+                    errorList.push(fieldLabelMap[fieldName] + ' is required');
+                }
+            }
+        });
+    }
+
+    return errorList;
+}
+
+/**
+ * Enterprise Notification Box on Validation Failure
+ */
+function displayValidationErrorsNotification(errorList, formEl) {
+    if (!errorList || !errorList.length) {
+        errorList = ['Please check all mandatory fields marked with an asterisk (*) and provide valid details.'];
+    }
+
+    // 1. In-page notification box at top of form
+    var box = $('#formValidationNotificationBox');
+    var list = $('#formValidationNotificationList');
+    if (box.length && list.length) {
+        list.empty();
+        errorList.forEach(function (msg) {
+            list.append('<li class="mb-1"><i class="fa-solid fa-circle-exclamation me-1" style="color: #ef4444; font-size: 11px;"></i> ' + $('<div>').text(msg).html() + '</li>');
+        });
+        box.removeClass('d-none');
+    }
+
+    // 2. Enterprise modal notification box
+    var alertHtml = '<div style="text-align: left; max-height: 250px; overflow-y: auto; padding: 4px 6px; font-size: 13px;">';
+    alertHtml += '<p style="margin-bottom: 10px; font-weight: 600; color: #1e293b;">The following validation' + (errorList.length > 1 ? 's' : '') + ' failed before submission:</p>';
+    alertHtml += '<ul style="margin: 0; padding-left: 18px; color: #dc2626; line-height: 1.6;">';
+    errorList.forEach(function (err) {
+        alertHtml += '<li style="margin-bottom: 4px;"><strong>' + $('<div>').text(err).html() + '</strong></li>';
+    });
+    alertHtml += '</ul>';
+    alertHtml += '<p style="margin-top: 10px; margin-bottom: 0; font-size: 11.5px; color: #64748b;">Please resolve these fields and click submit again.</p>';
+    alertHtml += '</div>';
+
+    Swal.fire({
+        title: "Validation Incomplete",
+        html: alertHtml,
+        icon: "warning",
+        buttonsStyling: false,
+        confirmButtonText: "Review & Fix",
+        customClass: {
+            confirmButton: "btn btn-primary btn-sm"
+        }
+    }).then(function () {
+        // Scroll to first invalid field or top notification box
+        var firstInvalid = formEl ? formEl.querySelector('.is-invalid, .fv-plugins-message-container:not(:empty)') : null;
+        if (firstInvalid) {
+            var fvRow = firstInvalid.closest('.fv-row') || firstInvalid;
+            fvRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var inp = fvRow.querySelector('input, select, textarea');
+            if (inp) inp.focus();
+        } else if (box.length) {
+            box[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
+    if (typeof toastr !== 'undefined') {
+        toastr.error('Validation failed: ' + errorList.length + ' field' + (errorList.length > 1 ? 's' : '') + ' require attention.');
+    }
 }
 
 @php if(@$page_event != 'EDIT'){  @endphp
@@ -3343,15 +3519,8 @@ var KTAddCandidate = function () {
                        
                     }, 500);
                 } else {
-							Swal.fire({
-										text				: "Sorry, looks like there are some errors detected, please try again.",
-										icon				: "error",
-										buttonsStyling		: false,
-										confirmButtonText	: "Ok, got it!",
-										customClass			: {
-																	confirmButton: "btn btn-primary"
-															  }
-							});
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form);
                 }
             });
         });
@@ -3477,15 +3646,8 @@ var KTEditCandidate = function () {
 
                     }, 500);
                 } else {
-							Swal.fire({
-										text				: "Sorry, looks like there are some errors detected, please try again.",
-										icon				: "error",
-										buttonsStyling		: false,
-										confirmButtonText	: "Ok, got it!",
-										customClass			: {
-																	confirmButton: "btn btn-primary"
-															  }
-							});
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form);
                 }
             });
         });
