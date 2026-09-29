@@ -311,7 +311,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
 				$max_sal_mode = strtoupper(substr($salaryModeSelect[$jobDetail->max_sal_mode], 0, 1));
 				$min_salary_currency = $currencySymbole[@$jobDetail->min_salary_currency];
 				$max_salary_currency = $currencySymbole[@$jobDetail->max_salary_currency];
-        $max_salary = GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary);
+        $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary));
         $salary_currency = @$jobDetail->max_salary_currency ?? 0;
         // dd($min_sal_mode,$max_sal_mode,$min_salary_currency,$max_salary_currency);
 

@@ -64,7 +64,7 @@
                     $max_sal_mode = strtoupper(substr($salaryModeSelect[$job->max_sal_mode], 0, 1));
                     $min_salary_currency = $currencySymbole[@$job->min_salary_currency];
                     $max_salary_currency = $currencySymbole[@$job->max_salary_currency];
-                    $max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
+                    $max_salary = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat($job->max_salary));
 
                     $created_at 		=	"";
                     $created_at 		=	@$job->created_at;
