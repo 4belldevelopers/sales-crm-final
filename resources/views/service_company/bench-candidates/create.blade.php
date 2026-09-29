@@ -578,7 +578,7 @@ if($snp_mode== 1){
                             'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
                         ];
                       @endphp
-                      <select name="nationality" id="nationality" data-minimum-results-for-search="0">
+                      <select name="nationality" id="nationality">
                         <option value="">Select nationality</option>
                         <optgroup label="⭐ Top 10 Popular Nationalities">
                           @foreach($topPopularNationalities as $natKey => $natItem)
@@ -599,7 +599,7 @@ if($snp_mode== 1){
                     <label>Highest Qualification <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
                       <i class="fa-solid fa-graduation-cap"></i>
-                      <select name="qualification" id="qualification" data-minimum-results-for-search="0">
+                      <select name="qualification" id="qualification">
                         <option value="">Select qualification</option>
                         @php
                           // Map incoming database qualification records by ID
@@ -3442,6 +3442,54 @@ $(document).ready(function () {
         });
     }
 
+    function enforceSelect2SearchField($select, placeholderText) {
+        setTimeout(function() {
+            var $openContainer = $('.select2-container--open');
+            var $dropdown = $openContainer.find('.select2-dropdown');
+            if (!$dropdown.length) return;
+
+            $dropdown.addClass('jero-adaptive-dropdown');
+            $openContainer.addClass('jero-adaptive-container');
+
+            var $searchContainer = $dropdown.find('.select2-search--dropdown');
+            var $searchField = $dropdown.find('.select2-search__field');
+
+            if (!$searchContainer.length || !$searchField.length) {
+                // The search box was omitted by Select2/theme — dynamically inject active search box!
+                $searchContainer = $(
+                    '<div class="select2-search select2-search--dropdown jero-injected-search" style="display:block !important; padding:8px 10px !important; background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important;">' +
+                        '<input class="select2-search__field" type="search" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" role="textbox" placeholder="' + placeholderText + '" style="display:block !important; width:100% !important; height:38px !important; min-height:38px !important; box-sizing:border-box !important; border:1px solid #cbd5e1 !important; border-radius:6px !important; padding:7px 12px !important; font-size:13px !important; outline:none !important; background:#ffffff !important; color:#0f172a !important;" />' +
+                    '</div>'
+                );
+                $dropdown.prepend($searchContainer);
+                $searchField = $searchContainer.find('input');
+
+                $searchField.on('input keyup', function() {
+                    var term = $(this).val();
+                    var s2 = $select.data('select2');
+                    if (s2) s2.trigger('query', { term: term });
+                });
+
+                $searchField.on('keydown', function(e) {
+                    var s2 = $select.data('select2');
+                    if (!s2) return;
+                    if (e.which === 40) { s2.trigger('results:next'); e.preventDefault(); }
+                    else if (e.which === 38) { s2.trigger('results:previous'); e.preventDefault(); }
+                    else if (e.which === 13) { s2.trigger('results:select', {}); e.preventDefault(); }
+                    else if (e.which === 27) { s2.trigger('close'); e.preventDefault(); }
+                });
+            } else {
+                // Existing search container: unconditionally unhide and format
+                $searchContainer.removeClass('select2-search--hide');
+                $searchContainer.attr('style', 'display:block !important; visibility:visible !important; opacity:1 !important; padding:8px 10px !important; background:#f8fafc !important; border-bottom:1px solid #e2e8f0 !important;');
+                $searchField.attr('placeholder', placeholderText);
+                $searchField.attr('style', 'display:block !important; visibility:visible !important; opacity:1 !important; width:100% !important; height:38px !important; min-height:38px !important; box-sizing:border-box !important; border:1px solid #cbd5e1 !important; border-radius:6px !important; padding:7px 12px !important; font-size:13px !important; outline:none !important; background:#ffffff !important; color:#0f172a !important;');
+            }
+
+            $searchField.focus();
+        }, 15);
+    }
+
     function initQualificationSelect2() {
         if (!$.fn.select2) return;
         $('#qualification').select2({
@@ -3488,17 +3536,18 @@ $(document).ready(function () {
             // 2. Initial sync & Qualification Select2 mount
             syncNativeOptions();
             initQualificationSelect2();
-
-            // 2b. Auto-focus search input field when either dropdown is opened
-            $('#nationality, #qualification').on('select2:open', function() {
-                var searchField = document.querySelector('.select2-container--open .select2-search__field');
-                if (searchField) {
-                    setTimeout(function() {
-                        searchField.focus();
-                    }, 20);
-                }
-            });
         }
+
+        // Delegated open handler: guaranteed to survive any select2 destroy/re-init cycles
+        $(document).on('select2:open', '#nationality', function() {
+            enforceSelect2SearchField($(this), 'Search nationality or country (e.g. India, USA, UK, Canada)...');
+        });
+        $(document).on('select2:open', '#qualification', function() {
+            enforceSelect2SearchField($(this), 'Search degree or acronym (e.g. B.Tech, MS, HND, CA, MBA)...');
+        });
+        $(document).on('select2:close', '#nationality, #qualification', function() {
+            $('.select2-container .jero-injected-search input, .select2-container .select2-search--dropdown input').val('');
+        });
 
         // 3. React to Nationality change: Dynamically Re-Scope Highest Qualification Dropdown List
         $('#nationality').on('change', function() {
