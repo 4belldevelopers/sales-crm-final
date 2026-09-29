@@ -1619,8 +1619,6 @@ $(document).ready(function () {
     // ─────────────────────────────────────────────────────────────────────────
 
     var upXhr                = null;
-    var _parseStatusInterval = null;
-    var _resumeUploadId      = null;
 
     function fmtKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
     function fmtSize(b) { return b >= 1048576 ? (b/1048576).toFixed(1)+' MB' : Math.round(b/1024)+' KB'; }
@@ -1638,7 +1636,6 @@ $(document).ready(function () {
 
     function backToDropzone() {
         resumeUploadGeneration++;
-        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         // Cancel client-side parse if in progress
         if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.cancelActiveParse === 'function') {
             window.JeroBenchClientParser.cancelActiveParse();
@@ -1790,8 +1787,6 @@ $(document).ready(function () {
 
     function uploadWithProgress(file) {
         window.__upXhrChannelClaimed = true;
-        if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
-        _resumeUploadId = null;
         resetProgress();
         window.__upXhrChannelClaimed = true;
 
@@ -3509,12 +3504,6 @@ KTUtil.onDOMContentLoaded(function () {
 });
 @php } @endphp
 
-function re_test(text) {
-    // Deprecated: Resume parsing is executed 100% client-side via JeroBenchClientParser.
-    // Zero server POST requests to extract.resume-job-applications or file.unset.
-    return;
-}
-
 
 
 
@@ -3744,22 +3733,6 @@ function total_exp_and_rel_exp(){
       $('#rel_exp_error').text('');
     }
              
-    }
-
-    function normalizeResumeText(text) {
-        return text
-            .replace(/[^\x00-\x7F]/g, " ")   // remove broken unicode
-            .replace(/\s+/g, " ")
-            .replace(/\|/g, " ")
-            .trim();
-    }
-
-
-
-    function handleFileInputChange(event) {
-        // Deprecated: Resume parsing is executed 100% client-side in processFile() via JeroBenchClientParser.
-        // Zero duplicate uploads to /uploadresume, zero server parse requests.
-        return;
     }
 
 
