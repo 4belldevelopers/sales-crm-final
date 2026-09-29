@@ -299,18 +299,26 @@ window.ResumePresign = (function () {
                 return;
             }
 
-            if (!uploadUrl || typeof uploadUrl !== 'string') {
-                var invalidUrlErr = new Error('Invalid upload URL');
+            if (!uploadUrl || typeof uploadUrl !== 'string' || !/^https?:\/\//i.test(uploadUrl)) {
+                var invalidUrlErr = new Error('Invalid upload URL: ' + uploadUrl);
                 invalidUrlErr.retryable = false;
                 reject(invalidUrlErr);
                 return;
             }
 
+            var mimeMap = {
+                pdf:  'application/pdf',
+                doc:  'application/msword',
+                docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            };
+            var ext = (file.name.split('.').pop() || '').toLowerCase();
+            var putContentType = mimeMap[ext] || file.type || 'application/octet-stream';
+
             var xhr = new XMLHttpRequest();
             _uploadXHR = xhr;
 
             xhr.open('PUT', uploadUrl, true);
-            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            xhr.setRequestHeader('Content-Type', putContentType);
 
             xhr.upload.onprogress = function (e) {
                 if (e.lengthComputable) {

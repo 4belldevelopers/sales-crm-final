@@ -58,8 +58,16 @@ return [
         'max_file_size'       => 6_291_456,  // 6 MB
         'allowed_mime_types'  => [
             'application/pdf',
+            'application/x-pdf',
+            'application/acrobat',
+            'applications/vnd.pdf',
+            'text/pdf',
             'application/msword',
+            'application/vnd.ms-word',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/octet-stream',
         ],
         'allowed_extensions'  => ['pdf', 'doc', 'docx'],
         'idempotency_key_len' => 64,  // UUID or sha256 hex
