@@ -1042,6 +1042,104 @@ body { overflow-x: hidden; }
         border-top: 1px dashed #e2e8f0;
     }
 }
+
+/* ── Enterprise Validation Error Highlighting (media_1790669780356.png) ── */
+.has-validation-error,
+input.has-validation-error,
+select.has-validation-error,
+textarea.has-validation-error,
+.form-control.has-validation-error,
+.form-select.has-validation-error,
+.tagify.has-validation-error,
+.rm-picker.has-validation-error {
+    border: 1.5px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+input.has-validation-error:focus,
+select.has-validation-error:focus,
+textarea.has-validation-error:focus,
+.form-control.has-validation-error:focus,
+.tagify.has-validation-error:focus-within,
+.rm-picker.has-validation-error:focus-within {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+    outline: none !important;
+}
+
+.rm-picker.has-validation-error {
+    border-radius: 8px !important;
+}
+
+#uploadBox.has-validation-error {
+    border: 1.5px dashed #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    border-radius: 8px !important;
+}
+
+.aw-mode-grid.has-validation-error,
+.wm-option-grid.has-validation-error {
+    border: 1.5px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    border-radius: 8px !important;
+    padding: 6px !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.br-rate-field.has-validation-error .ig input {
+    border: 1.5px solid #ef4444 !important;
+    border-right: none !important;
+    background-color: #fef2f2 !important;
+}
+
+.br-rate-field.has-validation-error .ig .ig-currency-box {
+    border: 1.5px solid #ef4444 !important;
+    background-color: #fee2e2 !important;
+}
+
+#skillExperienceWrapper tr.has-validation-error input,
+#skillExperienceWrapper tr.has-validation-error select {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.field-error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: #ef4444;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    animation: fieldErrorFadeIn 0.2s ease-in-out;
+}
+
+.field-error-message i {
+    color: #ef4444;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.field-error-message span {
+    color: #dc2626;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+@keyframes fieldErrorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />

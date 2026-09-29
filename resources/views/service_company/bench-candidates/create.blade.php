@@ -1900,7 +1900,8 @@ $(document).ready(function () {
         $('#fileName').text(file.name + ' (' + sizeStr + ')');
         $('#fileInfo').css('display', 'flex');
         $('#resumeCheck').val('1');
-        $('#uploadBox').addClass('has-file');
+        $('#uploadBox').addClass('has-file').removeClass('has-validation-error');
+        $('[data-field-error="resume"]').remove();
         $('.download-file').addClass('d-none');
 
         const selectedFile = file;
@@ -3229,6 +3230,8 @@ function renderRelationshipManagerCards() {
     }
 
     $picker.hide();
+    $picker.removeClass('has-validation-error');
+    $('[data-field-error="recruiter"]').remove();
     $addMore.show();
     $('#job_additional_detail').addClass('rm-has-selection');
 
@@ -3542,27 +3545,27 @@ function handleTalentSubmissionSuccess(response) {
 }
 
 var fieldConfigMap = {
-    'resume': { label: 'Upload Resume', selector: '#uploadBox' },
-    'careersummary': { label: 'Professional Summary', selector: '#careersummary' },
-    'full_name': { label: 'Full Name', selector: '#full_name' },
-    'email': { label: 'Primary Email', selector: '#email' },
-    'phone': { label: 'Primary Phone', selector: '#phone' },
-    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location' },
-    'qualification': { label: 'Highest Qualification', selector: '#qualification' },
-    'nationality': { label: 'Nationality', selector: '#nationality' },
-    'gender': { label: 'Gender', selector: '#gender' },
-    'current_company': { label: 'Current Company', selector: '#current_company' },
-    'current_designation': { label: 'Current Designation', selector: '#current_designation' },
-    'employmentType': { label: 'Employment Type', selector: '#EmploymentType' },
-    'total_exp': { label: 'Total Experience', selector: '#total_exp_year' },
-    'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year' },
-    'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period' },
-    'np_id': { label: 'Available From Date', selector: '#np_id_display' },
-    'wm': { label: 'Preferred Work Mode', selector: '#wr' },
-    'pay_rate': { label: 'Candidate Cost (Pay Rate)', selector: '#pay_annual' },
-    'bill_rate': { label: 'Client Bill Rate', selector: '#bill_annual' },
-    'skills': { label: 'Skills & Expertise (Min. 3 Complete Skills)', selector: '#skillExperienceWrapper' },
-    'recruiter': { label: 'Relationship Manager', selector: '#recruiter' }
+    'resume': { label: 'Upload Resume', selector: '#uploadBox', message: 'Please upload a resume file.' },
+    'careersummary': { label: 'Professional Summary', selector: '#careersummary', message: 'Professional summary is required.' },
+    'full_name': { label: 'Full Name', selector: '#full_name', message: 'Full name is required.' },
+    'email': { label: 'Primary Email', selector: '#email', message: 'A valid primary email is required.' },
+    'phone': { label: 'Primary Phone', selector: '#phone', message: 'Primary mobile number is required.' },
+    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location', message: 'Current location is required.' },
+    'qualification': { label: 'Highest Qualification', selector: '#qualification', message: 'Highest qualification is required.' },
+    'nationality': { label: 'Nationality', selector: '#nationality', message: 'Nationality is required.' },
+    'gender': { label: 'Gender', selector: '#gender', message: 'Gender is required.' },
+    'current_company': { label: 'Current Company', selector: '#current_company', message: 'Current company is required.' },
+    'current_designation': { label: 'Current Designation', selector: '#current_designation', message: 'Current designation is required.' },
+    'employmentType': { label: 'Employment Type', selector: '#EmploymentType', message: 'Employment type is required.' },
+    'total_exp': { label: 'Total Experience', selector: '#total_exp_year', message: 'Total experience is required.' },
+    'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year', message: 'Relevant experience is required.' },
+    'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period', message: 'Availability is required.' },
+    'np_id': { label: 'Available From Date', selector: '#np_id_display', message: 'Available from date is required.' },
+    'wm': { label: 'Preferred Work Mode', selector: '#wr', message: 'Preferred work mode is required.' },
+    'pay_rate': { label: 'Candidate Cost (Pay Rate)', selector: '#pay_annual', message: 'Candidate Cost (Pay Rate) is required.' },
+    'bill_rate': { label: 'Client Bill Rate', selector: '#bill_annual', message: 'Client Bill Rate is required.' },
+    'skills': { label: 'Skills & Expertise (Min. 3 Complete Skills)', selector: '#skillExperienceWrapper', message: 'At least 3 complete skills (Skill name, Experience, Rating) are required.' },
+    'recruiter': { label: 'Relationship Manager', selector: '#rmPicker', message: 'Please select a Relationship Manager.' }
 };
 
 window.__currentMissingFields = [];
@@ -3657,14 +3660,15 @@ function detectMissingFields(formEl, validatorInstance) {
     var missing = [];
     var seenKeys = {};
 
-    function addMissing(key, customLabel, customSelector) {
+    function addMissing(key, customLabel, customSelector, customMessage) {
         if (!seenKeys[key]) {
             seenKeys[key] = true;
             var cfg = fieldConfigMap[key] || {};
             missing.push({
                 key: key,
                 label: customLabel || cfg.label || key,
-                selector: customSelector || cfg.selector || ('#' + key)
+                selector: customSelector || cfg.selector || ('#' + key),
+                message: customMessage || cfg.message || ((customLabel || cfg.label || key) + ' is required.')
             });
         }
     }
@@ -3768,14 +3772,14 @@ function detectMissingFields(formEl, validatorInstance) {
     // 6. Skills & Expertise: at least 3 skills with complete details
     var skillsCheck = validateSkillsAndExpertise();
     if (!skillsCheck.valid) {
-        addMissing('skills', skillsCheck.label, '#skillExperienceWrapper');
+        addMissing('skills', skillsCheck.label, '#skillExperienceWrapper', skillsCheck.type === 'incomplete' ? 'Please complete all fields (Skill name, Experience, Rating) or remove the row.' : 'At least 3 complete skills (Skill name, Experience, Rating) are required.');
     }
 
     // 7. Relationship Manager
     var rec = ($('#recruiter').val() || '').trim();
     var recId = ($('#recruiter_id').val() || '').trim();
     if (!rec || !recId) {
-        addMissing('recruiter', 'Relationship Manager', '#recruiter');
+        addMissing('recruiter', 'Relationship Manager', '#rmPicker', 'Please select a Relationship Manager.');
     }
 
     return missing;
@@ -3955,6 +3959,167 @@ $(document).on('click', '#rfPrimaryCta', function (e) {
     }
 });
 
+function clearFieldValidationErrors(targetKey) {
+    if (targetKey) {
+        $('[data-field-error="' + targetKey + '"]').remove();
+        if (targetKey === 'recruiter') {
+            $('#rmPicker').removeClass('has-validation-error');
+        } else if (targetKey === 'resume') {
+            $('#uploadBox').removeClass('has-validation-error');
+        } else if (targetKey === 'pay_rate') {
+            $('#pay_annual').removeClass('has-validation-error');
+            $('#pay_annual').closest('.br-rate-field').removeClass('has-validation-error');
+        } else if (targetKey === 'bill_rate') {
+            $('#bill_annual').removeClass('has-validation-error');
+            $('#bill_annual').closest('.br-rate-field').removeClass('has-validation-error');
+        } else if (targetKey === 'kt_tagify_work_location') {
+            $('#kt_tagify_work_location').removeClass('has-validation-error');
+            $('#kt_tagify_work_location').closest('.bd-control').find('.tagify').removeClass('has-validation-error');
+        } else if (targetKey === 'skills') {
+            $('#skillExperienceWrapper tr').removeClass('has-validation-error');
+            $('#skillExperienceWrapper tr input, #skillExperienceWrapper tr select').removeClass('has-validation-error');
+        } else {
+            var cfg = fieldConfigMap[targetKey];
+            var selector = cfg && cfg.selector ? cfg.selector : ('#' + targetKey);
+            $(selector).removeClass('has-validation-error');
+        }
+    } else {
+        $('.has-validation-error').removeClass('has-validation-error');
+        $('.field-error-message').remove();
+    }
+}
+window.clearFieldValidationErrors = clearFieldValidationErrors;
+
+function applyFieldValidationErrors(missingFields) {
+    clearFieldValidationErrors();
+    if (!missingFields || !missingFields.length) return;
+
+    missingFields.forEach(function (f) {
+        var key = f.key;
+        var msg = f.message || (f.label + ' is required.');
+        var errorHtml = '<div class="field-error-message" data-field-error="' + key + '">'
+            + '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> '
+            + '<span>' + $('<div>').text(msg).html() + '</span>'
+            + '</div>';
+
+        if (key === 'recruiter') {
+            var $picker = $('#rmPicker');
+            $picker.addClass('has-validation-error');
+            if (!$('[data-field-error="recruiter"]').length) {
+                $picker.after(errorHtml);
+            }
+        } else if (key === 'resume') {
+            var $up = $('#uploadBox');
+            $up.addClass('has-validation-error');
+            if (!$('[data-field-error="resume"]').length) {
+                $up.after(errorHtml);
+            }
+        } else if (key === 'pay_rate') {
+            var $payField = $('#pay_annual').closest('.br-rate-field');
+            $payField.addClass('has-validation-error');
+            $('#pay_annual').addClass('has-validation-error');
+            if (!$('[data-field-error="pay_rate"]').length) {
+                var $ig = $('#pay_annual').closest('.ig');
+                if ($ig.length) $ig.after(errorHtml);
+                else $payField.append(errorHtml);
+            }
+        } else if (key === 'bill_rate') {
+            var $billField = $('#bill_annual').closest('.br-rate-field');
+            $billField.addClass('has-validation-error');
+            $('#bill_annual').addClass('has-validation-error');
+            if (!$('[data-field-error="bill_rate"]').length) {
+                var $ig = $('#bill_annual').closest('.ig');
+                if ($ig.length) $ig.after(errorHtml);
+                else $billField.append(errorHtml);
+            }
+        } else if (key === 'skills') {
+            var check = validateSkillsAndExpertise();
+            if (check && check.targetRow) {
+                $(check.targetRow).addClass('has-validation-error');
+            } else {
+                $('#skillExperienceWrapper tr').each(function () {
+                    var $tr = $(this);
+                    var s = ($tr.find('input[name="skills[]"]').val() || '').trim();
+                    var y = $tr.find('select[name="years[]"]').val();
+                    var r = $tr.find('select[name="ratings[]"]').val();
+                    if (!s || !y || !r) {
+                        $tr.addClass('has-validation-error');
+                    }
+                });
+            }
+            if (!$('[data-field-error="skills"]').length) {
+                var $seWrap = $('#skillExperienceWrapper').closest('.table-responsive, table, .se-card');
+                if ($seWrap.length) $seWrap.after(errorHtml);
+                else $('#skillExperienceWrapper').after(errorHtml);
+            }
+        } else if (key === 'kt_tagify_work_location') {
+            var $loc = $('#kt_tagify_work_location');
+            $loc.addClass('has-validation-error');
+            var $tagify = $loc.closest('.bd-control').find('.tagify');
+            if ($tagify.length) $tagify.addClass('has-validation-error');
+            if (!$('[data-field-error="kt_tagify_work_location"]').length) {
+                var $ctrl = $loc.closest('.bd-control');
+                if ($ctrl.length) $ctrl.after(errorHtml);
+                else $loc.after(errorHtml);
+            }
+        } else if (key === 'wm') {
+            var $wmWrap = $('#wr, .aw-mode-grid, .wm-option-grid').first();
+            $wmWrap.addClass('has-validation-error');
+            if (!$('[data-field-error="wm"]').length) {
+                $wmWrap.after(errorHtml);
+            }
+        } else {
+            var cfg = fieldConfigMap[key] || {};
+            var sel = f.selector || cfg.selector || ('#' + key);
+            var $el = $(sel);
+            if (!$el.length) $el = $('[name="' + key + '"]');
+            if ($el.length) {
+                $el.addClass('has-validation-error');
+                if (!$('[data-field-error="' + key + '"]').length) {
+                    var $ctrl = $el.closest('.bd-control, .pd-control, .bd-phone-control, .input-group');
+                    if ($ctrl.length) {
+                        $ctrl.after(errorHtml);
+                    } else {
+                        $el.after(errorHtml);
+                    }
+                }
+            }
+        }
+    });
+}
+window.applyFieldValidationErrors = applyFieldValidationErrors;
+
+$(document).on('input change focus', 'input, select, textarea', function () {
+    var $this = $(this);
+    var key = $this.attr('name') || $this.attr('id');
+    if ($this.hasClass('has-validation-error')) {
+        $this.removeClass('has-validation-error');
+    }
+    if ($this.closest('.has-validation-error').length) {
+        $this.closest('.has-validation-error').removeClass('has-validation-error');
+    }
+    if (key) {
+        $('[data-field-error="' + key + '"]').remove();
+    }
+    if ($this.attr('id') === 'pay_annual' || $this.attr('name') === 'pay_annual') {
+        clearFieldValidationErrors('pay_rate');
+    } else if ($this.attr('id') === 'bill_annual' || $this.attr('name') === 'bill_annual') {
+        clearFieldValidationErrors('bill_rate');
+    } else if ($this.closest('#skillExperienceWrapper').length) {
+        $this.closest('tr').removeClass('has-validation-error');
+        var sc = validateSkillsAndExpertise();
+        if (sc.valid) {
+            clearFieldValidationErrors('skills');
+        }
+    }
+});
+
+$(document).on('change input', '#kt_tagify_work_location', function () {
+    if ($(this).val() && $(this).val().trim()) {
+        clearFieldValidationErrors('kt_tagify_work_location');
+    }
+});
+
 function displayValidationErrorsNotification(errorList, formEl, validatorInstance) {
     var missing = detectMissingFields(formEl, validatorInstance);
     if (!missing.length && errorList && errorList.length) {
@@ -3969,13 +4134,15 @@ function displayValidationErrorsNotification(errorList, formEl, validatorInstanc
                 missing.push({
                     key: foundKey,
                     label: fieldConfigMap[foundKey].label,
-                    selector: fieldConfigMap[foundKey].selector
+                    selector: fieldConfigMap[foundKey].selector,
+                    message: fieldConfigMap[foundKey].message || (fieldConfigMap[foundKey].label + ' is required.')
                 });
             } else {
                 missing.push({
                     key: 'generic',
                     label: err.replace(/^(the|please|a)\s+/i, '').replace(/\s+(is required|is invalid|must contain.*)$/i, ''),
-                    selector: null
+                    selector: null,
+                    message: err
                 });
             }
         });
@@ -3983,11 +4150,12 @@ function displayValidationErrorsNotification(errorList, formEl, validatorInstanc
 
     if (!missing.length) {
         missing = [
-            { key: 'full_name', label: 'Full Name' },
-            { key: 'kt_tagify_work_location', label: 'Current Location' }
+            { key: 'full_name', label: 'Full Name', selector: '#full_name', message: 'Full name is required.' },
+            { key: 'kt_tagify_work_location', label: 'Current Location', selector: '#kt_tagify_work_location', message: 'Current location is required.' }
         ];
     }
 
+    applyFieldValidationErrors(missing);
     showRequiredFieldsModal(missing);
 }
 
