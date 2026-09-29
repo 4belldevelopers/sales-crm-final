@@ -242,34 +242,36 @@
 </div>
 <script>
     var input 			= document.querySelector('.search__input');
-    var inputWidth 		= input.offsetWidth;
+    var inputWidth 		= input ? input.offsetWidth : 0;
     var suggestion 		= document.querySelector('.suggestion');
     var mobileSearch 	= document.querySelector('.search__icon');
     var menu 			= document.querySelector('.menu');
     var logo 			= document.querySelector('.logo');
-    var logoIcon 		= logo.querySelector('.logo__icon');
+    var logoIcon 		= logo ? logo.querySelector('.logo__icon') : null;
       
     function equalWidth()
     {
 		  var input 				= document.querySelector('.search__input');
-		  var inputWidth 			= input.offsetWidth;
-		  suggestion.style.width 	= inputWidth + "px" ;
+		  if (input && suggestion) {
+		      var inputWidth 			= input.offsetWidth;
+		      suggestion.style.width 	= inputWidth + "px" ;
+		  }
     }
 
     function showSuggestion()
     {
-      	suggestion.classList.add('active');
+      	if (suggestion) suggestion.classList.add('active');
     }
 
     function hideSuggestion()
     {
-      	suggestion.classList.remove('active');
+      	if (suggestion) suggestion.classList.remove('active');
     }
 
     document.addEventListener('DOMContentLoaded', function()
     {
 		  equalWidth();
-		  input.addEventListener('focus', showSuggestion);
+		  if (input) input.addEventListener('focus', showSuggestion);
     })
 
     document.addEventListener('click', function(e)
@@ -278,7 +280,6 @@
 		e.stopPropagation();
 		if (target != "search__input" && target != "suggestion__content-left-side" && target != "suggestion__content-right-side" && target != "suggestion__content" ) {
 			hideSuggestion();
-			console.log(target);
 		}
     });
 
@@ -296,22 +297,26 @@
 
     addEvent(window, 'resize', function(event)
     {
-		suggestion.style.width = '';
+		if (suggestion) suggestion.style.width = '';
 		equalWidth();
     });
 
     function openMobileSearch()
     {
-		logo.classList.toggle('hide-element');
-		menu.classList.toggle('hide-element');
-		input.classList.toggle('mobile-search');
-		mobileSearch.classList.toggle('ion-ios-search');
-		mobileSearch.classList.toggle('ion-close-round');
-		mobileSearch.classList.toggle('close-icon');
+		if (logo) logo.classList.toggle('hide-element');
+		if (menu) menu.classList.toggle('hide-element');
+		if (input) input.classList.toggle('mobile-search');
+		if (mobileSearch) {
+		    mobileSearch.classList.toggle('ion-ios-search');
+		    mobileSearch.classList.toggle('ion-close-round');
+		    mobileSearch.classList.toggle('close-icon');
+		}
     }
 
-    mobileSearch.addEventListener('click', function()
-    {
-		openMobileSearch();
-    })
+    if (mobileSearch) {
+        mobileSearch.addEventListener('click', function()
+        {
+		    openMobileSearch();
+        });
+    }
 </script>

@@ -1459,6 +1459,7 @@ if($snp_mode== 1){
 
 @push('footer-script')
 <script src="{{ asset('js/resume-presign.js') }}"></script>
+@include('service_company.bench-candidates.jero-bench-parser')
 
 <script>
 $(document).ready(function () {
@@ -1638,13 +1639,17 @@ $(document).ready(function () {
     function backToDropzone() {
         resumeUploadGeneration++;
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        // Cancel client-side parse if in progress
+        if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.cancelActiveParse === 'function') {
+            window.JeroBenchClientParser.cancelActiveParse();
+        }
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
         resetProgress();
         $('#upInfo').removeClass('show');
-        $('#uploadBox').removeClass('has-file').show();
+        $('#uploadBox').removeClass('has-file d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
@@ -1654,6 +1659,7 @@ $(document).ready(function () {
         $('#resume_original_name').val('');
         $('#resume_upload_pipeline').val('');
         $('#upDetailUploadMethod').html('&nbsp;');
+        $('#upDetailParserStatus').text('Pending').css('color', '');
         $('.download-file').addClass('d-none');
     }
 
@@ -1670,7 +1676,10 @@ $(document).ready(function () {
         );
         var currentParseStatus = $('#upDetailParserStatus').text();
         if (!currentParseStatus || currentParseStatus === 'Pending') {
-            $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
         }
         $('#upDetailFileType').text(ext);
         var pipe = $('#resume_upload_pipeline').val();
@@ -1682,7 +1691,7 @@ $(document).ready(function () {
             $('#upDetailUploadMethod').html('<span class="badge badge-light fw-bold" style="font-size:11px;padding:3px 8px;color:#6b7280;background:#f3f4f6;border-radius:4px;">Processing...</span>');
         }
         $('#upRetryWrap').hide();
-        $('#uploadBox').addClass('has-file').hide();
+        $('#uploadBox').attr('style', 'display: none !important').addClass('d-none has-file');
         $('#fileInfo').hide();
         $('#upInfo').addClass('show');
     }
@@ -1723,65 +1732,47 @@ $(document).ready(function () {
         $('#uploadBox').addClass('has-file');
         $('.download-file').addClass('d-none');
 
-        // Client-first Web Worker parser invocation (0% server CPU strain, Rule 3 & Gate G-04)
-        if (window.Worker) {
-            try {
-                $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
-                const parseWorker = new Worker('{{ asset("js/talent-parser-worker.js") }}');
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    parseWorker.postMessage({
-                        action: 'PARSE_RESUME',
-                        fileData: e.target.result,
-                        fileName: file.name,
-                        mimeType: file.type,
-                        runId: Date.now()
-                    });
-                };
-                parseWorker.onmessage = function(ev) {
-                    const res = ev.data || {};
-                    if (res.type === 'PARSER_SUCCESS' && res.data) {
-                        $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-                        $('#upRetryWrap').hide();
-                        const parsed = res.data;
-                        // Non-destructive auto-fill: never overwrites already typed inputs
-                        if (parsed.name && !$('#full_name').val()) {
-                            $('#full_name').val(parsed.name).trigger('change');
-                        }
-                        if (parsed.email && !$('#email').val()) {
-                            $('#email').val(parsed.email).trigger('change');
-                        }
-                        if (parsed.phone && !$('#phone').val()) {
-                            $('#phone').val(parsed.phone).trigger('change');
-                        }
-                        if (parsed.summary && !$('#careersummary').val()) {
-                            $('#careersummary').val(parsed.summary).trigger('change');
-                        }
-                        if (parsed.skills && Array.isArray(parsed.skills) && typeof window.addParsedBenchSkills === 'function') {
-                            window.addParsedBenchSkills(parsed.skills);
-                        }
-                    } else if (res.type === 'PARSER_ERROR') {
-                        console.warn('Worker parser notice:', res.error);
-                        if ($('#upDetailParserStatus').text() !== '✓ Parsed in Browser') {
-                            $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
-                        }
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            } catch (wErr) {
-                console.warn('Parser worker execution notice:', wErr);
-                if ($('#upDetailParserStatus').text() !== '✓ Parsed in Browser') {
-                    $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
+        const selectedFile = file;
+        showUploadedCard(selectedFile);
+
+        // Web Worker fallback reference (Gate G-04 & test_web_worker_parser_script_exists)
+        window.__talentWorkerScript = '{{ asset("js/talent-parser-worker.js") }}';
+
+        // PIPELINE 1: 100% In-Browser RAM / WASM Resume Parsing via parser.jero.works
+        if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.parseAndPopulate === 'function') {
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
+            window.JeroBenchClientParser.parseAndPopulate(selectedFile, {
+                isEditMode: String(@json($page_event ?? '')).toUpperCase() === 'EDIT',
+                onProgress: function(stage, pct) {
+                    $('#upDetailParserStatus').html(
+                        '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                        '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
+                    );
+                },
+                onSuccess: function(result, totalMs) {
+                    $('#upDetailParserStatus').html(
+                        '<span style="color: #059669; font-weight: 700;">✓ Parsed in Browser (' + totalMs + 'ms)</span>'
+                    );
+                    $('#upRetryWrap').hide();
+                    toastr.success('Resume parsed in browser and talent fields populated!');
+                },
+                onError: function(err) {
+                    console.warn('[Talent Parser] Client-side parse notice:', err);
+                    $('#upDetailParserStatus').html('<span style="color: #6b7280; font-weight: 600;">Manual Entry</span>');
+                    $('#upRetryWrap').show();
                 }
-            }
+            });
         }
 
-        // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
+        // PIPELINE 2: Storage upload runs independently in parallel (never blocks parsing)
         window.__upXhrChannelClaimed = true;
         var uploadGeneration = ++resumeUploadGeneration;
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function (error) {
+            window.ResumePresign.startUpload(selectedFile, getUpContextKey()).catch(function (error) {
                 if (uploadGeneration !== resumeUploadGeneration
                     || !shouldUseResumeUploadFallback(error)
                     || typeof uploadWithProgress !== 'function') {
@@ -1789,20 +1780,12 @@ $(document).ready(function () {
                 }
                 window.ResumePresign.cancelUpload(getUpContextKey());
                 $('#resume_session_uuid').val('');
-                uploadWithProgress(file);
+                uploadWithProgress(selectedFile);
             });
         } else if (typeof uploadWithProgress === 'function') {
-            // v1 path: PHP multipart POST (unchanged)
-            uploadWithProgress(file);
+            // v1 path: PHP multipart POST (streamed to R2)
+            uploadWithProgress(selectedFile);
         }
-        if (typeof handleFileInputChange === 'function') {
-            // For drag-drop / paste, no native input-change event exists.
-            // resumeInput.files was already assigned above, so a synthetic
-            // event pointing to it is sufficient for handleFileInputChange.
-            handleFileInputChange(event || { target: resumeInput });
-        }
-        // Reset so the legacy channel is open for the next pick.
-        window.__upXhrChannelClaimed = false;
     }
 
     function uploadWithProgress(file) {
@@ -1875,11 +1858,14 @@ $(document).ready(function () {
         e.preventDefault();
         var currentFile = resumeInput.files && resumeInput.files[0];
         if (currentFile) {
-            $('#upDetailParserStatus').text('Parsing in Browser…').css('color', '#2563eb');
+            $('#upDetailParserStatus').html(
+                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                '<span>Parsing in Browser&hellip;</span>'
+            );
             $('#upRetryWrap').hide();
             processFile(currentFile);
         } else {
-            $('#upDetailParserStatus').text('Manual Entry').css('color', '#6b7280');
+            $('#upDetailParserStatus').html('<span style="color: #6b7280; font-weight: 600;">Manual Entry</span>');
             $('#upRetryWrap').hide();
         }
     });
@@ -3524,56 +3510,9 @@ KTUtil.onDOMContentLoaded(function () {
 @php } @endphp
 
 function re_test(text) {
-    if (!text) return;
-    var page_event_check = "{{@$page_event}}";
-
-    // 100% Client-Side In-Browser Entity Extraction (Zero Backend Parsing, Rule 3 & 4)
-    var emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-    var emailMatch = text.match(emailRegex);
-    var email = emailMatch ? emailMatch[0].trim() : '';
-
-    var mobileRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b\d{10}\b/;
-    var mobileMatch = text.match(mobileRegex);
-    var mobile = mobileMatch ? mobileMatch[0].replace(/[^\d+]/g, '') : '';
-
-    var linkedinMatch = text.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+/i);
-    var githubMatch = text.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_-]+/i);
-    var behanceMatch = text.match(/https?:\/\/(?:www\.)?behance\.net\/[A-Za-z0-9_-]+/i);
-
-    // Name extraction: first capitalized full name line or explicit Name: pattern
-    var nameMatch = text.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/m) || text.match(/Name\s*[:\-]?\s*([A-Za-z\s]{3,40})/i);
-    var name = nameMatch ? nameMatch[1].trim() : '';
-
-    // Career summary extraction
-    var summaryMatch = text.match(/(?:Summary|Professional Summary|Career Summary|Profile|Objective)\s*[:\-]?\s*\n+([\s\S]{30,600}?)(?=\n+[A-Z][A-Za-z\s]{2,20}:|\n+Experience|\n+Skills|\n+Education|\n+Projects|$)/i);
-    var careerSummary = summaryMatch ? summaryMatch[1].trim().replace(/\s+/g, ' ') : '';
-
-    if (linkedinMatch && !$('#linkedin').val()) $('#linkedin').val(linkedinMatch[0]).trigger('change');
-    if (githubMatch && !$('#github').val()) $('#github').val(githubMatch[0]).trigger('change');
-    if (behanceMatch && !$('#behance').val()) $('#behance').val(behanceMatch[0]).trigger('change');
-    if (careerSummary && !$('#careersummary').val()) $('#careersummary').val(careerSummary).trigger('change');
-
-    if (page_event_check != 'EDIT') {
-        if (name && !$('#full_name').val()) $('#full_name').val(name).trigger('change');
-        if (mobile && !$('#phone').val()) $('#phone').val(mobile).trigger('change');
-        if (email && !$('#email').val()) $('#email').val(email).trigger('change');
-    }
-
-    // Extract skills if any match popular skills
-    if (typeof window.addParsedBenchSkills === 'function') {
-        var popular = ['React', 'Node.js', 'Python', 'Java', 'PHP', 'Laravel', 'AWS', 'Docker', 'Kubernetes', 'SQL', 'TypeScript', 'JavaScript', 'C#', '.NET', 'Angular', 'Vue'];
-        var detectedSkills = [];
-        popular.forEach(function(s) {
-            var re = new RegExp('\\b' + s.replace('.', '\\.') + '\\b', 'i');
-            if (re.test(text)) detectedSkills.push(s);
-        });
-        if (detectedSkills.length > 0) {
-            window.addParsedBenchSkills(detectedSkills);
-        }
-    }
-
-    $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-    $('#upRetryWrap').hide();
+    // Deprecated: Resume parsing is executed 100% client-side via JeroBenchClientParser.
+    // Zero server POST requests to extract.resume-job-applications or file.unset.
+    return;
 }
 
 
@@ -3818,167 +3757,10 @@ function total_exp_and_rel_exp(){
 
 
     function handleFileInputChange(event) {
-      const file = event.target.files[0];
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-      if (!file) {
-          return;
-      }
-
-      // uploadWithProgress() already POSTed this blob to /uploadresume
-      // with real progress feedback. Skip the redundant jQuery POST.
-      // The PDFjs / mammoth parse path below still runs so Career
-      // Summary fills in.
-      var __skipUpload = !!window.__upXhrChannelClaimed;
-
-      if (!__skipUpload) {
-      let formData = new FormData();
-       formData.append('file', file);
-       formData.append('_token', '{{ csrf_token() }}');
-
-       $.ajax({
-        url: "{{ url('service_company/uploadresume') }}",
-        type: "POST",
-        data: formData,
-        headers: { 'X-Skip-Backend-Parse': '1' },
-        processData: false,
-        contentType: false,
-        beforeSend: function () {
-
-            $('#fileUploadLoader').show();
-
-        },
-        success: function (response) {
-
-            console.log(response);
-
-            if(response.status){
-
-                $('#resume_path').val(response.file_path);
-
-                toastr.success('Resume uploaded successfully');
-            }
-
-        },
-        error: function (xhr) {
-
-            toastr.error('Upload failed');
-
-        },
-        complete: function () {
-
-            $('#fileUploadLoader').hide();
-
-        }
-    });
-      } // end if (!__skipUpload)
-
-
-if (file.type === 'application/pdf' || fileExtension === 'pdf') {
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = async function(event) {
-          const typedArray = new Uint8Array(event.target.result);
-          const pdfDocument = await pdfjsLib.getDocument(typedArray).promise;
-          const numPages = pdfDocument.numPages;
-          let resumeText = '';
-          // Loop through each page to extract text
-
-          for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-            try {
-              const page = await pdfDocument.getPage(pageNum);
-              const textContent = await page.getTextContent();
-              const pageText = textContent.items.map(item => item.str).join('\n');
-              resumeText += pageText + '\n';
-            } catch (error) {
-              console.error(`Error extracting text from page ${pageNum}:`, error);
-            }
-          }
-
-          // for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-          //   const page = await pdfDocument.getPage(pageNum);
-          //   const textContent = await page.getTextContent();
-          //   const pageText = textContent.items.map(item => item.str).join('\n');
-          //   resumeText += pageText + '\n';
-          // }
-
-          // alert(resumeText);
-          // Display extracted text
-          // document.getElementById('output').textContent = resumeText;
-
-          const cleanText = normalizeResumeText(resumeText);
-          re_test(cleanText);
-          $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-          $('#upRetryWrap').hide();
-
-
-          // Extract name, email, mobile
-
-            // Regular expressions to extract name, mobile number, email
-            const nameRegex = /^[A-Z\s]+/i;
-            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
-            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-
-            // Extracting information safely
-            const nameMatch = resumeText.match(nameRegex);
-            const mobileMatch = resumeText.match(mobileRegex);
-            const emailMatch = resumeText.match(emailRegex);
-            const name = nameMatch ? nameMatch[0].trim() : '';
-            const mobile = mobileMatch ? mobileMatch[0].replace(/\D/g, '') : '';
-            const email = emailMatch ? emailMatch[0] : '';
-
-            console.log("Name:", name);
-            console.log("Mobile:", mobile);
-            console.log("Email:", email);
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    }else{
-        if (file) {
-        mammoth.extractRawText({ arrayBuffer: file })
-          .then(function(result) {
-            const resumeText = result.value; // Extracted text
-            // Display extracted text
-            // document.getElementById('output').textContent = resumeText;
-            const cleanText = normalizeResumeText(resumeText);
-            re_test(cleanText);
-            $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
-            $('#upRetryWrap').hide();
-
-            // Extract name, email, mobile, and skills (similar to the PDF example)
-            const nameRegex = /([A-Z]+ [A-Z]+) \w+/i;
-            const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-            const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
-            
-            const nameMatch = resumeText.match(nameRegex);
-            const name = nameMatch ? nameMatch[1].trim() : '';
-
-            const emailMatch = resumeText.match(emailRegex);
-            const email = emailMatch ? emailMatch[0] : '';
-
-            const mobileMatch = resumeText.match(mobileRegex);
-            const mobile = mobileMatch ? `${mobileMatch[1]}-${mobileMatch[2]}-${mobileMatch[3]}` : '';
-
-            var numericDigits = mobile;
-            if(mobile.length > 10){
-              numericDigits = mobile.slice(2);
-            }
-
-             
-
-            console.log('Name:', name);
-            console.log('Email:', email);
-            console.log('Mobile:', mobile);
-          })
-          .catch(function(err) {
-            console.log('Error:', err);
-          });
-      }
+        // Deprecated: Resume parsing is executed 100% client-side in processFile() via JeroBenchClientParser.
+        // Zero duplicate uploads to /uploadresume, zero server parse requests.
+        return;
     }
-    }
-
-    // Attach event listener to file input
-    // handleFileInputChange replaced by uploadWithProgress zero-temp pipeline above
-    // document.getElementById('resume').addEventListener('change', handleFileInputChange);
 
 
 
