@@ -830,6 +830,218 @@ body { overflow-x: hidden; }
     font-weight: 700 !important;
     color: #2563eb !important;
 }
+
+/* ── Redesigned Enterprise Relationship Manager Chip Card (media_1790669427546.png) ── */
+.rm-chips-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 6px;
+    margin-bottom: 8px;
+}
+
+.rm-chip-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8faff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 10px 18px;
+    min-height: 56px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.rm-chip-card:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.06);
+    background: #ffffff;
+}
+
+.rm-chip-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 190px;
+}
+
+.rm-chip-avatar {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #1e40af;
+    font-size: 13.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.rm-chip-identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.rm-chip-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rm-chip-sub {
+    font-size: 11.5px;
+    color: #64748b;
+    line-height: 1.2;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rm-chip-divider {
+    width: 1px;
+    height: 28px;
+    background: #e2e8f0;
+    margin: 0 16px;
+    flex-shrink: 0;
+}
+
+.rm-chip-col {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.rm-chip-icon {
+    font-size: 13px;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.rm-chip-text {
+    font-size: 12.5px;
+    color: #334155;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rm-chip-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.rm-chip-badge-selected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.rm-chip-badge-selected i {
+    color: #16a34a;
+    font-size: 13px;
+}
+
+.rm-chip-btn-remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ef4444;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.rm-chip-btn-remove:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.rm-chip-btn-remove i {
+    font-size: 12px;
+}
+
+/* Add another RM trigger button */
+.rm-add-more-wrap {
+    margin-top: 8px;
+    margin-bottom: 6px;
+}
+
+.rm-add-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px dashed #93c5fd;
+    color: #2563eb;
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.rm-add-more-btn:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+@media (max-width: 991px) {
+    .rm-chip-card {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    .rm-chip-divider {
+        display: none;
+    }
+    .rm-chip-left {
+        width: 100%;
+    }
+    .rm-chip-col {
+        flex: 1 1 45%;
+    }
+    .rm-chip-actions {
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 8px;
+        border-top: 1px dashed #e2e8f0;
+    }
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />

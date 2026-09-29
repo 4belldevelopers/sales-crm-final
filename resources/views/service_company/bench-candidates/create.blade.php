@@ -1346,12 +1346,21 @@ if($snp_mode== 1){
 
              <!-- Relationship Manager -->
             @php
-              $rmSelectedValue = trim((string) @$recruiterData);
-              $rmSelectedNames = array_values(array_filter(array_map('trim', preg_split('/\s*,\s*/', str_replace(' , ', ',', $rmSelectedValue)))));
-              $rmPrimaryName = $rmSelectedNames[0] ?? '';
-              $rmInitialParts = array_values(array_filter(explode(' ', trim($rmPrimaryName))));
-              $rmInitials = $rmPrimaryName ? strtoupper(substr($rmInitialParts[0] ?? $rmPrimaryName, 0, 1).substr($rmInitialParts[1] ?? '', 0, 1)) : '';
+              $rmInitialList = [];
+              if (!empty($recruiterlist) && count($recruiterlist) > 0) {
+                  foreach ($recruiterlist as $rItem) {
+                      $rmInitialList[] = [
+                          'id' => (string)$rItem->id,
+                          'name' => (string)$rItem->name,
+                          'email' => (string)($rItem->email ?? ''),
+                          'phone' => trim((!empty($rItem->calling_code) ? '+'.ltrim($rItem->calling_code, '+').' ' : '').($rItem->mobile ?? '')),
+                      ];
+                  }
+              }
             @endphp
+            <script>
+              window.__rmInitialList = @json($rmInitialList);
+            </script>
             <div class="fs rm-card">
               <div class="rm-hero">
                 <div class="rm-hero-title">
@@ -1364,43 +1373,36 @@ if($snp_mode== 1){
               </div>
               <div class="fsc fv-row rm-body">
 
-                <!--begin::Custom Details-->
+                <!--begin::Relationship Manager Section (media_1790669427546.png)-->
                 <div class="rm-content" id="job_additional_detail">
                   <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
+
+                  <!-- Hidden Form Inputs for authoritative persistence -->
+                  <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" />
+                  <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" />
+
+                  <!-- Dynamic Multi-Manager Cards List -->
+                  <div class="rm-chips-container" id="rmChipsContainer"></div>
+
+                  <!-- Add Another Manager Button (active when at least 1 manager is selected) -->
+                  <div class="rm-add-more-wrap" id="rmAddMoreWrap" style="display: none;">
+                    <button type="button" class="rm-add-more-btn" id="rmAddMoreBtn">
+                      <i class="fa-solid fa-plus" aria-hidden="true"></i> Add Relationship Manager
+                    </button>
+                  </div>
+
+                  <!-- Empty State Picker Box (active when no manager is selected) -->
                   <div class="rm-picker" id="rmPicker">
                     <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input class="form-control form-control-solid" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" placeholder="Search by name or email..." readonly="" />
+                    <input class="form-control form-control-solid" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
                     <span class="rm-input-placeholder">Search by name or email...</span>
                     <span class="rm-picker-divider"></span>
                     <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
                     <span class="rm-picker-chevron"><i class="fa-solid fa-chevron-down"></i></span>
                   </div>
-                  <small class="rm-help">Search and select a team member from your organization.</small>
-                  <input type="hidden" class="form-control form-control-solid" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" readonly="" />
-
-                  <div class="rm-selected-card" id="rmSelectedCard" style="{{ $rmPrimaryName ? 'display:flex' : 'display:none' }}">
-                    <button type="button" class="rm-selected-clear" id="rmClearSelection" aria-label="Clear relationship manager"><i class="fa-solid fa-xmark"></i></button>
-                    <div class="rm-selected-eyebrow">SELECTED MANAGER</div>
-                    <div class="rm-selected-content">
-                      <span class="rm-avatar" id="rmAvatar">{{ $rmInitials }}</span>
-                      <div class="rm-selected-copy">
-                        <strong id="rmSelectedName">{{ $rmPrimaryName }}</strong>
-                        <span class="rm-selected-role" id="rmSelectedRole">Relationship Manager</span>
-                        <span class="rm-selected-contact" id="rmSelectedContact"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="rm-info-card">
-                    <span class="rm-info-icon"><i class="fa-solid fa-info"></i></span>
-                    <span>
-                      <strong>Client Contact Information</strong>
-                      <small>The selected manager's business phone number and email address may be shared with clients for coordination regarding this talent.</small>
-                    </span>
-                  </div>
-
+                  <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
                 </div>
-                <!--end::Custom Details-->
+                <!--end::Relationship Manager Section-->
               </div>
             </div>
 
@@ -3112,18 +3114,38 @@ $(document).ready(function() {
                                       
   });
 
-  $(document).on('click', '#rmPicker', function(e) {
-      if ($(e.target).is('#recruiter')) {
-          return;
-      }
-      $('#recruiter').trigger('click');
+  $(document).on('click', '#rmPicker, #rmAddMoreBtn', function(e) {
+      e.preventDefault();
+      $('#kt_activitiesRecruiter_toggle').trigger('click');
   });
 
-  $(document).on('click', '#rmClearSelection', function(e) {
+  $(document).on('click', '.rm-chip-btn-remove', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      $('#recruiter').val('');
-      $('#recruiter_id').val('');
+      var rmId = String($(this).data('rm-id') || '');
+      var rmName = String($(this).data('rm-name') || '').trim();
+
+      removeRelationshipManagerById(rmId, rmName);
+
+      var curNames = ($('#recruiter').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      var curIds   = ($('#recruiter_id').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+
+      var newNames = curNames.filter(function(n) { return n.toLowerCase() !== rmName.toLowerCase(); });
+      var newIds   = curIds.filter(function(i) { return String(i) !== rmId; });
+
+      $('#recruiter').val(newNames.join(' , '));
+      $('#recruiter_id').val(newIds.join(' , '));
+
+      if (rmId) {
+          var $btn = $('#team_select_' + rmId);
+          if ($btn.length) {
+              $btn.removeClass('crm-remove').addClass('crm-add').text('Add').attr('data-assign', 0);
+          }
+          if (typeof crmRenderSelected === 'function') {
+              crmRenderSelected();
+          }
+      }
+
       syncRelationshipManagerCard();
   });
 
@@ -3136,80 +3158,125 @@ $(document).ready(function() {
   }, 400);
 });
 
-// Keep the redesigned Relationship Manager summary in sync with the existing drawer-owned recruiter fields.
+// ── Redesigned Dynamic Multi-Relationship Manager System (media_1790669427546.png) ──
+window.__rmSelectedManagers = window.__rmSelectedManagers || [];
+
 function rmEscape(value) {
     return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function rmTitleCase(value) {
-    return String(value || '').replace(/\b\w/g, function(char) {
-        return char.toUpperCase();
-    });
-}
-
-function rmSelectedNames() {
-    var value = $('#recruiter').val() || '';
-    return value.split(',').map(function(item) {
-        return item.trim();
-    }).filter(function(item) {
-        return item.length;
-    });
-}
-
 function rmInitials(name) {
-    var parts = String(name || '').trim().split(/\s+/);
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'RM';
     var first = parts[0] ? parts[0].charAt(0) : '';
-    var second = parts[1] ? parts[1].charAt(0) : '';
+    var second = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
     return (first + second || first || 'RM').toUpperCase();
 }
 
-function rmFindContact(name) {
-    var contacts = window.__teamContacts || [];
-    var normalized = String(name || '').trim().toLowerCase();
-    for (var index = 0; index < contacts.length; index++) {
-        if (String(contacts[index].name || '').trim().toLowerCase() === normalized) {
-            return contacts[index];
-        }
+function registerRelationshipManager(manager) {
+    if (!manager || !manager.name) return;
+    window.__rmSelectedManagers = window.__rmSelectedManagers || [];
+    var exists = window.__rmSelectedManagers.some(function(m) {
+        return (manager.id && String(m.id) === String(manager.id)) || (m.name.toLowerCase() === manager.name.toLowerCase());
+    });
+    if (!exists) {
+        window.__rmSelectedManagers.push(manager);
     }
-    return {};
 }
 
-function syncRelationshipManagerCard() {
-    var names = rmSelectedNames();
-    var selected = names[0] || '';
-    window.__rmLastRecruiterValue = $('#recruiter').val() || '';
-    $('#rmPicker').toggleClass('has-selection', names.length > 0);
-    $('#job_additional_detail').toggleClass('rm-has-selection', names.length > 0);
+function removeRelationshipManagerById(id, name) {
+    window.__rmSelectedManagers = (window.__rmSelectedManagers || []).filter(function(m) {
+        if (id && String(m.id) === String(id)) return false;
+        if (name && m.name.toLowerCase() === name.toLowerCase()) return false;
+        return true;
+    });
+}
 
-    if (!selected) {
-        $('#rmSelectedCard').hide();
-        $('#rmPickerAction').text('Select Relationship Manager');
+function getRmSelectedList() {
+    var rawNames = ($('#recruiter').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    var rawIds   = ($('#recruiter_id').val() || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    var pool = (window.__rmSelectedManagers || []).concat(window.__rmInitialList || []).concat(window.__crmTeam || []);
+    var list = [];
+
+    rawNames.forEach(function(name, index) {
+        var id = rawIds[index] || '';
+        var match = pool.find(function(m) {
+            return (id && String(m.id) === String(id)) || (m.name && m.name.toLowerCase() === name.toLowerCase());
+        });
+        list.push({
+            id: id || (match && match.id) || ('rm_' + index),
+            name: (match && match.name) || name,
+            email: (match && match.email) || '',
+            phone: (match && match.phone) || ''
+        });
+    });
+
+    return list;
+}
+
+function renderRelationshipManagerCards() {
+    var managers = getRmSelectedList();
+    var $container = $('#rmChipsContainer');
+    var $picker = $('#rmPicker');
+    var $addMore = $('#rmAddMoreWrap');
+
+    if (!managers || !managers.length) {
+        $container.empty().hide();
+        $addMore.hide();
+        $picker.css('display', 'flex');
+        $('#job_additional_detail').removeClass('rm-has-selection');
         return;
     }
 
-    var contact = rmFindContact(selected);
-    var role = contact.role || contact.display_name || 'Relationship Manager';
-    var email = contact.email || '';
-    var phone = contact.number || contact.mobile || contact.phone || '';
-    var contactHtml = '';
+    $picker.hide();
+    $addMore.show();
+    $('#job_additional_detail').addClass('rm-has-selection');
 
-    if (email) {
-        contactHtml += '<span><i class="fa-solid fa-envelope"></i>' + rmEscape(email) + '</span>';
-    }
-    if (phone) {
-        contactHtml += '<span><i class="fa-solid fa-phone"></i>' + rmEscape(phone) + '</span>';
-    }
-    if (names.length > 1) {
-        contactHtml += '<span class="rm-more-count">+' + (names.length - 1) + ' more selected</span>';
-    }
+    var html = '';
+    managers.forEach(function(m) {
+        var initials = rmInitials(m.name);
+        var subText = m.email || 'Relationship Manager';
+        var phoneDisplay = m.phone ? rmEscape(m.phone) : '—';
+        var emailDisplay = m.email ? rmEscape(m.email) : '—';
 
-    $('#rmPickerAction').text('Select Relationship Manager');
-    $('#rmAvatar').text(rmInitials(selected));
-    $('#rmSelectedName').text(rmTitleCase(selected));
-    $('#rmSelectedRole').text(rmTitleCase(role));
-    $('#rmSelectedContact').html(contactHtml).toggle(contactHtml.length > 0);
-    $('#rmSelectedCard').css('display', 'flex');
+        html += '<div class="rm-chip-card" data-rm-id="' + rmEscape(m.id) + '" data-rm-name="' + rmEscape(m.name) + '">'
+              +   '<div class="rm-chip-left">'
+              +     '<div class="rm-chip-avatar">' + initials + '</div>'
+              +     '<div class="rm-chip-identity">'
+              +       '<div class="rm-chip-name">' + rmEscape(m.name) + '</div>'
+              +       '<div class="rm-chip-sub">' + rmEscape(subText) + '</div>'
+              +     '</div>'
+              +   '</div>'
+              +   '<div class="rm-chip-divider"></div>'
+              +   '<div class="rm-chip-col rm-chip-phone">'
+              +     '<i class="fa-solid fa-phone rm-chip-icon"></i>'
+              +     '<span class="rm-chip-text">' + phoneDisplay + '</span>'
+              +   '</div>'
+              +   '<div class="rm-chip-divider"></div>'
+              +   '<div class="rm-chip-col rm-chip-email">'
+              +     '<i class="fa-regular fa-envelope rm-chip-icon"></i>'
+              +     '<span class="rm-chip-text">' + emailDisplay + '</span>'
+              +   '</div>'
+              +   '<div class="rm-chip-actions">'
+              +     '<span class="rm-chip-badge-selected"><i class="fa-solid fa-circle-check"></i> Selected</span>'
+              +     '<button type="button" class="rm-chip-btn-remove" data-rm-id="' + rmEscape(m.id) + '" data-rm-name="' + rmEscape(m.name) + '" title="Remove Relationship Manager">'
+              +       '<i class="fa-solid fa-trash-can"></i> Remove'
+              +     '</button>'
+              +   '</div>'
+              + '</div>';
+    });
+
+    $container.html(html).show();
 }
+
+function syncRelationshipManagerCard() {
+    window.__rmLastRecruiterValue = $('#recruiter').val() || '';
+    renderRelationshipManagerCards();
+}
+
+window.syncRelationshipManagerCard = syncRelationshipManagerCard;
+window.registerRelationshipManager = registerRelationshipManager;
+window.removeRelationshipManagerById = removeRelationshipManagerById;
 
 function isAvailableFromDateMode() {
     return String($('#serving_notice_period').val() || '') === '1';
