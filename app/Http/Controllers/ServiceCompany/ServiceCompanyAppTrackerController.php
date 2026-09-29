@@ -180,6 +180,78 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
     }
 
     /**
+     * Delta sync replay endpoint for Reverb gap recovery.
+     * Complies with docs/CODE_DOCUMENTATION_STANDARD.md.
+     * Tenancy: Enforces strict tenant scoping (auth user company_id matches job company_id).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deltaSync(Request $request)
+    {
+        $tenantId = (int) auth()->user()->company_id;
+        $jobId = (int) $request->get('job_id');
+        $afterVersion = (int) $request->get('after_version');
+
+        if ($jobId <= 0) {
+            return response()->json(['status' => 'error', 'message' => 'Invalid job ID'], 400);
+        }
+
+        // Multi-tenant authorization check: Job must belong to caller's company
+        $job = DB::table('jobs')->where('id', $jobId)->where('company_id', $tenantId)->first();
+        if (! $job) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized or job not found'], 403);
+        }
+
+        $latestVersion = (int) ($job->pipeline_version ?? 0);
+
+        // If client is already at or ahead of latest version
+        if ($afterVersion >= $latestVersion) {
+            return response()->json([
+                'status' => 'success',
+                'needs_snapshot' => false,
+                'latest_version' => $latestVersion,
+                'deltas' => [],
+            ]);
+        }
+
+        // Fetch missing deltas from transactional_outboxes
+        $events = DB::table('transactional_outboxes')
+            ->where('tenant_id', $tenantId)
+            ->where('job_id', $jobId)
+            ->where('version', '>', $afterVersion)
+            ->orderBy('version', 'asc')
+            ->limit(100)
+            ->get(['id', 'version', 'event_type', 'payload', 'created_at']);
+
+        // Gap detection: If no events found or if earliest version in outbox has already been purged (> afterVersion + 1)
+        if ($events->isEmpty() || ((int) $events->first()->version > ($afterVersion + 1))) {
+            return response()->json([
+                'status' => 'success',
+                'needs_snapshot' => true,
+                'latest_version' => $latestVersion,
+                'deltas' => [],
+            ]);
+        }
+
+        $deltas = $events->map(function ($ev) {
+            return [
+                'id' => (int) $ev->id,
+                'version' => (int) $ev->version,
+                'event_type' => $ev->event_type,
+                'payload' => json_decode($ev->payload, true) ?: [],
+                'timestamp' => $ev->created_at,
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => 'success',
+            'needs_snapshot' => false,
+            'latest_version' => $latestVersion,
+            'deltas' => $deltas,
+        ]);
+    }
+
+    /**
      * Runs the ES per-stage aggregation for a single job.
      * Used on cold-start or for live filtered counter requests.
      */
@@ -402,6 +474,200 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'skills' => $skillsByJob,
             'duplicates' => $duplicateMap,
         ];
+    }
+
+    /**
+     * Batch-resolve status maps specifically for Similar Candidates tab.
+     * Eliminates 6 per-row N+1 database queries in similar_existing_ajax.blade.php.
+     * Isolated strictly to Similar Candidates to ensure zero regressions on other tabs.
+     */
+    protected function prepareSimilarCandidatesRowMaps(array $data, int $companyId, int $jobId, int $appDuplicate, int $appDuplicateDays): array
+    {
+        $baseMaps = $this->prepareRowMaps($data, $companyId, $appDuplicate, $appDuplicateDays);
+
+        if (empty($data)) {
+            $baseMaps['rec_assigned'] = [];
+            $baseMaps['source_from_type'] = [];
+            $baseMaps['parent_assigned'] = [];
+            $baseMaps['existing_in_job'] = [];
+
+            return $baseMaps;
+        }
+
+        $candidateIds = collect($data)
+            ->map(fn ($row) => (int) ($row['candidate_id'] ?? $row['id'] ?? 0))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($candidateIds)) {
+            $baseMaps['rec_assigned'] = [];
+            $baseMaps['source_from_type'] = [];
+            $baseMaps['parent_assigned'] = [];
+            $baseMaps['existing_in_job'] = [];
+
+            return $baseMaps;
+        }
+
+        // 1. Direct assignment to this job in rec_candidate_assign
+        $recAssignedSet = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $jobId)
+            ->whereIn('source_from_id', $candidateIds)
+            ->pluck('source_from_id')
+            ->flip()
+            ->toArray();
+
+        // 2. Source-from-type lookup (public bench = 2, internal bench = 1)
+        $sourceTypeMap = [];
+        $sourceRows = DB::table('rec_candidate_assign')
+            ->where('source_company_id', $companyId)
+            ->whereIn('source_from_type', [1, 2])
+            ->whereIn('source_application_id', $candidateIds)
+            ->select('source_application_id', 'source_from_type')
+            ->get();
+        foreach ($sourceRows as $sr) {
+            if ($sr->source_from_type == 2 && ! isset($sourceTypeMap[$sr->source_application_id])) {
+                $sourceTypeMap[$sr->source_application_id] = 2;
+            }
+            if ($sr->source_from_type == 1) {
+                $sourceTypeMap[$sr->source_application_id] = 1;
+            }
+        }
+
+        // 3. Parent candidate assignment to this job in rec_candidate_assign
+        $parentAssignedSet = DB::table('rec_candidate_assign')
+            ->where('source_company_id', $companyId)
+            ->where('source_jobid', $jobId)
+            ->whereIn('source_from_type', [1, 2])
+            ->whereIn('parent_id', $candidateIds)
+            ->pluck('parent_id')
+            ->flip()
+            ->toArray();
+
+        // 4. Existing candidate in add_job_wise_condidates for this job
+        $existingInJobSet = DB::table('add_job_wise_condidates')
+            ->where('job_id', $jobId)
+            ->whereIn('job_application_id', $candidateIds)
+            ->pluck('job_application_id')
+            ->flip()
+            ->toArray();
+
+        // 5. Job required skills (1 single query for the entire page)
+        $jobRequiredSkills = DB::table('job_metronics_skills')
+            ->where('job_id', $jobId)
+            ->pluck('skill_name')
+            ->map(fn ($s) => strtolower(trim($s)))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // 6. City map for candidate locations (India: country = 101)
+        $cityIds = collect($data)
+            ->filter(fn ($r) => ((is_object($r) ? ($r->country ?? 0) : ($r['country'] ?? 0)) == 101))
+            ->map(fn ($r) => (int) (is_object($r) ? ($r->city_id ?? 0) : ($r['city_id'] ?? 0)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $cityMap = ! empty($cityIds)
+            ? DB::table('city_list')->whereIn('city_id', $cityIds)->pluck('city', 'city_id')->toArray()
+            : [];
+
+        // 7. Country name map
+        $countryIds = collect($data)
+            ->map(fn ($r) => is_object($r) ? ($r->country ?? null) : ($r['country'] ?? null))
+            ->filter(fn ($c) => is_numeric($c) && $c > 0)
+            ->map(fn ($c) => (int) $c)
+            ->unique()
+            ->values()
+            ->all();
+
+        $countryMap = ! empty($countryIds)
+            ? DB::table('countries')->whereIn('id', $countryIds)->pluck('country_name', 'id')->toArray()
+            : [];
+
+        // 8. add_job_wise_condidates details (company_name, client_name, job title, jobStatus, companyIdCheck)
+        $wiseIds = collect($data)
+            ->map(fn ($r) => (int) (is_object($r) ? ($r->id ?? 0) : ($r['id'] ?? 0)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $wiseJobInfo = ! empty($wiseIds)
+            ? DB::table('add_job_wise_condidates')
+                ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
+                ->join('clients', 'clients.id', 'jobs.client_id')
+                ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                ->select(
+                    'add_job_wise_condidates.id as wise_id',
+                    'companies.company_name',
+                    'clients.name as client_name',
+                    'jobs.title',
+                    'jobs.status as jobStatus',
+                    'jobs.company_id as companyIdCheck'
+                )
+                ->whereIn('add_job_wise_condidates.id', $wiseIds)
+                ->get()
+                ->keyBy('wise_id')
+                ->toArray()
+            : [];
+
+        // 9. Child status map (candidate_status)
+        $childStatusIds = collect($data)
+            ->map(fn ($r) => (int) (is_object($r) ? ($r->childStatusId ?? 0) : ($r['childStatusId'] ?? 0)))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $childStatusMap = ! empty($childStatusIds)
+            ? DB::table('candidate_status')->whereIn('id', $childStatusIds)->pluck('name', 'id')->toArray()
+            : [];
+
+        // 10. Spokesperson map for client job assignments
+        $jobClientPairs = collect($data)
+            ->filter(function ($r) use ($companyId) {
+                $cid = (int) (is_object($r) ? ($r->ClientComID ?? 0) : ($r['ClientComID'] ?? 0));
+
+                return $companyId != $cid && $cid > 0;
+            })
+            ->map(fn ($r) => [
+                'job_id' => (int) (is_object($r) ? ($r->jobId ?? $r->job_id ?? 0) : ($r['jobId'] ?? $r['job_id'] ?? 0)),
+                'client_com_id' => (int) (is_object($r) ? ($r->ClientComID ?? 0) : ($r['ClientComID'] ?? 0)),
+            ])
+            ->unique(fn ($p) => $p['job_id'].'_'.$p['client_com_id'])
+            ->values();
+
+        $spokpersonMap = [];
+        if ($jobClientPairs->isNotEmpty()) {
+            $jobIds = $jobClientPairs->pluck('job_id')->all();
+            $clientComIds = $jobClientPairs->pluck('client_com_id')->all();
+            $spokRows = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->whereIn('job_assign.job_id', $jobIds)
+                ->whereIn('job_assign.company_id', $clientComIds)
+                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->get();
+            foreach ($spokRows as $sr) {
+                $spokpersonMap[$sr->job_id.'_'.$sr->company_id] = $sr->name;
+            }
+        }
+
+        $baseMaps['rec_assigned'] = $recAssignedSet;
+        $baseMaps['source_from_type'] = $sourceTypeMap;
+        $baseMaps['parent_assigned'] = $parentAssignedSet;
+        $baseMaps['existing_in_job'] = $existingInJobSet;
+        $baseMaps['job_skills'] = $jobRequiredSkills;
+        $baseMaps['city_map'] = $cityMap;
+        $baseMaps['country_map'] = $countryMap;
+        $baseMaps['wise_job_info'] = $wiseJobInfo;
+        $baseMaps['child_status_map'] = $childStatusMap;
+        $baseMaps['spokperson_map'] = $spokpersonMap;
+
+        return $baseMaps;
     }
 
     public function allDataAjax(Request $request)
@@ -2088,7 +2354,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             || ($max_salary !== null && $max_salary !== '' && $max_salary != 0.00);
         $search = $freeTextSearch;
         // dd($data);
-        $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
+        $rowMaps = $this->prepareSimilarCandidatesRowMaps($data, $company_id, (int) $jobid, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
             'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'hasActiveFilters', 'search', 'rowMaps'))->render(),
             'total' => $total,
@@ -3025,6 +3291,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $id = $source_jobid = $source_from_type = $company_id = $source_jobid = '';
         $source_from_company_id = $source_from_user_id = $source_from_id = $source_tab = '';
         $source_company_id = $source_user_id = '';
+        $lastWiseIs = null;
 
         $source_company_id = auth()->user()->company_id;
         $source_user_id = auth()->user()->id;
@@ -3036,6 +3303,91 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $source_from_type = (int) @$request->source_from_type;
         $source_tab = @$request->source_tab;
         $wiseId = (int) @$request->wiseId;
+
+        // Phase 2: Idempotency Extraction & Collision Prevention
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        if (empty($idempotencyKey)) {
+            // Deterministic 15-second sliding window for legacy/double-click protection
+            $idempotencyKey = 'rec_assign_'.$source_company_id.'_'.$source_jobid.'_'.$id.'_'.floor(time() / 15);
+        }
+
+        $canonicalHash = sha1(json_encode([
+            'tenant' => $source_company_id,
+            'job' => $source_jobid,
+            'cand' => $id,
+            'type' => $source_from_type,
+            'tab' => $source_tab,
+            'wise' => $wiseId,
+        ]));
+
+        // 1. Atomic claim via sys_idempotency_keys
+        $claimed = DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => $source_company_id,
+            'idempotency_key' => $idempotencyKey,
+            'request_hash' => $canonicalHash,
+            'status' => 'PROCESSING',
+            'processing_until' => now()->addSeconds(60),
+            'expires_at' => now()->addHours(72),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (! $claimed) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $source_company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing) {
+                if ($existing->status === 'COMPLETED') {
+                    $body = json_decode($existing->response_body, true);
+
+                    return Reply::dataOnly($body ?: ['status' => 'success']);
+                }
+
+                if ($existing->status === 'PROCESSING') {
+                    if (strtotime($existing->processing_until) > time()) {
+                        return Reply::dataOnly(['status' => 'processing', 'message' => 'Candidate assignment is currently processing.']);
+                    }
+                    // Lease expired - reclaim
+                    DB::table('sys_idempotency_keys')
+                        ->where('tenant_id', $source_company_id)
+                        ->where('idempotency_key', $idempotencyKey)
+                        ->update([
+                            'processing_until' => now()->addSeconds(60),
+                            'updated_at' => now(),
+                        ]);
+                }
+
+                if ($existing->status === 'FAILED_FINAL') {
+                    $body = json_decode($existing->response_body, true);
+
+                    return Reply::dataOnly($body ?: ['status' => 'error']);
+                }
+            }
+        }
+
+        // 2. Authoritative duplicate check on add_job_wise_condidates
+        $alreadyAssigned = DB::table('add_job_wise_condidates')
+            ->where('job_id', $source_jobid)
+            ->where('job_application_id', $id)
+            ->first();
+
+        if ($alreadyAssigned) {
+            $res = ['status' => 'success', 'already_assigned' => true, 'message' => 'Candidate already added to Job — In-Review stage'];
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $source_company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($res),
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            return Reply::dataOnly($res);
+        }
 
         // dd($wiseId,$source_from_type);
 
@@ -3069,7 +3421,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $eventId = 9;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $coin_company_id, $eventId, auth()->user()->id, $coin_company_id, '', '');
             if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                $coinPayload = ['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins];
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', $source_company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_FINAL',
+                        'response_status' => 200,
+                        'response_body' => json_encode($coinPayload),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                return Reply::dataOnly($coinPayload);
             }
 
             $row_data = DB::table('job_applications')->select('*')->where('id', $id)->first();
@@ -3197,6 +3561,55 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
             DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastWiseIs = DB::getPdo()->lastInsertId();
+
+            // Phase 2: Monotonic pipeline version & outbox event
+            DB::table('jobs')->where('id', $source_jobid)->increment('pipeline_version');
+            $newPipelineVersion = DB::table('jobs')->where('id', $source_jobid)->value('pipeline_version') ?? 1;
+
+            DB::table('sys_outbox_events')->insert([
+                'tenant_id' => $source_company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'CandidateAssignment',
+                'aggregate_id' => $lastWiseIs,
+                'aggregate_version' => $newPipelineVersion,
+                'event_type' => 'CandidateAddedToJob',
+                'payload' => json_encode([
+                    'wise_id' => (int) $lastWiseIs,
+                    'job_id' => (int) $source_jobid,
+                    'candidate_id' => (int) $application_id,
+                    'rec_candidate_assign_id' => (int) $recCandidateAssignId,
+                    'company_id' => (int) $jobRow->company_id,
+                    'master_status_id' => 8,
+                    'source_from_type' => (int) $source_from_type,
+                    'pipeline_version' => (int) $newPipelineVersion,
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
+
+            // Phase 4 & 7: Dual-lease transactional outbox for decoupled ES & Reverb processing (Canary guarded)
+            $outboxService = app(\App\Services\TransactionalOutboxService::class);
+            if ($outboxService->isOptimizedPipelineEnabled((int) $source_company_id)) {
+                $outboxService->recordEvent(
+                    (int) $source_company_id,
+                    (int) $source_jobid,
+                    (int) $newPipelineVersion,
+                    'CandidateAddedToJob',
+                    [
+                        'wise_id' => (int) $lastWiseIs,
+                        'job_id' => (int) $source_jobid,
+                        'candidate_id' => (int) $application_id,
+                        'rec_candidate_assign_id' => (int) $recCandidateAssignId,
+                        'company_id' => (int) $jobRow->company_id,
+                        'master_status_id' => 8,
+                        'source_from_type' => (int) $source_from_type,
+                        'pipeline_version' => (int) $newPipelineVersion,
+                    ]
+                );
+            }
+
 
             $cachekeys = [
                 'allcvtracker_version_user_'.$this->user->id,
@@ -4048,8 +4461,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 (int) $lastWiseIs,
                 (int) ($jobRow->company_id ?? auth()->user()->company_id)
             );
-        } else {
+        } elseif (! empty($lastWiseIs)) {
             GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
+        }
+
+        // Phase 2: Mark Idempotency Record COMPLETED
+        if (! empty($idempotencyKey) && ! empty($source_company_id)) {
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $source_company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode(['status' => 'success']),
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
         }
 
         return Reply::dataOnly(['status' => 'success']);

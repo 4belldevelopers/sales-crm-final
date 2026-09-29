@@ -308,6 +308,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class, 'index'])->name('apptracker.index');
                 Route::get('apptracker/benchReqViewMore/{id}/{job_applications_id}', [ServiceCompanyAppTrackerController::class, 'benchReqViewMore'])->name('apptracker.benchReqViewMore');
                 Route::get('apptracker/loadcounter/{jobid?}/{mstatus_id?}/{inputSearch?}', [ServiceCompanyAppTrackerController::class, 'loadcounter'])->name('apptracker.loadcounter');
+                Route::get('apptracker/delta-sync', [ServiceCompanyAppTrackerController::class, 'deltaSync'])->name('apptracker.deltaSync');
+
                 Route::get('apptracker/export/{jobs}/{mstatus_id}/{start}/{length}', [ServiceCompanyAppTrackerController::class, 'export'])->name('apptracker.export');
                 Route::get('apptracker/data', [ServiceCompanyAppTrackerController::class, 'data'])->name('apptracker.data');
                 Route::get('apptracker/candidates_request_data', [ServiceCompanyAppTrackerController::class, 'candidates_request_data'])->name('apptracker.candidates_request_data');

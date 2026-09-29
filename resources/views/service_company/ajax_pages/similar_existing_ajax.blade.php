@@ -92,7 +92,7 @@
                     // both the percentage and the green-badge highlighting so
                     // the two pages produce identical Match% and identical
                     // matched-skill sets for the same candidate.
-                    $jobRequiredSkills = \Illuminate\Support\Facades\DB::table('job_metronics_skills')
+                    $jobRequiredSkills = $rowMaps['job_skills'] ?? \Illuminate\Support\Facades\DB::table('job_metronics_skills')
                         ->where('job_id', $row->job_id ?? $jobid)
                         ->pluck('skill_name')
                         ->map(fn($s) => strtolower(trim($s)))
@@ -150,10 +150,12 @@
                     // (jobId, candidate skills) inputs guarantees the two
                     // pages produce identical percentages for the same
                     // candidate.
-                    $percentageString = GeneralMethod::skill_percentage(
-                        $row->job_id ?? $jobid,
-                        $candidateAllSkills
-                    );
+                    $percentageString = isset($rowMaps['job_skills'])
+                        ? GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $candidateAllSkills)
+                        : GeneralMethod::skill_percentage(
+                            $row->job_id ?? $jobid,
+                            $candidateAllSkills
+                        );
                     $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
 
                     // Match % badge — standardized thresholds: >=85 green, 50-84 orange, <50 red
@@ -527,7 +529,9 @@
                         $row_country_name = '----';
                     } else {
                         if (!empty(@$row->country)) {
-                            if (is_numeric(@$row->country)) {
+                            if (isset($rowMaps['country_map'][$row->country])) {
+                                $row_country_name = ucwords($rowMaps['country_map'][$row->country]);
+                            } elseif (is_numeric(@$row->country)) {
                                 $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
                                 foreach ($country_name_Arr as $cval) {
                                     $row_country_name = ucwords($cval['name']);
@@ -560,11 +564,15 @@
                     $row_city_name = '';
 
                     if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
+                        if (isset($rowMaps['city_map'][$row->city_id])) {
+                            $row_city_name = $rowMaps['city_map'][$row->city_id];
+                        } else {
+                            $row_city = DB::table('city_list')
+                                ->select('*')
+                                ->where('city_id', @$row->city_id)
+                                ->first();
+                            $row_city_name = @$row_city->city;
+                        }
                     } else {
                         $row_city_name = @$row->city;
                     }
@@ -618,17 +626,20 @@
 
                     $client_name = '';
                    
-                    $add_job_wise_condidates = DB::table('add_job_wise_condidates')
-                    ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
-                    ->join('clients', 'clients.id', 'jobs.client_id')
-                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
-                    ->select('companies.company_name','clients.name as client_name','jobs.title','jobs.status as jobStatus','jobs.company_id as companyIdCheck')
-                    ->where('add_job_wise_condidates.id', $row->id)
-                    ->first();
-                    $client_name = $add_job_wise_condidates->client_name;
+                    $add_job_wise_condidates = $rowMaps['wise_job_info'][$row->id] ?? null;
+                    if (!$add_job_wise_condidates) {
+                        $add_job_wise_condidates = DB::table('add_job_wise_condidates')
+                            ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
+                            ->join('clients', 'clients.id', 'jobs.client_id')
+                            ->join('companies', 'companies.id', '=', 'jobs.company_id')
+                            ->select('companies.company_name','clients.name as client_name','jobs.title','jobs.status as jobStatus','jobs.company_id as companyIdCheck')
+                            ->where('add_job_wise_condidates.id', $row->id)
+                            ->first();
+                    }
+                    $client_name = $add_job_wise_condidates->client_name ?? '';
                     // dd($add_job_wise_condidates,$row->id);
                     $client_name = ucwords($client_name);
-                    if ($add_job_wise_condidates->companyIdCheck != $company_id) {
+                    if ($add_job_wise_condidates && $add_job_wise_condidates->companyIdCheck != $company_id) {
                         $client_name = $add_job_wise_condidates->company_name;
                     }
 
@@ -651,17 +662,10 @@
             <!-- Status start  -->
             <td>
                 @php
-                 $add_job_wise_condidates = DB::table('add_job_wise_condidates')
-                    ->join('jobs', 'add_job_wise_condidates.job_id', '=', 'jobs.id')
-                    ->join('clients', 'clients.id', 'jobs.client_id')
-                    ->join('companies', 'companies.id', '=', 'jobs.company_id')
-                    ->select('companies.company_name','clients.name as client_name','jobs.title','jobs.status as jobStatus','jobs.company_id as companyIdCheck')
-                    ->where('add_job_wise_condidates.id', $row->id)
-                    ->first();
-
+                    $jobStatusVal = $add_job_wise_condidates->jobStatus ?? '';
                     $status = $active = $hold = $inactive = $class = $recommendation_id = '';
-                    $status = ucwords($add_job_wise_condidates->jobStatus);
-                    $class = $job_status[$add_job_wise_condidates->jobStatus];
+                    $status = ucwords($jobStatusVal);
+                    $class = $job_status[$jobStatusVal] ?? '';
                     
                     if ($status == 'Active') {
                         $status = 'Hiring';
@@ -671,7 +675,7 @@
                     }
 
                     $recommendation_text = __('messages.internal_tag');
-                    if ($add_job_wise_condidates->companyIdCheck != $company_id) {
+                    if ($add_job_wise_condidates && $add_job_wise_condidates->companyIdCheck != $company_id) {
                         $recommendation_text = __('messages.clinet_tag');
                     }
 
@@ -695,8 +699,13 @@
                 @php
 
                 if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                    $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                    $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                    $spokKey = ($row->jobId ?? $row->job_id ?? 0).'_'.$row->ClientComID;
+                    if (isset($rowMaps['spokperson_map'][$spokKey])) {
+                        $rowpostedby = $rowMaps['spokperson_map'][$spokKey];
+                    } else {
+                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                    }
                     $rowpostedby = @$row->rec_candidate_assign_id ? $row->posted_by :  $rowpostedby;
                 }else{
                     $rowpostedby = $row->posted_by;
@@ -815,13 +824,16 @@
                         $name = '';
                     }
                     if (!empty(@$row->childStatusId) && @$row->childStatusId > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->childStatusId)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
+                        if (isset($rowMaps['child_status_map'][$row->childStatusId])) {
+                            $name = $rowMaps['child_status_map'][$row->childStatusId];
+                        } else {
+                            $childStatus = DB::table('candidate_status')
+                                ->select('*')
+                                ->where('id', $row->childStatusId)
+                                ->first();
+                            if (!empty($childStatus)) {
+                                $name = @$childStatus->name;
+                            }
                         }
                     }
                     echo '<div class="d-flex flex-column">
@@ -847,92 +859,93 @@
             <!-- Stage end  -->
             <td>
                 @php
-                    $source_from_id = @$row->candidate_id;
-                    $recCounter = 0;
-                    $recCounter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_id', @$row->candidate_id)
-                        //->where('source_from_type', 0)
-                        ->where('source_jobid', @$jobid)
-                        /*->orWhere(function ($query) use($source_from_id, $jobid) {
-																								$query->where('source_application_id', '=', $source_from_id)
-																								->where('source_from_type', '=', '1')
-																								->where('source_jobid', '=', $jobid);
-																					})*/
-                        ->count();
+                    $candId = (int) (@$row->candidate_id ?? @$row->id ?? 0);
+                    if (isset($rowMaps['rec_assigned'])) {
+                        // Phase 1 Optimization: Read precomputed maps (0 database queries in foreach loop)
+                        $isRecAssigned = isset($rowMaps['rec_assigned'][$candId]);
+                        $source_from_type = $rowMaps['source_from_type'][$candId] ?? 0;
+                        $isParentAssigned = isset($rowMaps['parent_assigned'][$candId]);
+                        $isExistingInJob = isset($rowMaps['existing_in_job'][$candId]);
 
-                    $source_from_type = 0;
-                    $public_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 2)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', @$row->candidate_id)
-                        ->count();
-
-                    if ($public_bench_conter > 0) {
-                        $source_from_type = 2;
-                    }
-
-                    $internal_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 1)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', @$row->candidate_id)
-                        ->count();
-
-                    if ($internal_bench_conter > 0) {
-                        $source_from_type = 1;
-                    }
-
-                    if ($recCounter > 0) {
-                        $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>' .
-                            @$row->wiseId .
-                            ' </div>';
+                        if ($isRecAssigned) {
+                            $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>' . @$row->wiseId . ' </div>';
+                        } elseif ($isParentAssigned || $isExistingInJob) {
+                            $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                        } else {
+                            $html = '<div class="d-flex flex-column"> 
+                                        <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' . @$source_from_type . '" data-row-id="' . @$row->candidate_id . '" data-row-wiseId="' . @$row->id . '" data-row-jobid="' . @$jobid . '">
+                                            Add to Job
+                                        </a> 
+                                    </div>';
+                        }
                     } else {
+                        // Safe fallback to legacy queries if rowMaps is not provided
+                        $source_from_id = @$row->candidate_id;
+                        $recCounter = DB::table('rec_candidate_assign')
+                            ->select('id')
+                            ->where('source_from_id', @$row->candidate_id)
+                            ->where('source_jobid', @$jobid)
+                            ->count();
+
+                        $source_from_type = 0;
                         $public_bench_conter = DB::table('rec_candidate_assign')
                             ->select('id')
                             ->where('source_from_type', '=', 2)
                             ->where('source_company_id', '=', $company_id)
-                            ->where('source_jobid', '=', $jobid)
-                            ->where('parent_id', '=', @$row->candidate_id)
+                            ->where('source_application_id', '=', @$row->candidate_id)
                             ->count();
+
+                        if ($public_bench_conter > 0) {
+                            $source_from_type = 2;
+                        }
+
                         $internal_bench_conter = DB::table('rec_candidate_assign')
                             ->select('id')
                             ->where('source_from_type', '=', 1)
                             ->where('source_company_id', '=', $company_id)
-                            ->where('source_jobid', '=', $jobid)
-                            ->where('parent_id', '=', @$row->candidate_id)
+                            ->where('source_application_id', '=', @$row->candidate_id)
                             ->count();
-                            $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                            ->select('job_application_id')
-                            ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', $row->candidate_id)->count();
 
-                        if ($public_bench_conter > 0) {
-                            $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
-                        } elseif ($internal_bench_conter > 0) {
-                            $html =
-                                '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
-                        }elseif($existingCandidatesQuery){
-                            $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                        if ($internal_bench_conter > 0) {
+                            $source_from_type = 1;
+                        }
+
+                        if ($recCounter > 0) {
+                            $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>' . @$row->wiseId . ' </div>';
                         } else {
-                            $html =
-                                '<div class="d-flex flex-column"> 
-												<a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' .
-                                @$source_from_type .
-                                '"  data-row-id="' .
-                                @$row->candidate_id .
-                                '" data-row-wiseId="' .
-                                @$row->id.
-                                '" data-row-jobid="' .
-                                @$jobid .
-                                '">
-													Add to Job
-												</a> 
-											</div>';
+                            $public_bench_conter = DB::table('rec_candidate_assign')
+                                ->select('id')
+                                ->where('source_from_type', '=', 2)
+                                ->where('source_company_id', '=', $company_id)
+                                ->where('source_jobid', '=', $jobid)
+                                ->where('parent_id', '=', @$row->candidate_id)
+                                ->count();
+                            $internal_bench_conter = DB::table('rec_candidate_assign')
+                                ->select('id')
+                                ->where('source_from_type', '=', 1)
+                                ->where('source_company_id', '=', $company_id)
+                                ->where('source_jobid', '=', $jobid)
+                                ->where('parent_id', '=', @$row->candidate_id)
+                                ->count();
+                            $existingCandidatesQuery = DB::table('add_job_wise_condidates')
+                                ->select('job_application_id')
+                                ->where('add_job_wise_condidates.job_id', '=', $jobid)
+                                ->where('add_job_wise_condidates.job_application_id', '=', $row->candidate_id)
+                                ->count();
+
+                            if ($public_bench_conter > 0) {
+                                $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                            } elseif ($internal_bench_conter > 0) {
+                                $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                            } elseif ($existingCandidatesQuery) {
+                                $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                            } else {
+                                $html = '<div class="d-flex flex-column"> 
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' . @$source_from_type . '" data-row-id="' . @$row->candidate_id . '" data-row-wiseId="' . @$row->id . '" data-row-jobid="' . @$jobid . '">
+                                                Add to Job
+                                            </a> 
+                                        </div>';
+                            }
                         }
                     }
                     echo $html;
