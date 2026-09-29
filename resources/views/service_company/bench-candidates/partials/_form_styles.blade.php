@@ -737,6 +737,75 @@ body { overflow-x: hidden; }
     width: 100%;
 }
 
+/* ── Currency Symbol Prefix inside input box (enterprise-grade ig-prefix) ── */
+.ig-prefix {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 36px;
+    height: 38px;
+    padding: 0 10px;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fb 100%);
+    border: 1px solid #d1d5db;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a5f;
+    letter-spacing: 0;
+    white-space: nowrap;
+    user-select: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* When input is focused, prefix box highlights too */
+.br-rate-field .ig:focus-within .ig-prefix {
+    background: linear-gradient(135deg, #e0eaff 0%, #dbeafe 100%);
+    color: #1d4ed8;
+    border-color: #3b82f6;
+}
+
+/* When prefix is present, remove border-radius from input left side */
+.ig-prefix ~ input {
+    border-radius: 0 !important;
+    padding-left: 10px !important;
+}
+
+/* ── USD Conversion label (≈ $X.XX) — enterprise light style ── */
+label span[id$="_usd"] {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0369a1;
+    background: #e0f2fe;
+    border-radius: 4px;
+    padding: 1px 6px;
+    line-height: 1.6;
+    vertical-align: middle;
+}
+
+/* ── br-panel-icon: Fix icon box sizing and alignment ── */
+.br-panel-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 10px !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+}
+.br-panel-icon i {
+    font-size: 15px !important;
+    line-height: 1 !important;
+    display: block !important;
+}
+
 .br-rate-field .ig input {
     flex: 1 1 auto;
     min-width: 0;
