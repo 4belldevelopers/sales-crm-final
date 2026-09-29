@@ -4270,17 +4270,10 @@ function displayValidationErrorsNotification(errorList, formEl, validatorInstanc
 }
 
 async function isInternetAvailable() {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
-    try {
-        await fetch("https://www.gstatic.com/generate_204", {
-            method: "GET",
-            cache: "no-cache",
-            mode: "no-cors"
-        });
-        return true;
-    } catch (error) {
-        return (typeof navigator !== 'undefined') ? navigator.onLine : true;
+    if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+        return navigator.onLine;
     }
+    return true;
 }
 window.isInternetAvailable = isInternetAvailable;
 
@@ -4306,12 +4299,7 @@ var KTAddCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
-                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
-                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -4321,8 +4309,105 @@ var KTAddCandidate = function () {
                 }
             }
         );
-        submitButton.addEventListener('click', async function (e) {
-            e.preventDefault();
+
+        var executeSubmit = function () {
+            closeRequiredFieldsModal();
+            $("#save-form").prop("disabled", true);
+            $("#save-form").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+            );
+            if (submitButton) {
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+            }
+
+            setTimeout(function () {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = true;
+                }
+                if (!navigator.onLine) {
+                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    $("#save-form").prop("disabled", false);
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    if (submitButton) submitButton.disabled = false;
+                    return;
+                }
+
+                // Layer 1: Client-Generated Idempotency UUID
+                let clientUuid = $('#client_submission_uuid').val();
+                if (!clientUuid) {
+                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(clientUuid);
+                }
+
+                window.normalizeCreateTalentPhones();
+                var formData = new FormData($('#createForm')[0]);
+                $.ajax({
+                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    redirect: true,
+                    success: function (response) {
+                        $("#save-form").prop("disabled", false);
+                        if (submitButton) submitButton.disabled = false;
+                        if(response.status == 'coinCheck'){
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            Swal.fire("Warning", ` ${response.message}`, "warning");
+                            return false;
+                        }
+
+                        if(response.status == 'mailcheck'){
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                $("#save-form").prop("disabled", false);
+                                if (typeof window.syncTalentStageAction === 'function') {
+                                    window.syncTalentStageAction();
+                                }
+                                if (submitButton) submitButton.disabled = false;
+                                return;
+                            }
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            Swal.fire("Warning", response.message, "warning").then(function(){});
+                            return false;
+                        }
+
+                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                        handleTalentSubmissionSuccess(response);
+                    },
+                    error: function (xhr) {
+                        $("#save-form").prop("disabled", false);
+                        if (typeof window.syncTalentStageAction === 'function') {
+                            window.syncTalentStageAction();
+                        }
+                        if (submitButton) submitButton.disabled = false;
+                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                        $('#client_submission_uuid').val(freshUuid);
+                        if (xhr.status === 0 || !navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        } else {
+                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                        }
+                    }
+                });
+            }, 500);
+        };
+
+        var handleCandidateSubmit = async function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+
             var connected = true;
             try {
                 connected = await isInternetAvailable();
@@ -4339,122 +4424,67 @@ var KTAddCandidate = function () {
                         confirmButton: "btn btn-warning"
                     }
                 });
-                return; // ⛔ STOP EXECUTION
+                return;
             }
 
-            validator.validate().then(function (status) {
-                var missing = detectMissingFields(form, validator);
-                if (status !== 'Valid' || (missing && missing.length > 0)) {
-                    $("#save-form").prop("disabled", false);
-                    if (typeof window.syncTalentStageAction === 'function') {
-                        window.syncTalentStageAction();
-                    }
+            var missing = detectMissingFields(form, validator);
+            if (missing && missing.length > 0) {
+                $("#save-form").prop("disabled", false);
+                if (typeof window.syncTalentStageAction === 'function') {
+                    window.syncTalentStageAction();
+                }
+                if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
-                    return;
                 }
-                closeRequiredFieldsModal();
-                $("#save-form").prop("disabled", true);
-                  $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
-                    submitButton.setAttribute('data-kt-indicator', 'on');
-                    submitButton.disabled = true;
-                    setTimeout(function () {
-                        submitButton.removeAttribute('data-kt-indicator');
-                        submitButton.disabled = true;
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false);
-                            window.syncTalentStageAction();
-                            submitButton.disabled = false;
-                            return;
-                        }
+                var errors = collectFormValidationErrors(form, validator);
+                displayValidationErrorsNotification(errors, form, validator);
+                return;
+            }
 
-                          // Layer 1: Client-Generated Idempotency UUID
-                          let clientUuid = $('#client_submission_uuid').val();
-                          if (!clientUuid) {
-                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                              $('#client_submission_uuid').val(clientUuid);
-                          }
+            if (validator && typeof validator.validate === 'function') {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        executeSubmit();
+                    } else {
+                        var fvErrors = collectFormValidationErrors(form, validator);
+                        displayValidationErrorsNotification(fvErrors, form, validator);
+                    }
+                }).catch(function (valErr) {
+                    console.warn('Validator validate fallback:', valErr);
+                    executeSubmit();
+                });
+            } else {
+                executeSubmit();
+            }
+        };
 
-                          window.normalizeCreateTalentPhones();
-													var formData 	=	new FormData($('#createForm')[0]);							
-													$.ajax({
-															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
-															   type 			: 'POST',
-															   data 			: formData,
-															   processData		: false,  	
-															   contentType		: false,  	
-															   redirect			: true,
-																success			: function (response) {
-                                  $("#save-form").prop("disabled", false);
-                                  submitButton.disabled = false;
-                                  if(response.status == 'coinCheck'){
-                                    window.syncTalentStageAction();
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-   																	Swal.fire("Warning",` ${response.message}` , "warning");	
-                                    return false;
-   																}
+        if (submitButton) {
+            submitButton.addEventListener('click', handleCandidateSubmit);
+        }
+        $(document).off('click', '#save-form').on('click', '#save-form', handleCandidateSubmit);
+    };
 
-                                  
-                                if(response.status == 'mailcheck'){
-                                  const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                  $('#client_submission_uuid').val(freshUuid);
-                                  if (!navigator.onLine) {
-                                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                      $("#save-form").prop("disabled", false);
-                                      window.syncTalentStageAction();
-                                      submitButton.disabled = false;
-                                      return;
-                                  }
-                                   window.syncTalentStageAction();
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
- 																	});	
-                                   return false;
-                                }
-                                
-                                  // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                                  handleTalentSubmissionSuccess(response);
-                                },
-																error			: function (xhr) {
-                                    $("#save-form").prop("disabled", false);
-                                    window.syncTalentStageAction();
-                                    submitButton.disabled = false;
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (xhr.status === 0 || !navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    } else {
-                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                                    }
-															}
-														});
-														
-                       
-                    }, 500);
-                } else {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
-                }
-            });
-        });
-    }
     return {
-				init: function () {
-										form 			=	document.querySelector('#createForm');
-										submitButton 	=	document.querySelector('#save-form');
-										handleForm();
-								  }
-     	   };
+        init: function () {
+            form = document.querySelector('#createForm');
+            submitButton = document.querySelector('#save-form');
+            handleForm();
+        }
+    };
 }();
 
-KTUtil.onDOMContentLoaded(function () {
-    KTAddCandidate.init();
-});
+function initKTAddCandidate() {
+    if (typeof KTAddCandidate !== 'undefined' && KTAddCandidate.init) {
+        KTAddCandidate.init();
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKTAddCandidate);
+} else {
+    initKTAddCandidate();
+}
+$(document).ready(initKTAddCandidate);
 @php } @endphp
 @php if(@$page_event == 'EDIT'){  @endphp
 var KTEditCandidate = function () {
@@ -4478,12 +4508,7 @@ var KTEditCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
-                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
-                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -4493,103 +4518,157 @@ var KTEditCandidate = function () {
                 }
             }
         );
-        submitButton.addEventListener('click', function (e) {
-            e.preventDefault();
-            validator.validate().then(function (status) {
-                var missing = detectMissingFields(form, validator);
-                if (status !== 'Valid' || (missing && missing.length > 0)) {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
+
+        var executeEditSubmit = function () {
+            closeRequiredFieldsModal();
+            $("#edit-form").prop("disabled", true);
+            $("#edit-form").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+            );
+            if (submitButton) {
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+            }
+
+            setTimeout(function () {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = true;
+                }
+                if (!navigator.onLine) {
+                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    $("#edit-form").prop("disabled", false).html("Update");
+                    if (submitButton) submitButton.disabled = false;
                     return;
                 }
-                closeRequiredFieldsModal();
-                $("#edit-form").prop("disabled", true);
-                  $("#edit-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
-                    submitButton.setAttribute('data-kt-indicator', 'on');
-                    submitButton.disabled = true;
-                    setTimeout(function () {
-                        submitButton.removeAttribute('data-kt-indicator');
-                        submitButton.disabled = true;
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#edit-form").prop("disabled", false).html("Update");
-                            submitButton.disabled = false;
-                            return;
+
+                // Layer 1: Client-Generated Idempotency UUID
+                let clientUuid = $('#client_submission_uuid').val();
+                if (!clientUuid) {
+                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(clientUuid);
+                }
+
+                window.normalizeCreateTalentPhones();
+                var formData = new FormData($('#createForm')[0]);
+                $.ajax({
+                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    redirect: true,
+                    success: function (response) {
+                        $("#edit-form").prop("disabled", false).html("Update");
+                        if (submitButton) submitButton.disabled = false;
+                        if(response.status == 'mailcheck'){
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                $("#edit-form").prop("disabled", false).html("Update");
+                                if (submitButton) submitButton.disabled = false;
+                                return;
+                            }
+                            $("#edit-form").html(`Update`);
+                            Swal.fire("Warning", response.message, "warning").then(function(){});
+                            return false;
                         }
 
+                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                        handleTalentSubmissionSuccess(response);
+                    },
+                    error: function (xhr) {
+                        $("#edit-form").prop("disabled", false).html("Update");
+                        if (submitButton) submitButton.disabled = false;
+                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                        $('#client_submission_uuid').val(freshUuid);
+                        if (xhr.status === 0 || !navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        } else {
+                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                        }
+                    }
+                });
+            }, 500);
+        };
 
-                          // Layer 1: Client-Generated Idempotency UUID
-                          let clientUuid = $('#client_submission_uuid').val();
-                          if (!clientUuid) {
-                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                              $('#client_submission_uuid').val(clientUuid);
-                          }
+        var handleEditSubmit = async function (e) {
+            if (e && e.preventDefault) e.preventDefault();
 
-                          window.normalizeCreateTalentPhones();
-													var formData 	=	new FormData($('#createForm')[0]);							
-													$.ajax({
-															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
-															   type 			: 'POST',
-															   data 			: formData,
-															   processData		: false,  	
-															   contentType		: false,  	
-															   redirect			: true,
-																success			: function (response) {
-                                  $("#edit-form").prop("disabled", false).html("Update");
-                                  submitButton.disabled = false;
-                                  if(response.status == 'mailcheck'){
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#edit-form").prop("disabled", false).html("Update");
-                                        submitButton.disabled = false;
-                                        return;
-                                    }
-                                   $("#edit-form").html(`Update`);
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
- 																	});	
-                                   return false;
-                                }
-                                
-                                 // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                                 handleTalentSubmissionSuccess(response);
-                              },
-															error			: function (xhr) {
-                                    $("#edit-form").prop("disabled", false).html("Update");
-                                    submitButton.disabled = false;
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (xhr.status === 0 || !navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    } else {
-                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                                    }
-															}
-															});
+            var connected = true;
+            try {
+                connected = await isInternetAvailable();
+            } catch (netErr) {
+                connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
+            }
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: {
+                        confirmButton: "btn btn-warning"
+                    }
+                });
+                return;
+            }
 
-                    }, 500);
-                } else {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
+            var missing = detectMissingFields(form, validator);
+            if (missing && missing.length > 0) {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
                 }
-            });
-        });
-    }
+                var errors = collectFormValidationErrors(form, validator);
+                displayValidationErrorsNotification(errors, form, validator);
+                return;
+            }
+
+            if (validator && typeof validator.validate === 'function') {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        executeEditSubmit();
+                    } else {
+                        var fvErrors = collectFormValidationErrors(form, validator);
+                        displayValidationErrorsNotification(fvErrors, form, validator);
+                    }
+                }).catch(function (valErr) {
+                    console.warn('Edit validator validate fallback:', valErr);
+                    executeEditSubmit();
+                });
+            } else {
+                executeEditSubmit();
+            }
+        };
+
+        if (submitButton) {
+            submitButton.addEventListener('click', handleEditSubmit);
+        }
+        $(document).off('click', '#edit-form').on('click', '#edit-form', handleEditSubmit);
+    };
+
     return {
-				init: function () {
-										form 			=	document.querySelector('#createForm');
-										submitButton 	=	document.querySelector('#edit-form');
-										handleForm();
-								  }
-    	   };
+        init: function () {
+            form = document.querySelector('#createForm');
+            submitButton = document.querySelector('#edit-form');
+            handleForm();
+        }
+    };
 }();
 
-KTUtil.onDOMContentLoaded(function () {
-    KTEditCandidate.init();
-});
+function initKTEditCandidate() {
+    if (typeof KTEditCandidate !== 'undefined' && KTEditCandidate.init) {
+        KTEditCandidate.init();
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKTEditCandidate);
+} else {
+    initKTEditCandidate();
+}
+$(document).ready(initKTEditCandidate);
 @php } @endphp
 
 
