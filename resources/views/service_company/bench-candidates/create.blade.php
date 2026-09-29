@@ -512,7 +512,7 @@ if($snp_mode== 1){
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
-                    <label>Nationality</label>
+                    <label>Nationality <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
                       <i class="fa-regular fa-flag"></i>
                       <select name="nationality" id="nationality">
@@ -563,10 +563,11 @@ if($snp_mode== 1){
                   </summary>
                   <div class="bd-grid bd-grid--two bd-extra-grid">
                     <div class="fg fv-row bd-field">
-                      <label>Gender</label>
+                      <label>Gender <span class="rq">*</span></label>
                       <div class="bd-control bd-control--select">
                         <i class="fa-regular fa-user"></i>
                         <select name="gender" id="gender">
+                          <option value="">Select gender</option>
                           <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
                           <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
                           <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
@@ -1118,6 +1119,17 @@ if($snp_mode== 1){
                     </div>
 
                     <div class="br-rate-panel br-bill-panel">
+                      <!-- Free Service Bill Rate Hover Notification -->
+                      <div class="br-free-bill-hover-notice" id="brFreeBillHoverNotice" style="display:none;" role="status" aria-live="polite">
+                        <div class="br-free-bill-hover-inner">
+                          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                          <div class="br-free-bill-hover-text">
+                            <strong>Client Bill Rate Not Applicable</strong>
+                            <span>Free Service is selected for this talent. Under this commercial tier, client billing is completely waived and no charges are applied.</span>
+                          </div>
+                        </div>
+                      </div>
+
                       <div class="br-panel-head">
                         <span class="br-panel-icon"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
                         <span>
@@ -2385,6 +2397,23 @@ $(document).ready(function () {
     $(document).on('change', '#comission_type', applyCommercialMode);
     $(document).on('input change', '#pay_annual, #pay_monthly, #pay_rate_amount, #bill_annual, #bill_monthly, #bill_rate_amount, #percentage_hike, #comment', refreshCommercialSummary);
 
+    // Free Service Client Bill Rate Hover Interaction (Enterprise feedback)
+    $(document).on('mouseenter', '.br-bill-panel', function () {
+        if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) {
+            $('#brFreeBillHoverNotice').stop(true, true).fadeIn(150);
+        }
+    });
+
+    $(document).on('mouseleave', '.br-bill-panel', function () {
+        $('#brFreeBillHoverNotice').stop(true, true).fadeOut(120);
+    });
+
+    $(document).on('click', '.br-card.is-free-service .br-bill-panel', function () {
+        if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) {
+            $('#brFreeBillHoverNotice').stop(true, true).fadeIn(120).delay(2200).fadeOut(200);
+        }
+    });
+
     window.isFreeCommercialMode = isFreeCommercialMode;
     window.refreshCommercialSummary = refreshCommercialSummary;
     window.syncBillFieldsFromAnnual = syncBillFieldsFromAnnual;
@@ -3301,21 +3330,27 @@ function handleTalentSubmissionSuccess(response) {
 }
 
 var fieldConfigMap = {
+    'resume': { label: 'Upload Resume', selector: '#uploadBox' },
+    'careersummary': { label: 'Professional Summary', selector: '#careersummary' },
     'full_name': { label: 'Full Name', selector: '#full_name' },
-    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location' },
-    'current_designation': { label: 'Current Designation', selector: '#current_designation' },
-    'employmentType': { label: 'Employment Type', selector: '#employmentType' },
-    'phone': { label: 'Primary Phone', selector: '#phone' },
-    'secondary_mobile': { label: 'Secondary Phone', selector: '#secondary_mobile' },
     'email': { label: 'Primary Email', selector: '#email' },
-    'qualification': { label: 'Qualification', selector: '#qualification' },
+    'phone': { label: 'Primary Phone', selector: '#phone' },
+    'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location' },
+    'qualification': { label: 'Highest Qualification', selector: '#qualification' },
+    'nationality': { label: 'Nationality', selector: '#nationality' },
+    'gender': { label: 'Gender', selector: '#gender' },
+    'current_company': { label: 'Current Company', selector: '#current_company' },
+    'current_designation': { label: 'Current Designation', selector: '#current_designation' },
+    'employmentType': { label: 'Employment Type', selector: '#EmploymentType' },
     'total_exp': { label: 'Total Experience', selector: '#total_exp_year' },
     'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year' },
-    'pay_rate': { label: 'Pay Rate', selector: '#pay_rate' },
-    'bill_rate': { label: 'Bill Rate', selector: '#bill_rate' },
-    'comission_type': { label: 'Commission Type', selector: '#comission_type' },
-    'recruiter': { label: 'Relationship Manager', selector: '#recruiter' },
-    'specialties': { label: 'Specialties', selector: '#specialties' }
+    'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period' },
+    'np_id': { label: 'Available From Date', selector: '#np_id_display' },
+    'wm': { label: 'Preferred Work Mode', selector: '#wr' },
+    'pay_rate': { label: 'Candidate Cost (Pay Rate)', selector: '#pay_annual' },
+    'bill_rate': { label: 'Client Bill Rate', selector: '#bill_annual' },
+    'skills': { label: 'Skills & Expertise (Min. 3 Complete Skills)', selector: '#skillExperienceWrapper' },
+    'recruiter': { label: 'Relationship Manager', selector: '#recruiter' }
 };
 
 window.__currentMissingFields = [];
@@ -3334,99 +3369,254 @@ function collectFormValidationErrors(formEl, validatorInstance) {
     return errors;
 }
 
+function validateSkillsAndExpertise() {
+    var $rows = $('#skillExperienceWrapper tr');
+    var completeSkills = [];
+    var incompleteRows = [];
+
+    $rows.each(function (idx, tr) {
+        var $tr = $(tr);
+        var skillName = ($tr.find('input[name="skills[]"]').val() || '').trim();
+        var years = $tr.find('select[name="years[]"]').val();
+        var rating = $tr.find('select[name="ratings[]"]').val();
+
+        var hasSkill = skillName !== '';
+        var hasYears = (years !== '' && years !== null && years !== undefined);
+        var hasRating = (rating !== '' && rating !== null && rating !== undefined);
+
+        var hasAnyDetail = hasSkill || hasYears || hasRating;
+
+        if (hasAnyDetail) {
+            if (hasSkill && hasYears && hasRating) {
+                completeSkills.push({
+                    rowEl: tr,
+                    index: idx,
+                    skillName: skillName,
+                    years: years,
+                    rating: rating
+                });
+            } else {
+                incompleteRows.push({
+                    rowEl: tr,
+                    index: idx,
+                    skillName: skillName,
+                    missingSkill: !hasSkill,
+                    missingYears: !hasYears,
+                    missingRating: !hasRating
+                });
+            }
+        }
+    });
+
+    if (incompleteRows.length > 0) {
+        var firstInc = incompleteRows[0];
+        var detailDesc = [];
+        if (firstInc.missingSkill) detailDesc.push('Skill Name');
+        if (firstInc.missingYears) detailDesc.push('Experience');
+        if (firstInc.missingRating) detailDesc.push('Rating');
+
+        return {
+            valid: false,
+            type: 'incomplete',
+            label: 'Skills & Expertise (Provide ' + detailDesc.join(', ') + ' or delete row)',
+            targetRow: firstInc.rowEl,
+            missingDetail: detailDesc.join(', '),
+            count: completeSkills.length
+        };
+    }
+
+    if (completeSkills.length < 3) {
+        return {
+            valid: false,
+            type: 'min_count',
+            label: 'Skills & Expertise (Minimum 3 Complete Skills Required &mdash; ' + completeSkills.length + '/3 Added)',
+            targetRow: null,
+            count: completeSkills.length
+        };
+    }
+
+    return {
+        valid: true,
+        count: completeSkills.length
+    };
+}
+
 function detectMissingFields(formEl, validatorInstance) {
     var missing = [];
     var seenKeys = {};
 
-    function addMissing(key) {
-        if (!seenKeys[key] && fieldConfigMap[key]) {
+    function addMissing(key, customLabel, customSelector) {
+        if (!seenKeys[key]) {
             seenKeys[key] = true;
+            var cfg = fieldConfigMap[key] || {};
             missing.push({
                 key: key,
-                label: fieldConfigMap[key].label,
-                selector: fieldConfigMap[key].selector
+                label: customLabel || cfg.label || key,
+                selector: customSelector || cfg.selector || ('#' + key)
             });
         }
     }
 
-    // 1. Inspect FormValidation rendered error containers in DOM
-    if (formEl) {
-        var msgContainers = formEl.querySelectorAll('.fv-plugins-message-container [data-field]');
-        msgContainers.forEach(function (el) {
-            var fName = el.getAttribute('data-field');
-            if (fName && fieldConfigMap[fName]) {
-                addMissing(fName);
-            }
-        });
-
-        var invalidInputs = formEl.querySelectorAll('.is-invalid, [aria-invalid="true"]');
-        invalidInputs.forEach(function (inp) {
-            var fName = inp.getAttribute('name');
-            if (fName && fieldConfigMap[fName]) {
-                addMissing(fName);
-            }
-        });
+    // 1. Upload Resume (Mandatory)
+    var hasResume = false;
+    if ($('#resumeCheck').val() === '1' || ($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) || ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim())) {
+        hasResume = true;
+    } else {
+        var ri = document.getElementById('resume');
+        if (ri && ri.files && ri.files.length > 0) {
+            hasResume = true;
+        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+            hasResume = true;
+        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+            hasResume = true;
+        }
+    }
+    if (!hasResume) {
+        addMissing('resume', 'Upload Resume', '#uploadBox');
     }
 
-    // 2. Direct validation check for all required fields
-    Object.keys(fieldConfigMap).forEach(function (key) {
-        if (seenKeys[key]) return;
-        var el = formEl ? formEl.querySelector(fieldConfigMap[key].selector || '[name="' + key + '"]') : null;
-        if (!el) el = formEl ? formEl.querySelector('[name="' + key + '"]') : null;
+    // 2. Professional Summary (Mandatory)
+    var cs = ($('#careersummary').val() || '').trim();
+    if (!cs) {
+        addMissing('careersummary', 'Professional Summary', '#careersummary');
+    }
 
-        if (key === 'phone') {
-            if (typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('phone', true)) {
-                addMissing('phone');
-            }
-        } else if (key === 'secondary_mobile') {
-            var sVal = $(el).val();
-            if (sVal && String(sVal).trim() && typeof window.validateCreateTalentPhone === 'function' && !window.validateCreateTalentPhone('secondary_mobile', false)) {
-                addMissing('secondary_mobile');
-            }
-        } else if (key === 'email') {
-            var emailVal = el ? $(el).val() : '';
-            if (!emailVal || !emailVal.trim() || !/\S+@\S+\.\S+/.test(emailVal)) {
-                addMissing('email');
-            }
-        } else if (key === 'kt_tagify_work_location') {
-            var locVal = el ? $(el).val() : '';
-            if (!locVal || !String(locVal).trim()) {
-                addMissing('kt_tagify_work_location');
-            }
-        } else if (key === 'recruiter') {
-            var recVal = el ? $(el).val() : '';
-            var recId = $('#recruiter_id').val();
-            if (!recVal || !String(recVal).trim() || !recId) {
-                addMissing('recruiter');
-            }
-        } else if (key === 'total_exp') {
-            var yr = $('#total_exp_year').val();
-            if (!yr && yr !== '0') {
-                addMissing('total_exp');
-            }
-        } else if (key === 'rel_exp') {
-            var rYr = $('#rel_exp_year').val();
-            if (!rYr && rYr !== '0') {
-                addMissing('rel_exp');
-            }
-        } else if (key === 'comission_type') {
-            var ct = $('#comission_type').val() || $('#hidden_comission_type').val();
-            if (!ct) {
-                addMissing('comission_type');
-            }
-        } else {
-            var val = el ? $(el).val() : '';
-            if (!val || !String(val).trim()) {
-                addMissing(key);
-            }
+    // 3. Candidate Profile: all fields including gender, only ignore date of birth
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn) addMissing('full_name', 'Full Name', '#full_name');
+
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/\S+@\S+\.\S+/.test(em)) addMissing('email', 'Primary Email', '#email');
+
+    if (typeof window.validateCreateTalentPhone === 'function') {
+        if (!window.validateCreateTalentPhone('phone', true)) {
+            addMissing('phone', 'Primary Phone', '#phone');
         }
-    });
+    } else {
+        var ph = ($('#phone').val() || '').trim();
+        if (!ph) addMissing('phone', 'Primary Phone', '#phone');
+    }
+
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    if (!loc) addMissing('kt_tagify_work_location', 'Current Location', '#kt_tagify_work_location');
+
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification', 'Highest Qualification', '#qualification');
+
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality', 'Nationality', '#nationality');
+
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender', 'Gender', '#gender');
+
+    // 4. Professional Profile: except Employee ID (Optional)
+    var cc = ($('#current_company').val() || '').trim();
+    if (!cc) addMissing('current_company', 'Current Company', '#current_company');
+
+    var cd = ($('#current_designation').val() || '').trim();
+    if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation');
+
+    var et = ($('#EmploymentType').val() || '').trim();
+    if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType');
+
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp', 'Relevant Experience', '#rel_exp_year');
+
+    var snp = $('#serving_notice_period').val();
+    if (!snp || snp === '0') {
+        addMissing('serving_notice_period', 'Availability', '#serving_notice_period');
+    } else if (snp === '1') {
+        var npDate = ($('#np_id').val() || $('#np_id_display').val() || '').trim();
+        if (!npDate) {
+            addMissing('np_id', 'Available From Date', '#np_id_display');
+        }
+    }
+
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm', 'Preferred Work Mode', '#wr');
+
+    // 5. Candidate Cost (Pay Rate) & Client Bill Rate
+    var payVal = $('#pay_annual').val() || $('#hidden_pay_annual').val();
+    if (!payVal || isNaN(payVal) || parseFloat(payVal) <= 0) {
+        addMissing('pay_rate', 'Candidate Cost (Pay Rate)', '#pay_annual');
+    }
+
+    // Client Bill Rate: ignored if Free Service is selected
+    var isFree = typeof isFreeCommercialMode === 'function' ? isFreeCommercialMode() : (($('#comission_type').val() || '2').toString() === '1');
+    if (!isFree) {
+        var billVal = $('#bill_annual').val() || $('#hidden_bill_annual').val();
+        if (!billVal || isNaN(billVal) || parseFloat(billVal) <= 0) {
+            addMissing('bill_rate', 'Client Bill Rate', '#bill_annual');
+        }
+    }
+
+    // 6. Skills & Expertise: at least 3 skills with complete details
+    var skillsCheck = validateSkillsAndExpertise();
+    if (!skillsCheck.valid) {
+        addMissing('skills', skillsCheck.label, '#skillExperienceWrapper');
+    }
+
+    // 7. Relationship Manager
+    var rec = ($('#recruiter').val() || '').trim();
+    var recId = ($('#recruiter_id').val() || '').trim();
+    if (!rec || !recId) {
+        addMissing('recruiter', 'Relationship Manager', '#recruiter');
+    }
 
     return missing;
 }
 
 function jumpToField(fieldKey) {
     closeRequiredFieldsModal();
+
+    if (fieldKey === 'skills') {
+        var check = validateSkillsAndExpertise();
+        if (check && check.targetRow) {
+            check.targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $(check.targetRow).addClass('field-attention-highlight');
+            setTimeout(function () {
+                $(check.targetRow).removeClass('field-attention-highlight');
+            }, 3000);
+            setTimeout(function () {
+                var $target = $(check.targetRow);
+                if (!$target.find('input[name="skills[]"]').val().trim()) {
+                    $target.find('input[name="skills[]"]').focus();
+                } else if (!$target.find('select[name="years[]"]').val()) {
+                    $target.find('select[name="years[]"]').focus();
+                } else {
+                    $target.find('select[name="ratings[]"]').focus();
+                }
+            }, 350);
+            return;
+        } else {
+            var wrapper = document.getElementById('skillExperienceWrapper');
+            if (wrapper) {
+                var card = wrapper.closest('.se-card') || wrapper;
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $(card).addClass('field-attention-highlight');
+                setTimeout(function () {
+                    $(card).removeClass('field-attention-highlight');
+                }, 3000);
+                setTimeout(function () {
+                    var emptySkillInput = $('#skillExperienceWrapper tr input[name="skills[]"]').filter(function() {
+                        return !this.value.trim();
+                    }).first();
+                    if (emptySkillInput.length) {
+                        emptySkillInput.focus();
+                    } else if ($('.asb').length) {
+                        $('.asb').trigger('click');
+                        setTimeout(function() {
+                            $('#skillExperienceWrapper tr:last-child input[name="skills[]"]').focus();
+                        }, 100);
+                    }
+                }, 350);
+            }
+            return;
+        }
+    }
 
     var cfg = fieldConfigMap[fieldKey];
     var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
@@ -3435,24 +3625,31 @@ function jumpToField(fieldKey) {
     }
 
     if (targetEl) {
-        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group') || targetEl;
+        var parentDetails = targetEl.closest('details');
+        if (parentDetails && !parentDetails.open) {
+            parentDetails.open = true;
+        }
+
+        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs') || targetEl;
         scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Add temporary visual highlight ring around that field
-        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body') || targetEl;
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body, .br-rate-field, .bd-field, .pd-field, .pd-exp-card, .resume-card') || targetEl;
         $(highlightEl).addClass('field-attention-highlight');
         setTimeout(function () {
             $(highlightEl).removeClass('field-attention-highlight');
         }, 3000);
 
-        // Automatically focus the field
         setTimeout(function () {
-            if (fieldKey === 'recruiter') {
+            if (fieldKey === 'resume') {
+                $('#chooseFileBtn').focus();
+            } else if (fieldKey === 'recruiter') {
                 $('#kt_activitiesRecruiter_toggle').trigger('click');
             } else if (fieldKey === 'kt_tagify_work_location') {
                 var tagifyInput = document.querySelector('.tagify__input');
                 if (tagifyInput) tagifyInput.focus();
                 else targetEl.focus();
+            } else if (fieldKey === 'serving_notice_period') {
+                $('.aw-option-grid button').first().focus();
             } else if (typeof targetEl.focus === 'function') {
                 targetEl.focus();
             }
@@ -3592,22 +3789,24 @@ var KTAddCandidate = function () {
             form,
             {
                 fields: {					
-                    		'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
-                        'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
-                    		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
-                    		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
-							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
-							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
-                    		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
-                        'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"},digits:{message: "Relevant Experience must contain only digits"}}},
-                        'pay_rate' 				:	{validators:{notEmpty:{message: "Pay rate is required"},digits:{message: "Pay rate must containts only digits"}}},
-                        'bill_rate' 			:	{validators:{notEmpty:{message: "Bill rate is required"},digits:{message: "Bill rate must contains only digits"}}},
-                        'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                        'recruiter'					:	{validators:{ notEmpty: { message: "Assign internal team/recruiter is required" } }  },
-                        // 'skills'				:	{ validators: { notEmpty: {  message: 'Skills is required' } }},
-                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}}
+                    'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
+                    'careersummary'			:	{validators:{notEmpty: {message: "Professional summary is required"}} },
+                    'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
+                    'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
+                    'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
+                    'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
+                    'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+                    'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
+                    'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
+                    'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
+                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
+                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
+                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
+                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -3634,9 +3833,14 @@ var KTAddCandidate = function () {
               }
 
             validator.validate().then(function (status) {
-                if (status == 'Valid') {
-                  closeRequiredFieldsModal();
-                  $("#save-form").prop("disabled", true);
+                var missing = detectMissingFields(form, validator);
+                if (status !== 'Valid' || (missing && missing.length > 0)) {
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form, validator);
+                    return;
+                }
+                closeRequiredFieldsModal();
+                $("#save-form").prop("disabled", true);
                   $("#save-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
                   );
@@ -3746,22 +3950,24 @@ var KTEditCandidate = function () {
             form,
             {
                 fields: {					
-                    		'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
-                        'kt_tagify_work_location'				:	{validators:{notEmpty: {message: "Current Location is required"}} },
-                    		'current_designation'	:	{validators:{notEmpty:{message: "Current designation is required"}} },
-                    		'employmentType'		:	{validators:{notEmpty:{message: "Employment Type is required"}} },
-                        'phone':{validators:{notEmpty:{message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
-							          'secondary_mobile':{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
-							          'email':	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
-                    		'qualification':	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    		'total_exp':	{validators:{ notEmpty:{message:"Total Experience is required"},	digits:	{message: "Total Experience must contain only digits"} }},
-                        'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"},digits:{message: "Relevant Experience must contain only digits"}}},
-                        'pay_rate' 				:	{validators:{notEmpty:{message: "Pay rate is required"},digits:{message: "Pay rate must containts only digits"}}},
-                        'bill_rate' 			:	{validators:{notEmpty:{message: "Bill rate is required"},digits:{message: "Bill rate must contains only digits"}}},
-                        'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                        'recruiter'					:	{validators:{ notEmpty: { message: "Assign internal team/recruiter is required" } }  },
-                        // 'skills'				:	{ validators: { notEmpty: {  message: 'Skills is required' } }},
-                        'specialties'			:	{validators:{ notEmpty:{message: "Specialties is required"}}}
+                    'full_name'				:	{validators:{notEmpty: {message: "Full name is required"}} },
+                    'careersummary'			:	{validators:{notEmpty: {message: "Professional summary is required"}} },
+                    'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
+                    'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
+                    'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
+                    'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
+                    'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
+                    'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
+                    'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
+                    'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
+                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
+                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
+                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
+                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -3774,9 +3980,14 @@ var KTEditCandidate = function () {
         submitButton.addEventListener('click', function (e) {
             e.preventDefault();
             validator.validate().then(function (status) {
-                if (status == 'Valid') {
-                  closeRequiredFieldsModal();
-                  $("#edit-form").prop("disabled", true);
+                var missing = detectMissingFields(form, validator);
+                if (status !== 'Valid' || (missing && missing.length > 0)) {
+                    var errors = collectFormValidationErrors(form, validator);
+                    displayValidationErrorsNotification(errors, form, validator);
+                    return;
+                }
+                closeRequiredFieldsModal();
+                $("#edit-form").prop("disabled", true);
                   $("#edit-form").html(
                     `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
                   );
