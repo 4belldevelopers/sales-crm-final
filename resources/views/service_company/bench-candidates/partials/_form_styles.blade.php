@@ -1376,145 +1376,298 @@ textarea.has-validation-error:focus,
     padding: 6px 14px !important;
 }
 
-/* ── Adaptive Qualification & Nationality Select2 Styling ── */
-.bd-control--select .select2-container {
-    width: 100% !important;
-    display: block !important;
+/* ── JERO Enterprise Custom Combobox Engine (Adaptive Nationality & Education) ── */
+.jero-custom-select {
+    position: relative;
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    user-select: none;
 }
-.bd-control--select .select2-container .select2-selection--single {
-    min-height: 42px !important;
-    height: 42px !important;
-    border: 1px solid #d8deec !important;
-    border-radius: 6px !important;
-    background-color: #ffffff !important;
-    padding-left: 42px !important;
-    padding-right: 28px !important;
+
+.bd-control--select {
+    position: relative;
+}
+
+/* Hide native select visually while keeping it fully present for FormData & validator */
+.bd-control--select > select {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    clip: rect(0, 0, 0, 0) !important;
+    overflow: hidden !important;
+    z-index: -1 !important;
+}
+
+/* Hide static icon inside bd-control--select because custom select trigger includes its own */
+.bd-control--select > i {
+    display: none !important;
+}
+
+/* Trigger Button */
+.jero-cs-trigger {
     display: flex !important;
     align-items: center !important;
-    box-shadow: none !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 14px !important;
+    background: #ffffff !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+    font-family: 'Poppins', sans-serif !important;
 }
-.bd-control--select .select2-container .select2-selection--single:focus,
-.bd-control--select .select2-container--open .select2-selection--single {
+
+.jero-cs-trigger:hover {
+    border-color: #94a3b8 !important;
+}
+
+.jero-cs-trigger:focus,
+.jero-custom-select.is-open .jero-cs-trigger {
     border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
 }
-.bd-control--select .select2-container .select2-selection__rendered {
-    color: #0b1545 !important;
-    font-size: 13.5px !important;
+
+/* Validation error state */
+.jero-custom-select.has-validation-error .jero-cs-trigger,
+.bd-control.has-validation-error .jero-cs-trigger {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+}
+
+.jero-cs-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+.jero-cs-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    color: #5d6681 !important;
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+.jero-cs-value {
+    font-size: 13px !important;
     font-weight: 500 !important;
-    padding: 0 !important;
-    line-height: normal !important;
+    color: #0b1545 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
 }
-.bd-control--select .select2-container .select2-selection__arrow {
-    height: 40px !important;
-    right: 12px !important;
-}
-.bd-control--select .select2-container .select2-selection__placeholder {
-    color: #94a3b8 !important;
+
+.jero-cs-placeholder {
+    color: #8991a8 !important;
     font-weight: 400 !important;
 }
 
-/* Universal God-Level Dropdown Menu & Search Field for Select2 */
-.jero-adaptive-dropdown,
-.select2-container--open .select2-dropdown {
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
-    z-index: 999999 !important;
-    background: #ffffff !important;
+.jero-cs-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
 }
 
-/* Force Search Box to ALWAYS be visibly rendered and styled */
-.select2-container--open .select2-dropdown .select2-search,
-.select2-container--open .select2-dropdown .select2-search--dropdown,
-.select2-container--open .select2-search,
-.select2-container--open .select2-search--dropdown,
-.select2-container--open .select2-search--dropdown.select2-search--hide,
-.select2-dropdown .select2-search,
-.select2-dropdown .select2-search--dropdown,
-.select2-search--dropdown.select2-search--hide,
-.select2-search--dropdown,
-.jero-adaptive-dropdown .select2-search,
-.jero-adaptive-dropdown .select2-search--dropdown,
-.jero-adaptive-dropdown.select2-search--hide,
-.jero-adaptive-dropdown .select2-search--hide,
-.jero-injected-search {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    min-height: 52px !important;
-    box-sizing: border-box !important;
+.jero-cs-badge {
+    display: inline-block !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #e0e7ff !important;
+    color: #3730a3 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+}
+
+.jero-cs-arrow {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    transition: transform 0.2s ease !important;
+}
+
+.jero-custom-select.is-open .jero-cs-arrow {
+    transform: rotate(180deg) !important;
+    color: #3b82f6 !important;
+}
+
+/* Floating Dropdown Menu Panel */
+.jero-cs-dropdown {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: calc(100% + 4px) !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
+    z-index: 999999 !important;
+    overflow: hidden !important;
+    display: none;
+    flex-direction: column !important;
+    max-height: 340px !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.jero-custom-select.is-open .jero-cs-dropdown {
+    display: flex !important;
+}
+
+.jero-custom-select.is-open.open-up .jero-cs-dropdown {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+}
+
+/* Sticky Search Box at the top */
+.jero-cs-search-box {
+    display: flex !important;
+    align-items: center !important;
+    position: sticky !important;
+    top: 0 !important;
     padding: 8px 10px !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    position: relative !important;
-    z-index: 100 !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    gap: 8px !important;
 }
 
-.select2-container--open .select2-dropdown .select2-search__field,
-.select2-container--open .select2-search__field,
-.select2-dropdown .select2-search__field,
-.select2-search--dropdown .select2-search__field,
-.select2-search__field,
-.jero-adaptive-dropdown .select2-search__field,
-.jero-injected-search .select2-search__field {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+.jero-cs-search-box i.jero-cs-search-icon {
+    color: #64748b !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+.jero-cs-search-input {
     width: 100% !important;
-    height: 38px !important;
-    min-height: 38px !important;
-    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 6px !important;
-    padding: 7px 12px !important;
+    padding: 6px 12px !important;
     font-size: 13px !important;
     font-family: 'Poppins', sans-serif !important;
     color: #0f172a !important;
-    background-color: #ffffff !important;
+    background: #ffffff !important;
     outline: none !important;
+    box-sizing: border-box !important;
 }
 
-.select2-container--open .select2-dropdown .select2-search__field:focus,
-.select2-container--open .select2-search__field:focus,
-.select2-dropdown .select2-search__field:focus,
-.select2-search--dropdown .select2-search__field:focus,
-.select2-search__field:focus,
-.jero-adaptive-dropdown .select2-search__field:focus,
-.jero-injected-search .select2-search__field:focus {
+.jero-cs-search-input:focus {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
 }
 
-.jero-adaptive-dropdown .select2-results__group {
-    font-weight: 700 !important;
+.jero-cs-search-clear {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    padding: 0 4px !important;
+    line-height: 1 !important;
+}
+.jero-cs-search-clear:hover {
+    color: #475569 !important;
+}
+
+/* Scrollable Options Container */
+.jero-cs-list {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    max-height: 280px !important;
+    padding: 4px 0 !important;
+}
+
+/* Group Title */
+.jero-cs-group-title {
+    padding: 7px 12px !important;
     font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
     color: #1e40af !important;
     background: #f1f5f9 !important;
-    padding: 7px 12px !important;
-    border-top: 1px solid #e2e8f0;
-    border-bottom: 1px solid #e2e8f0;
-    letter-spacing: 0.3px;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
 }
-.jero-adaptive-dropdown .select2-results__options {
-    max-height: 280px !important;
-    overflow-y: auto !important;
+
+.jero-cs-group:first-child .jero-cs-group-title {
+    border-top: none !important;
 }
-.jero-adaptive-dropdown .select2-results__option {
+
+/* Option Item */
+.jero-cs-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 14px !important;
     font-size: 13px !important;
     font-weight: 500 !important;
     color: #1e293b !important;
-    padding: 7px 14px !important;
+    cursor: pointer !important;
+    transition: background 0.1s ease !important;
 }
-.jero-adaptive-dropdown .select2-results__option--highlighted {
+
+.jero-cs-item:hover,
+.jero-cs-item.is-highlighted {
     background-color: #eff6ff !important;
     color: #1d4ed8 !important;
 }
-.jero-adaptive-dropdown .select2-results__option[aria-selected="true"] {
+
+.jero-cs-item.is-selected {
     background-color: #e0e7ff !important;
     color: #312e81 !important;
     font-weight: 600 !important;
+}
+
+.jero-cs-item-badge {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #e0e7ff !important;
+    color: #3730a3 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    margin-left: 8px !important;
+}
+
+.jero-cs-item.is-selected .jero-cs-item-badge {
+    background: #c7d2fe !important;
+    color: #1e1b4b !important;
+}
+
+/* Empty message */
+.jero-cs-empty {
+    padding: 20px 14px !important;
+    text-align: center !important;
+    color: #64748b !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+.jero-cs-empty i {
+    font-size: 18px !important;
+    color: #94a3b8 !important;
+    display: block !important;
+    margin-bottom: 6px !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
