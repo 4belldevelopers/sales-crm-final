@@ -1414,29 +1414,54 @@ textarea.has-validation-error:focus,
     font-weight: 400 !important;
 }
 
-/* Custom Dropdown Menu for Adaptive Select2 */
-.jero-adaptive-dropdown {
+/* Universal God-Level Dropdown Menu & Search Field for Select2 */
+.jero-adaptive-dropdown,
+.select2-container--open .select2-dropdown {
     border: 1px solid #cbd5e1 !important;
     border-radius: 8px !important;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1) !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
     background: #ffffff !important;
 }
+
+/* Force Search Box to ALWAYS be visibly rendered and styled */
+.select2-container--open .select2-dropdown .select2-search,
+.select2-container--open .select2-dropdown .select2-search--dropdown,
+.select2-container--open .select2-search,
+.select2-container--open .select2-search--dropdown,
+.select2-container--open .select2-search--dropdown.select2-search--hide,
+.select2-dropdown .select2-search,
+.select2-dropdown .select2-search--dropdown,
+.select2-search--dropdown.select2-search--hide,
+.select2-search--dropdown,
 .jero-adaptive-dropdown .select2-search,
-.jero-adaptive-dropdown .select2-search--dropdown {
+.jero-adaptive-dropdown .select2-search--dropdown,
+.jero-adaptive-dropdown.select2-search--hide,
+.jero-adaptive-dropdown .select2-search--hide,
+.jero-injected-search {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
+    height: auto !important;
+    min-height: 52px !important;
+    box-sizing: border-box !important;
     padding: 8px 10px !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
+    position: relative !important;
+    z-index: 100 !important;
 }
-.jero-adaptive-dropdown.select2-search--hide,
-.jero-adaptive-dropdown .select2-search--hide {
+
+.select2-container--open .select2-dropdown .select2-search__field,
+.select2-container--open .select2-search__field,
+.select2-dropdown .select2-search__field,
+.select2-search--dropdown .select2-search__field,
+.select2-search__field,
+.jero-adaptive-dropdown .select2-search__field,
+.jero-injected-search .select2-search__field {
     display: block !important;
-}
-.jero-adaptive-dropdown .select2-search__field {
-    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     width: 100% !important;
     height: 38px !important;
     min-height: 38px !important;
@@ -1450,10 +1475,18 @@ textarea.has-validation-error:focus,
     background-color: #ffffff !important;
     outline: none !important;
 }
-.jero-adaptive-dropdown .select2-search__field:focus {
+
+.select2-container--open .select2-dropdown .select2-search__field:focus,
+.select2-container--open .select2-search__field:focus,
+.select2-dropdown .select2-search__field:focus,
+.select2-search--dropdown .select2-search__field:focus,
+.select2-search__field:focus,
+.jero-adaptive-dropdown .select2-search__field:focus,
+.jero-injected-search .select2-search__field:focus {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
 }
+
 .jero-adaptive-dropdown .select2-results__group {
     font-weight: 700 !important;
     font-size: 11px !important;
@@ -1482,10 +1515,6 @@ textarea.has-validation-error:focus,
     background-color: #e0e7ff !important;
     color: #312e81 !important;
     font-weight: 600 !important;
-}
-.jero-adaptive-dropdown .select2-results__option[aria-disabled="true"],
-.jero-adaptive-dropdown li.select2-results__option[aria-disabled="true"] {
-    display: none !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
