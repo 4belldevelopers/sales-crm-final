@@ -1043,6 +1043,42 @@ body { overflow-x: hidden; }
     }
 }
 
+/* ── Skills & Expertise: Minimum Skills Requirement Badge ── */
+.se-badge--req {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 13px;
+    border-radius: 6px;
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0;
+}
+.se-badge--req i {
+    color: #f59e0b;
+    font-size: 12px;
+}
+
+/* ── Star Proficiency Rating: Highlight selected option in gold tones ── */
+.se-card .sk select[name="ratings[]"] option {
+    font-size: 13px;
+    font-family: 'Poppins', sans-serif;
+    color: #0B1545;
+    font-weight: 500;
+}
+.se-card .sk select[name="ratings[]"] {
+    color: #b45309;
+    font-weight: 600;
+}
+.se-card .sk select[name="ratings[]"] option:first-child {
+    color: #64748b;
+    font-weight: 400;
+}
+
 /* ── Enterprise Validation Error Highlighting (media_1790669780356.png) ── */
 .has-validation-error,
 input.has-validation-error,
