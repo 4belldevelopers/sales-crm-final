@@ -11656,8 +11656,36 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $query_update = DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastInsertedId = DB::getPdo()->lastInsertId();
 
-            // ── v2 session link — runs inside the same transaction ────────────────────
+            // ── v2 session link & resume DB update — runs inside the same transaction ──
             if ($resumeSession) {
+                $resumeAssetId = null;
+                try {
+                    $resumeAssetId = DB::table('resume_assets')->insertGetId([
+                        'company_id' => (int) $company_id,
+                        'candidate_id' => (int) $application_id,
+                        'upload_session_id' => $resumeSession->uuid,
+                        'object_key' => (string) $finalResumeUrl,
+                        'original_filename' => (string) ($request->input('resume_original_name') ?: ($resumeSession->original_filename ?: 'resume.pdf')),
+                        'mime_type' => (string) ($resumeSession->mime_type ?: 'application/pdf'),
+                        'file_size' => (int) ($resumeSession->file_size_bytes ?: 0),
+                        'checksum_sha256' => $resumeSession->sha256_hex ?: null,
+                        'version' => 1,
+                        'status' => 'ACTIVE',
+                        'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                        'parser_version' => $request->input('parser_version', null),
+                        'created_at' => now(),
+                        'attached_at' => now(),
+                    ]);
+                } catch (\Throwable $rae) {
+                    \Log::warning('clientappstore(): resume_assets insert fallback: '.$rae->getMessage());
+                }
+
+                $jobAppUpdate = ['resume' => $finalResumeUrl];
+                if ($resumeAssetId) {
+                    $jobAppUpdate['current_resume_id'] = $resumeAssetId;
+                }
+                DB::table('job_applications')->where('id', $application_id)->update($jobAppUpdate);
+
                 ResumeUpload::where('id', $resumeSession->id)
                     ->where('company_id', $company_id)
                     ->where('status', ResumeUploadStatus::Completed->value)
@@ -11668,7 +11696,65 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ]);
                 UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
                     'candidate_id' => $application_id,
+                    'resume_asset_id' => $resumeAssetId,
                 ], $company_id, $submitted_by);
+            } elseif ($request->filled('uploaded_file_path') || $request->hasFile('resume')) {
+                $companyNameR2 = DB::table('companies')
+                    ->where('id', auth()->user()->company_id)
+                    ->value('company_name');
+                $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
+                $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
+                $companyNameRTwo = $companyNameR2.'_'.auth()->user()->company_id;
+                $year = date('Y');
+                $month = date('m');
+
+                $tempPath = $request->input('uploaded_file_path');
+                $full_name = $request->input('resume_original_name');
+                if ($tempPath && $full_name) {
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                    $uniqueFileName = "{$application_id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $application_id, $companyNameRTwo, $year, $month, $r2Path)->onConnection('emails');
+
+                    $resumeAssetId = null;
+                    try {
+                        $resumeAssetId = DB::table('resume_assets')->insertGetId([
+                            'company_id' => (int) $company_id,
+                            'candidate_id' => (int) $application_id,
+                            'upload_session_id' => null,
+                            'object_key' => (string) $fileUrl,
+                            'original_filename' => (string) $full_name,
+                            'mime_type' => 'application/pdf',
+                            'file_size' => 0,
+                            'checksum_sha256' => null,
+                            'version' => 1,
+                            'status' => 'ACTIVE',
+                            'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                            'parser_version' => $request->input('parser_version', null),
+                            'created_at' => now(),
+                            'attached_at' => now(),
+                        ]);
+                    } catch (\Throwable $rae) {
+                        \Log::warning('clientappstore(): resume_assets insert fallback (v1): '.$rae->getMessage());
+                    }
+
+                    $jobAppUpdate = ['resume' => $fileUrl];
+                    if ($resumeAssetId) {
+                        $jobAppUpdate['current_resume_id'] = $resumeAssetId;
+                    }
+                    DB::table('job_applications')->where('id', $application_id)->update($jobAppUpdate);
+                } elseif ($request->hasFile('resume')) {
+                    $filename = time().'_'.preg_replace('/[^a-zA-Z0-9._\-]/', '', $request->file('resume')->getClientOriginalName());
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$filename}";
+                    Storage::disk('r2')->put($r2Path, file_get_contents($request->file('resume')));
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+                    DB::table('job_applications')->where('id', $application_id)->update(['resume' => $fileUrl]);
+                }
             }
             // ─────────────────────────────────────────────────────────────────────────
 
