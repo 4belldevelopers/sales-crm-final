@@ -526,11 +526,6 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                {{-- Hidden secondary contact inputs preserved for data integrity (fields removed from UI per UX decision) --}}
-                <input type="hidden" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" />
-                <input type="hidden" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" />
-                <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code">
-
                 {{-- Gender & Date of Birth: moved into main Candidate Profile card --}}
                 <div class="bd-grid bd-grid--two">
                   <div class="fg fv-row bd-field">
@@ -562,6 +557,9 @@ if($snp_mode== 1){
               <div class="fsc">
                <div id="skillTags" class="skill-tags"></div>
                 <input type="hidden" value="{{ @$application->skills }}" id="skills" />
+                <input type="hidden" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" />
+                <input type="hidden" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" />
+                <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code" />
               </div>
             </div>
 
@@ -1057,7 +1055,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="pay-annual">
                         <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1080,7 +1079,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field" data-rate-panel="pay-monthly">
                         <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1103,7 +1103,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field" data-rate-panel="pay-hourly">
                         <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1160,7 +1161,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="bill-annual">
                         <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1183,7 +1185,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field" data-rate-panel="bill-monthly">
                         <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1206,7 +1209,8 @@ if($snp_mode== 1){
                       <div class="br-rate-field" data-rate-panel="bill-hourly">
                         <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
-                          <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
+                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
+                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
                           <div class="ig-currency-box">
                             <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
                               @foreach($currency as $key=>$val)
@@ -1364,11 +1368,8 @@ if($snp_mode== 1){
                   <!-- Empty State Picker Box (active when no manager is selected) -->
                   <div class="rm-picker" id="rmPicker">
                     <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input class="form-control form-control-solid" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
-                    <span class="rm-input-placeholder">Search by name or email...</span>
-                    <span class="rm-picker-divider"></span>
+                    <input type="text" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
                     <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
-                    <span class="rm-picker-chevron"><i class="fa-solid fa-chevron-down"></i></span>
                   </div>
                   <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
                 </div>
@@ -1895,7 +1896,6 @@ $(document).ready(function () {
                         '<span style="color: #059669; font-weight: 700;">✓ Parsed in Browser (' + totalMs + 'ms)</span>'
                     );
                     $('#upRetryWrap').hide();
-                    toastr.success('Resume parsed in browser and talent fields populated!');
                 },
                 onError: function(err) {
                     console.warn('[Talent Parser] Client-side parse notice:', err);
@@ -2117,11 +2117,12 @@ $(document).ready(function () {
       preferredCountries: ["in", "us", "gb", "ca", "au"],
     });
 
-    const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
+    const secMobileEl = document.querySelector("#secondary_mobile");
+    const secondaryPhoneInput = (secMobileEl && secMobileEl.type !== 'hidden') ? window.intlTelInput(secMobileEl, {
       separateDialCode: true,
       initialCountry: "{{ $second_phone_code }}",
       preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
+    }) : null;
     window.createTalentPhoneInputs = {
       primary: primaryPhoneInput,
       secondary: secondaryPhoneInput
@@ -2165,6 +2166,7 @@ $(document).ready(function () {
 
       // Function to update hidden country code inputs
     function updateCountryCode(inputField, hiddenField) {
+      if (!inputField || typeof inputField.getSelectedCountryData !== 'function') return;
       const selectedCountryData = inputField.getSelectedCountryData();
       //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
       const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
@@ -2176,23 +2178,21 @@ $(document).ready(function () {
       updateCountryCode(primaryPhoneInput, "#primary_country_code");
     });
 
-    $("#secondary_mobile").on("countrychange input change", function () {
-      updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-    });
+    if (secondaryPhoneInput) {
+      $("#secondary_mobile").on("countrychange input change", function () {
+        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
+      });
+    }
     // Update country code dynamically when the user selects a different country flag
     $(".iti__flag-container").on("click", function (event) {
       const targetInput = $(event.target).closest(".iti").find("input");
 
       if (targetInput.is("#phone")) {
         updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      } else if (targetInput.is("#secondary_mobile")) {
+      } else if (targetInput.is("#secondary_mobile") && secondaryPhoneInput) {
         updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
       }
     });
-
-    setTimeout(function () {	
-      $(".iti__flag-container").click();
-    },500);
 
     const HOURS_PER_MONTH = 160;
     const MONTHS_PER_YEAR = 12;
@@ -2612,59 +2612,100 @@ $(document).ready(function () {
 
         isUpdating = false;
     });
+    /**
+     * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
+     * active Pay Rate input using the CORRECT currency code read directly from the
+     * selected option text. Fixes the broken currencyRateschar[currency_id] index
+     * mismatch (DB IDs are 1-based, array is 0-indexed).
+     */
     function updatePayUI() {
-        let currency = $('#pay_rate_currency').val();
-        let pay_rate_amount = $('#pay_rate_amount').val();
-        let currSet = currencyRateschar[currency];
-        if(currency==4){ 
-          $('#pay_rate_hourly_usd').text('');
-          $('#pay_rate_monthly_usd').text('');
-          $('#pay_rate_annual_usd').text('');
-          updateCTCFields();
-          refreshCommercialSummary();
-          return false;
-        }
+        // Get currency code directly from selected option text (e.g. "INR", "USD")
+        let currencyCode = ($('.br-pay-currency-select option:selected').first().text().trim() ||
+                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyRate = currencyRates[currencyCode] || 1;
+        let isUSD = (currencyCode === 'USD');
 
-        let hourly = fromUSD(pay_rate_amount, currSet);
-        let monthly = hourly * HOURS_PER_MONTH;
-        let annual = monthly * MONTHS_PER_YEAR;
-        
-        $('#pay_rate_hourly_usd').text('Approx $ '+ format(hourly));
-        $('#pay_rate_monthly_usd').text('Approx $ '+ format(monthly));
-        $('#pay_rate_annual_usd').text('Approx $ '+ format(annual));
+        // Read the active annual value (most common tab); hourly is always synced
+        let payAnnual  = parseFloat($('#pay_annual').val()) || 0;
+        let payMonthly = parseFloat($('#pay_monthly').val()) || 0;
+        let payHourly  = parseFloat($('#pay_rate_amount').val()) || 0;
+
+        // If no direct values, derive from whichever field has data
+        if (!payHourly && payAnnual) payHourly = payAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
+        if (!payHourly && payMonthly) payHourly = payMonthly / HOURS_PER_MONTH;
+
+        // Update the visible currency prefix symbol in all pay-rate .ig boxes
+        let paySymbol = getCurrencySymbol(currencyCode);
+        $('.br-pay-panel .ig-prefix').text(paySymbol);
+
+        if (isUSD || !currencyRate || !payHourly) {
+            // USD selected — no conversion needed, clear USD spans
+            $('#pay_rate_hourly_usd').text('');
+            $('#pay_rate_monthly_usd').text('');
+            $('#pay_rate_annual_usd').text('');
+        } else {
+            // Convert from local currency to USD: local / rate = USD
+            let hourlyUSD  = payHourly / currencyRate;
+            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
+            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
+            $('#pay_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
+            $('#pay_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
+            $('#pay_rate_annual_usd').text('≈ $' + format(annualUSD));
+        }
         updateCTCFields();
         refreshCommercialSummary();
     }
+
+    /**
+     * updateBillUI — Same fix applied to the Bill Rate USD conversion labels.
+     * Reads currency code from option text, not broken currencyRateschar[id] lookup.
+     */
     function updateBillUI() {
         if (isFreeCommercialMode()) {
-          $('#bill_rate_hourly_usd').text('');
-          $('#bill_rate_monthly_usd').text('');
-          $('#bill_rate_annual_usd').text('');
-          refreshCommercialSummary();
-          return false;
+            $('#bill_rate_hourly_usd').text('');
+            $('#bill_rate_monthly_usd').text('');
+            $('#bill_rate_annual_usd').text('');
+            $('.br-bill-panel .ig-prefix').text('');
+            refreshCommercialSummary();
+            return false;
         }
 
-        let currency = $('#pay_rate_currency').val();
-        let bill_rate_amount = $('#bill_rate_amount').val();
-        let currSet = currencyRateschar[currency];
-        if(currency==4){ 
-          $('#bill_rate_hourly_usd').text('');
-          $('#bill_rate_monthly_usd').text('');
-          $('#bill_rate_annual_usd').text('');
-          updateCTCFields();
-          refreshCommercialSummary();
-          return false;
+        let currencyCode = ($('.br-bill-currency-select option:selected').first().text().trim() ||
+                           $('.br-pay-currency-select option:selected').first().text().trim() ||
+                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyRate = currencyRates[currencyCode] || 1;
+        let isUSD = (currencyCode === 'USD');
+
+        let billAnnual  = parseFloat($('#bill_annual').val()) || 0;
+        let billMonthly = parseFloat($('#bill_monthly').val()) || 0;
+        let billHourly  = parseFloat($('#bill_rate_amount').val()) || 0;
+
+        if (!billHourly && billAnnual) billHourly = billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
+        if (!billHourly && billMonthly) billHourly = billMonthly / HOURS_PER_MONTH;
+
+        let billSymbol = getCurrencySymbol(currencyCode);
+        $('.br-bill-panel .ig-prefix').text(billSymbol);
+
+        if (isUSD || !currencyRate || !billHourly) {
+            $('#bill_rate_hourly_usd').text('');
+            $('#bill_rate_monthly_usd').text('');
+            $('#bill_rate_annual_usd').text('');
+        } else {
+            let hourlyUSD  = billHourly / currencyRate;
+            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
+            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
+            $('#bill_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
+            $('#bill_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
+            $('#bill_rate_annual_usd').text('≈ $' + format(annualUSD));
         }
-
-        let hourly = fromUSD(bill_rate_amount, currSet);
-        let monthly = hourly * HOURS_PER_MONTH;
-        let annual = monthly * MONTHS_PER_YEAR;
-
-        $('#bill_rate_hourly_usd').text('Approx $ '+ format(hourly));
-        $('#bill_rate_monthly_usd').text('Approx $ '+ format(monthly));
-        $('#bill_rate_annual_usd').text('Approx $ '+ format(annual));
         updateCTCFields();
         refreshCommercialSummary();
+    }
+
+    /** getCurrencySymbol — Maps currency code to a display symbol for the prefix box */
+    function getCurrencySymbol(code) {
+        var map = { USD: '$', INR: '₹', EUR: '€', GBP: '£', JPY: '¥', AED: 'د.إ' };
+        return map[code] || code || '$';
     }
 
     $('#pay_rate_amount').on('input', function () {
@@ -2834,13 +2875,13 @@ $(document).ready(function () {
         (function buildRatingOptions(select, selected) {
             const ratingLabels = [
                 '',
-                '★ Beginner',
-                '★★ Elementary',
-                '★★★ Intermediate',
-                '★★★★ Advanced',
-                '★★★★★ Expert'
+                '★ 1 Star',
+                '★★ 2 Stars',
+                '★★★ 3 Stars',
+                '★★★★ 4 Stars',
+                '★★★★★ 5 Stars'
             ];
-            const ratingTitles = ['Select Rating', 'Beginner', 'Elementary', 'Intermediate', 'Advanced', 'Expert'];
+            const ratingTitles = ['Select Rating', '1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'];
             select.add(new Option('Select Rating', ''));
             for (let v = 1; v <= 5; v++) {
                 const opt = new Option(ratingLabels[v], String(v));
@@ -2883,8 +2924,12 @@ $(document).ready(function () {
             }, 250);
         });
         row.querySelector('.ab').addEventListener('click', () => {
+            if (experienceWrapper.querySelectorAll('tr').length <= 3 || row.getAttribute('data-protected') === '1') {
+                return;
+            }
             if ($.fn.select2) $(row).find('.se-field--select select').select2('destroy');
             row.remove();
+            updateSkillDeleteButtons();
             updatePopularSkills();
         });
 
@@ -2892,16 +2937,62 @@ $(document).ready(function () {
         // Enhance only attached rows; the native selects remain usable if Select2 is unavailable.
         if ($.fn.select2) {
             $(row).find('.se-field--select select').each(function () {
-                $(this).select2({
+                var selectName = this.name;
+                var s2Config = {
                     width: '100%',
                     dropdownParent: $(document.body),
                     dropdownCssClass: 'se-enterprise-dropdown',
-                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity
-                });
+                    minimumResultsForSearch: selectName === 'years[]' ? 0 : Infinity
+                };
+                if (selectName === 'ratings[]') {
+                    s2Config.templateResult = function (data) {
+                        if (!data.id) return data.text;
+                        var count = parseInt(data.id, 10);
+                        if (!count || isNaN(count)) return data.text;
+                        var stars = '';
+                        for (var i = 0; i < count; i++) {
+                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 12px; margin-right: 2px;"></i>';
+                        }
+                        var label = count === 1 ? '1 Star' : (count + ' Stars');
+                        return $('<span>' + stars + '<span style="color: #1e293b; font-weight: 500; margin-left: 6px;">' + label + '</span></span>');
+                    };
+                    s2Config.templateSelection = function (data) {
+                        if (!data.id) return data.text;
+                        var count = parseInt(data.id, 10);
+                        if (!count || isNaN(count)) return data.text;
+                        var stars = '';
+                        for (var i = 0; i < count; i++) {
+                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px; margin-right: 2px;"></i>';
+                        }
+                        var label = count === 1 ? '1 Star' : (count + ' Stars');
+                        return $('<span>' + stars + '<span style="color: #0f172a; font-weight: 500; margin-left: 5px;">' + label + '</span></span>');
+                    };
+                }
+                $(this).select2(s2Config);
             });
         }
         updatePopularSkills();
         return row;
+    }
+
+    function updateSkillDeleteButtons() {
+        const rows = Array.from(experienceWrapper.querySelectorAll('tr'));
+        const total = rows.length;
+        rows.forEach((r, idx) => {
+            const btn = r.querySelector('.ab');
+            if (!btn) return;
+            if (idx < 3 || total <= 3) {
+                r.setAttribute('data-protected', '1');
+                btn.disabled = true;
+                btn.style.cssText = 'opacity:0.22;cursor:not-allowed;pointer-events:none;';
+                btn.title = 'Minimum 3 skills are required — this row cannot be deleted';
+            } else {
+                r.removeAttribute('data-protected');
+                btn.disabled = false;
+                btn.style.cssText = 'opacity:1;cursor:pointer;pointer-events:auto;';
+                btn.title = 'Delete skill';
+            }
+        });
     }
 
     function addParsedBenchSkills(values) {
@@ -2924,11 +3015,16 @@ $(document).ready(function () {
     // Load minimum 3 empty rows by default so users immediately understand the requirement
     while (experienceWrapper.children.length < 3) addSkillExperience();
 
+    // Protect first 3 rows — cannot be deleted (min 3 skills required)
+    updateSkillDeleteButtons();
+
     document.querySelector('.se-card .asb').addEventListener('click', () => {
         addSkillExperience().querySelector('[name="skills[]"]').focus();
+        updateSkillDeleteButtons();
     });
     popularSkillButtons.forEach(button => button.addEventListener('click', () => {
         addSkillExperience(button.dataset.skill).querySelector('[name="skills[]"]').focus();
+        updateSkillDeleteButtons();
     }));
 
 
@@ -3106,6 +3202,32 @@ $(document).ready(function() {
   $(document).on('click', '#rmPicker, #rmAddMoreBtn', function(e) {
       e.preventDefault();
       $('#kt_activitiesRecruiter_toggle').trigger('click');
+
+      // Auto-load RM drawer data if not yet loaded (fixes blank drawer issue)
+      var $body = $('#kt_activitiesRecruiter_body');
+      if ($body.find('#kt_activities_body').length === 0) {
+          var client_id = "{{ @$client->id }}";
+          var recruiter    = $('#recruiter').val() || '';
+          var recruiter_id = $('#recruiter_id').val() || '';
+          var token        = "{{ csrf_token() }}";
+          var baseurl      = "{{ asset('assets/images/Loading2.gif') }}";
+          var url          = "{{ route('service_company.jobs.recruiter',':id') }}".replace(':id', client_id || 0);
+          $body.html('<div style="text-align:center;padding:30px;"><img src="' + baseurl + '" height="35px"></div>');
+          $.ajax({
+              type: 'GET',
+              url: url,
+              data: { '_token': token, 'recruiter': recruiter, 'recruiter_id': recruiter_id, 'from': 'bench-candidates' },
+              success: function(response) {
+                  $body.html(response.view);
+                  if (typeof crmRenderSelected === 'function') {
+                      crmRenderSelected();
+                  }
+              },
+              error: function() {
+                  $body.html('<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;"><i class="fa-solid fa-circle-exclamation" style="color:#f87171;"></i> Failed to load team. Please try again.</div>');
+              }
+          });
+      }
   });
 
   $(document).on('click', '.rm-chip-btn-remove', function(e) {
@@ -4147,6 +4269,21 @@ function displayValidationErrorsNotification(errorList, formEl, validatorInstanc
     showRequiredFieldsModal(missing);
 }
 
+async function isInternetAvailable() {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
+    try {
+        await fetch("https://www.gstatic.com/generate_204", {
+            method: "GET",
+            cache: "no-cache",
+            mode: "no-cors"
+        });
+        return true;
+    } catch (error) {
+        return (typeof navigator !== 'undefined') ? navigator.onLine : true;
+    }
+}
+window.isInternetAvailable = isInternetAvailable;
+
 @php if(@$page_event != 'EDIT'){  @endphp
 var KTAddCandidate = function () {
     var form;
@@ -4186,23 +4323,34 @@ var KTAddCandidate = function () {
         );
         submitButton.addEventListener('click', async function (e) {
             e.preventDefault();
-             const connected = await isInternetAvailable();
-              if (!connected) {
-                  Swal.fire({
-                      title: "No Internet",
-                      text: "You are currently offline or the server is unreachable.",
-                      icon: "warning",
-                      confirmButtonText: "Ok, got it!",
-                      customClass: {
-                          confirmButton: "btn btn-warning"
-                      }
-                  });
-                  return; // ⛔ STOP EXECUTION
-              }
+            var connected = true;
+            try {
+                connected = await isInternetAvailable();
+            } catch (netErr) {
+                connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
+            }
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: {
+                        confirmButton: "btn btn-warning"
+                    }
+                });
+                return; // ⛔ STOP EXECUTION
+            }
 
             validator.validate().then(function (status) {
                 var missing = detectMissingFields(form, validator);
                 if (status !== 'Valid' || (missing && missing.length > 0)) {
+                    $("#save-form").prop("disabled", false);
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
                     var errors = collectFormValidationErrors(form, validator);
                     displayValidationErrorsNotification(errors, form, validator);
                     return;
