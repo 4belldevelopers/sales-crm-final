@@ -1896,7 +1896,6 @@ $(document).ready(function () {
                         '<span style="color: #059669; font-weight: 700;">✓ Parsed in Browser (' + totalMs + 'ms)</span>'
                     );
                     $('#upRetryWrap').hide();
-                    toastr.success('Resume parsed in browser and talent fields populated!');
                 },
                 onError: function(err) {
                     console.warn('[Talent Parser] Client-side parse notice:', err);
@@ -2938,12 +2937,38 @@ $(document).ready(function () {
         // Enhance only attached rows; the native selects remain usable if Select2 is unavailable.
         if ($.fn.select2) {
             $(row).find('.se-field--select select').each(function () {
-                $(this).select2({
+                var selectName = this.name;
+                var s2Config = {
                     width: '100%',
                     dropdownParent: $(document.body),
                     dropdownCssClass: 'se-enterprise-dropdown',
-                    minimumResultsForSearch: this.name === 'years[]' ? 0 : Infinity
-                });
+                    minimumResultsForSearch: selectName === 'years[]' ? 0 : Infinity
+                };
+                if (selectName === 'ratings[]') {
+                    s2Config.templateResult = function (data) {
+                        if (!data.id) return data.text;
+                        var count = parseInt(data.id, 10);
+                        if (!count || isNaN(count)) return data.text;
+                        var stars = '';
+                        for (var i = 0; i < count; i++) {
+                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 12px; margin-right: 2px;"></i>';
+                        }
+                        var label = count === 1 ? '1 Star' : (count + ' Stars');
+                        return $('<span>' + stars + '<span style="color: #1e293b; font-weight: 500; margin-left: 6px;">' + label + '</span></span>');
+                    };
+                    s2Config.templateSelection = function (data) {
+                        if (!data.id) return data.text;
+                        var count = parseInt(data.id, 10);
+                        if (!count || isNaN(count)) return data.text;
+                        var stars = '';
+                        for (var i = 0; i < count; i++) {
+                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px; margin-right: 2px;"></i>';
+                        }
+                        var label = count === 1 ? '1 Star' : (count + ' Stars');
+                        return $('<span>' + stars + '<span style="color: #0f172a; font-weight: 500; margin-left: 5px;">' + label + '</span></span>');
+                    };
+                }
+                $(this).select2(s2Config);
             });
         }
         updatePopularSkills();
