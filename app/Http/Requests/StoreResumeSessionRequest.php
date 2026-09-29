@@ -13,6 +13,24 @@ class StoreResumeSessionRequest extends CoreRequest
         return true; // route is already behind `auth` middleware
     }
 
+    protected function prepareForValidation(): void
+    {
+        $filename = (string) $this->input('original_filename', '');
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        $canonicalMimeMap = [
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+
+        if (isset($canonicalMimeMap[$ext])) {
+            $this->merge([
+                'mime_type' => $canonicalMimeMap[$ext],
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
