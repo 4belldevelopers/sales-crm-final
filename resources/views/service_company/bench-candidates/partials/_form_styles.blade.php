@@ -1,5 +1,6 @@
 {{-- Phase 8 Frontend Optimization: Modular Form Styles Partial --}}
 <link rel="stylesheet" href="{{ asset('assets/node_modules/select2/dist/css/select2.min.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
 body { overflow-x: hidden; }
 .dropzone { padding: 1.8rem 1.75rem !important; border: 2px dashed #e6e7e8 !important; background: transparent !important; text-align: inherit !important; }
@@ -479,6 +480,15 @@ body { overflow-x: hidden; }
     color: #0f172a;
 }
 
+.rf-modal-close svg {
+    stroke: currentColor;
+    transition: transform 0.15s ease;
+}
+
+.rf-modal-close:hover svg {
+    transform: rotate(90deg);
+}
+
 /* Warning circle at top center */
 .rf-warning-icon-wrap {
     width: 64px;
@@ -598,6 +608,13 @@ body { overflow-x: hidden; }
     font-size: 12px;
     flex-shrink: 0;
     margin-left: 8px;
+    stroke: currentColor;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.rf-field-row:hover .rf-field-chevron {
+    color: #0f172a;
+    transform: translateX(2px);
 }
 
 /* Helper text */
@@ -611,9 +628,12 @@ body { overflow-x: hidden; }
     text-align: left;
 }
 
-.rf-helper-text i {
+.rf-helper-text i,
+.rf-helper-text svg {
     font-size: 13px;
     color: #64748b;
+    stroke: currentColor;
+    flex-shrink: 0;
 }
 
 /* Primary CTA button */
@@ -643,13 +663,16 @@ body { overflow-x: hidden; }
     transform: scale(0.99);
 }
 
-.rf-cta-btn i {
+.rf-cta-btn i,
+.rf-cta-btn svg {
     font-size: 13px;
+    stroke: currentColor;
     transition: transform 0.15s ease;
 }
 
-.rf-cta-btn:hover i {
-    transform: translateX(2px);
+.rf-cta-btn:hover i,
+.rf-cta-btn:hover svg {
+    transform: translateX(3px);
 }
 
 /* Temporary field attention highlight when navigated from modal */
@@ -1203,8 +1226,10 @@ textarea.has-validation-error:focus,
     animation: fieldErrorFadeIn 0.2s ease-in-out;
 }
 
-.field-error-message i {
+.field-error-message i,
+.field-error-message svg {
     color: #ef4444;
+    stroke: currentColor;
     font-size: 13px;
     flex-shrink: 0;
 }
@@ -1356,6 +1381,12 @@ textarea.has-validation-error:focus,
 .se-field--select .fa-star {
     color: #f59e0b !important;
 }
+.se-star-icon {
+    display: inline-block;
+    vertical-align: -1px;
+    fill: #f59e0b;
+    flex-shrink: 0;
+}
 
 /* ── Categorized Highest Qualification & Nationality Dropdown Styling ── */
 #nationality optgroup,
@@ -1467,21 +1498,23 @@ textarea.has-validation-error:focus,
     display: none !important;
 }
 
-/* Explicit styling for native Gender select */
-.bd-control select#gender {
+/* Explicit styling for native Gender select (Matches Date of Birth 42px height & 6px border-radius) */
+.bd-control select#gender,
+.bd-control--select select#gender {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
     width: 100% !important;
-    min-height: 46px !important;
-    height: 46px !important;
-    padding: 0 38px 0 42px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    line-height: 40px !important;
+    padding: 0 34px 0 42px !important;
     background-color: #ffffff !important;
     border: 1px solid #d8deec !important;
-    border-radius: 7px !important;
+    border-radius: 6px !important;
     color: #0b1545 !important;
-    font-size: 13px !important;
+    font-size: 13.5px !important;
     font-weight: 500 !important;
     font-family: 'Poppins', sans-serif !important;
     outline: none !important;
@@ -1492,30 +1525,34 @@ textarea.has-validation-error:focus,
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 14px center !important;
-    background-size: 12px !important;
+    background-size: 11px !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
     box-sizing: border-box !important;
 }
 
-.bd-control:has(select#gender) > i {
+.bd-control:has(select#gender) > i,
+.bd-control--select:has(select#gender) > i {
     display: inline-flex !important;
     position: absolute !important;
     left: 14px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    color: #5d6681 !important;
+    color: #53618c !important;
     font-size: 14px !important;
     z-index: 2 !important;
     pointer-events: none !important;
 }
 
-.bd-control select#gender:focus {
+.bd-control select#gender:focus,
+.bd-control--select select#gender:focus {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
 }
 
 .bd-control select#gender.has-validation-error,
-.bd-control.has-validation-error select#gender {
+.bd-control.has-validation-error select#gender,
+.bd-control--select select#gender.has-validation-error,
+.bd-control--select.has-validation-error select#gender {
     border-color: #ef4444 !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
 }
