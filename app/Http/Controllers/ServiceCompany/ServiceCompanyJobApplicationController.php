@@ -11093,7 +11093,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->where('recommendation_relation.to_company_id', '=', $company_id);
         if (! $isEdit) {
             $jobQuery->where('jobs.status', '=', 'active')
-                ->where('recommendation_relation.final_status', '=', 1);
+                ->where(function ($query) {
+                    $query->where('recommendation_relation.final_status', '=', 1)
+                        ->orWhere('recommendation_relation.final_status', '=', 2);
+                });
         }
         $this->job = $jobQuery->count();
         if ($this->job == 0) {
@@ -11192,6 +11195,44 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache');
 
+    }
+
+    public function jobQuestion($jobID = null, $applicationId = null)
+    {
+        $this->job = Job::find($jobID);
+        if (! $this->job) {
+            return Reply::dataOnly(['status' => 'success', 'view' => '', 'requiredColumnsView' => '', 'requiredSectionsView' => '', 'count' => 0]);
+        }
+        $this->jobQuestion = $this->job->questions()->with(['answers' => function ($query) use ($jobID, $applicationId) {
+            $query->where(['job_application_id' => $applicationId, 'job_id' => $jobID]);
+        }])->get();
+        $this->gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
+
+        $view = view()->exists('service_company.job-applications.job-question')
+            ? view('service_company.job-applications.job-question', $this->data)->render()
+            : (view()->exists('admin.job-applications.job-question') ? view('admin.job-applications.job-question', $this->data)->render() : '');
+        $options = ['job' => $this->job, 'gender' => $this->gender];
+        $sections = ['section_visibility' => $this->job->section_visibility];
+        if ($applicationId) {
+            $application = JobApplication::select('id', 'gender', 'dob', 'country', 'state', 'city')->where('id', $applicationId)->first();
+            if ($application) {
+                $options = \Illuminate\Support\Arr::add($options, 'application', $application);
+                $sections = \Illuminate\Support\Arr::add($sections, 'application', $application);
+            }
+        }
+        $requiredColumnsView = view()->exists('service_company.job-applications.required-columns')
+            ? view('service_company.job-applications.required-columns', $options)->render()
+            : (view()->exists('admin.job-applications.required-columns') ? view('admin.job-applications.required-columns', $options)->render() : '');
+        $requiredSectionsView = view()->exists('service_company.job-applications.required-sections')
+            ? view('service_company.job-applications.required-sections', $sections)->render()
+            : (view()->exists('admin.job-applications.required-sections') ? view('admin.job-applications.required-sections', $sections)->render() : '');
+        $count = count($this->jobQuestion);
+        $data = ['status' => 'success', 'view' => $view, 'requiredColumnsView' => $requiredColumnsView, 'requiredSectionsView' => $requiredSectionsView, 'count' => $count];
+        if ($applicationId && isset($application)) {
+            $data = \Illuminate\Support\Arr::add($data, 'application', $application);
+        }
+
+        return Reply::dataOnly($data);
     }
 
     public function clientappstore(Request $request)
