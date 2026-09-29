@@ -4,7 +4,7 @@
                 @php
                     use App\Helper\GeneralMethod;
                     
-					$company_id = (@$company_id) ? $company_id : auth()->user()->company_id;
+					$company_id = (int) ((@$company_id) ? $company_id : (auth()->user()->company_id ?? 0));
                     $logos = GeneralMethod::openCompanyDetails($id,$company_id);
                     $lock_unlock = GeneralMethod::openChecksubscription($company_id);
                     $jobIdEncrypt = GeneralMethod::value_encrypt($id);
@@ -77,8 +77,9 @@
 
                     $jobCompId = (int) ($jobClientInfo->company_id ?? @$job->company_id ?? 0);
                     $selfCompVal = (int) ($jobClientInfo->self_company ?? @$job->self_company ?? 0);
+                    $viewerCompId = (int) ($company_id ?? 0);
 
-                    $isDirectClientJob = ($company_id > 0 && $jobCompId > 0 && $company_id !== $jobCompId);
+                    $isDirectClientJob = ($viewerCompId > 0 && $jobCompId > 0 && $viewerCompId !== $jobCompId);
                     if ($isDirectClientJob) {
                         $tagsType = 'Direct Client';
                     } elseif ($selfCompVal === 1) {
@@ -87,13 +88,15 @@
                         $tagsType = 'Internal Client';
                     }
 
-                    if ($tagsType === 'Internal Client') {
-                        $internalClientName = ! empty($jobClientInfo->client_name) ? $jobClientInfo->client_name : (@$job->client_name ?? '');
-                        if (! empty($internalClientName)) {
-                            $company_or_client = $internalClientName;
+                    /* Intent: Always display Parent/Main Company Name under job title on open-toolbar */
+                    $parent_company_name = ! empty($account->company_name) ? $account->company_name : '';
+                    if (empty($parent_company_name)) {
+                        $targetCompanyId = ($viewerCompId > 0) ? $viewerCompId : ($jobCompId > 0 ? $jobCompId : 0);
+                        if ($targetCompanyId > 0) {
+                            $parent_company_name = \DB::table('companies')->where('id', $targetCompanyId)->value('company_name');
                         }
                     }
-					
+                    $toolbar_display_company = ! empty($parent_company_name) ? $parent_company_name : $company_or_client;
 
                 @endphp
                 <!--begin::Requisitions=-->
@@ -125,7 +128,7 @@
                         <a href="javascript:void(0);"
                             class="text-dark fw-bolder text-hover-primary fs-6">{{ strtoupper(substr(@$jobtitle, 0, 27)) }}</a>
                         <a href="javascript:void(0);"
-                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$company_or_client ?? @$account->company_name, 0, 50)) }}</a>
+                            class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$toolbar_display_company, 0, 50)) }}</a>
                     </div>
                     <!--begin::User details-->
                     <div class="d-flex flex-column ml-2 show-detail-open" data-id="{{$id}}">
