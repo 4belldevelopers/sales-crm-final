@@ -153,6 +153,11 @@ body {overflow-x:hidden; }
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            {{-- V4 Remediation hidden fields --}}
+            <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
+            <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
+            <input type="hidden" name="resume_version" id="resume_version" value="{{ (int)(@$application->resume_version ?? 1) }}">
+            <input type="hidden" name="resume_intent" id="resume_intent" value="{{ (!empty($application->resume) || !empty($application->current_resume_id)) ? 'KEEP' : 'NONE' }}">
           <div class="fc">
             <!-- Upload + Career Summary -->
             <div class="g2" style="margin-bottom:16px">
@@ -1219,10 +1224,15 @@ body {overflow-x:hidden; }
 @push('footer-script')
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="{{ asset('js/resume-presign.js') }}"></script>
+<script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
+@include('service_company.job-applications.jero-client-parser')
 
 <script>
 $(document).ready(function () {
+
+    // Authoritative Edit/Add state directly from Laravel route/view model
+    var IS_EDIT_MODE = {{ $page_event === 'EDIT' ? 'true' : 'false' }};
+    console.log('[PARSER] IS_EDIT_MODE authoritatively set to:', IS_EDIT_MODE);
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
@@ -1256,6 +1266,7 @@ $(document).ready(function () {
                 ).show();
                 $('#uploaded_file_path').val('');
                 $('#resume_original_name').val('');
+                $('#resumeCheck').val('1');
                 var ri = document.getElementById('resume'); if (ri) ri.value = ''; // prevent multipart file on submit
             } else if (data.state === 'failed') {
                 if (typeof _showUploadError === 'function') {
@@ -1265,12 +1276,23 @@ $(document).ready(function () {
         });
     }
 
-    // Build a unique contextKey for this company + job + application context
+    // Tab-scoped instance ID ensures multiple open tabs never collide or clear each other's upload sessions
+    window.__tabInstanceId = window.__tabInstanceId || (window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('tab_' + Math.random().toString(36).slice(2) + Date.now()));
+
+    // Generate submission & update UUIDs on page load if not already set
+    if (!$('#client_submission_uuid').val()) {
+        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+    }
+    if (!$('#client_update_uuid').val()) {
+        $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
+    }
+
+    // Build a unique contextKey for this company + job + application + tab context
     function getUpContextKey() {
         var companyId = @json(auth()->user()->company_id ?? 0);
         var jobId = $('#job_id').val() || '0';
         var appId = $('#appId').val() || '0';
-        return 'comp' + companyId + '_job' + jobId + '_app' + appId;
+        return 'comp' + companyId + '_job' + jobId + '_app' + appId + '_tab' + window.__tabInstanceId;
     }
 
     /**
@@ -1278,13 +1300,14 @@ $(document).ready(function () {
      * Prevents previous session resume leakage on page refresh.
      */
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-        var isEditMode = @json(($page_event ?? '') === 'EDIT') || (($('#appId').val() || '0') !== '0');
+        var isEditMode = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         if (!isEditMode) {
             window.ResumePresign.cancelUpload(getUpContextKey());
             $('#resume_session_uuid').val('');
             $('#uploaded_file_path').val('');
             $('#resume_original_name').val('');
             $('#resumeCheck').val('');
+            $('#upInfo').removeClass('show');
             $('#uploadBox').show();
             $('#fileInfo').hide();
             $('#fileName').text('');
@@ -1298,11 +1321,17 @@ $(document).ready(function () {
 
     const uploadBox  = document.getElementById('uploadBox');
     const resumeInput = document.getElementById('resume');
+    var resumeUploadGeneration = 0;
 
-    // ─── Zero-temp upload pipeline ───────────────────────────────────────────
-    // xhr.send(file) → raw bytes → Laravel php://input → streamed to R2
-    // No PHP upload_tmp_dir write. No CORS needed.
-    // ─────────────────────────────────────────────────────────────────────────
+    function shouldUseResumeUploadFallback(error) {
+        var message = String((error && error.message) || '');
+
+        return message.indexOf('R2 upload failed') !== -1
+            || message.indexOf('Network error during upload') !== -1
+            || message.indexOf('Upload timed out') !== -1
+            || message.indexOf('Upload feature is not enabled') !== -1
+            || message.indexOf('Presign request failed') !== -1;
+    }
 
     let upXhr                = null;
     let _parseStatusInterval = null;
@@ -1321,38 +1350,63 @@ $(document).ready(function () {
         $('#upPill').hide();
         const $b = $('#upBanner');
         $b.hide().removeClass('ok err').empty();
+        $('#save-form, #update-form').prop('disabled', false);
     }
 
     function backToDropzone() {
+        resumeUploadGeneration++;
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
+        resetProgress();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-            window.ResumePresign.cancelUpload();
+            window.ResumePresign.cancelUpload(getUpContextKey());
         }
-        resetProgress();
+        // Abort any in-flight WASM client parsing
+        if (window.JeroClientParser && typeof window.JeroClientParser.cancelActiveParse === 'function') {
+            window.JeroClientParser.cancelActiveParse();
+        }
+        window._clientParserState = null;
+        window._currentActiveResumeFile = null;
+        $('#resume_session_uuid').val('');
+        $('#uploaded_file_path').val('');
+        $('#resume_original_name').val('');
+        $('.resume-card').removeClass('has-uploaded-resume');
         $('#upInfo').removeClass('show');
-        $('#uploadBox').show();
+        $('#uploadBox').removeClass('d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
         $('#resumeCheck').val('');
-        $('#uploaded_file_path').val('');
-        $('#resume_original_name').val('');
+        var isEdit = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
+        $('#resume_intent').val(isEdit ? 'REMOVE' : 'NONE');
         $('.download-file').addClass('d-none');
+        window.__upLoc = null;
     }
 
-    function showUploadedCard(file) {
+    function showUploadedCard(file, parserResponse) {
         var ext = extLabel(file);
         var $info = $('#upInfo');
-        $info.find('.up-file-icon').text(ext);
+        $('#upFileBadgeExt').text(ext);
+        if (ext === 'DOC' || ext === 'DOCX') {
+            $('.up-file-badge').css({'background': '#dbeafe', 'color': '#2563eb'});
+            $('.up-file-badge i').attr('class', 'fa-regular fa-file-word').css('color', '#2563eb');
+            $('#upFileBadgeExt').css('color', '#2563eb');
+        } else {
+            $('.up-file-badge').css({'background': '#fee2e2', 'color': '#dc2626'});
+            $('.up-file-badge i').attr('class', 'fa-regular fa-file-pdf').css('color', '#dc2626');
+            $('#upFileBadgeExt').css('color', '#dc2626');
+        }
         $('#upFileName').text(file.name);
-        $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
+        $('#upFileSub').html(fmtSize(file.size) + ' &bull; ' + ext);
+
         var now = new Date();
+        var day = String(now.getDate()).padStart(2, '0');
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        $('#upDetailUploadedOn').text(
-            String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear()+
-            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')
-        );
+        var month = months[now.getMonth()];
+        var year = now.getFullYear();
+        var hours = String(now.getHours()).padStart(2, '0');
+        var mins = String(now.getMinutes()).padStart(2, '0');
+        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hours + ':' + mins);
         $('#upDetailParserStatus').text('Pending').css('color','');
         $('#upRetryWrap').hide();
         $('#uploadBox').hide();
@@ -1370,25 +1424,8 @@ $(document).ready(function () {
     }
 
     function _startParsePoller(uploadId) {
+        // Zero server-side polling: Resume parsing is 100% client-side via JeroClientParser.
         _resumeUploadId = uploadId;
-        if (_parseStatusInterval) clearInterval(_parseStatusInterval);
-        _parseStatusInterval = setInterval(function () {
-            $.get('{{ route("service_company.resume.status", ["id" => "__ID__"]) }}'.replace('__ID__', uploadId))
-                .done(function (r) {
-                    var map = { Queued:'Queued…', Processing:'Parsing resume…', Completed:'Parsed ✓', Failed:'Parse failed' };
-                    $('#upDetailParserStatus').text(map[r.status] || r.status);
-                    if (r.status === 'Completed' || r.status === 'Failed') {
-                        clearInterval(_parseStatusInterval);
-                        _parseStatusInterval = null;
-                        if (r.status === 'Failed') {
-                            $('#upDetailParserStatus').css('color', '#f44336');
-                            $('#upRetryWrap').show();
-                        } else {
-                            $('#upRetryWrap').hide();
-                        }
-                    }
-                });
-        }, 4000);
     }
 
     function uploadWithProgress(file) {
@@ -1472,31 +1509,78 @@ $(document).ready(function () {
             alert('Maximum file size is 6 MB.');
             return;
         }
+        var uploadGeneration = ++resumeUploadGeneration;
 
         const sizeStr = sizeMB >= 1 ? sizeMB.toFixed(2) + ' MB' : Math.round(file.size / 1024) + ' KB';
         $('#fileName').text(file.name + ' (' + sizeStr + ')');
         $('#fileInfo').css('display', 'flex');
         $('#resumeCheck').val('1');
+        $('#resume_intent').val('ATTACH_IF_AVAILABLE');
         $('.download-file').addClass('d-none');
 
-        // Drive the zero-temp XHR first; guard tells handleFileInputChange to skip its jQuery POST.
+        const selectedFile = file;
         window.__upXhrChannelClaimed = true;
-        if (RESUMES_FEATURE_BROWSER_UPLOAD) {
-            // v2 path: direct browser → R2, zero PHP bytes.
-            window.ResumePresign.startUpload(file, getUpContextKey()).catch(function () {
-                // error already surfaced via onStateChange 'failed'
+        window._currentActiveResumeFile = selectedFile;
+        window._clientParserState = 'parsing';
+
+        showUploadedCard(selectedFile, null);
+
+        $('#upDetailParserStatus').html(
+            '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+            '<span>Parsing in browser&hellip;</span>'
+        );
+
+        // ── Phase 1-5: 100% Client-Side Resume Parsing via https://parser.jero.works/ ──────────
+        if (window.JeroClientParser && typeof window.JeroClientParser.parseAndPopulate === 'function') {
+            var reqSkills = [];
+            if (typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
+                reqSkills = candidateRequiredSkills.map(function (s) { return s.name; });
+            }
+
+            window.JeroClientParser.parseAndPopulate(selectedFile, {
+                isEditMode: IS_EDIT_MODE,
+                requiredSkills: reqSkills,
+                onProgress: function (stage, pct) {
+                    $('#upDetailParserStatus').html(
+                        '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
+                        '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
+                    );
+                },
+                onSuccess: function (result, totalMs) {
+                    window._clientParserState = 'completed';
+                    $('#upDetailParserStatus').html(
+                        '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
+                    );
+                    toastr.success('Resume parsed in browser and fields populated!');
+                },
+                onError: function (err) {
+                    window._clientParserState = 'error';
+                    $('#upDetailParserStatus').html(
+                        '<span style="color: #f59e0b; font-weight: 500;">Manual Entry</span>'
+                    );
+                    toastr.info('Resume parsing unavailable. Please enter candidate details manually.');
+                }
             });
-        } else if (typeof uploadWithProgress === 'function') {
-            // v1 path: PHP multipart POST (unchanged)
-            uploadWithProgress(file);
         }
-        if (typeof handleFileInputChange === 'function') {
-            // For drag-drop / paste, no native input-change event exists.
-            // resumeInput.files was already assigned above, so a synthetic
-            // event pointing to it is sufficient for handleFileInputChange.
-            handleFileInputChange(event || { target: resumeInput });
-        }
-        // Reset so the legacy channel is open for the next pick.
+
+        // ── PIPELINE 2: Independent Background Storage Upload ──────────
+        setTimeout(function () {
+            var uploadGeneration = ++resumeUploadGeneration;
+            if (RESUMES_FEATURE_BROWSER_UPLOAD) {
+                window.ResumePresign.startUpload(selectedFile, getUpContextKey()).catch(function (error) {
+                    if (uploadGeneration !== resumeUploadGeneration
+                        || !shouldUseResumeUploadFallback(error)
+                        || typeof uploadWithProgress !== 'function') {
+                        return;
+                    }
+                    window.ResumePresign.cancelUpload(getUpContextKey());
+                    uploadWithProgress(selectedFile);
+                });
+            } else if (typeof uploadWithProgress === 'function') {
+                uploadWithProgress(selectedFile);
+            }
+        }, 30);
+
         window.__upXhrChannelClaimed = false;
     }
 
@@ -2756,12 +2840,19 @@ var KTAddCandidate = function () {
 
             validator.validate().then(function (status) {
                 if (status == 'Valid') {
-                  $("#save-form").prop("disabled", true);
-                  $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`
-                  );
-                    submitButton.setAttribute('data-kt-indicator', 'on');
-                    submitButton.disabled = true;
+                    // Ensure unique client_submission_uuid for idempotency
+                    if (!$('#client_submission_uuid').val()) {
+                        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+                    }
+
+                    $("#save-form, #update-form").prop("disabled", true);
+                    $("#save-form, #update-form").html(
+                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`
+                    );
+                    if (submitButton) {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+                    }
 
                     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
                     var formData = new FormData($('#createForm')[0]);
@@ -2774,9 +2865,11 @@ var KTAddCandidate = function () {
                         redirect			: true,
                         success			: function (response) {
                             if(response.status == 'coinCheck'){
-                                $("#save-form").prop("disabled", false).html("Submit");
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = false;
+                                $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
+                                if (submitButton) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                }
                                 Swal.fire("Success", response.message , "warning");
                                 return false;
                             }
@@ -2784,52 +2877,74 @@ var KTAddCandidate = function () {
                             if(response.status == 'mailcheck'){
                                 if (!navigator.onLine) {
                                     Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    $("#save-form").prop("disabled", false).html("Submit");
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
+                                    $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
+                                    if (submitButton) {
+                                        submitButton.removeAttribute('data-kt-indicator');
+                                        submitButton.disabled = false;
+                                    }
                                     return;
                                 }
 
-                                $("#save-form").prop("disabled", false).html(`Submit`);
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = false;
+                                $("#save-form, #update-form").prop("disabled", false).html(`Submit Candidate`);
+                                if (submitButton) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                }
                                 Swal.fire("Success", response.message , "warning");
                                 return false;
                             }
 
-                            submitButton.removeAttribute('data-kt-indicator');
-                            submitButton.disabled = true;
+                            if (submitButton) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = true;
+                            }
+
+                            var fallbackUrl = '{{ route("service_company.cvtracker.index") }}';
+                            var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
+                            var formRedirected = false;
+                            function executeFormRedirect() {
+                                if (formRedirected) return;
+                                formRedirected = true;
+                                if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
+                                if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
+                                window.location.assign(targetUrl);
+                            }
+
+                            // Rotate client_submission_uuid for any subsequent submission
+                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+
                             Swal.fire({
-                                text				: "You have successfully Submitted",
-                                icon				: "success",
-                                buttonsStyling		: false,
-                                confirmButtonText	: "Ok, got it!",
-                                customClass			: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            }).then(function (result) {
-                                if (result.isConfirmed) {
-                                    if(form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
-                                    if(form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
-                                }
+                                text: "You have successfully Submitted",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, got it!",
+                                customClass: { confirmButton: "btn btn-primary" },
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(function () {
+                                executeFormRedirect();
                             });
 
-                            window.location = response.url;
+                            setTimeout(executeFormRedirect, 2200);
                         },
                         error			: function (response) {
                             if (!navigator.onLine) {
                                 Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                $("#save-form").prop("disabled", false).html("Submit");
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = false;
+                                $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
+                                if (submitButton) {
+                                    submitButton.removeAttribute('data-kt-indicator');
+                                    submitButton.disabled = false;
+                                }
                                 return;
                             }
 
-                            $("#save-form").prop("disabled", false);
-                            $("#save-form").html("Submit Candidate");
-                            submitButton.removeAttribute('data-kt-indicator');
-                            submitButton.disabled = false;
-                            Swal.fire("Error", "Submission failed. Please try again.", "error");
+                            $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
+                            if (submitButton) {
+                                submitButton.removeAttribute('data-kt-indicator');
+                                submitButton.disabled = false;
+                            }
+                            var errMsg = (response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : "Submission failed. Please try again.";
+                            Swal.fire("Error", errMsg, "error");
                         }
                     });
                 } 

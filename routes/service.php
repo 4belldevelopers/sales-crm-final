@@ -216,6 +216,8 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('job-applications/interview-show/{id?}', [ServiceCompanyJobApplicationController::class, 'interviewShow'])->name('job-applications.interview-show');
                 Route::get('apptracker/show-interviews/{id?}', [ServiceCompanyAppTrackerController::class, 'showInterviews'])->name('apptracker.show-interviews');
                 Route::get('job-applications/create/{jobId?}/{appId?}', [ServiceCompanyJobApplicationController::class, 'create'])->name('job-applications.create');
+                Route::get('job-applications/clientcreate/{jobId?}/{appId?}', [ServiceCompanyJobApplicationController::class, 'clientcreate'])->name('job-applications.clientcreate');
+                Route::get('job-applications/question/{jobID?}/{applicationId?}', [ServiceCompanyJobApplicationController::class, 'jobQuestion'])->name('job-applications.question');
                 Route::get('job-applications/getAdditionalDetail/{job_id?}', [ServiceCompanyJobApplicationController::class, 'getAdditionalDetail'])->name('job-applications.getAdditionalDetail');
 
                 Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
