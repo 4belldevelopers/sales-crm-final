@@ -2719,23 +2719,41 @@ $(document).ready(function () {
 
     var inputloc = document.querySelector("#kt_tagify_work_location");
     var cities = @json($cities);
-                             
-    // Initialize Tagify script on the above inputs
-    var tagifylocation =  new Tagify(inputloc, {
-        whitelist: cities,
-        enforceWhitelist: true, // Prevents users from adding custom values
-        maxTags: 1,
-        placeholder: 'Search and select one verified location',
-        dropdown: {
-            maxItems: 20,           // <- maximum allowed rendered suggestions
-            classname: "bd-location-dropdown", // <- custom classname for this dropdown, so it could be targeted
-            enabled: 0,             // <- show suggestions on focus
-            closeOnSelect: true,
-            highlightFirst: true // First suggestion active
-        }
-    });
+    var tagifylocation = null;
+
+    // Initialize Tagify script on the above inputs safely
+    if (inputloc && typeof Tagify !== 'undefined') {
+        tagifylocation = new Tagify(inputloc, {
+            whitelist: cities,
+            enforceWhitelist: true, // Prevents users from adding custom values
+            maxTags: 1,
+            placeholder: 'Search and select one verified location',
+            dropdown: {
+                maxItems: 20,           // <- maximum allowed rendered suggestions
+                classname: "bd-location-dropdown", // <- custom classname for this dropdown, so it could be targeted
+                enabled: 0,             // <- show suggestions on focus
+                closeOnSelect: true,
+                highlightFirst: true // First suggestion active
+            }
+        });
+
+        tagifylocation.on('input', function(e) {
+            tagifylocation.dropdown.show.call(tagifylocation);
+        });
+
+        tagifylocation.on('dropdown:select', function(e) {
+            setSingleLocationTag(e.detail.data.value);
+        });
+
+        tagifylocation.on('add', function(e) {
+            if (tagifylocation.value.length > 1) {
+                setSingleLocationTag(e.detail.data.value);
+            }
+        });
+    }
 
     function setSingleLocationTag(locationValue) {
+        if (!tagifylocation) return;
         var selectedLocation = Array.isArray(locationValue) ? locationValue[0] : locationValue;
         if (selectedLocation && typeof selectedLocation === 'object') {
             selectedLocation = selectedLocation.value || selectedLocation.name || selectedLocation.text || '';
@@ -2746,21 +2764,6 @@ $(document).ready(function () {
             tagifylocation.addTags([selectedLocation]);
         }
     }
-
-    // Keep location as a single verified selection while preserving the existing Tagify field payload.
-    tagifylocation.on('input', function(e) {
-        tagifylocation.dropdown.show.call(tagifylocation);
-    });
-
-    tagifylocation.on('dropdown:select', function(e) {
-        setSingleLocationTag(e.detail.data.value);
-    });
-
-    tagifylocation.on('add', function(e) {
-        if (tagifylocation.value.length > 1) {
-            setSingleLocationTag(e.detail.data.value);
-        }
-    });
     
    function debounce(func, delay) {
         let timer;
@@ -2776,28 +2779,25 @@ $(document).ready(function () {
             url: "{{ url('/') }}" + "/city-job-suggestions?q=" + query,
             method: 'GET',
             success: function(data) {
-                console.warn("Fetched Cities: ", data);
-
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && tagifylocation) {
                     tagifylocation.settings.whitelist = data; // Update whitelist
-                    // tagifylocation.dropdown.show(query); // Show suggestions
                     tagifylocation.dropdown.show.call(tagifylocation);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
                 }
             },
             error: function(err) {
-                console.error("Error fetching cities:", err);
+                console.warn("Notice fetching cities:", err);
             }
         });
-    }, 200); // 300ms delay
+    }, 200); // 200ms delay
 
     // Listen for user input to trigger API call
-    tagifylocation.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 2) return;
-        fetchSuggestions(query);
-    });
+    if (tagifylocation) {
+        tagifylocation.on('input', function(e) {
+            var query = e.detail.value.trim();
+            if (query.length < 2) return;
+            fetchSuggestions(query);
+        });
+    }
 
     setTimeout(() => {
       var city = "{{@$default_loc}}";
@@ -2808,22 +2808,19 @@ $(document).ready(function () {
     }, 100);
     setTimeout(() => {
         var defaultLocation = {!! json_encode(@$default_loc) !!}; // Ensure proper Blade syntax for JavaScript
-        if (defaultLocation) {
+        if (defaultLocation && tagifylocation) {
             setSingleLocationTag(defaultLocation); // Add the default location as a tag
             tagifylocation.dropdown.hide();
         }
-    }, 2000); // 3 seconds delay
+    }, 2000); // 2 seconds delay
 		
 </script>
-<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.14.3/tagify.css">
 <link rel="stylesheet" href="{{ asset('assets/plugins/datepicker/datepicker3.css') }}">
 <script src="{{ asset('assets/plugins/datepicker/bootstrap-datepicker.js') }}"></script>
 <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}"></script>
-<script src="{{ asset('front/assets/js/location.js') }}"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-<script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/additional-methods.min.js"></script>
 <script>
 
 $(document).ready(function() {
@@ -3526,88 +3523,57 @@ KTUtil.onDOMContentLoaded(function () {
 });
 @php } @endphp
 
-function re_test(text){
-  $('.page-loader').css('display', 'flex');
-   var page_event_check = "{{@$page_event}}";
-$.ajax({
-                  type		: 'POST',
-                  url			: "{{ route('service_company.extract.resume-job-applications',':id') }}",
-                  data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'resumeText' : text},
-                  beforeSend	: function() {
-                  },
-                  success 	: function (response) {
-                    $('.page-loader').css('display', 'none');
-                    if(response.linkedin !=''){
-                      $('#linkedin').val(response.linkedin);
-                    }
-                    if(response.github !=''){
-                       $('#github').val(response.github);
-                    }
-                    if(response.behance !=''){
-                       $('#behance').val(response.behance);
-                    }                      
-                    $('#careersummary').val(response.careerSummary);
-                    if (window.addParsedBenchSkills) window.addParsedBenchSkills(response.skills);
-                    if(page_event_check != 'EDIT'){
-                    $('#full_name').val(response.name);
-                    $('#phone').val(response.number);
-                    $('#email').val(response.email);
-                    $('#dob').val(response.dob);
-                    $('#qualification').val(response.qualification).change();
+function re_test(text) {
+    if (!text) return;
+    var page_event_check = "{{@$page_event}}";
 
-                    var resumeText = $('#uploaded_file_path').val();
-                      $.ajax({
-                        type		: 'POST',
-                        url			: "{{ route('service_company.file.unset') }}",
-                        data		: {'_token': '{{ csrf_token() }}','_method': 'POST', 'file_path' : resumeText},
-                        success 	: function (response) {
+    // 100% Client-Side In-Browser Entity Extraction (Zero Backend Parsing, Rule 3 & 4)
+    var emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
+    var emailMatch = text.match(emailRegex);
+    var email = emailMatch ? emailMatch[0].trim() : '';
 
-                        }
+    var mobileRegex = /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\b\d{10}\b/;
+    var mobileMatch = text.match(mobileRegex);
+    var mobile = mobileMatch ? mobileMatch[0].replace(/[^\d+]/g, '') : '';
 
-                      });
+    var linkedinMatch = text.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/[A-Za-z0-9_-]+/i);
+    var githubMatch = text.match(/https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_-]+/i);
+    var behanceMatch = text.match(/https?:\/\/(?:www\.)?behance\.net\/[A-Za-z0-9_-]+/i);
 
+    // Name extraction: first capitalized full name line or explicit Name: pattern
+    var nameMatch = text.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/m) || text.match(/Name\s*[:\-]?\s*([A-Za-z\s]{3,40})/i);
+    var name = nameMatch ? nameMatch[1].trim() : '';
 
-                    setSingleLocationTag(response.country); // Keep current location to one selected value
+    // Career summary extraction
+    var summaryMatch = text.match(/(?:Summary|Professional Summary|Career Summary|Profile|Objective)\s*[:\-]?\s*\n+([\s\S]{30,600}?)(?=\n+[A-Z][A-Za-z\s]{2,20}:|\n+Experience|\n+Skills|\n+Education|\n+Projects|$)/i);
+    var careerSummary = summaryMatch ? summaryMatch[1].trim().replace(/\s+/g, ' ') : '';
 
-                    
-                    
+    if (linkedinMatch && !$('#linkedin').val()) $('#linkedin').val(linkedinMatch[0]).trigger('change');
+    if (githubMatch && !$('#github').val()) $('#github').val(githubMatch[0]).trigger('change');
+    if (behanceMatch && !$('#behance').val()) $('#behance').val(behanceMatch[0]).trigger('change');
+    if (careerSummary && !$('#careersummary').val()) $('#careersummary').val(careerSummary).trigger('change');
 
-                    var countryName = response.country;
-                    var stateName = response.state;
-                    var cityName = response.city;
-                    
-                    var countrydropdown = document.getElementById("country");
-                    for (var i = 0; i < countrydropdown.options.length; i++) {
-                     
-                        if (countrydropdown.options[i].text.trim() === countryName) {
-                            // Set the option as selected
-                            countrydropdown.selectedIndex = i;
-                            var event = new Event('change');
-                            countrydropdown.dispatchEvent(event);
-                            break; // Exit the loop since we found the country
-                        }
-                    }
-                   
-                  setTimeout(() => {
-                    var statedropdown = document.getElementById("state");
-                    for (var ik = 0; ik < statedropdown.options.length; ik++) {
-                        if (statedropdown.options[ik].text.trim() === stateName) {
-                            //Set the option as selected Uttar Pradesh Uttar Pradesh
-                            statedropdown.selectedIndex = ik;
-                            var eventstate = new Event('change');
-                            statedropdown.dispatchEvent(eventstate);
-                            break; // Exit the loop since we found the state
-                        }
-                    }   
-                  }, 1000);
-               }
-                   
-                    
-                    // $('.value_JSON').prepend('<tag title="dd" contenteditable="false" spellcheck="false" tabindex="-1" class="tagify__tag " value="dd"><x title="" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span class="tagify__tag-text">dd</span></div></tag>');
+    if (page_event_check != 'EDIT') {
+        if (name && !$('#full_name').val()) $('#full_name').val(name).trigger('change');
+        if (mobile && !$('#phone').val()) $('#phone').val(mobile).trigger('change');
+        if (email && !$('#email').val()) $('#email').val(email).trigger('change');
+    }
 
-                    }
-             });	
+    // Extract skills if any match popular skills
+    if (typeof window.addParsedBenchSkills === 'function') {
+        var popular = ['React', 'Node.js', 'Python', 'Java', 'PHP', 'Laravel', 'AWS', 'Docker', 'Kubernetes', 'SQL', 'TypeScript', 'JavaScript', 'C#', '.NET', 'Angular', 'Vue'];
+        var detectedSkills = [];
+        popular.forEach(function(s) {
+            var re = new RegExp('\\b' + s.replace('.', '\\.') + '\\b', 'i');
+            if (re.test(text)) detectedSkills.push(s);
+        });
+        if (detectedSkills.length > 0) {
+            window.addParsedBenchSkills(detectedSkills);
+        }
+    }
 
+    $('#upDetailParserStatus').text('✓ Parsed in Browser').css('color', '#059669');
+    $('#upRetryWrap').hide();
 }
 
 
@@ -3952,10 +3918,13 @@ if (file.type === 'application/pdf' || fileExtension === 'pdf') {
             const mobileRegex = /(?:\+?\d{2}\s*-\s*\d{10})|(?:\(\d{3}\)-\d{3}-\d{3})/;
             const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
 
-            // Extracting information
-            const name = resumeText.match(nameRegex)[0].trim();
-            const mobile = resumeText.match(mobileRegex)[0].replace(/\D/g, '');
-            const email = resumeText.match(emailRegex)[0];
+            // Extracting information safely
+            const nameMatch = resumeText.match(nameRegex);
+            const mobileMatch = resumeText.match(mobileRegex);
+            const emailMatch = resumeText.match(emailRegex);
+            const name = nameMatch ? nameMatch[0].trim() : '';
+            const mobile = mobileMatch ? mobileMatch[0].replace(/\D/g, '') : '';
+            const email = emailMatch ? emailMatch[0] : '';
 
             console.log("Name:", name);
             console.log("Mobile:", mobile);

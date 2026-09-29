@@ -82,19 +82,9 @@
 <meta property="og:site_name" content="" />
 <link rel="canonical" href="" />
 <link rel="shortcut icon" type="image/x-icon"  href="{{ asset('img/favicon.svg')}}">
-{{-- Step 8a: Self-hosted Poppins, reduced to 400+500 weights only (-400KB).
-     Deployment task: copy poppins-400.woff2 and poppins-500.woff2 to public/fonts/.
-     Until fonts are deployed, the CDN fallback below is the active source. --}}
-@if(file_exists(public_path('fonts/poppins-400.woff2')))
-<style>
-@font-face{font-family:'Poppins';src:url('{{ asset('fonts/poppins-400.woff2') }}') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
-@font-face{font-family:'Poppins';src:url('{{ asset('fonts/poppins-500.woff2') }}') format('woff2');font-weight:500;font-style:normal;font-display:swap;}
-</style>
-@else
-{{-- CDN fallback until fonts/poppins-*.woff2 are deployed to public/fonts/ --}}
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap" />
-@endif
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
 @php
     try {
         echo app(\Illuminate\Foundation\Vite::class)(['resources/css/app.css', 'resources/js/app.js']);
