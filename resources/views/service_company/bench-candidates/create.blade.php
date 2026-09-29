@@ -732,7 +732,7 @@ if($snp_mode== 1){
                 <div class="bd-grid bd-grid--two">
                   <div class="fg fv-row bd-field">
                     <label>Gender <span class="rq">*</span></label>
-                    <div class="bd-control">
+                    <div class="bd-control bd-control--select">
                       <i class="fa-regular fa-user"></i>
                       <select name="gender" id="gender">
                         <option value="">Select gender</option>
@@ -1402,7 +1402,7 @@ if($snp_mode== 1){
                       <th>Skill <span class="rq">*</span></th>
                       <th>Experience (Years) <span class="rq">*</span></th>
                       <th>Experience (Months)</th>
-                      <th><i class="fa-solid fa-star" aria-hidden="true" style="color:#f59e0b;"></i> Proficiency Rating <span class="rq">*</span></th>
+                      <th><svg viewBox="0 0 24 24" width="13" height="13" fill="#f59e0b" style="display:inline-block; vertical-align:-2px; margin-right:4px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Proficiency Rating <span class="rq">*</span></th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1629,7 +1629,7 @@ if($snp_mode== 1){
 <div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
     <div class="rf-modal-box">
         <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
         <!-- Warning Icon (Yellow circle with exclamation) -->
@@ -1654,14 +1654,14 @@ if($snp_mode== 1){
 
         <!-- Helper text -->
         <div class="rf-helper-text">
-            <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             <span>Click a field above to jump directly to it.</span>
         </div>
 
         <!-- Primary CTA -->
         <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
             <span>Review Required Fields</span>
-            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
     </div>
 </div>
@@ -3008,13 +3008,15 @@ $(document).ready(function () {
                     minimumResultsForSearch: selectName === 'years[]' ? 0 : Infinity
                 };
                 if (selectName === 'ratings[]') {
+                    var starSvg = '<svg class="se-star-icon" viewBox="0 0 24 24" width="13" height="13" fill="#f59e0b" style="display:inline-block; vertical-align:-1px; margin-right:2px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                    var starSvgSel = '<svg class="se-star-icon" viewBox="0 0 24 24" width="12" height="12" fill="#f59e0b" style="display:inline-block; vertical-align:-1px; margin-right:2px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
                     s2Config.templateResult = function (data) {
                         if (!data.id) return data.text;
                         var count = parseInt(data.id, 10);
                         if (!count || isNaN(count)) return data.text;
                         var stars = '';
                         for (var i = 0; i < count; i++) {
-                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 12px; margin-right: 2px;"></i>';
+                            stars += starSvg;
                         }
                         var label = count === 1 ? '1 Star' : (count + ' Stars');
                         return $('<span>' + stars + '<span style="color: #1e293b; font-weight: 500; margin-left: 6px;">' + label + '</span></span>');
@@ -3025,7 +3027,7 @@ $(document).ready(function () {
                         if (!count || isNaN(count)) return data.text;
                         var stars = '';
                         for (var i = 0; i < count; i++) {
-                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px; margin-right: 2px;"></i>';
+                            stars += starSvgSel;
                         }
                         var label = count === 1 ? '1 Star' : (count + ' Stars');
                         return $('<span>' + stars + '<span style="color: #0f172a; font-weight: 500; margin-left: 5px;">' + label + '</span></span>');
@@ -4698,7 +4700,7 @@ function showRequiredFieldsModal(missingFields) {
             + '<span class="rf-field-badge" aria-hidden="true">!</span>'
             + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
             + '</div>'
-            + '<i class="fa-solid fa-chevron-right rf-field-chevron" aria-hidden="true"></i>'
+            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
             + '</div>';
         $list.append(rowHtml);
     });
@@ -4797,7 +4799,7 @@ function applyFieldValidationErrors(missingFields) {
         var key = f.key;
         var msg = f.message || (f.label + ' is required.');
         var errorHtml = '<div class="field-error-message" data-field-error="' + key + '">'
-            + '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> '
+            + '<svg class="fe-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:4px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
             + '<span>' + $('<div>').text(msg).html() + '</span>'
             + '</div>';
 
