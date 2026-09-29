@@ -64,7 +64,11 @@ return new class extends Migration
         if (Schema::hasTable('job_applications')) {
             Schema::table('job_applications', function (Blueprint $table) {
                 if (! Schema::hasColumn('job_applications', 'aggregate_version')) {
-                    $table->unsignedInteger('aggregate_version')->default(1)->after('resume_version');
+                    if (Schema::hasColumn('job_applications', 'resume_version')) {
+                        $table->unsignedInteger('aggregate_version')->default(1)->after('resume_version');
+                    } else {
+                        $table->unsignedInteger('aggregate_version')->default(1);
+                    }
                 }
             });
         }

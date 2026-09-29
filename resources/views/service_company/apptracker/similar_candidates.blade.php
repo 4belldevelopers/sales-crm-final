@@ -1235,6 +1235,118 @@
                                         <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
                                         <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
                                         <script>
+                                            // Phase 3: Bounded Browser RAM & IndexedDB Lookup Store (<30MB Tab Budget)
+                                            const JeroAppTrackerStore = (function() {
+                                                const DB_NAME = 'jero_apptracker_db';
+                                                const DB_VERSION = 1;
+                                                const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+                                                const SUGGESTIONS_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours TTL
+
+                                                let dbPromise = null;
+
+                                                function getDB() {
+                                                    if (!window.indexedDB) return Promise.resolve(null);
+                                                    if (dbPromise) return dbPromise;
+
+                                                    dbPromise = new Promise((resolve) => {
+                                                        try {
+                                                            const req = window.indexedDB.open(DB_NAME, DB_VERSION);
+                                                            req.onupgradeneeded = function(e) {
+                                                                const db = e.target.result;
+                                                                if (!db.objectStoreNames.contains('suggestions')) {
+                                                                    db.createObjectStore('suggestions', { keyPath: 'cache_key' });
+                                                                }
+                                                                if (!db.objectStoreNames.contains('meta')) {
+                                                                    db.createObjectStore('meta', { keyPath: 'id' });
+                                                                }
+                                                            };
+                                                            req.onsuccess = function(e) {
+                                                                const db = e.target.result;
+                                                                // Multi-Tenant Isolation (Rule 6): Enforce tenant boundary on open
+                                                                try {
+                                                                    const tx = db.transaction(['meta'], 'readonly');
+                                                                    const metaStore = tx.objectStore('meta');
+                                                                    const metaReq = metaStore.get('current_tenant');
+                                                                    metaReq.onsuccess = function() {
+                                                                        const meta = metaReq.result;
+                                                                        if (meta && meta.tenant_id !== CURRENT_TENANT_ID) {
+                                                                            // Tenant mismatch / switch: purge cache immediately to prevent leaks
+                                                                            const wipeTx = db.transaction(['suggestions', 'meta'], 'readwrite');
+                                                                            wipeTx.objectStore('suggestions').clear();
+                                                                            wipeTx.objectStore('meta').put({ id: 'current_tenant', tenant_id: CURRENT_TENANT_ID, updated_at: Date.now() });
+                                                                        } else if (!meta) {
+                                                                            const setTx = db.transaction(['meta'], 'readwrite');
+                                                                            setTx.objectStore('meta').put({ id: 'current_tenant', tenant_id: CURRENT_TENANT_ID, updated_at: Date.now() });
+                                                                        }
+                                                                    };
+                                                                } catch (err) {
+                                                                    console.warn('JeroAppTrackerStore tenancy check:', err);
+                                                                }
+                                                                resolve(db);
+                                                            };
+                                                            req.onerror = function() { resolve(null); };
+                                                        } catch (err) {
+                                                            resolve(null);
+                                                        }
+                                                    });
+
+                                                    return dbPromise;
+                                                }
+
+                                                return {
+                                                    get: async function(type, query) {
+                                                        const db = await getDB();
+                                                        if (!db || !query) return null;
+                                                        return new Promise((resolve) => {
+                                                            try {
+                                                                const key = type + '_' + query.trim().toLowerCase();
+                                                                const tx = db.transaction(['suggestions'], 'readonly');
+                                                                const store = tx.objectStore('suggestions');
+                                                                const req = store.get(key);
+                                                                req.onsuccess = function() {
+                                                                    const res = req.result;
+                                                                    if (res && (Date.now() - res.timestamp < SUGGESTIONS_TTL_MS)) {
+                                                                        resolve(res.data);
+                                                                    } else {
+                                                                        resolve(null);
+                                                                    }
+                                                                };
+                                                                req.onerror = function() { resolve(null); };
+                                                            } catch (e) {
+                                                                resolve(null);
+                                                            }
+                                                        });
+                                                    },
+                                                    set: async function(type, query, data) {
+                                                        const db = await getDB();
+                                                        if (!db || !query || !Array.isArray(data)) return;
+                                                        try {
+                                                             const key = type + '_' + query.trim().toLowerCase();
+                                                             const tx = db.transaction(['suggestions'], 'readwrite');
+                                                             const store = tx.objectStore('suggestions');
+                                                             store.put({
+                                                                 cache_key: key,
+                                                                 type: type,
+                                                                 query: query,
+                                                                 data: data,
+                                                                 timestamp: Date.now()
+                                                             });
+                                                         } catch (e) {
+                                                             // Non-fatal if storage quota exceeded
+                                                         }
+                                                    },
+                                                    purge: async function() {
+                                                        const db = await getDB();
+                                                        if (!db) return;
+                                                        try {
+                                                            const tx = db.transaction(['suggestions', 'meta'], 'readwrite');
+                                                            tx.objectStore('suggestions').clear();
+                                                            tx.objectStore('meta').clear();
+                                                        } catch (e) {}
+                                                    }
+                                                };
+                                            })();
+
                                             const inputElm = document.querySelector('#kt_tagify_users');
 
                                             const tagify = new Tagify(inputElm, {
@@ -1322,12 +1434,20 @@
                                                 };
                                             }
 
-                                            const fetchSuggestionsSkills = debounceskill(function(query) {
+                                            const fetchSuggestionsSkills = debounceskill(async function(query) {
+                                                if (!query || query.length < 1) return;
+                                                const cached = await JeroAppTrackerStore.get('skills', query);
+                                                if (cached && Array.isArray(cached)) {
+                                                    tagify.settings.whitelist = cached;
+                                                    tagify.dropdown.show.call(tagify);
+                                                    return;
+                                                }
                                                 $.ajax({
-                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
+                                                            JeroAppTrackerStore.set('skills', query, data);
                                                             tagify.settings.whitelist = data; // Update whitelist
                                                             tagify.dropdown.show.call(tagify);
                                                         } else {
@@ -1448,14 +1568,23 @@
                                             // earlier input handler did) rendered an empty, stuck
                                             // dropdown that never repopulated, which is why the city
                                             // autosuggest appeared broken.
-                                            const fetchSuggestions = debounce(function(query) {
+                                            const fetchSuggestions = debounce(async function(query) {
+                                                if (!query || query.length < 2) return;
+                                                const cached = await JeroAppTrackerStore.get('locations', query);
+                                                if (cached && Array.isArray(cached)) {
+                                                    tagifylocation.settings.whitelist = cached;
+                                                    simfCloseLocPanel();
+                                                    tagifylocation.dropdown.show.call(tagifylocation, query);
+                                                    return;
+                                                }
                                                 $.ajax({
                                                     url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
+                                                            JeroAppTrackerStore.set('locations', query, data);
                                                             // Tagify's dropdown filters against
-                                                            // settings.whitelist specifically ΓÇö a
+                                                            // settings.whitelist specifically — a
                                                             // top-level tagifylocation.whitelist isn't
                                                             // read anywhere, which is why suggestions
                                                             // stopped appearing after this was changed.
@@ -2468,6 +2597,15 @@
             var source_tab = $btn.data('row-from');
             var wiseId = $btn.data('row-wiseid');
 
+            // Phase 2: Client-side Idempotency UUID guard
+            var idempotencyKey = $btn.data('idempotency-key');
+            if (!idempotencyKey) {
+                idempotencyKey = (typeof crypto !== 'undefined' && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : 'sim_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+                $btn.data('idempotency-key', idempotencyKey);
+            }
+
             var url = '{{ route('service_company.apptracker.rec_candidate_assign') }}';
             var token = "{{ csrf_token() }}";
 
@@ -2512,7 +2650,8 @@
                                 'source_from_type': source_from_type,
                                 'source_jobid': source_jobid,
                                 'source_tab': source_tab,
-                                'wiseId': wiseId
+                                'wiseId': wiseId,
+                                'idempotency_key': idempotencyKey
                             },
                             success: function(response) {
                                 if (response.status == 'coinCheck') {
@@ -2522,6 +2661,7 @@
                                 }
 
                                 if (response.status == 'success') {
+                                    $btn.removeData('idempotency-key');
                                     simfMarkCandidateRowAdded($btn);
                                     simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
                                 } else {

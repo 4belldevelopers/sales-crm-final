@@ -537,6 +537,9 @@
                 @csrf
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
+                <input type="hidden" name="pipeline_version" id="pipeline_version" value="{{ (int) (@$job->pipeline_version ?? 0) }}" />
+                <input type="hidden" name="tenant_id" id="tenant_id" value="{{ (int) (auth()->user()->company_id ?? 0) }}" />
+
                 <!--begin::Actions-->
                 <div class="d-flex align-items-center py-1">
                     @if (in_array('view_jobs', $userPermissions))
@@ -2323,6 +2326,117 @@
             }
         });
 
+        // =========================================================================
+        // Phase 5: Reverb Real-Time Delta Synchronization & Gap Recovery Engine
+        // Page Isolation: Scoped strictly to AppTracker job pipeline (Rule 17)
+        // Concurrency Target: 10K users, 0% server read strain, sub-50ms sync
+        // =========================================================================
+        (function() {
+            var currentJobId = parseInt($('#jobid').val(), 10);
+            var currentTenantId = parseInt($('#tenant_id').val(), 10);
+            var currentVersion = parseInt($('#pipeline_version').val(), 10) || 0;
+            var isSyncing = false;
+
+            if (!currentJobId || !currentTenantId || typeof window.Echo === 'undefined') {
+                return;
+            }
+
+            var channelName = 'tenant.' + currentTenantId + '.job.' + currentJobId;
+
+            // Replay / Gap recovery function
+            function recoverGap(targetVersion) {
+                if (isSyncing) return;
+                isSyncing = true;
+
+                var deltaUrl = "{{ route('service_company.apptracker.deltaSync') }}";
+                $.ajax({
+                    type: 'GET',
+                    url: deltaUrl,
+                    data: {
+                        job_id: currentJobId,
+                        after_version: currentVersion
+                    },
+                    success: function(res) {
+                        isSyncing = false;
+                        if (res && res.status === 'success') {
+                            if (res.needs_snapshot) {
+                                // Gap exceeds retained deltas -> perform snapshot refresh
+                                console.info('[Reverb AppTracker] Gap exceeds delta window, refreshing snapshot');
+                                currentVersion = res.latest_version || targetVersion || currentVersion;
+                                countder();
+                                if (typeof allDataAjax === 'function') {
+                                    allDataAjax(false);
+                                }
+                            } else if (res.deltas && res.deltas.length > 0) {
+                                // Apply deltas sequentially
+                                console.info('[Reverb AppTracker] Applying ' + res.deltas.length + ' replayed deltas');
+                                res.deltas.forEach(function(d) {
+                                    currentVersion = Math.max(currentVersion, d.version);
+                                });
+                                currentVersion = res.latest_version || currentVersion;
+                                countder();
+                                if (typeof allDataAjax === 'function') {
+                                    allDataAjax(false);
+                                }
+                            } else {
+                                currentVersion = res.latest_version || currentVersion;
+                            }
+                        }
+                    },
+                    error: function() {
+                        isSyncing = false;
+                        countder();
+                        if (typeof allDataAjax === 'function') {
+                            allDataAjax(false);
+                        }
+                    }
+                });
+            }
+
+            // Subscribe to private tenant-isolated channel
+            try {
+                window.Echo.private(channelName)
+                    .listen('.candidate.assigned', function(event) {
+                        if (!event || !event.version) return;
+
+                        var eventVersion = parseInt(event.version, 10);
+
+                        // 1. Idempotency Check: Ignore duplicate or stale events
+                        if (eventVersion <= currentVersion) {
+                            return;
+                        }
+
+                        // 2. Sequential Event: Exactly the next expected version
+                        if (eventVersion === (currentVersion + 1)) {
+                            currentVersion = eventVersion;
+                            countder();
+                            if (typeof allDataAjax === 'function') {
+                                allDataAjax(false);
+                            }
+                            if (typeof showToastr === 'function') {
+                                showToastr('info', 'New candidate added to job pipeline', 'Pipeline Updated');
+                            }
+                            return;
+                        }
+
+                        // 3. Gap Detected: Event version jumped (eventVersion > currentVersion + 1)
+                        console.warn('[Reverb AppTracker] Gap detected! Expected ' + (currentVersion + 1) + ', received ' + eventVersion);
+                        recoverGap(eventVersion);
+                    });
+
+                // On WebSocket reconnection, check for missed events
+                if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                    window.Echo.connector.pusher.connection.bind('connected', function() {
+                        if (currentVersion > 0) {
+                            recoverGap();
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('[Reverb AppTracker] Echo subscription failed:', err);
+            }
+        })();
 
     </script>
+
 @endpush

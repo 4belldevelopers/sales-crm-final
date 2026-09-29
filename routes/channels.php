@@ -11,3 +11,8 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('company.{companyId}.dashboard', function ($user, int $companyId) {
     return (int) $user->company_id === (int) $companyId;
 });
+
+// Phase 4 & 5 — private tenant-isolated channel for job recruitment pipeline events
+Broadcast::channel('tenant.{companyId}.job.{jobId}', function ($user, int $companyId, int $jobId) {
+    return (int) $user->company_id === (int) $companyId;
+});
