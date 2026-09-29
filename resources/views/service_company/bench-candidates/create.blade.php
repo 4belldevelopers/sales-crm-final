@@ -1458,7 +1458,7 @@ if($snp_mode== 1){
 @endphp
 
 @push('footer-script')
-<script src="{{ asset('js/resume-presign.js') }}"></script>
+<script src="{{ asset('js/resume-presign.js') }}?v=20260929-godlevel"></script>
 @include('service_company.bench-candidates.jero-bench-parser')
 
 <script>
