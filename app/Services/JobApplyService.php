@@ -291,6 +291,7 @@ class JobApplyService
         DB::beginTransaction();
         try {
             $jobApplication->save();
+             GeneralMethod::careerStore($jobApplication->id);
 
             /* Atomic claim & R2 validation for session resume uploads */
             if ($resumeSession) {

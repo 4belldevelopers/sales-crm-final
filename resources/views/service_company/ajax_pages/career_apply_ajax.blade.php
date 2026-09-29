@@ -226,9 +226,9 @@
 
                     // dd($convertedAmounEctc, $convertedAmounCtc,$sal_mode,$convertedAmounEctc[$sal_mode]);
 
-                    // Convert INR to EUR
-                    $bill_rate_amount = $convertedAmounEctc[$sal_mode];
-                    $pay_rate_amount = $convertedAmounCtc[$sal_mode];
+                    $effective_sal_mode = ($sal_mode !== '' && $sal_mode !== null) ? $sal_mode : 0;
+                    $bill_rate_amount = $convertedAmounEctc[$effective_sal_mode] ?? 0;
+                    $pay_rate_amount = $convertedAmounCtc[$effective_sal_mode] ?? 0;
 
 
                     $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$jobMode);

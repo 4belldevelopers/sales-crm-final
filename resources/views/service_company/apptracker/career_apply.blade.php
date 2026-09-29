@@ -1579,7 +1579,7 @@
                                             </div>
                                             <div class="col-3">
                                                 <label class="wcf-mini-label">Min Salary</label>
-                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="0">
+                                                <input type="number" class="form-control form-control-solid" name="min_sal" id="min_sal" placeholder="Any" value="{{ $min_salary }}">
                                                 <div class="fv-plugins-message-container"></div>
                                                 <span class="form-text text-muted minimum_salary_word"></span>
                                             </div>
