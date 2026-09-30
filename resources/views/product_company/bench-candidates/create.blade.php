@@ -8,6 +8,53 @@ body {overflow-x:hidden; } .dropzone {padding: 1.8rem 1.75rem!important; border:
 #calender::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
 #dob::-webkit-inner-spin-button,
 #dob::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
 </style>
 @endpush
 
@@ -146,14 +193,18 @@ body {overflow-x:hidden; } .dropzone {padding: 1.8rem 1.75rem!important; border:
                   <div class="col-lg-4">
                     <label class="form-label required">Pay rate</label>
                     <div class="row">
-                      <div class="col-3 pe-0">
-                        <select class="form-select form-select-solid" arial-label="Select Currency" id="pay_rate_currency" name="pay_rate_currency">
+                      <div class="col-4 pe-0">
+                        <select class="form-select form-select-solid select2-currency-dropdown" arial-label="Select Currency" id="pay_rate_currency" name="pay_rate_currency" data-control="select2" data-placeholder="Search currency...">
 @foreach($currency as $key=>$val)
-	<option value="{{ $key }}">{{ $val }}</option>	
+    @php
+        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+        $short = !empty($cMeta['symbol']) ? $cMeta['code'].' ('.$cMeta['symbol'].')' : $cMeta['code'];
+    @endphp
+	<option value="{{ $key }}" data-code="{{ $val }}" data-short="{{ $short }}" data-search="{{ $cMeta['keywords'] }}">{{ $cMeta['label'] }}</option>	
 @endforeach
                         </select>
                       </div>
-                      <div class="col-5 px-2">
+                      <div class="col-4 px-2">
                         <input type="number" class="form-control form-control-solid" name="pay_rate_amount" id="pay_rate_amount" placeholder="Enter pay rate" value="">
                       </div>
                       <div class="col-4 pl-0">
@@ -168,14 +219,18 @@ body {overflow-x:hidden; } .dropzone {padding: 1.8rem 1.75rem!important; border:
                   <div class="col-lg-4">
                     <label class="form-label required">Bill rate</label>
                     <div class="row">
-                      <div class="col-3 pe-0">
-                        <select class="form-select form-select-solid" arial-label="Select Currency" name="bill_rate_currency" id="bill_rate_currency">
+                      <div class="col-4 pe-0">
+                        <select class="form-select form-select-solid select2-currency-dropdown" arial-label="Select Currency" name="bill_rate_currency" id="bill_rate_currency" data-control="select2" data-placeholder="Search currency...">
 @foreach($currency as $key=>$val)
-	<option value="{{ $key }}">{{ $val }}</option>	
+    @php
+        $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+        $short = !empty($cMeta['symbol']) ? $cMeta['code'].' ('.$cMeta['symbol'].')' : $cMeta['code'];
+    @endphp
+	<option value="{{ $key }}" data-code="{{ $val }}" data-short="{{ $short }}" data-search="{{ $cMeta['keywords'] }}">{{ $cMeta['label'] }}</option>	
 @endforeach
                         </select>
                       </div>
-                      <div class="col-5 px-2">
+                      <div class="col-4 px-2">
                         <input type="number" class="form-control form-control-solid" name="bill_rate_amount" id="bill_rate_amount" placeholder="Enter Bill rate" value="" >
                       </div>
                       <div class="col-4 pl-0">
@@ -404,14 +459,60 @@ document.addEventListener('DOMContentLoaded', function () {
 				});	
   });  		
   
+  function initBenchCurrencySelect2() {
+      if (window.jQuery && $.fn.select2) {
+          $('.select2-currency-dropdown').each(function() {
+              var $el = $(this);
+              if ($el.hasClass('select2-hidden-accessible')) {
+                  $el.select2('destroy');
+              }
+              $el.select2({
+                  width: '100%',
+                  dropdownParent: $(document.body),
+                  dropdownCssClass: 'br-currency-select2-dropdown',
+                  placeholder: 'Search currency...',
+                  minimumResultsForSearch: 0,
+                  templateSelection: function(data) {
+                      if (!data.id) return data.text;
+                      var $opt = $(data.element);
+                      var short = $opt.data('short') || $opt.data('code');
+                      return short ? short : data.text;
+                  },
+                  matcher: function (params, data) {
+                      if ($.trim(params.term) === '') {
+                          return data;
+                      }
+                      if (typeof data.text === 'undefined') {
+                          return null;
+                      }
+                      var term = params.term.toLowerCase();
+                      var text = data.text.toLowerCase();
+                      var $opt = $(data.element);
+                      var code = ($opt.data('code') || '').toString().toLowerCase();
+                      var searchKw = ($opt.data('search') || '').toString().toLowerCase();
+
+                      if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                          return data;
+                      }
+                      return null;
+                  }
+              });
+          });
+      }
+  }
+
   $('body').on('change', '#pay_rate_currency', function(){
-   			var	pay_rate_currency		=	$(this).val();
-			document.getElementById("bill_rate_currency").selectedIndex = pay_rate_currency;
-   });
-   $('body').on('change', '#bill_rate_currency', function(){
-   			var	bill_rate_currency		=	$(this).val();
-			document.getElementById("pay_rate_currency").selectedIndex = bill_rate_currency;
-   });
+      var val = $(this).val();
+      if ($('#bill_rate_currency').val() !== val) {
+          $('#bill_rate_currency').val(val).trigger('change.select2');
+      }
+  });
+  $('body').on('change', '#bill_rate_currency', function(){
+      var val = $(this).val();
+      if ($('#pay_rate_currency').val() !== val) {
+          $('#pay_rate_currency').val(val).trigger('change.select2');
+      }
+  });
    $('body').on('change', '#pay_rate_mode', function(){
    			var	pay_rate_mode	=	$(this).val();
 			document.getElementById("bill_rate_mode").selectedIndex = pay_rate_mode;
@@ -422,6 +523,7 @@ document.addEventListener('DOMContentLoaded', function () {
    });
    
    $( document ).ready(function() {
+       initBenchCurrencySelect2();
 									   $(".serving_notice_period").click(function(){
 											   $('#calender').val('');
 											   var selected 	=	$(".serving_notice_period:checked");

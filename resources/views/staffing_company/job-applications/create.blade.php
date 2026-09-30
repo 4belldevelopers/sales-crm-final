@@ -48,6 +48,53 @@ body
 {
    border-top:1px dashed gray;
 }
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
 </style>
 @endpush
 
@@ -397,23 +444,25 @@ body
                   <div class="col-lg-4">
                     <label class="form-label required">Current CTC</label>
                     <div class="row">
-                      <div class="col-3 pe-0">
-                        <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
+                      <div class="col-4 pe-0">
+                        <select class="form-select form-select-solid select2-candidate-currency" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur" data-control="select2" data-placeholder="Search currency...">
                           <?php 
                                        $current_ctc_cur	=	"";
                                        $current_ctc_cur	=	@$application->current_ctc_cur;
                                        foreach($currency as $key=>$val)
                                        {
-                                       $sel	=	'';
-                                       if($current_ctc_cur == $key){
-                                       $sel	=	'selected="selected"';	
-                                       }											
-                                       echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                           $sel	=	'';
+                                           if($current_ctc_cur == $key){
+                                               $sel	=	'selected="selected"';	
+                                           }
+                                           $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                           $short = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
+                                           echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($short) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';	
                                        }
                                     ?>
                         </select>
                       </div>
-                      <div class="col-5 px-2">
+                      <div class="col-4 px-2">
                         <input type="number" class="form-control form-control-solid" name="ctc" id="ctc" placeholder="Enter current CTC" value="<?php echo @$application->ctc; ?>">
                       </div>
                       <div class="col-4 pl-0">
@@ -440,8 +489,8 @@ body
                                  //echo '<pre>'; print_r( @$application); 
                                  ?>
                     <div class="row">
-                      <div class="col-3 pe-0">
-                        <select class="form-select form-select-solid" arial-label="Select Currency" name="current_ectc_cur" id="current_ectc_cur">
+                      <div class="col-4 pe-0">
+                        <select class="form-select form-select-solid select2-candidate-currency" arial-label="Select Currency" name="current_ectc_cur" id="current_ectc_cur" data-control="select2" data-placeholder="Search currency...">
                           <?php 
                                        $current_ectc_cur	=	"";
                                        $current_ectc_cur	=	@$application->current_ectc_cur;
@@ -450,13 +499,15 @@ body
                                           $sel	=	'';
                                           if($current_ectc_cur == $key){
                                              $sel	=	'selected="selected"';	
-                                          }	
-                                          echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';	
+                                          }
+                                          $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                          $short = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
+                                          echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($short) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';	
                                        }
                                     ?>
                         </select>
                       </div>
-                      <div class="col-5 px-2">
+                      <div class="col-4 px-2">
                         <input type="number" class="form-control form-control-solid" name="ectc" id="ectc" placeholder="Enter expected CTC" value="<?php echo @$application->ectc; ?>" >
                       </div>
                       <div class="col-4 pl-0">
@@ -1111,13 +1162,63 @@ new Tagify(input2);
    								
    	});
 		
+   function initStaffingCandidateCurrencySelect2() {
+       if (window.jQuery && $.fn.select2) {
+           $('.select2-candidate-currency').each(function() {
+               var $el = $(this);
+               if ($el.hasClass('select2-hidden-accessible')) {
+                   $el.select2('destroy');
+               }
+               $el.select2({
+                   width: '100%',
+                   dropdownParent: $(document.body),
+                   dropdownCssClass: 'br-currency-select2-dropdown',
+                   placeholder: 'Search currency...',
+                   minimumResultsForSearch: 0,
+                   templateSelection: function(data) {
+                       if (!data.id) return data.text;
+                       var $opt = $(data.element);
+                       var short = $opt.data('short') || $opt.data('code');
+                       return short ? short : data.text;
+                   },
+                   matcher: function (params, data) {
+                       if ($.trim(params.term) === '') {
+                           return data;
+                       }
+                       if (typeof data.text === 'undefined') {
+                           return null;
+                       }
+                       var term = params.term.toLowerCase();
+                       var text = data.text.toLowerCase();
+                       var $opt = $(data.element);
+                       var code = ($opt.data('code') || '').toString().toLowerCase();
+                       var searchKw = ($opt.data('search') || '').toString().toLowerCase();
+
+                       if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                           return data;
+                       }
+                       return null;
+                   }
+               });
+           });
+       }
+   }
+
+   $(document).ready(function() {
+       initStaffingCandidateCurrencySelect2();
+   });
+
    $('body').on('change', '#current_ctc_cur', function(){
-   			var	current_ctc_cur		=	$(this).val();
-			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
+       var val = $(this).val();
+       if ($('#current_ectc_cur').val() !== val) {
+           $('#current_ectc_cur').val(val).trigger('change.select2');
+       }
    });
    $('body').on('change', '#current_ectc_cur', function(){
-   			var	current_ectc_cur	=	$(this).val();
-			document.getElementById("current_ctc_cur").selectedIndex = current_ectc_cur;
+       var val = $(this).val();
+       if ($('#current_ctc_cur').val() !== val) {
+           $('#current_ctc_cur').val(val).trigger('change.select2');
+       }
    });
    $('body').on('change', '#current_ctc_mode', function(){
    			var	current_ctc_mode	=	$(this).val();
