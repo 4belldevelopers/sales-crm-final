@@ -1563,12 +1563,13 @@ textarea.has-validation-error:focus,
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    min-height: 46px !important;
-    height: 46px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
     padding: 0 14px !important;
     background: #ffffff !important;
     border: 1px solid #d8deec !important;
-    border-radius: 7px !important;
+    border-radius: 6px !important;
     cursor: pointer !important;
     outline: none !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
@@ -1839,6 +1840,9 @@ textarea.has-validation-error:focus,
     font-size: 18px !important;
     color: #94a3b8 !important;
     display: block !important;
+    margin-bottom: 6px !important;
+}
+
 /* Location Combobox Polish Styles */
 .jero-cs-trigger-clear {
     display: inline-flex !important;
@@ -1905,6 +1909,88 @@ textarea.has-validation-error:focus,
     color: #3730a3;
     border-color: #c7d2fe;
     font-weight: 600;
+}
+
+/* ==========================================================================
+   Candidate Profile Card: Strict 42px Equal Height & Alignment Engine
+   Ensures 100% pixel-perfect equal height (42px) across all 8 controls:
+   1. Full Name (text input)
+   2. Email (email input)
+   3. Mobile Number (phone input + iti flag wrapper)
+   4. Nationality (custom combobox)
+   5. Current Location (custom combobox)
+   6. Date of Birth (date input)
+   7. Gender (select dropdown)
+   8. Highest Qualification (custom combobox)
+   ========================================================================== */
+#talent_create_app #bd-candidate-profile-card .bd-control,
+#talent_create_app #bd-candidate-profile-card .bd-phone-control,
+#talent_create_app #bd-candidate-profile-card .bd-control--select,
+#talent_create_app #bd-candidate-profile-card .bd-control--has-combobox,
+#talent_create_app .bd-card:has(#full_name) .bd-control,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control,
+#talent_create_app .bd-card:has(#full_name) .bd-control--select,
+#talent_create_app .bd-card:has(#full_name) .bd-control--has-combobox {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-control input,
+#talent_create_app #bd-candidate-profile-card .bd-phone-control input,
+#talent_create_app #bd-candidate-profile-card .bd-control select,
+#talent_create_app #bd-candidate-profile-card .bd-control input[type="date"],
+#talent_create_app #bd-candidate-profile-card .jero-custom-select .jero-cs-trigger,
+#talent_create_app .bd-card:has(#full_name) .bd-control input,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control input,
+#talent_create_app .bd-card:has(#full_name) .bd-control select,
+#talent_create_app .bd-card:has(#full_name) .bd-control input[type="date"],
+#talent_create_app .bd-card:has(#full_name) .jero-custom-select .jero-cs-trigger {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    line-height: 40px !important;
+    box-sizing: border-box !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-control input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
+#talent_create_app #bd-candidate-profile-card .bd-control input[type="date"],
+#talent_create_app .bd-card:has(#full_name) .bd-control input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
+#talent_create_app .bd-card:has(#full_name) .bd-control input[type="date"] {
+    padding-left: 42px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-phone-control .iti,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control .iti {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    box-sizing: border-box !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-phone-control .iti__selected-flag,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control .iti__selected-flag {
+    height: 40px !important;
+    max-height: 40px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-field label,
+#talent_create_app .bd-card:has(#full_name) .bd-field label {
+    min-height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-bottom: 7px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />

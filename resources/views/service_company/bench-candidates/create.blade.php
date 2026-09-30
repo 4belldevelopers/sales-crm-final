@@ -448,7 +448,7 @@ if($snp_mode== 1){
             <!--end::Upload Photo & Resume/CV-->
 
             <!-- Basic Details -->
-            <div class="fs bd-card">
+            <div class="fs bd-card bd-card--candidate-profile" id="bd-candidate-profile-card">
               <div class="bd-hero">
                 <div class="bd-hero-title">
                   <span class="bd-hero-icon"><i class="fa-regular fa-user"></i></span>
@@ -486,49 +486,7 @@ if($snp_mode== 1){
                 </div>
 
                 <div class="bd-grid bd-grid--three">
-                  <div class="fg fv-row bd-field">
-                    <label>Current Location <span class="rq">*</span></label>
-                    <div class="bd-control bd-control--has-combobox">
-                      <i class="fa-solid fa-location-dot"></i>
-                      {{-- Canonical Form Fields (0% MySQL Reads, Server Trust Boundary Compliant) --}}
-                      <input type="hidden" name="location_city_id" id="location_city_id" value="{{ @$application->city_id ?? '' }}">
-                      <input type="hidden" name="location_state_id" id="location_state_id" value="{{ @$application->state ?? '' }}">
-                      <input type="hidden" name="location_country_id" id="location_country_id" value="{{ @$application->country ?? '' }}">
-                      <input type="hidden" name="location_canonical_label" id="location_canonical_label" value="{{ @$default_loc ?? '' }}">
-                      <input type="hidden" name="location_sig" id="location_sig" value="">
-
-                      {{-- Backward-Compatible Bridge Payload for FormValidation & Legacy Interop --}}
-                      <input type="hidden" name="kt_tagify_work_location" id="kt_tagify_work_location" value="{{ @$default_loc ? json_encode([['value' => @$default_loc]]) : '' }}">
-
-                      {{-- JERO Native Custom Combobox Mount Point --}}
-                      <div class="jero-custom-select" id="jero-cs-location" data-field="location">
-                        <button type="button" class="jero-cs-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="jero-cs-location-list">
-                          <span class="jero-cs-left">
-                            <span class="jero-cs-icon"><i class="fa-solid fa-location-dot"></i></span>
-                            <span class="jero-cs-value jero-cs-placeholder">Search city, state or country</span>
-                          </span>
-                          <span class="jero-cs-right">
-                            <span class="jero-cs-trigger-clear" title="Clear selection" style="display:none;">&times;</span>
-                            <i class="fa-solid fa-chevron-down jero-cs-arrow"></i>
-                          </span>
-                        </button>
-                        <div class="jero-cs-dropdown" style="display: none;">
-                          <div class="jero-cs-search-box">
-                            <i class="fa-solid fa-magnifying-glass jero-cs-search-icon"></i>
-                            <input type="text" class="jero-cs-search-input" placeholder="Search city, state or country..." autocomplete="off" />
-                            <i class="fa-solid fa-spinner jero-cs-search-spinner" style="display:none;"></i>
-                            <button type="button" class="jero-cs-search-clear" style="display:none;">&times;</button>
-                          </div>
-                          <div class="jero-cs-list" id="jero-cs-location-list" role="listbox"></div>
-                          <div class="jero-cs-empty is-hidden"><i class="fa-regular fa-face-frown"></i> No locations matching your search.</div>
-                        </div>
-                      </div>
-                    </div>
-                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State --}}
-                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none;"></div>
-                  </div>
-
-                  {{-- Nationality: Reordered before Qualification to govern adaptive curation (Left-to-Right Flow) --}}
+                  {{-- Nationality: Reordered to Box 1 in Row 2 --}}
                   <div class="fg fv-row bd-field">
                     <label>Nationality <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
@@ -628,7 +586,76 @@ if($snp_mode== 1){
                     </div>
                   </div>
 
-                  {{-- Highest Qualification: Adaptive Country Curation + Global Alias Escape Search --}}
+                  {{-- Current Location: Reordered to Box 2 in Row 2 --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Current Location <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--has-combobox">
+                      <i class="fa-solid fa-location-dot"></i>
+                      {{-- Canonical Form Fields (0% MySQL Reads, Server Trust Boundary Compliant) --}}
+                      <input type="hidden" name="location_city_id" id="location_city_id" value="{{ @$application->city_id ?? '' }}">
+                      <input type="hidden" name="location_state_id" id="location_state_id" value="{{ @$application->state ?? '' }}">
+                      <input type="hidden" name="location_country_id" id="location_country_id" value="{{ @$application->country ?? '' }}">
+                      <input type="hidden" name="location_canonical_label" id="location_canonical_label" value="{{ @$default_loc ?? '' }}">
+                      <input type="hidden" name="location_sig" id="location_sig" value="">
+
+                      {{-- Backward-Compatible Bridge Payload for FormValidation & Legacy Interop --}}
+                      <input type="hidden" name="kt_tagify_work_location" id="kt_tagify_work_location" value="{{ @$default_loc ? json_encode([['value' => @$default_loc]]) : '' }}">
+
+                      {{-- JERO Native Custom Combobox Mount Point --}}
+                      <div class="jero-custom-select" id="jero-cs-location" data-field="location">
+                        <button type="button" class="jero-cs-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="jero-cs-location-list">
+                          <span class="jero-cs-left">
+                            <span class="jero-cs-icon"><i class="fa-solid fa-location-dot"></i></span>
+                            <span class="jero-cs-value jero-cs-placeholder">Search city, state or country</span>
+                          </span>
+                          <span class="jero-cs-right">
+                            <span class="jero-cs-trigger-clear" title="Clear selection" style="display:none;">&times;</span>
+                            <i class="fa-solid fa-chevron-down jero-cs-arrow"></i>
+                          </span>
+                        </button>
+                        <div class="jero-cs-dropdown" style="display: none;">
+                          <div class="jero-cs-search-box">
+                            <i class="fa-solid fa-magnifying-glass jero-cs-search-icon"></i>
+                            <input type="text" class="jero-cs-search-input" placeholder="Search city, state or country..." autocomplete="off" />
+                            <i class="fa-solid fa-spinner jero-cs-search-spinner" style="display:none;"></i>
+                            <button type="button" class="jero-cs-search-clear" style="display:none;">&times;</button>
+                          </div>
+                          <div class="jero-cs-list" id="jero-cs-location-list" role="listbox"></div>
+                          <div class="jero-cs-empty is-hidden"><i class="fa-regular fa-face-frown"></i> No locations matching your search.</div>
+                        </div>
+                      </div>
+                    </div>
+                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State --}}
+                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none;"></div>
+                  </div>
+
+                  {{-- Date of Birth (Optional): Reordered to Box 3 in Row 2 --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Date of Birth <span class="opt text-muted fw-normal fs-8">(Optional)</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-calendar-days"></i>
+                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Row 3: Gender & Highest Qualification --}}
+                <div class="bd-grid bd-grid--two">
+                  {{-- Gender: Box 1 in Row 3 --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Gender <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-user"></i>
+                      <select name="gender" id="gender">
+                        <option value="">Select gender</option>
+                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {{-- Highest Qualification: Reordered to Box 2 in Row 3 --}}
                   <div class="fg fv-row bd-field">
                     <label>Highest Qualification <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
@@ -762,29 +789,6 @@ if($snp_mode== 1){
                           </optgroup>
                         @endif
                       </select>
-                    </div>
-                  </div>
-                </div>
-
-                {{-- Gender & Date of Birth: moved into main Candidate Profile card --}}
-                <div class="bd-grid bd-grid--two">
-                  <div class="fg fv-row bd-field">
-                    <label>Gender <span class="rq">*</span></label>
-                    <div class="bd-control bd-control--select">
-                      <i class="fa-regular fa-user"></i>
-                      <select name="gender" id="gender">
-                        <option value="">Select gender</option>
-                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="fg fv-row bd-field">
-                    <label>Date of Birth</label>
-                    <div class="bd-control">
-                      <i class="fa-regular fa-calendar-days"></i>
-                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
                     </div>
                   </div>
                 </div>
