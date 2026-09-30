@@ -72,7 +72,81 @@
     #jrwrap .input-with-icon .form-input { padding-left: 38px; }
     #jrwrap .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px; height: 16px; }
     #jrwrap .salary-input-wrapper { display: flex; gap: 8px; }
-    #jrwrap .currency-select { width: 90px; flex-shrink: 0; }
+    #jrwrap .currency-select { width: 140px; min-width: 130px; flex-shrink: 0; }
+    #jrwrap .salary-input-wrapper .select2-container { width: 140px !important; min-width: 130px !important; flex-shrink: 0; }
+    #jrwrap .salary-input-wrapper .select2-container--default .select2-selection--single {
+        height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+        padding-right: 26px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        box-sizing: border-box;
+        background-color: var(--card-bg, #ffffff);
+        color: var(--text-primary, #1e293b);
+    }
+    #jrwrap .salary-input-wrapper .select2-container--default.select2-container--open .select2-selection--single,
+    #jrwrap .salary-input-wrapper .select2-container--default .select2-selection--single:focus {
+        border-color: var(--border-focus, #3b82f6) !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+        outline: none;
+    }
+    #jrwrap .salary-input-wrapper .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+        top: 1px;
+        right: 6px;
+    }
+    .br-currency-select2-dropdown {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+        overflow: hidden;
+        z-index: 1060;
+    }
+    .br-currency-select2-dropdown .select2-search--dropdown {
+        padding: 8px 10px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 13px;
+        outline: none;
+        font-family: 'Poppins', sans-serif;
+        background-color: #ffffff;
+        width: 100%;
+    }
+    .br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .br-currency-select2-dropdown .select2-results__options {
+        max-height: 260px;
+    }
+    .br-currency-select2-dropdown .select2-results__option {
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+        line-height: 1.4;
+    }
+    .br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+    }
+    .br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+    }
     #jrwrap .range-group { display: flex; align-items: flex-start; gap: 12px; }
     #jrwrap .range-field { flex: 1; }
     #jrwrap .range-field-label { font-size: 11px; color: var(--text-muted); margin-top: 6px; display: block; text-align: center; }
@@ -893,7 +967,9 @@
                                                 $sel = '';
                                                 if (@$job->min_salary_currency === null) { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
                                                 else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                                echo '<option value="' . $key . '" ' . $sel . '>' . $val . '</option>';
+                                                $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                                $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
+                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
                                             }
                                             ?>
                                         </select>
@@ -910,7 +986,9 @@
                                                 $sel = '';
                                                 if (@$job->max_salary_currency === null) { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
                                                 else { if (@$job->max_salary_currency == $key) { $sel = 'selected="selected"'; } }
-                                                echo '<option value="' . $key . '" ' . $sel . '>' . $val . '</option>';
+                                                $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                                $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
+                                                echo '<option value="' . $key . '" data-code="' . e($val) . '" data-short="' . e($shortText) . '" data-search="' . e($cMeta['keywords']) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
                                             }
                                             ?>
                                         </select>
@@ -1861,7 +1939,8 @@
                                     if ($cur_sc == @$key) {
                                         $sel = 'selected="selected"';
                                     }
-                                    echo '<option value="' . $key . '"  ' . $sel . '>' . $val . '</option>';
+                                    $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                    echo '<option value="' . $key . '" data-code="' . e($val) . '" ' . $sel . '>' . e($cMeta['label']) . '</option>';
                                 }
                             ?>
                         </select>
@@ -2744,12 +2823,58 @@
             }
         }
 
-        // ---- Currency / salary-mode mirroring (original) ----
+        // ---- Currency Select2 & mirroring ----
+        if (window.jQuery && $.fn.select2) {
+            $('.currency-select').select2({
+                width: '140px',
+                dropdownParent: $(document.body),
+                dropdownCssClass: 'br-currency-select2-dropdown',
+                placeholder: 'Search currency...',
+                minimumResultsForSearch: 0,
+                templateSelection: function(data) {
+                    if (!data.id) return data.text;
+                    var $el = $(data.element);
+                    var short = $el.data('short') || $el.data('code');
+                    return short ? short : data.text;
+                },
+                matcher: function (params, data) {
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    if (typeof data.text === 'undefined') {
+                        return null;
+                    }
+                    var term = params.term.toLowerCase();
+                    var text = data.text.toLowerCase();
+                    var $el = $(data.element);
+                    var code = ($el.data('code') || '').toString().toLowerCase();
+                    var searchKw = ($el.data('search') || '').toString().toLowerCase();
+
+                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                        return data;
+                    }
+                    return null;
+                }
+            });
+        }
+
         $('body').on('change', '#min_salary_currency', function() {
-            document.getElementById("max_salary_currency").selectedIndex = this.selectedIndex;
+            var val = $(this).val();
+            if ($('#max_salary_currency').val() !== val) {
+                $('#max_salary_currency').val(val).trigger('change.select2');
+            }
+            if ($('#salary_currency').length) {
+                $('#salary_currency').val(val);
+            }
         });
         $('body').on('change', '#max_salary_currency', function() {
-            document.getElementById("min_salary_currency").selectedIndex = this.selectedIndex;
+            var val = $(this).val();
+            if ($('#min_salary_currency').val() !== val) {
+                $('#min_salary_currency').val(val).trigger('change.select2');
+            }
+            if ($('#salary_currency').length) {
+                $('#salary_currency').val(val);
+            }
         });
         $('body').on('change', '#min_sal_mode', function() {
             document.getElementById("max_sal_mode").selectedIndex = this.selectedIndex;
@@ -3320,7 +3445,16 @@
         }
 
         // ---------- REVIEW (Step 4) ----------
-        function getSelText(id) { var el = document.getElementById(id); if (!el) return ''; if (el.tagName === 'SELECT') { return el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : ''; } return el.value || ''; }
+        function getSelText(id) {
+            var el = document.getElementById(id);
+            if (!el) return '';
+            if (el.tagName === 'SELECT') {
+                var opt = el.options[el.selectedIndex];
+                if (!opt) return '';
+                return opt.getAttribute('data-code') || opt.text || '';
+            }
+            return el.value || '';
+        }
         function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = (val && String(val).trim() !== '') ? val : '-'; }
         function clientName() {
             var el = document.getElementById('client_id');
