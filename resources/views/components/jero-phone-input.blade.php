@@ -92,7 +92,8 @@
         </label>
     @endif
 
-    <div class="jero-phone-input-group position-relative d-flex align-items-center">
+    <div class="jero-phone-input-group position-relative d-flex align-items-center"
+         style="position: relative !important; display: flex !important; align-items: center !important; width: 100% !important; max-width: 100% !important; height: 38px !important; min-height: 38px !important; max-height: 38px !important; background: #ffffff !important; background-color: #ffffff !important; border: 1px solid #d8deec !important; border-radius: 6px !important; box-sizing: border-box !important; overflow: hidden !important;">
         <!-- Hidden input for Country Code (e.g. +91) submitted with form -->
         <input type="hidden" 
                name="{{ $countryCodeName }}" 
@@ -106,7 +107,8 @@
                 id="{{ $id }}_btn"
                 aria-haspopup="listbox"
                 aria-expanded="false"
-                title="Select country code">
+                title="Select country code"
+                style="display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 100% !important; min-height: 36px !important; max-height: 36px !important; background: transparent !important; background-color: transparent !important; border: 0 none transparent !important; border-radius: 5px 0 0 5px !important; padding: 0 10px 0 12px !important; margin: 0 !important; box-shadow: none !important; outline: none !important; flex-shrink: 0 !important;">
             <span class="jero-selected-flag" id="{{ $id }}_flag" data-iso="{{ $initialIso }}"></span>
             <span class="jero-selected-dial" id="{{ $id }}_dial">{{ $initialCode }}</span>
             <i class="fa fa-chevron-down jero-chevron"></i>
@@ -125,7 +127,8 @@
                maxlength="{{ $initialLength }}"
                autocomplete="tel-national"
                inputmode="numeric"
-               {{ $required ? 'required' : '' }}>
+               {{ $required ? 'required' : '' }}
+               style="flex: 1 1 auto !important; min-width: 0 !important; width: 100% !important; height: 100% !important; min-height: 0 !important; max-height: 100% !important; background: transparent !important; background-color: transparent !important; border: 0 none transparent !important; border-width: 0 !important; border-style: none !important; border-color: transparent !important; box-shadow: none !important; outline: none !important; padding: 0 54px 0 10px !important; margin: 0 !important; box-sizing: border-box !important; color: #181c32 !important; font-size: 13px !important; font-weight: 500 !important; font-family: 'Poppins', Helvetica, sans-serif !important;">
 
         <!-- Real-Time Visual Digit Counter Badge -->
         <span class="badge {{ $initialDigitsCount === $initialLength && $initialLength > 0 ? 'bg-light-success text-success' : 'bg-light text-muted' }} jero-digit-counter"
@@ -177,45 +180,72 @@
 }
 
 /* Enterprise unified pure white container */
-.jero-phone-input-group {
-  position: relative;
+.jero-phone-input-group,
+.jero-phone-box-wrapper .jero-phone-input-group,
+.candidate-card .jero-phone-box-wrapper .jero-phone-input-group,
+.job-candidate-create .jero-phone-input-group,
+.candidate-profile-grid .jero-phone-input-group,
+.candidate-secondary-grid .jero-phone-input-group {
+  position: relative !important;
   display: flex !important;
   align-items: center !important;
-  width: 100%;
+  width: 100% !important;
+  max-width: 100% !important;
   height: 38px !important;
   min-height: 38px !important;
+  max-height: 38px !important;
+  background: #ffffff !important;
   background-color: #ffffff !important;
   border: 1px solid #d8deec !important;
   border-radius: 6px !important;
   box-sizing: border-box !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  overflow: visible;
+  overflow: hidden !important;
 }
 
-.jero-phone-input-group:hover:not(:focus-within) {
+.jero-phone-input-group:hover:not(:focus-within),
+.jero-phone-box-wrapper .jero-phone-input-group:hover:not(:focus-within),
+.candidate-card .jero-phone-box-wrapper .jero-phone-input-group:hover:not(:focus-within) {
   border-color: #b5b5c3 !important;
 }
 
-.jero-phone-input-group:focus-within {
+.jero-phone-input-group:focus-within,
+.jero-phone-box-wrapper .jero-phone-input-group:focus-within,
+.candidate-card .jero-phone-box-wrapper .jero-phone-input-group:focus-within,
+.job-candidate-create .jero-phone-input-group:focus-within {
   border-color: #009ef7 !important;
   box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
 }
 
+.jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper .jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper .jero-phone-input-group:has(.is-invalid) {
+  border-color: #f1416c !important;
+  box-shadow: 0 0 0 3px rgba(241, 65, 108, 0.12) !important;
+}
+
 /* Country picker button - centered vertically and horizontally */
-.jero-country-picker-btn {
+.jero-country-picker-btn,
+.jero-phone-box-wrapper .jero-phone-input-group .jero-country-picker-btn,
+.candidate-card .jero-phone-box-wrapper .jero-country-picker-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   height: 100% !important;
   min-height: 36px !important;
+  max-height: 36px !important;
   background: transparent !important;
   background-color: transparent !important;
-  border: none !important;
+  border: 0 none transparent !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   padding: 0 10px 0 12px !important;
   margin: 0 !important;
   cursor: pointer !important;
   user-select: none !important;
   outline: none !important;
+  box-shadow: none !important;
   gap: 6px !important;
   flex-shrink: 0 !important;
   line-height: 1 !important;
@@ -223,7 +253,6 @@
   border-bottom-left-radius: 5px !important;
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
-  box-shadow: none !important;
   transition: background-color 0.15s ease !important;
 }
 
@@ -283,13 +312,27 @@
   margin: 0 2px !important;
 }
 
-/* Phone digits input */
-.jero-phone-main-input {
+/* Phone digits input - completely impervious to external card/input styles */
+.jero-phone-main-input,
+.jero-phone-box-wrapper .jero-phone-input-group input.jero-phone-main-input,
+.candidate-card .jero-phone-box-wrapper input.jero-phone-main-input,
+.job-candidate-create .candidate-card .jero-phone-input-group input,
+.job-candidate-create .bd-card .jero-phone-input-group #phone,
+.job-candidate-create .bd-card .jero-phone-input-group #secondary_mobile,
+.candidate-profile-grid .jero-phone-input-group input,
+.candidate-secondary-grid .jero-phone-input-group input,
+#phone.jero-phone-main-input,
+#secondary_mobile.jero-phone-main-input {
   flex: 1 1 auto !important;
+  min-width: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 36px !important;
-  border: none !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  border: 0 none transparent !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   outline: none !important;
   box-shadow: none !important;
   background: transparent !important;
@@ -299,9 +342,10 @@
   font-weight: 500 !important;
   font-family: 'Poppins', Helvetica, sans-serif !important;
   padding: 0 54px 0 10px !important;
+  margin: 0 !important;
   letter-spacing: 0.3px !important;
-  border-top-right-radius: 5px !important;
-  border-bottom-right-radius: 5px !important;
+  border-radius: 0 5px 5px 0 !important;
+  box-sizing: border-box !important;
 }
 
 .jero-phone-main-input::placeholder {
@@ -311,9 +355,18 @@
   opacity: 1 !important;
 }
 
-.jero-phone-main-input:focus {
-  outline: none !important;
+.jero-phone-main-input:focus,
+.jero-phone-box-wrapper .jero-phone-input-group input.jero-phone-main-input:focus,
+.candidate-card .jero-phone-box-wrapper input.jero-phone-main-input:focus,
+.job-candidate-create .candidate-card .jero-phone-input-group input:focus,
+#phone.jero-phone-main-input:focus,
+#secondary_mobile.jero-phone-main-input:focus {
+  border: 0 none transparent !important;
+  border-color: transparent !important;
   box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Real-time digit counter badge */
