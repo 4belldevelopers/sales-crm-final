@@ -30,6 +30,7 @@
 15. OpenDoc WASM Engine Isolation: Download Resume Center, Forward Resume, and Online Editor are strictly 3 separate engines. Never merge them.
 16. **Document the purpose of every new code** — intent comment/docblock on each new file/class/method; intent + tenancy note on complex/raw queries. See [docs/CODE_DOCUMENTATION_STANDARD.md](docs/CODE_DOCUMENTATION_STANDARD.md).
 17. **Complete Page/Blade Isolation:** Every page/blade designed, developed, or updated must be completely isolated to that page. Do NOT reuse or share stateful JS/drawers/scripts across pages; changes to one page must never touch or affect another page.
+18. **Product Company & Staffing Company Code Freeze:** Files under `resources/views/product_company/` and `resources/views/staffing_company/` (and their respective controllers/modules) are strictly frozen. Do NOT edit or modify them unless explicitly requested. Currency and UI enhancements are strictly scoped to **Service Company** and **Admin**.
 
 ## Build/run/verify
 See [docs/VERIFY.md](docs/VERIFY.md). Key: `php -l`, `./vendor/bin/pint`,
