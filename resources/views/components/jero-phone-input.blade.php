@@ -78,6 +78,23 @@
     $initialLength = $dialToLen[$initialCode] ?? 10;
     $initialValue = old($name, $value);
     $initialDigitsCount = strlen(preg_replace('/[^\d]/', '', (string)$initialValue));
+
+    $getInitialFlagSvg = function($iso) {
+        $code = strtoupper($iso ?: 'IN');
+        $svgs = [
+            'IN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+            'US' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+            'GB' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="ssr_gb"><rect width="640" height="480"/></clipPath><g clip-path="url(#ssr_gb)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+            'AE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+            'CA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+            'AU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><g transform="scale(0.5)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+            'SG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+            'SA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+            'DE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+            'FR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>',
+        ];
+        return $svgs[$code] ?? ('<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#1e3c72" rx="40"/><text x="320" y="310" fill="#ffffff" font-size="240" font-family="\'Poppins\', sans-serif" font-weight="bold" text-anchor="middle">' . $code . '</text></svg>');
+    };
 @endphp
 
 <div class="jero-phone-box-wrapper w-100 {{ $class }}" 
@@ -107,10 +124,7 @@
                 aria-haspopup="listbox"
                 aria-expanded="false"
                 title="Select country code">
-            <span class="jero-selected-flag" id="{{ $id }}_flag">
-                <img src="https://flagcdn.com/w20/{{ strtolower($initialIso) }}.png" width="20" height="14" alt="{{ $initialIso }}" class="rounded-1 shadow-xs" style="object-fit: cover; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
-                <span class="jero-flag-fallback badge bg-light-primary text-primary px-1 py-0 fs-9 fw-bold" style="display:none; font-size:10px; line-height:14px;">{{ $initialIso }}</span>
-            </span>
+            <span class="jero-selected-flag" id="{{ $id }}_flag">{!! $getInitialFlagSvg($initialIso) !!}</span>
             <span class="jero-selected-dial" id="{{ $id }}_dial">{{ $initialCode }}</span>
             <i class="fa fa-chevron-down jero-chevron"></i>
         </button>
@@ -143,15 +157,20 @@
          style="display: none; position: absolute; top: calc(100% + 4px); left: 0; z-index: 1060; width: 340px; max-height: 360px; overflow: hidden; border-radius: 0.625rem; box-shadow: 0 10px 30px rgba(0,0,0,0.18); background: #ffffff; border: 1px solid #dce3ee;">
 
         <!-- Search Header -->
-        <div class="p-2 border-bottom bg-light d-flex align-items-center" style="border-top-left-radius: 0.625rem; border-top-right-radius: 0.625rem;">
+        <div class="p-2 border-bottom bg-light d-flex align-items-center position-relative" style="border-top-left-radius: 0.625rem; border-top-right-radius: 0.625rem;">
             <i class="fa fa-search text-gray-500 ms-2 me-2 fs-7" aria-hidden="true"></i>
             <input type="text"
-                   class="form-control form-control-sm form-control-solid fs-7 border-0 bg-white jero-search-input"
+                   class="form-control form-control-sm form-control-solid fs-7 border-0 bg-white jero-search-input pe-6"
                    placeholder="Search country or code (e.g. India, +91)..."
                    id="{{ $id }}_search"
                    autocomplete="off"
                    spellcheck="false"
                    style="outline: none; box-shadow: none;">
+            <span class="jero-search-clear text-gray-500 cursor-pointer position-absolute end-0 me-3 fs-7"
+                  style="display: none; line-height: 1; user-select: none;"
+                  title="Clear search">
+                <i class="fa fa-times-circle"></i>
+            </span>
         </div>
 
         <!-- Country List -->
@@ -485,6 +504,65 @@
     { iso: "UZ", name: "Uzbekistan", dial: "+998", len: 9 }
   ];
 
+  window.__JERO_FLAGS_SVG__ = {
+    'IN': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+    'US': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+    'GB': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="js_gb"><rect width="640" height="480"/></clipPath><g clip-path="url(#js_gb)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+    'AE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+    'CA': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+    'AU': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><g transform="scale(0.5)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+    'SG': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+    'SA': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+    'DE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+    'FR': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>',
+    'QA': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#8d1b3d"/><polygon points="0,0 200,0 260,26 200,53 260,80 200,106 260,133 200,160 260,186 200,213 260,240 200,266 260,293 200,320 260,346 200,373 260,400 200,426 260,453 200,480 0,480" fill="#ffffff"/></svg>',
+    'KW': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#007a3d"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#ce1126"/><polygon points="0,0 180,140 180,340 0,480" fill="#000000"/></svg>',
+    'OM': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#db161b"/><rect y="320" width="640" height="160" fill="#008000"/><rect width="180" height="480" fill="#db161b"/><circle cx="90" cy="90" r="30" fill="#ffffff"/></svg>',
+    'BH': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ce1126"/><polygon points="0,0 180,0 250,48 180,96 250,144 180,192 250,240 180,288 250,336 180,384 250,432 180,480 0,480" fill="#ffffff"/></svg>',
+    'MY': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#cc0000"/><path d="M0,34h640M0,102h640M0,170h640M0,238h640M0,306h640M0,374h640M0,442h640" stroke="#ffffff" stroke-width="34"/><rect width="320" height="272" fill="#000066"/><circle cx="150" cy="136" r="60" fill="#ffcc00"/><circle cx="170" cy="136" r="50" fill="#000066"/><circle cx="205" cy="136" r="30" fill="#ffcc00"/></svg>',
+    'PH': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#0038a8"/><rect y="240" width="640" height="240" fill="#ce1126"/><polygon points="0,0 280,240 0,480" fill="#ffffff"/><circle cx="90" cy="240" r="28" fill="#fcd116"/></svg>',
+    'ID': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ce1126"/><rect y="240" width="640" height="240" fill="#ffffff"/></svg>',
+    'NZ': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00247d"/><g transform="scale(0.5)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g><circle cx="480" cy="120" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="430" cy="200" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="530" cy="220" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/><circle cx="470" cy="300" r="14" fill="#cc142b" stroke="#ffffff" stroke-width="4"/></svg>',
+    'ZA': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#e03c31"/><rect y="240" width="640" height="240" fill="#001489"/><polygon points="0,0 260,240 0,480" fill="#000000"/><path d="M0,0 L260,240 L640,240 M0,480 L260,240" stroke="#007749" stroke-width="80" fill="none"/><path d="M0,0 L260,240 L640,240 M0,480 L260,240" stroke="#ffb81c" stroke-width="25" fill="none"/></svg>',
+    'IE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#169b62"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ff883e"/></svg>',
+    'NL': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ae1c28"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#21468b"/></svg>',
+    'SE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006aa7"/><rect x="200" width="80" height="480" fill="#fecc00"/><rect y="200" width="640" height="80" fill="#fecc00"/></svg>',
+    'CH': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#d52b1e"/><rect x="280" y="120" width="80" height="240" fill="#ffffff"/><rect x="200" y="200" width="240" height="80" fill="#ffffff"/></svg>',
+    'ES': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="120" fill="#aa151b"/><rect y="120" width="640" height="240" fill="#f1bf00"/><rect y="360" width="640" height="120" fill="#aa151b"/><circle cx="200" cy="240" r="40" fill="#aa151b"/></svg>',
+    'IT': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#009246"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ce2b37"/></svg>',
+    'BR': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#009c3b"/><polygon points="320,60 580,240 320,420 60,240" fill="#ffdf00"/><circle cx="320" cy="240" r="85" fill="#002776"/><path d="M236,240 Q320,210 404,240" stroke="#ffffff" stroke-width="12" fill="none"/></svg>',
+    'MX': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#006847"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ce1126"/><circle cx="320" cy="240" r="30" fill="#9c7a40"/></svg>',
+    'JP': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><circle cx="320" cy="240" r="120" fill="#bc002d"/></svg>',
+    'KR': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><circle cx="320" cy="240" r="90" fill="#cd2e3a"/><path d="M230,240 A90,90 0 0,0 410,240 A45,45 0 0,0 320,240 A45,45 0 0,1 230,240 Z" fill="#0047a0"/></svg>',
+    'PK': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#ffffff"/><rect x="160" width="480" height="480" fill="#01411c"/><circle cx="400" cy="240" r="90" fill="#ffffff"/><circle cx="430" cy="220" r="80" fill="#01411c"/><circle cx="450" cy="190" r="22" fill="#ffffff"/></svg>',
+    'BD': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006a4e"/><circle cx="280" cy="240" r="120" fill="#f42a41"/></svg>',
+    'LK': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffbe29"/><rect x="40" y="40" width="60" height="400" fill="#00534e"/><rect x="110" y="40" width="60" height="400" fill="#eb7400"/><rect x="190" y="40" width="410" height="400" fill="#8d153a"/><circle cx="400" cy="240" r="70" fill="#ffbe29"/></svg>',
+    'NP': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><polygon points="40,20 400,220 180,220 420,440 40,440" fill="#dc143c" stroke="#003893" stroke-width="20"/><circle cx="160" cy="140" r="30" fill="#ffffff"/><circle cx="180" cy="340" r="40" fill="#ffffff"/></svg>',
+    'NG': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#008751"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#008751"/></svg>',
+    'KE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="140" fill="#000000"/><rect y="140" width="640" height="20" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#bb0000"/><rect y="320" width="640" height="20" fill="#ffffff"/><rect y="340" width="640" height="140" fill="#006600"/><ellipse cx="320" cy="240" rx="45" ry="90" fill="#bb0000" stroke="#ffffff" stroke-width="8"/></svg>',
+    'EG': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><circle cx="320" cy="240" r="28" fill="#c09338"/></svg>',
+    'TR': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#e30a17"/><circle cx="280" cy="240" r="90" fill="#ffffff"/><circle cx="305" cy="240" r="72" fill="#e30a17"/><polygon points="370,240 395,248 375,263 382,288 360,272 338,288 345,263 325,248 350,240 360,215" fill="#ffffff"/></svg>',
+    'PL': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ffffff"/><rect y="240" width="640" height="240" fill="#dc143c"/></svg>',
+    'RO': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002b7f"/><rect x="213" width="214" height="480" fill="#fcd116"/><rect x="427" width="213" height="480" fill="#ce1126"/></svg>',
+    'UA': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#0057b7"/><rect y="240" width="640" height="240" fill="#ffd700"/></svg>',
+    'VN': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#da251d"/><polygon points="320,130 348,217 439,217 365,271 393,358 320,304 247,358 275,271 201,217 292,217" fill="#ffff00"/></svg>',
+    'TH': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="80" fill="#a51931"/><rect y="80" width="640" height="80" fill="#f4f5f8"/><rect y="160" width="640" height="160" fill="#2d2a4a"/><rect y="320" width="640" height="80" fill="#f4f5f8"/><rect y="400" width="640" height="80" fill="#a51931"/></svg>',
+    'HK': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#de2910"/><circle cx="320" cy="240" r="90" fill="#ffffff"/><circle cx="320" cy="240" r="70" fill="#de2910"/><circle cx="320" cy="240" r="30" fill="#ffffff"/></svg>',
+    'TW': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#fe0000"/><rect width="320" height="240" fill="#000095"/><circle cx="160" cy="120" r="60" fill="#ffffff"/><circle cx="160" cy="120" r="45" fill="#000095"/><circle cx="160" cy="120" r="30" fill="#ffffff"/></svg>',
+    'IL': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><rect y="50" width="640" height="60" fill="#0038b8"/><rect y="370" width="640" height="60" fill="#0038b8"/><polygon points="320,180 370,270 270,270" stroke="#0038b8" stroke-width="12" fill="none"/><polygon points="320,300 370,210 270,210" stroke="#0038b8" stroke-width="12" fill="none"/></svg>'
+  };
+
+  window.getJeroFlagSvg = function(iso) {
+    const code = (iso || 'IN').toUpperCase();
+    if (window.__JERO_FLAGS_SVG__ && window.__JERO_FLAGS_SVG__[code]) {
+      return window.__JERO_FLAGS_SVG__[code];
+    }
+    const colors = ['#1e3c72', '#2a5298', '#134e5e', '#71b280', '#0f2027', '#203a43', '#2c5364', '#373b44'];
+    const hash = (code.charCodeAt(0) + (code.charCodeAt(1) || 0)) % colors.length;
+    const bg = colors[hash];
+    return `<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="${bg}" rx="60"/><text x="320" y="320" fill="#ffffff" font-size="240" font-family="'Poppins', sans-serif" font-weight="700" text-anchor="middle">${code}</text></svg>`;
+  };
+
   window.setupJeroPhoneBox = function(wrapper) {
     if (!wrapper || wrapper._jeroInitialized) return;
     wrapper._jeroInitialized = true;
@@ -492,6 +570,7 @@
     const btn = wrapper.querySelector('.jero-country-picker-btn');
     const dropdown = wrapper.querySelector('.jero-country-dropdown');
     const searchInput = wrapper.querySelector('.jero-search-input');
+    const searchClear = wrapper.querySelector('.jero-search-clear');
     const countryList = wrapper.querySelector('.jero-country-list');
     const flagSpan = wrapper.querySelector('.jero-selected-flag');
     const dialSpan = wrapper.querySelector('.jero-selected-dial');
@@ -520,6 +599,11 @@
       currentCountry = window.__JERO_COUNTRIES_DB__.find(c => c.iso === defaultIso) || window.__JERO_COUNTRIES_DB__[0];
     }
 
+    // Ensure initial flag is synced
+    if (currentCountry && flagSpan) {
+      flagSpan.innerHTML = window.getJeroFlagSvg(currentCountry.iso);
+    }
+
     function updateCounter(targetLength) {
       if (!counter) return;
       const currentDigits = (input.value || '').replace(/[^\d]/g, '');
@@ -540,7 +624,7 @@
       currentCountry = c;
       hiddenCode.value = c.dial;
       dialSpan.textContent = c.dial;
-      flagSpan.innerHTML = `<img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="14" alt="${c.iso}" class="rounded-1 shadow-xs" style="object-fit:cover; display:block;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';"><span class="jero-flag-fallback badge bg-light-primary text-primary px-1 py-0 fs-9 fw-bold" style="display:none; font-size:10px; line-height:14px;">${c.iso}</span>`;
+      flagSpan.innerHTML = window.getJeroFlagSvg(c.iso);
       input.setAttribute('maxlength', c.len);
 
       const digits = (input.value || '').replace(/[^\d]/g, '');
@@ -572,6 +656,7 @@
       let html = '';
       filtered.forEach((c, index) => {
         const isSelected = currentCountry && currentCountry.iso === c.iso;
+        const flagSvg = window.getJeroFlagSvg(c.iso);
         html += `
           <div class="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer jero-country-item ${isSelected ? 'bg-light-primary text-primary fw-bold' : 'text-gray-800'}"
                data-dial="${c.dial}"
@@ -581,7 +666,7 @@
                aria-selected="${isSelected ? 'true' : 'false'}"
                style="font-size: 13px; border-bottom: 1px solid #f4f4f7; transition: background-color 0.15s ease; user-select: none;">
             <div class="d-flex align-items-center text-truncate me-2">
-              <img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="14" alt="${c.iso}" class="me-2 rounded-1 shadow-xs" style="object-fit:cover; display:block;" onerror="this.style.display='none';">
+              <span class="me-2 d-inline-flex align-items-center flex-shrink-0" style="width: 20px; height: 15px;">${flagSvg}</span>
               <span class="text-truncate">${c.name}</span>
             </div>
             <div class="d-flex align-items-center flex-shrink-0">
@@ -625,6 +710,7 @@
       dropdown.style.display = 'block';
       btn.setAttribute('aria-expanded', 'true');
       searchInput.value = '';
+      if (searchClear) searchClear.style.display = 'none';
       selectedIndex = -1;
       renderList('');
       setTimeout(() => searchInput.focus(), 30);
@@ -654,8 +740,24 @@
       }
     });
 
+    // Search clear click
+    if (searchClear) {
+      searchClear.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = '';
+        this.style.display = 'none';
+        selectedIndex = -1;
+        renderList('');
+        searchInput.focus();
+      });
+    }
+
     // Search filter input
     searchInput.addEventListener('input', function(e) {
+      if (searchClear) {
+        searchClear.style.display = this.value.trim() ? 'block' : 'none';
+      }
       selectedIndex = -1;
       renderList(this.value);
     });
