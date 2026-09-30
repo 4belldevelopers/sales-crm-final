@@ -102,17 +102,21 @@
 
         <!-- Country Selector Trigger Button -->
         <button type="button" 
-                class="btn btn-sm btn-icon-flex jero-country-picker-btn d-flex align-items-center bg-light-secondary border-end-0 rounded-end-0 px-3"
+                class="jero-country-picker-btn"
                 id="{{ $id }}_btn"
                 aria-haspopup="listbox"
                 aria-expanded="false"
-                style="height: 38px; border: 1px solid #e4e6ef; cursor: pointer; user-select: none;">
-            <span class="jero-selected-flag me-2 d-inline-flex align-items-center" id="{{ $id }}_flag">
-                <img src="https://flagcdn.com/w20/{{ strtolower($initialIso) }}.png" width="20" height="15" alt="{{ $initialIso }}" class="rounded-1 shadow-xs" style="object-fit: cover; vertical-align: middle;">
+                title="Select country code">
+            <span class="jero-selected-flag" id="{{ $id }}_flag">
+                <img src="https://flagcdn.com/w20/{{ strtolower($initialIso) }}.png" width="20" height="14" alt="{{ $initialIso }}" class="rounded-1 shadow-xs" style="object-fit: cover; display: block;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                <span class="jero-flag-fallback badge bg-light-primary text-primary px-1 py-0 fs-9 fw-bold" style="display:none; font-size:10px; line-height:14px;">{{ $initialIso }}</span>
             </span>
-            <span class="jero-selected-dial fs-7 fw-bold text-gray-800 me-1" id="{{ $id }}_dial">{{ $initialCode }}</span>
-            <i class="fa fa-chevron-down text-gray-500 ms-1" style="font-size: 10px;"></i>
+            <span class="jero-selected-dial" id="{{ $id }}_dial">{{ $initialCode }}</span>
+            <i class="fa fa-chevron-down jero-chevron"></i>
         </button>
+
+        <!-- Hairline Subtle Divider -->
+        <div class="jero-phone-divider"></div>
 
         <!-- Main Phone Digits Input -->
         <input type="tel" 
@@ -120,17 +124,15 @@
                id="{{ $id }}" 
                value="{{ $initialValue }}"
                placeholder="{{ $placeholder }}"
-               class="form-control form-control-solid fs-7 ps-3 pe-15 rounded-start-0"
-               style="height: 38px; border-left: 0;"
+               class="jero-phone-main-input"
                maxlength="{{ $initialLength }}"
                autocomplete="tel-national"
                inputmode="numeric"
                {{ $required ? 'required' : '' }}>
 
         <!-- Real-Time Visual Digit Counter Badge -->
-        <span class="position-absolute end-0 me-3 badge {{ $initialDigitsCount === $initialLength && $initialLength > 0 ? 'bg-light-success text-success' : 'bg-light-primary text-primary' }} fs-8 fw-semibold jero-digit-counter"
-              id="{{ $id }}_counter"
-              style="pointer-events: none; z-index: 5;">
+        <span class="badge {{ $initialDigitsCount === $initialLength && $initialLength > 0 ? 'bg-light-success text-success' : 'bg-light text-muted' }} jero-digit-counter"
+              id="{{ $id }}_counter">
             {{ $initialDigitsCount }}/{{ $initialLength }}
         </span>
     </div>
@@ -169,52 +171,185 @@
 .jero-phone-box-wrapper {
   position: relative;
   font-family: 'Poppins', Helvetica, sans-serif;
+  width: 100%;
 }
-.jero-country-picker-btn {
-  background-color: #f5f8fa !important;
-  border: 1px solid #e4e6ef !important;
-  border-right: none !important;
-  color: #181c32 !important;
-  font-weight: 600 !important;
+
+/* Enterprise unified pure white container */
+.jero-phone-input-group {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  width: 100%;
   height: 38px !important;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-  white-space: nowrap;
+  min-height: 38px !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d8deec !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: visible;
 }
-.jero-country-picker-btn:hover,
-.jero-country-picker-btn:focus {
-  background-color: #eef3f7 !important;
+
+.jero-phone-input-group:hover:not(:focus-within) {
   border-color: #b5b5c3 !important;
-  outline: none !important;
 }
-.jero-phone-input-group .form-control {
-  height: 38px !important;
-  border: 1px solid #e4e6ef !important;
-  border-left: none !important;
-  background-color: #f5f8fa !important;
+
+.jero-phone-input-group:focus-within {
+  border-color: #009ef7 !important;
+  box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.12) !important;
+}
+
+/* Country picker button - centered vertically and horizontally */
+.jero-country-picker-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  min-height: 36px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 10px 0 12px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  outline: none !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  border-top-left-radius: 5px !important;
+  border-bottom-left-radius: 5px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.jero-country-picker-btn:hover {
+  background-color: #f8fafc !important;
+}
+
+.jero-selected-flag {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+}
+
+.jero-selected-flag img {
+  width: 20px !important;
+  height: 14px !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  display: block !important;
+  vertical-align: middle !important;
+}
+
+.jero-selected-dial {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #181c32 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.jero-country-picker-btn .jero-chevron {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 9px !important;
+  color: #7e8299 !important;
+  line-height: 1 !important;
+  transition: transform 0.2s ease !important;
+}
+
+.jero-country-picker-btn[aria-expanded="true"] .jero-chevron {
+  transform: rotate(180deg) !important;
+}
+
+/* Hairline divider between country selector and input */
+.jero-phone-divider {
+  width: 1px !important;
+  height: 20px !important;
+  background-color: #e4e6ef !important;
+  flex-shrink: 0 !important;
+  margin: 0 2px !important;
+}
+
+/* Phone digits input */
+.jero-phone-main-input {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 36px !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
   color: #181c32 !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  letter-spacing: 0.3px;
-  padding-right: 70px !important;
+  font-family: 'Poppins', Helvetica, sans-serif !important;
+  padding: 0 54px 0 10px !important;
+  letter-spacing: 0.3px !important;
+  border-top-right-radius: 5px !important;
+  border-bottom-right-radius: 5px !important;
 }
-.jero-phone-input-group .form-control:focus {
-  background-color: #ffffff !important;
-  border-color: #009ef7 !important;
+
+.jero-phone-main-input::placeholder {
+  color: #8A94B4 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+.jero-phone-main-input:focus {
+  outline: none !important;
   box-shadow: none !important;
 }
+
+/* Real-time digit counter badge */
 .jero-digit-counter {
-  top: 50%;
-  transform: translateY(-50%);
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   font-size: 11px !important;
-  padding: 3px 6px !important;
-  letter-spacing: 0.2px;
-  pointer-events: none;
-  z-index: 4;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  letter-spacing: 0.2px !important;
+  pointer-events: none !important;
+  border-radius: 4px !important;
+  z-index: 4 !important;
+  line-height: 1.2 !important;
 }
+
+/* Searchable dropdown styling */
+.jero-country-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1060;
+  width: 340px;
+  max-height: 360px;
+  overflow: hidden;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+  background: #ffffff !important;
+  border: 1px solid #d8deec !important;
+}
+
 .jero-country-item:hover {
   background-color: #f1faff !important;
   color: #009ef7 !important;
 }
+
 .jero-country-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -391,12 +526,12 @@
       const len = targetLength || (currentCountry ? currentCountry.len : 10);
       counter.textContent = `${currentDigits.length}/${len}`;
       if (currentDigits.length === 0) {
-        counter.className = 'position-absolute end-0 me-3 badge bg-light-primary text-primary fs-8 fw-semibold jero-digit-counter';
+        counter.className = 'badge bg-light text-muted jero-digit-counter';
       } else if (currentDigits.length === len) {
-        counter.className = 'position-absolute end-0 me-3 badge bg-light-success text-success fs-8 fw-bold jero-digit-counter';
+        counter.className = 'badge bg-light-success text-success fw-bold jero-digit-counter';
         counter.innerHTML = `${currentDigits.length}/${len} <i class="fa fa-check text-success ms-1" style="font-size:9px;"></i>`;
       } else {
-        counter.className = 'position-absolute end-0 me-3 badge bg-light-warning text-warning fs-8 fw-semibold jero-digit-counter';
+        counter.className = 'badge bg-light-primary text-primary fw-semibold jero-digit-counter';
       }
     }
 
@@ -405,7 +540,7 @@
       currentCountry = c;
       hiddenCode.value = c.dial;
       dialSpan.textContent = c.dial;
-      flagSpan.innerHTML = `<img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="15" alt="${c.iso}" class="rounded-1 shadow-xs" style="object-fit:cover; vertical-align:middle;">`;
+      flagSpan.innerHTML = `<img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="14" alt="${c.iso}" class="rounded-1 shadow-xs" style="object-fit:cover; display:block;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';"><span class="jero-flag-fallback badge bg-light-primary text-primary px-1 py-0 fs-9 fw-bold" style="display:none; font-size:10px; line-height:14px;">${c.iso}</span>`;
       input.setAttribute('maxlength', c.len);
 
       const digits = (input.value || '').replace(/[^\d]/g, '');
@@ -446,7 +581,7 @@
                aria-selected="${isSelected ? 'true' : 'false'}"
                style="font-size: 13px; border-bottom: 1px solid #f4f4f7; transition: background-color 0.15s ease; user-select: none;">
             <div class="d-flex align-items-center text-truncate me-2">
-              <img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="15" alt="${c.iso}" class="me-2 rounded-1 shadow-xs" style="object-fit:cover; vertical-align:middle;">
+              <img src="https://flagcdn.com/w20/${c.iso.toLowerCase()}.png" width="20" height="14" alt="${c.iso}" class="me-2 rounded-1 shadow-xs" style="object-fit:cover; display:block;" onerror="this.style.display='none';">
               <span class="text-truncate">${c.name}</span>
             </div>
             <div class="d-flex align-items-center flex-shrink-0">
