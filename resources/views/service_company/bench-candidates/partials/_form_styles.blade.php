@@ -1,4 +1,6 @@
 {{-- Phase 8 Frontend Optimization: Modular Form Styles Partial --}}
+<link rel="stylesheet" href="{{ asset('assets/node_modules/select2/dist/css/select2.min.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
 body { overflow-x: hidden; }
 .dropzone { padding: 1.8rem 1.75rem !important; border: 2px dashed #e6e7e8 !important; background: transparent !important; text-align: inherit !important; }
@@ -478,6 +480,15 @@ body { overflow-x: hidden; }
     color: #0f172a;
 }
 
+.rf-modal-close svg {
+    stroke: currentColor;
+    transition: transform 0.15s ease;
+}
+
+.rf-modal-close:hover svg {
+    transform: rotate(90deg);
+}
+
 /* Warning circle at top center */
 .rf-warning-icon-wrap {
     width: 64px;
@@ -597,6 +608,13 @@ body { overflow-x: hidden; }
     font-size: 12px;
     flex-shrink: 0;
     margin-left: 8px;
+    stroke: currentColor;
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.rf-field-row:hover .rf-field-chevron {
+    color: #0f172a;
+    transform: translateX(2px);
 }
 
 /* Helper text */
@@ -610,9 +628,12 @@ body { overflow-x: hidden; }
     text-align: left;
 }
 
-.rf-helper-text i {
+.rf-helper-text i,
+.rf-helper-text svg {
     font-size: 13px;
     color: #64748b;
+    stroke: currentColor;
+    flex-shrink: 0;
 }
 
 /* Primary CTA button */
@@ -642,13 +663,16 @@ body { overflow-x: hidden; }
     transform: scale(0.99);
 }
 
-.rf-cta-btn i {
+.rf-cta-btn i,
+.rf-cta-btn svg {
     font-size: 13px;
+    stroke: currentColor;
     transition: transform 0.15s ease;
 }
 
-.rf-cta-btn:hover i {
-    transform: translateX(2px);
+.rf-cta-btn:hover i,
+.rf-cta-btn:hover svg {
+    transform: translateX(3px);
 }
 
 /* Temporary field attention highlight when navigated from modal */
@@ -730,60 +754,36 @@ body { overflow-x: hidden; }
     background: #f1f5f9;
 }
 
-/* Currency dropdown in commercial rate fields */
-.br-rate-field .ig {
-    display: flex;
-    position: relative;
-    width: 100%;
+/* ── Restored USD Conversion label (Approx $ X.XX) floating right on label ── */
+.br-rate-field label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-bottom: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
 }
 
-/* ── Currency Symbol Prefix inside input box (enterprise-grade ig-prefix) ── */
-.ig-prefix {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    min-width: 36px;
-    height: 38px;
-    padding: 0 10px;
-    background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fb 100%);
-    border: 1px solid #d1d5db;
-    border-right: none;
-    border-radius: 6px 0 0 6px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e3a5f;
-    letter-spacing: 0;
-    white-space: nowrap;
-    user-select: none;
-    transition: background 0.15s ease, color 0.15s ease;
+.br-rate-field label .rq {
+    margin-left: 2px !important;
+    margin-right: auto !important;
+    color: #ef4444 !important;
 }
 
-/* When input is focused, prefix box highlights too */
-.br-rate-field .ig:focus-within .ig-prefix {
-    background: linear-gradient(135deg, #e0eaff 0%, #dbeafe 100%);
-    color: #1d4ed8;
-    border-color: #3b82f6;
-}
-
-/* When prefix is present, remove border-radius from input left side */
-.ig-prefix ~ input {
-    border-radius: 0 !important;
-    padding-left: 10px !important;
-}
-
-/* ── USD Conversion label (≈ $X.XX) — enterprise light style ── */
+.br-rate-field label span[id$="_usd"],
 label span[id$="_usd"] {
-    display: inline-block;
-    margin-left: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #0369a1;
-    background: #e0f2fe;
-    border-radius: 4px;
-    padding: 1px 6px;
-    line-height: 1.6;
-    vertical-align: middle;
+    float: right !important;
+    margin-left: auto !important;
+    color: #EF560A !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    line-height: normal !important;
+    white-space: nowrap !important;
 }
 
 /* ── br-panel-icon: Fix icon box sizing and alignment ── */
@@ -806,78 +806,79 @@ label span[id$="_usd"] {
     display: block !important;
 }
 
+/* ── Commercial Rate Input Group (.ig + .ig-a integrated seamless design) ── */
+.br-rate-field .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    position: relative !important;
+    width: 100% !important;
+    gap: 0 !important;
+}
+
 .br-rate-field .ig input {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 38px;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 38px !important;
     border-radius: 6px 0 0 6px !important;
     border: 1px solid #d1d5db !important;
     border-right: none !important;
-    padding: 8px 12px;
-    font-size: 0.95rem;
-    color: #0f172a;
-    background: #ffffff;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    padding: 8px 12px !important;
+    font-size: 0.95rem !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 .br-rate-field .ig input:focus {
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
-    z-index: 2;
+    position: relative !important;
+    z-index: 2 !important;
 }
 
-.ig-currency-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f8fafc;
-    border: 1px solid #d1d5db;
-    border-radius: 0 6px 6px 0;
-    flex: 0 0 auto;
-    transition: border-color 0.15s ease, background 0.15s ease;
+.br-rate-field .ig .ig-a,
+.br-rate-field .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 54px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    background: #f8fafc !important;
+    border: 1px solid #d1d5db !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 6px 6px 0 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease !important;
 }
 
-.br-rate-field .ig:focus-within .ig-currency-box {
-    border-color: #3b82f6;
+.br-rate-field .ig:focus-within .ig-a,
+.br-rate-field .ig:focus-within .changeTextCurrency {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
 }
 
-.ig-currency-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: transparent;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1e293b;
-    padding: 0 26px 0 12px;
-    height: 100%;
-    min-height: 38px;
-    cursor: pointer;
-    line-height: normal;
+.br-card.is-free-service .br-bill-panel .ig input {
+    background-color: #f1f5f9 !important;
+    cursor: not-allowed !important;
 }
 
-.ig-currency-chevron {
-    position: absolute;
-    right: 9px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    color: #64748b;
-    pointer-events: none;
-}
-
-.br-card.is-free-service .br-bill-panel .ig-currency-box {
-    opacity: 0.6;
-    background: #f1f5f9;
-    cursor: not-allowed;
-}
-
-.br-card.is-free-service .br-bill-panel .ig-currency-select {
-    cursor: not-allowed;
+.br-card.is-free-service .br-bill-panel .ig-a,
+.br-card.is-free-service .br-bill-panel .changeTextCurrency {
+    opacity: 0.6 !important;
+    background: #f1f5f9 !important;
+    cursor: not-allowed !important;
 }
 
 /* Margin Summary dynamic difference amount */
@@ -900,13 +901,13 @@ label span[id$="_usd"] {
     color: #2563eb !important;
 }
 
-/* ── Redesigned Enterprise Relationship Manager Chip Card (media_1790669427546.png) ── */
+/* ── Redesigned Enterprise Relationship Manager Chip Card (media_1790683314858.png) ── */
 .rm-chips-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-top: 6px;
+    margin-top: 10px;
     margin-bottom: 8px;
 }
 
@@ -1200,9 +1201,11 @@ textarea.has-validation-error:focus,
     background-color: #fef2f2 !important;
 }
 
-.br-rate-field.has-validation-error .ig .ig-currency-box {
+.br-rate-field.has-validation-error .ig .ig-a,
+.br-rate-field.has-validation-error .ig .changeTextCurrency {
     border: 1.5px solid #ef4444 !important;
     background-color: #fee2e2 !important;
+    color: #dc2626 !important;
 }
 
 #skillExperienceWrapper tr.has-validation-error input,
@@ -1223,8 +1226,10 @@ textarea.has-validation-error:focus,
     animation: fieldErrorFadeIn 0.2s ease-in-out;
 }
 
-.field-error-message i {
+.field-error-message i,
+.field-error-message svg {
     color: #ef4444;
+    stroke: currentColor;
     font-size: 13px;
     flex-shrink: 0;
 }
@@ -1246,15 +1251,6 @@ textarea.has-validation-error:focus,
     }
 }
 
-/* ── Scope ig-prefix strictly to rate field panels — prevent leaking elsewhere ── */
-.br-rate-field .ig-prefix {
-    /* intentionally inherit; already defined above */
-}
-/* Ensure ig-prefix is ONLY inside rate panels — no leakage */
-.fg .ig-prefix, .bd-field .ig-prefix, .addl-input-wrap .ig-prefix,
-.rm-picker-wrap .ig-prefix, form label .ig-prefix:not(.br-rate-field .ig-prefix) {
-    display: none !important;
-}
 
 /* ── Fix ITI phone flag floating over Gender label ── */
 /* The .iti__flag-container is position:absolute — contain it strictly inside the phone field */
@@ -1384,6 +1380,466 @@ textarea.has-validation-error:focus,
 .select2-selection__rendered .fa-star,
 .se-field--select .fa-star {
     color: #f59e0b !important;
+}
+.se-star-icon {
+    display: inline-block;
+    vertical-align: -1px;
+    fill: #f59e0b;
+    flex-shrink: 0;
+}
+
+/* ── Categorized Highest Qualification & Nationality Dropdown Styling ── */
+#nationality optgroup,
+#qualification optgroup {
+    font-weight: 700 !important;
+    font-size: 11.5px !important;
+    color: #1e40af !important;
+    background: #f1f5f9 !important;
+    padding: 7px 10px !important;
+    letter-spacing: 0.25px;
+}
+#nationality option,
+#qualification option {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    padding: 6px 14px !important;
+}
+
+/* ── Ensure Candidate Profile Card & Grid Never Clip Floating Dropdowns ── */
+.fs.bd-card,
+.bd-card,
+.bd-card .bd-body,
+.bd-card .fsc,
+.bd-card .bd-grid,
+.bd-card .bd-field,
+.bd-card .bd-control,
+.bd-card .bd-control--select {
+    overflow: visible !important;
+}
+
+.bd-grid .bd-field:has(#nationality),
+.bd-grid .bd-field:has(#qualification),
+.bd-grid .bd-field:has(.jero-custom-select) {
+    overflow: visible !important;
+}
+
+/* Base stacking context: Candidate Profile sits above subsequent cards */
+.bd-card {
+    position: relative;
+    z-index: 30;
+}
+
+/* Active Stacking Elevation when Combobox is open */
+.bd-card.has-active-combobox,
+.bd-card:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1050 !important;
+    overflow: visible !important;
+}
+
+.bd-grid:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1051 !important;
+}
+
+.bd-field:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1052 !important;
+}
+
+.bd-control:has(.jero-custom-select.is-open) {
+    position: relative !important;
+    z-index: 1053 !important;
+}
+
+.jero-custom-select.is-open {
+    position: relative !important;
+    z-index: 1054 !important;
+}
+
+/* Subsequent card sits lower in the stack so dropdown renders cleanly on top of it */
+.fs.pd-card,
+.pd-card {
+    position: relative;
+    z-index: 10;
+}
+
+/* ── JERO Enterprise Custom Combobox Engine (Adaptive Nationality & Education) ── */
+.jero-custom-select {
+    position: relative;
+    width: 100%;
+    font-family: 'Poppins', sans-serif;
+    user-select: none;
+}
+
+.bd-control--select {
+    position: relative;
+}
+
+/* Hide native select visually ONLY when a custom combobox engine is present */
+.bd-control--has-combobox > select,
+.bd-control--select:has(.jero-custom-select) > select {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    clip: rect(0, 0, 0, 0) !important;
+    overflow: hidden !important;
+    z-index: -1 !important;
+}
+
+/* Hide static icon inside bd-control ONLY when custom select trigger includes its own */
+.bd-control--has-combobox > i,
+.bd-control--select:has(.jero-custom-select) > i {
+    display: none !important;
+}
+
+/* Explicit styling for native Gender select (Matches Date of Birth 42px height & 6px border-radius) */
+.bd-control select#gender,
+.bd-control--select select#gender {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    line-height: 40px !important;
+    padding: 0 34px 0 42px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    color: #0b1545 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    outline: none !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 14px center !important;
+    background-size: 11px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+
+.bd-control:has(select#gender) > i,
+.bd-control--select:has(select#gender) > i {
+    display: inline-flex !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #53618c !important;
+    font-size: 14px !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+}
+
+.bd-control select#gender:focus,
+.bd-control--select select#gender:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+.bd-control select#gender.has-validation-error,
+.bd-control.has-validation-error select#gender,
+.bd-control--select select#gender.has-validation-error,
+.bd-control--select.has-validation-error select#gender {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+}
+
+/* Trigger Button */
+.jero-cs-trigger {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    padding: 0 14px !important;
+    background: #ffffff !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 7px !important;
+    cursor: pointer !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.jero-cs-trigger:hover {
+    border-color: #94a3b8 !important;
+}
+
+.jero-cs-trigger:focus,
+.jero-custom-select.is-open .jero-cs-trigger {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14) !important;
+}
+
+/* Validation error state */
+.jero-custom-select.has-validation-error .jero-cs-trigger,
+.bd-control.has-validation-error .jero-cs-trigger {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14) !important;
+}
+
+.jero-cs-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+.jero-cs-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    color: #5d6681 !important;
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+.jero-cs-value {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0b1545 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+}
+
+.jero-cs-placeholder {
+    color: #8991a8 !important;
+    font-weight: 400 !important;
+}
+
+.jero-cs-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
+}
+
+.jero-cs-badge {
+    display: inline-block !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #e0e7ff !important;
+    color: #3730a3 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+}
+
+.jero-cs-arrow {
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+    transition: transform 0.2s ease !important;
+}
+
+.jero-custom-select.is-open .jero-cs-arrow {
+    transform: rotate(180deg) !important;
+    color: #3b82f6 !important;
+}
+
+/* Floating Dropdown Menu Panel */
+.jero-cs-dropdown {
+    position: absolute !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: calc(100% + 4px) !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.22), 0 10px 18px -6px rgba(15, 23, 42, 0.14) !important;
+    z-index: 999999 !important;
+    overflow: hidden !important;
+    display: none;
+    flex-direction: column !important;
+    max-height: 340px !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.jero-custom-select.is-open .jero-cs-dropdown {
+    display: flex !important;
+}
+
+.jero-custom-select.is-open.open-up .jero-cs-dropdown {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+}
+
+/* Sticky Search Box at the top */
+.jero-cs-search-box {
+    display: flex !important;
+    align-items: center !important;
+    position: sticky !important;
+    top: 0 !important;
+    padding: 8px 10px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    gap: 8px !important;
+}
+
+.jero-cs-search-box i.jero-cs-search-icon {
+    color: #64748b !important;
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+.jero-cs-search-input {
+    width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #0f172a !important;
+    background: #ffffff !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+.jero-cs-search-input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+.jero-cs-search-clear {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    padding: 0 4px !important;
+    line-height: 1 !important;
+}
+.jero-cs-search-clear:hover {
+    color: #475569 !important;
+}
+
+/* Scrollable Options Container */
+.jero-cs-list {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    max-height: 280px !important;
+    padding: 4px 0 !important;
+}
+
+/* Group Title */
+.jero-cs-group-title {
+    padding: 7px 12px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    color: #1e40af !important;
+    background: #f1f5f9 !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+}
+
+.jero-cs-group:first-child .jero-cs-group-title {
+    border-top: none !important;
+}
+
+/* Option Item */
+.jero-cs-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: background 0.1s ease !important;
+}
+
+.jero-cs-item:hover,
+.jero-cs-item.is-highlighted {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+.jero-cs-item.is-selected {
+    background-color: #e0e7ff !important;
+    color: #312e81 !important;
+    font-weight: 600 !important;
+}
+
+/* Bulletproof hiding of non-matching items and groups */
+.jero-cs-item.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-group.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-empty.is-hidden {
+    display: none !important;
+}
+
+.jero-cs-item-text {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+}
+
+.jero-cs-item-badge {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    background: #e0e7ff !important;
+    color: #3730a3 !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    margin-left: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+.jero-cs-item.is-selected .jero-cs-item-badge {
+    background: #c7d2fe !important;
+    color: #1e1b4b !important;
+}
+
+/* Empty message */
+.jero-cs-empty {
+    padding: 20px 14px !important;
+    text-align: center !important;
+    color: #64748b !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+.jero-cs-empty i {
+    font-size: 18px !important;
+    color: #94a3b8 !important;
+    display: block !important;
+    margin-bottom: 6px !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
