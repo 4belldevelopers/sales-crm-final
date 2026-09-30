@@ -759,6 +759,20 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
       <div class="bxr-sort-panel d-none" id="bxr_sort_panel"></div>
     </div>
 
+    {{-- ══ GLOBAL CURRENCY SWITCHER (RULE 14 & 17 SANDBOXED v4.1) ═══ --}}
+    <div class="bxr-currency-wrap ms-auto d-flex align-items-center gap-2">
+      <span class="text-muted fs-8 fw-semibold"><i class="fa-solid fa-coins me-1 text-primary"></i>Currency:</span>
+      <select id="bxr_currency_switcher" class="form-select form-select-sm form-select-solid fs-8 py-1 px-3 w-140px">
+        <option value="AUTO" selected>⚙️ Auto (Default)</option>
+        <option value="ORIGINAL">🏷️ Original</option>
+        <optgroup label="Global ISO Currencies">
+          @foreach(\App\Helper\GeneralMethod::currency() as $code)
+            <option value="{{ $code }}">{{ $code }}</option>
+          @endforeach
+        </optgroup>
+      </select>
+    </div>
+
     <div class="bxr-tbl-loading loadingMessagebenchCandidateExploreJobAjax" style="display:none;" title="Processing...">
       <span class="spinner-border spinner-border-sm text-primary" style="width:13px;height:13px;border-width:2px;"></span>
     </div>
@@ -916,8 +930,15 @@ $(document).ready(function(){
         window.history.pushState('page2','Title',url+'/'+bid+'/'+page);
         fetchBenchExploreJobCandidateList();
     });
-});
 </script>
+
+{{-- ── Global Currency Sandbox Integration (Rule 14 & 17 Sandboxed v4.1) ── --}}
+<script>
+    window.__JERO_FX_RATES__ = @json(\App\Helper\GeneralMethod::currencyConverter()['usd_based_rates'] ?? []);
+    window.__JERO_FX_VERSION__ = "{{ \App\Helper\GeneralMethod::getLatestFxSnapshot()['version'] ?? '202609-001' }}";
+    window.__JERO_USER_CURRENCY__ = "{{ \App\Helper\GeneralMethod::defaultCurrency() }}";
+</script>
+<script src="{{ asset('assets/js/jero-currency-sandbox.js') }}"></script>
 
 {{-- ── BenchExploreTabManager: Centralized Tab & Lazy Loading Manager ── --}}
 <script>
@@ -955,6 +976,15 @@ var BenchExploreTabManager = (function(){
                     e.preventDefault();
                     clearTimeout(state.searchDebounceTimer);
                     self.loadCurrentTab(1);
+                }
+            });
+
+            // Global Currency Switcher handler
+            $(document).on('change', '#bxr_currency_switcher', function(){
+                var selected = $(this).val() || 'AUTO';
+                var target = selected === 'AUTO' ? (window.__JERO_USER_CURRENCY__ || 'USD') : selected;
+                if (window.JeroCurrency) {
+                    window.JeroCurrency.setCurrency(target, $('#benchCandidateExploreJobAjax')[0]);
                 }
             });
         },
@@ -1049,6 +1079,12 @@ var BenchExploreTabManager = (function(){
             $('.bxr-live').html(overallTotal);
             $('#bxr_footer_number').text(res.total);
             $('#paginationbenchCandidateExploreJob').html(res.pagination);
+
+            if (window.JeroCurrency) {
+                var activeVal = $('#bxr_currency_switcher').val() || 'AUTO';
+                var target = activeVal === 'AUTO' ? (window.__JERO_USER_CURRENCY__ || 'USD') : activeVal;
+                window.JeroCurrency.setCurrency(target, $('#benchCandidateExploreJobAjax')[0]);
+            }
 
             if (res.counters) {
                 var d = res.counters;

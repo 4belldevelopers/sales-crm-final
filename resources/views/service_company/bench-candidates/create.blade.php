@@ -1248,22 +1248,21 @@ if($snp_mode== 1){
                       <label for="pay_rate_currency">Currency</label>
                       <select id="pay_rate_currency" name="pay_rate_currency">
                           @php
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->pay_rate_currency;
+                              $current_ctc_cur = @$application->pay_rate_currency;
 
-                              foreach($currency as $key=>$val){
-                                  $sel	=	'';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel	=	'selected="selected"';
-                                    }
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';
-                                  }
+                              foreach($currency as $key => $val){
+                                  $sel = '';
+                                  if($current_ctc_cur === null || $current_ctc_cur === ''){
+                                      if($currency_code == $val){
+                                          $sel = 'selected="selected"';
+                                      }
+                                  } else {
+                                      if((string)$current_ctc_cur === (string)$key || (string)$current_ctc_cur === (string)$val){
+                                          $sel = 'selected="selected"';
+                                      }
                                   }
 
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';
+                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                               }
                           @endphp
                       </select>
@@ -1283,41 +1282,39 @@ if($snp_mode== 1){
                     </select>
                     <select name="bill_rate_currency" id="bill_rate_currency">
                         @php
-                            $current_ectc_cur	=	"";
-                            $current_ectc_cur	=	@$application->bill_rate_currency;
-                            foreach($currency as $key=>$val){
-                              $sel	=	'';
-                              if($current_ectc_cur===null){
-                                if($currency_code==$val){
-                                  $sel	=	'selected="selected"';
-                                }
-                              }else{
-                                if($current_ectc_cur == $key){
-                                $sel	=	'selected="selected"';
-                                }
+                            $current_ectc_cur = @$application->bill_rate_currency;
+                            foreach($currency as $key => $val){
+                              $sel = '';
+                              if($current_ectc_cur === null || $current_ectc_cur === ''){
+                                  if($currency_code == $val){
+                                      $sel = 'selected="selected"';
+                                  }
+                              } else {
+                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
+                                      $sel = 'selected="selected"';
+                                  }
                               }
 
-                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                             }
                         @endphp
                     </select>
                     <select name="current_th_cur" id="current_th_cur">
                         @php
-                            $current_ectc_cur	=	"";
-                            $current_ectc_cur	=	@$application->bill_rate_currency;
-                            foreach($currency as $key=>$val){
-                              $sel	=	'';
-                              if($current_ectc_cur===null){
-                                if($currency_code==$val){
-                                  $sel	=	'selected="selected"';
-                                }
-                              }else{
-                                if($current_ectc_cur == $key){
-                                $sel	=	'selected="selected"';
-                                }
+                            $current_ectc_cur = @$application->bill_rate_currency;
+                            foreach($currency as $key => $val){
+                              $sel = '';
+                              if($current_ectc_cur === null || $current_ectc_cur === ''){
+                                  if($currency_code == $val){
+                                      $sel = 'selected="selected"';
+                                  }
+                              } else {
+                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
+                                      $sel = 'selected="selected"';
+                                  }
                               }
 
-                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                             }
                         @endphp
                     </select>
@@ -1752,22 +1749,23 @@ if($snp_mode== 1){
 @endsection
 
 @php
-    $rates = $currencyConverter['usd_based_rates'] ?? [
+    $currencyConverterData = $currencyConverter ?? \App\Helper\GeneralMethod::currencyConverter();
+    $rates = $currencyConverterData['usd_based_rates'] ?? [
         'USD' => 1,
-        'INR' => 83,
-        'EUR' => 0.87,
-        'JPY' => 159.65,
+        'INR' => 96.06,
+        'EUR' => 0.88,
+        'JPY' => 157.39,
         'GBP' => 0.76,
         'AED' => 3.67
     ];
 
-    $currencyKeys = $currencyConverter['getKey'] ?? [
-        'INR',
-        'EUR',
-        'JPY',
-        'GBP',
-        'USD',
-        'AED'
+    $currencyKeys = $currencyConverterData['getKey'] ?? [
+        0 => 'INR',
+        1 => 'EUR',
+        2 => 'JPY',
+        3 => 'GBP',
+        4 => 'USD',
+        5 => 'AED'
     ];
 @endphp
 
@@ -2813,17 +2811,21 @@ $(document).ready(function () {
         if (!payAnnual && payMonthly) payAnnual = payMonthly * MONTHS_PER_YEAR;
 
         if (isUSD) {
-            $('#pay_rate_hourly_usd').text('');
-            $('#pay_rate_monthly_usd').text('');
-            $('#pay_rate_annual_usd').text('');
+            $('#pay_rate_hourly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#pay_rate_monthly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#pay_rate_annual_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
         } else {
             let hourlyUSD  = payHourly / currencyRate;
             let monthlyUSD = payMonthly / currencyRate;
             let annualUSD  = payAnnual / currencyRate;
 
-            $('#pay_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
-            $('#pay_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
-            $('#pay_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
+            let hStr = hourlyUSD > 0 ? '$ ' + parseFloat(hourlyUSD).toFixed(2) : '$ 0.00';
+            let mStr = monthlyUSD > 0 ? '$ ' + parseFloat(monthlyUSD).toFixed(2) : '$ 0.00';
+            let aStr = annualUSD > 0 ? '$ ' + parseFloat(annualUSD).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$ 0.00';
+
+            $('#pay_rate_hourly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + hStr + ' / hr USD</span>');
+            $('#pay_rate_monthly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + mStr + ' / mo USD</span>');
+            $('#pay_rate_annual_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + aStr + ' / yr USD</span>');
         }
         updateCTCFields();
         refreshCommercialSummary();
@@ -2856,17 +2858,21 @@ $(document).ready(function () {
         if (!billAnnual && billMonthly) billAnnual = billMonthly * MONTHS_PER_YEAR;
 
         if (isUSD) {
-            $('#bill_rate_hourly_usd').text('');
-            $('#bill_rate_monthly_usd').text('');
-            $('#bill_rate_annual_usd').text('');
+            $('#bill_rate_hourly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#bill_rate_monthly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#bill_rate_annual_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
         } else {
             let hourlyUSD  = billHourly / currencyRate;
             let monthlyUSD = billMonthly / currencyRate;
             let annualUSD  = billAnnual / currencyRate;
 
-            $('#bill_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
-            $('#bill_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
-            $('#bill_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
+            let hStr = hourlyUSD > 0 ? '$ ' + parseFloat(hourlyUSD).toFixed(2) : '$ 0.00';
+            let mStr = monthlyUSD > 0 ? '$ ' + parseFloat(monthlyUSD).toFixed(2) : '$ 0.00';
+            let aStr = annualUSD > 0 ? '$ ' + parseFloat(annualUSD).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$ 0.00';
+
+            $('#bill_rate_hourly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + hStr + ' / hr USD</span>');
+            $('#bill_rate_monthly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + mStr + ' / mo USD</span>');
+            $('#bill_rate_annual_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + aStr + ' / yr USD</span>');
         }
         updateCTCFields();
         refreshCommercialSummary();
