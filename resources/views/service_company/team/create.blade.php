@@ -69,23 +69,16 @@
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label>@lang('app.mobile')</label>
-                <div class="form-row">
-                  <div class="col-sm-5">
-                    <select name="calling_code" id="calling_code" class="form-control selectpicker" data-live-search="true" data-width="100%" >
-                      
-                                                @foreach ($calling_codes as $code => $value)
-                                                    
-                      <option value="{{ $value['dial_code'] }}">{{ $value['dial_code'] . ' - ' . $value['name'] }}</option>
-                      
-                                                @endforeach
-                                            
-                    </select>
-                  </div>
-                  <div class="col-sm-7">
-                    <input type="number" class="form-control" name="mobile" placeholder="Enter Your Mobile..">
-                  </div>
-                </div>
+                <x-jero-phone-input
+                    id="mobile"
+                    name="mobile"
+                    countryCodeName="calling_code"
+                    countryCodeId="calling_code"
+                    value=""
+                    countryCode=""
+                    label="Mobile"
+                    :required="false"
+                    placeholder="Enter mobile number" />
               </div>
             </div>
           </div>

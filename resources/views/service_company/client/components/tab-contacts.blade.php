@@ -141,9 +141,9 @@ if ($page_event == 'EDIT') {
       <label class="cdf-label" for="client_drawer_phone">Phone Number</label>
       <div class="cdf-input-wrap">
         <i class="la la-phone cdf-input-icon" aria-hidden="true"></i>
-        <input type="number" id="client_drawer_phone" placeholder="Enter 10-digit phone number" autocomplete="off">
+        <input type="number" id="client_drawer_phone" placeholder="Enter phone number" autocomplete="off">
       </div>
-      <div class="cdf-error" id="cdf_err_phone">Please enter a valid 10-digit phone number.</div>
+      <div class="cdf-error" id="cdf_err_phone">Please enter a valid phone number (6-15 digits).</div>
     </div>
   </div>
   <!-- Footer -->

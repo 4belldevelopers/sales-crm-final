@@ -129,11 +129,16 @@
 
               <div class="jp-field">
                 <label class="jp-label">Phone Number <span class="jp-req">*</span></label>
-                <div class="jp-input-wrap jp-phone">
-                  <input type="number" name="mobile" id="mobile" maxlength="10" class="jp-input" placeholder="Enter Phone" value="{{$team->mobile}}">
-                  <input type="hidden" value="{{ @$phone_code }}" id="phone_country_code" name="phone_country_code">
-                  <span class="jp-wa"><i class="bi bi-whatsapp"></i></span>
-                </div>
+                <x-jero-phone-input
+                    id="mobile"
+                    name="mobile"
+                    countryCodeName="phone_country_code"
+                    countryCodeId="phone_country_code"
+                    :value="$team->mobile"
+                    :countryCode="@$phone_code"
+                    label=""
+                    :required="true"
+                    placeholder="Enter Phone" />
                 <div class="fv-plugins-message-container invalid-feedback"></div>
               </div>
             </div>
@@ -447,7 +452,7 @@
       v = v.trim();
       if(v === '') return 'Phone number is required';
       if(!/^[0-9]+$/.test(v)) return 'Phone number can only contain digits';
-      if(v.length !== 10) return 'Phone number must be 10 digits long';
+      if(v.length < 6 || v.length > 15) return 'Please enter a valid phone number';
       return '';
     },
     kt_tagify_work_location: function(v){ v = v.trim(); return (v === '' || v === '[]') ? 'Please select your city' : ''; },
@@ -527,41 +532,10 @@
 <script>
 
   $(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#mobile"), {
-      separateDialCode: true,
-      initialCountry: "{{ $phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-
+    if (window.JeroPhoneBox) {
+      window.JeroPhoneBox.initAll();
     }
-    // Update country code on input or country flag selection
-    $("#mobile").on("input change", function () {
-      updateCountryCode(primaryPhoneInput, "#phone_country_code");
-    });
-
-
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#mobile")) {
-        updateCountryCode(primaryPhoneInput, "#phone_country_code");
-      }
-
-    });
-
-    setTimeout(function () {
-      $(".iti__flag-container").click();
-    },500);
+  });
 
   });
 
@@ -718,9 +692,9 @@ var KTAccountSettingsProfileDetails = function () {
                                 message: 'Phone is required'
                             },
                             stringLength: {
-                                min: 10,
-                                max: 10,
-                                message: 'Phone number must be 10 digits long'
+                                min: 6,
+                                max: 15,
+                                message: 'Please enter a valid phone number'
                             },
                             regexp: {
                                 regexp: /^[0-9]+$/,
