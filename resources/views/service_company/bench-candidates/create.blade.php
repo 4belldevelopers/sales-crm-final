@@ -1246,7 +1246,7 @@ if($snp_mode== 1){
                     </div>
                     <div class="br-currency">
                       <label for="pay_rate_currency">Currency</label>
-                      <select id="pay_rate_currency" name="pay_rate_currency">
+                      <select id="pay_rate_currency" name="pay_rate_currency" class="form-select form-select-solid br-currency-select" data-control="select2" data-placeholder="Search currency...">
                           @php
                               $current_ctc_cur = @$application->pay_rate_currency;
 
@@ -1262,7 +1262,11 @@ if($snp_mode== 1){
                                       }
                                   }
 
-                                  echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                                  $entLabel = $cMeta['label'];
+                                  $keywords = $cMeta['keywords'];
+
+                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';
                               }
                           @endphp
                       </select>
@@ -2544,8 +2548,9 @@ $(document).ready(function () {
         $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
         $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
 
-        let activeCurrName = $('#pay_rate_currency option:selected').text().trim() || 
-                             $('.br-pay-currency-select option:selected').first().text().trim() || '';
+        let activeCurrName = ($('#pay_rate_currency option:selected').data('code') || 
+                             $('#pay_rate_currency option:selected').text().split('—')[0].trim() || 
+                             $('.br-pay-currency-select option:selected').first().text().split('—')[0].trim() || 'INR').toUpperCase();
 
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
@@ -2793,11 +2798,63 @@ $(document).ready(function () {
         isUpdating = false;
     });
     /**
+     * Extracts canonical 3-letter currency code from the active #pay_rate_currency option.
+     * Prevents long enterprise label text (e.g. "USD — US Dollar ($)") from breaking
+     * rate conversion lookups or overflowing input currency badges.
+     */
+    function getSelectedCommercialCurrencyCode() {
+        let $selected = $('#pay_rate_currency option:selected');
+        let code = $selected.data('code');
+        if (!code) {
+            let txt = ($selected.text() || '').trim();
+            code = txt.split('—')[0].split('-')[0].trim();
+        }
+        return (code || 'INR').toUpperCase();
+    }
+
+    /**
+     * Initializes enterprise Select2 on #pay_rate_currency with search box,
+     * fuzzy country/keyword matching, and Metronic Poppins styling.
+     */
+    function initPayRateCurrencySelect2() {
+        if (!$.fn.select2) return;
+        let $currencySelect = $('#pay_rate_currency');
+        if ($currencySelect.hasClass('select2-hidden-accessible')) {
+            $currencySelect.select2('destroy');
+        }
+        $currencySelect.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'br-currency-select2-dropdown',
+            placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+            minimumResultsForSearch: 0,
+            matcher: function (params, data) {
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+                if (typeof data.text === 'undefined') {
+                    return null;
+                }
+                let term = params.term.toLowerCase();
+                let text = data.text.toLowerCase();
+                let $el = $(data.element);
+                let code = ($el.data('code') || '').toString().toLowerCase();
+                let searchKw = ($el.data('search') || '').toString().toLowerCase();
+
+                if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+    }
+
+    /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Pay Rate input using the currency code read from #pay_rate_currency.
+     * active Pay Rate input using canonical currency code read from #pay_rate_currency.
      */
     function updatePayUI() {
-        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
+        let currencyCode = getSelectedCommercialCurrencyCode();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2833,7 +2890,7 @@ $(document).ready(function () {
 
     /**
      * updateBillUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Bill Rate input using the currency code read from #pay_rate_currency.
+     * active Bill Rate input using canonical currency code read from #pay_rate_currency.
      */
     function updateBillUI() {
         if (isFreeCommercialMode()) {
@@ -2844,7 +2901,7 @@ $(document).ready(function () {
             return false;
         }
 
-        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
+        let currencyCode = getSelectedCommercialCurrencyCode();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2906,14 +2963,19 @@ $(document).ready(function () {
         if (!currencyVal) return;
 
         // 1. Sync header currency & hidden selects
-        $('#pay_rate_currency').val(currencyVal);
+        if ($('#pay_rate_currency').val() != currencyVal) {
+            $('#pay_rate_currency').val(currencyVal);
+            if ($.fn.select2 && $('#pay_rate_currency').hasClass('select2-hidden-accessible')) {
+                $('#pay_rate_currency').trigger('change.select2');
+            }
+        }
         $('#bill_rate_currency').val(currencyVal);
         $('#current_th_cur').val(currencyVal);
 
-        // 2. Update text for all integrated rate currency badges
-        let selectedText = $('#pay_rate_currency option:selected').text().trim() || 'INR';
-        if (selectedText) {
-            $('.changeTextCurrency').text(selectedText);
+        // 2. Update text for all integrated rate currency badges (canonical 3-letter code)
+        let selectedCode = getSelectedCommercialCurrencyCode();
+        if (selectedCode) {
+            $('.changeTextCurrency').text(selectedCode);
         }
 
         updatePayUI();
@@ -2927,10 +2989,17 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.br-rate-field .changeTextCurrency, .br-rate-field .ig-a', function () {
-        $('#pay_rate_currency').focus();
+        if ($.fn.select2 && $('#pay_rate_currency').hasClass('select2-hidden-accessible')) {
+            $('#pay_rate_currency').select2('open');
+        } else {
+            $('#pay_rate_currency').focus();
+        }
     });
 
+    initPayRateCurrencySelect2();
+
     setTimeout(() => {
+        initPayRateCurrencySelect2();
         let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
@@ -2939,7 +3008,7 @@ $(document).ready(function () {
         payRateUpdate();
         billRateUpdate();
         refreshCommercialSummary();
-    }, 500);
+    }, 400);
 
     
 

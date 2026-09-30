@@ -4286,6 +4286,372 @@ END:VCALENDAR";
         return $array;
     }
 
+    /**
+     * Enterprise Currency Metadata lookup.
+     * Returns structured descriptive details for all global ATS trading currencies:
+     * ISO code, full descriptive name, symbol, enterprise label (e.g. 'INR — Indian Rupee (₹)', 'USD — US Dollar ($)'),
+     * and search keywords for Select2 instant autocomplete.
+     *
+     * @param string|null $code
+     * @return array
+     */
+    public static function currencyEnterpriseMeta(?string $code = null): array
+    {
+        static $metaMap = [
+            'USD' => [
+                'code' => 'USD',
+                'name' => 'US Dollar',
+                'symbol' => '$',
+                'label' => 'USD — US Dollar ($)',
+                'keywords' => 'usd us dollar america united states american usd dollars $',
+            ],
+            'INR' => [
+                'code' => 'INR',
+                'name' => 'Indian Rupee',
+                'symbol' => '₹',
+                'label' => 'INR — Indian Rupee (₹)',
+                'keywords' => 'inr indian rupee india rupees indian currency ₹ in',
+            ],
+            'EUR' => [
+                'code' => 'EUR',
+                'name' => 'Euro',
+                'symbol' => '€',
+                'label' => 'EUR — Euro (€)',
+                'keywords' => 'eur euro europe european union € eu',
+            ],
+            'GBP' => [
+                'code' => 'GBP',
+                'name' => 'British Pound',
+                'symbol' => '£',
+                'label' => 'GBP — British Pound (£)',
+                'keywords' => 'gbp british pound pound sterling uk united kingdom britain england £',
+            ],
+            'AED' => [
+                'code' => 'AED',
+                'name' => 'UAE Dirham',
+                'symbol' => 'د.إ',
+                'label' => 'AED — UAE Dirham (د.إ)',
+                'keywords' => 'aed uae dirham emirates dubai abu dhabi dirhams',
+            ],
+            'CAD' => [
+                'code' => 'CAD',
+                'name' => 'Canadian Dollar',
+                'symbol' => 'C$',
+                'label' => 'CAD — Canadian Dollar (C$)',
+                'keywords' => 'cad canadian dollar canada c$',
+            ],
+            'AUD' => [
+                'code' => 'AUD',
+                'name' => 'Australian Dollar',
+                'symbol' => 'A$',
+                'label' => 'AUD — Australian Dollar (A$)',
+                'keywords' => 'aud australian dollar australia a$',
+            ],
+            'SGD' => [
+                'code' => 'SGD',
+                'name' => 'Singapore Dollar',
+                'symbol' => 'S$',
+                'label' => 'SGD — Singapore Dollar (S$)',
+                'keywords' => 'sgd singapore dollar singapore s$',
+            ],
+            'CHF' => [
+                'code' => 'CHF',
+                'name' => 'Swiss Franc',
+                'symbol' => 'CHF',
+                'label' => 'CHF — Swiss Franc (CHF)',
+                'keywords' => 'chf swiss franc switzerland francs',
+            ],
+            'JPY' => [
+                'code' => 'JPY',
+                'name' => 'Japanese Yen',
+                'symbol' => '¥',
+                'label' => 'JPY — Japanese Yen (¥)',
+                'keywords' => 'jpy japanese yen japan yen ¥',
+            ],
+            'NZD' => [
+                'code' => 'NZD',
+                'name' => 'New Zealand Dollar',
+                'symbol' => 'NZ$',
+                'label' => 'NZD — New Zealand Dollar (NZ$)',
+                'keywords' => 'nzd new zealand dollar kiwi nz$',
+            ],
+            'ZAR' => [
+                'code' => 'ZAR',
+                'name' => 'South African Rand',
+                'symbol' => 'R',
+                'label' => 'ZAR — South African Rand (R)',
+                'keywords' => 'zar south african rand south africa rand',
+            ],
+            'BRL' => [
+                'code' => 'BRL',
+                'name' => 'Brazilian Real',
+                'symbol' => 'R$',
+                'label' => 'BRL — Brazilian Real (R$)',
+                'keywords' => 'brl brazilian real brazil reais',
+            ],
+            'PHP' => [
+                'code' => 'PHP',
+                'name' => 'Philippine Peso',
+                'symbol' => '₱',
+                'label' => 'PHP — Philippine Peso (₱)',
+                'keywords' => 'php philippine peso philippines pesos ₱',
+            ],
+            'MYR' => [
+                'code' => 'MYR',
+                'name' => 'Malaysian Ringgit',
+                'symbol' => 'RM',
+                'label' => 'MYR — Malaysian Ringgit (RM)',
+                'keywords' => 'myr malaysian ringgit malaysia ringgits rm',
+            ],
+            'THB' => [
+                'code' => 'THB',
+                'name' => 'Thai Baht',
+                'symbol' => '฿',
+                'label' => 'THB — Thai Baht (฿)',
+                'keywords' => 'thb thai baht thailand baht ฿',
+            ],
+            'IDR' => [
+                'code' => 'IDR',
+                'name' => 'Indonesian Rupiah',
+                'symbol' => 'Rp',
+                'label' => 'IDR — Indonesian Rupiah (Rp)',
+                'keywords' => 'idr indonesian rupiah indonesia rp',
+            ],
+            'VND' => [
+                'code' => 'VND',
+                'name' => 'Vietnamese Dong',
+                'symbol' => '₫',
+                'label' => 'VND — Vietnamese Dong (₫)',
+                'keywords' => 'vnd vietnamese dong vietnam ₫',
+            ],
+            'SEK' => [
+                'code' => 'SEK',
+                'name' => 'Swedish Krona',
+                'symbol' => 'kr',
+                'label' => 'SEK — Swedish Krona (kr)',
+                'keywords' => 'sek swedish krona sweden kronor kr',
+            ],
+            'NOK' => [
+                'code' => 'NOK',
+                'name' => 'Norwegian Krone',
+                'symbol' => 'kr',
+                'label' => 'NOK — Norwegian Krone (kr)',
+                'keywords' => 'nok norwegian krone norway kroner kr',
+            ],
+            'DKK' => [
+                'code' => 'DKK',
+                'name' => 'Danish Krone',
+                'symbol' => 'kr',
+                'label' => 'DKK — Danish Krone (kr)',
+                'keywords' => 'dkk danish krone denmark kroner kr',
+            ],
+            'PLN' => [
+                'code' => 'PLN',
+                'name' => 'Polish Zloty',
+                'symbol' => 'zł',
+                'label' => 'PLN — Polish Zloty (zł)',
+                'keywords' => 'pln polish zloty poland zlotych zł',
+            ],
+            'MXN' => [
+                'code' => 'MXN',
+                'name' => 'Mexican Peso',
+                'symbol' => 'Mex$',
+                'label' => 'MXN — Mexican Peso (Mex$)',
+                'keywords' => 'mxn mexican peso mexico pesos mex$',
+            ],
+            'HKD' => [
+                'code' => 'HKD',
+                'name' => 'Hong Kong Dollar',
+                'symbol' => 'HK$',
+                'label' => 'HKD — Hong Kong Dollar (HK$)',
+                'keywords' => 'hkd hong kong dollar hk$',
+            ],
+            'TWD' => [
+                'code' => 'TWD',
+                'name' => 'Taiwan New Dollar',
+                'symbol' => 'NT$',
+                'label' => 'TWD — Taiwan New Dollar (NT$)',
+                'keywords' => 'twd taiwan new dollar taiwan nt$',
+            ],
+            'KRW' => [
+                'code' => 'KRW',
+                'name' => 'South Korean Won',
+                'symbol' => '₩',
+                'label' => 'KRW — South Korean Won (₩)',
+                'keywords' => 'krw south korean won korea won ₩',
+            ],
+            'TRY' => [
+                'code' => 'TRY',
+                'name' => 'Turkish Lira',
+                'symbol' => '₺',
+                'label' => 'TRY — Turkish Lira (₺)',
+                'keywords' => 'try turkish lira turkey ₺',
+            ],
+            'SAR' => [
+                'code' => 'SAR',
+                'name' => 'Saudi Riyal',
+                'symbol' => '﷼',
+                'label' => 'SAR — Saudi Riyal (﷼)',
+                'keywords' => 'sar saudi riyal saudi arabia riyals ﷼',
+            ],
+            'QAR' => [
+                'code' => 'QAR',
+                'name' => 'Qatari Riyal',
+                'symbol' => '﷼',
+                'label' => 'QAR — Qatari Riyal (﷼)',
+                'keywords' => 'qar qatari riyal qatar riyals ﷼',
+            ],
+            'KWD' => [
+                'code' => 'KWD',
+                'name' => 'Kuwaiti Dinar',
+                'symbol' => 'KD',
+                'label' => 'KWD — Kuwaiti Dinar (KD)',
+                'keywords' => 'kwd kuwaiti dinar kuwait dinars kd',
+            ],
+            'BHD' => [
+                'code' => 'BHD',
+                'name' => 'Bahraini Dinar',
+                'symbol' => 'BD',
+                'label' => 'BHD — Bahraini Dinar (BD)',
+                'keywords' => 'bhd bahraini dinar bahrain dinars bd',
+            ],
+            'OMR' => [
+                'code' => 'OMR',
+                'name' => 'Omani Rial',
+                'symbol' => 'RO',
+                'label' => 'OMR — Omani Rial (RO)',
+                'keywords' => 'omr omani rial oman rials ro',
+            ],
+            'EGP' => [
+                'code' => 'EGP',
+                'name' => 'Egyptian Pound',
+                'symbol' => 'E£',
+                'label' => 'EGP — Egyptian Pound (E£)',
+                'keywords' => 'egp egyptian pound egypt pounds e£',
+            ],
+            'ILS' => [
+                'code' => 'ILS',
+                'name' => 'Israeli Shekel',
+                'symbol' => '₪',
+                'label' => 'ILS — Israeli Shekel (₪)',
+                'keywords' => 'ils israeli shekel israel new shekel ₪',
+            ],
+            'CZK' => [
+                'code' => 'CZK',
+                'name' => 'Czech Koruna',
+                'symbol' => 'Kč',
+                'label' => 'CZK — Czech Koruna (Kč)',
+                'keywords' => 'czk czech koruna czech republic korunas kč',
+            ],
+            'HUF' => [
+                'code' => 'HUF',
+                'name' => 'Hungarian Forint',
+                'symbol' => 'Ft',
+                'label' => 'HUF — Hungarian Forint (Ft)',
+                'keywords' => 'huf hungarian forint hungary forints ft',
+            ],
+            'RON' => [
+                'code' => 'RON',
+                'name' => 'Romanian Leu',
+                'symbol' => 'lei',
+                'label' => 'RON — Romanian Leu (lei)',
+                'keywords' => 'ron romanian leu romania lei',
+            ],
+            'CLP' => [
+                'code' => 'CLP',
+                'name' => 'Chilean Peso',
+                'symbol' => 'CLP$',
+                'label' => 'CLP — Chilean Peso (CLP$)',
+                'keywords' => 'clp chilean peso chile pesos clp$',
+            ],
+            'COP' => [
+                'code' => 'COP',
+                'name' => 'Colombian Peso',
+                'symbol' => 'COL$',
+                'label' => 'COP — Colombian Peso (COL$)',
+                'keywords' => 'cop colombian peso colombia pesos col$',
+            ],
+            'ARS' => [
+                'code' => 'ARS',
+                'name' => 'Argentine Peso',
+                'symbol' => 'AR$',
+                'label' => 'ARS — Argentine Peso (AR$)',
+                'keywords' => 'ars argentine peso argentina pesos ar$',
+            ],
+            'NGN' => [
+                'code' => 'NGN',
+                'name' => 'Nigerian Naira',
+                'symbol' => '₦',
+                'label' => 'NGN — Nigerian Naira (₦)',
+                'keywords' => 'ngn nigerian naira nigeria naira ₦',
+            ],
+            'KES' => [
+                'code' => 'KES',
+                'name' => 'Kenyan Shilling',
+                'symbol' => 'KSh',
+                'label' => 'KES — Kenyan Shilling (KSh)',
+                'keywords' => 'kes kenyan shilling kenya shillings ksh',
+            ],
+            'PKR' => [
+                'code' => 'PKR',
+                'name' => 'Pakistani Rupee',
+                'symbol' => '₨',
+                'label' => 'PKR — Pakistani Rupee (₨)',
+                'keywords' => 'pkr pakistani rupee pakistan rupees ₨',
+            ],
+            'BDT' => [
+                'code' => 'BDT',
+                'name' => 'Bangladeshi Taka',
+                'symbol' => '৳',
+                'label' => 'BDT — Bangladeshi Taka (৳)',
+                'keywords' => 'bdt bangladeshi taka bangladesh taka ৳',
+            ],
+            'LKR' => [
+                'code' => 'LKR',
+                'name' => 'Sri Lankan Rupee',
+                'symbol' => 'Rs',
+                'label' => 'LKR — Sri Lankan Rupee (Rs)',
+                'keywords' => 'lkr sri lankan rupee sri lanka rupees rs',
+            ],
+            'NPR' => [
+                'code' => 'NPR',
+                'name' => 'Nepalese Rupee',
+                'symbol' => 'रू',
+                'label' => 'NPR — Nepalese Rupee (रू)',
+                'keywords' => 'npr nepalese rupee nepal rupees रू',
+            ],
+        ];
+
+        if ($code === null) {
+            return $metaMap;
+        }
+
+        $upper = strtoupper(trim($code));
+        if (isset($metaMap[$upper])) {
+            return $metaMap[$upper];
+        }
+
+        return [
+            'code' => $upper,
+            'name' => $upper,
+            'symbol' => $upper,
+            'label' => $upper,
+            'keywords' => strtolower($upper),
+        ];
+    }
+
+    /**
+     * Get enterprise formatted label for a currency code (e.g. 'USD — US Dollar ($)').
+     *
+     * @param string|null $code
+     * @return string
+     */
+    public static function currencyEnterpriseLabel(?string $code): string
+    {
+        $meta = self::currencyEnterpriseMeta($code);
+        return $meta['label'] ?? ($code ?: 'INR');
+    }
+
     public static function thousandsCurrencyFormat_old($num)
     {
 
