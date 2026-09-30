@@ -1563,12 +1563,13 @@ textarea.has-validation-error:focus,
     align-items: center !important;
     justify-content: space-between !important;
     width: 100% !important;
-    min-height: 46px !important;
-    height: 46px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
     padding: 0 14px !important;
     background: #ffffff !important;
     border: 1px solid #d8deec !important;
-    border-radius: 7px !important;
+    border-radius: 6px !important;
     cursor: pointer !important;
     outline: none !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
@@ -1840,6 +1841,366 @@ textarea.has-validation-error:focus,
     color: #94a3b8 !important;
     display: block !important;
     margin-bottom: 6px !important;
+}
+
+/* Location Combobox Polish Styles */
+.jero-cs-trigger-clear {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    color: #94a3b8 !important;
+    border-radius: 50% !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+    cursor: pointer !important;
+    margin-right: 2px !important;
+}
+.jero-cs-trigger-clear:hover {
+    background-color: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+.jero-cs-search-spinner {
+    font-size: 13px !important;
+    color: #3b82f6 !important;
+    animation: jeroSpin 0.75s linear infinite !important;
+}
+
+@keyframes jeroSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Needs-Confirmation Disambiguation Bar */
+.jero-disambiguation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+}
+.jero-disambiguation-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #1e40af;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.jero-disambiguation-badge:hover {
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-color: #93c5fd;
+}
+.jero-disambiguation-badge.is-recommended {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-color: #c7d2fe;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Candidate Profile Card: Strict 42px Equal Height & Alignment Engine
+   Ensures 100% pixel-perfect equal height (42px) across all 8 controls:
+   1. Full Name (text input)
+   2. Email (email input)
+   3. Mobile Number (phone input + iti flag wrapper)
+   4. Nationality (custom combobox)
+   5. Current Location (custom combobox)
+   6. Date of Birth (date input)
+   7. Gender (select dropdown)
+   8. Highest Qualification (custom combobox)
+   ========================================================================== */
+#talent_create_app #bd-candidate-profile-card .bd-control,
+#talent_create_app #bd-candidate-profile-card .bd-phone-control,
+#talent_create_app #bd-candidate-profile-card .bd-control--select,
+#talent_create_app #bd-candidate-profile-card .bd-control--has-combobox,
+#talent_create_app .bd-card:has(#full_name) .bd-control,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control,
+#talent_create_app .bd-card:has(#full_name) .bd-control--select,
+#talent_create_app .bd-card:has(#full_name) .bd-control--has-combobox {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-control input,
+#talent_create_app #bd-candidate-profile-card .bd-phone-control input,
+#talent_create_app #bd-candidate-profile-card .bd-control select,
+#talent_create_app #bd-candidate-profile-card .bd-control input[type="date"],
+#talent_create_app #bd-candidate-profile-card .jero-custom-select .jero-cs-trigger,
+#talent_create_app .bd-card:has(#full_name) .bd-control input,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control input,
+#talent_create_app .bd-card:has(#full_name) .bd-control select,
+#talent_create_app .bd-card:has(#full_name) .bd-control input[type="date"],
+#talent_create_app .bd-card:has(#full_name) .jero-custom-select .jero-cs-trigger {
+    min-height: 42px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    line-height: 40px !important;
+    box-sizing: border-box !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-control input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
+#talent_create_app #bd-candidate-profile-card .bd-control input[type="date"],
+#talent_create_app .bd-card:has(#full_name) .bd-control input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
+#talent_create_app .bd-card:has(#full_name) .bd-control input[type="date"] {
+    padding-left: 42px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-phone-control .iti,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control .iti {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    box-sizing: border-box !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-phone-control .iti__selected-flag,
+#talent_create_app .bd-card:has(#full_name) .bd-phone-control .iti__selected-flag {
+    height: 40px !important;
+    max-height: 40px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-field label,
+#talent_create_app .bd-card:has(#full_name) .bd-field label {
+    min-height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-bottom: 7px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+}
+
+/* ==========================================================================
+   Enterprise Available From Date Hover Notification Card
+   ========================================================================== */
+.aw-date-info-trigger {
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin-left: 6px !important;
+    border-radius: 50% !important;
+    color: #4f46e5 !important;
+    background: #eef2ff !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    vertical-align: middle !important;
+    outline: none !important;
+}
+
+.aw-date-info-trigger:hover,
+.aw-date-info-trigger:focus,
+.aw-date-info-trigger:focus-within {
+    background: #e0e7ff !important;
+    color: #3730a3 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+}
+
+.aw-date-info-trigger i.fa-circle-info {
+    font-size: 13px !important;
+    line-height: 1 !important;
+}
+
+.aw-date-hover-card {
+    position: absolute !important;
+    bottom: calc(100% + 12px) !important;
+    right: -20px !important;
+    width: 350px !important;
+    max-width: 90vw !important;
+    background: #ffffff !important;
+    border: 1px solid #d8deec !important;
+    border-radius: 10px !important;
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.18), 0 8px 16px -6px rgba(15, 23, 42, 0.10) !important;
+    padding: 14px 16px !important;
+    z-index: 1060 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translateY(6px) !important;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s !important;
+    text-align: left !important;
+    white-space: normal !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.aw-date-hover-card::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 23px !important;
+    border-width: 7px !important;
+    border-style: solid !important;
+    border-color: #ffffff transparent transparent transparent !important;
+}
+
+.aw-date-hover-card::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 22px !important;
+    border-width: 8px !important;
+    border-style: solid !important;
+    border-color: #d8deec transparent transparent transparent !important;
+}
+
+.aw-date-info-trigger:hover .aw-date-hover-card,
+.aw-date-info-trigger:focus .aw-date-hover-card,
+.aw-date-info-trigger:focus-within .aw-date-hover-card {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateY(0) !important;
+}
+
+.aw-hover-card-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.aw-hover-card-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    font-size: 12.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+}
+
+.aw-hover-card-title i {
+    font-size: 13px !important;
+    color: #3b82f6 !important;
+}
+
+.aw-hover-card-pill {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+    text-transform: uppercase !important;
+    color: #059669 !important;
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    border-radius: 20px !important;
+    padding: 2px 7px !important;
+}
+
+.aw-hover-card-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 9px !important;
+}
+
+.aw-hover-item {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+}
+
+.aw-hover-icon {
+    width: 22px !important;
+    height: 22px !important;
+    border-radius: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+}
+
+.aw-hover-icon--blue {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+.aw-hover-icon--amber {
+    background: #fffbeb !important;
+    color: #d97706 !important;
+}
+
+.aw-hover-icon--emerald {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+}
+
+.aw-hover-text {
+    flex: 1 1 auto !important;
+}
+
+.aw-hover-text strong {
+    display: block !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    line-height: 1.3 !important;
+}
+
+.aw-hover-text small {
+    display: block !important;
+    font-size: 10.5px !important;
+    font-weight: 400 !important;
+    color: #64748b !important;
+    line-height: 1.35 !important;
+    margin-top: 2px !important;
+}
+
+.aw-hover-card-footer {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding-top: 9px !important;
+    margin-top: 10px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    font-size: 10px !important;
+    color: #475569 !important;
+    line-height: 1.3 !important;
+}
+
+.aw-hover-card-footer i {
+    font-size: 12px !important;
+    color: #10b981 !important;
+    flex-shrink: 0 !important;
+}
+
+@media (max-width: 560px) {
+    .aw-date-hover-card {
+        right: -60px !important;
+        width: 300px !important;
+    }
+    .aw-date-hover-card::after {
+        right: 63px !important;
+    }
+    .aw-date-hover-card::before {
+        right: 62px !important;
+    }
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
