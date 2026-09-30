@@ -4462,8 +4462,8 @@ select option,
 /* Create Talent field polish: keep phone, availability date, and skill inputs aligned with enterprise form typography. */
 .bd-phone-control input,
 .bd-phone-control .iti input,
-#phone,
-#secondary_mobile {
+#phone:not(.jero-phone-main-input),
+#secondary_mobile:not(.jero-phone-main-input) {
     min-height: 38px !important;
     height: 38px !important;
     color: var(--et-text, #0B1545) !important;
