@@ -756,6 +756,36 @@ A comprehensive forensic audit of `database/schema/mysql-schema.sql` (217 tables
 * **Remediation:** Dynamic single-step cross-rate formula using USD as the universal clearing anchor:
   $$\text{Amount}_{\text{Target}} = \text{Amount}_{\text{Source}} \times \left( \frac{\text{Rate}_{\text{Target}}}{\text{Rate}_{\text{Source}}} \right)$$
 
+#### 🔴 Bug 8: Dual Currency Schema Column Discrepancy (`master_currency.code` vs `currencies.currency_code`)
+* **File / Table:** `app/Helper/GeneralMethod.php` (`defaultCurrency()`), `master_currency`, and `currencies`.
+* **Root Cause & Forensic Error Trace:**
+  - JERO's database maintains two lookup tables for currency data created during different historical phases:
+    1. `master_currency`: Columns are `id`, `country`, `currency`, `code`, `symbol` (e.g. `id=53, country='India', currency='Rupees', code='INR', symbol='Rp'`). Notice that the ISO code is in column **`code`** (NOT `currency_code`).
+    2. `currencies`: Columns are `id`, `currency_name`, `currency_symbol`, `currency_code`, `usd_based_rates`, `inr_based_rates`, `getKey`. The ISO code is in column **`currency_code`**.
+  - When a tenant organization configured their company currency via Account Settings (`companies.currency`), the value was saved as an integer foreign key (e.g. `53` pointing to `master_currency.id = 53` for India).
+  - Attempting to query `DB::table('master_currency')->where('id', $company->currency)->value('currency_code')` caused a fatal production outage:
+    ```
+    SQLSTATE[42S22]: Column not found: 1054 Unknown column 'currency_code' in 'field list'
+    (SQL: select `currency_code` from `master_currency` where `id` = 53 limit 1)
+    ```
+* **Impact:** 500 Internal Server Error on application page loads for any tenant whose company record referenced `master_currency`.
+* **Remediation & Production Standard:**
+  - Standardized `GeneralMethod::defaultCurrency()` to query `code` on `master_currency` first, then fall back to `currencies.currency_code` (by `getKey`), followed by calling-code country auto-detection:
+    ```php
+    if (is_numeric($company->currency)) {
+        $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('code');
+        if ($code) {
+            return strtoupper(trim($code));
+        }
+        $code = DB::table('currencies')->where('getKey', (int) $company->currency)->value('currency_code');
+        if ($code) {
+            return strtoupper(trim($code));
+        }
+    } else {
+        return strtoupper(trim($company->currency));
+    }
+    ```
+
 ---
 
 ### 13.2. Detailed UX Specification: The "🏷️ Original" Marketplace Mode
