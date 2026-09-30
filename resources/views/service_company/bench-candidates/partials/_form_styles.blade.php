@@ -1839,7 +1839,72 @@ textarea.has-validation-error:focus,
     font-size: 18px !important;
     color: #94a3b8 !important;
     display: block !important;
-    margin-bottom: 6px !important;
+/* Location Combobox Polish Styles */
+.jero-cs-trigger-clear {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    color: #94a3b8 !important;
+    border-radius: 50% !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+    cursor: pointer !important;
+    margin-right: 2px !important;
+}
+.jero-cs-trigger-clear:hover {
+    background-color: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+.jero-cs-search-spinner {
+    font-size: 13px !important;
+    color: #3b82f6 !important;
+    animation: jeroSpin 0.75s linear infinite !important;
+}
+
+@keyframes jeroSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Needs-Confirmation Disambiguation Bar */
+.jero-disambiguation-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #f1f5f9;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+}
+.jero-disambiguation-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #1e40af;
+    background: #dbeafe;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.jero-disambiguation-badge:hover {
+    background: #bfdbfe;
+    color: #1e3a8a;
+    border-color: #93c5fd;
+}
+.jero-disambiguation-badge.is-recommended {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-color: #c7d2fe;
+    font-weight: 600;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />

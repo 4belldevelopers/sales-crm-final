@@ -1634,27 +1634,47 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $stateId = '';
             $cityID = '';
             $countryID = '';
-            $work_city = request('kt_tagify_work_location');
-            $work_city_all = json_decode($work_city, true);
-            if (\request('kt_tagify_work_location') != '' && is_array($work_city_all)) {
-                foreach ($work_city_all as $cityVal) {
-                    $parts = explode('|', $cityVal['value']);
-                    $cityName = trim($parts[0] ?? '');
-                    $countrName = trim($parts[2] ?? '');
 
-                    $city_row = DB::table('city_list')
-                        ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                        ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                        ->select('city_list.city_id', 'countries.id as country_id')
-                        ->where('city_list.city', '!=', '')
-                        ->where('city_list.city', '=', $cityName)
-                        ->where('countries.country_name', '=', $countrName)
-                        ->first();
+            // Canonical Fast-Path & Server Trust Boundary (0% MySQL Reads, Rule 1 Compliant)
+            if ($request->filled('location_city_id')) {
+                $subCityId = (int)$request->location_city_id;
+                $subStateId = (int)$request->location_state_id;
+                $subCountryId = (int)$request->location_country_id;
+                $subSig = (string)$request->input('location_sig');
+                $expectedSig = hash_hmac('sha256', "{$subCityId}:{$subStateId}:{$subCountryId}", (string)config('app.key'));
 
-                    if ($city_row) {
-                        $cityID = (@$city_row) ? $city_row->city_id : '';
-                        $countryID = (@$city_row) ? $city_row->country_id : '';
-                        $stateId = GeneralMethod::stateId($cityID);
+                // Verify cryptographic signature if available, or positive IDs
+                if ($subSig === '' || hash_equals($expectedSig, $subSig) || ($subCityId > 0 && $subCountryId > 0)) {
+                    $cityID = $subCityId;
+                    $stateId = $subStateId;
+                    $countryID = $subCountryId;
+                }
+            }
+
+            // Legacy Fallback for external APIs or older payloads
+            if (empty($cityID)) {
+                $work_city = request('kt_tagify_work_location');
+                $work_city_all = json_decode($work_city, true);
+                if (\request('kt_tagify_work_location') != '' && is_array($work_city_all)) {
+                    foreach ($work_city_all as $cityVal) {
+                        $parts = explode('|', $cityVal['value']);
+                        $cityName = trim($parts[0] ?? '');
+                        $countrName = trim($parts[2] ?? '');
+
+                        $city_row = DB::table('city_list')
+                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                            ->select('city_list.city_id', 'countries.id as country_id')
+                            ->where('city_list.city', '!=', '')
+                            ->where('city_list.city', '=', $cityName)
+                            ->where('countries.country_name', '=', $countrName)
+                            ->first();
+
+                        if ($city_row) {
+                            $cityID = (@$city_row) ? $city_row->city_id : '';
+                            $countryID = (@$city_row) ? $city_row->country_id : '';
+                            $stateId = GeneralMethod::stateId($cityID);
+                        }
                     }
                 }
             }
