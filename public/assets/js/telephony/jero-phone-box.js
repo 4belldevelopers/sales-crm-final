@@ -23,7 +23,7 @@
       this.el.setAttribute('role', 'region');
       this.el.setAttribute('aria-label', 'Country Selector');
       this.el.style.cssText = [
-        'position: absolute',
+        'position: fixed',
         'z-index: 99999',
         'display: none',
         'width: 340px',
@@ -78,14 +78,19 @@
       let top;
       if (spaceBelow < dropdownHeight && rect.top > dropdownHeight) {
         // Collision-Aware Flip upwards on 15.6" screens or bottom-drawer positioning
-        top = rect.top + window.scrollY - dropdownHeight - 4;
+        top = rect.top - dropdownHeight - 4;
       } else {
-        top = rect.bottom + window.scrollY + 4;
+        top = rect.bottom + 4;
       }
-      const left = Math.max(8, rect.left + window.scrollX);
+      let left = Math.max(8, rect.left);
+      if (left + 340 > window.innerWidth) {
+        left = Math.max(8, window.innerWidth - 348);
+      }
 
+      this.el.style.position = 'fixed';
       this.el.style.top = `${top}px`;
       this.el.style.left = `${left}px`;
+      this.el.style.zIndex = '99999';
     },
 
     close() {
@@ -247,6 +252,18 @@
       const defaultIso = (this.wrapper.getAttribute('data-default-iso') || 'IN').toUpperCase();
       let initialDial = (this.hiddenCode.value || '').trim();
 
+      // Check if value is ISO2 code (e.g. "in", "us", "+in")
+      const stripped = initialDial.replace('+', '').toUpperCase();
+      if (stripped.length === 2 && /^[A-Z]{2}$/.test(stripped)) {
+        const countryByIso = this.countries.find(c => c.iso === stripped);
+        if (countryByIso) {
+          this.selectCountry(countryByIso);
+          this.bindEvents();
+          this.updateCounter();
+          return;
+        }
+      }
+
       if (initialDial && !initialDial.startsWith('+')) {
         initialDial = '+' + initialDial;
         this.hiddenCode.value = initialDial;
@@ -381,8 +398,37 @@
     getInstance(fieldId) {
       const wrapper = document.getElementById(`${fieldId}_wrapper`);
       return wrapper ? wrapper._jeroPhoneBoxInstance : null;
+    },
+    toggleDropdown(fieldId) {
+      const wrapper = document.getElementById(`${fieldId}_wrapper`) || document.querySelector(`[data-field-id="${fieldId}"]`);
+      if (wrapper) {
+        if (!wrapper._jeroPhoneBoxInstance) {
+          new JeroPhoneBox(wrapper);
+        }
+        if (wrapper._jeroPhoneBoxInstance) {
+          Portal.toggle(wrapper._jeroPhoneBoxInstance);
+        }
+      }
     }
   };
+
+  // Delegated Click for Dropdown Toggle (Universal fallback)
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.jero-country-picker-btn');
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const wrapper = btn.closest('.jero-phone-box-wrapper');
+      if (wrapper) {
+        if (!wrapper._jeroPhoneBoxInstance) {
+          new JeroPhoneBox(wrapper);
+        }
+        if (wrapper._jeroPhoneBoxInstance) {
+          Portal.toggle(wrapper._jeroPhoneBoxInstance);
+        }
+      }
+    }
+  });
 
   // Auto-init on DOMContentLoaded
   if (document.readyState === 'loading') {
