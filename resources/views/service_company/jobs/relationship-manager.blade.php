@@ -230,6 +230,7 @@ $crmSelected = [];
 
 // $recruiter is the array of currently-assigned names passed by controller
 $assignedNames = array_map('trim', (array)($recruiter ?? []));
+$assignedIds = array_filter(array_map('trim', explode(',', (string)($_REQUEST['recruiter_id'] ?? request('recruiter_id') ?? ''))));
 
 foreach ($team as $tv) {
     $tName  = trim(@$tv->name) ?: '?';
@@ -242,7 +243,8 @@ foreach ($team as $tv) {
     elseif ($tOrd >= 117 && $tOrd <= 121) { $tAv = 'bg-dark text-white'; }
     else { $tAv = 'bg-light-secondary text-dark'; }
 
-    $isAssigned = in_array(trim($tName), $assignedNames);
+    $isAssigned = in_array(strtolower(trim($tName)), array_map('strtolower', $assignedNames))
+               || in_array((string)$tv->id, $assignedIds);
 
     $tMobile = (string)(@$tv->mobile ?? @$tv->number ?? @$tv->phone ?? '');
     $tCallingCode = (string)(@$tv->calling_code ?? '');
@@ -435,11 +437,34 @@ window.__crmTeam = __crmTeam;
 function crmEsc(s) {
     return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function crmFind(id) {
+
+function crmFind(idOrName) {
+    if (!idOrName) return null;
+    var target = String(idOrName).trim().toLowerCase();
     for (var i = 0; i < __crmTeam.length; i++) {
-        if (String(__crmTeam[i].id) === String(id)) return __crmTeam[i];
+        var u = __crmTeam[i];
+        if (String(u.id).trim() === target || u.name.trim().toLowerCase() === target) {
+            return u;
+        }
     }
     return null;
+}
+
+function crmFallbackUser(id, name, email, phone) {
+    var nm = (name || id || 'Relationship Manager').trim();
+    var first = (nm.charAt(0) || 'R').toUpperCase();
+    return {
+        id: id || '',
+        name: nm,
+        role: 'Relationship Manager',
+        email: email || '',
+        phone: phone || '',
+        initial: first,
+        avatarClass: 'bg-light-primary text-primary',
+        jobs: 0,
+        captainJobs: 0,
+        trmTalents: 0
+    };
 }
 
 function crmCardHtml(u) {
@@ -447,13 +472,13 @@ function crmCardHtml(u) {
         ? '<div class="crm-kebab-wrap"><button type="button" class="crm-kebab-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>'
           + '<div class="crm-kebab-menu"><a href="javascript:void(0);" class="crm-email-action" data-email="' + crmEsc(u.email) + '"><i class="fa-regular fa-envelope"></i> Email</a></div></div>'
         : '';
-    return '<div class="crm-card">'
+    return '<div class="crm-card" data-card-rmid="' + crmEsc(u.id) + '">'
         + '<div class="d-flex align-items-start justify-content-between gap-2">'
         +   '<div class="d-flex align-items-center gap-2" style="min-width:0;">'
-        +     '<div class="crm-avatar ' + u.avatarClass + '">' + crmEsc(u.initial) + '</div>'
+        +     '<div class="crm-avatar ' + (u.avatarClass || 'bg-light-primary text-primary') + '">' + crmEsc(u.initial || 'R') + '</div>'
         +     '<div style="min-width:0;">'
         +       '<div style="font-size:13px;font-weight:600;color:#181c32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + crmEsc(u.name) + '</div>'
-        +       '<div style="font-size:11px;color:#9ca3af;">' + crmEsc(u.role) + '</div>'
+        +       '<div style="font-size:11px;color:#9ca3af;">' + crmEsc(u.role || 'Relationship Manager') + '</div>'
         +     '</div>'
         +   '</div>'
         +   '<div class="d-flex align-items-center gap-1 flex-shrink-0">'
@@ -462,65 +487,143 @@ function crmCardHtml(u) {
         +   '</div>'
         + '</div>'
         + '<div class="crm-wl">'
-        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-briefcase crm-ic-blue"></i><span class="crm-wl-num">' + u.jobs + '</span></div><div class="crm-wl-lbl">Active Jobs</div></div>'
-        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-crown crm-ic-purple"></i><span class="crm-wl-num">' + u.captainJobs + '</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>'
-        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-users crm-ic-green"></i><span class="crm-wl-num">' + u.trmTalents + '</span></div><div class="crm-wl-lbl">TRM Talents</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-briefcase crm-ic-blue"></i><span class="crm-wl-num">' + (u.jobs || 0) + '</span></div><div class="crm-wl-lbl">Active Jobs</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-crown crm-ic-purple"></i><span class="crm-wl-num">' + (u.captainJobs || 0) + '</span></div><div class="crm-wl-lbl">Captain Jobs</div></div>'
+        +   '<div><div class="crm-wl-top"><i class="fa-solid fa-users crm-ic-green"></i><span class="crm-wl-num">' + (u.trmTalents || 0) + '</span></div><div class="crm-wl-lbl">TRM Talents</div></div>'
         + '</div>'
-        + '<button type="button" class="crm-btn-remove crm-card-remove" data-rmid="' + u.id + '">Remove</button>'
+        + '<button type="button" class="crm-btn-remove crm-card-remove" data-rmid="' + crmEsc(u.id) + '" data-rmname="' + crmEsc(u.name) + '">Remove</button>'
         + '</div>';
 }
 
 function crmRenderSelected() {
-    var ids = [];
+    // 1. Gather all currently selected IDs and Names from #recruiter_id and #recruiter
+    var curVal   = ($('#recruiter').val() || '').trim();
+    var curIdVal = ($('#recruiter_id').val() || '').trim();
+
+    var selectedNames = curVal ? curVal.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+    var selectedIds   = curIdVal ? curIdVal.split(',').map(function(s){ return String(s).trim(); }).filter(Boolean) : [];
+
+    // Also sync from window.__rmSelectedManagers (from main page)
+    if (window.__rmSelectedManagers && window.__rmSelectedManagers.length) {
+        window.__rmSelectedManagers.forEach(function(m) {
+            if (m.id && !selectedIds.includes(String(m.id).trim())) {
+                selectedIds.push(String(m.id).trim());
+            }
+            if (m.name && !selectedNames.some(function(n){ return n.toLowerCase() === m.name.trim().toLowerCase(); })) {
+                selectedNames.push(m.name.trim());
+            }
+        });
+    }
+
+    // 2. Synchronize all table buttons state in the drawer (.cp_select)
     $('.cp_select').each(function () {
-        if (String($(this).data('assign')) === '1') ids.push($(this).attr('rel'));
+        var $btn = $(this);
+        var rel = String($btn.attr('rel') || '').trim();
+        var title = String($btn.attr('data-title') || '').trim().toLowerCase();
+        
+        var isAssigned = selectedIds.includes(rel) || selectedNames.some(function(n){ return n.toLowerCase() === title; });
+        if (isAssigned) {
+            $btn.removeClass('crm-add').addClass('crm-remove').text('Remove');
+            $btn.attr('data-assign', '1');
+            $btn.data('assign', 1);
+            if (rel && !selectedIds.includes(rel)) selectedIds.push(rel);
+        } else {
+            $btn.removeClass('crm-remove').addClass('crm-add').text('Add');
+            $btn.attr('data-assign', '0');
+            $btn.data('assign', 0);
+        }
     });
-    if (ids.length === 0) {
-        $('#crmSelectedGrid').hide().empty();
-        $('#crmEmptyState').show();
+
+    // 3. Resolve user objects for rendering
+    var selectedUsers = [];
+    var seenKeys = {};
+
+    selectedIds.forEach(function (id) {
+        var u = crmFind(id);
+        if (u && !seenKeys[String(u.id)]) {
+            seenKeys[String(u.id)] = true;
+            selectedUsers.push(u);
+        }
+    });
+
+    selectedNames.forEach(function (name) {
+        var u = crmFind(name);
+        if (u && !seenKeys[String(u.id)]) {
+            seenKeys[String(u.id)] = true;
+            selectedUsers.push(u);
+        } else if (!u && !seenKeys[name.toLowerCase()]) {
+            seenKeys[name.toLowerCase()] = true;
+            selectedUsers.push(crmFallbackUser('', name, '', ''));
+        }
+    });
+
+    // 4. Update DOM container
+    var $grid  = $('#crmSelectedGrid');
+    var $empty = $('#crmEmptyState');
+    var $count = $('#crmSelectedCount');
+
+    if (selectedUsers.length === 0) {
+        $grid.hide().empty();
+        $empty.show();
+        $count.text('(0)');
     } else {
         var html = '';
-        ids.forEach(function (id) { var u = crmFind(id); if (u) html += crmCardHtml(u); });
-        $('#crmSelectedGrid').html(html).show();
-        $('#crmEmptyState').hide();
+        selectedUsers.forEach(function (u) {
+            html += crmCardHtml(u);
+        });
+        $grid.html(html).show();
+        $empty.hide();
+        $count.text('(' + selectedUsers.length + ')');
     }
-    $('#crmSelectedCount').text('(' + ids.length + ')');
 }
+window.crmRenderSelected = crmRenderSelected;
 
 $(document).ready(function () {
 
     // Search
     var $rows = $('#crm_team_table tbody tr');
-    $('#searchInput').on('keyup', function () {
+    $('#searchInput').off('keyup').on('keyup', function () {
         var val = $(this).val().toLowerCase();
         $rows.each(function () { $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1); });
     });
 
-    // Scroll to table button
-    $(document).on('click', '#crmScrollToTable', function (e) {
+    // Scroll to table button inside drawer scroll container
+    $(document).off('click', '#crmScrollToTable').on('click', '#crmScrollToTable', function (e) {
         e.preventDefault();
-        $('html,body').animate({ scrollTop: $('#crmAddSection').offset().top - 20 }, 400);
-        setTimeout(function () { $('#searchInput').focus(); }, 450);
+        var $scroll = $('#kt_activities_scroll');
+        var $target = $('#crmAddSection');
+        if ($scroll.length && $target.length) {
+            $scroll.animate({ scrollTop: $scroll.scrollTop() + $target.position().top - 10 }, 350);
+        }
+        setTimeout(function () { $('#searchInput').focus(); }, 400);
     });
 
-    // Card remove -> trigger table button
-    $(document).on('click', '.crm-card-remove', function (e) {
+    // Card remove -> remove user
+    $(document).off('click', '.crm-card-remove').on('click', '.crm-card-remove', function (e) {
         e.preventDefault();
-        $('#team_select_' + $(this).data('rmid')).trigger('click');
+        var rmId = String($(this).data('rmid') || '');
+        var rmName = String($(this).data('rmname') || '');
+        var $tableBtn = rmId ? $('#team_select_' + rmId) : $();
+        if ($tableBtn.length && ($tableBtn.attr('data-assign') === '1' || $tableBtn.hasClass('crm-remove'))) {
+            $tableBtn.trigger('click');
+        } else {
+            DeleteEvent(rmName, rmId);
+            crmRenderSelected();
+        }
     });
 
-    // Kebab
-    $(document).on('click', '.crm-kebab-btn', function (e) {
+    // Kebab menu
+    $(document).off('click', '.crm-kebab-btn').on('click', '.crm-kebab-btn', function (e) {
         e.preventDefault(); e.stopPropagation();
         var $m = $(this).siblings('.crm-kebab-menu');
         $('.crm-kebab-menu').not($m).removeClass('show');
         $m.toggleClass('show');
     });
-    $(document).on('click', '.crm-kebab-menu', function (e) { e.stopPropagation(); });
-    $(document).on('click', function () { $('.crm-kebab-menu').removeClass('show'); });
+    $(document).off('click', '.crm-kebab-menu').on('click', '.crm-kebab-menu', function (e) { e.stopPropagation(); });
+    $(document).off('click.crmKebabDoc').on('click.crmKebabDoc', function () { $('.crm-kebab-menu').removeClass('show'); });
 
     // Email
-    $(document).on('click', '.crm-email-action', function (e) {
+    $(document).off('click', '.crm-email-action').on('click', '.crm-email-action', function (e) {
         e.preventDefault(); e.stopPropagation();
         $('.crm-kebab-menu').removeClass('show');
         var email = $(this).data('email');
@@ -528,49 +631,78 @@ $(document).ready(function () {
     });
 
     // Add / Remove in table
-    $(document).on('click', '.cp_select', function () {
-        var rel    = $(this).attr('rel');
-        var assign = $(this).attr('data-assign');
-        var title  = $(this).attr('data-title');
-        var email  = $(this).attr('data-email') || '';
-        var phone  = $(this).attr('data-phone') || '';
-        if (assign == 0) {
-            $(this).removeClass('crm-add').addClass('crm-remove').text('Remove').attr('data-assign', 1);
+    $(document).off('click', '.cp_select').on('click', '.cp_select', function (e) {
+        e.preventDefault();
+        var $btn   = $(this);
+        var rel    = String($btn.attr('rel') || '').trim();
+        var assign = String($btn.attr('data-assign') || $btn.data('assign') || '0');
+        var title  = String($btn.attr('data-title') || '').trim();
+        var email  = String($btn.attr('data-email') || '').trim();
+        var phone  = String($btn.attr('data-phone') || '').trim();
+
+        if (assign === '0') {
+            $btn.removeClass('crm-add').addClass('crm-remove').text('Remove');
+            $btn.attr('data-assign', '1');
+            $btn.data('assign', 1);
             addRecruiterManager(title, rel, email, phone);
         } else {
-            $(this).removeClass('crm-remove').addClass('crm-add').text('Add').attr('data-assign', 0);
+            $btn.removeClass('crm-remove').addClass('crm-add').text('Add');
+            $btn.attr('data-assign', '0');
+            $btn.data('assign', 0);
             DeleteEvent(title, rel);
         }
         crmRenderSelected();
     });
 
+    // Initial render and continuous watcher
+    crmRenderSelected();
+
+    var __lastCrmRec = null;
+    var __lastCrmRecId = null;
+    if (window.__crmWatcherInterval) clearInterval(window.__crmWatcherInterval);
+    window.__crmWatcherInterval = setInterval(function () {
+        var r = ($('#recruiter').val() || '').trim();
+        var ri = ($('#recruiter_id').val() || '').trim();
+        if (r !== __lastCrmRec || ri !== __lastCrmRecId) {
+            __lastCrmRec = r;
+            __lastCrmRecId = ri;
+            crmRenderSelected();
+        }
+    }, 300);
+
 });
 
 function addRecruiterManager(name, rel, email, phone) {
-    var cur   = $('#recruiter').val();
-    var curId = $('#recruiter_id').val();
-    if (cur !== '') {
-        var names = cur.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        var ids   = curId.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        if (!names.includes(name.trim())) {
-            names.push(name.trim());
-            $('#recruiter').val(names.join(' , '));
-        }
-        if (!ids.includes(String(rel).trim())) {
-            ids.push(String(rel).trim());
-            $('#recruiter_id').val(ids.join(' , '));
-        }
-    } else {
-        $('#recruiter').val(name);
-        $('#recruiter_id').val(rel);
+    name = (name || '').trim();
+    rel = String(rel || '').trim();
+    if (!name && !rel) return;
+
+    var cur   = $('#recruiter').val() || '';
+    var curId = $('#recruiter_id').val() || '';
+
+    var names = cur ? cur.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    var ids   = curId ? curId.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+
+    if (name && !names.some(function(n) { return n.toLowerCase() === name.toLowerCase(); })) {
+        names.push(name);
     }
+    if (rel && !ids.includes(rel)) {
+        ids.push(rel);
+    }
+
+    $('#recruiter').val(names.join(' , '));
+    $('#recruiter_id').val(ids.join(' , '));
+
+    var u = crmFind(rel) || crmFind(name);
+    var finalEmail = email || (u ? u.email : '');
+    var finalPhone = phone || (u ? u.phone : '');
 
     if (typeof window.registerRelationshipManager === 'function') {
         window.registerRelationshipManager({
-            id: String(rel),
+            id: rel,
             name: name,
-            email: email || '',
-            phone: phone || ''
+            email: finalEmail,
+            phone: finalPhone
         });
     }
     if (typeof window.syncRelationshipManagerCard === 'function') {
@@ -579,14 +711,17 @@ function addRecruiterManager(name, rel, email, phone) {
 }
 
 function DeleteEvent(name, rel) {
-    var cur   = $('#recruiter').val();
-    var curId = $('#recruiter_id').val();
-    if (cur !== '') {
-        var names = cur.split(',').map(function(s) { return s.trim(); }).filter(function (n) { return n.toLowerCase() !== name.trim().toLowerCase(); });
-        var ids   = curId.split(',').map(function(s) { return s.trim(); }).filter(function (i) { return i !== String(rel).trim(); });
-        $('#recruiter').val(names.join(' , '));
-        $('#recruiter_id').val(ids.join(' , '));
-    }
+    name = (name || '').trim().toLowerCase();
+    rel = String(rel || '').trim();
+
+    var cur   = $('#recruiter').val() || '';
+    var curId = $('#recruiter_id').val() || '';
+
+    var names = cur ? cur.split(',').map(function(s) { return s.trim(); }).filter(function (n) { return n.toLowerCase() !== name; }) : [];
+    var ids   = curId ? curId.split(',').map(function(s) { return s.trim(); }).filter(function (i) { return i !== rel; }) : [];
+
+    $('#recruiter').val(names.join(' , '));
+    $('#recruiter_id').val(ids.join(' , '));
 
     if (typeof window.removeRelationshipManagerById === 'function') {
         window.removeRelationshipManagerById(rel, name);

@@ -238,6 +238,38 @@
 
             if (!combined) continue;
 
+            // Smart Global Alias & Synonym Mapping (Canonical Resolution)
+            // Engineering & Technology (B.Tech / B.E)
+            if (/\b(b\.?tech|b\.?e\.?|bachelor of technology|bachelor of engineering|beng)\b/i.test(combined)) return '13';
+            // Master of Technology / Engineering (M.Tech / M.E)
+            if (/\b(m\.?tech|m\.?e\.?|master of technology|master of engineering|meng)\b/i.test(combined)) return '40';
+            // Computer Applications
+            if (/\b(m\.?c\.?a|master of computer applications)\b/i.test(combined)) return '42';
+            if (/\b(b\.?c\.?a|bachelor of computer applications)\b/i.test(combined)) return '16';
+            // Science & Computing (B.S., B.Sc., BSCS, Bachelor of Science)
+            if (/\b(b\.?s\.?|b\.?sc|bachelor of science|bsc(?:\s*\(hons\))?|bscs)\b/i.test(combined)) return '12';
+            // Master of Science (M.S., M.Sc., MSCS, Master of Science)
+            if (/\b(m\.?s\.?|m\.?sc|master of science|msc|mscs)\b/i.test(combined)) return '39';
+            // Business Administration
+            if (/\b(m\.?b\.?a|pgdm|master of business administration)\b/i.test(combined)) return '41';
+            if (/\b(b\.?b\.?a|b\.?m\.?s|bachelor of business administration)\b/i.test(combined)) return '5';
+            // Commerce & Finance
+            if (/\b(b\.?com|bachelor of commerce)\b/i.test(combined)) return '6';
+            if (/\b(m\.?com|master of commerce)\b/i.test(combined)) return '35';
+            // Doctorate & Ph.D.
+            if (/\b(ph\.?d|doctorate|doctor of philosophy|dphil)\b/i.test(combined)) return '52';
+            // Associate Degrees & Diplomas
+            if (/\b(associate(?:'s)? degree|polytechnic|diploma)\b/i.test(combined)) return '22';
+            // Professional & Legal
+            if (/\b(chartered accountant|cpa|acca)\b/i.test(combined)) return '26';
+            if (/\b(ll\.?b|juris doctor|j\.?d\.?|bachelor of laws)\b/i.test(combined)) return '23';
+            if (/\b(ll\.?m|master of laws)\b/i.test(combined)) return '31';
+            // Medicine & Surgery
+            if (/\b(mbbs|medical doctor|m\.?d\.?)\b/i.test(combined)) return '24';
+            // High School & Secondary
+            if (/\b(12th|hsc|senior secondary|high school|a[- ]?levels?)\b/i.test(combined)) return '2';
+            if (/\b(10th|ssc|matriculation|gcse|o[- ]?levels?)\b/i.test(combined)) return '1';
+
             for (var j = 0; j < options.length; j++) {
                 var opt = options[j];
                 if (!opt.value) continue;
@@ -247,15 +279,6 @@
                 if (combined === optText || degreeRaw === optText) {
                     return opt.value;
                 }
-
-                if (/\bb\.?tech\b/i.test(degreeRaw) && /\bb\.?tech\b/i.test(optText)) return opt.value;
-                if (/\bm\.?tech\b/i.test(degreeRaw) && /\bm\.?tech\b/i.test(optText)) return opt.value;
-                if (/\bmba\b/i.test(degreeRaw) && /\bmba\b/i.test(optText)) return opt.value;
-                if (/\bmca\b/i.test(degreeRaw) && /\bmca\b/i.test(optText)) return opt.value;
-                if (/\bbca\b/i.test(degreeRaw) && /\bbca\b/i.test(optText)) return opt.value;
-                if (/\bphd\b/i.test(degreeRaw) && /\bphd\b/i.test(optText)) return opt.value;
-                if (/\bdoctorate\b/i.test(degreeRaw) && /\bdoctor/i.test(optText)) return opt.value;
-                if (/\bdiploma\b/i.test(degreeRaw) && /\bdiploma\b/i.test(optText)) return opt.value;
 
                 if (combined.indexOf(optText) !== -1 || optText.indexOf(degreeRaw) !== -1) {
                     return opt.value;
@@ -299,6 +322,9 @@
 
                 $el.val(strVal);
                 $el.trigger('input').trigger('change');
+                if ($.fn.select2 && $el.hasClass('select2-hidden-accessible')) {
+                    $el.trigger('change.select2');
+                }
 
                 var domEl = $el[0];
                 if (domEl && typeof domEl.dispatchEvent === 'function') {
@@ -363,6 +389,67 @@
                             tagifyLoc.addTags([parsedLocData]);
                         } catch (_) {}
                     }
+                }
+            }
+
+            // 5b. Nationality Auto-Detection (Client RAM In-Memory Matcher)
+            var detectedNationality = null;
+            if (cand.nationality) {
+                detectedNationality = cand.nationality;
+            }
+            if (!detectedNationality) {
+                var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
+                if (rawCc === '91') detectedNationality = 'Indian';
+                else if (rawCc === '44') detectedNationality = 'British';
+                else if (rawCc === '61') detectedNationality = 'Australian';
+                else if (rawCc === '971') detectedNationality = 'Emirati';
+                else if (rawCc === '65') detectedNationality = 'Singaporean';
+                else if (rawCc === '49') detectedNationality = 'German';
+                else if (rawCc === '33') detectedNationality = 'French';
+                else if (rawCc === '353') detectedNationality = 'Irish';
+                else if (rawCc === '31') detectedNationality = 'Dutch';
+                else if (rawCc === '966') detectedNationality = 'Saudi';
+                else if (rawCc === '1') {
+                    var locStr = String(parsedLocData || '').toLowerCase();
+                    if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
+                        detectedNationality = 'Canadian';
+                    } else {
+                        detectedNationality = 'American';
+                    }
+                }
+            }
+            if (!detectedNationality && parsedLocData) {
+                var locLower = String(parsedLocData).toLowerCase();
+                if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
+                    detectedNationality = 'Indian';
+                } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
+                    detectedNationality = 'American';
+                } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
+                    detectedNationality = 'British';
+                } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
+                    detectedNationality = 'Canadian';
+                } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
+                    detectedNationality = 'Australian';
+                } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
+                    detectedNationality = 'Emirati';
+                } else if (/singapore/.test(locLower)) {
+                    detectedNationality = 'Singaporean';
+                } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
+                    detectedNationality = 'German';
+                } else if (/france|paris|lyon|marseille/.test(locLower)) {
+                    detectedNationality = 'French';
+                } else if (/ireland|dublin|cork/.test(locLower)) {
+                    detectedNationality = 'Irish';
+                } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
+                    detectedNationality = 'Dutch';
+                } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
+                    detectedNationality = 'Saudi';
+                }
+            }
+            if (detectedNationality) {
+                setVal('#nationality', detectedNationality);
+                if ($.fn.select2 && $('#nationality').hasClass('select2-hidden-accessible')) {
+                    $('#nationality').trigger('change.select2');
                 }
             }
 

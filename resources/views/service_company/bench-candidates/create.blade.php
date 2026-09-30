@@ -493,34 +493,236 @@ if($snp_mode== 1){
                       <input type="text" class="" value="" id="kt_tagify_work_location" name="kt_tagify_work_location" placeholder="Search city, state or country" />
                     </div>
                   </div>
+
+                  {{-- Nationality: Reordered before Qualification to govern adaptive curation (Left-to-Right Flow) --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Nationality <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-flag"></i>
+                      @php
+                        // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
+                        $countryToDemonym = [
+                            'in' => 'Indian',
+                            'us' => 'American',
+                            'gb' => 'British',
+                            'uk' => 'British',
+                            'ca' => 'Canadian',
+                            'au' => 'Australian',
+                            'ae' => 'Emirati',
+                            'sg' => 'Singaporean',
+                            'de' => 'German',
+                            'fr' => 'French',
+                            'nl' => 'Dutch',
+                            'ie' => 'Irish',
+                            'sa' => 'Saudi',
+                        ];
+                        $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
+                        $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
+
+                        // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
+                        $topPopularNationalities = [
+                            'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
+                            'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
+                            'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
+                            'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
+                            'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
+                            'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
+                            'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
+                            'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
+                            'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
+                            'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
+                            'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
+                            'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
+                            'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
+                        ];
+
+                        // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
+                        $allNationalities = [
+                            'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
+                            'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
+                            'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
+                            'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
+                            'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
+                            'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
+                            'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
+                            'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
+                            'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
+                            'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
+                            'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
+                            'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
+                            'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
+                            'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
+                            'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
+                            'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
+                            'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
+                            'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
+                            'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
+                            'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
+                            'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
+                            'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
+                            'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
+                            'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
+                            'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
+                            'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
+                            'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
+                            'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
+                            'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
+                            'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
+                            'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
+                            'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
+                            'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
+                            'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
+                            'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
+                            'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
+                            'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
+                            'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
+                        ];
+                      @endphp
+                      <select name="nationality" id="nationality">
+                        <option value="">Select nationality</option>
+                        <optgroup label="⭐ Top 10 Popular Nationalities">
+                          @foreach($topPopularNationalities as $natKey => $natItem)
+                            <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
+                          @endforeach
+                        </optgroup>
+                        <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
+                          @foreach($allNationalities as $demonym => $countrySynonyms)
+                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
+                          @endforeach
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+
+                  {{-- Highest Qualification: Adaptive Country Curation + Global Alias Escape Search --}}
                   <div class="fg fv-row bd-field">
                     <label>Highest Qualification <span class="rq">*</span></label>
                     <div class="bd-control bd-control--select">
                       <i class="fa-solid fa-graduation-cap"></i>
                       <select name="qualification" id="qualification">
                         <option value="">Select qualification</option>
-                        @foreach($qualification as $data_value)
                         @php
-                        $sel = '';
-                        if(@$application->qualification == $data_value->id ){
-                        $sel = 'selected="selected"';
-                        }
+                          // Map incoming database qualification records by ID
+                          $qualMap = [];
+                          if (!empty($qualification)) {
+                              foreach ($qualification as $qItem) {
+                                  $qualMap[$qItem->id] = $qItem;
+                              }
+                          }
+
+                          // 7-Category Global Education Standard with Regional Prov & Global Alias Taxonomy
+                          $educationCategories = [
+                              "🎓 Bachelor's / Undergraduate Degrees" => [
+                                  13 => ['label' => 'B.Tech / B.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian,Commonwealth', 'aliases' => 'btech,b.tech,b tech,be,b.e,bachelor of technology,bachelor of engineering,beng,b.eng,bse'],
+                                  12 => ['label' => 'B.S. / B.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,Canadian,British,Australian,European,Indian', 'aliases' => 'bs,b.s.,bsc,b.sc,bachelor of science,bachelor science,bs cs,bsc cs,b sc'],
+                                  16 => ['label' => 'BCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'bca,b.c.a.,bachelor of computer applications,bachelor computer applications'],
+                                  5  => ['label' => 'BBA / BMS (Business Administration)', 'badge' => 'Business / Global', 'regions' => 'Indian,American,Canadian,British,Australian', 'aliases' => 'bba,b.b.a.,bms,b.m.s.,bachelor of business administration,bachelor business'],
+                                  6  => ['label' => 'B.Com (Commerce & Finance)', 'badge' => 'Commerce / Global', 'regions' => 'Indian,British,Canadian,Australian,Commonwealth', 'aliases' => 'bcom,b.com,bachelor of commerce,bachelor commerce'],
+                                  3  => ['label' => 'B.A (Arts & Humanities)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'ba,b.a.,bachelor of arts,bachelor arts'],
+                                  7  => ['label' => 'B.Des (Design)', 'badge' => 'Design / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bdes,b.des,bachelor of design,bachelor design'],
+                                  18 => ['label' => 'BFA (Fine Arts)', 'badge' => 'Arts / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bfa,b.f.a.,bachelor of fine arts'],
+                                  4  => ['label' => 'B.Arch (Architecture)', 'badge' => 'Architecture / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'barch,b.arch,bachelor of architecture'],
+                                  11 => ['label' => 'B.Pharma (Pharmacy)', 'badge' => 'Pharma / Global', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'bpharma,b.pharma,b pharm,b.pharm,bachelor of pharmacy'],
+                                  19 => ['label' => 'BHM (Hotel Management)', 'badge' => 'Hospitality', 'regions' => 'Indian', 'aliases' => 'bhm,b.h.m.,bachelor of hotel management'],
+                                  8  => ['label' => 'B.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bed,b.ed,bachelor of education'],
+                                  9  => ['label' => 'B.El.Ed (Elementary Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'beled,b.el.ed,bachelor of elementary education'],
+                                  10 => ['label' => 'B.P.Ed (Physical Education)', 'badge' => 'Sports & Phys', 'regions' => 'Indian', 'aliases' => 'bped,b.p.ed,bachelor of physical education'],
+                                  21 => ['label' => 'BVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bvsc,b.v.sc,bachelor of veterinary science'],
+                              ],
+                              "🎓 Master's / Postgraduate Degrees" => [
+                                  39 => ['label' => 'M.S. / M.Sc (Science & Computing)', 'badge' => 'USA / Global', 'regions' => 'American,Canadian,British,Australian,European,Indian', 'aliases' => 'ms,m.s.,msc,m.sc,master of science,master science,ms cs,msc cs,m s,m sc,stanford ms,mit ms'],
+                                  40 => ['label' => 'M.Tech / M.E (Engineering & Technology)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'mtech,m.tech,m tech,me,m.e,master of technology,master of engineering,meng,m.eng'],
+                                  41 => ['label' => 'MBA / PGDM (Business Administration)', 'badge' => 'Management / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'mba,m.b.a.,pgdm,p.g.d.m.,master of business administration,master business administration,executive mba'],
+                                  42 => ['label' => 'MCA (Computer Applications)', 'badge' => 'India / Tech', 'regions' => 'Indian', 'aliases' => 'mca,m.c.a.,master of computer applications,master computer applications'],
+                                  43 => ['label' => 'MCM (Computer Management)', 'badge' => 'Management', 'regions' => 'Indian', 'aliases' => 'mcm,m.c.m.,master of computer management'],
+                                  35 => ['label' => 'M.Com (Commerce & Finance)', 'badge' => 'Commerce', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mcom,m.com,master of commerce'],
+                                  32 => ['label' => 'M.A (Arts & Humanities)', 'badge' => 'Humanities', 'regions' => 'Indian,American,Canadian,British,Australian,European', 'aliases' => 'ma,m.a.,master of arts'],
+                                  36 => ['label' => 'M.Des. (Design)', 'badge' => 'Design', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mdes,m.des,master of design'],
+                                  45 => ['label' => 'MFA (Fine Arts)', 'badge' => 'Fine Arts', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mfa,m.f.a.,master of fine arts'],
+                                  33 => ['label' => 'M.Arch (Architecture)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'march,m.arch,master of architecture'],
+                                  38 => ['label' => 'M.Pharma (Pharmacy)', 'badge' => 'Pharma', 'regions' => 'Indian,American,Canadian,British', 'aliases' => 'mpharma,m.pharma,m pharm,m.pharm,master of pharmacy'],
+                                  37 => ['label' => 'M.Ed (Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'med,m.ed,master of education'],
+                                  47 => ['label' => 'MVSC (Veterinary Science)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mvsc,m.v.sc,master of veterinary science'],
+                                  30 => ['label' => 'Integrated PG (Dual Degree)', 'badge' => 'Integrated / Dual', 'regions' => 'Indian,European', 'aliases' => 'integrated pg,dual degree,integrated mtech,integrated btech mtech,5 year integrated'],
+                              ],
+                              "🏛️ Doctorate & Research Degrees" => [
+                                  52 => ['label' => 'Ph.D. / Doctorate (Doctor of Philosophy)', 'badge' => 'Doctorate / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'phd,ph.d.,ph.d,doctorate,doctor of philosophy,dphil,d.phil'],
+                              ],
+                              "📜 Associate Degrees & Diplomas" => [
+                                  22 => ['label' => 'Diploma / Associate Degree (Technical & Polytechnic)', 'badge' => 'Polytechnic / Assoc', 'regions' => 'Indian,American,Canadian,Australian', 'aliases' => 'diploma,polytechnic,associate degree,aa,a.a.,as,a.s.,aas,a.a.s.,associate of science,associate of arts'],
+                                  48 => ['label' => 'PG Diploma (Post Graduate Diploma)', 'badge' => 'PG Diploma', 'regions' => 'Indian,Canadian,British,Commonwealth', 'aliases' => 'pg diploma,pgd,pgdiploma,post graduate diploma'],
+                                  25 => ['label' => 'HND / HNC (Higher National Diploma/Certificate)', 'badge' => 'UK / Commonwealth', 'regions' => 'British,Commonwealth', 'aliases' => 'hnd,hnc,higher national diploma,higher national certificate'],
+                              ],
+                              "⚖️ Professional, Legal & Medical Degrees" => [
+                                  26 => ['label' => 'CA / CPA (Chartered Accounting)', 'badge' => 'Finance / Global', 'regions' => 'Indian,American,Canadian,British,Australian', 'aliases' => 'ca,cpa,chartered accountant,chartered accountancy,certified public accountant'],
+                                  27 => ['label' => 'CS (Company Secretary)', 'badge' => 'Corporate Law', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'cs,c.s.,company secretary,company secretaryship'],
+                                  29 => ['label' => 'ICWA / CMA (Cost & Management Accounting)', 'badge' => 'Cost Accounting', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'icwa,cma,cost accountant,cost and management accountant'],
+                                  23 => ['label' => 'LLB (Law Degree)', 'badge' => 'Legal / Global', 'regions' => 'Indian,British,American,Commonwealth', 'aliases' => 'llb,l.l.b.,bachelor of laws,jd,j.d.,juris doctor,law degree'],
+                                  31 => ['label' => 'LLM (Master of Laws)', 'badge' => 'Legal / Postgrad', 'regions' => 'Indian,American,Canadian,British,European,Commonwealth', 'aliases' => 'llm,l.l.m.,master of laws'],
+                                  24 => ['label' => 'MBBS (Bachelor of Medicine & Surgery)', 'badge' => 'Medical / Surgery', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mbbs,m.b.b.s.,bachelor of medicine,md,doctor of medicine'],
+                                  46 => ['label' => 'MD / MS (Doctor of Medicine / Surgery)', 'badge' => 'Medical Specialty', 'regions' => 'Indian,American,Canadian,British,Commonwealth', 'aliases' => 'md,m.d.,ms general surgery,master of surgery,doctor of medicine'],
+                                  28 => ['label' => 'DM (Doctor of Medicine - Super Specialty)', 'badge' => 'Super Specialty', 'regions' => 'Indian', 'aliases' => 'dm,d.m.,super specialty'],
+                                  34 => ['label' => 'M.Ch (Surgical Super Specialty)', 'badge' => 'Surgical Specialty', 'regions' => 'Indian', 'aliases' => 'mch,m.ch,magister chirurgiae'],
+                                  17 => ['label' => 'BDS (Dental Surgery)', 'badge' => 'Dental', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'bds,b.d.s.,dental surgery,dentist'],
+                                  44 => ['label' => 'MDS (Master of Dental Surgery)', 'badge' => 'Dental Postgrad', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'mds,m.d.s.,master dental surgery'],
+                                  15 => ['label' => 'BAMS (Ayurvedic Medicine)', 'badge' => 'Ayurveda', 'regions' => 'Indian', 'aliases' => 'bams,b.a.m.s.,ayurveda'],
+                                  20 => ['label' => 'BHMS (Homeopathic Medicine)', 'badge' => 'Homeopathy', 'regions' => 'Indian', 'aliases' => 'bhms,b.h.m.s.,homeopathy'],
+                                  14 => ['label' => 'B.U.M.S (Unani Medicine)', 'badge' => 'Unani', 'regions' => 'Indian', 'aliases' => 'bums,b.u.m.s.,unani'],
+                              ],
+                              "🏫 Secondary & High School" => [
+                                  2  => ['label' => '12th Standard / High School Diploma / A-Levels', 'badge' => 'High School', 'regions' => 'Indian,American,Canadian', 'aliases' => '12th,12th standard,hsc,intermediate,high school,high school diploma,ged'],
+                                  1  => ['label' => '10th Standard / GCSE / O-Levels', 'badge' => 'Secondary', 'regions' => 'Indian', 'aliases' => '10th,10th standard,ssc,matric,matriculation'],
+                                  49 => ['label' => 'A levels / Advanced (UK/International)', 'badge' => 'UK A-Levels', 'regions' => 'British,Commonwealth', 'aliases' => 'a levels,a-levels,alevel,advanced level'],
+                                  51 => ['label' => 'GCSE / O-Levels (UK/International)', 'badge' => 'UK GCSE', 'regions' => 'British,Commonwealth', 'aliases' => 'gcse,o-levels,o levels,olevel'],
+                                  50 => ['label' => 'GNVQ / Vocational Secondary', 'badge' => 'Vocational', 'regions' => 'British,Commonwealth', 'aliases' => 'gnvq,vocational secondary'],
+                              ],
+                              "🌐 Other Qualifications" => [
+                                  60 => ['label' => 'Others / Non-Disclosed', 'badge' => 'Other', 'regions' => 'Global,Indian,American,Canadian,British,Australian,European', 'aliases' => 'other,others,non disclosed'],
+                              ],
+                          ];
+
+                          $selectedQualId = @$application->qualification;
+                          $renderedIds = [];
                         @endphp
-                        <option value="{{ @$data_value->id }}" {{ @$sel }}>{{ @$data_value->name }}</option>
+
+                        @foreach($educationCategories as $categoryLabel => $catItems)
+                          <optgroup label="{{ $categoryLabel }}">
+                            @foreach($catItems as $qId => $itemMeta)
+                              @if(isset($qualMap[$qId]))
+                                @php
+                                  $renderedIds[] = $qId;
+                                  $isSelected = ((string)$selectedQualId === (string)$qId);
+                                @endphp
+                                <option value="{{ $qId }}" 
+                                        data-regions="{{ $itemMeta['regions'] }}"
+                                        data-aliases="{{ $itemMeta['aliases'] }}"
+                                        data-badge="{{ $itemMeta['badge'] }}"
+                                        {{ $isSelected ? 'selected="selected"' : '' }}>
+                                  {{ $itemMeta['label'] }}
+                                </option>
+                              @endif
+                            @endforeach
+                          </optgroup>
                         @endforeach
-                      </select>
-                    </div>
-                  </div>
-                  <div class="fg fv-row bd-field">
-                    <label>Nationality <span class="rq">*</span></label>
-                    <div class="bd-control bd-control--select">
-                      <i class="fa-regular fa-flag"></i>
-                      <select name="nationality" id="nationality">
-                        <option value="">Select nationality</option>
-                        <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
-                        <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
-                        <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
-                        <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+
+                        {{-- Fallback safety for any unmapped database record --}}
+                        @php
+                          $remainingItems = [];
+                          foreach ($qualMap as $qId => $qObj) {
+                              if (!in_array($qId, $renderedIds)) {
+                                  $remainingItems[] = $qObj;
+                              }
+                          }
+                        @endphp
+                        @if(count($remainingItems) > 0)
+                          <optgroup label="Additional Qualifications">
+                            @foreach($remainingItems as $remItem)
+                              <option value="{{ $remItem->id }}" data-regions="Global" data-aliases="" data-badge="Other" {{ ((string)$selectedQualId === (string)$remItem->id) ? 'selected="selected"' : '' }}>
+                                {{ $remItem->name }}
+                              </option>
+                            @endforeach
+                          </optgroup>
+                        @endif
                       </select>
                     </div>
                   </div>
@@ -1055,72 +1257,24 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="pay-annual">
                         <label>Pay Rate (Annual) <span class="rq">*</span><span id="pay_rate_annual_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payrateannual"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="pay-monthly">
                         <label>Pay Rate (Monthly) <span class="rq">*</span><span id="pay_rate_monthly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payratemonthly"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="pay-hourly">
                         <label>Pay Rate (Hourly) <span class="rq">*</span><span id="pay_rate_hourly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-pay-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-pay-currency-select" aria-label="Select Pay Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="pay_rate_amount" id="pay_rate_amount" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted payratehourly"></span>
                       </div>
@@ -1161,72 +1315,24 @@ if($snp_mode== 1){
                       <div class="br-rate-field is-active" data-rate-panel="bill-annual">
                         <label>Bill Rate (Annual) <span class="rq">*</span><span id="bill_rate_annual_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billrateannual"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="bill-monthly">
                         <label>Bill Rate (Monthly) <span class="rq">*</span><span id="bill_rate_monthly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billratemonthly"></span>
                       </div>
                       <div class="br-rate-field" data-rate-panel="bill-hourly">
                         <label>Bill Rate (Hourly) <span class="rq">*</span><span id="bill_rate_hourly_usd"></span></label>
                         <div class="ig">
-                           <span class="ig-prefix ig-bill-prefix" aria-hidden="true">&#8377;</span>
-                           <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                          <div class="ig-currency-box">
-                            <select class="ig-currency-select br-currency-sync br-bill-currency-select" aria-label="Select Bill Rate Currency">
-                              @foreach($currency as $key=>$val)
-                                @php
-                                  $sel = '';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val) $sel = 'selected="selected"';
-                                  }else{
-                                    if($current_ctc_cur == $key) $sel = 'selected="selected"';
-                                  }
-                                @endphp
-                                <option value="{{ $key }}" {{ $sel }}>{{ $val }}</option>
-                              @endforeach
-                            </select>
-                            <i class="fa-solid fa-chevron-down ig-currency-chevron" aria-hidden="true"></i>
-                          </div>
+                          <input type="number" name="bill_rate_amount" id="bill_rate_amount" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
+                          <span class="ig-a changeTextCurrency">{{ $currency_code }}</span>
                         </div>
                         <span class="form-text text-muted billratehourly"></span>
                       </div>
@@ -1296,7 +1402,7 @@ if($snp_mode== 1){
                       <th>Skill <span class="rq">*</span></th>
                       <th>Experience (Years) <span class="rq">*</span></th>
                       <th>Experience (Months)</th>
-                      <th><i class="fa-solid fa-star" aria-hidden="true" style="color:#f59e0b;"></i> Proficiency Rating <span class="rq">*</span></th>
+                      <th><svg viewBox="0 0 24 24" width="13" height="13" fill="#f59e0b" style="display:inline-block; vertical-align:-2px; margin-right:4px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Proficiency Rating <span class="rq">*</span></th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1347,7 +1453,7 @@ if($snp_mode== 1){
               </div>
               <div class="fsc fv-row rm-body">
 
-                <!--begin::Relationship Manager Section (media_1790669427546.png)-->
+                <!--begin::Relationship Manager Section (media_1790683314858.png)-->
                 <div class="rm-content" id="job_additional_detail">
                   <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
 
@@ -1355,23 +1461,16 @@ if($snp_mode== 1){
                   <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" />
                   <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" />
 
-                  <!-- Dynamic Multi-Manager Cards List -->
-                  <div class="rm-chips-container" id="rmChipsContainer"></div>
-
-                  <!-- Add Another Manager Button (active when at least 1 manager is selected) -->
-                  <div class="rm-add-more-wrap" id="rmAddMoreWrap" style="display: none;">
-                    <button type="button" class="rm-add-more-btn" id="rmAddMoreBtn">
-                      <i class="fa-solid fa-plus" aria-hidden="true"></i> Add Relationship Manager
-                    </button>
-                  </div>
-
-                  <!-- Empty State Picker Box (active when no manager is selected) -->
+                  <!-- Relationship Manager Search Bar (Always at top, directly under label) -->
                   <div class="rm-picker" id="rmPicker">
                     <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
                     <input type="text" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
                     <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
                   </div>
                   <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
+
+                  <!-- Dynamic Multi-Manager Cards Listing (Displayed BELOW the search bar) -->
+                  <div class="rm-chips-container" id="rmChipsContainer" style="display: none;"></div>
                 </div>
                 <!--end::Relationship Manager Section-->
               </div>
@@ -1530,7 +1629,7 @@ if($snp_mode== 1){
 <div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
     <div class="rf-modal-box">
         <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
         <!-- Warning Icon (Yellow circle with exclamation) -->
@@ -1555,14 +1654,14 @@ if($snp_mode== 1){
 
         <!-- Helper text -->
         <div class="rf-helper-text">
-            <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             <span>Click a field above to jump directly to it.</span>
         </div>
 
         <!-- Primary CTA -->
         <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
             <span>Review Required Fields</span>
-            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
     </div>
 </div>
@@ -2614,65 +2713,53 @@ $(document).ready(function () {
     });
     /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Pay Rate input using the CORRECT currency code read directly from the
-     * selected option text. Fixes the broken currencyRateschar[currency_id] index
-     * mismatch (DB IDs are 1-based, array is 0-indexed).
+     * active Pay Rate input using the currency code read from #pay_rate_currency.
      */
     function updatePayUI() {
-        // Get currency code directly from selected option text (e.g. "INR", "USD")
-        let currencyCode = ($('.br-pay-currency-select option:selected').first().text().trim() ||
-                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
-        // Read the active annual value (most common tab); hourly is always synced
         let payAnnual  = parseFloat($('#pay_annual').val()) || 0;
         let payMonthly = parseFloat($('#pay_monthly').val()) || 0;
         let payHourly  = parseFloat($('#pay_rate_amount').val()) || 0;
 
-        // If no direct values, derive from whichever field has data
         if (!payHourly && payAnnual) payHourly = payAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
         if (!payHourly && payMonthly) payHourly = payMonthly / HOURS_PER_MONTH;
+        if (!payMonthly && payHourly) payMonthly = payHourly * HOURS_PER_MONTH;
+        if (!payAnnual && payMonthly) payAnnual = payMonthly * MONTHS_PER_YEAR;
 
-        // Update the visible currency prefix symbol in all pay-rate .ig boxes
-        let paySymbol = getCurrencySymbol(currencyCode);
-        $('.br-pay-panel .ig-prefix').text(paySymbol);
-
-        if (isUSD || !currencyRate || !payHourly) {
-            // USD selected — no conversion needed, clear USD spans
+        if (isUSD) {
             $('#pay_rate_hourly_usd').text('');
             $('#pay_rate_monthly_usd').text('');
             $('#pay_rate_annual_usd').text('');
         } else {
-            // Convert from local currency to USD: local / rate = USD
             let hourlyUSD  = payHourly / currencyRate;
-            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
-            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
-            $('#pay_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
-            $('#pay_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
-            $('#pay_rate_annual_usd').text('≈ $' + format(annualUSD));
+            let monthlyUSD = payMonthly / currencyRate;
+            let annualUSD  = payAnnual / currencyRate;
+
+            $('#pay_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
+            $('#pay_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
+            $('#pay_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
         }
         updateCTCFields();
         refreshCommercialSummary();
     }
 
     /**
-     * updateBillUI — Same fix applied to the Bill Rate USD conversion labels.
-     * Reads currency code from option text, not broken currencyRateschar[id] lookup.
+     * updateBillUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
+     * active Bill Rate input using the currency code read from #pay_rate_currency.
      */
     function updateBillUI() {
         if (isFreeCommercialMode()) {
             $('#bill_rate_hourly_usd').text('');
             $('#bill_rate_monthly_usd').text('');
             $('#bill_rate_annual_usd').text('');
-            $('.br-bill-panel .ig-prefix').text('');
             refreshCommercialSummary();
             return false;
         }
 
-        let currencyCode = ($('.br-bill-currency-select option:selected').first().text().trim() ||
-                           $('.br-pay-currency-select option:selected').first().text().trim() ||
-                           $('#pay_rate_currency option:selected').text().trim() || '').toUpperCase();
+        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2682,30 +2769,24 @@ $(document).ready(function () {
 
         if (!billHourly && billAnnual) billHourly = billAnnual / MONTHS_PER_YEAR / HOURS_PER_MONTH;
         if (!billHourly && billMonthly) billHourly = billMonthly / HOURS_PER_MONTH;
+        if (!billMonthly && billHourly) billMonthly = billHourly * HOURS_PER_MONTH;
+        if (!billAnnual && billMonthly) billAnnual = billMonthly * MONTHS_PER_YEAR;
 
-        let billSymbol = getCurrencySymbol(currencyCode);
-        $('.br-bill-panel .ig-prefix').text(billSymbol);
-
-        if (isUSD || !currencyRate || !billHourly) {
+        if (isUSD) {
             $('#bill_rate_hourly_usd').text('');
             $('#bill_rate_monthly_usd').text('');
             $('#bill_rate_annual_usd').text('');
         } else {
             let hourlyUSD  = billHourly / currencyRate;
-            let monthlyUSD = hourlyUSD * HOURS_PER_MONTH;
-            let annualUSD  = monthlyUSD * MONTHS_PER_YEAR;
-            $('#bill_rate_hourly_usd').text('≈ $' + format(hourlyUSD));
-            $('#bill_rate_monthly_usd').text('≈ $' + format(monthlyUSD));
-            $('#bill_rate_annual_usd').text('≈ $' + format(annualUSD));
+            let monthlyUSD = billMonthly / currencyRate;
+            let annualUSD  = billAnnual / currencyRate;
+
+            $('#bill_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
+            $('#bill_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
+            $('#bill_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
         }
         updateCTCFields();
         refreshCommercialSummary();
-    }
-
-    /** getCurrencySymbol — Maps currency code to a display symbol for the prefix box */
-    function getCurrencySymbol(code) {
-        var map = { USD: '$', INR: '₹', EUR: '€', GBP: '£', JPY: '¥', AED: 'د.إ' };
-        return map[code] || code || '$';
     }
 
     $('#pay_rate_amount').on('input', function () {
@@ -2717,13 +2798,7 @@ $(document).ready(function () {
 
        if (isUpdating) return;
         isUpdating = true;
-        // var payamount = $('#pay_rate_amount').val();
-        // let hourly = parseFloat(payamount) || 0;
-        // $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
-        // $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-
         updatePayUI();
-
         isUpdating = false;
       
     }
@@ -2732,13 +2807,7 @@ $(document).ready(function () {
 
        if (isUpdating) return;
         isUpdating = true;
-        // var payamount = $('#bill_rate_amount').val();
-        // let hourly = parseFloat(payamount) || 0;
-
-        // $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
-        // $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
         updateBillUI();
-
         isUpdating = false;
       
     }
@@ -2747,23 +2816,13 @@ $(document).ready(function () {
     function syncAllCommercialCurrencies(currencyVal) {
         if (!currencyVal) return;
 
-        // 1. Sync header currency
+        // 1. Sync header currency & hidden selects
         $('#pay_rate_currency').val(currencyVal);
-
-        // 2. Sync hidden selects
         $('#bill_rate_currency').val(currencyVal);
         $('#current_th_cur').val(currencyVal);
 
-        // 3. Sync Pay Rate currency dropdowns
-        $('.br-pay-currency-select').val(currencyVal);
-
-        // 4. Sync Bill Rate currency dropdowns
-        $('.br-bill-currency-select').val(currencyVal);
-
-        // 5. Update text for any legacy badge/spans
-        let selectedText = $('#pay_rate_currency option:selected').text().trim() ||
-                           $('.br-pay-currency-select option:selected').first().text().trim() ||
-                           '';
+        // 2. Update text for all integrated rate currency badges
+        let selectedText = $('#pay_rate_currency option:selected').text().trim() || 'INR';
         if (selectedText) {
             $('.changeTextCurrency').text(selectedText);
         }
@@ -2773,13 +2832,17 @@ $(document).ready(function () {
         refreshCommercialSummary();
     }
 
-    $(document).on('change', '#pay_rate_currency, #bill_rate_currency, .br-pay-currency-select, .br-bill-currency-select', function () {
+    $(document).on('change', '#pay_rate_currency, #bill_rate_currency', function () {
         let val = $(this).val();
         syncAllCommercialCurrencies(val);
     });
 
+    $(document).on('click', '.br-rate-field .changeTextCurrency, .br-rate-field .ig-a', function () {
+        $('#pay_rate_currency').focus();
+    });
+
     setTimeout(() => {
-        let initCurr = $('#pay_rate_currency').val() || $('.br-pay-currency-select').first().val();
+        let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
         }
@@ -2787,7 +2850,7 @@ $(document).ready(function () {
         payRateUpdate();
         billRateUpdate();
         refreshCommercialSummary();
-    }, 1000);
+    }, 500);
 
     
 
@@ -2945,13 +3008,15 @@ $(document).ready(function () {
                     minimumResultsForSearch: selectName === 'years[]' ? 0 : Infinity
                 };
                 if (selectName === 'ratings[]') {
+                    var starSvg = '<svg class="se-star-icon" viewBox="0 0 24 24" width="13" height="13" fill="#f59e0b" style="display:inline-block; vertical-align:-1px; margin-right:2px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                    var starSvgSel = '<svg class="se-star-icon" viewBox="0 0 24 24" width="12" height="12" fill="#f59e0b" style="display:inline-block; vertical-align:-1px; margin-right:2px;" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
                     s2Config.templateResult = function (data) {
                         if (!data.id) return data.text;
                         var count = parseInt(data.id, 10);
                         if (!count || isNaN(count)) return data.text;
                         var stars = '';
                         for (var i = 0; i < count; i++) {
-                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 12px; margin-right: 2px;"></i>';
+                            stars += starSvg;
                         }
                         var label = count === 1 ? '1 Star' : (count + ' Stars');
                         return $('<span>' + stars + '<span style="color: #1e293b; font-weight: 500; margin-left: 6px;">' + label + '</span></span>');
@@ -2962,7 +3027,7 @@ $(document).ready(function () {
                         if (!count || isNaN(count)) return data.text;
                         var stars = '';
                         for (var i = 0; i < count; i++) {
-                            stars += '<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px; margin-right: 2px;"></i>';
+                            stars += starSvgSel;
                         }
                         var label = count === 1 ? '1 Star' : (count + ' Stars');
                         return $('<span>' + stars + '<span style="color: #0f172a; font-weight: 500; margin-left: 5px;">' + label + '</span></span>');
@@ -3129,9 +3194,630 @@ $(document).ready(function () {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/3.14.3/tagify.css">
 <link rel="stylesheet" href="{{ asset('assets/plugins/datepicker/datepicker3.css') }}">
 <script src="{{ asset('assets/plugins/datepicker/bootstrap-datepicker.js') }}"></script>
-<script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+/**
+ * JERO Enterprise Adaptive Nationality & Education Combobox Engine
+ * - 0% MySQL Reads, 100% In-Browser RAM execution (< 1ms search latency)
+ * - Guaranteed Sticky Search Box at the top of both dropdowns
+ * - Real-time Country-Adaptive Education curation
+ * - Global Escape Hatch: Typing in Highest Qualification searches 100% worldwide degrees with synonym aliases
+ * - 100% Two-Way Synchronization with native <select> elements for form validation & controller payload
+ * - Strict Rule 17 Page Isolation
+ */
+(function($) {
+    'use strict';
+
+    function getRegionalBucket(nationality) {
+        var nat = (nationality || '').trim();
+        if (!nat || nat === 'Indian') return ['Indian'];
+        if (nat === 'American') return ['American'];
+        if (nat === 'Canadian') return ['Canadian', 'American'];
+        if (nat === 'British') return ['British', 'Commonwealth'];
+        if (nat === 'Australian') return ['Australian', 'Commonwealth', 'British'];
+        if (['German', 'French', 'Dutch', 'Irish', 'Italian', 'Spanish', 'Swedish', 'Swiss', 'Austrian', 'Belgian', 'Polish'].indexOf(nat) !== -1) {
+            return ['European'];
+        }
+        if (['Emirati', 'Saudi', 'Qatari', 'Kuwaiti', 'Bahraini', 'Omani'].indexOf(nat) !== -1) {
+            return ['Indian', 'British', 'American'];
+        }
+        return ['all']; // 'Other' or unlisted demonyms show all degrees cleanly
+    }
+
+    function isQualInBucket(qualId, nationality) {
+        if (!qualId) return true;
+        var $opt = $('#qualification option[value="' + qualId + '"]');
+        if (!$opt.length) return true;
+        var bucket = getRegionalBucket(nationality);
+        if (bucket.indexOf('all') !== -1) return true;
+        var regions = ($opt.attr('data-regions') || 'Global').split(',').map(function(r) { return r.trim(); });
+        if (regions.indexOf('Global') !== -1) return true;
+        for (var k = 0; k < bucket.length; k++) {
+            if (regions.indexOf(bucket[k]) !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function closeAllComboboxes() {
+        $('.jero-custom-select').removeClass('is-open open-up');
+        $('.jero-cs-trigger').attr('aria-expanded', 'false');
+        $('.bd-card').removeClass('has-active-combobox');
+    }
+
+    // Token-based, accent-insensitive and punctuation-insensitive string cleaner
+    function jeroCleanStr(str) {
+        if (!str) return '';
+        return str.toString()
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    // Build the Nationality Custom Combobox
+    function buildNationalityCombobox() {
+        var $select = $('#nationality');
+        if (!$select.length) return;
+        $('#jero-cs-nationality').remove();
+
+        var placeholder = 'Select nationality';
+        var currentVal = ($select.val() || '').trim();
+        var currentLabel = placeholder;
+        if (currentVal) {
+            var $selOpt = $select.find('option:selected').first();
+            if ($selOpt.length && $selOpt.val()) {
+                currentLabel = $selOpt.text();
+            }
+        }
+
+        var html = '<div class="jero-custom-select" id="jero-cs-nationality">' +
+            '<button type="button" class="jero-cs-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+                '<div class="jero-cs-left">' +
+                    '<span class="jero-cs-icon"><i class="fa-regular fa-flag"></i></span>' +
+                    '<span class="jero-cs-value ' + (!currentVal ? 'jero-cs-placeholder' : '') + '">' + currentLabel + '</span>' +
+                '</div>' +
+                '<div class="jero-cs-right">' +
+                    '<span class="jero-cs-arrow"><i class="fa-solid fa-chevron-down"></i></span>' +
+                '</div>' +
+            '</button>' +
+            '<div class="jero-cs-dropdown">' +
+                '<div class="jero-cs-search-box">' +
+                    '<i class="fa-solid fa-magnifying-glass jero-cs-search-icon"></i>' +
+                    '<input type="text" class="jero-cs-search-input" placeholder="Search nationality or country (e.g. India, USA, UK, Canada)..." spellcheck="false" autocomplete="off">' +
+                    '<button type="button" class="jero-cs-search-clear" style="display:none;" title="Clear search">&times;</button>' +
+                '</div>' +
+                '<div class="jero-cs-list"></div>' +
+                '<div class="jero-cs-empty" style="display:none;"><i class="fa-solid fa-circle-question"></i> No nationality found</div>' +
+            '</div>' +
+        '</div>';
+
+        var $cs = $(html);
+        var $list = $cs.find('.jero-cs-list');
+        var selectedItemDone = false;
+
+        $select.children().each(function() {
+            var $node = $(this);
+            if ($node.is('optgroup')) {
+                var groupLabel = $node.attr('label') || '';
+                var $group = $('<div class="jero-cs-group"><div class="jero-cs-group-title">' + groupLabel + '</div></div>');
+                $node.find('option').each(function() {
+                    var $opt = $(this);
+                    var val = $opt.val();
+                    if (!val) return;
+                    var text = $opt.text();
+                    var synonyms = $opt.attr('data-synonyms') || '';
+                    var isSelected = (val === currentVal && !selectedItemDone);
+                    if (isSelected) selectedItemDone = true;
+                    var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
+                        '<span class="jero-cs-item-text">' + text + '</span>' +
+                    '</div>');
+                    $group.append($item);
+                });
+                $list.append($group);
+            } else if ($node.is('option') && $node.val()) {
+                var val = $node.val();
+                var text = $node.text();
+                var synonyms = $node.attr('data-synonyms') || '';
+                var isSelected = (val === currentVal && !selectedItemDone);
+                if (isSelected) selectedItemDone = true;
+                var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
+                    '<span class="jero-cs-item-text">' + text + '</span>' +
+                '</div>');
+                $list.append($item);
+            }
+        });
+
+        $select.closest('.bd-control').addClass('bd-control--has-combobox');
+        $select.after($cs);
+    }
+
+    // Build the Qualification Custom Combobox
+    function buildQualificationCombobox() {
+        var $select = $('#qualification');
+        if (!$select.length) return;
+        $('#jero-cs-qualification').remove();
+
+        var placeholder = 'Select qualification';
+        var currentVal = ($select.val() || '').trim();
+        var currentLabel = placeholder;
+        var currentBadge = '';
+        if (currentVal) {
+            var $selOpt = $select.find('option:selected').first();
+            if ($selOpt.length && $selOpt.val()) {
+                currentLabel = $selOpt.text();
+                currentBadge = $selOpt.attr('data-badge') || '';
+            }
+        }
+
+        var html = '<div class="jero-custom-select" id="jero-cs-qualification">' +
+            '<button type="button" class="jero-cs-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+                '<div class="jero-cs-left">' +
+                    '<span class="jero-cs-icon"><i class="fa-solid fa-graduation-cap"></i></span>' +
+                    '<span class="jero-cs-value ' + (!currentVal ? 'jero-cs-placeholder' : '') + '">' + currentLabel + '</span>' +
+                '</div>' +
+                '<div class="jero-cs-right">' +
+                    '<span class="jero-cs-badge" style="' + (currentBadge ? '' : 'display:none;') + '">' + currentBadge + '</span>' +
+                    '<span class="jero-cs-arrow"><i class="fa-solid fa-chevron-down"></i></span>' +
+                '</div>' +
+            '</button>' +
+            '<div class="jero-cs-dropdown">' +
+                '<div class="jero-cs-search-box">' +
+                    '<i class="fa-solid fa-magnifying-glass jero-cs-search-icon"></i>' +
+                    '<input type="text" class="jero-cs-search-input" placeholder="Search degree or acronym (e.g. B.Tech, MS, HND, CA, MBA)..." spellcheck="false" autocomplete="off">' +
+                    '<button type="button" class="jero-cs-search-clear" style="display:none;" title="Clear search">&times;</button>' +
+                '</div>' +
+                '<div class="jero-cs-list"></div>' +
+                '<div class="jero-cs-empty" style="display:none;"><i class="fa-solid fa-graduation-cap"></i> No matching degrees found</div>' +
+            '</div>' +
+        '</div>';
+
+        var $cs = $(html);
+        var $list = $cs.find('.jero-cs-list');
+        var selectedItemDone = false;
+
+        $select.children().each(function() {
+            var $node = $(this);
+            if ($node.is('optgroup')) {
+                var groupLabel = $node.attr('label') || '';
+                var $group = $('<div class="jero-cs-group"><div class="jero-cs-group-title">' + groupLabel + '</div></div>');
+                $node.find('option').each(function() {
+                    var $opt = $(this);
+                    var val = $opt.val();
+                    if (!val) return;
+                    var text = $opt.text();
+                    var regions = $opt.attr('data-regions') || 'Global';
+                    var aliases = $opt.attr('data-aliases') || '';
+                    var badge = $opt.attr('data-badge') || '';
+                    var isSelected = (val === currentVal && !selectedItemDone);
+                    if (isSelected) selectedItemDone = true;
+                    var badgeHtml = badge ? '<span class="jero-cs-item-badge">' + badge + '</span>' : '';
+                    var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-regions="' + regions + '" data-aliases="' + aliases + '" data-badge="' + badge + '">' +
+                        '<span class="jero-cs-item-text">' + text + '</span>' +
+                        badgeHtml +
+                    '</div>');
+                    $group.append($item);
+                });
+                $list.append($group);
+            }
+        });
+
+        $select.closest('.bd-control').addClass('bd-control--has-combobox');
+        $select.after($cs);
+    }
+
+    // Filter Qualification items by selected nationality (idle state) or search query (global unlock)
+    function filterQualificationItems() {
+        var $cs = $('#jero-cs-qualification');
+        if (!$cs.length) return;
+        var selectedNat = ($('#nationality').val() || '').trim();
+        var selectedQual = ($('#qualification').val() || '').trim();
+        var bucket = getRegionalBucket(selectedNat);
+        var rawQuery = $cs.find('.jero-cs-search-input').val() || '';
+        var cleanQ = jeroCleanStr(rawQuery);
+        var compactQ = cleanQ.replace(/\s+/g, '');
+        var queryWords = cleanQ.split(' ').filter(Boolean);
+        var totalVisible = 0;
+
+        $cs.find('.jero-cs-group').each(function() {
+            var $group = $(this);
+            var groupVisible = 0;
+
+            $group.find('.jero-cs-item').each(function() {
+                var $item = $(this);
+                var val = String($item.attr('data-val') || '');
+                var text = $item.find('.jero-cs-item-text').text() || '';
+                var aliases = $item.attr('data-aliases') || '';
+                var badge = $item.attr('data-badge') || '';
+                var regions = ($item.attr('data-regions') || 'Global').split(',').map(function(r) { return r.trim(); });
+
+                var isMatch = false;
+
+                if (cleanQ.length > 0) {
+                    var cleanText = jeroCleanStr(text);
+                    var cleanAliases = jeroCleanStr(aliases);
+                    var cleanBadge = jeroCleanStr(badge);
+                    var combined = cleanText + ' ' + cleanAliases + ' ' + cleanBadge;
+                    var combinedCompact = combined.replace(/\s+/g, '');
+
+                    if (cleanText.indexOf(cleanQ) !== -1 || cleanAliases.indexOf(cleanQ) !== -1 || cleanBadge.indexOf(cleanQ) !== -1) {
+                        isMatch = true;
+                    } else if (combinedCompact.indexOf(compactQ) !== -1) {
+                        isMatch = true;
+                    } else if (queryWords.length > 0) {
+                        var allWordsMatch = true;
+                        for (var w = 0; w < queryWords.length; w++) {
+                            if (combined.indexOf(queryWords[w]) === -1 && combinedCompact.indexOf(queryWords[w]) === -1) {
+                                allWordsMatch = false;
+                                break;
+                            }
+                        }
+                        if (allWordsMatch) {
+                            isMatch = true;
+                        }
+                    }
+                } else {
+                    if (selectedQual && val === selectedQual) {
+                        isMatch = true;
+                    } else if (bucket.indexOf('all') !== -1 || regions.indexOf('Global') !== -1) {
+                        isMatch = true;
+                    } else {
+                        for (var b = 0; b < bucket.length; b++) {
+                            if (regions.indexOf(bucket[b]) !== -1) {
+                                isMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isMatch) {
+                    $item.removeClass('is-hidden').show();
+                    groupVisible++;
+                    totalVisible++;
+                } else {
+                    $item.addClass('is-hidden').hide();
+                }
+            });
+
+            if (groupVisible > 0) {
+                $group.removeClass('is-hidden').show();
+            } else {
+                $group.addClass('is-hidden').hide();
+            }
+        });
+
+        if (totalVisible === 0) {
+            $cs.find('.jero-cs-empty').removeClass('is-hidden').show();
+        } else {
+            $cs.find('.jero-cs-empty').addClass('is-hidden').hide();
+        }
+    }
+
+    // Filter Nationality items by country synonyms or demonym text
+    function filterNationalityItems() {
+        var $cs = $('#jero-cs-nationality');
+        if (!$cs.length) return;
+        var rawQuery = $cs.find('.jero-cs-search-input').val() || '';
+        var cleanQ = jeroCleanStr(rawQuery);
+        var compactQ = cleanQ.replace(/\s+/g, '');
+        var queryWords = cleanQ.split(' ').filter(Boolean);
+        var totalVisible = 0;
+
+        $cs.find('.jero-cs-group').each(function() {
+            var $group = $(this);
+            var groupVisible = 0;
+
+            $group.find('.jero-cs-item').each(function() {
+                var $item = $(this);
+                var text = $item.find('.jero-cs-item-text').text() || '';
+                var synonyms = $item.attr('data-synonyms') || '';
+                var val = $item.attr('data-val') || '';
+
+                var isMatch = false;
+                if (!cleanQ) {
+                    isMatch = true;
+                } else {
+                    var cleanText = jeroCleanStr(text);
+                    var cleanSynonyms = jeroCleanStr(synonyms);
+                    var cleanVal = jeroCleanStr(val);
+                    var combined = cleanText + ' ' + cleanSynonyms + ' ' + cleanVal;
+                    var combinedCompact = combined.replace(/\s+/g, '');
+
+                    if (cleanText.indexOf(cleanQ) !== -1 || cleanSynonyms.indexOf(cleanQ) !== -1 || cleanVal.indexOf(cleanQ) !== -1) {
+                        isMatch = true;
+                    } else if (combinedCompact.indexOf(compactQ) !== -1) {
+                        isMatch = true;
+                    } else if (queryWords.length > 0) {
+                        var allWordsMatch = true;
+                        for (var w = 0; w < queryWords.length; w++) {
+                            if (combined.indexOf(queryWords[w]) === -1 && combinedCompact.indexOf(queryWords[w]) === -1) {
+                                allWordsMatch = false;
+                                break;
+                            }
+                        }
+                        if (allWordsMatch) {
+                            isMatch = true;
+                        }
+                    }
+                }
+
+                if (isMatch) {
+                    $item.removeClass('is-hidden').show();
+                    groupVisible++;
+                    totalVisible++;
+                } else {
+                    $item.addClass('is-hidden').hide();
+                }
+            });
+
+            if (groupVisible > 0) {
+                $group.removeClass('is-hidden').show();
+            } else {
+                $group.addClass('is-hidden').hide();
+            }
+        });
+
+        if (totalVisible === 0) {
+            $cs.find('.jero-cs-empty').removeClass('is-hidden').show();
+        } else {
+            $cs.find('.jero-cs-empty').addClass('is-hidden').hide();
+        }
+    }
+
+    // Open/Toggle Combobox
+    $(document).on('click', '.jero-cs-trigger', function(e) {
+        e.stopPropagation();
+        var $combobox = $(this).closest('.jero-custom-select');
+        var wasOpen = $combobox.hasClass('is-open');
+
+        closeAllComboboxes();
+
+        if (!wasOpen) {
+            var rect = this.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 340 && rect.top > 340) {
+                $combobox.addClass('open-up');
+            } else {
+                $combobox.removeClass('open-up');
+            }
+
+            $combobox.addClass('is-open');
+            $(this).attr('aria-expanded', 'true');
+            $combobox.closest('.bd-card').addClass('has-active-combobox');
+
+            var $search = $combobox.find('.jero-cs-search-input');
+            $search.val('');
+            $combobox.find('.jero-cs-search-clear').hide();
+
+            if ($combobox.attr('id') === 'jero-cs-nationality') {
+                filterNationalityItems();
+            } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+                filterQualificationItems();
+            }
+
+            setTimeout(function() {
+                $search.focus().select();
+            }, 60);
+        }
+    });
+
+    // Prevent clicks inside dropdown from bubbling and closing
+    $(document).on('click', '.jero-cs-dropdown', function(e) {
+        e.stopPropagation();
+    });
+
+    $(document).on('click', '.jero-cs-search-box', function(e) {
+        e.stopPropagation();
+        $(this).find('.jero-cs-search-input').focus();
+    });
+
+    // Search Input Typing Handler
+    $(document).on('input keyup change', '.jero-cs-search-input', function(e) {
+        if (e.which === 27 || e.which === 13 || e.which === 38 || e.which === 40) return;
+        var $input = $(this);
+        var val = $input.val();
+        var $clearBtn = $input.siblings('.jero-cs-search-clear');
+        if (val) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
+        }
+
+        var $combobox = $input.closest('.jero-custom-select');
+        if ($combobox.attr('id') === 'jero-cs-nationality') {
+            filterNationalityItems();
+        } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+            filterQualificationItems();
+        }
+    });
+
+    // Clear Search Input Button
+    $(document).on('click', '.jero-cs-search-clear', function(e) {
+        e.stopPropagation();
+        var $input = $(this).siblings('.jero-cs-search-input');
+        $input.val('').focus();
+        $(this).hide();
+        var $combobox = $(this).closest('.jero-custom-select');
+        if ($combobox.attr('id') === 'jero-cs-nationality') {
+            filterNationalityItems();
+        } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+            filterQualificationItems();
+        }
+    });
+
+    // Keyboard Navigation: Escape, Arrows, Enter
+    $(document).on('keydown', '.jero-custom-select.is-open', function(e) {
+        var $combobox = $(this);
+        var $visibleItems = $combobox.find('.jero-cs-item:not(.is-hidden):visible');
+
+        if (e.which === 27) { // Escape
+            closeAllComboboxes();
+            $combobox.find('.jero-cs-trigger').focus();
+            e.preventDefault();
+        } else if (e.which === 40) { // Arrow Down
+            var $curr = $visibleItems.filter('.is-highlighted');
+            var idx = $visibleItems.index($curr);
+            $visibleItems.removeClass('is-highlighted');
+            if (idx === -1 || idx >= $visibleItems.length - 1) {
+                var $target = $visibleItems.first();
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
+            } else {
+                var $target = $visibleItems.eq(idx + 1);
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
+            }
+            e.preventDefault();
+        } else if (e.which === 38) { // Arrow Up
+            var $curr = $visibleItems.filter('.is-highlighted');
+            var idx = $visibleItems.index($curr);
+            $visibleItems.removeClass('is-highlighted');
+            if (idx <= 0) {
+                var $target = $visibleItems.last();
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
+            } else {
+                var $target = $visibleItems.eq(idx - 1);
+                $target.addClass('is-highlighted');
+                if ($target.length) $target[0].scrollIntoView({ block: 'nearest' });
+            }
+            e.preventDefault();
+        } else if (e.which === 13) { // Enter
+            var $target = $visibleItems.filter('.is-highlighted');
+            if (!$target.length) {
+                $target = $visibleItems.first();
+            }
+            if ($target.length) {
+                $target.trigger('click');
+            }
+            e.preventDefault();
+        }
+    });
+
+    // Select Nationality Item
+    $(document).on('click', '#jero-cs-nationality .jero-cs-item', function(e) {
+        e.stopPropagation();
+        var $item = $(this);
+        var val = $item.attr('data-val') || '';
+        var text = $item.find('.jero-cs-item-text').text();
+
+        var $cs = $('#jero-cs-nationality');
+        $cs.find('.jero-cs-item').removeClass('is-selected');
+        $item.addClass('is-selected');
+        $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text(text);
+        $cs.removeClass('has-validation-error');
+        $cs.closest('.bd-control').removeClass('has-validation-error');
+        $('[data-field-error="nationality"]').remove();
+        closeAllComboboxes();
+
+        var $nativeNat = $('#nationality');
+        $nativeNat.val(val).trigger('change');
+
+        var curQual = ($('#qualification').val() || '').trim();
+        if (curQual && !isQualInBucket(curQual, val)) {
+            $('#qualification').val('').trigger('change');
+            var $qualCs = $('#jero-cs-qualification');
+            $qualCs.find('.jero-cs-item').removeClass('is-selected');
+            $qualCs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select qualification');
+            $qualCs.find('.jero-cs-badge').hide().text('');
+        }
+
+        filterQualificationItems();
+
+        if (window.benchFormValidator && window.benchFormValidator.revalidateField) {
+            window.benchFormValidator.revalidateField('nationality');
+            window.benchFormValidator.revalidateField('qualification');
+        }
+    });
+
+    // Select Qualification Item
+    $(document).on('click', '#jero-cs-qualification .jero-cs-item', function(e) {
+        e.stopPropagation();
+        var $item = $(this);
+        var val = $item.attr('data-val') || '';
+        var text = $item.find('.jero-cs-item-text').text();
+        var badge = $item.attr('data-badge') || '';
+
+        var $cs = $('#jero-cs-qualification');
+        $cs.find('.jero-cs-item').removeClass('is-selected');
+        $item.addClass('is-selected');
+        $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text(text);
+        if (badge) {
+            $cs.find('.jero-cs-badge').show().text(badge);
+        } else {
+            $cs.find('.jero-cs-badge').hide().text('');
+        }
+        $cs.removeClass('has-validation-error');
+        $cs.closest('.bd-control').removeClass('has-validation-error');
+        $('[data-field-error="qualification"]').remove();
+        closeAllComboboxes();
+
+        $('#qualification').val(val).trigger('change');
+
+        if (window.benchFormValidator && window.benchFormValidator.revalidateField) {
+            window.benchFormValidator.revalidateField('qualification');
+        }
+    });
+
+    // Click outside to close any open dropdowns
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.jero-custom-select').length) {
+            closeAllComboboxes();
+        }
+    });
+
+    // Native <select> external change listener (e.g. from resume parser or prefill)
+    $(document).on('change', '#nationality', function() {
+        var val = $(this).val();
+        var $cs = $('#jero-cs-nationality');
+        if ($cs.length) {
+            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]').first();
+            $cs.find('.jero-cs-item').removeClass('is-selected');
+            if ($item.length) {
+                $item.addClass('is-selected');
+                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text());
+            } else if (!val) {
+                $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select nationality');
+            }
+            filterQualificationItems();
+        }
+    });
+
+    $(document).on('change', '#qualification', function() {
+        var val = $(this).val();
+        var $cs = $('#jero-cs-qualification');
+        if ($cs.length) {
+            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]').first();
+            $cs.find('.jero-cs-item').removeClass('is-selected');
+            if ($item.length) {
+                $item.addClass('is-selected');
+                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text());
+                var badge = $item.attr('data-badge') || '';
+                if (badge) {
+                    $cs.find('.jero-cs-badge').show().text(badge);
+                } else {
+                    $cs.find('.jero-cs-badge').hide().text('');
+                }
+            } else if (!val) {
+                $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select qualification');
+                $cs.find('.jero-cs-badge').hide().text('');
+            }
+        }
+    });
+
+    // Mount Custom Comboboxes on DOM Ready
+    $(document).ready(function() {
+        buildNationalityCombobox();
+        buildQualificationCombobox();
+        filterQualificationItems();
+    });
+
+})(jQuery);
+</script>
 <script>
 
 $(document).ready(function() {
@@ -3227,6 +3913,10 @@ $(document).ready(function() {
                   $body.html('<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;"><i class="fa-solid fa-circle-exclamation" style="color:#f87171;"></i> Failed to load team. Please try again.</div>');
               }
           });
+      } else {
+          if (typeof crmRenderSelected === 'function') {
+              crmRenderSelected();
+          }
       }
   });
 
@@ -3329,21 +4019,22 @@ function renderRelationshipManagerCards() {
     var managers = getRmSelectedList();
     var $container = $('#rmChipsContainer');
     var $picker = $('#rmPicker');
-    var $addMore = $('#rmAddMoreWrap');
 
     if (!managers || !managers.length) {
         $container.empty().hide();
-        $addMore.hide();
-        $picker.css('display', 'flex');
+        $picker.removeClass('has-selection');
+        $('#recruiter_display').val('').attr('placeholder', 'Search by name or email...');
+        $('#rmPickerAction').text('Select Relationship Manager');
         $('#job_additional_detail').removeClass('rm-has-selection');
         return;
     }
 
-    $picker.hide();
+    $picker.addClass('has-selection');
     $picker.removeClass('has-validation-error');
     $('[data-field-error="recruiter"]').remove();
-    $addMore.show();
     $('#job_additional_detail').addClass('rm-has-selection');
+    $('#recruiter_display').val('').attr('placeholder', 'Search by name or email...');
+    $('#rmPickerAction').text('Select Relationship Manager');
 
     var html = '';
     managers.forEach(function(m) {
@@ -4009,7 +4700,7 @@ function showRequiredFieldsModal(missingFields) {
             + '<span class="rf-field-badge" aria-hidden="true">!</span>'
             + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
             + '</div>'
-            + '<i class="fa-solid fa-chevron-right rf-field-chevron" aria-hidden="true"></i>'
+            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
             + '</div>';
         $list.append(rowHtml);
     });
@@ -4108,7 +4799,7 @@ function applyFieldValidationErrors(missingFields) {
         var key = f.key;
         var msg = f.message || (f.label + ' is required.');
         var errorHtml = '<div class="field-error-message" data-field-error="' + key + '">'
-            + '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> '
+            + '<svg class="fe-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:4px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
             + '<span>' + $('<div>').text(msg).html() + '</span>'
             + '</div>';
 
@@ -4116,7 +4807,11 @@ function applyFieldValidationErrors(missingFields) {
             var $picker = $('#rmPicker');
             $picker.addClass('has-validation-error');
             if (!$('[data-field-error="recruiter"]').length) {
-                $picker.after(errorHtml);
+                if ($('#rmHelpText').length) {
+                    $('#rmHelpText').after(errorHtml);
+                } else {
+                    $picker.after(errorHtml);
+                }
             }
         } else if (key === 'resume') {
             var $up = $('#uploadBox');
@@ -4185,6 +4880,7 @@ function applyFieldValidationErrors(missingFields) {
             if (!$el.length) $el = $('[name="' + key + '"]');
             if ($el.length) {
                 $el.addClass('has-validation-error');
+                $el.closest('.bd-control').find('.jero-custom-select').addClass('has-validation-error');
                 if (!$('[data-field-error="' + key + '"]').length) {
                     var $ctrl = $el.closest('.bd-control, .pd-control, .bd-phone-control, .input-group');
                     if ($ctrl.length) {
@@ -4204,9 +4900,11 @@ $(document).on('input change focus', 'input, select, textarea', function () {
     var key = $this.attr('name') || $this.attr('id');
     if ($this.hasClass('has-validation-error')) {
         $this.removeClass('has-validation-error');
+        $this.closest('.bd-control').find('.jero-custom-select').removeClass('has-validation-error');
     }
     if ($this.closest('.has-validation-error').length) {
         $this.closest('.has-validation-error').removeClass('has-validation-error');
+        $this.closest('.bd-control').find('.jero-custom-select').removeClass('has-validation-error');
     }
     if (key) {
         $('[data-field-error="' + key + '"]').remove();
@@ -4270,17 +4968,10 @@ function displayValidationErrorsNotification(errorList, formEl, validatorInstanc
 }
 
 async function isInternetAvailable() {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return false;
-    try {
-        await fetch("https://www.gstatic.com/generate_204", {
-            method: "GET",
-            cache: "no-cache",
-            mode: "no-cors"
-        });
-        return true;
-    } catch (error) {
-        return (typeof navigator !== 'undefined') ? navigator.onLine : true;
+    if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+        return navigator.onLine;
     }
+    return true;
 }
 window.isInternetAvailable = isInternetAvailable;
 
@@ -4306,12 +4997,7 @@ var KTAddCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
-                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
-                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -4321,8 +5007,106 @@ var KTAddCandidate = function () {
                 }
             }
         );
-        submitButton.addEventListener('click', async function (e) {
-            e.preventDefault();
+        window.benchFormValidator = validator;
+
+        var executeSubmit = function () {
+            closeRequiredFieldsModal();
+            $("#save-form").prop("disabled", true);
+            $("#save-form").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+            );
+            if (submitButton) {
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+            }
+
+            setTimeout(function () {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = true;
+                }
+                if (!navigator.onLine) {
+                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    $("#save-form").prop("disabled", false);
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    if (submitButton) submitButton.disabled = false;
+                    return;
+                }
+
+                // Layer 1: Client-Generated Idempotency UUID
+                let clientUuid = $('#client_submission_uuid').val();
+                if (!clientUuid) {
+                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(clientUuid);
+                }
+
+                window.normalizeCreateTalentPhones();
+                var formData = new FormData($('#createForm')[0]);
+                $.ajax({
+                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    redirect: true,
+                    success: function (response) {
+                        $("#save-form").prop("disabled", false);
+                        if (submitButton) submitButton.disabled = false;
+                        if(response.status == 'coinCheck'){
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            Swal.fire("Warning", ` ${response.message}`, "warning");
+                            return false;
+                        }
+
+                        if(response.status == 'mailcheck'){
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                $("#save-form").prop("disabled", false);
+                                if (typeof window.syncTalentStageAction === 'function') {
+                                    window.syncTalentStageAction();
+                                }
+                                if (submitButton) submitButton.disabled = false;
+                                return;
+                            }
+                            if (typeof window.syncTalentStageAction === 'function') {
+                                window.syncTalentStageAction();
+                            }
+                            Swal.fire("Warning", response.message, "warning").then(function(){});
+                            return false;
+                        }
+
+                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                        handleTalentSubmissionSuccess(response);
+                    },
+                    error: function (xhr) {
+                        $("#save-form").prop("disabled", false);
+                        if (typeof window.syncTalentStageAction === 'function') {
+                            window.syncTalentStageAction();
+                        }
+                        if (submitButton) submitButton.disabled = false;
+                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                        $('#client_submission_uuid').val(freshUuid);
+                        if (xhr.status === 0 || !navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        } else {
+                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                        }
+                    }
+                });
+            }, 500);
+        };
+
+        var handleCandidateSubmit = async function (e) {
+            if (e && e.preventDefault) e.preventDefault();
+
             var connected = true;
             try {
                 connected = await isInternetAvailable();
@@ -4339,122 +5123,67 @@ var KTAddCandidate = function () {
                         confirmButton: "btn btn-warning"
                     }
                 });
-                return; // ⛔ STOP EXECUTION
+                return;
             }
 
-            validator.validate().then(function (status) {
-                var missing = detectMissingFields(form, validator);
-                if (status !== 'Valid' || (missing && missing.length > 0)) {
-                    $("#save-form").prop("disabled", false);
-                    if (typeof window.syncTalentStageAction === 'function') {
-                        window.syncTalentStageAction();
-                    }
+            var missing = detectMissingFields(form, validator);
+            if (missing && missing.length > 0) {
+                $("#save-form").prop("disabled", false);
+                if (typeof window.syncTalentStageAction === 'function') {
+                    window.syncTalentStageAction();
+                }
+                if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
-                    return;
                 }
-                closeRequiredFieldsModal();
-                $("#save-form").prop("disabled", true);
-                  $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
-                    submitButton.setAttribute('data-kt-indicator', 'on');
-                    submitButton.disabled = true;
-                    setTimeout(function () {
-                        submitButton.removeAttribute('data-kt-indicator');
-                        submitButton.disabled = true;
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#save-form").prop("disabled", false);
-                            window.syncTalentStageAction();
-                            submitButton.disabled = false;
-                            return;
-                        }
+                var errors = collectFormValidationErrors(form, validator);
+                displayValidationErrorsNotification(errors, form, validator);
+                return;
+            }
 
-                          // Layer 1: Client-Generated Idempotency UUID
-                          let clientUuid = $('#client_submission_uuid').val();
-                          if (!clientUuid) {
-                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                              $('#client_submission_uuid').val(clientUuid);
-                          }
+            if (validator && typeof validator.validate === 'function') {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        executeSubmit();
+                    } else {
+                        var fvErrors = collectFormValidationErrors(form, validator);
+                        displayValidationErrorsNotification(fvErrors, form, validator);
+                    }
+                }).catch(function (valErr) {
+                    console.warn('Validator validate fallback:', valErr);
+                    executeSubmit();
+                });
+            } else {
+                executeSubmit();
+            }
+        };
 
-                          window.normalizeCreateTalentPhones();
-													var formData 	=	new FormData($('#createForm')[0]);							
-													$.ajax({
-															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
-															   type 			: 'POST',
-															   data 			: formData,
-															   processData		: false,  	
-															   contentType		: false,  	
-															   redirect			: true,
-																success			: function (response) {
-                                  $("#save-form").prop("disabled", false);
-                                  submitButton.disabled = false;
-                                  if(response.status == 'coinCheck'){
-                                    window.syncTalentStageAction();
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-   																	Swal.fire("Warning",` ${response.message}` , "warning");	
-                                    return false;
-   																}
+        if (submitButton) {
+            submitButton.addEventListener('click', handleCandidateSubmit);
+        }
+        $(document).off('click', '#save-form').on('click', '#save-form', handleCandidateSubmit);
+    };
 
-                                  
-                                if(response.status == 'mailcheck'){
-                                  const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                  $('#client_submission_uuid').val(freshUuid);
-                                  if (!navigator.onLine) {
-                                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                      $("#save-form").prop("disabled", false);
-                                      window.syncTalentStageAction();
-                                      submitButton.disabled = false;
-                                      return;
-                                  }
-                                   window.syncTalentStageAction();
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
- 																	});	
-                                   return false;
-                                }
-                                
-                                  // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                                  handleTalentSubmissionSuccess(response);
-                                },
-																error			: function (xhr) {
-                                    $("#save-form").prop("disabled", false);
-                                    window.syncTalentStageAction();
-                                    submitButton.disabled = false;
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (xhr.status === 0 || !navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    } else {
-                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                                    }
-															}
-														});
-														
-                       
-                    }, 500);
-                } else {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
-                }
-            });
-        });
-    }
     return {
-				init: function () {
-										form 			=	document.querySelector('#createForm');
-										submitButton 	=	document.querySelector('#save-form');
-										handleForm();
-								  }
-     	   };
+        init: function () {
+            form = document.querySelector('#createForm');
+            submitButton = document.querySelector('#save-form');
+            handleForm();
+        }
+    };
 }();
 
-KTUtil.onDOMContentLoaded(function () {
-    KTAddCandidate.init();
-});
+function initKTAddCandidate() {
+    if (typeof KTAddCandidate !== 'undefined' && KTAddCandidate.init) {
+        KTAddCandidate.init();
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKTAddCandidate);
+} else {
+    initKTAddCandidate();
+}
+$(document).ready(initKTAddCandidate);
 @php } @endphp
 @php if(@$page_event == 'EDIT'){  @endphp
 var KTEditCandidate = function () {
@@ -4478,12 +5207,7 @@ var KTEditCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'total_exp'				:	{validators:{ notEmpty:{message:"Total Experience is required"}, digits: {message: "Total Experience must contain only digits"} }},
-                    'rel_exp'				:	{validators:{ notEmpty:{message:"Relevant Experience is required"}, digits:{message: "Relevant Experience must contain only digits"}}},
-                    'pay_rate' 				:	{validators:{callback:{message: "Pay rate is required", callback: function(input){ var val = $('#pay_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'bill_rate' 			:	{validators:{callback:{message: "Bill rate is required", callback: function(input){ if (typeof isFreeCommercialMode === 'function' && isFreeCommercialMode()) return true; var val = $('#bill_annual').val() || (input && input.value); return val !== '' && !isNaN(val) && parseFloat(val) > 0; } }}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},	
-                    'recruiter'				:	{validators:{ notEmpty: { message: "Relationship Manager is required" } }  }
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -4493,103 +5217,157 @@ var KTEditCandidate = function () {
                 }
             }
         );
-        submitButton.addEventListener('click', function (e) {
-            e.preventDefault();
-            validator.validate().then(function (status) {
-                var missing = detectMissingFields(form, validator);
-                if (status !== 'Valid' || (missing && missing.length > 0)) {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
+
+        var executeEditSubmit = function () {
+            closeRequiredFieldsModal();
+            $("#edit-form").prop("disabled", true);
+            $("#edit-form").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+            );
+            if (submitButton) {
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+            }
+
+            setTimeout(function () {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = true;
+                }
+                if (!navigator.onLine) {
+                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    $("#edit-form").prop("disabled", false).html("Update");
+                    if (submitButton) submitButton.disabled = false;
                     return;
                 }
-                closeRequiredFieldsModal();
-                $("#edit-form").prop("disabled", true);
-                  $("#edit-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
-                  );
-                    submitButton.setAttribute('data-kt-indicator', 'on');
-                    submitButton.disabled = true;
-                    setTimeout(function () {
-                        submitButton.removeAttribute('data-kt-indicator');
-                        submitButton.disabled = true;
-                        if (!navigator.onLine) {
-                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                            $("#edit-form").prop("disabled", false).html("Update");
-                            submitButton.disabled = false;
-                            return;
+
+                // Layer 1: Client-Generated Idempotency UUID
+                let clientUuid = $('#client_submission_uuid').val();
+                if (!clientUuid) {
+                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(clientUuid);
+                }
+
+                window.normalizeCreateTalentPhones();
+                var formData = new FormData($('#createForm')[0]);
+                $.ajax({
+                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    redirect: true,
+                    success: function (response) {
+                        $("#edit-form").prop("disabled", false).html("Update");
+                        if (submitButton) submitButton.disabled = false;
+                        if(response.status == 'mailcheck'){
+                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                            $('#client_submission_uuid').val(freshUuid);
+                            if (!navigator.onLine) {
+                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                $("#edit-form").prop("disabled", false).html("Update");
+                                if (submitButton) submitButton.disabled = false;
+                                return;
+                            }
+                            $("#edit-form").html(`Update`);
+                            Swal.fire("Warning", response.message, "warning").then(function(){});
+                            return false;
                         }
 
+                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                        handleTalentSubmissionSuccess(response);
+                    },
+                    error: function (xhr) {
+                        $("#edit-form").prop("disabled", false).html("Update");
+                        if (submitButton) submitButton.disabled = false;
+                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                        $('#client_submission_uuid').val(freshUuid);
+                        if (xhr.status === 0 || !navigator.onLine) {
+                            Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        } else {
+                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                        }
+                    }
+                });
+            }, 500);
+        };
 
-                          // Layer 1: Client-Generated Idempotency UUID
-                          let clientUuid = $('#client_submission_uuid').val();
-                          if (!clientUuid) {
-                              clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                              $('#client_submission_uuid').val(clientUuid);
-                          }
+        var handleEditSubmit = async function (e) {
+            if (e && e.preventDefault) e.preventDefault();
 
-                          window.normalizeCreateTalentPhones();
-													var formData 	=	new FormData($('#createForm')[0]);							
-													$.ajax({
-															   url 				: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',								   
-															   type 			: 'POST',
-															   data 			: formData,
-															   processData		: false,  	
-															   contentType		: false,  	
-															   redirect			: true,
-																success			: function (response) {
-                                  $("#edit-form").prop("disabled", false).html("Update");
-                                  submitButton.disabled = false;
-                                  if(response.status == 'mailcheck'){
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (!navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                        $("#edit-form").prop("disabled", false).html("Update");
-                                        submitButton.disabled = false;
-                                        return;
-                                    }
-                                   $("#edit-form").html(`Update`);
-   																	Swal.fire("Warning", response.message , "warning").then(function(){
- 																	});	
-                                   return false;
-                                }
-                                
-                                 // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                                 handleTalentSubmissionSuccess(response);
-                              },
-															error			: function (xhr) {
-                                    $("#edit-form").prop("disabled", false).html("Update");
-                                    submitButton.disabled = false;
-                                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                                    $('#client_submission_uuid').val(freshUuid);
-                                    if (xhr.status === 0 || !navigator.onLine) {
-                                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    } else {
-                                        Swal.fire("Error", "Something went wrong. Please try again.", "error");
-                                    }
-															}
-															});
+            var connected = true;
+            try {
+                connected = await isInternetAvailable();
+            } catch (netErr) {
+                connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
+            }
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: {
+                        confirmButton: "btn btn-warning"
+                    }
+                });
+                return;
+            }
 
-                    }, 500);
-                } else {
-                    var errors = collectFormValidationErrors(form, validator);
-                    displayValidationErrorsNotification(errors, form, validator);
+            var missing = detectMissingFields(form, validator);
+            if (missing && missing.length > 0) {
+                if (submitButton) {
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
                 }
-            });
-        });
-    }
+                var errors = collectFormValidationErrors(form, validator);
+                displayValidationErrorsNotification(errors, form, validator);
+                return;
+            }
+
+            if (validator && typeof validator.validate === 'function') {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        executeEditSubmit();
+                    } else {
+                        var fvErrors = collectFormValidationErrors(form, validator);
+                        displayValidationErrorsNotification(fvErrors, form, validator);
+                    }
+                }).catch(function (valErr) {
+                    console.warn('Edit validator validate fallback:', valErr);
+                    executeEditSubmit();
+                });
+            } else {
+                executeEditSubmit();
+            }
+        };
+
+        if (submitButton) {
+            submitButton.addEventListener('click', handleEditSubmit);
+        }
+        $(document).off('click', '#edit-form').on('click', '#edit-form', handleEditSubmit);
+    };
+
     return {
-				init: function () {
-										form 			=	document.querySelector('#createForm');
-										submitButton 	=	document.querySelector('#edit-form');
-										handleForm();
-								  }
-    	   };
+        init: function () {
+            form = document.querySelector('#createForm');
+            submitButton = document.querySelector('#edit-form');
+            handleForm();
+        }
+    };
 }();
 
-KTUtil.onDOMContentLoaded(function () {
-    KTEditCandidate.init();
-});
+function initKTEditCandidate() {
+    if (typeof KTEditCandidate !== 'undefined' && KTEditCandidate.init) {
+        KTEditCandidate.init();
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKTEditCandidate);
+} else {
+    initKTEditCandidate();
+}
+$(document).ready(initKTEditCandidate);
 @php } @endphp
 
 
