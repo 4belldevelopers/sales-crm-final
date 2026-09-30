@@ -353,31 +353,35 @@
             </td>
             <td>
                 @php
-                    $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                        ->select('job_application_id')
-                        ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                        ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
+                    $isAdded = (isset($assignedCandidateIds) && in_array((int)@$row->id, $assignedCandidateIds, true));
+                    if (! $isAdded) {
+                        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
+                            ->select('job_application_id')
+                            ->where('add_job_wise_condidates.job_id', '=', $jobid)
+                            ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
+                        $isAdded = ($existingCandidatesQuery > 0);
+                    }
 
-                    if($row->status==2){
-                        if ($existingCandidatesQuery > 0) {
-                            $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
-                        }elseif($row->countforadd >= 3){
+                    if ($row->status == 2) {
+                        if ($isAdded) {
+                            $html = '<div class="d-flex flex-column"> <button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button> </div>';
+                        } elseif ($row->countforadd >= 3) {
                             $html = '<div class="d-flex flex-column"> 
                                 <a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a> 
                                 </div>';
-                        }else{
-                        $html =
-                            '<div class="d-flex flex-column"> 
-                                <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="2"  data-row-id="' .
-                            @$row->id .
-                            '" data-row-jobid="' .
-                            @$jobid .
-                            '">
-                                Add to Job
-                                </a> 
+                        } else {
+                            $html =
+                                '<div class="d-flex flex-column"> 
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="2" data-row-id="' .
+                                @$row->id .
+                                '" data-row-jobid="' .
+                                @$jobid .
+                                '">
+                                    Add to Job
+                                    </a> 
                                 </div>';
                         }
-                    }else{
+                    } else {
                         $html = '<div class="d-flex flex-column"> 
                                 <a href="javascript:void(0);" class="btn btn-sm btn-danger fs-6">Expired</a> 
                                 </div>';

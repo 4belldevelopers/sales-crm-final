@@ -353,36 +353,32 @@
             <td>
                 @php
                     $html = '';
-                    $recCounter = 0;
-                    $recCounter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_id', @$row->id)
-                        ->where('source_from_type', 1)
-                        ->where('source_jobid', @$jobid)
-                        ->count();
-
+                    $isAdded = (isset($assignedCandidateIds) && in_array((int)@$row->id, $assignedCandidateIds, true));
+                    if (! $isAdded) {
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
                             ->select('job_application_id')
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
+                            ->where('add_job_wise_condidates.job_application_id', '=', @$row->id)->count();
+                        $recCounter = DB::table('rec_candidate_assign')
+                            ->select('id')
+                            ->where('source_from_id', @$row->id)
+                            ->where('source_from_type', 1)
+                            ->where('source_jobid', @$jobid)
+                            ->count();
+                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0);
+                    }
 
-                     if($row->status==2){
-                        if ($existingCandidatesQuery > 0) {
-                        $html =
-                            '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a> </div>';
+                    if ($row->status == 2) {
+                        if ($isAdded) {
+                            $html = '<div class="d-flex flex-column"> <button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button> </div>';
                         } else {
-                            $html =
-                                '<div class="d-flex flex-column"> 
-                                                <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="1"  data-row-id="' .
-                                @$row->id .
-                                '" data-row-jobid="' .
-                                @$jobid .
-                                '">
-                                                    Add to Job
-                                                </a> 
-                                            </div>';
+                            $html = '<div class="d-flex flex-column"> 
+                                        <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="1" data-row-id="' . @$row->id . '" data-row-jobid="' . @$jobid . '">
+                                            Add to Job
+                                        </a> 
+                                    </div>';
                         }
-                     }else{
+                    } else {
                         
                         if($row->status==1){
                             $html =' <a href="javascript:void(0);" data-row-id="985" class="fw-bold fs-6  stage_sub_stage interview text-hover-primary" data-toggle="modal" data-target="#stage_sub_stage">

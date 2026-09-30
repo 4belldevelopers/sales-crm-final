@@ -12041,6 +12041,69 @@ END:VCALENDAR";
         ];
     }
 
+    /**
+     * Get all candidate IDs (job_applications.id) that are already assigned,
+     * added, or submitted to the specified job.
+     * Scoped strictly to (candidate_id + CURRENT job_id) across:
+     * 1. add_job_wise_condidates (job_id = $jobId)
+     * 2. rec_candidate_assign (source_jobid = $jobId -> source_from_id, source_application_id, parent_id)
+     * 3. job_applications (job_id = $jobId -> id)
+     *
+     * Candidates assigned to other jobs are never excluded.
+     *
+     * @param int $jobId
+     * @param int|null $companyId
+     * @return int[]
+     */
+    public static function getJobAssignedCandidateIds(int $jobId, ?int $companyId = null): array
+    {
+        if ($jobId <= 0) {
+            return [];
+        }
+
+        $q1 = DB::table('add_job_wise_condidates')
+            ->where('job_id', $jobId)
+            ->whereNotNull('job_application_id')
+            ->where('job_application_id', '>', 0)
+            ->select('job_application_id as candidate_id');
+
+        $q2 = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $jobId)
+            ->whereNotNull('source_from_id')
+            ->where('source_from_id', '>', 0)
+            ->select('source_from_id as candidate_id');
+
+        $q3 = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $jobId)
+            ->whereNotNull('source_application_id')
+            ->where('source_application_id', '>', 0)
+            ->select('source_application_id as candidate_id');
+
+        $q4 = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $jobId)
+            ->whereNotNull('parent_id')
+            ->where('parent_id', '>', 0)
+            ->select('parent_id as candidate_id');
+
+        $q5 = DB::table('job_applications')
+            ->where('job_id', $jobId)
+            ->select('id as candidate_id');
+
+        if ($companyId) {
+            $q1->where('company_id', $companyId);
+            $q5->where('company_id', $companyId);
+        }
+
+        return DB::query()
+            ->fromSub($q1->union($q2)->union($q3)->union($q4)->union($q5), 'assigned_cands')
+            ->pluck('candidate_id')
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
     public static function custome_count_all($id)
     {
         $company_id = auth()->user()->company_id;
@@ -12129,8 +12192,8 @@ END:VCALENDAR";
         $locationCluster = self::resolveLocationCluster($exactLocationIds, $locationCityNames);
         $location = $locationCluster['expanded'];
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $id)->pluck('job_application_id')->toArray();
+        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates on other jobs are never excluded.
+        $existingCandidatesQuery = self::getJobAssignedCandidateIds((int) $id, (int) $company_id);
 
         // dd($education);
 
@@ -12270,13 +12333,7 @@ END:VCALENDAR";
             ],
         ];
 
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'candidate_id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         if (! empty($location)) {
 
@@ -12537,11 +12594,7 @@ END:VCALENDAR";
             ];
         }
 
-        if (! empty($existingCandidatesQuery)) {
-            $boolQueryInternalBench['bool']['must_not'][] = [
-                'terms' => ['id' => $existingCandidatesQuery],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         $total_InternalBenchApplications = 0;
 
@@ -12713,74 +12766,63 @@ END:VCALENDAR";
             ];
         }
 
-        if (! empty($existingCandidatesQuery)) {
-            $boolQueryMarketBench['bool']['must_not'][] = [
-                'terms' => ['id' => $existingCandidatesQuery],
-            ];
-        }
-
-        $total_MarketBenchApplications = 0;
-
-        // ####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
-
-        // ####################################  START  Bench Talent Request
-
-        $boolQuerytBenchRequest = [
-            'bool' => [
-                'should' => [
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['source_company_id' => $company_id]],
-                                ['term' => ['source_jobid' => $id]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-                'must_not' => [
-                    // Exclude already-added candidates from the tab counter too.
-                    ['term' => ['ac_status' => 1]],
-                ],
-                'filter' => [],
-            ],
-        ];
-        $total_RequestBenchApplications = 0;
-
-        // ####################################  END  Bench Talent Request (executed via msearch below)
-
-        // ####################################  START  CAREER COUNTER
-
-        $boolQueryCareer = [
-            'bool' => [
-                'should' => [
-                    // First condition
-                    [
-                        'bool' => [
-                            'must' => array_merge([
-                                ['term' => ['company_id' => $company_id]],
-                                ['term' => ['job_id' => $id]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['term' => ['status' => 1]],
-                                    ],
-                                ]],
-                            ]),
-                        ],
-                    ],
-                ],
-                'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
-                'must_not' => [],
-            ],
-        ];
-
-        if (! empty($existingCandidatesQuery)) {
-            $boolQueryCareer['bool']['must_not'][] = [
-                'terms' => ['id' => $existingCandidatesQuery],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
+ 
+         $total_MarketBenchApplications = 0;
+ 
+         // ####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
+ 
+         // ####################################  START  Bench Talent Request
+ 
+         $boolQuerytBenchRequest = [
+             'bool' => [
+                 'should' => [
+                     [
+                         'bool' => [
+                             'must' => array_merge([
+                                 ['term' => ['source_company_id' => $company_id]],
+                                 ['term' => ['source_jobid' => $id]],
+                             ]),
+                         ],
+                     ],
+                 ],
+                 'minimum_should_match' => 1,
+                 'must_not' => [],
+                 'filter' => [],
+             ],
+         ];
+         $total_RequestBenchApplications = 0;
+ 
+         // ####################################  END  Bench Talent Request (executed via msearch below)
+ 
+         // ####################################  START  CAREER COUNTER
+ 
+         $boolQueryCareer = [
+             'bool' => [
+                 'should' => [
+                     // First condition
+                     [
+                         'bool' => [
+                             'must' => array_merge([
+                                 ['term' => ['company_id' => $company_id]],
+                                 ['term' => ['job_id' => $id]],
+                             ], [
+                                 ['bool' => [
+                                     'must_not' => [
+                                         ['term' => ['status' => 1]],
+                                     ],
+                                 ]],
+                             ]),
+                         ],
+                     ],
+                 ],
+                 'minimum_should_match' => 1,
+                 'filter' => [], // We'll add all filters here
+                 'must_not' => [],
+             ],
+         ];
+ 
+         // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         $total_career = 0;
 

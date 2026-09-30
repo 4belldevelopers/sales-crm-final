@@ -510,13 +510,24 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             return $baseMaps;
         }
 
-        // 1. Direct assignment to this job in rec_candidate_assign
-        $recAssignedSet = DB::table('rec_candidate_assign')
+        // 1. Direct assignment to this job in rec_candidate_assign (source_from_id or source_application_id)
+        $recAssignedRows = DB::table('rec_candidate_assign')
             ->where('source_jobid', $jobId)
-            ->whereIn('source_from_id', $candidateIds)
-            ->pluck('source_from_id')
-            ->flip()
-            ->toArray();
+            ->where(function ($q) use ($candidateIds) {
+                $q->whereIn('source_from_id', $candidateIds)
+                    ->orWhereIn('source_application_id', $candidateIds);
+            })
+            ->select('source_from_id', 'source_application_id')
+            ->get();
+        $recAssignedSet = [];
+        foreach ($recAssignedRows as $r) {
+            if (! empty($r->source_from_id)) {
+                $recAssignedSet[$r->source_from_id] = true;
+            }
+            if (! empty($r->source_application_id)) {
+                $recAssignedSet[$r->source_application_id] = true;
+            }
+        }
 
         // 2. Source-from-type lookup (public bench = 2, internal bench = 1)
         $sourceTypeMap = [];
@@ -552,6 +563,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->pluck('job_application_id')
             ->flip()
             ->toArray();
+
+        // 4b. Direct candidate application in job_applications for this job
+        $directJobApps = DB::table('job_applications')
+            ->where('job_id', $jobId)
+            ->whereIn('id', $candidateIds)
+            ->pluck('id')
+            ->all();
+        foreach ($directJobApps as $dId) {
+            $existingInJobSet[$dId] = true;
+        }
 
         // 5. Job required skills (1 single query for the entire page)
         $jobRequiredSkills = DB::table('job_metronics_skills')
@@ -2077,18 +2098,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         // Skills filter
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'candidate_id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
-
-        $existingMap = array_flip($existingCandidatesQuery);
+        // Determine "Added" candidates specifically for the CURRENT JOB ID.
+        // A candidate assigned to another job is NOT considered "Added" for this job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $existingMap = array_flip($assignedCandidateIds);
 
         $boolQuery['bool']['must_not'][] = [
             'terms' => [
@@ -2231,9 +2244,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
         }
 
-        // dd($boolQuery);
-
-        // dd($existingCandidatesQuery);
+        // Primary sort: Candidates with "Add to Job" status must always appear FIRST (0),
+        // followed by candidates already "Added" to the current job (1).
+        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates assigned to another job are NOT "Added" for this job.
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
 
         // Build the final query
         $params = [
@@ -4926,6 +4955,31 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // Apply fallback sort by ID descending
         $sort[] = ['id' => ['order' => 'desc', 'unmapped_type' => 'long']];
 
+        // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => "
+                        if (doc.containsKey('ac_status') && doc['ac_status'].size() > 0 && doc['ac_status'].value == 1) {
+                            return 1;
+                        }
+                        if (doc.containsKey('candidate_id') && doc['candidate_id'].size() > 0 && params.assignedIds.contains((int) doc['candidate_id'].value)) {
+                            return 1;
+                        }
+                        return 0;
+                    ",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
+
         $boolQuery = [
             'bool' => [
                 'should' => [
@@ -5220,7 +5274,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'total', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'total', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -5860,6 +5914,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 break;
         }
 
+        // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
+
         $boolQuery = [
             'bool' => [
                 'must' => [
@@ -6156,16 +6229,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         if ($valCheck == 22) {
             $today = date('Y-m-d');
@@ -6329,7 +6393,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_outsource = request('app_int_outsource');
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.internal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -6917,6 +6981,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 break;
         }
 
+        // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
+
         $boolQuery = [
             'bool' => [
                 'should' => [
@@ -7188,17 +7271,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
         }
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-
-        if (! empty($existingCandidatesQuery)) {
-            if (! isset($boolQuery['bool']['must_not'])) {
-                $boolQuery['bool']['must_not'] = [];
-            }
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => ['id' => $existingCandidatesQuery],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         // Build the final query
         $params = [
@@ -7293,7 +7366,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_outsource = request('app_int_outsource');
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.career_apply_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -7849,6 +7922,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 break;
         }
 
+        // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
+
         $boolQuery = [
             'bool' => [
                 'must' => [
@@ -8214,16 +8306,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
         }
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         // Build the final query
         $params = [
@@ -8310,7 +8393,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_outsource = request('app_int_outsource');
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'boostbenchApplications', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'boostbenchApplications', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -9318,21 +9401,35 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
         }
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
+        // Determine "Added" candidates specifically for the CURRENT JOB ID.
+        // A candidate assigned to another job is NOT considered "Added" for this job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
 
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'candidate_id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
         $boolQuery['bool']['must_not'][] = [
             'terms' => [
                 'job_master_status_id' => [5, 6],
             ],
         ];
+
+        // Primary sort: Candidates with "Add to Job" status must always appear FIRST (0),
+        // followed by candidates already "Added" to the current job (1).
+        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates assigned to another job are NOT "Added" for this job.
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
 
         // Build the final query
         $params = [
@@ -10028,6 +10125,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 break;
         }
 
+        // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
+        $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignmentSortScript = [
+            '_script' => [
+                'type' => 'number',
+                'script' => [
+                    'lang' => 'painless',
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
+                        : "0",
+                    'params' => [
+                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
+                    ],
+                ],
+                'order' => 'asc',
+            ],
+        ];
+        array_unshift($sort, $assignmentSortScript);
+
         if ($valCheck == 22) {
             $today = date('Y-m-d');
             $next30 = date('Y-m-d', strtotime('+30 days'));
@@ -10388,16 +10504,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
         }
 
-        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-            ->where('job_id', '=', $jobid)->pluck('job_application_id')->toArray();
-
-        if (! empty($existingCandidatesQuery)) {
-            $boolQuery['bool']['must_not'][] = [
-                'terms' => [
-                    'id' => $existingCandidatesQuery,
-                ],
-            ];
-        }
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         // Build the final query
         $params = [
@@ -10494,7 +10601,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.dinternal_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];

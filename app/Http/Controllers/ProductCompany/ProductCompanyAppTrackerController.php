@@ -1042,7 +1042,9 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 'state_list.state as state_name',
                 'recommendation_relation.final_status',
                 'bench_applications.id as bench_applications_id',
-                'uc.company_name as uc_company_name'
+                'uc.company_name as uc_company_name',
+                'cur_job_wise.id as cur_job_wise_id',
+                'cur_job_assign.id as cur_job_assign_id'
             )
             ->join('jobs', 'jobs.id', 'job_applications.job_id')
             ->leftjoin('job_skills', 'jobs.id', 'job_skills.job_id')
@@ -1054,7 +1056,15 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
             ->leftjoin('application_status', 'application_status.id', 'job_applications.status_id')
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->leftjoin('state_list', 'state_list.id', 'job_applications.state');
+            ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
+            ->leftJoin('rec_candidate_assign as cur_job_assign', function ($join) use ($jobid) {
+                $join->on('cur_job_assign.source_application_id', '=', 'job_applications.id')
+                    ->where('cur_job_assign.source_jobid', '=', DB::raw((int) $jobid));
+            })
+            ->leftJoin('add_job_wise_condidates as cur_job_wise', function ($join) use ($jobid) {
+                $join->on('cur_job_wise.job_application_id', '=', 'job_applications.id')
+                    ->where('cur_job_wise.job_id', '=', DB::raw((int) $jobid));
+            });
         $existingApplications = $existingApplications->leftJoin('rec_candidate_assign', function ($join) {
             $join->on('rec_candidate_assign.source_application_id', '=', 'job_applications.id')
                 ->where('rec_candidate_assign.source_from_type', '=', '2');
@@ -1069,7 +1079,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '=', 0)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%")
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
@@ -1078,7 +1087,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '=', 0)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
@@ -1086,7 +1094,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 return $query->where('job_applications.company_id', '=', $company_id)
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('job_applications.thirdparty_company_id', '=', 0)
-                    ->where('job_applications.job_id', '!=', $jobid)
                     ->where('job_applications.skills', 'like', '%'.$val.'%');
             });
         }
@@ -1095,7 +1102,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '>', 0)
                 ->where('job_applications.master_status_id', '!=', 8)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%")
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
@@ -1105,7 +1111,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '>', 0)
                 ->where('job_applications.master_status_id', '!=', 8)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
@@ -1114,7 +1119,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('job_applications.thirdparty_company_id', '>', 0)
                     ->where('job_applications.master_status_id', '!=', 8)
-                    ->where('job_applications.job_id', '!=', $jobid)
                     ->where('job_applications.skills', 'like', '%'.$val.'%');
             });
         }
@@ -1122,7 +1126,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('recommendation_relation.job_id', '>', 0)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%")
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
@@ -1131,7 +1134,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('recommendation_relation.job_id', '>', 0)
-                ->where('job_applications.job_id', '!=', $jobid)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
@@ -1139,12 +1141,15 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('recommendation_relation.job_id', '>', 0)
-                    ->where('job_applications.job_id', '!=', $jobid)
                     ->where('job_applications.skills', 'like', '%'.$val.'%');
             });
         }
         $existingApplications = $existingApplications->groupBy('job_applications.id');
-        $existingApplications = $existingApplications->orderBy('job_applications.id', 'DESC');
+        $existingApplications = $existingApplications->orderByRaw('CASE
+            WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL OR job_applications.job_id = ' . (int) $jobid . ' THEN 1
+            ELSE 0
+        END ASC')
+        ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($existingApplications)
 
@@ -1448,25 +1453,24 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                     $source_from_type = 1;
                 }
 
-                if ($recCounter > 0) {
-                    $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
-                } else {
-
+                $is_added = (! empty($row->cur_job_wise_id) || ! empty($row->cur_job_assign_id) || (int) @$row->job_id === (int) $jobid || $recCounter > 0);
+                if (! $is_added) {
                     $public_bench_conter = DB::table('rec_candidate_assign')->select('id')->where('source_from_type', '=', 2)->where('source_company_id', '=', $company_id)->where('source_jobid', '=', $jobid)->where('parent_id', '=', @$row->id)->count();
                     $internal_bench_conter = DB::table('rec_candidate_assign')->select('id')->where('source_from_type', '=', 1)->where('source_company_id', '=', $company_id)->where('source_jobid', '=', $jobid)->where('parent_id', '=', @$row->id)->count();
 
-                    if ($public_bench_conter > 0) {
-                        $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
-                    } elseif ($internal_bench_conter > 0) {
-                        $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
-                    } else {
-                        $html = '<div class="d-flex flex-column"> 
+                    if ($public_bench_conter > 0 || $internal_bench_conter > 0) {
+                        $is_added = true;
+                    }
+                }
+
+                if ($is_added) {
+                    $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
+                } else {
+                    $html = '<div class="d-flex flex-column"> 
 									<a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="'.@$source_from_type.'"  data-row-id="'.@$row->id.'" data-row-jobid="'.@$jobid.'">
 										Add InReview
 									</a> 
 								</div>';
-                    }
-
                 }
 
                 return $html;
@@ -1954,7 +1958,8 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             'companies.company_name',
             'rec_candidate_assign.source_application_id',
             'rec_candidate_assign.source_jobid',
-            'rec_candidate_assign.id as rec_candidate_assign_id'
+            'rec_candidate_assign.id as rec_candidate_assign_id',
+            'cur_job_wise.id as cur_job_wise_id'
         )
             ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
             ->leftjoin('master_status', 'master_status.id', 'job_applications.master_status_id')
@@ -1973,6 +1978,10 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                     ->where('rec_candidate_assign.source_from_type', '=', 1)
                     ->where('rec_candidate_assign.source_company_id', '=', $company_id);
                 // ->where('rec_candidate_assign.source_from_company_id', '!=', $company_id);
+            })
+            ->leftJoin('add_job_wise_condidates as cur_job_wise', function ($join) use ($jobid) {
+                $join->on('cur_job_wise.job_application_id', '=', 'rec_candidate_assign.source_application_id')
+                    ->where('cur_job_wise.job_id', '=', DB::raw((int) $jobid));
             });
 
         $search = '';
@@ -2044,10 +2053,11 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
 
         $jobApplications = $jobApplications->where('job_applications.condidate_type', '=', 'bench_condidate');
         $jobApplications = $jobApplications->groupBy('job_applications.id');
-
-        // dd($jobApplications->toSql(),$jobApplications->get());
-
-        // echo $jobApplications->toSql(); exit;
+        $jobApplications = $jobApplications->orderByRaw('CASE
+            WHEN cur_job_wise.id IS NOT NULL THEN 1
+            ELSE 0
+        END ASC')
+        ->orderBy('job_applications.id', 'DESC');
 
         $dataTable = DataTables::of($jobApplications)
 
@@ -2284,8 +2294,12 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                         $name = @$childStatus->name;
                     }
                 }
-                $addStatus = DB::table('add_job_wise_condidates')->select('*')->where('job_id', $row->source_jobid)->where('job_application_id', $row->source_application_id)->first();
-                if (empty($addStatus)) {
+                $is_added = ! empty($row->cur_job_wise_id);
+                if (! $is_added) {
+                    $addStatus = DB::table('add_job_wise_condidates')->select('id')->where('job_id', $row->source_jobid)->where('job_application_id', $row->source_application_id)->first();
+                    $is_added = ! empty($addStatus);
+                }
+                if (! $is_added) {
                     return ' <div class="d-flex flex-column">
 						<a href="javascript:void(0);" data-row-id="'.@$row->source_jobid.'" data-recomnded-id="'.@$row->rec_candidate_assign_id.'" data-condidate-id="'.@$row->id.'" class="btn btn-sm btn-primary add_to_list">Add to list</a>
 					  </div>';
@@ -2350,9 +2364,24 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
         $benchApplications = DB::table('job_applications')
-            ->select('job_applications.*', 'qualification_master.name as qualification_name', 'bench_master_status.name as master_status_name', 'bench_master_status.css_style');
+            ->select(
+                'job_applications.*',
+                'qualification_master.name as qualification_name',
+                'bench_master_status.name as master_status_name',
+                'bench_master_status.css_style',
+                'cur_job_wise.id as cur_job_wise_id',
+                'cur_job_assign.id as cur_job_assign_id'
+            );
         $benchApplications = $benchApplications->join('bench_master_status', 'bench_master_status.id', 'job_applications.status');
         $benchApplications = $benchApplications->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification');
+        $benchApplications = $benchApplications->leftJoin('rec_candidate_assign as cur_job_assign', function ($join) use ($jobid) {
+            $join->on('cur_job_assign.source_from_id', '=', 'job_applications.id')
+                ->where('cur_job_assign.source_jobid', '=', DB::raw((int) $jobid));
+        });
+        $benchApplications = $benchApplications->leftJoin('add_job_wise_condidates as cur_job_wise', function ($join) use ($jobid) {
+            $join->on('cur_job_wise.job_application_id', '=', 'job_applications.id')
+                ->where('cur_job_wise.job_id', '=', DB::raw((int) $jobid));
+        });
 
         if (\request('search') != '') {
             $search = request('search');
@@ -2378,7 +2407,11 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
         }
         $benchApplications = $benchApplications->where('job_applications.condidate_type', 'bench_condidate');
         $benchApplications = $benchApplications->groupBy('job_applications.id');
-        $benchApplications = $benchApplications->orderBy('job_applications.id', 'DESC');
+        $benchApplications = $benchApplications->orderByRaw('CASE
+            WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL THEN 1
+            ELSE 0
+        END ASC')
+        ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($benchApplications)
 
@@ -2530,11 +2563,13 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 return '<div class="d-flex flex-column"> <span class="text-dark fw-bolder fs-6">'.@$updated_at.'</span> </div>';
             })
             ->editColumn('Action', function ($row) use ($jobid) {
+                $is_added = (! empty($row->cur_job_wise_id) || ! empty($row->cur_job_assign_id));
+                if (! $is_added) {
+                    $recCounter = DB::table('rec_candidate_assign')->select('id')->where('source_from_id', @$row->id)->where('source_from_type', 1)->where('source_jobid', @$jobid)->count();
+                    $is_added = ($recCounter > 0);
+                }
 
-                $recCounter = 0;
-                $recCounter = DB::table('rec_candidate_assign')->select('id')->where('source_from_id', @$row->id)->where('source_from_type', 1)->where('source_jobid', @$jobid)->count();
-
-                if ($recCounter > 0) {
+                if ($is_added) {
                     $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
                 } else {
                     $html = '<div class="d-flex flex-column"> 
@@ -2545,7 +2580,6 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 }
 
                 return $html;
-
             })
 
             ->rawColumns(['chkbox', 'Name', 'Contacts', 'Exp', 'Salary', 'NP', 'Qualification', 'Location', 'Type', 'OfferBy', 'LastActive', 'Action'])
@@ -2596,11 +2630,27 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
         $benchApplications = DB::table('job_applications')
-            ->select('job_applications.*', 'qualification_master.name as qualification_name', 'bench_master_status.name as master_status_name', 'bench_master_status.css_style');
+            ->select(
+                'job_applications.*',
+                'qualification_master.name as qualification_name',
+                'bench_master_status.name as master_status_name',
+                'bench_master_status.css_style',
+                'cur_job_wise.id as cur_job_wise_id',
+                'cur_job_assign.id as cur_job_assign_id'
+            );
         $benchApplications = $benchApplications->join('bench_master_status', 'bench_master_status.id', 'job_applications.status');
         $benchApplications = $benchApplications->join('package_active', 'package_active.company_id', 'job_applications.company_id');
         $benchApplications = $benchApplications->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification');
         $benchApplications = $benchApplications->join('jobs', 'jobs.id', 'job_applications.job_id');
+        $benchApplications = $benchApplications->leftJoin('rec_candidate_assign as cur_job_assign', function ($join) use ($jobid) {
+            $join->on('cur_job_assign.source_from_id', '=', 'job_applications.id')
+                ->where('cur_job_assign.source_from_type', '=', DB::raw(2))
+                ->where('cur_job_assign.source_jobid', '=', DB::raw((int) $jobid));
+        });
+        $benchApplications = $benchApplications->leftJoin('add_job_wise_condidates as cur_job_wise', function ($join) use ($jobid) {
+            $join->on('cur_job_wise.job_application_id', '=', 'job_applications.id')
+                ->where('cur_job_wise.job_id', '=', DB::raw((int) $jobid));
+        });
         $benchApplications = $benchApplications->where('package_active.newbenchclientrequest_balance', '>', 0);
         if (\request('search') != '') {
             $search = request('search');
@@ -2620,7 +2670,11 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
         }
         // dd($job->id);
         $benchApplications = $benchApplications->groupBy('job_applications.id');
-        $benchApplications = $benchApplications->orderBy('job_applications.id', 'DESC');
+        $benchApplications = $benchApplications->orderByRaw('CASE
+            WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL THEN 1
+            ELSE 0
+        END ASC')
+        ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($benchApplications)
 
@@ -2774,10 +2828,13 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             })
             ->editColumn('Action', function ($row) use ($jobid) {
 
-                $recCounter = 0;
-                $recCounter = DB::table('rec_candidate_assign')->select('id')->where('source_from_id', @$row->id)->where('source_from_type', 2)->where('source_jobid', @$jobid)->count();
+                $is_added = (! empty($row->cur_job_wise_id) || ! empty($row->cur_job_assign_id));
+                if (! $is_added) {
+                    $recCounter = DB::table('rec_candidate_assign')->select('id')->where('source_from_id', @$row->id)->where('source_from_type', 2)->where('source_jobid', @$jobid)->count();
+                    $is_added = ($recCounter > 0);
+                }
 
-                if ($recCounter > 0) {
+                if ($is_added) {
                     $html = '<div class="d-flex flex-column"> <a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a> </div>';
                 } else {
                     $html = '<div class="d-flex flex-column"> 
