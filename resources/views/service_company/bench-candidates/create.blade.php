@@ -477,11 +477,16 @@ if($snp_mode== 1){
                   </div>
                   <div class="fg fv-row bd-field">
                     <label>Mobile Number (Not Disclosed to Client) <span class="rq">*</span></label>
-                    <div class="bd-phone-control">
-                      <i class="fa-solid fa-mobile-screen-button"></i>
-                      <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter mobile number" />
                   </div>
                 </div>
 
@@ -2294,23 +2299,9 @@ $(document).ready(function () {
 <script>
 
   $(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-      separateDialCode: true,
-      initialCountry: "{{ $phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-    const secMobileEl = document.querySelector("#secondary_mobile");
-    const secondaryPhoneInput = (secMobileEl && secMobileEl.type !== 'hidden') ? window.intlTelInput(secMobileEl, {
-      separateDialCode: true,
-      initialCountry: "{{ $second_phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    }) : null;
-    window.createTalentPhoneInputs = {
-      primary: primaryPhoneInput,
-      secondary: secondaryPhoneInput
-    };
+    if (window.JeroPhoneBox) {
+      window.JeroPhoneBox.initAll();
+    }
 
     window.normalizeCreateTalentPhoneDigits = function (value) {
       return String(value || '').replace(/[^\d]/g, '');
@@ -2327,14 +2318,6 @@ $(document).ready(function () {
         return !required;
       }
 
-      const itiInstance = inputId === 'secondary_mobile'
-        ? window.createTalentPhoneInputs?.secondary
-        : window.createTalentPhoneInputs?.primary;
-
-      if (window.intlTelInputUtils && itiInstance && typeof itiInstance.isValidNumber === 'function') {
-        return itiInstance.isValidNumber();
-      }
-
       const digits = window.normalizeCreateTalentPhoneDigits(rawValue);
       return digits.length >= 6 && digits.length <= 15;
     };
@@ -2347,36 +2330,7 @@ $(document).ready(function () {
         }
       });
     };
-
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      if (!inputField || typeof inputField.getSelectedCountryData !== 'function') return;
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-      
-    }
-    // Update country code on input or country flag selection
-    $("#phone").on("countrychange input change", function () {
-      updateCountryCode(primaryPhoneInput, "#primary_country_code");
-    });
-
-    if (secondaryPhoneInput) {
-      $("#secondary_mobile").on("countrychange input change", function () {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      });
-    }
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#phone")) {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      } else if (targetInput.is("#secondary_mobile") && secondaryPhoneInput) {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      }
-    });
+  });
 
     const HOURS_PER_MONTH = 160;
     const MONTHS_PER_YEAR = 12;

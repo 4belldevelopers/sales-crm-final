@@ -130,7 +130,16 @@
                 <!--end::Label-->
                 <!--begin::Col-->
                 <div class="col-lg-9 fv-row fv-plugins-icon-container">
-                  <input type="number" name="mobile" id="mobile" class="form-control form-control-lg form-control-solid" placeholder="Enter Phone" value="{{$team->mobile}}">
+                  <x-jero-phone-input
+                      id="mobile"
+                      name="mobile"
+                      countryCodeName="calling_code"
+                      countryCodeId="calling_code"
+                      :value="$team->mobile"
+                      :countryCode="@$team->calling_code"
+                      label=""
+                      :required="true"
+                      placeholder="Enter Phone" />
                   <div class="fv-plugins-message-container invalid-feedback"></div>
                 </div>
                 <!--end::Col-->

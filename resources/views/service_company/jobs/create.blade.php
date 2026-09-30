@@ -2297,10 +2297,17 @@
                         <!-- Phone Number -->
                         <div class="atm-field">
                             <label class="atm-label" for="cp_number_0">Phone Number</label>
-                            <div class="atm-input-wrap">
-                                <input type="number" name="cp_number" id="cp_number_0" maxlength="10" placeholder="Enter phone number" autocomplete="off">
-                            </div>
-                            <div class="atm-error" id="atm_err_phone">Please enter a valid 10-digit phone number.</div>
+                            <x-jero-phone-input
+                                id="cp_number_0"
+                                name="cp_number"
+                                countryCodeName="phone_country_code"
+                                countryCodeId="phone_country_code"
+                                value=""
+                                :countryCode="@$country_code"
+                                label=""
+                                :required="false"
+                                placeholder="Enter phone number" />
+                            <div class="atm-error" id="atm_err_phone">Please enter a valid phone number.</div>
                         </div>
 
                     </form>
@@ -2370,22 +2377,9 @@
     });
 
     $(document).ready(function () {
-        const primaryPhoneInput = window.intlTelInput(document.querySelector("#cp_number_0"), {
-            separateDialCode: true,
-            initialCountry: "{{ $country_code }}",
-            preferredCountries: ["in", "us", "gb", "ca", "au"],
-        });
-        function updateCountryCode(inputField, hiddenField) {
-            const selectedCountryData = inputField.getSelectedCountryData();
-            const countryCode = selectedCountryData.iso2;
-            $(hiddenField).val(countryCode);
+        if (window.JeroPhoneBox) {
+            window.JeroPhoneBox.initAll();
         }
-        $("#cp_number_0").on("input change", function () { updateCountryCode(primaryPhoneInput, "#phone_country_code"); });
-        $(".iti__flag-container").on("click", function (event) {
-            const targetInput = $(event.target).closest(".iti").find("input");
-            if (targetInput.is("#cp_number_0")) { updateCountryCode(primaryPhoneInput, "#phone_country_code"); }
-        });
-        setTimeout(function () { $(".iti__flag-container").click(); }, 500);
     });
 
     function opensidebar() { $('#kt_activitiesClient_toggle').trigger('click'); }

@@ -427,23 +427,29 @@ body {overflow-x:hidden; }
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="secondary_mobile"
+                        name="secondary_mobile"
+                        countryCodeName="secondary_country_code"
+                        countryCodeId="secondary_country_code"
+                        :value="@$application->secondary_mobile"
+                        :countryCode="@$second_phone_code"
+                        label=""
+                        :required="false"
+                        placeholder="Enter secondary number" />
                   </div>
                 </div>
                 <div class="g4">
@@ -2119,50 +2125,9 @@ $(document).ready(function () {
 
 localStorage.setItem('currentPage', "{{ @$currentPage }}");
   $(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-      separateDialCode: true,
-      initialCountry: "{{ $phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-    const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
-      separateDialCode: true,
-      initialCountry: "{{ $second_phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-
+    if (window.JeroPhoneBox) {
+      window.JeroPhoneBox.initAll();
     }
-    // Update country code on input or country flag selection
-    $("#phone").on("input change", function () {
-      updateCountryCode(primaryPhoneInput, "#primary_country_code");
-    });
-
-    $("#secondary_mobile").on("input change", function () {
-      updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-    });
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#phone")) {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      } else if (targetInput.is("#secondary_mobile")) {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      }
-    });
-
-    setTimeout(function () {	
-      $(".iti__flag-container").click();
-    },500);
-
   });
 
 
@@ -2729,8 +2694,8 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Primary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -2739,8 +2704,8 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Secondary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
