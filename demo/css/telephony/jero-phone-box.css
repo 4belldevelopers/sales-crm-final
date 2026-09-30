@@ -1,0 +1,106 @@
+/**
+ * JERO Enterprise Mobile Number Box Styles
+ * Metronic 15.6" Screen Fit | WCAG 2.1 AA | Poppins Typography (max 14px)
+ */
+
+.jero-phone-box-wrapper {
+  position: relative;
+  font-family: 'Poppins', Helvetica, sans-serif;
+}
+
+.jero-phone-input-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.jero-country-picker-btn {
+  background-color: #f5f8fa !important;
+  border: 1px solid #e4e6ef !important;
+  border-right: none !important;
+  color: #181c32 !important;
+  font-weight: 600 !important;
+  height: 38px !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.jero-country-picker-btn:hover,
+.jero-country-picker-btn:focus {
+  background-color: #eef3f7 !important;
+  border-color: #b5b5c3 !important;
+  outline: none !important;
+}
+
+.jero-phone-input-group .form-control {
+  height: 38px !important;
+  border: 1px solid #e4e6ef !important;
+  border-left: none !important;
+  background-color: #f5f8fa !important;
+  color: #181c32 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px;
+  padding-right: 70px !important; /* Space for counter badge */
+}
+
+.jero-phone-input-group .form-control:focus {
+  background-color: #ffffff !important;
+  border-color: #009ef7 !important;
+  box-shadow: none !important;
+}
+
+.jero-phone-input-group .form-control:focus + .jero-digit-counter {
+  opacity: 1;
+}
+
+.jero-digit-counter {
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* Portal Menu */
+.jero-phone-portal-menu {
+  box-sizing: border-box;
+  animation: jeroPortalFadeIn 0.15s ease-out;
+}
+
+@keyframes jeroPortalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jero-country-item:hover {
+  background-color: #f1faff !important;
+  color: #009ef7 !important;
+}
+
+.jero-country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.jero-country-list::-webkit-scrollbar-track {
+  background: #f1f1f4;
+}
+
+.jero-country-list::-webkit-scrollbar-thumb {
+  background: #c4c4d0;
+  border-radius: 3px;
+}
+
+.jero-country-list::-webkit-scrollbar-thumb:hover {
+  background: #a1a1b5;
+}

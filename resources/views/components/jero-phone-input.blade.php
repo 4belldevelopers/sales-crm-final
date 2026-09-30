@@ -19,17 +19,46 @@
 @php
     $resolvedCountryCodeId = $countryCodeId ?: ($id . '_country_code');
     $tenantHqIso = strtoupper(auth()->check() && auth()->user()->company ? (auth()->user()->company->headquarter_country_code ?? 'IN') : 'IN');
-    $initialCode = old($countryCodeName, $countryCode ?: ($tenantHqIso === 'IN' ? '+91' : '+1'));
-    if ($initialCode && !str_starts_with($initialCode, '+')) {
-        $initialCode = '+' . $initialCode;
+
+    // Comprehensive ISO-2 to Dial Code mapping
+    $isoToDial = [
+        'IN' => '+91', 'US' => '+1', 'GB' => '+44', 'AE' => '+971', 'CA' => '+1',
+        'AU' => '+61', 'SG' => '+65', 'SA' => '+966', 'DE' => '+49', 'FR' => '+33',
+        'QA' => '+974', 'KW' => '+965', 'OM' => '+968', 'BH' => '+973', 'MY' => '+60',
+        'PH' => '+63', 'ID' => '+62', 'NZ' => '+64', 'ZA' => '+27', 'IE' => '+353',
+        'NL' => '+31', 'SE' => '+46', 'CH' => '+41', 'ES' => '+34', 'IT' => '+39',
+        'BR' => '+55', 'MX' => '+52', 'JP' => '+81', 'KR' => '+82', 'PK' => '+92',
+        'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
+        'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
+        'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972'
+    ];
+
+    $rawCode = trim((string) old($countryCodeName, $countryCode));
+    $upperRaw = strtoupper($rawCode);
+
+    if (isset($isoToDial[$upperRaw])) {
+        $initialCode = $isoToDial[$upperRaw];
+    } elseif ($rawCode && preg_match('/^\+?\d+$/', $rawCode)) {
+        $initialCode = str_starts_with($rawCode, '+') ? $rawCode : ('+' . $rawCode);
+    } else {
+        $initialCode = $isoToDial[$tenantHqIso] ?? '+91';
     }
+
     $initialValue = old($name, $value);
     
     // Quick SSR Flag Map for immediate render without JS flash
     $flagMap = [
         '+91' => '🇮🇳', '+1' => '🇺🇸', '+971' => '🇦🇪', '+44' => '🇬🇧', 
         '+65' => '🇸🇬', '+61' => '🇦🇺', '+86' => '🇨🇳', '+49' => '🇩🇪',
-        '+33' => '🇫🇷', '+966' => '🇸🇦', '+974' => '🇶🇦', '+965' => '🇰🇼'
+        '+33' => '🇫🇷', '+966' => '🇸🇦', '+974' => '🇶🇦', '+965' => '🇰🇼',
+        '+968' => '🇴🇲', '+973' => '🇧🇭', '+60' => '🇲🇾', '+63' => '🇵🇭',
+        '+62' => '🇮🇩', '+64' => '🇳🇿', '+27' => '🇿🇦', '+353' => '🇮🇪',
+        '+31' => '🇳🇱', '+46' => '🇸🇪', '+41' => '🇨🇭', '+34' => '🇪🇸',
+        '+39' => '🇮🇹', '+55' => '🇧🇷', '+52' => '🇲🇽', '+81' => '🇯🇵',
+        '+82' => '🇰🇷', '+92' => '🇵🇰', '+880' => '🇧🇩', '+94' => '🇱🇰',
+        '+977' => '🇳🇵', '+234' => '🇳🇬', '+254' => '🇰🇪', '+20' => '🇪🇬',
+        '+90' => '🇹🇷', '+48' => '🇵🇱', '+40' => '🇷🇴', '+380' => '🇺🇦',
+        '+84' => '🇻🇳', '+66' => '🇹🇭', '+852' => '🇭🇰', '+886' => '🇹🇼'
     ];
     $initialFlag = $flagMap[$initialCode] ?? '🌐';
 @endphp
@@ -59,6 +88,7 @@
                 id="{{ $id }}_btn"
                 aria-haspopup="listbox"
                 aria-expanded="false"
+                onclick="event.preventDefault(); event.stopPropagation(); if (window.JeroPhoneBox && window.JeroPhoneBox.toggleDropdown) { window.JeroPhoneBox.toggleDropdown('{{ $id }}'); }"
                 style="height: 38px; border: 1px solid #e4e6ef;">
             <span class="jero-selected-flag me-1 fs-5" id="{{ $id }}_flag">{{ $initialFlag }}</span>
             <span class="jero-selected-dial fs-7 fw-bold text-gray-800 me-1" id="{{ $id }}_dial">{{ $initialCode }}</span>
@@ -96,7 +126,16 @@
 @endonce
 
 <script>
-    if (typeof window.JeroPhoneBox !== 'undefined') {
-        window.JeroPhoneBox.init('{{ $id }}_wrapper');
+(function() {
+    function initPhoneBox() {
+        if (typeof window.JeroPhoneBox !== 'undefined') {
+            window.JeroPhoneBox.init('{{ $id }}_wrapper');
+        }
     }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPhoneBox);
+    } else {
+        initPhoneBox();
+    }
+})();
 </script>
