@@ -353,8 +353,8 @@
             </td>
             <td>
                 @php
-                    $isAdded = (isset($assignedCandidateIds) && in_array((int)@$row->id, $assignedCandidateIds, true));
-                    if (! $isAdded) {
+                    $isAdded = (isset($assignedCandidateIds) && in_array((int) @$row->id, $assignedCandidateIds, true));
+                    if (! $isAdded && ! isset($assignedCandidateIds)) {
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
                             ->select('job_application_id')
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)

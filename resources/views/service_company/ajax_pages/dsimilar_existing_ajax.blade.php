@@ -704,53 +704,64 @@
                     $candId = (int) (@$row->candidate_id ?? @$row->id ?? 0);
                     $source_from_id = $candId;
 
-                    $recCounter = DB::table('rec_candidate_assign')
-                        ->where('source_jobid', @$jobid)
-                        ->where(function($q) use ($candId) {
-                            $q->where('source_from_id', $candId)
-                              ->orWhere('source_application_id', $candId);
-                        })
-                        ->count();
+                    if (isset($rowMaps)) {
+                        $recCounter = isset($rowMaps['recAssignedSet'][$candId]) ? 1 : 0;
+                        $source_from_type = $rowMaps['sourceTypeMap'][$candId] ?? 0;
+                        $parent_conter = isset($rowMaps['parentAssignedSet'][$candId]) ? 1 : 0;
+                        $existingCandidatesQuery = isset($rowMaps['existingCandidatesSet'][$candId]) ? 1 : 0;
+                        $directJobApp = isset($rowMaps['directJobAppSet'][$candId]) ? 1 : 0;
+                        if (isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true)) {
+                            $existingCandidatesQuery = 1;
+                        }
+                    } else {
+                        $recCounter = DB::table('rec_candidate_assign')
+                            ->where('source_jobid', @$jobid)
+                            ->where(function ($q) use ($candId) {
+                                $q->where('source_from_id', $candId)
+                                    ->orWhere('source_application_id', $candId);
+                            })
+                            ->count();
 
-                    $source_from_type = 0;
-                    $public_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 2)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', $candId)
-                        ->count();
+                        $source_from_type = 0;
+                        $public_bench_conter = DB::table('rec_candidate_assign')
+                            ->select('id')
+                            ->where('source_from_type', '=', 2)
+                            ->where('source_company_id', '=', $company_id)
+                            ->where('source_application_id', '=', $candId)
+                            ->count();
 
-                    if ($public_bench_conter > 0) {
-                        $source_from_type = 2;
+                        if ($public_bench_conter > 0) {
+                            $source_from_type = 2;
+                        }
+
+                        $internal_bench_conter = DB::table('rec_candidate_assign')
+                            ->select('id')
+                            ->where('source_from_type', '=', 1)
+                            ->where('source_company_id', '=', $company_id)
+                            ->where('source_application_id', '=', $candId)
+                            ->count();
+
+                        if ($internal_bench_conter > 0) {
+                            $source_from_type = 1;
+                        }
+
+                        $parent_conter = DB::table('rec_candidate_assign')
+                            ->where('source_company_id', '=', $company_id)
+                            ->where('source_jobid', '=', $jobid)
+                            ->whereIn('source_from_type', [1, 2])
+                            ->where('parent_id', '=', $candId)
+                            ->count();
+
+                        $existingCandidatesQuery = DB::table('add_job_wise_condidates')
+                            ->where('job_id', '=', $jobid)
+                            ->where('job_application_id', '=', $candId)
+                            ->count();
+
+                        $directJobApp = DB::table('job_applications')
+                            ->where('job_id', '=', $jobid)
+                            ->where('id', '=', $candId)
+                            ->count();
                     }
-
-                    $internal_bench_conter = DB::table('rec_candidate_assign')
-                        ->select('id')
-                        ->where('source_from_type', '=', 1)
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_application_id', '=', $candId)
-                        ->count();
-
-                    if ($internal_bench_conter > 0) {
-                        $source_from_type = 1;
-                    }
-
-                    $parent_conter = DB::table('rec_candidate_assign')
-                        ->where('source_company_id', '=', $company_id)
-                        ->where('source_jobid', '=', $jobid)
-                        ->whereIn('source_from_type', [1, 2])
-                        ->where('parent_id', '=', $candId)
-                        ->count();
-
-                    $existingCandidatesQuery = DB::table('add_job_wise_condidates')
-                        ->where('job_id', '=', $jobid)
-                        ->where('job_application_id', '=', $candId)
-                        ->count();
-
-                    $directJobApp = DB::table('job_applications')
-                        ->where('job_id', '=', $jobid)
-                        ->where('id', '=', $candId)
-                        ->count();
 
                     if ($recCounter > 0 || $parent_conter > 0 || $existingCandidatesQuery > 0 || $directJobApp > 0) {
                         $html = '<div class="d-flex flex-column"> 

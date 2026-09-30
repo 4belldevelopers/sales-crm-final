@@ -340,8 +340,8 @@
             </td>
             <td>
                 @php
-                    $isAdded = (isset($assignedCandidateIds) && in_array((int)@$row->id, $assignedCandidateIds, true));
-                    if (! $isAdded) {
+                    $isAdded = ((int) (@$row->status ?? 0) === 1) || (isset($assignedCandidateIds) && in_array((int) @$row->id, $assignedCandidateIds, true));
+                    if (! $isAdded && ! isset($assignedCandidateIds)) {
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
                             ->select('job_application_id')
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)
@@ -351,7 +351,7 @@
                             ->where('source_from_id', @$row->id)
                             ->where('source_jobid', @$jobid)
                             ->count();
-                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0 || (int)@$row->status === 1);
+                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0 || (int) @$row->status === 1);
                     }
 
                     if ($isAdded) {

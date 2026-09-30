@@ -1075,7 +1075,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             $search = request('search');
             $existingApplications = $existingApplications->where('job_applications.full_name', 'LIKE', "%$search%");
         }
-        $existingApplications = $existingApplications->where(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
+        $existingApplications = $existingApplications->where(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode) {
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '=', 0)
@@ -1083,21 +1083,21 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
         });
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
+        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title) {
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '=', 0)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
+            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val) {
                 return $query->where('job_applications.company_id', '=', $company_id)
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('job_applications.thirdparty_company_id', '=', 0)
                     ->where('job_applications.skills', 'like', '%'.$val.'%');
             });
         }
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
+        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode) {
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '>', 0)
@@ -1106,7 +1106,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
         });
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
+        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title) {
             return $query->where('job_applications.company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('job_applications.thirdparty_company_id', '>', 0)
@@ -1114,7 +1114,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
+            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val) {
                 return $query->where('job_applications.company_id', '=', $company_id)
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('job_applications.thirdparty_company_id', '>', 0)
@@ -1122,7 +1122,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                     ->where('job_applications.skills', 'like', '%'.$val.'%');
             });
         }
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
+        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode) {
             return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('recommendation_relation.job_id', '>', 0)
@@ -1130,14 +1130,14 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
                 ->where('job_applications.pincode', '=', $postcode)
                 ->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
         });
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
+        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title) {
             return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                 ->where('job_applications.master_status_id', '!=', 6)
                 ->where('recommendation_relation.job_id', '>', 0)
                 ->where('job_applications.current_designation', 'LIKE', "%$title%");
         });
         foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
+            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val) {
                 return $query->where('job_applications.thirdparty_company_id', '=', $company_id)
                     ->where('job_applications.master_status_id', '!=', 6)
                     ->where('recommendation_relation.job_id', '>', 0)
@@ -1146,10 +1146,10 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
         }
         $existingApplications = $existingApplications->groupBy('job_applications.id');
         $existingApplications = $existingApplications->orderByRaw('CASE
-            WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL OR job_applications.job_id = ' . (int) $jobid . ' THEN 1
+            WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL OR job_applications.job_id = '.(int) $jobid.' THEN 1
             ELSE 0
         END ASC')
-        ->orderBy('job_applications.id', 'DESC');
+            ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($existingApplications)
 
@@ -2057,7 +2057,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             WHEN cur_job_wise.id IS NOT NULL THEN 1
             ELSE 0
         END ASC')
-        ->orderBy('job_applications.id', 'DESC');
+            ->orderBy('job_applications.id', 'DESC');
 
         $dataTable = DataTables::of($jobApplications)
 
@@ -2411,7 +2411,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL THEN 1
             ELSE 0
         END ASC')
-        ->orderBy('job_applications.id', 'DESC');
+            ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($benchApplications)
 
@@ -2674,7 +2674,7 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
             WHEN cur_job_wise.id IS NOT NULL OR cur_job_assign.id IS NOT NULL THEN 1
             ELSE 0
         END ASC')
-        ->orderBy('job_applications.id', 'DESC');
+            ->orderBy('job_applications.id', 'DESC');
 
         return DataTables::of($benchApplications)
 
@@ -2854,186 +2854,13 @@ class ProductCompanyAppTrackerController extends ProductCompanyBaseController
 
     public function custome_count($id)
     {
-
-        $company_id = auth()->user()->company_id;
-
-        $jobid = $id;
-        $job = $this->job;
-
-        $title = @$job->title;
-        $min_exp = @$job->min_exp;
-        $max_exp = @$job->max_exp;
-        $min_salary = @$job->min_salary;
-        $max_salary = @$job->max_salary;
-
-        $loc_data = DB::table('client_location_jobs')->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')->where('client_location_jobs.job_id', $jobid)->first();
-        $postcode = @$loc_data->postcode;
-        $skill_arr = [];
-        $skill_data = DB::table('job_metronics_skills')->select('*')->where('job_id', $jobid)->get()->toArray();
-        foreach ($skill_data as $sval) {
-            $skill_arr[] = $sval->skill_name;
-        }
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-
-        // #############################   START  EXISTING CANDIDATE
-        $existingApplications = DB::table('job_applications')->select('job_applications.id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })
-            ->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            // ->join('jobs', 'jobs.id', 'job_applications.job_id')
-            ->leftjoin('job_skills', 'jobs.id', 'job_skills.job_id')
-            // ->leftjoin('master_status', 'master_status.id', 'job_applications.master_status_id')
-            ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftjoin('application_status', 'application_status.id', 'job_applications.status_id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->leftjoin('state_list', 'state_list.id', 'job_applications.state');
-        $existingApplications = $existingApplications->where(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
-            return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.current_designation', 'LIKE', "%$title%")->where('job_applications.pincode', '=', $postcode)->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
-        });
-
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
-            return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.current_designation', 'LIKE', "%$title%");
-        });
-        foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
-                return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '=', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.skills', 'like', '%'.$val.'%');
-            });
-        }
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
-            return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)->where('add_job_wise_condidates.master_status_id', '!=', 8)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.current_designation', 'LIKE', "%$title%")->where('job_applications.pincode', '=', $postcode)->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
-        });
-
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
-            return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)->where('add_job_wise_condidates.master_status_id', '!=', 8)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.current_designation', 'LIKE', "%$title%");
-        });
-
-        foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
-                return $query->where('add_job_wise_condidates.company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)->where('add_job_wise_condidates.master_status_id', '!=', 8)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.skills', 'like', '%'.$val.'%');
-            });
-        }
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode, $jobid) {
-            return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('recommendation_relation.job_id', '>', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('add_job_wise_condidates.existing', '=', 0)->where('job_applications.current_designation', 'LIKE', "%$title%")->where('job_applications.pincode', '=', $postcode)->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
-        });
-
-        $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $title, $jobid) {
-            return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('recommendation_relation.job_id', '>', 0)->where('add_job_wise_condidates.existing', '=', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('job_applications.current_designation', 'LIKE', "%$title%");
-        });
-        foreach ($skill_arr as $val) {
-            $existingApplications = $existingApplications->orWhere(function ($query) use ($company_id, $val, $jobid) {
-                return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id)->where('add_job_wise_condidates.master_status_id', '!=', 6)->where('recommendation_relation.job_id', '>', 0)->where('add_job_wise_condidates.existing', '=', 0)->where('add_job_wise_condidates.job_id', '!=', $jobid)->where('job_applications.skills', 'like', '%'.$val.'%');
-            });
-        }
-        $existingApplications = $existingApplications->distinct('add_job_wise_condidates.id');
-        $existingApplications = $existingApplications->orderBy('add_job_wise_condidates.id', 'DESC');
-
-        // #############################   END  EXISTING CANDIDATE
-
-        // #############################		START INTERNAL BENCH CANDIDATE
-        $internalBenchApplications = DB::table('job_applications')->select('job_applications.id');
-        $internalBenchApplications = $internalBenchApplications->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('bench_master_status', function ($join) {
-                $join->on('bench_master_status.id', 'add_job_wise_condidates.master_status_id');
-            });
-        // $internalBenchApplications = $internalBenchApplications->join('bench_master_status', 'bench_master_status.id', 'job_applications.status');
-        $internalBenchApplications = $internalBenchApplications->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification');
-        $internalBenchApplications = $internalBenchApplications->where(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode) {
-            return $query->where('job_applications.status', 2)->where('add_job_wise_condidates.company_id', '=', $company_id)->where('job_applications.current_designation', 'LIKE', "%$title%")->where('job_applications.pincode', '=', $postcode)->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
-        });
-        $internalBenchApplications = $internalBenchApplications->orWhere(function ($query) use ($company_id, $title) {
-            return $query->where('add_job_wise_condidates.company_id', $company_id)->where('job_applications.status', 2)->where('job_applications.current_designation', 'LIKE', "%$title%");
-        });
-        foreach ($skill_arr as $val) {
-            $internalBenchApplications = $internalBenchApplications->orWhere(function ($query) use ($company_id, $val) {
-                return $query->where('add_job_wise_condidates.company_id', $company_id)->where('job_applications.status', 2)->where('job_applications.skills', 'like', '%'.$val.'%');
-            });
-        }
-        $internalBenchApplications = $internalBenchApplications->distinct('add_job_wise_condidates.id');
-        $internalBenchApplications = $internalBenchApplications->orderBy('add_job_wise_condidates.id', 'DESC');
-        // #############################		END INTERNAL BENCH CANDIDATE
-
-        // #############################		START PUBLIC BENCH
-        $publicBenchApplications = DB::table('job_applications')->select('job_applications.*', 'qualification_master.name as qualification_name', 'bench_master_status.name as master_status_name', 'bench_master_status.css_style');
-        $publicBenchApplications = $publicBenchApplications->join('bench_master_status', 'bench_master_status.id', 'job_applications.status');
-        $publicBenchApplications = $publicBenchApplications->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification');
-
-        $publicBenchApplications = $publicBenchApplications->where(function ($query) use ($company_id, $title, $min_exp, $max_exp, $postcode) {
-            return $query->where('job_applications.status', 2)->where('job_applications.company_id', '!=', $company_id)->where('job_applications.current_designation', 'LIKE', "%$title%")->where('job_applications.pincode', '=', $postcode)->whereBetween('job_applications.total_exp', [$min_exp, $max_exp]);
-        });
-        $publicBenchApplications = $publicBenchApplications->orWhere(function ($query) use ($company_id, $title) {
-            return $query->where('job_applications.company_id', '!=', $company_id)->where('job_applications.status', 2)->where('job_applications.current_designation', 'LIKE', "%$title%");
-        });
-        foreach ($skill_arr as $val) {
-            $publicBenchApplications = $publicBenchApplications->orWhere(function ($query) use ($company_id, $val) {
-                return $query->where('job_applications.company_id', '!=', $company_id)->where('job_applications.status', 2)->where('job_applications.skills', 'like', '%'.$val.'%');
-            });
-        }
-        $publicBenchApplications = $publicBenchApplications->distinct('job_applications.id');
-        $publicBenchApplications = $publicBenchApplications->orderBy('job_applications.id', 'DESC');
-        // #############################		END PUBLIC BENCH
-
-        // //////////////
-
-        $jobApplications = JobApplication::select(
-            'job_applications.*',
-            'jobs.title',
-            'job_locations.location',
-            'application_status.status as a_status',
-            'clients.name as client_name',
-            'users.name as posted_by',
-            'users.image as posted_by_image',
-            // 'notice_periods.np_title',
-            'qualification_master.name as qualification_name',
-            'master_status.name',
-            'master_status.css_style',
-            'state_list.state as state_name',
-            'city_list.city as indian_city_name',
-            'companies.company_name',
-            'rec_candidate_assign.source_jobid',
-            'rec_candidate_assign.id as rec_candidate_assign_id'
-        )->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->join('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })
-            ->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            // ->leftjoin('jobs', 'jobs.id', 'job_applications.job_id')
-            // ->leftjoin('master_status', 'master_status.id', 'job_applications.master_status_id')
-            ->leftjoin('job_skills', 'jobs.id', 'job_skills.job_id')
-            ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-            ->leftjoin('application_status', 'application_status.id', 'job_applications.status_id')
-            ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
-            ->leftjoin('city_list', 'city_list.city_id', 'job_applications.city_id')
-            ->join('rec_candidate_assign', function ($join) use ($jobid, $company_id) {
-                $join->on('rec_candidate_assign.source_application_id', '=', 'job_applications.id')
-                    ->where('rec_candidate_assign.source_jobid', '=', $jobid)
-                    ->where('rec_candidate_assign.source_from_type', '=', 1)
-                    ->where('rec_candidate_assign.source_company_id', '=', $company_id);
-                // ->where('rec_candidate_assign.source_from_company_id', '!=', $company_id);
-            })->where('job_applications.condidate_type', '=', 'bench_condidate');
-
-        // ///////////////////
-
-        $this->public_bench_counter = $publicBenchApplications->count();
-        $this->internal_bench_counter = $internalBenchApplications->count();
-        $this->existing_counter = $existingApplications->count();
-        $this->recomnded_counter = $jobApplications->count();
-
+        $return_data = GeneralMethod::custome_count_all($id);
+        $this->pool_counter = $return_data->pool_counter ?? 0;
+        $this->public_bench_counter = $return_data->public_bench_counter ?? 0;
+        $this->internal_bench_counter = $return_data->internal_bench_counter ?? 0;
+        $this->existing_counter = $return_data->existing_counter ?? 0;
+        $this->recomnded_counter = $return_data->recomnded_counter ?? 0;
+        $this->career_counter = $return_data->career_counter ?? 0;
     }
 
     public function benchReqViewMore($id, $job_applications_id)
