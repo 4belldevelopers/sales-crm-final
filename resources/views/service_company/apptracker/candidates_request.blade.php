@@ -1093,14 +1093,7 @@
                                             // job-scoped defaults. Fetched here (view-only, read-only master
                                             // data, no tenancy concerns) rather than in the controller, per
                                             // this task's "do not touch the controller" constraint.
-                                            $brfQualificationTag = DB::table('qualification_master')
-                                                ->select('*')
-                                                ->whereNotIn('id', [60])
-                                                ->orderBy('qualification_master.display_order', 'ASC')
-                                                ->get()
-                                                ->map(function ($row) {
-                                                    return $row->name;
-                                                });
+                                            $brfQualificationTag = \App\Services\ReferenceDataCache::qualificationNames();
                                         @endphp
                                         <div class="brf-select-dd" id="brf_edu_dd">
                                             <button type="button" class="brf-select-dd-btn" id="brf_edu_dd_btn">
@@ -1515,13 +1508,6 @@
                         if ($poolCounter.length) {
                             var currentPool = parseInt($poolCounter.text()) || 0;
                             $poolCounter.text(currentPool + 1);
-                        }
-                        var $reqCounter = $('#benchTalentReq_counter');
-                        if ($reqCounter.length) {
-                            var currentReq = parseInt($reqCounter.text()) || 0;
-                            if (currentReq > 0) {
-                                $reqCounter.text(currentReq - 1);
-                            }
                         }
                     },
                     error: function() {
@@ -2091,7 +2077,7 @@
                     $('.page-loader').css('display', 'none');
                     $('#sc_table_card').show();
                     $('#candidatetList').html(response.html);
-                    $('.benchTalentReq_counter').html(response.total);
+                    $('#benchTalentReq_counter, .benchTalentReq_counter').html(response.total);
                     $('#brf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
                 },

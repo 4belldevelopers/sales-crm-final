@@ -157,18 +157,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $data = Cache::flexible($cacheKey, [30, 120], function () use ($jobid, $company_id) {
             try {
                 return Cache::lock("lock:pipeline:{$jobid}", 5)->block(6, function () use ($jobid, $company_id) {
-                    // Prefer pipeline_counters DB snapshot (written by counters:reconcile every 5 min).
-                    // Use mysql_replica (sticky:false) so this read always hits the
-                    // replica even when a stage move happened earlier in this request.
-                    $row = DB::connection('mysql_replica')->table('pipeline_counters')
-                        ->where('job_id', $jobid)
-                        ->where('company_id', $company_id)
-                        ->first();
-                    if ($row) {
-                        return $this->pipelineRowToCounters($row);
-                    }
-
-                    // Cold start: table not yet populated — hit ES once and return.
                     return $this->runCounterES($jobid, $company_id);
                 });
             } catch (\Throwable) {
@@ -1504,11 +1492,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         }
         ['location' => $location, 'education' => $education, 'cityNames' => $locationCityNames] = $this->resolveTagifyFilters();
-        // Metro clustering expands $location to include cluster cities (e.g. Delhi NCR); see config/location_clusters.php
-        $exactLocationIds = array_map('intval', $location);
-        $locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
-        $location = $locationCluster['expanded'];
-        $locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
+        // Strictly filter by exact configured/selected location city_id(s) (e.g. Gurgaon/Gurugram, Haryana)
+        // so the Similar Candidates count and candidate list only include candidates applicable to the job's location.
+        $exactLocationIds = array_values(array_unique(array_filter(array_map('intval', $location), fn (int $cid) => $cid > 0)));
+        $location = $exactLocationIds;
+        $locationClusterExpanded = false;
 
         // (A $relevanceCase block used to sit here, building a MySQL-style
         // "CASE WHEN ... LIKE" string from the same checked/unchecked skill
@@ -2254,7 +2242,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'lang' => 'painless',
                     'source' => (! empty($assignedCandidateIds))
                         ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
-                        : "0",
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -3639,7 +3627,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 );
             }
 
-
             $cachekeys = [
                 'allcvtracker_version_user_'.$this->user->id,
                 'allapptracker_version_user_'.$this->user->id,
@@ -4560,8 +4547,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $job = Job::withoutGlobalScopes()->findOrFail($jobid);
 
-        $interviewStatus = [];
-        $interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
+        $interviewStatus = ReferenceDataCache::masterStatuses();
         $chkAdminRole = $this->user->hasRole('admin');
         // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
         $feedback_status = ReferenceDataCache::feedbackStatus();
@@ -4993,11 +4979,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     ],
                 ],
                 'minimum_should_match' => 1,
-                'must_not' => [
-                    // Exclude already-added candidates (ac_status=1) so they
-                    // don't appear in the list and are not counted in the total.
-                    ['term' => ['ac_status' => 1]],
-                ],
+                'must_not' => [],
                 'filter' => $filters,
             ],
         ];
@@ -5295,68 +5277,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Retrieve header counter badges for the given job via Elasticsearch.
+     *
+     * Intent: Eliminate legacy MySQL reads on Job Applicant Tracker count lookups by
+     * delegating to GeneralMethod::custome_count_all($id).
+     *
+     * @param  int|string  $id  Current job ID
+     * @param  int|string  $company_id  Tenant company ID
+     * @return object
+     */
     public function dinternal_count($id, $company_id)
     {
-
-        $jobid = $id;
-        $job = $this->job;
-        $title = $job->title;
-        $min_exp = $job->min_exp;
-        $max_exp = $job->max_exp;
-        $min_salary = $job->min_salary;
-        $max_salary = $job->max_salary;
-        $loc_data = DB::table('client_location_jobs')->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')->where('client_location_jobs.job_id', $jobid)->first();
-        $postcode = @$loc_data->postcode;
-        $skill_arr = [];
-        $skill_data = DB::table('job_metronics_skills')->select('*')->where('job_id', $jobid)->get()->toArray();
-        foreach ($skill_data as $sval) {
-            $skill_arr[] = $sval->skill_name;
-        }
-        $salaryMode = GeneralMethod::salaryMode();
-        $currencySymbole = GeneralMethod::currencySymbole();
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
-        $gdFilterData = GeneralMethod::gdFilterData($id);
-        $this->default_loc = GeneralMethod::JobcitiesTags($id);
-        $this->qualification = GeneralMethod::allQualificationSelected($id);
-
-        $min_exp = ($gdFilterData->min_exp >= 1) ? $gdFilterData->min_exp - 1 : $gdFilterData->min_exp;
-        $max_exp = $gdFilterData->max_exp + 1;
-        $min_salary_currency = $gdFilterData->min_salary_currency;
-        $min_salary = 0;
-        $max_salary = $gdFilterData->max_salary;
-        $sal_mode = $gdFilterData->min_sal_mode;
-        $default_skill = $gdFilterData->default_skill;
-
-        $currency = GeneralMethod::currency();  // Currency code
-        $currencyCheck = $currency[$min_salary_currency];
-        $convertedAmount = $gdFilterData->max_salary;
-        if ($min_salary_currency > 0) {
-            $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currencyCheck);
-        }
-        $ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
-        $min_salary = 0; // $job->min_salary;
-        // $max_salary = $job->max_salary;
-
-        if ($sal_mode == 0) {
-            $max_salary = $ectcdivided->yearly;
-
-        } elseif ($sal_mode == 1) {
-            $max_salary = $ectcdivided->monthly;
-
-        } elseif ($sal_mode == 2) {
-            $max_salary = $ectcdivided->hourly;
-
-        }
-        $min_exp = ($job->min_exp >= 1) ? $job->min_exp - 1 : $job->min_exp;
-        $max_exp = $job->max_exp + 1;
-
-        $jobid = $id;
-        $job = $this->job;
-        $title = $job->title;
-
+        return GeneralMethod::custome_count_all($id);
     }
 
     public function internal_bench($id)
@@ -5923,7 +5856,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'lang' => 'painless',
                     'source' => (! empty($assignedCandidateIds))
                         ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
-                        : "0",
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -6426,7 +6359,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
         $this->default_loc = $jobDefaults->default_loc;
-        $this->qualification = GeneralMethod::allQualificationSelected($id);
+        $this->qualification = ''; // GeneralMethod::allQualificationSelected($id);
         $this->min_exp = '';
         $this->max_exp = '';
         $this->min_salary_currency = $jobDefaults->min_salary_currency;
@@ -6988,9 +6921,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'type' => 'number',
                 'script' => [
                     'lang' => 'painless',
-                    'source' => (! empty($assignedCandidateIds))
-                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
-                        : "0",
+                    'source' => "
+                        if (doc.containsKey('status') && doc['status'].size() > 0 && doc['status'].value == 1) {
+                            return 1;
+                        }
+                        if (doc.containsKey('id') && doc['id'].size() > 0 && params.assignedIds.contains((int) doc['id'].value)) {
+                            return 1;
+                        }
+                        return 0;
+                    ",
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -7931,7 +7870,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'lang' => 'painless',
                     'source' => (! empty($assignedCandidateIds))
                         ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
-                        : "0",
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -8632,11 +8571,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         ['location' => $location, 'education' => $education, 'cityNames' => $locationCityNames] = $this->resolveTagifyFilters();
-        // Metro clustering expands $location to include cluster cities (e.g. Delhi NCR); see config/location_clusters.php
-        $exactLocationIds = array_map('intval', $location);
-        $locationCluster = GeneralMethod::resolveLocationCluster($exactLocationIds, $locationCityNames);
-        $location = $locationCluster['expanded'];
-        $locationClusterExpanded = count($locationCluster['expanded']) > count($locationCluster['exact']);
+        // Strictly filter by exact configured/selected location city_id(s) (e.g. Gurgaon/Gurugram, Haryana)
+        // so the Similar Candidates count and candidate list only include candidates applicable to the job's location.
+        $exactLocationIds = array_values(array_unique(array_filter(array_map('intval', $location), fn (int $cid) => $cid > 0)));
+        $location = $exactLocationIds;
+        $locationClusterExpanded = false;
 
         $valCheck = $request->input('sortingfilter');
         $country = '';
@@ -9421,7 +9360,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'lang' => 'painless',
                     'source' => (! empty($assignedCandidateIds))
                         ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
-                        : "0",
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -10134,7 +10073,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'lang' => 'painless',
                     'source' => (! empty($assignedCandidateIds))
                         ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
-                        : "0",
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -11826,16 +11765,49 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         if (($rawLoc = request('kt_tagify_location')) !== null && $rawLoc !== '') {
             $tags = json_decode($rawLoc, true) ?? [];
             if (! empty($tags) && is_array($tags)) {
-                $names = array_map(fn ($s) => trim(explode('|', $s['value'])[0]), $tags);
+                $names = array_values(array_filter(array_map(fn ($s) => trim(explode('|', $s['value'] ?? '')[0]), $tags)));
                 $cityNames = $names;
-                // 5-min Redis cache so the same filter chips share one DB round-trip
-                $cacheKey = 'tagify:cities:'.md5(implode(',', $names));
-                $cityIdMap = Cache::remember($cacheKey, 300, fn () => DB::table('city_list')->whereIn('city', $names)->pluck('city_id', 'city')
-                );
-                foreach ($names as $name) {
-                    if (isset($cityIdMap[$name])) {
-                        $cityIds[] = (int) $cityIdMap[$name];
+                if (! empty($names)) {
+                    $lowerNames = array_values(array_unique(array_map('strtolower', $names)));
+                    sort($lowerNames);
+                    // 24h Redis cache backed by ELASTIC_LOCATIONS (0% MySQL reads)
+                    $cacheKey = 'tagify:es_cities:'.md5(implode(',', $lowerNames));
+                    $cityIdMap = Cache::remember($cacheKey, 86400, function () use ($lowerNames) {
+                        try {
+                            $res = $this->elasticService->getClient()->search([
+                                'index' => ELASTIC_LOCATIONS,
+                                'body' => [
+                                    'size' => count($lowerNames) * 5,
+                                    '_source' => ['city_id', 'city_name'],
+                                    'query' => [
+                                        'terms' => [
+                                            'city_name' => $lowerNames,
+                                        ],
+                                    ],
+                                ],
+                            ]);
+                            $map = [];
+                            foreach ($res['hits']['hits'] ?? [] as $hit) {
+                                $src = $hit['_source'] ?? [];
+                                $cid = (int) ($src['city_id'] ?? 0);
+                                $cname = strtolower(trim((string) ($src['city_name'] ?? '')));
+                                if ($cid > 0 && $cname !== '') {
+                                    $map[$cname][] = $cid;
+                                }
+                            }
+
+                            return $map;
+                        } catch (\Throwable $e) {
+                            return [];
+                        }
+                    });
+
+                    foreach ($lowerNames as $lowerName) {
+                        foreach ($cityIdMap[$lowerName] ?? [] as $cid) {
+                            $cityIds[] = (int) $cid;
+                        }
                     }
+                    $cityIds = array_values(array_unique($cityIds));
                 }
             }
         }

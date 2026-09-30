@@ -3291,62 +3291,13 @@ END:VCALENDAR";
     {
         $company_id = auth()->user()->company_id ?? 0;
 
-        $logos = DB::table('jobs')
+        $row = DB::table('jobs')
             ->select(
                 'jobs.id',
-                'jobs.title',
-                'jobs.work_type',
-                'jobs.show_vendor',
-                'jobs.total_positions',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
                 'jobs.company_id',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
                 'clients.name as clients_name',
-                'clients.logo_logical_path',
                 'clients.self_company',
-                'clients.company_id as client_company_id',
                 'companies.company_name',
-                'companies.logo',
-                DB::raw('COUNT(job_applications.id) as allCandidate'),
-
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),       // MEANS COMPANY OWN UPLOAD APP
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
-
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
-
-                DB::raw('SUM(
-				CASE 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
-						ELSE 0 END
-			 ) AS thirdparty_Rejected'
-                ),
-                // DB::raw("SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = ".$company_id." AND job_applications.master_status_id = 9 THEN 1 ELSE 0 END) AS thirdparty_InReview_Rejected"),
-
                 'recommendation_relation.id as recommendation_id',
                 'recommendation_relation.from_company_id',
                 'recommendation_relation.final_status',
@@ -3354,10 +3305,9 @@ END:VCALENDAR";
             )
             ->leftJoin('clients', 'clients.id', 'jobs.client_id')
             ->leftJoin('companies', 'companies.id', 'jobs.company_id')
-            ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
             ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('jobs.id', '>', '0');
-        $row = $logos->where('jobs.id', $jobid)->first();
+            ->where('jobs.id', $jobid)
+            ->first();
 
         if (! $row) {
             return '';
@@ -4016,13 +3966,85 @@ END:VCALENDAR";
     // populating a UI field (the filter drawer's default_loc). Avoids an
     // unnecessary MySQL join on every header-counter computation, which
     // runs on every AppTracker tab page load.
+    /**
+     * Resolve exact city_id values configured on the current job's ELASTIC_JOBS document.
+     *
+     * Intent: Ensure all Job Applicant Tracker candidate count cards (Similar Candidates,
+     * In-house Bench Talents, Agency Bench Talents) and default location filters strictly
+     * match the current job's configured location(s) (e.g. Gurgaon/Gurugram, Haryana) using
+     * 100% Elasticsearch (ELASTIC_JOBS + ELASTIC_LOCATIONS fallback) and 0% MySQL reads,
+     * without expanding into unrelated cities via metro clusters.
+     *
+     * @param  object  $jobsDetails  Raw _source document from ELASTIC_JOBS
+     * @return array<int, int> Deduplicated positive integer city_id list for the job
+     */
+    public static function resolveJobLocationCityIdsFromEs(object $jobsDetails): array
+    {
+        $cityIds = [];
+        $fallbackCityNames = [];
+
+        foreach ($jobsDetails->client_city_jobs ?? [] as $sval) {
+            $sval = (object) $sval;
+            if (! empty($sval->city_id) && (int) $sval->city_id > 0) {
+                $cityIds[] = (int) $sval->city_id;
+            } elseif (! empty($sval->city_name)) {
+                $fallbackCityNames[] = strtolower(trim((string) $sval->city_name));
+            } elseif (! empty($sval->city)) {
+                $fallbackCityNames[] = strtolower(trim((string) $sval->city));
+            }
+        }
+
+        if (empty($cityIds) && ! empty($fallbackCityNames)) {
+            $fallbackCityNames = array_values(array_unique(array_filter($fallbackCityNames)));
+            sort($fallbackCityNames);
+            $cacheKey = 'es_loc_city_ids_by_name:'.md5(implode(',', $fallbackCityNames));
+            $resolvedIds = Cache::remember($cacheKey, 86400, function () use ($fallbackCityNames) {
+                try {
+                    $elasticService = app(ElasticService::class);
+                    $res = $elasticService->getClient()->search([
+                        'index' => ELASTIC_LOCATIONS,
+                        'body' => [
+                            'size' => count($fallbackCityNames) * 5,
+                            '_source' => ['city_id'],
+                            'query' => [
+                                'terms' => [
+                                    'city_name' => $fallbackCityNames,
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $ids = [];
+                    foreach ($res['hits']['hits'] ?? [] as $hit) {
+                        $cid = (int) ($hit['_source']['city_id'] ?? 0);
+                        if ($cid > 0) {
+                            $ids[] = $cid;
+                        }
+                    }
+
+                    return array_values(array_unique($ids));
+                } catch (\Throwable $e) {
+                    return [];
+                }
+            });
+            $cityIds = array_merge($cityIds, $resolvedIds);
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $cityIds), fn (int $cid) => $cid > 0)));
+    }
+
     public static function jobDefaultsFromEs($id, $resolveLocationNames = true)
     {
-        $elasticService = app(ElasticService::class);
-        $jobEsDoc = (object) $elasticService->getClient()->get([
-            'index' => ELASTIC_JOBS,
-            'id' => $id,
-        ])['_source'];
+        static $jobEsDocMemo = [];
+
+        $jobKey = (int) $id;
+        if (! isset($jobEsDocMemo[$jobKey])) {
+            $elasticService = app(ElasticService::class);
+            $jobEsDocMemo[$jobKey] = (object) $elasticService->getClient()->get([
+                'index' => ELASTIC_JOBS,
+                'id' => $id,
+            ])['_source'];
+        }
+        $jobEsDoc = $jobEsDocMemo[$jobKey];
 
         $skillArr = [];
         foreach ($jobEsDoc->job_metronics_skills ?? [] as $sval) {
@@ -4030,25 +4052,53 @@ END:VCALENDAR";
             $skillArr[] = $sval->skill_name;
         }
 
-        $cityIds = [];
-        foreach ($jobEsDoc->client_city_jobs ?? [] as $sval) {
-            $sval = (object) $sval;
-            $cityIds[] = $sval->city_id;
-        }
+        $cityIds = self::resolveJobLocationCityIdsFromEs($jobEsDoc);
         $locationTags = [];
         if ($resolveLocationNames && ! empty($cityIds)) {
-            $locationTags = DB::table('client_city_jobs')
-                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-                ->where('city_list.city', '!=', '')
-                ->whereIn('city_list.city_id', $cityIds)
-                ->get()
-                ->map(function ($city) {
-                    return $city->city_name.' | '.$city->state_name.' | '.$city->country_name;
-                })
-                ->toArray();
+            $sortedCityIds = $cityIds;
+            sort($sortedCityIds);
+            $cacheKey = 'es_job_loc_tags:'.implode(',', $sortedCityIds);
+            $locationTagsByCityId = Cache::remember($cacheKey, 86400, function () use ($sortedCityIds) {
+                try {
+                    $elasticService = app(ElasticService::class);
+                    $res = $elasticService->getClient()->search([
+                        'index' => ELASTIC_LOCATIONS,
+                        'body' => [
+                            'size' => count($sortedCityIds) * 2,
+                            '_source' => ['city_id', 'city_name', 'state_name', 'country_name'],
+                            'query' => [
+                                'terms' => [
+                                    'city_id' => $sortedCityIds,
+                                ],
+                            ],
+                        ],
+                    ]);
+                    $map = [];
+                    foreach ($res['hits']['hits'] ?? [] as $hit) {
+                        $src = $hit['_source'] ?? [];
+                        $cid = (int) ($src['city_id'] ?? 0);
+                        $cityName = trim((string) ($src['city_name'] ?? ''));
+                        if ($cid > 0 && $cityName !== '') {
+                            $stateName = trim((string) ($src['state_name'] ?? ''));
+                            $countryName = trim((string) ($src['country_name'] ?? ''));
+                            $map[$cid] = ucwords($cityName, " \t\r\n\f\v/")
+                                .' | '.ucwords($stateName, " \t\r\n\f\v/")
+                                .' | '.ucwords($countryName, " \t\r\n\f\v/");
+                        }
+                    }
+
+                    return $map;
+                } catch (\Throwable $e) {
+                    return [];
+                }
+            });
+
+            foreach ($cityIds as $cid) {
+                if (! empty($locationTagsByCityId[$cid])) {
+                    $locationTags[] = $locationTagsByCityId[$cid];
+                }
+            }
+            $locationTags = array_values(array_unique($locationTags));
         }
 
         return (object) [
@@ -4061,7 +4111,7 @@ END:VCALENDAR";
             'min_sal_mode' => $jobEsDoc->min_sal_mode,
             'qualification' => $jobEsDoc->qualification ?? '',
             'default_skill' => implode(',', $skillArr),
-            'default_loc' => $locationTags[0] ?? '',
+            'default_loc' => implode(',', $locationTags),
             'default_locations' => $locationTags,
         ];
     }
@@ -12021,19 +12071,23 @@ END:VCALENDAR";
         }
 
         $matchedFragments = array_values(array_unique($matchedFragments));
+        sort($matchedFragments);
+        $clusterCacheKey = 'loc_cluster_ids:'.md5(implode('|', $matchedFragments));
 
-        $clusterCityIds = DB::table('city_list')
-            ->where('city', '!=', '')
-            ->where(function ($q) use ($matchedFragments) {
-                foreach ($matchedFragments as $fragment) {
-                    $q->orWhere('city', 'LIKE', '%'.$fragment.'%');
-                }
-            })
-            ->pluck('city_id')
-            ->map(function ($id) {
-                return (int) $id;
-            })
-            ->toArray();
+        $clusterCityIds = Cache::remember($clusterCacheKey, 86400, function () use ($matchedFragments) {
+            return DB::table('city_list')
+                ->where('city', '!=', '')
+                ->where(function ($q) use ($matchedFragments) {
+                    foreach ($matchedFragments as $fragment) {
+                        $q->orWhere('city', 'LIKE', '%'.$fragment.'%');
+                    }
+                })
+                ->pluck('city_id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->toArray();
+        });
 
         return [
             'exact' => $exactCityIds,
@@ -12051,8 +12105,6 @@ END:VCALENDAR";
      *
      * Candidates assigned to other jobs are never excluded.
      *
-     * @param int $jobId
-     * @param int|null $companyId
      * @return int[]
      */
     public static function getJobAssignedCandidateIds(int $jobId, ?int $companyId = null): array
@@ -12104,13 +12156,31 @@ END:VCALENDAR";
             ->toArray();
     }
 
+    /**
+     * Compute and cache all header counter badges for the Job Applicant Tracker page.
+     *
+     * Intent: Serve all candidate count cards (including Similar Candidates, In-house Bench Talents,
+     * and Agency Bench Talents) from 100% Elasticsearch with 0% MySQL reads, scoped by tenant
+     * ($company_id), current job ($id), and current job's exact location(s).
+     *
+     * @param  int|string  $id  Current job ID
+     * @return object Counter payload object
+     */
     public static function custome_count_all($id)
     {
-        $company_id = auth()->user()->company_id;
+        static $requestMemo = [];
+
+        $company_id = (int) (auth()->user()->company_id ?? 0);
+        $jobId = (int) $id;
+        $cacheKey = "custome_count_all:v3:{$company_id}:{$jobId}";
+
+        if (isset($requestMemo[$cacheKey])) {
+            return $requestMemo[$cacheKey];
+        }
 
         // BUG-05: stale-while-revalidate — serve cached counters immediately, refresh in background
-        return Cache::flexible("custome_count_all:{$company_id}:{$id}", [60, 300], function () use ($id, $company_id) {
-            return self::custome_count_all_compute($id, $company_id);
+        return $requestMemo[$cacheKey] = Cache::flexible($cacheKey, [60, 300], function () use ($jobId, $company_id) {
+            return self::custome_count_all_compute($jobId, $company_id);
         });
     }
 
@@ -12124,7 +12194,7 @@ END:VCALENDAR";
         // so the rest of this (large, multi-counter) function is unchanged.
         // false: this function only ever uses raw city_ids in ES filters
         // below, never the resolved "City | State | Country" display
-        // strings, so skip that extra MySQL join.
+        // strings, so skip that extra lookup.
         $jobs_details = self::jobDefaultsFromEs($id, false)->jobEsDoc;
         //  dd($jobs_details);
         $min_exp = ($jobs_details->min_exp >= 1) ? $jobs_details->min_exp - 1 : $jobs_details->min_exp;
@@ -12143,59 +12213,20 @@ END:VCALENDAR";
             $max_salary = self::convertToINR($max_salary, $currencyCheck);
             $min_salary = self::convertToINR($min_salary, $currencyCheck);
         }
-        // $ectcdivided = self::salaryDividedByMode($sal_mode, $convertedAmount);
-        // //  dd($ectcdivided);
-        // if ($sal_mode == 0) {
-        // 	$max_salary = $ectcdivided->yearly;
-        // } elseif ($sal_mode == 1) {
-        // 	$max_salary = $ectcdivided->monthly;
 
-        // } elseif ($sal_mode == 2) {
-        // 	$max_salary = $ectcdivided->hourly;
-
-        // }
-
-        // 		dd($jobs_details);
-
-        $education = [$jobs_details->qualification];
-        $educationfiletr = self::qualificationFilterCondition($jobs_details->qualification);
-        $education = array_unique(array_merge($educationfiletr, $education));
         $skill_arr = [];
-        $skill_data = $jobs_details->job_metronics_skills;
+        $skill_data = $jobs_details->job_metronics_skills ?? [];
         foreach ($skill_data as $sval) {
             $sval = (object) $sval;
             $skill_arr[] = $sval->skill_name;
         }
         $requiredSkills = array_map('strtolower', $skill_arr);
 
-        $location_arr = [];
-        $location_data = $jobs_details->client_city_jobs;
-        // dd($location_data);
-        foreach ($location_data as $sval) {
-            $sval = (object) $sval;
-            $location_arr[] = $sval->city_id;
-        }
-        $location = $location_arr;
-
-        // Same Delhi NCR-style metro cluster expansion
-        // similar_existing_data_ajax() applies to the actual results (see
-        // resolveLocationCluster() above) — without this, this counter used
-        // only the job's exact default city while the results page (once a
-        // clustered city like Gurgaon is involved) counted every city in
-        // the cluster, which is the other half of why the two numbers
-        // diverged. city_list has no name on the job's own city_id list, so
-        // resolve it first purely to determine cluster membership.
-        $exactLocationIds = array_map('intval', $location);
-        $locationCityNames = ! empty($exactLocationIds)
-            ? DB::table('city_list')->whereIn('city_id', $exactLocationIds)->pluck('city')->toArray()
-            : [];
-        $locationCluster = self::resolveLocationCluster($exactLocationIds, $locationCityNames);
-        $location = $locationCluster['expanded'];
-
-        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates on other jobs are never excluded.
-        $existingCandidatesQuery = self::getJobAssignedCandidateIds((int) $id, (int) $company_id);
-
-        // dd($education);
+        // Strictly scope all 3 candidate count cards (Similar Candidates, In-house Bench Talents,
+        // Agency Bench Talents) to the CURRENT JOB ID's exact configured location city_id(s) from
+        // ELASTIC_JOBS (e.g. Gurgaon/Gurugram, Haryana -> city_id 132032), with 0% MySQL reads and
+        // no metro-cluster expansion into other cities.
+        $location = self::resolveJobLocationCityIdsFromEs($jobs_details);
 
         // ####################################   START  POOL APPLICATION COUNTER
 
@@ -12475,23 +12506,17 @@ END:VCALENDAR";
         ];
 
         if (! empty($requiredSkills)) {
-            if (! empty($requiredSkills)) {
-                $should = [];
+            $should = [];
 
-                foreach ($requiredSkills as $skill) {
-                    $should[] = [
-                        'match_phrase' => [
-                            'job_application_skills.skills' => $skill,
-                        ],
-                    ];
-                }
-                $boolQueryInternalBench['bool']['filter'][] = [
-                    'bool' => [
-                        'should' => $should,
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+            foreach ($requiredSkills as $skill) {
+                $should[] = self::buildSkillMatchClause($skill);
             }
+            $boolQueryInternalBench['bool']['filter'][] = [
+                'bool' => [
+                    'should' => $should,
+                    'minimum_should_match' => 1,
+                ],
+            ];
         }
 
         if (! empty($location)) {
@@ -12647,23 +12672,17 @@ END:VCALENDAR";
         ];
 
         if (! empty($requiredSkills)) {
-            if (! empty($requiredSkills)) {
-                $should = [];
+            $should = [];
 
-                foreach ($requiredSkills as $skill) {
-                    $should[] = [
-                        'match_phrase' => [
-                            'job_application_skills.skills' => $skill,
-                        ],
-                    ];
-                }
-                $boolQueryMarketBench['bool']['filter'][] = [
-                    'bool' => [
-                        'should' => $should,
-                        'minimum_should_match' => 1,
-                    ],
-                ];
+            foreach ($requiredSkills as $skill) {
+                $should[] = self::buildSkillMatchClause($skill);
             }
+            $boolQueryMarketBench['bool']['filter'][] = [
+                'bool' => [
+                    'should' => $should,
+                    'minimum_should_match' => 1,
+                ],
+            ];
         }
 
         if (! empty($location)) {
@@ -12767,62 +12786,56 @@ END:VCALENDAR";
         }
 
         // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
- 
-         $total_MarketBenchApplications = 0;
- 
-         // ####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
- 
-         // ####################################  START  Bench Talent Request
- 
-         $boolQuerytBenchRequest = [
-             'bool' => [
-                 'should' => [
-                     [
-                         'bool' => [
-                             'must' => array_merge([
-                                 ['term' => ['source_company_id' => $company_id]],
-                                 ['term' => ['source_jobid' => $id]],
-                             ]),
-                         ],
-                     ],
-                 ],
-                 'minimum_should_match' => 1,
-                 'must_not' => [],
-                 'filter' => [],
-             ],
-         ];
-         $total_RequestBenchApplications = 0;
- 
-         // ####################################  END  Bench Talent Request (executed via msearch below)
- 
-         // ####################################  START  CAREER COUNTER
- 
-         $boolQueryCareer = [
-             'bool' => [
-                 'should' => [
-                     // First condition
-                     [
-                         'bool' => [
-                             'must' => array_merge([
-                                 ['term' => ['company_id' => $company_id]],
-                                 ['term' => ['job_id' => $id]],
-                             ], [
-                                 ['bool' => [
-                                     'must_not' => [
-                                         ['term' => ['status' => 1]],
-                                     ],
-                                 ]],
-                             ]),
-                         ],
-                     ],
-                 ],
-                 'minimum_should_match' => 1,
-                 'filter' => [], // We'll add all filters here
-                 'must_not' => [],
-             ],
-         ];
- 
-         // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
+
+        $total_MarketBenchApplications = 0;
+
+        // ####################################   END Market Bench APPLICATION COUNTER (executed via msearch below)
+
+        // ####################################  START  Bench Talent Request
+
+        $boolQuerytBenchRequest = [
+            'bool' => [
+                'should' => [
+                    [
+                        'bool' => [
+                            'must' => array_merge([
+                                ['term' => ['source_company_id' => $company_id]],
+                                ['term' => ['source_jobid' => $id]],
+                            ]),
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+                'must_not' => [],
+                'filter' => [],
+            ],
+        ];
+        $total_RequestBenchApplications = 0;
+
+        // ####################################  END  Bench Talent Request (executed via msearch below)
+
+        // ####################################  START  CAREER COUNTER
+
+        $boolQueryCareer = [
+            'bool' => [
+                'should' => [
+                    // First condition
+                    [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['company_id' => $company_id]],
+                                ['term' => ['job_id' => $id]],
+                            ],
+                        ],
+                    ],
+                ],
+                'minimum_should_match' => 1,
+                'filter' => [], // We'll add all filters here
+                'must_not' => [],
+            ],
+        ];
+
+        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
         $total_career = 0;
 
