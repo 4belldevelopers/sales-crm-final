@@ -4213,17 +4213,17 @@ END:VCALENDAR";
 
     public static function currency()
     {
-
         $currencies = Cache::remember('currency_codesww', 86400, function () {
             return DB::table('currencies')
                 ->orderBy('getKey', 'ASC')
-                ->pluck('currency_code')
+                ->pluck('currency_code', 'getKey')
                 ->toArray();
         });
         if ($currencies) {
             return $currencies;
         }
-        $array = [
+
+        return [
             0 => 'INR',
             1 => 'EUR',
             2 => 'JPY',
@@ -4231,22 +4231,34 @@ END:VCALENDAR";
             4 => 'USD',
             5 => 'AED',
         ];
-
-        return $array;
     }
 
     public static function currencySymbole()
     {
-        $array = [
-            0 => '<i class="fa fa-inr" aria-hidden="true"></i>',
-            1 => '<i class="fa fa-eur" aria-hidden="true"></i>',
-            2 => '<i class="fa fa-jpy" aria-hidden="true"></i>',
-            3 => '<i class="fa fa-gbp" aria-hidden="true"></i>',
-            4 => '<i class="fa fa-usd" aria-hidden="true"></i>',
-            5 => '<i class="fa fa-usd" aria-hidden="true"></i>',
-        ];
+        return Cache::remember('currency_symbols_all', 86400, function () {
+            $currencies = DB::table('currencies')->get();
+            $iconMap = [
+                'INR' => '<i class="fa fa-inr" aria-hidden="true"></i>',
+                'EUR' => '<i class="fa fa-eur" aria-hidden="true"></i>',
+                'JPY' => '<i class="fa fa-jpy" aria-hidden="true"></i>',
+                'GBP' => '<i class="fa fa-gbp" aria-hidden="true"></i>',
+                'USD' => '<i class="fa fa-usd" aria-hidden="true"></i>',
+                'AED' => '<span class="fw-bold">AED </span>',
+                'CAD' => '<span class="fw-bold">C$ </span>',
+                'AUD' => '<span class="fw-bold">A$ </span>',
+                'SGD' => '<span class="fw-bold">S$ </span>',
+            ];
 
-        return $array;
+            $array = [];
+            foreach ($currencies as $curr) {
+                $code = strtoupper(trim($curr->currency_code));
+                $html = $iconMap[$code] ?? ('<span class="fw-bold">' . e($curr->currency_symbol ?: $code) . ' </span>');
+                $array[$curr->getKey] = $html;
+                $array[$code] = $html;
+            }
+
+            return $array;
+        });
     }
 
     public static function currencySymboleforexcell()
@@ -4304,25 +4316,141 @@ END:VCALENDAR";
         return $num;
     }
 
+    /**
+     * Intent: Fetch latest immutable FX snapshot from currency_snapshots table with self-healing fallback.
+     */
+    public static function getLatestFxSnapshot(?string $version = null): array
+    {
+        $cacheKey = $version ? "fx_snapshot:{$version}" : 'fx_snapshot:active';
+
+        return Cache::remember($cacheKey, 86400, function () use ($version) {
+            $query = DB::table('currency_snapshots');
+            if ($version) {
+                $query->where('version', $version);
+            } else {
+                $query->where('is_active', 1)->orderBy('effective_from', 'desc');
+            }
+            $snapshot = $query->first();
+
+            if ($snapshot) {
+                $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
+
+                return [
+                    'version' => $snapshot->version,
+                    'base_currency' => $snapshot->base_currency,
+                    'rates_json' => $rates,
+                    'effective_from' => $snapshot->effective_from,
+                ];
+            }
+
+            // Self-healing: seed initial snapshot from currencies table
+            $currencies = DB::table('currencies')->get();
+            $rates = [];
+            foreach ($currencies as $curr) {
+                $code = strtoupper(trim($curr->currency_code));
+                $rates[$code] = (float) $curr->usd_based_rates;
+            }
+            $rates['USD'] = 1.0;
+            if (empty($rates)) {
+                $rates = ['USD' => 1.0, 'INR' => 83.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.67];
+            }
+
+            $v = '202609-001';
+            $json = json_encode($rates);
+            try {
+                DB::table('currency_snapshots')->updateOrInsert(
+                    ['version' => $v],
+                    [
+                        'base_currency' => 'USD',
+                        'rates_json' => $json,
+                        'rates_hash' => hash('sha256', $json),
+                        'effective_from' => '2026-09-01 00:00:00',
+                        'is_active' => 1,
+                        'source' => 'monthly_reference_v4',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Self-healing currency_snapshot insert exception: '.$e->getMessage());
+            }
+
+            return [
+                'version' => $v,
+                'base_currency' => 'USD',
+                'rates_json' => $rates,
+                'effective_from' => '2026-09-01 00:00:00',
+            ];
+        });
+    }
+
+    /**
+     * Intent: Universal, high-precision cross-currency conversion using USD as the base pivot.
+     * Formula: Converted = (Amount / RateFromUSD) * RateToUSD
+     */
+    public static function convertCurrency($amount, $fromCurrency, $toCurrency = 'USD', ?string $version = null): float
+    {
+        if ($amount === null || ! is_numeric($amount)) {
+            return 0.0;
+        }
+        $amount = (float) $amount;
+        if ($amount == 0.0) {
+            return 0.0;
+        }
+
+        $allCurrencies = self::currency();
+        $from = is_numeric($fromCurrency) ? ($allCurrencies[(int) $fromCurrency] ?? 'INR') : strtoupper(trim($fromCurrency));
+        $to = is_numeric($toCurrency) ? ($allCurrencies[(int) $toCurrency] ?? 'USD') : strtoupper(trim($toCurrency));
+
+        if ($from === $to) {
+            return $amount;
+        }
+
+        $snapshot = self::getLatestFxSnapshot($version);
+        $rates = $snapshot['rates_json'] ?? [];
+
+        $rateFrom = isset($rates[$from]) ? (float) $rates[$from] : null;
+        $rateTo = isset($rates[$to]) ? (float) $rates[$to] : null;
+
+        if ($rateFrom && $rateTo && $rateFrom > 0 && $rateTo > 0) {
+            return ($amount / $rateFrom) * $rateTo;
+        }
+
+        // Fallback: check currencies table rates directly
+        $ratesFallback = self::currencyConverter()['usd_based_rates'] ?? [];
+        $rfFrom = isset($ratesFallback[$from]) ? (float) $ratesFallback[$from] : 1.0;
+        $rfTo = isset($ratesFallback[$to]) ? (float) $ratesFallback[$to] : 1.0;
+        if ($rfFrom > 0 && $rfTo > 0) {
+            return ($amount / $rfFrom) * $rfTo;
+        }
+
+        return $amount;
+    }
+
+    /**
+     * Intent: Normalize candidate salary or bill rate to standard USD hourly basis for Elasticsearch indexing and range queries.
+     */
+    public static function convertToUSDHourly($amount, $currency, int $mode = 0, int $annualHours = 2080): float
+    {
+        if ($amount === null || ! is_numeric($amount) || (float) $amount <= 0) {
+            return 0.0;
+        }
+        $rawAmount = (float) $amount;
+
+        $annual = match ($mode) {
+            1 => $rawAmount * 12.0,
+            2 => $rawAmount * (float) $annualHours,
+            default => $rawAmount,
+        };
+
+        $annualUSD = self::convertCurrency($annual, $currency, 'USD');
+
+        return $annualHours > 0 ? round($annualUSD / (float) $annualHours, 4) : 0.0;
+    }
+
     public static function convertToINR($amount, $currency)
     {
-
-        $exchangeRates = self::currencyConverter()['inr_based_rates'] ?? [];
-
-        $exchangeRates = ! empty($exchangeRates) ? $exchangeRates : [
-            'INR' => 1,
-            'EUR' => 88.50,
-            'JPY' => 0.68,
-            'GBP' => 103.70,
-            'USD' => 83,
-            'AED' => 20.38,
-        ];
-
-        if (array_key_exists($currency, $exchangeRates)) {
-            return $amount * $exchangeRates[$currency];
-        } else {
-            return 0;
-        }
+        return self::convertCurrency($amount, $currency, 'INR');
     }
 
     public static function salaryDividedByMode($mode, $amount)
@@ -6625,23 +6753,51 @@ END:VCALENDAR";
 
     public static function defaultCurrency()
     {
+        if (! auth()->check()) {
+            return 'USD';
+        }
         $company_id = auth()->user()->company_id;
 
-        $defaultCurrency = DB::table('companies')
-            ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-            ->select('master_currency.code')
-            ->where('companies.id', $company_id)
-            ->first();
+        return Cache::remember("tenant_default_currency:{$company_id}", 3600, function () use ($company_id) {
+            $company = DB::table('companies')
+                ->select('currency', 'calling_code')
+                ->where('id', $company_id)
+                ->first();
 
-        // dd($defaultCurrency );
+            if ($company && ! empty($company->currency)) {
+                if (is_numeric($company->currency)) {
+                    $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('currency_code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                    $code = DB::table('currencies')->where('getKey', (int) $company->currency)->value('currency_code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                } else {
+                    return strtoupper(trim($company->currency));
+                }
+            }
 
-        $currency_code = 'INR';
-        if ($defaultCurrency) {
-            $currency_code = ($defaultCurrency->code);
-        }
+            // HQ / Country Auto-Detection from calling code
+            if ($company && ! empty($company->calling_code)) {
+                $code = (string) $company->calling_code;
+                if ($code === '91' || $code === '+91') {
+                    return 'INR';
+                }
+                if ($code === '44' || $code === '+44') {
+                    return 'GBP';
+                }
+                if ($code === '971' || $code === '+971') {
+                    return 'AED';
+                }
+                if (in_array($code, ['33', '+33', '49', '+49', '34', '+34', '39', '+39', '31', '+31', '32', '+32'], true)) {
+                    return 'EUR';
+                }
+            }
 
-        return $currency_code;
-
+            return 'USD'; // Safe global default for all other international accounts
+        });
     }
 
     public static function defaultTimeZone()

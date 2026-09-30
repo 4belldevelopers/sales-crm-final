@@ -113,6 +113,8 @@ class ElasticBenchCandidatesIndex
 
             $bulkData = [];
             $ik = 1;
+            $snapshot = \App\Helper\GeneralMethod::getLatestFxSnapshot();
+            $snapshotVersion = $snapshot['version'] ?? '202609-001';
             foreach ($applications as $application) {
 
                 $add_job_wise_condidates = DB::table('add_job_wise_condidates')
@@ -275,6 +277,17 @@ class ElasticBenchCandidatesIndex
                     'bill_rate_currency' => $application->bill_rate_currency,
                     'bill_rate_amount' => $application->bill_rate_amount,
                     'bill_rate_mode' => $application->bill_rate_mode,
+                    'bill_rate_usd_hourly_index' => \App\Helper\GeneralMethod::convertToUSDHourly(
+                        $application->bill_rate_amount,
+                        $application->bill_rate_currency,
+                        (int) ($application->bill_rate_mode ?? 0)
+                    ),
+                    'pay_rate_usd_hourly_index' => \App\Helper\GeneralMethod::convertToUSDHourly(
+                        $application->ctc,
+                        $application->current_ctc_cur,
+                        (int) ($application->current_ctc_mode ?? 0)
+                    ),
+                    'fx_snapshot_version' => $snapshotVersion,
                     'condidate_type' => $application->condidate_type,
                     'master_status_id' => $application->master_status_id,
                     'posted_by' => $application->posted_by,

@@ -120,8 +120,12 @@
        that depends on FontAwesome being loaded — on this AJAX response path
        the font isn't always present, so the literal tag leaks through as text.
        Map currency_id → unicode glyph instead. */
-    $currencyGlyphs = [0=>'₹', 1=>'€', 2=>'¥', 3=>'£', 4=>'$', 5=>'د.إ'];
-    $salCurrencySym = $currencyGlyphs[(int)@$jobDetails->min_salary_currency] ?? '₹';
+    $salCurrencyCode = $currency[(int)@$jobDetails->min_salary_currency] ?? 'INR';
+    $currencyGlyphs = [
+        'INR' => '₹', 'EUR' => '€', 'JPY' => '¥', 'GBP' => '£', 'USD' => '$',
+        'AED' => 'د.إ', 'CAD' => 'C$', 'AUD' => 'A$', 'SGD' => 'S$',
+    ];
+    $salCurrencySym = $currencyGlyphs[$salCurrencyCode] ?? ($salCurrencyCode . ' ');
     $salSuffix = ['/Annum', '/Month', '/Hour'][(int)(@$jobDetails->min_sal_mode ?? 0)] ?? '';
     $salaryDisplay = '';
     if ($min_salary_raw > 0 || $max_salary_raw > 0) {
@@ -414,7 +418,7 @@
             @if($salaryDisplay)
             <div class="bxr-col-exp-row">
                 <span class="bxr-icon-box">{{ $salCurrencySym }}</span>
-                <span>{{ $salaryDisplay }}{!! $salSuffix !== '' ? ' <span class="bxr-col-exp-mode">'.$salSuffix.'</span>' : '' !!}</span>
+                <span data-jero-currency-amount="{{ $min_salary_raw }}" data-jero-currency-max="{{ $max_salary_raw }}" data-jero-currency-original="{{ $salCurrencyCode }}" data-jero-currency-mode="{{ $salSuffix }}">{{ $salaryDisplay }}{!! $salSuffix !== '' ? ' <span class="bxr-col-exp-mode">'.$salSuffix.'</span>' : '' !!}</span>
             </div>
             @endif
             <div>

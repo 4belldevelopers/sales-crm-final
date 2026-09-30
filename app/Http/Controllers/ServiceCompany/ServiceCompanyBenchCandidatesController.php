@@ -144,9 +144,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
      */
     private function benchStaffingAnalytics(int $companyId): object
     {
+        $targetCurrency = GeneralMethod::defaultCurrency();
+
         // Talents still on bench (unplaced) — drives Bench Cost / Loss + aging.
         $benchRows = DB::table('job_applications')
-            ->select('id', 'ctc_yearly', 'created_at')
+            ->select('id', 'ctc_yearly', 'current_ctc_cur', 'created_at')
             ->where('company_id', $companyId)
             ->where('condidate_type', 'bench_condidate')
             ->where('status', 2)
@@ -154,16 +156,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         // Actual placement records: what the client pays us (bill_rate) + what we pay the placed talent (pay_rate).
         $placementRows = DB::table('bench_place')
-            ->select('bench_id', 'pay_rate_amount', 'pay_rate_mode', 'bill_rate_amount', 'bill_rate_mode', 'create_at')
+            ->select('bench_id', 'pay_rate_currency', 'pay_rate_amount', 'pay_rate_mode', 'bill_rate_currency', 'bill_rate_amount', 'bill_rate_mode', 'create_at')
             ->where('source_comapny_id', $companyId)
             ->get();
 
-        // Annualise a raw placement rate (mode: 0=Annual, 1=Monthly, 2=Hourly).
-        $annual = fn ($amount, $mode) => (float) GeneralMethod::salaryDividedByMode((int) $mode, (float) $amount)->yearly;
+        // Annualise a raw placement rate (mode: 0=Annual, 1=Monthly, 2=Hourly) normalized to tenant default currency.
+        $annual = function ($amount, $mode, $curr) use ($targetCurrency) {
+            $rawAnnual = (float) GeneralMethod::salaryDividedByMode((int) $mode, (float) $amount)->yearly;
 
-        $benchCost = (float) $benchRows->sum(fn ($r) => (float) $r->ctc_yearly);
-        $placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
-        $placedSalary = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+            return GeneralMethod::convertCurrency($rawAnnual, $curr, $targetCurrency);
+        };
+
+        $benchCost = (float) $benchRows->sum(fn ($r) => GeneralMethod::convertCurrency((float) $r->ctc_yearly, $r->current_ctc_cur, $targetCurrency));
+        $placedClientPay = (float) $placementRows->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode, $r->bill_rate_currency));
+        $placedSalary = (float) $placementRows->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode, $r->pay_rate_currency));
         $grossProfit = $placedClientPay - $benchCost - $placedSalary;
 
         // Bench Aging buckets (days on bench, derived from created_at).
@@ -192,11 +198,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             $lossToDate = (float) $benchRows
                 ->filter(fn ($r) => $r->created_at && Carbon::parse($r->created_at)->lte($cursor))
-                ->sum(fn ($r) => (float) $r->ctc_yearly);
+                ->sum(fn ($r) => GeneralMethod::convertCurrency((float) $r->ctc_yearly, $r->current_ctc_cur, $targetCurrency));
 
             $placedToDate = $placementRows->filter(fn ($r) => $r->create_at && Carbon::parse($r->create_at)->lte($cursor));
-            $clientPayToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode));
-            $placedSalToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode));
+            $clientPayToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->bill_rate_amount, $r->bill_rate_mode, $r->bill_rate_currency));
+            $placedSalToDate = (float) $placedToDate->sum(fn ($r) => $annual($r->pay_rate_amount, $r->pay_rate_mode, $r->pay_rate_currency));
 
             $lossSeries[] = round($lossToDate, 2);
             $profitSeries[] = round($clientPayToDate - $lossToDate - $placedSalToDate, 2);
@@ -1605,10 +1611,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $benchApplication->bill_rate_amount = @$request->bill_rate_amount;
             $benchApplication->bill_rate_mode = @$request->bill_rate_mode;
 
-            $currency = GeneralMethod::currency();
+            $currencyList = GeneralMethod::currency();
 
-            $ecurrency = $currency[$request->bill_rate_currency] ?? 'INR';
-            $econvertedAmount = $request->bill_annual;
+            $ecurrency = $currencyList[$request->bill_rate_currency] ?? 'INR';
+            $econvertedAmount = (float) $request->bill_annual;
             if ($request->bill_rate_currency > 0) {
                 $econvertedAmount = GeneralMethod::convertToINR($econvertedAmount, $ecurrency);
             }
@@ -1618,10 +1624,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $benchApplication->ectc_monthly = @$ectcdivided->monthly;
             $benchApplication->ectc_hourly = @$ectcdivided->hourly;
 
-            $currency = $currency[$request->pay_rate_currency] ?? 'INR';
-            $convertedAmount = $request->pay_annual;
+            $payCurrencyCode = $currencyList[$request->pay_rate_currency] ?? 'INR';
+            $convertedAmount = (float) $request->pay_annual;
             if ($request->pay_rate_currency > 0) {
-                $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $currency);
+                $convertedAmount = GeneralMethod::convertToINR($convertedAmount, $payCurrencyCode);
             }
 
             $ctcdivided = GeneralMethod::salaryDividedByMode(0, $convertedAmount);
