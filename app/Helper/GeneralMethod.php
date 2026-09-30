@@ -6766,7 +6766,7 @@ END:VCALENDAR";
 
             if ($company && ! empty($company->currency)) {
                 if (is_numeric($company->currency)) {
-                    $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('currency_code');
+                    $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('code');
                     if ($code) {
                         return strtoupper(trim($code));
                     }
