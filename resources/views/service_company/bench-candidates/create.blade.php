@@ -586,7 +586,33 @@ if($snp_mode== 1){
                     </div>
                   </div>
 
-                  {{-- Current Location: Reordered to Box 2 in Row 2 --}}
+                  {{-- Gender: Reordered to Box 2 in Row 2 --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Gender <span class="rq">*</span></label>
+                    <div class="bd-control bd-control--select">
+                      <i class="fa-regular fa-user"></i>
+                      <select name="gender" id="gender">
+                        <option value="">Select gender</option>
+                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {{-- Date of Birth (Optional): Reordered to Box 3 in Row 2 --}}
+                  <div class="fg fv-row bd-field">
+                    <label>Date of Birth <span class="opt text-muted fw-normal fs-8">(Optional)</span></label>
+                    <div class="bd-control">
+                      <i class="fa-regular fa-calendar-days"></i>
+                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
+                    </div>
+                  </div>
+                </div>
+
+                {{-- Row 3: Current Location & Highest Qualification --}}
+                <div class="bd-grid bd-grid--two">
+                  {{-- Current Location: Reordered to Box 1 in Row 3 --}}
                   <div class="fg fv-row bd-field">
                     <label>Current Location <span class="rq">*</span></label>
                     <div class="bd-control bd-control--has-combobox">
@@ -627,32 +653,6 @@ if($snp_mode== 1){
                     </div>
                     {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State --}}
                     <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none;"></div>
-                  </div>
-
-                  {{-- Date of Birth (Optional): Reordered to Box 3 in Row 2 --}}
-                  <div class="fg fv-row bd-field">
-                    <label>Date of Birth <span class="opt text-muted fw-normal fs-8">(Optional)</span></label>
-                    <div class="bd-control">
-                      <i class="fa-regular fa-calendar-days"></i>
-                      <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" />
-                    </div>
-                  </div>
-                </div>
-
-                {{-- Row 3: Gender & Highest Qualification --}}
-                <div class="bd-grid bd-grid--two">
-                  {{-- Gender: Box 1 in Row 3 --}}
-                  <div class="fg fv-row bd-field">
-                    <label>Gender <span class="rq">*</span></label>
-                    <div class="bd-control bd-control--select">
-                      <i class="fa-regular fa-user"></i>
-                      <select name="gender" id="gender">
-                        <option value="">Select gender</option>
-                        <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                        <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                      </select>
-                    </div>
                   </div>
 
                   {{-- Highest Qualification: Reordered to Box 2 in Row 3 --}}
@@ -1090,11 +1090,52 @@ if($snp_mode== 1){
                   </div>
 
                   <div class="fg fv-row aw-field">
-                    <label class="aw-date-label" for="np_id_display">Available From Date <span class="rq">*</span></label>
+                    <label class="aw-date-label d-inline-flex align-items-center" for="np_id_display">
+                      Available From Date <span class="rq">*</span>
+                      <span class="aw-date-info-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Click or hover for availability SLA guidance">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span class="aw-date-hover-card" role="tooltip">
+                          <span class="aw-hover-card-header">
+                            <span class="aw-hover-card-title">
+                              <i class="fa-regular fa-calendar-check text-primary"></i>
+                              <span>Deployment &amp; Availability SLA</span>
+                            </span>
+                            <span class="aw-hover-card-pill">Marketplace SLA</span>
+                          </span>
+                          <span class="aw-hover-card-content">
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--blue"><i class="fa-solid fa-magnifying-glass"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Marketplace Search Visibility &amp; Ranking</strong>
+                                <small>Hiring clients filter candidates by this start date. Talent with verified accurate availability receives up to 3× higher shortlist volume.</small>
+                              </span>
+                            </span>
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--amber"><i class="fa-regular fa-clock"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Serving Notice Period (LWD + 1)</strong>
+                                <small>If candidate is currently employed, select the first working day immediately following their official Last Working Day (LWD).</small>
+                              </span>
+                            </span>
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--emerald"><i class="fa-solid fa-bolt"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Immediate Joining (Bench Talent)</strong>
+                                <small>If this talent is on bench and ready to deploy today, toggle "Immediate Joiner" above for instant priority matching.</small>
+                              </span>
+                            </span>
+                          </span>
+                          <span class="aw-hover-card-footer">
+                            <i class="fa-solid fa-shield-halved text-success"></i>
+                            <span>Guarantees verified availability SLA to eliminate deployment disputes with clients.</span>
+                          </span>
+                        </span>
+                      </span>
+                    </label>
                     <small class="aw-field-help">Enter the date from which this talent will be available.</small>
                     <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
                       <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
-                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly data-bs-toggle="tooltip" data-bs-placement="top" title="Deployment start date visible to clients in marketplace search">
                       <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
                     </div>
                     <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show to clients in the talents marketplace.</span></div>
@@ -1136,7 +1177,7 @@ if($snp_mode== 1){
                         <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
                         <span class="aw-radio"></span>
                         <i class="fa-solid fa-users" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Work From Office</strong><small>Office location based work.</small></span>
+                        <span class="aw-work-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span>
                       </label>
                     </div>
                   </div>
