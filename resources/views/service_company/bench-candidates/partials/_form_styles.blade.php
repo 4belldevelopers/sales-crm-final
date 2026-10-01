@@ -58,6 +58,213 @@ body { overflow-x: hidden; }
     color: #2563EB !important;
 }
 
+/* Quick Hub Selection Pills */
+#talent_create_app .wa-popular-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    margin-top: 4px;
+}
+
+#talent_create_app .wa-chips-label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+#talent_create_app .wa-popular-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+#talent_create_app .wa-chip-btn {
+    appearance: none;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 3px 11px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    line-height: 1.4;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    user-select: none;
+}
+
+#talent_create_app .wa-chip-btn:hover {
+    background: #EFF6FF;
+    border-color: #93C5FD;
+    color: #1D4ED8;
+    transform: translateY(-1px);
+}
+
+#talent_create_app .wa-chip-btn.is-active {
+    background: #2563EB !important;
+    border-color: #2563EB !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Work Authorization Select2 Enhancement */
+#talent_create_app .addl-select-wrap .select2-container {
+    width: 100% !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single {
+    min-height: 40px !important;
+    height: 40px !important;
+    border: 1px solid #CDD7EB !important;
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    background-color: #FFFFFF !important;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
+    outline: none !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0B1545 !important;
+    line-height: 26px !important;
+    padding-left: 0 !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #64748B !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear {
+    color: #94A3B8 !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    margin-right: 22px !important;
+    line-height: 26px !important;
+    cursor: pointer !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear:hover {
+    color: #EF4444 !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px !important;
+    right: 12px !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #5570A8 transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #5570A8 transparent !important;
+    border-width: 0 4px 5px 4px !important;
+}
+
+#talent_create_app .addl-select-wrap .select2-container ~ i.fa-chevron-down {
+    display: none !important;
+}
+
+/* Work Authorization Select2 Dropdown Menu (Appended to Body) */
+.wa-select2-dropdown {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden !important;
+    z-index: 1060 !important;
+}
+
+.wa-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px !important;
+    background: #F8FAFC !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.wa-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    font-size: 12.5px !important;
+    outline: none !important;
+    font-family: 'Poppins', sans-serif !important;
+    background-color: #FFFFFF !important;
+    width: 100% !important;
+}
+
+.wa-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.wa-select2-dropdown .select2-results__options {
+    max-height: 280px !important;
+}
+
+.wa-select2-dropdown .select2-results__group {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #475569 !important;
+    background-color: #F1F5F9 !important;
+    padding: 6px 12px !important;
+    border-top: 1px solid #E2E8F0 !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.wa-select2-dropdown .select2-results__group:first-child {
+    border-top: none !important;
+}
+
+.wa-select2-dropdown .select2-results__option {
+    padding: 7px 14px !important;
+    font-size: 12.5px !important;
+    font-weight: 500 !important;
+    color: #1E293B !important;
+    line-height: 1.4 !important;
+    transition: background-color 0.12s ease !important;
+}
+
+.wa-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3B82F6 !important;
+    color: #FFFFFF !important;
+}
+
+.wa-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #EFF6FF !important;
+    color: #1D4ED8 !important;
+    font-weight: 600 !important;
+}
+
 /* Equal Height Flex Pairing for Resume Upload and Career Summary */
 #talent_create_app .equal-height-row {
     display: flex;

@@ -1635,6 +1635,19 @@ if($snp_mode== 1){
                 <section class="addl-section addl-section--details">
                   <div class="addl-wide-field fv-row">
                     <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info" title="Select the candidate's active legal work authorization or visa classification."></i></label>
+                    <div class="wa-popular-chips-wrap">
+                      <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
+                      <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
+                        <button type="button" class="wa-chip-btn" data-region="United States" data-filter="United States" title="Filter United States Visas">🇺🇸 US</button>
+                        <button type="button" class="wa-chip-btn" data-region="Canada" data-filter="Canada" title="Filter Canada Visas">🇨🇦 Canada</button>
+                        <button type="button" class="wa-chip-btn" data-region="India" data-filter="India" title="Filter India Work Status">🇮🇳 India</button>
+                        <button type="button" class="wa-chip-btn" data-region="United Kingdom" data-filter="United Kingdom" title="Filter UK Visas">🇬🇧 UK</button>
+                        <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
+                        <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
+                        <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
+                        <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
+                      </div>
+                    </div>
                     <div class="addl-select-wrap">
                       @php
                         $currentVisa  = trim((string) @$application->visastatu);
@@ -1700,7 +1713,7 @@ if($snp_mode== 1){
                                          || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
                                          || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
                       @endphp
-                      <select name="visastatu" id="visastatu">
+                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work (e.g. H-1B, Green Card, UAE Golden Visa, PR, Citizen)...">
                         <option value="">Select work authorization or visa status</option>
 
                         <optgroup label="United States (US)">
@@ -1778,7 +1791,7 @@ if($snp_mode== 1){
                       </select>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                    <small>Select the active visa or legal right-to-work status for this candidate.</small>
+                    <small class="text-muted mt-1 d-block">Search by country name, visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                   </div>
                   {{-- Professional Reference removed from UI (data preserved via hidden input) --}}
                   <input type="hidden" name="referencename" id="referencename" value="{{ @$application->referencename }}" />
@@ -2936,6 +2949,139 @@ $(document).ready(function () {
     }
 
     /**
+     * Initializes enterprise Select2 on #visastatu with full text & optgroup search,
+     * quick-select popular hub chip synchronization, and Metronic Poppins styling.
+     */
+    function initWorkAuthorizationSelect2() {
+        if (!$.fn.select2) return;
+        let $visaSelect = $('#visastatu');
+        if (!$visaSelect.length) return;
+
+        if ($visaSelect.hasClass('select2-hidden-accessible')) {
+            $visaSelect.select2('destroy');
+        }
+
+        $visaSelect.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'wa-select2-dropdown',
+            placeholder: 'Search visa or work authorization status...',
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            matcher: function (params, data) {
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase().trim();
+
+                // If this is an optgroup (it has children)
+                if (data.children && data.children.length > 0) {
+                    var groupLabel = (data.text || '').toLowerCase();
+                    // If optgroup label matches the term (e.g. "Dubai", "UAE", "India", "United States", "Canada")
+                    if (groupLabel.indexOf(term) > -1) {
+                        return data;
+                    }
+
+                    // Otherwise test each child within the optgroup
+                    var filteredChildren = [];
+                    for (var i = 0; i < data.children.length; i++) {
+                        var child = data.children[i];
+                        var childText = (child.text || '').toLowerCase();
+                        var childVal = (child.id || '').toLowerCase();
+                        if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
+                            filteredChildren.push(child);
+                        }
+                    }
+
+                    if (filteredChildren.length > 0) {
+                        var modifiedData = $.extend({}, data, true);
+                        modifiedData.children = filteredChildren;
+                        return modifiedData;
+                    }
+                    return null;
+                }
+
+                // If this is a standalone option
+                var text = (data.text || '').toLowerCase();
+                var val = (data.id || '').toLowerCase();
+                if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+
+        // Hide static chevron if Select2 is initialized
+        $visaSelect.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
+
+        // Sync active state of popular hub chips based on current selection
+        syncWorkAuthActiveChip();
+    }
+
+    function syncWorkAuthActiveChip() {
+        let val = $('#visastatu').val();
+        $('.wa-chip-btn').removeClass('is-active');
+        if (!val) return;
+
+        let $selectedOpt = $('#visastatu').find('option:selected');
+        let $optgroup = $selectedOpt.closest('optgroup');
+        let groupLabel = ($optgroup.attr('label') || '').toLowerCase();
+        let optVal = (val || '').toLowerCase();
+
+        $('.wa-chip-btn').each(function () {
+            let filter = ($(this).data('filter') || '').toLowerCase();
+            let region = ($(this).data('region') || '').toLowerCase();
+            if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
+                optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
+                $(this).addClass('is-active');
+                return false;
+            }
+        });
+    }
+
+    $(document).on('change', '#visastatu', function () {
+        syncWorkAuthActiveChip();
+    });
+
+    // Handle Quick Hub Chip click
+    $(document).on('click', '.wa-chip-btn', function (e) {
+        e.preventDefault();
+        let $btn = $(this);
+        let filterTerm = $btn.data('filter') || '';
+        let wasActive = $btn.hasClass('is-active');
+
+        $('.wa-chip-btn').removeClass('is-active');
+
+        let $visaSelect = $('#visastatu');
+        if (wasActive) {
+            // If already active, toggle off and reset search if dropdown open
+            if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+                if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                    let $searchField = $('.wa-select2-dropdown .select2-search__field');
+                    if ($searchField.length) {
+                        $searchField.val('').trigger('input').trigger('keyup');
+                    }
+                }
+            }
+            return;
+        }
+
+        $btn.addClass('is-active');
+
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            $visaSelect.select2('open');
+            setTimeout(function () {
+                let $searchField = $('.wa-select2-dropdown .select2-search__field');
+                if ($searchField.length) {
+                    $searchField.val(filterTerm).trigger('input').trigger('keyup');
+                }
+            }, 60);
+        } else {
+            $visaSelect.focus();
+        }
+    });
+
+    /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
      * active Pay Rate input using canonical currency code read from #pay_rate_currency.
      */
@@ -3083,9 +3229,11 @@ $(document).ready(function () {
     });
 
     initPayRateCurrencySelect2();
+    initWorkAuthorizationSelect2();
 
     setTimeout(() => {
         initPayRateCurrencySelect2();
+        initWorkAuthorizationSelect2();
         let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
