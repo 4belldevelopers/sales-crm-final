@@ -191,38 +191,14 @@
 </style>
 
 @php
-/* ── Build per-user workload stats via ES (same pattern as hmlisting.blade.php) ── */
-$crmCompanyId = auth()->user()->company_id;
-$crmElastic   = app(\App\Services\ElasticService::class)->getClient();
+/* ── Build per-user workload stats via Redis-cached RelationshipManagerService (0% MySQL / 0% ES strain) ── */
+$crmCompanyId = (int) auth()->user()->company_id;
+$rmService = app(\App\Services\RelationshipManagerService::class);
+$workloadStats = $rmService->getWorkloadStats($crmCompanyId);
 
-$crmActiveJobs = [];
-try {
-    $r = $crmElastic->search(['index' => ELASTIC_JOBS, 'body' => ['size' => 0,
-        'query' => ['term' => ['status' => 'active']],
-        'aggs'  => ['by_user' => ['terms' => ['field' => 'job_assign.user_id', 'size' => 2000]]],
-    ]]);
-    foreach ($r['aggregations']['by_user']['buckets'] ?? [] as $b) {
-        $crmActiveJobs[(int)$b['key']] = (int)$b['doc_count'];
-    }
-} catch (\Throwable $e) { $crmActiveJobs = []; }
-
-$crmCaptainJobs = [];
-try {
-    $r = $crmElastic->search(['index' => ELASTIC_JOBS, 'body' => ['size' => 0,
-        'query' => ['term' => ['job_assign.company_id' => $crmCompanyId]],
-        'aggs'  => ['by_captain' => ['terms' => ['field' => 'job_assign.spok_user_id', 'size' => 2000]]],
-    ]]);
-    foreach ($r['aggregations']['by_captain']['buckets'] ?? [] as $b) {
-        $crmCaptainJobs[(int)$b['key']] = (int)$b['doc_count'];
-    }
-} catch (\Throwable $e) { $crmCaptainJobs = []; }
-
-// TRM Talents = bench_assign rows per user (MySQL is authoritative)
-$crmTrmTalents = DB::table('bench_assign')
-    ->select('user_id', DB::raw('COUNT(*) as cnt'))
-    ->groupBy('user_id')
-    ->pluck('cnt', 'user_id')
-    ->toArray();
+$crmActiveJobs  = $workloadStats['active_jobs'] ?? [];
+$crmCaptainJobs = $workloadStats['captain_jobs'] ?? [];
+$crmTrmTalents  = $workloadStats['trm_talents'] ?? [];
 
 /* Build row objects */
 $crmRows     = [];
@@ -661,6 +637,10 @@ $(document).ready(function () {
     var __lastCrmRecId = null;
     if (window.__crmWatcherInterval) clearInterval(window.__crmWatcherInterval);
     window.__crmWatcherInterval = setInterval(function () {
+        var $drawer = $('#kt_activitiesRecruiter');
+        if ($drawer.length && !$drawer.hasClass('drawer-on') && $drawer.css('display') === 'none') {
+            return;
+        }
         var r = ($('#recruiter').val() || '').trim();
         var ri = ($('#recruiter_id').val() || '').trim();
         if (r !== __lastCrmRec || ri !== __lastCrmRecId) {
@@ -668,7 +648,14 @@ $(document).ready(function () {
             __lastCrmRecId = ri;
             crmRenderSelected();
         }
-    }, 300);
+    }, 500);
+
+    $(document).off('click.crmClose', '#kt_activitiesRecruiter_close').on('click.crmClose', '#kt_activitiesRecruiter_close', function () {
+        if (window.__crmWatcherInterval) {
+            clearInterval(window.__crmWatcherInterval);
+            window.__crmWatcherInterval = null;
+        }
+    });
 
 });
 

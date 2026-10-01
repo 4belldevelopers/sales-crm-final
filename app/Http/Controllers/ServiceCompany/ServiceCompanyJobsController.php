@@ -5951,18 +5951,41 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function recruiter($id)
     {
-        //    dd("dkd");
-        $recruiter = '';
-        $recruiter = $_REQUEST['recruiter'];
-        $recruiter_id = $_REQUEST['recruiter_id'];
+        $recruiter = $_REQUEST['recruiter'] ?? request('recruiter', '');
+        $recruiter_id = $_REQUEST['recruiter_id'] ?? request('recruiter_id', '');
 
-        $this->recruiter = explode(',', $recruiter);
-        $recruiterId = explode(',', $recruiter_id);
+        $this->recruiter = explode(',', (string) $recruiter);
+        $company_id = (int) auth()->user()->company_id;
+
+        // Intent: Fast 0% server/DB read path for bench-candidates RM drawer via Redis L2 team roster
+        if (request('from') === 'bench-candidates' || strpos(url()->previous(), 'bench-candidates') !== false) {
+            $rmService = app(\App\Services\RelationshipManagerService::class);
+            $roster = $rmService->getTeamRoster($company_id);
+
+            $this->team = collect($roster)->map(fn ($u) => (object) [
+                'id'             => $u['id'],
+                'name'           => $u['fullName'],
+                'email'          => $u['email'],
+                'mobile'         => $u['phone'],
+                'phone'          => $u['phone'],
+                'designation'    => $u['role'],
+                'display_name'   => $u['role'],
+                'working_status' => $u['active'] ? 1 : 0,
+                'activeJobs'     => $u['activeJobs'],
+                'captainJobs'    => $u['captainJobs'],
+                'trmTalents'     => $u['trmTalents'],
+            ]);
+
+            $view = view('service_company.jobs.relationship-manager', $this->data)->render();
+
+            return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        }
+
         $recruiterId = array_values(
             array_filter(
                 array_map(
                     fn ($id) => (int) trim($id),
-                    explode(',', $recruiter_id)
+                    explode(',', (string) $recruiter_id)
                 )
             )
         );

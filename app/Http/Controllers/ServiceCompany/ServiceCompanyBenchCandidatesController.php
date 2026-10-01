@@ -31,6 +31,7 @@ use App\Models\User;
 use App\Services\BenchTalentHeroAnalytics;
 use App\Services\ElasticService;
 use App\Services\MailService;
+use App\Services\RelationshipManagerService;
 use App\Services\ShortlistBenchCandidateListingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -2533,65 +2534,112 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     }
 
-    public function hmlisting($id)
+    /**
+     * Intent: Load Relationship Manager listing for a bench candidate.
+     * Tenancy: Scoped strictly by authenticated user's company_id.
+     * Performance: 0% MySQL reads on warm cycles via Redis L2 team roster cache.
+     * Supports both JSON API response (for Client-First RAM Store) and Blade HTML fallback.
+     */
+    public function hmlisting($id, RelationshipManagerService $rmService)
     {
-        $this->currentBenchId = $id;
+        $company_id = (int) auth()->user()->company_id;
+        $this->currentBenchId = (int) $id;
         $this->recruiter = [];
 
-        $company_id = auth()->user()->company_id;
-        $this->team = DB::table('users')
-            ->leftJoin('bench_assign', function ($join) use ($id) {
-                $join->on('bench_assign.user_id', '=', 'users.id');
-                $join->on('bench_assign.bench_applications_id', '=', DB::raw("'".$id."'"));
-            })
-            ->leftjoin('role_user', 'role_user.user_id', 'users.id')
-            ->leftjoin('roles', 'roles.id', 'role_user.role_id')
-            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->select(
-                'users.id',
-                'users.name',
-                'users.email',
-                'users.working_status',
-                'bench_assign.id as bench_assign_id',
-                'bench_assign.bench_applications_id',
-                'users_profile.designation as display_name'
-            )
-            ->where('users.company_id', $company_id)
-            ->where('users.status', '=', 'active')
-            ->orderByDesc('bench_assign.user_id')
-            ->orderBy('users.name', 'asc')
-            ->groupBy('users.id')
-            ->get();
+        // 1. Retrieve cached company team roster (0 MySQL reads on warm visits)
+        $roster = $rmService->getTeamRoster($company_id);
+
+        // 2. Retrieve currently assigned RM IDs for this bench candidate
+        $assignedIds = $rmService->getAssignedBenchRmIds($this->currentBenchId, $company_id);
+        $assignedMap = array_flip($assignedIds);
+
+        // If client requested pure JSON (Client-First RAM Engine)
+        if (request()->wantsJson() || request('format') === 'json') {
+            return Reply::dataOnly([
+                'status'       => 'success',
+                'candidate_id' => $this->currentBenchId,
+                'assigned_ids' => $assignedIds,
+                'team'         => $roster,
+            ]);
+        }
+
+        // Map assigned status onto team collection for Blade view rendering
+        $this->team = collect($roster)->map(function ($u) use ($assignedMap, $id) {
+            $isAssigned = isset($assignedMap[$u['id']]);
+
+            return (object) [
+                'id'                    => $u['id'],
+                'name'                  => $u['fullName'],
+                'email'                 => $u['email'],
+                'working_status'        => $u['active'] ? 1 : 0,
+                'bench_assign_id'       => $isAssigned ? 1 : null,
+                'bench_applications_id' => $isAssigned ? (int) $id : null,
+                'display_name'          => $u['role'],
+                'activeJobs'            => $u['activeJobs'],
+                'captainJobs'           => $u['captainJobs'],
+                'trmTalents'            => $u['trmTalents'],
+            ];
+        });
+
+        $this->assignedIds = $assignedIds;
         $view = view('service_company.bench-candidates.hmlisting', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly(['status' => 'success', 'view' => $view, 'assigned_ids' => $assignedIds]);
     }
 
-    public function hmlistingupdate(Request $request)
+    /**
+     * Intent: Assign or remove a Relationship Manager for a bench candidate.
+     * Tenancy: Scoped strictly by company_id.
+     * Concurrency: Protected by distributed Redis lock and synchronous ES sync.
+     */
+    public function hmlistingupdate(Request $request, RelationshipManagerService $rmService)
     {
-        $company_id = auth()->user()->company_id;
-        $assignStatus = $request->assignStatus;
-        $currentBenchId = $request->currentBenchId;
-        $currentUserId = $request->currentUserId;
+        $company_id     = (int) auth()->user()->company_id;
+        $operatorUserId = (int) auth()->user()->id;
+        $assignStatus   = (int) $request->assignStatus;
+        $currentBenchId = (int) ($request->currentBenchId ?? $request->candidate_id ?? $request->id);
+        $currentUserId  = (int) ($request->currentUserId ?? $request->user_id);
 
-        $cachekeys = [
-            'allbenchcandidates_version_user_'.$this->user->id,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
+        $result = $rmService->updateBenchCandidateRm(
+            $currentBenchId,
+            $currentUserId,
+            $assignStatus,
+            $company_id,
+            $operatorUserId
+        );
+
+        if ($result['status'] === 'error') {
+            return Reply::dataOnly(['status' => 'error', 'msg' => $result['message']]);
         }
 
-        if ($assignStatus == 1) {
-            DB::table('bench_assign')->where('bench_applications_id', $currentBenchId)->where('user_id', $currentUserId)->where('company_id', $company_id)->delete();
+        return Reply::dataOnly([
+            'status'         => 'success',
+            'msg'            => $result['msg'],
+            'action'         => $result['action'],
+            'is_assigned'    => $result['is_assigned'],
+            'candidate_id'   => $currentBenchId,
+            'user_id'        => $currentUserId,
+            'assigned_count' => $result['assigned_count'],
+            'first_manager'  => $result['first_manager'],
+            'assigned_rms'   => $result['assigned_rms'],
+        ]);
+    }
 
-            return Reply::dataOnly(['status' => 'success', 'msg' => 'Remove Record successfully.']);
-        } else {
-            DB::table('bench_assign')->where('bench_applications_id', $currentBenchId)->where('user_id', $currentUserId)->where('company_id', $company_id)->delete();
-            $values = ['company_id' => $company_id, 'user_id' => $currentUserId, 'bench_applications_id' => $currentBenchId];
-            DB::table('bench_assign')->insert($values);
+    /**
+     * Intent: Slim JSON endpoint for Client-First RAM Store (window.JeroRmStore).
+     * Tenancy: Scoped by company_id.
+     */
+    public function rmRosterJson(RelationshipManagerService $rmService)
+    {
+        $company_id = (int) auth()->user()->company_id;
+        $roster = $rmService->getTeamRoster($company_id);
+        $epoch = (int) Cache::get("bench:tenant:{$company_id}:epoch", 1);
 
-            return Reply::dataOnly(['status' => 'success', 'msg' => 'Added Record successfully.']);
-        }
+        return response()->json([
+            'status' => 'success',
+            'epoch'  => $epoch,
+            'team'   => $roster,
+        ]);
     }
 
     public function bench_application_status(Request $request, $id)
