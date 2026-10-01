@@ -850,17 +850,18 @@ if($snp_mode== 1){
 
                 <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
                   <div class="fg fv-row pd-field">
-                    <label>Employment Type <span class="rq">*</span></label>
+                    <label>Client Engagement Model <span class="rq">*</span></label>
                     <div class="pd-control pd-control--select">
-                      <i class="fa-solid fa-users"></i>
+                      <i class="fa-solid fa-handshake"></i>
                       <select name="employmentType" id="EmploymentType">
-                        <option value="">Select employment type</option>
-                        <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                        <option {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract</option>
-                        <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                        <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                        <option value="">Select engagement model</option>
+                        <option value="Contract" {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract / C2C / C2H / Staff Augmentation</option>
+                        <option value="Full Time" {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Direct Hire / Permanent Placement</option>
+                        <option value="Freelance" {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance / Fractional Consulting</option>
+                        <option value="Part Time" {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part-Time Contract</option>
                       </select>
                     </div>
+                    <small>Select how this talent will be deployed to clients in the marketplace.</small>
                   </div>
                   <div class="fg fv-row d-none">
                       <label>Commission Type <span class="rq">*</span></label>
@@ -880,7 +881,7 @@ if($snp_mode== 1){
                     <label>Employee ID <span>(Optional)</span></label>
                     <div class="pd-control">
                       <i class="fa-regular fa-id-card"></i>
-                      <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                      <input type="text" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
                     </div>
                     <small>Internal employee identifier</small>
                   </div>
@@ -2176,8 +2177,8 @@ $(document).ready(function () {
     $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
     $('#talent-stage-placed').on('click', function () {
         Swal.fire({
-            title: 'Talent Already Placed',
-            html: 'No client has selected this talent yet. Change the stage to <strong>Bench</strong> to make the talent available for new client opportunities.',
+            title: 'Direct Placement Requires an Active Client Requisition',
+            html: 'Talent cannot be added directly as <strong>Placed</strong> during initial creation. Please save this talent under <strong>Bench</strong> or <strong>Pool</strong> first, then place them directly through a client job pipeline.',
             icon: 'info',
             confirmButtonText: 'Got it'
         });
@@ -5314,7 +5315,7 @@ var fieldConfigMap = {
     'gender': { label: 'Gender', selector: '#gender', message: 'Gender is required.' },
     'current_company': { label: 'Current Company', selector: '#current_company', message: 'Current company is required.' },
     'current_designation': { label: 'Current Designation', selector: '#current_designation', message: 'Current designation is required.' },
-    'employmentType': { label: 'Employment Type', selector: '#EmploymentType', message: 'Employment type is required.' },
+    'employmentType': { label: 'Client Engagement Model', selector: '#EmploymentType', message: 'Client engagement model is required.' },
     'total_exp': { label: 'Total Experience', selector: '#total_exp_year', message: 'Total experience is required.' },
     'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year', message: 'Relevant experience is required.' },
     'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period', message: 'Availability is required.' },
@@ -5491,7 +5492,7 @@ function detectMissingFields(formEl, validatorInstance) {
     if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation');
 
     var et = ($('#EmploymentType').val() || '').trim();
-    if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType');
+    if (!et) addMissing('employmentType', 'Client Engagement Model', '#EmploymentType');
 
     var te = $('#total_exp_year').val();
     if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
@@ -5947,7 +5948,7 @@ var KTAddCandidate = function () {
                     'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
                     'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
                     'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
-                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Client Engagement Model is required"}} },
                     'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
                     'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
                     'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
@@ -6157,7 +6158,7 @@ var KTEditCandidate = function () {
                     'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
                     'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
                     'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
-                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Client Engagement Model is required"}} },
                     'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
                     'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
                     'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
