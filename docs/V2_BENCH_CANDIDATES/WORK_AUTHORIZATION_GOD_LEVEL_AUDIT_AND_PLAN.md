@@ -367,3 +367,71 @@ To future-proof for candidates holding multiple legal authorizations (e.g. US + 
 - **Phase 3 — Elasticsearch Projection:** Update `GeneralMethod` to project `work_authorizations[]` into ES with idempotency guards.
 - **Phase 4 — Recruiter Discovery:** Update candidate drawer and listings with prioritized badges (`H-1B`, `C2C/W2`, `Exp: Aug 2027`).
 - **Phase 5 — Load & Concurrency Testing:** Validate under 10K concurrency load and test legacy candidate integrity.
+
+---
+
+## 10. Global Expansion Framework: 240+ Country Generative Taxonomy (Future Reference & Roadmap)
+
+> **Strategic Purpose:** As JERO expands into a truly global talent marketplace, recruiters will trade and place bench candidates across Latin America (Brazil, Mexico, Argentina), Europe (Germany, France, Netherlands, Poland), APAC (Japan, South Korea, Philippines, Vietnam), the Middle East (Saudi Arabia, Qatar), and Africa (Nigeria, South Africa, Kenya). This framework specifies the universal generative engine for all 240+ countries without causing DOM bloat or server strain.
+
+### 10.1 Two-Tier Country Architecture
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ TIER 1: Core High-Volume Tech Hubs (Handcrafted & Specialized Visa Programs) │
+│   • United States (US): H-1B, Green Card, GC-EAD, H-4 EAD, TN, OPT, E-3, O-1  │
+│   • United Arab Emirates (AE): Golden Visa, Green Visa, Employment, Iqama   │
+│   • Singapore (SG): Employment Pass (EP), S Pass, ONE Pass, LOC             │
+│   • United Kingdom (GB): Skilled Worker, ILR, Graduate Visa, Youth Mobility │
+│   • Canada (CA): PR, Open Work Permit / PGWP, LMIA Closed Permit            │
+│   • India (IN): Citizen / Domestic Right to Work, OCI/PIO, Employment Visa  │
+│   • Australia & NZ (AU/NZ): TSS 482, Skilled 189/190, Graduate 485, SCV 444 │
+│   • European Union (EU): EU Blue Card, EU Citizen                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ TIER 2: Worldwide Generative Taxonomy (All 240+ Countries via ISO 3166-1)   │
+│   Generates 7 universal, legally sound right-to-work statuses dynamically: │
+│     1. [Country] - Citizen / National                                       │
+│     2. [Country] - Permanent Resident (PR)                                  │
+│     3. [Country] - Work Visa / Employment Permit (Company Sponsored)        │
+│     4. [Country] - Open / Temporary Work Permit                             │
+│     5. [Country] - Student Work Authorization (Post-Study / Part-Time)      │
+│     6. [Country] - Digital Nomad / Remote Contractor Visa                   │
+│     7. [Country] - Requires Visa Sponsorship                                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.2 Client-First Performance Architecture (Zero DOM Bloat / 10K Concurrency)
+- **Why NOT hardcode in Blade HTML:**  
+  Hardcoding 240 countries × 7 options = **1,680 `<option>` tags** directly in the Blade HTML would inflate page payload by ~150 KB, increase initial DOM parsing latency, and cause UI stutter on 15.6" screens and mobile devices.
+- **Client-First / User RAM Engine (Rule 3 & 4):**  
+  The 240-country master list is maintained in an immutable, cached client asset (`public/country-state-city/countries.json`). When a recruiter types a non-Tier-1 country (e.g. *"Germany"*, *"Japan"*, *"Brazil"*) into the top search box, the client-side JavaScript dynamically generates the 7 standardized options in **User RAM with 0ms server latency and 0% server read strain**.
+
+### 10.3 Canonical Code Generation Formula for 240+ Countries
+To maintain clean, strongly-typed Elasticsearch indexing without database schema alterations:
+- **Formula:** `{ISO2}_{CATEGORY_KEY}`
+- **Examples:**
+  - **Germany (DE):** `DE_CITIZEN`, `DE_PR`, `DE_WORK_VISA`, `DE_OPEN_WP`, `DE_STUDENT_WORK`, `DE_NOMAD`, `DE_REQ_SPONSOR`
+  - **Japan (JP):** `JP_CITIZEN`, `JP_PR`, `JP_WORK_VISA`, `JP_OPEN_WP`, `JP_STUDENT_WORK`, `JP_NOMAD`, `JP_REQ_SPONSOR`
+  - **Brazil (BR):** `BR_CITIZEN`, `BR_PR`, `BR_WORK_VISA`, `BR_OPEN_WP`, `BR_STUDENT_WORK`, `BR_NOMAD`, `BR_REQ_SPONSOR`
+  - **Saudi Arabia (SA):** `SA_CITIZEN`, `SA_PR`, `SA_WORK_VISA`, `SA_OPEN_WP`, `SA_STUDENT_WORK`, `SA_NOMAD`, `SA_REQ_SPONSOR`
+  - **Nigeria (NG):** `NG_CITIZEN`, `NG_PR`, `NG_WORK_VISA`, `NG_OPEN_WP`, `NG_STUDENT_WORK`, `NG_NOMAD`, `NG_REQ_SPONSOR`
+
+### 10.4 Elasticsearch Projection for Global Candidates
+Every generated code projects cleanly into the `work_authorizations[]` Elasticsearch array:
+```json
+{
+  "work_authorizations": [
+    {
+      "jurisdiction": "DE",
+      "code": "DE_WORK_VISA",
+      "category": "WORK_VISA",
+      "display_label": "Germany - Work Visa / Employment Permit",
+      "sponsorship_requirement": "IMMEDIATE_REQUIRED",
+      "has_expiry": true,
+      "taxonomy_version": "WA-2026.10"
+    }
+  ]
+}
+```
+
+### 10.5 Implementation Trigger
+This Tier-2 dynamic generative engine can be activated via feature flag `feature.global_work_auth_enabled` when JERO officially opens marketplace onboarding for hiring companies outside the top 8 staffing hubs.
