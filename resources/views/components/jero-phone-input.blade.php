@@ -137,6 +137,9 @@
         </span>
     </div>
 
+    <!-- Dedicated Validation Error Feedback Container (Outside the 38px group to prevent flex compression & badge overlap) -->
+    <div class="fv-plugins-message-container invalid-feedback jero-phone-error-msg" id="{{ $id }}_error" style="display: none;"></div>
+
     <!-- IN-PLACE POPUP DROPDOWN (Direct Child of Wrapper, Scoped & 100% Collision Safe) -->
     <div class="jero-country-dropdown card shadow-lg border"
          id="{{ $id }}_dropdown"
@@ -219,6 +222,8 @@
 
 .jero-phone-input-group.is-invalid,
 .jero-phone-box-wrapper .jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper.is-invalid .jero-phone-input-group,
+.jero-phone-box-wrapper:has(.is-invalid) .jero-phone-input-group,
 .jero-phone-box-wrapper .jero-phone-input-group:has(.is-invalid) {
   border-color: #f1416c !important;
   box-shadow: 0 0 0 3px rgba(241, 65, 108, 0.12) !important;
@@ -388,6 +393,54 @@
   outline: none !important;
   background: transparent !important;
   background-color: transparent !important;
+}
+
+/* Neutralize Bootstrap / FormValidation invalid state on input (suppress red exclamation icon, maintain padding) */
+.jero-phone-main-input.is-invalid,
+.jero-phone-main-input:invalid,
+.jero-phone-input-group input.is-invalid,
+.jero-phone-input-group input:invalid {
+  border: 0 none transparent !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  padding: 0 54px 0 10px !important;
+}
+
+/* Hide any rogue validation message container or plugin icon injected inside the 38px flex group */
+.jero-phone-input-group > .fv-plugins-message-container,
+.jero-phone-input-group > .invalid-feedback,
+.jero-phone-input-group > label.error,
+.jero-phone-input-group .fv-plugins-icon,
+.jero-phone-input-group i.fv-plugins-icon {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Dedicated validation error message outside the 38px input group */
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg,
+.jero-phone-box-wrapper > .fv-plugins-message-container {
+  display: block;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #f1416c !important;
+  margin-top: 4px !important;
+  padding-left: 2px !important;
+  line-height: 1.3 !important;
+  width: 100% !important;
+  clear: both !important;
+}
+
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg:empty,
+.jero-phone-box-wrapper > .fv-plugins-message-container:empty {
+  display: none !important;
 }
 
 /* Real-time digit counter badge */
@@ -635,6 +688,8 @@
     const hiddenCode = wrapper.querySelector('.jero-phone-country-code-input') || wrapper.querySelector('input[type="hidden"]');
     const input = wrapper.querySelector('input[type="tel"]');
     const counter = wrapper.querySelector('.jero-digit-counter');
+    const inputGroup = wrapper.querySelector('.jero-phone-input-group');
+    const errorContainer = wrapper.querySelector(`#${input ? input.id : ''}_error`) || wrapper.querySelector('.jero-phone-error-msg');
     const defaultIso = (wrapper.getAttribute('data-default-iso') || 'IN').toUpperCase();
 
     if (!btn || !dropdown || !searchInput || !countryList || !input || !hiddenCode) return;
@@ -878,6 +933,17 @@
       const clean = this.value.replace(/[^\d]/g, '');
       if (this.value !== clean) this.value = clean;
       updateCounter(currentCountry ? currentCountry.len : 10);
+      input.classList.remove('is-invalid');
+      if (inputGroup) inputGroup.classList.remove('is-invalid');
+      if (errorContainer) {
+        errorContainer.style.display = 'none';
+        errorContainer.innerHTML = '';
+      }
+      const rogueInWrapper = wrapper.querySelectorAll('.fv-plugins-message-container:not(.jero-phone-error-msg)');
+      rogueInWrapper.forEach(function(r) {
+        r.innerHTML = '';
+        r.style.display = 'none';
+      });
     });
 
     // Smart paste handling
@@ -906,6 +972,62 @@
       updateCounter(len);
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
+
+    // Validation Conflict Resolution & Interception
+    // 1. Intercept rogue FormValidation / jQuery Validate feedback nodes and icons injected inside 38px group
+    if (inputGroup && errorContainer && window.MutationObserver && !inputGroup._hasValidationObserver) {
+      inputGroup._hasValidationObserver = true;
+      const groupObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) {
+              const isFeedback = node.classList && (
+                node.classList.contains('fv-plugins-message-container') ||
+                node.classList.contains('invalid-feedback') ||
+                (node.tagName === 'LABEL' && node.classList.contains('error'))
+              );
+              const isIcon = node.classList && (
+                node.classList.contains('fv-plugins-icon') ||
+                node.classList.contains('fv-plugins-bootstrap5-icon')
+              );
+
+              if (isFeedback) {
+                const text = (node.innerText || node.textContent || '').trim();
+                if (text && errorContainer) {
+                  errorContainer.innerHTML = node.innerHTML || `<div class="fv-help-block">${text}</div>`;
+                  errorContainer.style.display = 'block';
+                  inputGroup.classList.add('is-invalid');
+                }
+                try { node.remove(); } catch (e) {}
+              } else if (isIcon) {
+                try { node.remove(); } catch (e) {}
+              }
+            }
+          });
+        });
+      });
+      groupObserver.observe(inputGroup, { childList: true });
+    }
+
+    // 2. Observe input for is-invalid class added by FormValidation
+    if (input && inputGroup && window.MutationObserver && !input._hasValidationClassObserver) {
+      input._hasValidationClassObserver = true;
+      const inputClassObserver = new MutationObserver(function() {
+        if (input.classList.contains('is-invalid')) {
+          inputGroup.classList.add('is-invalid');
+          if (errorContainer && errorContainer.textContent.trim()) {
+            errorContainer.style.display = 'block';
+          }
+        } else {
+          inputGroup.classList.remove('is-invalid');
+          if (errorContainer) {
+            errorContainer.style.display = 'none';
+            errorContainer.innerHTML = '';
+          }
+        }
+      });
+      inputClassObserver.observe(input, { attributes: true, attributeFilter: ['class'] });
+    }
 
     // Initial counter render
     updateCounter(currentCountry ? currentCountry.len : 10);
