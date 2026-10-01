@@ -805,9 +805,9 @@ if ($page_event == 'EDIT') {
       // Allow only numbers
       this.value = this.value.replace(/\D/g, '');
 
-      // Restrict to 10 digits
-      if (this.value.length > 10) {
-          this.value = this.value.slice(0, 10);
+      // Restrict to 15 digits (ITU-T E.164 standard)
+      if (this.value.length > 15) {
+          this.value = this.value.slice(0, 15);
       }
 
   });
@@ -878,6 +878,7 @@ if ($page_event == 'EDIT') {
   $(document).ready(function () {
     // Initialize intl-tel-input for existing contact number fields
       function initializeIntlTelInput(inputElement,initialCountry='in') {
+          if (!inputElement || typeof window.intlTelInput !== 'function') return null;
           return window.intlTelInput(inputElement, {
               separateDialCode: true,
               initialCountry: initialCountry, // Default country
@@ -895,19 +896,14 @@ if ($page_event == 'EDIT') {
       addmewdddd();
 
     function updateCountryCode(inputField,ele) {
+      if (typeof window.intlTelInputGlobals === 'undefined' || !window.intlTelInputGlobals.getInstance) return;
       const itiInstance = window.intlTelInputGlobals.getInstance(inputField);
 
-      console.log(inputField);
-      console.log($(inputField).val());
-         console.log($(inputField).closest(".iti").html());
-          if (itiInstance) {
-              const selectedCountryData = itiInstance.getSelectedCountryData();
-              const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-              // alert(countryCode);
-              // Assuming you have a hidden input to store the country code
-              ele.closest('.client-cperson-container-child').find("input[name='calling_code[]']").val(countryCode);
-          }
-
+      if (itiInstance) {
+          const selectedCountryData = itiInstance.getSelectedCountryData();
+          const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
+          ele.closest('.client-cperson-container-child').find("input[name='calling_code[]']").val(countryCode);
+      }
     }
 
     $(document).on('click','.iti__flag-container',function(){
@@ -1857,9 +1853,9 @@ for (let i = 0; i < countAddrees; i++) {
       $firstBad = $firstBad || $('#client_drawer_email');
       valid = false;
     }
-    if (phone && (phone.length !== 10 || isNaN(phone))) {
+    if (phone && (phone.length < 6 || phone.length > 15 || isNaN(phone))) {
       $('#client_drawer_phone').addClass('is-invalid');
-      $('#cdf_err_phone').text('Please enter a valid 10-digit phone number.').addClass('visible');
+      $('#cdf_err_phone').text('Please enter a valid phone number (6-15 digits).').addClass('visible');
       $firstBad = $firstBad || $('#client_drawer_phone');
       valid = false;
     }

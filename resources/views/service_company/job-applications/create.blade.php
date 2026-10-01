@@ -15,7 +15,109 @@
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926" rel="stylesheet" type="text/css" />
-
+<style>
+/* Scoped Enterprise Currency Select2 Dropdown on Add Candidate Page */
+.job-candidate-create .candidate-salary-header-currency {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 290px;
+    max-width: 380px;
+}
+.job-candidate-create .candidate-salary-header-currency > label {
+    margin: 0;
+    color: var(--jac-text);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.job-candidate-create .candidate-salary-header-currency .select2-container {
+    flex: 1 1 auto;
+    min-width: 220px;
+}
+.job-candidate-create .candidate-salary-header-currency .select2-container--default .select2-selection--single {
+    height: 38px;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 30px;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.job-candidate-create .candidate-salary-header-currency .select2-container--default.select2-container--open .select2-selection--single,
+.job-candidate-create .candidate-salary-header-currency .select2-container--default .select2-selection--single:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    outline: none;
+}
+.job-candidate-create .candidate-salary-header-currency .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    top: 1px;
+    right: 8px;
+}
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+@media (max-width: 767px) {
+    .job-candidate-create .candidate-salary-header-currency {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-top: 8px;
+    }
+}
+</style>
 @endpush
 
 @section('content')
@@ -435,7 +537,16 @@
                   </div>
                   <div class="fg fv-row">
                     <label>Primary Contact Number <span class="rq">*</span></label>
-                    <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code"></div></div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
                     <label>Current Location <span class="rq">*</span></label>
@@ -496,7 +607,16 @@
                     </div>
                     <div class="fg fv-row">
                       <label>Secondary Contact Number</label>
-                      <div class="candidate-field-control candidate-phone-control"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><div class="ig"><input type="number" name="secondary_mobile" id="secondary_mobile" value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number" style="padding-left: 76px !important; width: 307px;" /><input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code" name="secondary_country_code"></div></div>
+                      <x-jero-phone-input
+                          id="secondary_mobile"
+                          name="secondary_mobile"
+                          countryCodeName="secondary_country_code"
+                          countryCodeId="secondary_country_code"
+                          :value="@$application->secondary_mobile"
+                          :countryCode="@$second_phone_code"
+                          label=""
+                          :required="false"
+                          placeholder="Enter secondary number" />
                     </div>
                   </div>
                 </details>
@@ -741,7 +861,7 @@
                 </div>
                 <div class="candidate-salary-header-currency">
                   <label for="current_ctc_cur">Currency</label>
-                  <select id="current_ctc_cur" name="current_ctc_cur">
+                  <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                     @php
                         $current_ctc_cur = "";
                         $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
@@ -756,7 +876,11 @@
                                 $sel = 'selected="selected"';
                               }
                             }
-                            echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                            $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                            $entLabel = $cMeta['label'];
+                            $keywords = $cMeta['keywords'];
+
+                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';
                         }
                     @endphp
                   </select>
@@ -765,7 +889,7 @@
                       @php
                           foreach($currency as $key=>$val){
                               $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
-                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
                           }
                       @endphp
                     </select>
@@ -773,7 +897,7 @@
                       @php
                           foreach($currency as $key=>$val){
                               $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
-                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
                           }
                       @endphp
                     </select>
@@ -2224,50 +2348,10 @@ var cities = @json($cities);
 
 
     $(document).ready(function () {
-      // Initialize intl-tel-input for Primary and Secondary phone fields
-      const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-        separateDialCode: true,
-        initialCountry: "{{ $phone_code }}",
-        preferredCountries: ["in", "us", "gb", "ca", "au"],
-      });
-
-      const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
-        separateDialCode: true,
-        initialCountry: "{{ $second_phone_code }}",
-        preferredCountries: ["in", "us", "gb", "ca", "au"],
-      });
-
-        // Function to update hidden country code inputs
-      function updateCountryCode(inputField, hiddenField) {
-        const selectedCountryData = inputField.getSelectedCountryData();
-        //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-        const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-        $(hiddenField).val(countryCode);
-
+      // JERO Enterprise Phone Box auto-initializes on load
+      if (window.JeroPhoneBox) {
+        window.JeroPhoneBox.initAll();
       }
-      // Update country code on input or country flag selection
-      $("#phone").on("input change", function () {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      });
-
-      $("#secondary_mobile").on("input change", function () {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      });
-      // Update country code dynamically when the user selects a different country flag
-      $(".iti__flag-container").on("click", function (event) {
-        const targetInput = $(event.target).closest(".iti").find("input");
-
-        if (targetInput.is("#phone")) {
-          updateCountryCode(primaryPhoneInput, "#primary_country_code");
-        } else if (targetInput.is("#secondary_mobile")) {
-          updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-        }
-      });
-
-      setTimeout(function () {	
-        $(".iti__flag-container").click();
-      },500);
-
     });
 
 
@@ -2360,8 +2444,8 @@ async function isInternetAvailable() {
                         validators:
                         {
                             notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Primary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -2369,8 +2453,8 @@ async function isInternetAvailable() {
                     {
                         validators:
                         {
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Secondary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -3710,8 +3794,8 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Primary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -3720,8 +3804,8 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Secondary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -4331,10 +4415,15 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 
     function currencyLabel() {
         if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) {
-            return '';
+            return 'INR';
         }
 
-        return salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex].text.trim();
+        var opt = salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex];
+        var code = opt.getAttribute('data-code');
+        if (!code) {
+            code = opt.text.trim().split('—')[0].split('-')[0].trim();
+        }
+        return (code || 'INR').toUpperCase();
     }
 
     function formatAmount(value) {
@@ -4521,7 +4610,49 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     });
     if (salaryCurrencySelect) {
         salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
+
+        if (window.jQuery && $.fn.select2) {
+            var $curSelect = $(salaryCurrencySelect);
+            if ($curSelect.hasClass('select2-hidden-accessible')) {
+                $curSelect.select2('destroy');
+            }
+            $curSelect.select2({
+                width: '100%',
+                dropdownParent: $(document.body),
+                dropdownCssClass: 'br-currency-select2-dropdown',
+                placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+                minimumResultsForSearch: 0,
+                matcher: function (params, data) {
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    if (typeof data.text === 'undefined') {
+                        return null;
+                    }
+                    var term = params.term.toLowerCase();
+                    var text = data.text.toLowerCase();
+                    var $el = $(data.element);
+                    var code = ($el.data('code') || '').toString().toLowerCase();
+                    var searchKw = ($el.data('search') || '').toString().toLowerCase();
+
+                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                        return data;
+                    }
+                    return null;
+                }
+            }).on('change', function () {
+                syncSalaryCurrency();
+            });
+        }
     }
+
+    $(document).on('click', '.candidate-salary-panel .changeTextCurrency, .candidate-salary-panel .ig-a', function () {
+        if (window.jQuery && $.fn.select2 && $('#current_ctc_cur').hasClass('select2-hidden-accessible')) {
+            $('#current_ctc_cur').select2('open');
+        } else if (salaryCurrencySelect) {
+            salaryCurrencySelect.focus();
+        }
+    });
 
     syncSalaryPeriod(activeSalaryPeriod());
     syncSalaryCurrency();

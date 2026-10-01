@@ -99,6 +99,53 @@ body
    font-size: 1rem!important;
 }
 /*Multi dropdown css*/
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
 </style>
 @endpush
 @section('content')
@@ -512,19 +559,20 @@ body
                                        <div class="row">
                                           <div class="">
                                              <select class="form-select form-select-solid" arial-label="Select Currency" name="salary_currency" id="salary_currency">
-                                             <?php 
-                                                foreach($currency as $key=>$val)
-                                                {
-                                                	$min_salary_currency		=	$sel	=	'';
-                                                	$min_salary_currency		=	@$job->min_salary_currency;
-                                                	if($min_salary_currency == @$key )
-                                                	{
-                                                		$sel		=	'selected="selected"' ;	
-                                                	}
-                                                	echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                                                }
-                                                ?>	
-                                             </select>
+                              <?php 
+                                foreach($currency as $key=>$val)
+                                {
+                                  $min_salary_currency = $sel = "";
+                                  $min_salary_currency = @$job->min_salary_currency;
+                                  if($min_salary_currency == @$key )
+                                  {
+                                    $sel = "selected=\"selected\"";	
+                                  }
+                                  $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                  echo "<option value=\"" . $key . "\" data-code=\"" . e($val) . "\" " . $sel . ">" . e($cMeta["label"]) . "</option>";	
+                                }
+                                ?>
+                            </select>
                                           </div>
                                           <div class="">
                                              <input type="number" class="form-control form-control-solid" name="min_salary" id="min_salary" placeholder="From" value="<?php echo @$job->min_salary; ?>">
@@ -548,23 +596,25 @@ body
                                     <div class="col-lg-4">
                                        <label class="form-label required">Minimum Salary</label>
                                        <div class="row">
-                                          <div class="col-3 px-1">
-                                             <select class="form-select form-select-solid" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency">
-                                             <?php 
-                                                foreach($currency as $key=>$val)
-                                                {
-                                                	$min_salary_currency		=	$sel	=	'';
-                                                	$min_salary_currency		=	@$job->min_salary_currency;
-                                                	if($min_salary_currency == @$key )
-                                                	{
-                                                		$sel		=	'selected="selected"' ;	
-                                                	}
-                                                	echo '<option value="'.$key.'"  '.@$sel.'>'.$val.'</option>';	
-                                                }
-                                                ?>
-                                             </select>
-                                          </div>
-                                          <div class="col-5 px-0">
+                                          <div class="col-4 px-1">
+                            <select class="form-select form-select-solid select2-job-currency" arial-label="Select Currency" name="min_salary_currency" id="min_salary_currency" data-control="select2" data-placeholder="Search currency...">
+                              <?php 
+                                foreach($currency as $key=>$val)
+                                {
+                                  $min_salary_currency = $sel = "";
+                                  $min_salary_currency = @$job->min_salary_currency;
+                                  if($min_salary_currency == @$key )
+                                  {
+                                    $sel = "selected=\"selected\"";	
+                                  }
+                                  $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                  $short = !empty($cMeta["symbol"]) ? $cMeta["code"] . " (" . $cMeta["symbol"] . ")" : $cMeta["code"];
+                                  echo "<option value=\"" . $key . "\" data-code=\"" . e($val) . "\" data-short=\"" . e($short) . "\" data-search=\"" . e($cMeta["keywords"]) . "\" " . $sel . ">" . e($cMeta["label"]) . "</option>";	
+                                }
+                                ?>
+                            </select>
+                          </div>
+                          <div class="col-4 px-0">
                                              <input type="number" class="form-control form-control-lg form-control-solid" name="minimum_salary" id="minimum_salary" placeholder="Enter min salary" value="<?php echo @$job->min_salary; ?>">
                                           </div>
                                           <div class="col-4 px-1">
@@ -589,24 +639,25 @@ body
                                     <div class="col-lg-4">
                                        <label class="form-label required">Maximum Salary</label>
                                        <div class="row">
-                                          <div class="col-3 px-1">
-                                             <select class="form-select form-select-solid" arial-label="Select Currency" name="max_salary_currency" id="max_salary_currency">
-                                             <?php 
-                                                foreach($currency as $key=>$val)
-                                                {
-                                                	$max_salary_currency		=	$sel	=	'';
-                                                	$max_salary_currency		=	@$job->max_salary_currency;
-                                                	if($max_salary_currency == @$key )
-                                                	{
-                                                		$sel		=	'selected="selected"' ;	
-                                                	}
-                                                	
-                                                	echo '<option value="'.$key.'"  '.@$sel.'>'.$val.'</option>';	
-                                                }
-                                                ?>
-                                             </select>
-                                          </div>
-                                          <div class="col-5 px-0">
+                                          <div class="col-4 px-1">
+                            <select class="form-select form-select-solid select2-job-currency" arial-label="Select Currency" name="max_salary_currency" id="max_salary_currency" data-control="select2" data-placeholder="Search currency...">
+                              <?php 
+                                foreach($currency as $key=>$val)
+                                {
+                                  $max_salary_currency = $sel = "";
+                                  $max_salary_currency = @$job->max_salary_currency;
+                                  if($max_salary_currency == @$key )
+                                  {
+                                    $sel = "selected=\"selected\"";	
+                                  }
+                                  $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
+                                  $short = !empty($cMeta["symbol"]) ? $cMeta["code"] . " (" . $cMeta["symbol"] . ")" : $cMeta["code"];
+                                  echo "<option value=\"" . $key . "\" data-code=\"" . e($val) . "\" data-short=\"" . e($short) . "\" data-search=\"" . e($cMeta["keywords"]) . "\" " . $sel . ">" . e($cMeta["label"]) . "</option>";	
+                                }
+                                ?>
+                            </select>
+                          </div>
+                          <div class="col-4 px-0">
                                              <input type="number" class="form-control form-control-lg form-control-solid" name="maximum_salary" id="maximum_salary" placeholder="Enter max salary" value="<?php echo @$job->max_salary; ?>">
                                           </div>
                                           <div class="col-4 px-1">
@@ -1457,7 +1508,7 @@ body
       				$('.span_qualification').html(qualification);	
    
    	
-   	var min_salary_currency		=	$('#min_salary_currency option:selected').text(); 
+   	var min_salary_currency		=	$('#min_salary_currency option:selected').data('code') || $('#min_salary_currency option:selected').text().split('—')[0].trim(); 
    	var minimum_salary			=	$('#minimum_salary').val(); 
    	var min_sal_mode			=	$('#min_sal_mode option:selected').text();   
    	var minSal					=   min_salary_currency +' '+minimum_salary +' '+ min_sal_mode;
@@ -1555,13 +1606,69 @@ body
    
    //updatefrm
    
+   function initJobCurrencySelect2() {
+       if (window.jQuery && $.fn.select2) {
+           $('.select2-job-currency').each(function() {
+               var $el = $(this);
+               if ($el.hasClass('select2-hidden-accessible')) {
+                   $el.select2('destroy');
+               }
+               $el.select2({
+                   width: '100%',
+                   dropdownParent: $(document.body),
+                   dropdownCssClass: 'br-currency-select2-dropdown',
+                   placeholder: 'Search currency...',
+                   minimumResultsForSearch: 0,
+                   templateSelection: function(data) {
+                       if (!data.id) return data.text;
+                       var $opt = $(data.element);
+                       var short = $opt.data('short') || $opt.data('code');
+                       return short ? short : data.text;
+                   },
+                   matcher: function (params, data) {
+                       if ($.trim(params.term) === '') {
+                           return data;
+                       }
+                       if (typeof data.text === 'undefined') {
+                           return null;
+                       }
+                       var term = params.term.toLowerCase();
+                       var text = data.text.toLowerCase();
+                       var $opt = $(data.element);
+                       var code = ($opt.data('code') || '').toString().toLowerCase();
+                       var searchKw = ($opt.data('search') || '').toString().toLowerCase();
+
+                       if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                           return data;
+                       }
+                       return null;
+                   }
+               });
+           });
+       }
+   }
+
+   $(document).ready(function() {
+       initJobCurrencySelect2();
+   });
+
    $('body').on('change', '#min_salary_currency', function(){
-   			var	min_salary_currency	=	$(this).val();
-   document.getElementById("max_salary_currency").selectedIndex = min_salary_currency;
+       var val = $(this).val();
+       if ($('#max_salary_currency').val() !== val) {
+           $('#max_salary_currency').val(val).trigger('change.select2');
+       }
+       if ($('#salary_currency').length) {
+           $('#salary_currency').val(val);
+       }
    });
    $('body').on('change', '#max_salary_currency', function(){
-   			var	max_salary_currency	=	$(this).val();
-   document.getElementById("min_salary_currency").selectedIndex = max_salary_currency;
+       var val = $(this).val();
+       if ($('#min_salary_currency').val() !== val) {
+           $('#min_salary_currency').val(val).trigger('change.select2');
+       }
+       if ($('#salary_currency').length) {
+           $('#salary_currency').val(val);
+       }
    });
    $('body').on('change', '#min_sal_mode', function(){
    			var	min_sal_mode	=	$(this).val();
