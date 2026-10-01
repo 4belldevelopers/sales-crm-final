@@ -1,34 +1,28 @@
-# Work Authorization & Placement Eligibility — Enterprise Architecture, Audit & Multi-Phase Implementation Plan (V2)
+# Work Authorization & Placement Eligibility — Production Specification & Hardened Architecture (V3 Final)
 
-> **Document Version:** 2.0 (Post-Architectural Review & Decoupling)  
-> **Status:** Architecture Approved / Ready for Phased Execution  
-> **Scope:** Service Company Bench Candidate Creation & Lifecycle (`resources/views/service_company/bench-candidates/create.blade.php`), Data Persistence, Elasticsearch Projection, and Recruiter Marketplace Discovery.  
-> **Core Architectural Principle:** Decouple legal right-to-work, tax engagement eligibility, sponsorship context, expiration tracking, and verification into a normalized **Work Authorization Profile**. Preserve `visastatu` strictly as a backward-compatible projection.
+> **Document Version:** 3.0 (Production Hardened — Implementation Ready)  
+> **Status:** Architecture Approved / Hardened / Implementation Ready  
+> **Scope:** Service Company Bench Candidate Creation & Lifecycle (`resources/views/service_company/bench-candidates/create.blade.php`), Data Persistence, Elasticsearch Projection (`ats_candidates_elastic`), and Recruiter Discovery.  
+> **Core Architectural Principle:** Decouple legal right-to-work, declared engagement models, sponsorship profile, temporal validity, and verification into a normalized multi-dimensional model. Preserve `visastatu` strictly as a backward-compatible display projection.
 
 ---
 
-## 1. Executive Summary & Review Verdict
+## 1. Executive Summary & Production Baseline
 
-The initial audit diagnosed the symptoms: a 5-item hardcoded select, domain inaccuracies (`F1` as work authorization), zero multi-geo support, and a copy-pasted UI banner. 
-
-However, cramming country, visa type, sponsorship, C2C/W2 eligibility, expiration, clearance, and verification into a single column (`visastatu`) is an architectural anti-pattern. 
+The V3 specification resolves all architectural, compliance, and data-integrity risks identified across technical reviews. 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                           ARCHITECTURAL ANTI-PATTERN                            │
-│  Attempting to make `visastatu` answer: Legal Right + Country + Sponsorship +   │
-│  Tax Engagement (C2C/W2) + Expiry + Verification in one flat string.            │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                       ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                       ENTERPRISE V2 MULTI-DIMENSIONAL MODEL                      │
+│                    V3 PRODUCTION MULTI-DIMENSIONAL ARCHITECTURE                 │
 │                                                                                 │
-│   1. Work Authorization (Country + Legal Right to Work + Permit Code)           │
-│   2. Sponsorship Context (Not Required / May Require Later / Required)         │
-│   3. Engagement Eligibility (C2C, W2, 1099, Direct Hire - Tax/Contract Model)   │
-│   4. Authorization Expiry (Conditional date picker & countdown alerts)          │
-│   5. Verification State (Self-Declared vs Document Provided vs Verified)       │
-│   6. Backward Compatibility Projection (`visastatu` preserved as display sync) │
+│   1. Work Authorization Jurisdiction (Country where legal right applies)        │
+│   2. Candidate Immigration Status (Canonical code from versioned taxonomy)      │
+│   3. Declared / Available Engagement Models (C2C, W2, 1099, Direct Hire)        │
+│   4. Sponsorship Profile (Candidate declaration vs Placement opportunity rule)   │
+│   5. Temporal Validity & Expiry (Conditional date picker + warning buckets)     │
+│   6. Verification Lifecycle (Self-Declared -> Document -> Review -> Verified)  │
+│   7. Security & Compliance Firewall (Zero sensitive PII/Doc numbers in ES)      │
+│   8. Dual-Storage & ES Projection (`work_authorizations[]` array schema)        │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -36,59 +30,93 @@ However, cramming country, visa type, sponsorship, C2C/W2 eligibility, expiratio
 
 ## 2. Multi-Dimensional Information Architecture
 
-### Dimension 1: Work Authorization (Where & What)
-- **Work Jurisdiction / Country:** Country where the candidate is legally permitted to work (US, CA, IN, UK, UAE, SG, AU, Other).
-- **Authorization Category:**
-  - Citizen
-  - Permanent Resident
-  - Open Work Permit
-  - Employer-Specific Work Permit
-  - Student / Training Authorization
-  - Not Applicable / Global Remote
-- **Canonical Authorization Code:** Stable, immutable identifiers (e.g., `US_CITIZEN`, `US_H1B`, `CA_PR`, `IN_CITIZEN`, `SG_EP`).
+### Dimension 1: Country, Citizenship & Work Jurisdiction
+The system strictly distinguishes three independent geographical dimensions:
+1. **Candidate Current Location:** Managed by JERO's existing location picker (`country`, `state`, `city_id`).
+2. **Candidate Citizenship:** Nationality/Citizenship of origin (`nationality` field).
+3. **Work Authorization Jurisdiction:** The sovereign country/region where the candidate possesses the legal right to work (e.g. US, CA, IN, UK, AE, SG, AU, Other).
 
-### Dimension 2: Sponsorship Profile
-Immigration sponsorship is not a universal constant; it is contextual to the hiring company and role:
-- `NOT_REQUIRED`: Candidate holds unrestricted authorization (Citizen, PR, EAD).
-- `FUTURE_REQUIRED`: Valid today, but will eventually require employer sponsorship petition (e.g. STEM-OPT, temporary permit).
-- `IMMEDIATE_REQUIRED`: Requires visa transfer or new petition sponsor prior to day 1 (e.g. H-1B transfer, E-3, O-1).
-- `Sponsorship Notes`: Optional text for recruiter context (e.g. *"I-140 approved, priority date 2018"*).
+### Dimension 2: Canonical Status Code & Taxonomy
+- **Stable Canonical Codes:** Immutable identifiers (e.g., `US_CITIZEN`, `US_H1B`, `CA_PR`, `IN_CITIZEN`, `AE_GOLDEN_VISA`, `SG_EP`).
+- **Human-Readable Labels:** Dynamically loaded from configuration (`config/work_authorization.php`).
+- **Taxonomy Versioning:** Every record stores `taxonomy_version` (e.g. `WA-2026.10`) for auditability.
 
-### Dimension 3: Engagement Eligibility (Commercial Model)
-> **Separation Principle:** Immigration authorization is legal compliance. C2C / W2 / 1099 is tax and commercial contracting. They must never be merged.
-- `C2C` (Corp-to-Corp): Prime vendor / employer-to-client staffing.
+### Dimension 3: Sponsorship Semantics (Candidate Profile vs Placement Opportunity)
+Sponsorship is separated into two distinct levels:
+1. **Candidate Profile (Declared Profile):**
+   - `NOT_REQUIRED`: Candidate holds unrestricted authorization (Citizen, PR, independent EAD).
+   - `FUTURE_REQUIRED`: Valid today, but will eventually require employer sponsorship petition (e.g. STEM-OPT, temporary permit).
+   - `IMMEDIATE_REQUIRED`: Requires visa transfer or new petition sponsor prior to day 1 (e.g. H-1B transfer, E-3, O-1).
+   - `sponsorship_default`: UI suggestion only derived from taxonomy; **must never overwrite explicit recruiter entry**.
+   - `sponsorship_notes`: Internal recruiter notes (e.g. *"I-140 approved, priority date 2018"*), marked as internal-only.
+2. **Placement / Opportunity Context:**
+   - Evaluated at submission time against the client requisition's sponsorship policy.
+
+### Dimension 4: Declared / Available Engagement Models
+> **Compliance Precision:** The system records *declared or available engagement preferences*, not legal certifications of C2C suitability.
+- `C2C` (Corp-to-Corp): Agency/employer billing to client.
 - `W2`: Direct vendor payroll or client payroll.
 - `1099`: Independent contractor / self-employed.
 - `DIRECT_HIRE`: Permanent full-time placement.
 
-### Dimension 4: Expiration & Temporal Validity
-- Displayed conditionally: Only shown when an authorization is expiring or temporary.
-- Fields: `Valid From` (optional), `Valid Until` (date).
-- Dynamic Recruiter Flags:
-  - `ACTIVE_HEALTHY` (> 90 days remaining)
+### Dimension 5: Temporal Validity & Warning State
+- **Conditional Visibility:** Expiry fields are revealed only when the selected authorization has `expires = true`.
+- **Warning States (No Automatic Hard Blocks):**
+  - `HEALTHY` (> 90 days remaining)
   - `EXPIRING_SOON` (30–90 days remaining — warning indicator)
-  - `CRITICAL` (< 30 days remaining — urgent extension required)
-  - `EXPIRED` (Expired date — submission blocked/flagged)
+  - `CRITICAL` (< 30 days remaining — high-priority renewal prompt)
+  - `EXPIRED` (Date in past — displays a prominent warning flag; submission eligibility is determined by placement context/client rules, not an automatic profile-level hard block).
 
-### Dimension 5: Verification & Trust State
-JERO does not certify legal status unless verified through an authoritative workflow:
-- `SELF_DECLARED`: Candidate or agency recruiter entered details without document upload.
-- `DOCUMENT_PROVIDED`: Right-to-work documents uploaded (I-797, Passport, EAD copy, Work permit).
-- `VERIFIED`: Operations/compliance team reviewed and approved documents.
-- `VERIFICATION_EXPIRED`: Periodic re-verification required (e.g. updated I-9 reverification).
+### Dimension 6: Verification Lifecycle
+Trust rating is explicitly auditable without making false legal certifications:
+```
+[SELF_DECLARED] ──> [DOCUMENT_PROVIDED] ──> [PENDING_REVIEW] ──> [VERIFIED]
+                                                 │
+                                                 └──> [REJECTED]
+[VERIFIED] ──(Validity Period Expired)──> [VERIFICATION_EXPIRED]
+```
+- Metadata tracked: `verification_status`, `verification_source` (`SELF_DECLARED`, `AGENCY_REVIEW`, `JERO_OPERATIONS`), `verified_at`, `verified_by`.
 
 ---
 
-## 3. Configuration-Driven Taxonomy (`config/work_authorization.php`)
+## 3. Mandatory Security & Compliance Firewall
 
-To prevent hardcoded business logic and endless Blade modifications, all taxonomies are defined in a centralized configuration file:
+> [!CAUTION]
+> **Strict ES Security Rule:** Elasticsearch must **NEVER** index or store sensitive immigration document identifiers or attachments.
+
+### Permitted in Elasticsearch (`ats_candidates_elastic`)
+- Canonical authorization code (`US_H1B`)
+- Work jurisdiction (`US`)
+- Expiry date and bucket (`2027-08-31`, `HEALTHY`)
+- Declared engagement models (`["C2C", "W2"]`)
+- Sponsorship profile (`IMMEDIATE_REQUIRED`)
+- Verification status enum (`VERIFIED`, `SELF_DECLARED`)
+
+### Strictly Forbidden in Elasticsearch (Restricted to Encrypted MySQL / Private Storage)
+- ❌ Passport numbers
+- ❌ USCIS Alien / Registration numbers (A-Number)
+- ❌ Form I-797 receipt or approval numbers
+- ❌ EAD document numbers
+- ❌ Document binary contents or unauthenticated presigned URLs
+- ❌ Sensitive internal legal/compliance notes
+
+---
+
+## 4. Configuration-Driven Architecture (`config/work_authorization.php`)
+
+All rules, labels, suggested defaults, and expiration flags reside in a versioned configuration file:
 
 ```php
 <?php
 // config/work_authorization.php — Canonical Taxonomies for Global Work Authorization & Compliance.
-// Decouples UI presentation, stable database codes, and Elasticsearch indexing facets.
+// Taxonomy Version: WA-2026.10 | Schema Version: 2026-01
 
 return [
+    'schema_version' => '2026-01',
+    'taxonomy_version' => 'WA-2026.10',
+
+    'popular_jurisdictions' => ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'EU'],
+
     'jurisdictions' => [
         'US' => [
             'label' => 'United States',
@@ -96,29 +124,29 @@ return [
                 'CITIZEN' => [
                     'label' => 'Citizenship & Permanent Residency',
                     'items' => [
-                        'US_CITIZEN' => ['label' => 'US Citizen (USC)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'US_PERMANENT_RESIDENT' => ['label' => 'Permanent Resident (Green Card)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
+                        'US_CITIZEN' => ['label' => 'US Citizen (USC)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'US_PERMANENT_RESIDENT' => ['label' => 'Permanent Resident (Green Card)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
                     ],
                 ],
                 'EAD' => [
                     'label' => 'Employment Authorization Document (EAD)',
                     'items' => [
-                        'US_GC_EAD' => ['label' => 'GC-EAD (Adjustment of Status)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'US_H4_EAD' => ['label' => 'H-4 EAD (Spouse Dependent)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'US_L2_EAD' => ['label' => 'L-2 / L-2S EAD', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'US_OPT_EAD' => ['label' => 'OPT / STEM-OPT EAD', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
-                        'US_OTHER_EAD' => ['label' => 'Other US EAD (TPS / Asylee)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
+                        'US_GC_EAD' => ['label' => 'GC-EAD (Adjustment of Status)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'US_H4_EAD' => ['label' => 'H-4 EAD (Spouse Dependent)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'US_L2_EAD' => ['label' => 'L-2 / L-2S EAD', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'US_OPT_EAD' => ['label' => 'OPT / STEM-OPT EAD', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
+                        'US_OTHER_EAD' => ['label' => 'Other US EAD (TPS / Asylee)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
                     ],
                 ],
                 'TEMPORARY_WORK' => [
                     'label' => 'Non-Immigrant Work Visas',
                     'items' => [
-                        'US_H1B' => ['label' => 'H-1B (Specialty Occupation)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'US_TN' => ['label' => 'TN Visa (USMCA - Canada/Mexico)', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
-                        'US_E3' => ['label' => 'E-3 (Australian Specialty)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'US_O1' => ['label' => 'O-1 (Extraordinary Ability)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'US_L1' => ['label' => 'L-1 (Intracompany Transferee)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'US_CPT' => ['label' => 'CPT (Student Curricular Training)', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
+                        'US_H1B' => ['label' => 'H-1B (Specialty Occupation)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'US_TN' => ['label' => 'TN Visa (USMCA - Canada/Mexico)', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
+                        'US_E3' => ['label' => 'E-3 (Australian Specialty)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'US_O1' => ['label' => 'O-1 (Extraordinary Ability)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'US_L1' => ['label' => 'L-1 (Intracompany Transferee)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'US_CPT' => ['label' => 'CPT (Student Curricular Training)', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
                     ],
                 ],
             ],
@@ -130,10 +158,10 @@ return [
                 'GENERAL' => [
                     'label' => 'Status & Work Permits',
                     'items' => [
-                        'CA_CITIZEN' => ['label' => 'Canadian Citizen', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'CA_PR' => ['label' => 'Permanent Resident (PR)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'CA_OPEN_WP' => ['label' => 'Open Work Permit / PGWP', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
-                        'CA_CLOSED_WP' => ['label' => 'Employer-Specific / LMIA Work Permit', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
+                        'CA_CITIZEN' => ['label' => 'Canadian Citizen', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'CA_PR' => ['label' => 'Permanent Resident (PR)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'CA_OPEN_WP' => ['label' => 'Open Work Permit / PGWP', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
+                        'CA_CLOSED_WP' => ['label' => 'Employer-Specific / LMIA Work Permit', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
                     ],
                 ],
             ],
@@ -145,24 +173,24 @@ return [
                 'GENERAL' => [
                     'label' => 'Indian Right to Work',
                     'items' => [
-                        'IN_CITIZEN' => ['label' => 'Indian Citizen / Domestic Right to Work', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'IN_OCI_PIO' => ['label' => 'OCI / PIO Cardholder', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'IN_WORK_VISA' => ['label' => 'Employment Visa (India)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
+                        'IN_CITIZEN' => ['label' => 'Indian Citizen / Domestic Right to Work', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'IN_OCI_PIO' => ['label' => 'OCI / PIO Cardholder', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'IN_WORK_VISA' => ['label' => 'Employment Visa (India)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
                     ],
                 ],
             ],
         ],
 
-        'UK' => [
+        'GB' => [
             'label' => 'United Kingdom',
             'categories' => [
                 'GENERAL' => [
                     'label' => 'UK Right to Work',
                     'items' => [
-                        'UK_CITIZEN' => ['label' => 'British Citizen', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'UK_ILR' => ['label' => 'Indefinite Leave to Remain (ILR)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'UK_SKILLED_WORKER' => ['label' => 'Skilled Worker / Tier 2 Visa', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'UK_GRADUATE' => ['label' => 'Graduate / Youth Mobility Visa', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
+                        'UK_CITIZEN' => ['label' => 'British Citizen', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'UK_ILR' => ['label' => 'Indefinite Leave to Remain (ILR)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'UK_SKILLED_WORKER' => ['label' => 'Skilled Worker / Tier 2 Visa', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'UK_GRADUATE' => ['label' => 'Graduate / Youth Mobility Visa', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
                     ],
                 ],
             ],
@@ -174,12 +202,12 @@ return [
                 'GENERAL' => [
                     'label' => 'UAE & Gulf Work Authorizations',
                     'items' => [
-                        'AE_GOLDEN_VISA' => ['label' => 'UAE Golden Visa (10-Year Self-Sponsored)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'AE_GREEN_VISA' => ['label' => 'UAE Green Visa (5-Year Skilled / Freelance)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'AE_EMPLOYMENT_VISA' => ['label' => 'UAE Employment Residence Visa (Company / Freezone)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'AE_FREELANCE_VISA' => ['label' => 'UAE Freelance / Remote Work Visa', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'AE_NATIONAL' => ['label' => 'UAE / GCC National', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'GCC_IQAMA' => ['label' => 'GCC Resident Work Permit / Iqama', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
+                        'AE_GOLDEN_VISA' => ['label' => 'UAE Golden Visa (10-Year Self-Sponsored)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'AE_GREEN_VISA' => ['label' => 'UAE Green Visa (5-Year Skilled / Freelance)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'AE_EMPLOYMENT_VISA' => ['label' => 'UAE Employment Residence Visa (Company / Freezone)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'AE_FREELANCE_VISA' => ['label' => 'UAE Freelance / Remote Work Visa', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'AE_NATIONAL' => ['label' => 'UAE / GCC National', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'GCC_IQAMA' => ['label' => 'GCC Resident Work Permit / Iqama', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
                     ],
                 ],
             ],
@@ -191,12 +219,12 @@ return [
                 'GENERAL' => [
                     'label' => 'Singapore Work Passes',
                     'items' => [
-                        'SG_CITIZEN' => ['label' => 'Singapore Citizen (SC)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'SG_PR' => ['label' => 'Singapore Permanent Resident (PR)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'SG_EP' => ['label' => 'Employment Pass (EP)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'SG_SPASS' => ['label' => 'S Pass (Skilled Staff)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'SG_ONE_PASS' => ['label' => 'ONE Pass / Tech.Pass / PEP', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'SG_LOC_DP' => ['label' => 'Letter of Consent (LOC / Dependant Pass)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
+                        'SG_CITIZEN' => ['label' => 'Singapore Citizen (SC)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'SG_PR' => ['label' => 'Singapore Permanent Resident (PR)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'SG_EP' => ['label' => 'Employment Pass (EP)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'SG_SPASS' => ['label' => 'S Pass (Skilled Staff)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'SG_ONE_PASS' => ['label' => 'ONE Pass / Tech.Pass / PEP', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'SG_LOC_DP' => ['label' => 'Letter of Consent (LOC / Dependant Pass)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
                     ],
                 ],
             ],
@@ -208,11 +236,11 @@ return [
                 'GENERAL' => [
                     'label' => 'Australia & NZ Right to Work',
                     'items' => [
-                        'AU_CITIZEN_PR' => ['label' => 'Australian Citizen / Permanent Resident', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'AU_TSS_482' => ['label' => 'TSS Visa (Subclass 482 - Temporary Skill)', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'AU_SKILLED_189_190' => ['label' => 'Skilled Work Visa (Subclass 189 / 190)', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'AU_GRADUATE_485' => ['label' => 'Temporary Graduate Visa (Subclass 485)', 'expires' => true, 'default_sponsorship' => 'FUTURE_REQUIRED'],
-                        'NZ_CITIZEN_PR' => ['label' => 'New Zealand Citizen / Resident', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
+                        'AU_CITIZEN_PR' => ['label' => 'Australian Citizen / Permanent Resident', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'AU_TSS_482' => ['label' => 'TSS Visa (Subclass 482 - Temporary Skill)', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'AU_SKILLED_189_190' => ['label' => 'Skilled Work Visa (Subclass 189 / 190)', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'AU_GRADUATE_485' => ['label' => 'Temporary Graduate Visa (Subclass 485)', 'expires' => true, 'sponsorship_default' => 'FUTURE_REQUIRED'],
+                        'NZ_CITIZEN_PR' => ['label' => 'New Zealand Citizen / Resident', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
                     ],
                 ],
             ],
@@ -224,11 +252,11 @@ return [
                 'GENERAL' => [
                     'label' => 'International & Other',
                     'items' => [
-                        'EU_CITIZEN' => ['label' => 'EU / EEA Citizen', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'EU_BLUE_CARD' => ['label' => 'EU Blue Card', 'expires' => true, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'GLOBAL_AUTH_PERMIT' => ['label' => 'Authorized Work Permit (Country Specific)', 'expires' => true, 'default_sponsorship' => 'NOT_REQUIRED'],
-                        'GLOBAL_REQUIRES_SPONSOR' => ['label' => 'Requires International Visa Sponsorship', 'expires' => false, 'default_sponsorship' => 'IMMEDIATE_REQUIRED'],
-                        'NOT_APPLICABLE' => ['label' => 'Not Applicable / Global Remote Contractor', 'expires' => false, 'default_sponsorship' => 'NOT_REQUIRED'],
+                        'EU_CITIZEN' => ['label' => 'EU / EEA Citizen', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'EU_BLUE_CARD' => ['label' => 'EU Blue Card', 'expires' => true, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'GLOBAL_AUTH_PERMIT' => ['label' => 'Authorized Work Permit (Country Specific)', 'expires' => true, 'sponsorship_default' => 'NOT_REQUIRED'],
+                        'GLOBAL_REQUIRES_SPONSOR' => ['label' => 'Requires International Visa Sponsorship', 'expires' => false, 'sponsorship_default' => 'IMMEDIATE_REQUIRED'],
+                        'NOT_APPLICABLE' => ['label' => 'Not Applicable / Global Remote Contractor', 'expires' => false, 'sponsorship_default' => 'NOT_REQUIRED'],
                     ],
                 ],
             ],
@@ -239,163 +267,103 @@ return [
 
 ---
 
-## 4. Data Migration & Legacy Preservation (Zero Data Corruption)
+## 5. Dual-Storage & Migration Contract (Zero Data Corruption)
 
-### The Fallacy of Silent Reinterpretation
-Historical candidate records with `F1` or `L1` must **never be silently converted** into `OPT-EAD` or another permit:
-- A candidate saved with `F1` in 2024 might simply be a student without work authorization, or might have CPT or OPT. Converting it silently is **data corruption**.
-- Legacy values are tagged with an explicit **Normalization Confidence State**:
-  - `VERIFIED_CANONICAL`: New submission or edited selection using verified taxonomy code.
-  - `LEGACY_MAPPED`: Unambiguous historical mapping (e.g., `H1B` → `US_H1B`, `Green Card` → `US_PERMANENT_RESIDENT`).
-  - `LEGACY_UNVERIFIED`: Ambiguous historical values (e.g., `F1`, `L1`, custom text). Rendered as **`Legacy Value (Unverified: F1)`** with an alert badge in recruiter view prompting confirmation.
+### Explicit Normalization States
+Historical data is never silently reinterpreted:
+- `VERIFIED_CANONICAL`: Submissions created with a valid canonical code.
+- `LEGACY_MAPPED`: Unambiguous historical mapping (`H1B` → `US_H1B`, `Green Card` → `US_PERMANENT_RESIDENT`).
+- `LEGACY_UNVERIFIED`: Ambiguous historical records (`F1`, `L1`, custom text). Stored with `legacy_source_value = "F1"` and tagged as `LEGACY_UNVERIFIED`. The UI displays *"Legacy Value (Unverified: F1)"* prompting recruiter review.
 
-### Dual-Layer Storage Contract
-```
-┌─────────────────────────────────────────────────────────────┐
-│  MySQL Database                                             │
-├─────────────────────────────────────────────────────────────┤
-│  1. `bench_applications.visastatu` (Preserved String)       │
-│     • Kept 100% in sync for backward compatibility.         │
-│     • Stores human-readable display string or legacy text.  │
-│                                                             │
-│  2. `bench_additional_detail` / JSON Metadata Store         │
-│     • `work_auth_code`: "US_H1B" (Canonical key)           │
-│     • `work_auth_country`: "US"                             │
-│     • `work_auth_sponsorship`: "NOT_REQUIRED"              │
-│     • `work_auth_engagement`: ["C2C", "W2"]                │
-│     • `work_auth_expires_at`: "2027-08-31"                  │
-│     • `work_auth_verification`: "SELF_DECLARED"             │
-│     • `work_auth_confidence`: "VERIFIED_CANONICAL"          │
-└─────────────────────────────────────────────────────────────┘
-```
+### Persistence Strategy (Interim vs Long-Term Target)
+1. **Interim (Phase 1–3):**
+   - `bench_applications.visastatu`: Preserved display string sync.
+   - `bench_additional_detail`: Key-value structured metadata storage (`work_auth_code`, `work_auth_jurisdiction`, `work_auth_sponsorship`, `work_auth_engagement`, `work_auth_expires_at`, `work_auth_verification`, `schema_version`, `taxonomy_version`, `legacy_source_value`).
+2. **Long-Term Target (Phase 5):**
+   - Dedicated normalized relation `candidate_work_authorizations` (supports multiple jurisdictions per candidate).
 
 ---
 
-## 5. Elasticsearch Read Projection (CQRS Architecture)
+## 6. Elasticsearch Read Projection (`work_authorizations[]` Array)
 
-In adherence to Rule 2 (Elasticsearch is ONLY for Read), queries and filters in candidate listings and drawers do NOT parse unstructured text. 
-
-The candidate index projection contains a dedicated, strongly-typed `work_authorization` object:
+To future-proof for candidates holding multiple legal authorizations (e.g. US + Canada dual authorization), Elasticsearch projects an array of objects:
 
 ```json
 {
-  "work_authorization": {
-    "jurisdiction": "US",
-    "code": "US_H1B",
-    "category": "TEMPORARY_WORK",
-    "display_label": "H-1B (Specialty Occupation)",
-    "sponsorship_requirement": "IMMEDIATE_REQUIRED",
-    "engagement_models": ["C2C", "W2"],
-    "has_expiry": true,
-    "expires_at": "2027-08-31",
-    "expiry_bucket": "HEALTHY",
-    "verification_status": "SELF_DECLARED",
-    "normalization_confidence": "VERIFIED_CANONICAL"
-  }
-}
-```
-
-### Recruiter Filtering Facets (Sub-30ms ES Queries)
-Recruiters can now execute compound, authoritative searches with zero DB load:
-```json
-{
-  "query": {
-    "bool": {
-      "filter": [
-        { "term": { "work_authorization.jurisdiction": "US" } },
-        { "terms": { "work_authorization.code": ["US_CITIZEN", "US_PERMANENT_RESIDENT", "US_GC_EAD", "US_H1B"] } },
-        { "term": { "work_authorization.engagement_models": "C2C" } },
-        { "range": { "work_authorization.expires_at": { "gte": "now+180d" } } }
-      ]
+  "work_authorizations": [
+    {
+      "jurisdiction": "US",
+      "code": "US_H1B",
+      "category": "TEMPORARY_WORK",
+      "display_label": "H-1B (Specialty Occupation)",
+      "sponsorship_requirement": "IMMEDIATE_REQUIRED",
+      "declared_engagement_models": ["C2C", "W2"],
+      "has_expiry": true,
+      "expires_at": "2027-08-31",
+      "expiry_bucket": "HEALTHY",
+      "verification_status": "SELF_DECLARED",
+      "normalization_confidence": "VERIFIED_CANONICAL",
+      "taxonomy_version": "WA-2026.10",
+      "schema_version": "2026-01"
     }
-  }
+  ]
 }
 ```
 
----
-
-## 6. Progressive Disclosure UI Design (15.6" Screen Fit)
-
-Rather than overwhelming the recruiter with a giant compliance block, the card uses a clean **Progressive Disclosure** pattern:
-
-### 1. Primary View (Clean & Compact)
-- **Work Jurisdiction / Country:** Curated country select (defaults to candidate's Location country if selected).
-- **Work Authorization:** Filtered select showing relevant status options for that country.
-- **Sponsorship Pill Selector:** `[ Not Required ]` `[ May Require Later ]` `[ Required ]`.
-- **Engagement Eligibility:** Checkbox pills `[ C2C ]` `[ W2 ]` `[ 1099 ]` `[ Direct Hire ]`.
-
-### 2. Secondary View (Conditional & Progressive)
-- **Authorization Expiry:** Revealed automatically only when a temporary/expiring status is selected (`has_expiry = true`).
-- **Expand Advanced Compliance (`+ Additional Details`):**
-  - Verification State (`Self-Declared` vs `Document Provided`).
-  - Sponsorship Context / Notes (e.g. I-140 approval date, petition receipt number).
-
-### 3. Global Country Coverage & Search Architecture (All 240+ Countries)
-To serve a true worldwide talent marketplace without hardcoding restrictions:
-1. **Tier 1: Popular Hiring Hubs (Quick-Select Chips):**
-   - Clickable interactive pills above the search select for instant 1-click focus:
-     `[ 🇺🇸 United States ] [ 🇨🇦 Canada ] [ 🇮🇳 India ] [ 🇬🇧 United Kingdom ] [ 🇦🇪 Dubai / UAE ] [ 🇸🇬 Singapore ] [ 🇦🇺 Australia ] [ 🇪🇺 European Union ] [ 🌐 All Countries ]`
-2. **Tier 2: Instant Search Box at the Top:**
-   - Client-side search input directly at the top of the select dropdown.
-   - Recruiters can type:
-     - **Any country name:** (e.g. *"Germany"*, *"Japan"*, *"Brazil"*, *"France"*, *"Mexico"*, *"South Africa"*, *"Netherlands"*, *"Poland"*).
-     - **Any visa or permit type:** (e.g. *"H-1B"*, *"Golden Visa"*, *"Blue Card"*, *"PR"*, *"Citizen"*, *"TSS 482"*, *"E-3"*, *"OPT"*).
-   - Zero-delay real-time filtering executed in browser memory (Client-First / User RAM, 0% server read strain).
-3. **Tier 3: Comprehensive Country-Wise Work Authorization (All 240+ Countries):**
-   - Integrates the global ISO country dataset (`countries.json` / cached master lookup).
-   - For all countries worldwide, standardizes right-to-work legal options:
-     - `[Country] - Citizen / National`
-     - `[Country] - Permanent Resident (PR)`
-     - `[Country] - Work Visa / Employment Permit (Company Sponsored)`
-     - `[Country] - Open / Temporary Work Permit`
-     - `[Country] - Student Work Authorization`
-     - `[Country] - Digital Nomad / Remote Contractor Visa`
-     - `[Country] - Requires Visa Sponsorship`
-   - Plus universal fallback: `Authorized Work Permit (Country Specific)` and `Not Applicable / Remote Contractor`.
-
-### 4. Responsive Metronic Standards (Rule 14)
-- Scoped strictly under `#talent_create_app`.
-- Poppins font, max font 14px, 12px for badges/hints.
-- 100% responsive for 1366×768 (standard laptop) and 1920×1080 (full HD desktop) with internal scrolling and zero viewport overflow.
+### Performance & Idempotency SLA
+- **Latency Target:** Low-latency Elasticsearch filtering validated under the JERO 10,000 concurrent-user load profile (0 MySQL reads on query hot-path).
+- **Client Cache Strategy:** No per-keystroke server request for locally cached taxonomy search.
+- **Idempotent Queue Updates:** Queue jobs track candidate version/timestamp (`aggregate_version`) to guarantee out-of-order queue executions do not overwrite newer states.
 
 ---
 
-## 7. Revised 6-Phase Implementation Roadmap
+## 7. Progressive Disclosure UI & State Machine
 
-```mermaid
-flowchart LR
-    P0["Phase 0<br>Data Contract & Taxonomy"] --> P1["Phase 1<br>Progressive UI Component"]
-    P1 --> P2["Phase 2<br>Persistence & Dual-Sync"]
-    P2 --> P3["Phase 3<br>ES Indexing Projection"]
-    P3 --> P4["Phase 4<br>Recruiter Facets & Drawer"]
-    P4 --> P5["Phase 5<br>Migration & 10K Load Test"]
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🌟 Popular Hiring Hubs (Quick Pills)                                        │
+│ [ 🇺🇸 US ] [ 🇨🇦 Canada ] [ 🇮🇳 India ] [ 🇬🇧 UK ] [ 🇦🇪 Dubai ] [ 🇸🇬 SG ] [ 🇦🇺 AU ] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. Jurisdiction (Suggested from location, can be freely changed)            │
+│ 2. Authorization Status (Dropdown populated for selected jurisdiction)      │
+│ 3. Declared Engagement Models: [ C2C ] [ W2 ] [ 1099 ] [ Direct Hire ]      │
+│ 4. Sponsorship Profile: [ Not Required ] [ May Require Later ] [ Required ] │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ (Conditional) If status expires:                                            │
+│   • Authorization Expiry Date [ DD/MM/YYYY ]                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ (+ Additional Compliance Details - Collapsed by Default):                   │
+│   • Verification Status [ Self-Declared / Document Provided ]               │
+│   • Internal Recruiter Compliance Notes (Internal Only)                     │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 0: Data Contract & Taxonomy
-- Create `config/work_authorization.php` with canonical jurisdictions, codes, labels, expiry rules, and default sponsorship.
-- Define canonical code list (`US_CITIZEN`, `US_H1B`, etc.) and legacy mapping dictionary.
+### UI Dependency State Machine
+1. **Jurisdiction Changed:** Immediately resets authorization selection to prevent illegal state combinations (e.g. India + H-1B).
+2. **Authorization Selected:** If `expires = true`, smoothly transitions the expiry date field into view; if `expires = false`, hides expiry and clears previous date.
+3. **Sponsorship Suggested:** Selecting an authorization code populates `sponsorship_default` as a suggestion; user can freely override.
 
-### Phase 1: Progressive UI Component
-- Update `resources/views/service_company/bench-candidates/create.blade.php` to consume `config('work_authorization')`.
-- Implement progressive disclosure: Primary controls (Country + Authorization + Sponsorship + Engagement) and conditional controls (Expiry date picker).
-- Apply scoped Metronic styles in `_form_styles.blade.php`.
+---
 
-### Phase 2: Persistence & Dual-Sync
-- In `ServiceCompanyBenchCandidatesController@store`:
-  - Preserve `bench_applications.visastatu` with canonical display string (100% backward compatible).
-  - Store structured metadata (`work_auth_code`, `work_auth_sponsorship`, `work_auth_engagement`, `work_auth_expires_at`, `work_auth_verification`).
+## 8. Explicit Validation Matrix
 
-### Phase 3: Elasticsearch Projection
-- Update `GeneralMethod::indexCandidateElastic` and `ProcessCandidateUpdateJob`:
-  - Map normalized `work_authorization` object into `ats_candidates_elastic`.
-  - Maintain zero MySQL queries on read paths.
+| Condition | Validation Rule | Error / Warning Action |
+|---|---|---|
+| Jurisdiction empty | Authorization dropdown disabled | Prompt: "Select jurisdiction first" |
+| Authorization requires expiry | Expiry date recommended | Soft warning if omitted (optional field) |
+| Expiry date in past | Warning flag applied | Warning: "Authorization has expired" |
+| Jurisdiction changed | Clear authorization | Resets dependent authorization selection |
+| Legacy unverified record | Tagged as `LEGACY_UNVERIFIED` | Recruiter badge: "Needs confirmation" |
+| Document uploaded | Set to `DOCUMENT_PROVIDED` | Moves status from `SELF_DECLARED` |
+| Verification set to `VERIFIED` | Requires compliance role & timestamp | Blocks non-privileged users |
 
-### Phase 4: Recruiter Discovery & Drawer Badges
-- Update the bench candidate drawer (`benchCandidateDetails/public_show`) and listing card:
-  - Display clean, professional badges (e.g. `[US: H-1B]` `[C2C / W2]` `[Exp: Aug 2027]`).
-  - Visually flag `LEGACY_UNVERIFIED` data with a confirmation prompt.
+---
 
-### Phase 5: Verification, Migration & 10K Concurrency Testing
-- Verify zero regression across other drawers, modals, and frozen folders (`product_company`, `staffing_company`).
-- Validate responsive rendering at 1366×768 and 1920×1080.
-- Execute unit and feature tests (`php artisan test`).
+## 9. Phased Execution Roadmap
+
+- **Phase 0 — Data Contract & Taxonomy:** Approve `config/work_authorization.php`, canonical codes, and validation matrix.
+- **Phase 1 — Progressive UI Component:** Upgrade `create.blade.php` to consume config, render top search, popular pills, and progressive disclosure.
+- **Phase 2 — Persistence & Dual-Sync:** Update `ServiceCompanyBenchCandidatesController` to store canonical codes and metadata while keeping `visastatu` display in sync.
+- **Phase 3 — Elasticsearch Projection:** Update `GeneralMethod` to project `work_authorizations[]` into ES with idempotency guards.
+- **Phase 4 — Recruiter Discovery:** Update candidate drawer and listings with prioritized badges (`H-1B`, `C2C/W2`, `Exp: Aug 2027`).
+- **Phase 5 — Load & Concurrency Testing:** Validate under 10K concurrency load and test legacy candidate integrity.
