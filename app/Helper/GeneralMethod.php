@@ -1277,103 +1277,44 @@ END:VCALENDAR";
         $updatetimelineId = DB::table('updatetimeline')->insertGetId($values);
 
         $elasticService = app(ElasticService::class);
+        static $esTimelineDocCache = [];
+        $fetchEsDoc = function (string $index, $docId) use ($elasticService, &$esTimelineDocCache) {
+            $docId = (int) $docId;
+            if ($docId <= 0) {
+                return null;
+            }
+            $cKey = $index.':'.$docId;
+            if (! array_key_exists($cKey, $esTimelineDocCache)) {
+                try {
+                    $res = $elasticService->getClient()->get([
+                        'index' => $index,
+                        'id' => $docId,
+                    ]);
+                    $esTimelineDocCache[$cKey] = isset($res['_source']) ? (object) $res['_source'] : null;
+                } catch (\Throwable $e) {
+                    $esTimelineDocCache[$cKey] = null;
+                }
+            }
 
-        $params = [
-            'index' => ELASTIC_JOBS,
-            'id' => @$timelineArr['job_id'] ? @$timelineArr['job_id'] : 0,
-        ];
+            return $esTimelineDocCache[$cKey];
+        };
 
-        $response = $elasticService->getClient()->get($params);
-
-        $job_details = isset($response['_source']) ? (object) $response['_source'] : null;
-
-        $params = [
-            'index' => ELASTIC_USERS_LIST,
-            'id' => @$timelineArr['event_by_user_id'] ? @$timelineArr['event_by_user_id'] : 0,
-        ];
-
-        $response = $elasticService->getClient()->get($params);
-
-        $user_details = isset($response['_source']) ? (object) $response['_source'] : null;
+        $job_details = $fetchEsDoc(ELASTIC_JOBS, @$timelineArr['job_id'] ?: 0);
+        $user_details = $fetchEsDoc(ELASTIC_USERS_LIST, @$timelineArr['event_by_user_id'] ?: 0);
 
         $interview_details = null;
-
-        // Safely extract interview_schedules_id
         $interviewScheduleId = $timelineArr['interview_schedules_id'] ?? null;
-
         if (! empty($interviewScheduleId)) {
-            try {
-                $response = $elasticService->getClient()->get([
-                    'index' => ELASTIC_INERTVIEW_TRACKER,
-                    'id' => $interviewScheduleId,
-                ]);
-
-                $interview_details = isset($response['_source'])
-                    ? (object) $response['_source']
-                    : null;
-
-            } catch (Missing404Exception $e) {
-                // Document not found — this is OK
-                $interview_details = null;
-
-            } catch (\Throwable $e) {
-                // Log only real failures (ES down, timeout, etc.)
-                // \Log::error('Elastic interview tracker fetch failed', [
-                // 	'index' => ELASTIC_INERTVIEW_TRACKER,
-                // 	'id'    => $interviewScheduleId,
-                // 	'error' => $e->getMessage(),
-                // ]);
-
-                $interview_details = null;
-            }
+            $interview_details = $fetchEsDoc(ELASTIC_INERTVIEW_TRACKER, $interviewScheduleId);
         }
 
         $status_details = null;
-
         if (! empty($interview_details->stage ?? null)) {
-            try {
-                $response = $elasticService->getClient()->get([
-                    'index' => ELASTIC_MASTER_STATUS,
-                    'id' => $interview_details->stage ?? null,
-                ]);
-
-                $status_details = isset($response['_source'])
-                    ? (object) $response['_source']
-                    : null;
-
-            } catch (Missing404Exception $e) {
-                // Document not found — this is OK
-                $status_details = null;
-
-            } catch (\Throwable $e) {
-                // Log only real failures (ES down, timeout, etc.)
-                // \Log::error('Elastic interview tracker fetch failed', [
-                // 	'index' => ELASTIC_MASTER_STATUS,
-                // 	'id'    => $interview_details?->stage,
-                // 	'error' => $e->getMessage(),
-                // ]);
-
-                $status_details = null;
-            }
+            $status_details = $fetchEsDoc(ELASTIC_MASTER_STATUS, $interview_details->stage);
         }
 
-        $params = [
-            'index' => ELASTIC_CLIENT_LIST,
-            'id' => $job_details->client_id,
-        ];
-
-        $response = $elasticService->getClient()->get($params);
-
-        $client_details = isset($response['_source']) ? (object) $response['_source'] : null;
-
-        $params = [
-            'index' => ELASTIC_COMPANIES_INDEX,
-            'id' => $user_details->company_id,
-        ];
-
-        $response = $elasticService->getClient()->get($params);
-
-        $company_details = isset($response['_source']) ? (object) $response['_source'] : null;
+        $client_details = $fetchEsDoc(ELASTIC_CLIENT_LIST, $job_details->client_id ?? 0);
+        $company_details = $fetchEsDoc(ELASTIC_COMPANIES_INDEX, $user_details->company_id ?? 0);
 
         // return users
 
@@ -2742,6 +2683,104 @@ END:VCALENDAR";
 
             // NEVER crash blade
             return '';
+        }
+    }
+
+    /**
+     * Intent: Bulk variant of companyDetails($jobid) for job listing blades — resolves
+     * logo paths for an entire page of ELASTIC_JOBS rows in at most 2 Elasticsearch
+     * mget/terms queries instead of 6 per-row exists()+get() HTTP round-trips.
+     * Preserves 100% identical logo resolution logic as companyDetails().
+     * Tenancy: Uses caller's $company_id to distinguish own-company vs third-party jobs.
+     */
+    public static function companyDetailsBulk(array $jobsData, $company_id = null): array
+    {
+        if (empty($jobsData)) {
+            return [];
+        }
+
+        try {
+            $elasticService = app(\App\Services\ElasticService::class);
+            $client = $elasticService->getClient();
+            if (empty($company_id) && auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+
+            $comIds = [];
+            $clientIds = [];
+            foreach ($jobsData as $row) {
+                $r = (object) $row;
+                if (! empty($r->comId)) {
+                    $comIds[] = (int) $r->comId;
+                }
+                if (! empty($r->client_id)) {
+                    $clientIds[] = (int) $r->client_id;
+                }
+            }
+            $comIds = array_values(array_unique($comIds));
+            $clientIds = array_values(array_unique($clientIds));
+
+            $companiesMap = [];
+            if (! empty($comIds)) {
+                try {
+                    $res = $client->search([
+                        'index' => ELASTIC_COMPANIES_INDEX,
+                        'body' => [
+                            'size' => count($comIds),
+                            '_source' => ['id', 'logo', 'company_name'],
+                            'query' => ['ids' => ['values' => $comIds]],
+                        ],
+                    ]);
+                    foreach ($res['hits']['hits'] ?? [] as $hit) {
+                        $companiesMap[(int) $hit['_id']] = (object) ($hit['_source'] ?? []);
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+
+            $clientsMap = [];
+            if (! empty($clientIds)) {
+                try {
+                    $res = $client->search([
+                        'index' => ELASTIC_CLIENT_LIST,
+                        'body' => [
+                            'size' => count($clientIds),
+                            '_source' => ['id', 'logo_logical_path', 'self_company'],
+                            'query' => ['ids' => ['values' => $clientIds]],
+                        ],
+                    ]);
+                    foreach ($res['hits']['hits'] ?? [] as $hit) {
+                        $clientsMap[(int) $hit['_id']] = (object) ($hit['_source'] ?? []);
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
+
+            $logoMap = [];
+            foreach ($jobsData as $row) {
+                $jobs_details = (object) $row;
+                $jobId = (int) ($jobs_details->id ?? 0);
+                if ($jobId <= 0) {
+                    continue;
+                }
+                $company_details = $companiesMap[(int) ($jobs_details->comId ?? 0)] ?? null;
+                $client_details = $clientsMap[(int) ($jobs_details->client_id ?? 0)] ?? null;
+
+                if (($jobs_details->comId ?? null) == $company_id) {
+                    $logo_path = $client_details->logo_logical_path ?? '';
+                    if (($client_details->self_company ?? 0) == 1) {
+                        $logo_path = $company_details->logo ?? $logo_path;
+                    }
+                } else {
+                    $logo_path = $company_details->logo ?? '';
+                }
+
+                $logoMap[$jobId] = $logo_path;
+            }
+
+            return $logoMap;
+        } catch (\Throwable $e) {
+            return [];
         }
     }
 
@@ -6855,6 +6894,40 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Intent: Bulk variant of companyDetailsGet() — fetches multiple company documents
+     * from ELASTIC_COMPANIES_INDEX in 1 search query instead of 1 get() per row.
+     * Tenancy: Global company directory metadata keyed by company ID.
+     */
+    public static function companyDetailsGetBulk(array $companyIds): array
+    {
+        $companyIds = array_values(array_unique(array_filter(array_map('intval', $companyIds))));
+        if (empty($companyIds)) {
+            return [];
+        }
+
+        try {
+            $elasticService = app(ElasticService::class);
+            $res = $elasticService->getClient()->search([
+                'index' => ELASTIC_COMPANIES_INDEX,
+                'body' => [
+                    'size' => count($companyIds),
+                    'query' => ['ids' => ['values' => $companyIds]],
+                ],
+            ]);
+            $map = [];
+            foreach ($res['hits']['hits'] ?? [] as $hit) {
+                if (isset($hit['_source'])) {
+                    $map[(int) $hit['_id']] = (object) $hit['_source'];
+                }
+            }
+
+            return $map;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
     public static function statusCountThirdpartyAll($companyId, $jobID)
     {
 
@@ -7661,40 +7734,20 @@ END:VCALENDAR";
                     ->map(fn ($skill) => strtolower((string) $skill))
                     ->implode(',');
 
-                $params = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'size' => 1,
-                    'body' => [
-                        'query' => [
-                            'bool' => [
-                                'filter' => [
-                                    [
-                                        'term' => [
-                                            'jobId' => (int) $application->jobId,
-                                        ],
-                                    ],
-                                    [
-                                        'term' => [
-                                            'candidate_id' => (int) $application->id,
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ];
-
-                $response = $elasticService->getClient()->search($params);
-
-                $exists = ! empty($response['hits']['hits']);
-
                 $duplicate = (int) ($application->duplicate ?? 0);
 
                 // Intent: Evaluate candidate duplicate status in static method context without $this or undefined variables.
                 // TENANCY NOTE: Scope company duplicate checks by application company_id.
                 $companyId = $companyIdOverride ?: ($application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null)));
                 if ($companyId) {
-                    $company = DB::table('companies')->where('id', $companyId)->first();
+                    static $companyDupSettingsCache = [];
+                    if (! array_key_exists((int) $companyId, $companyDupSettingsCache)) {
+                        $companyDupSettingsCache[(int) $companyId] = DB::table('companies')
+                            ->select('app_duplicate', 'app_duplicate_days')
+                            ->where('id', $companyId)
+                            ->first();
+                    }
+                    $company = $companyDupSettingsCache[(int) $companyId];
                     $appDuplicate = $company->app_duplicate ?? 0;
                     $appDuplicateDays = $company->app_duplicate_days ?? 0;
 
@@ -13840,6 +13893,117 @@ END:VCALENDAR";
                 ],
             ];
         }
+    }
+
+    /**
+     * Intent: Bulk variant of bench_explore_listing_counter() — computes pipeline stage
+     * counters for an entire page of bench candidate IDs in 1 Elasticsearch terms+filters
+     * aggregation instead of 10 per-row ES search calls in bench-candidate-list-ajax.blade.php.
+     * Tenancy: Scoped by candidate IDs and $company_id (other_company term), identical to single-row helper.
+     */
+    public static function bench_explore_listing_counter_bulk(array $benchIds, $company_id = null): array
+    {
+        $benchIds = array_values(array_unique(array_filter(array_map('intval', $benchIds))));
+        if (empty($benchIds)) {
+            return [];
+        }
+
+        if (empty($company_id) && auth()->check()) {
+            $company_id = auth()->user()->company_id;
+        }
+
+        $defaultCounter = fn () => (object) [
+            'total' => 0,
+            'applicationCounter' => (object) [
+                'allCandidate' => 0,
+                'Sourcing' => 0,
+                'Screening' => 0,
+                'Evaluation' => 0,
+                'Negotiation' => 0,
+                'Offered' => 0,
+                'Joined' => 0,
+                'Rejected' => 0,
+                'Interview' => 0,
+            ],
+        ];
+
+        $map = [];
+        foreach ($benchIds as $id) {
+            $map[$id] = $defaultCounter();
+        }
+
+        $must = [
+            ['terms' => ['candidate_id' => $benchIds]],
+            ['terms' => ['job_status' => ['active', 'hold', 'inactive', '2']]],
+        ];
+        if (! empty($company_id)) {
+            $must[] = ['term' => ['other_company' => (int) $company_id]];
+        }
+
+        $params = [
+            'index' => ELASTIC_CANDIDATES,
+            'body' => [
+                'size' => 0,
+                'query' => [
+                    'bool' => [
+                        'must' => $must,
+                    ],
+                ],
+                'aggs' => [
+                    'by_candidate' => [
+                        'terms' => [
+                            'field' => 'candidate_id',
+                            'size' => count($benchIds) + 5,
+                        ],
+                        'aggs' => [
+                            'status_counts' => [
+                                'filters' => [
+                                    'filters' => [
+                                        '1' => ['term' => ['job_master_status_id' => 1]],
+                                        '2' => ['term' => ['job_master_status_id' => 2]],
+                                        '3' => ['term' => ['job_master_status_id' => 3]],
+                                        '4' => ['term' => ['job_master_status_id' => 4]],
+                                        '5' => ['term' => ['job_master_status_id' => 5]],
+                                        '6' => ['term' => ['job_master_status_id' => 6]],
+                                        '7' => ['terms' => ['job_master_status_id' => [7, 9]]],
+                                        '8' => ['term' => ['job_master_status_id' => 8]],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        try {
+            $elasticService = app(ElasticService::class);
+            $response = $elasticService->getClient()->search($params);
+            $candBuckets = $response['aggregations']['by_candidate']['buckets'] ?? [];
+            foreach ($candBuckets as $cb) {
+                $cid = (int) ($cb['key'] ?? 0);
+                $total = (int) ($cb['doc_count'] ?? 0);
+                $buckets = $cb['status_counts']['buckets'] ?? [];
+                $map[$cid] = (object) [
+                    'total' => $total,
+                    'applicationCounter' => (object) [
+                        'allCandidate' => $total,
+                        'Sourcing' => $buckets['1']['doc_count'] ?? 0,
+                        'Screening' => $buckets['2']['doc_count'] ?? 0,
+                        'Evaluation' => $buckets['3']['doc_count'] ?? 0,
+                        'Negotiation' => $buckets['4']['doc_count'] ?? 0,
+                        'Offered' => $buckets['5']['doc_count'] ?? 0,
+                        'Joined' => $buckets['6']['doc_count'] ?? 0,
+                        'Rejected' => $buckets['7']['doc_count'] ?? 0,
+                        'Interview' => $buckets['8']['doc_count'] ?? 0,
+                    ],
+                ];
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('bench_explore_listing_counter_bulk exception: '.$e->getMessage());
+        }
+
+        return $map;
     }
 
     public static function benchRequestCheck($candidate_id, $job_id)

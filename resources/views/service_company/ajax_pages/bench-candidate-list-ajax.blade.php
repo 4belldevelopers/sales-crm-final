@@ -11,15 +11,23 @@
     $company_id = auth()->user()->company_id;
 @endphp
 @if (count($data) > 0)
+    @php
+        // Ensure bulk ES stage counter map is available even if rendered outside data_ajax
+        if (!isset($benchExploreCounters) || empty($benchExploreCounters)) {
+            $pageBenchIds = array_values(array_filter(array_map(fn($r) => is_object($r) ? ($r->id ?? 0) : ($r['id'] ?? 0), $data)));
+            $benchExploreCounters = GeneralMethod::bench_explore_listing_counter_bulk($pageBenchIds, $company_id);
+        }
+    @endphp
     @foreach ($data as $rowArr)
         @php
             $row = (object) $rowArr;
             /**
-             * Intent: Fetch candidate pipeline activity counts via GeneralMethod::bench_explore_listing_counter
-             * to guarantee 100% count consistency between the bench candidates table and the bench explore view.
+             * Intent: Read candidate pipeline activity counts from bulk-fetched $benchExploreCounters
+             * (1 ES aggregation per page instead of 10 per-row ES queries) while guaranteeing 100%
+             * count consistency between the bench candidates table and the bench explore view.
              * Tenancy: Scoped by candidate ID and logged-in company.
              */
-            $bench_explore_listing_counter = GeneralMethod::bench_explore_listing_counter($row->id);
+            $bench_explore_listing_counter = $benchExploreCounters[$row->id] ?? GeneralMethod::bench_explore_listing_counter($row->id, $company_id);
             $applicationCounter = $bench_explore_listing_counter->applicationCounter;
 
             $row->Sourcing = $applicationCounter->Sourcing ?? 0;
@@ -249,6 +257,11 @@
                         $hmCount = count($hiringHr);
                         $firstHr = (object) ($hiringHr[0] ?? []);
                         $managerName = !empty($firstHr->name) ? ucwords($firstHr->name) : 'Unassigned';
+                        $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                    } elseif (isset($benchManagersMap) && is_array($benchManagersMap)) {
+                        $hmEntry = $benchManagersMap[$row->id] ?? null;
+                        $hmCount = (int) ($hmEntry['count'] ?? 0);
+                        $managerName = !empty($hmEntry['first_name']) ? ucwords($hmEntry['first_name']) : 'Unassigned';
                         $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                     } else {
                         $hmCount = DB::table('bench_assign')

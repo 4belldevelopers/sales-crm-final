@@ -1416,16 +1416,26 @@
     </script>
 
     <script>
-        //  var table;   
-        //    tableLoad('load');
+        // Phase 1 Optimization: 250ms debounce on #kt_tagify_2 search input and XHR abort for countder()
+        var _aptkSearchTimer = null;
+        var _aptkCounterXhr = null;
 
         document.addEventListener("DOMContentLoaded", function() {
             var inputJobSearch = document.querySelector("#kt_tagify_2");
-
-            inputJobSearch.addEventListener("keyup", function() {
-                // filtersdataget();
-                fetchCandidates();
-            });
+            if (inputJobSearch) {
+                inputJobSearch.addEventListener("keyup", function(e) {
+                    if (_aptkSearchTimer) {
+                        clearTimeout(_aptkSearchTimer);
+                    }
+                    if (e && (e.key === 'Enter' || e.keyCode === 13)) {
+                        fetchCandidates(1);
+                        return;
+                    }
+                    _aptkSearchTimer = setTimeout(function() {
+                        fetchCandidates(1);
+                    }, 250);
+                });
+            }
         });
 
 
@@ -1452,6 +1462,9 @@
 
 
         function countder() {
+            if (_aptkCounterXhr && _aptkCounterXhr.readyState !== 4) {
+                _aptkCounterXhr.abort();
+            }
             var jobid = $('#jobid').val();
             var mstatus_id = $('#mstatus_id').val();
             var inputSearch = $('#inputSearch').val();
@@ -1460,7 +1473,7 @@
             url = url.replace(':mstatus_id', mstatus_id);
             url = url.replace(':inputSearch', inputSearch);
 
-            $.ajax({
+            _aptkCounterXhr = $.ajax({
                 type: 'GET',
                 url: url,
                 success: function(response) {
@@ -1504,8 +1517,8 @@
 
                 }
             });
+            return _aptkCounterXhr;
         }
-        countder();
         window.countder = countder;
         $(document).on('click', '#stage_sub_stage_close', function() {
             $('#csd_drawer_close').trigger('click');
@@ -2152,8 +2165,15 @@
 
 
         var page_no = localStorage.getItem('currentPage') || 1;
+        var _aptkListXhr = null;
+        var _aptkReqSeq = 0;
 
         function fetchCandidates(page, search = '') {
+            var seq = ++_aptkReqSeq;
+            if (_aptkListXhr && _aptkListXhr.readyState !== 4) {
+                _aptkListXhr.abort();
+            }
+
             var targetPage = page || page_no || 1;
             page_no = targetPage;
             localStorage.setItem('currentPage', targetPage);
@@ -2182,7 +2202,7 @@
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            return $.ajax({
+            _aptkListXhr = $.ajax({
                 url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${targetPage}`,
                 type: 'GET',
                 data: {
@@ -2195,6 +2215,7 @@
                   size : perPage
                 },
                 success: function(response) {
+                    if (seq !== _aptkReqSeq) return;
                     countder();
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
@@ -2263,7 +2284,8 @@
                 }
 
                 },
-                error: function(xhr) {
+                error: function(xhr, status) {
+                    if (status === 'abort' || seq !== _aptkReqSeq) return;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
@@ -2271,6 +2293,7 @@
                     console.error('allDataAjax failed:', xhr.status, xhr.responseText);
                 }
             });
+            return _aptkListXhr;
         }
 
         // ── Job Status drawer (same as jobs/index.blade.php) ──────────────────
@@ -2363,9 +2386,10 @@
                                 // Gap exceeds retained deltas -> perform snapshot refresh
                                 console.info('[Reverb AppTracker] Gap exceeds delta window, refreshing snapshot');
                                 currentVersion = res.latest_version || targetVersion || currentVersion;
-                                countder();
-                                if (typeof allDataAjax === 'function') {
-                                    allDataAjax(false);
+                                if (typeof fetchCandidates === 'function') {
+                                    fetchCandidates(page_no || 1);
+                                } else {
+                                    countder();
                                 }
                             } else if (res.deltas && res.deltas.length > 0) {
                                 // Apply deltas sequentially
@@ -2374,9 +2398,10 @@
                                     currentVersion = Math.max(currentVersion, d.version);
                                 });
                                 currentVersion = res.latest_version || currentVersion;
-                                countder();
-                                if (typeof allDataAjax === 'function') {
-                                    allDataAjax(false);
+                                if (typeof fetchCandidates === 'function') {
+                                    fetchCandidates(page_no || 1);
+                                } else {
+                                    countder();
                                 }
                             } else {
                                 currentVersion = res.latest_version || currentVersion;
@@ -2385,9 +2410,10 @@
                     },
                     error: function() {
                         isSyncing = false;
-                        countder();
-                        if (typeof allDataAjax === 'function') {
-                            allDataAjax(false);
+                        if (typeof fetchCandidates === 'function') {
+                            fetchCandidates(page_no || 1);
+                        } else {
+                            countder();
                         }
                     }
                 });
@@ -2409,9 +2435,10 @@
                         // 2. Sequential Event: Exactly the next expected version
                         if (eventVersion === (currentVersion + 1)) {
                             currentVersion = eventVersion;
-                            countder();
-                            if (typeof allDataAjax === 'function') {
-                                allDataAjax(false);
+                            if (typeof fetchCandidates === 'function') {
+                                fetchCandidates(page_no || 1);
+                            } else {
+                                countder();
                             }
                             if (typeof showToastr === 'function') {
                                 showToastr('info', 'New candidate added to job pipeline', 'Pipeline Updated');

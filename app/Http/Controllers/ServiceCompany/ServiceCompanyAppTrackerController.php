@@ -83,7 +83,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $this->boardColumns = ReferenceDataCache::applicationStatuses();
             $this->locations = JobLocation::all();
             // $this->jobs 					=	Job::all();
-            $this->skills = Skill::all();
+            $this->skills = ReferenceDataCache::skills();
             $this->clients = Client::all();
             // $this->users 					=	User::company()->get();
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::orderBy('np_id')->get());
@@ -109,7 +109,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $this->boardColumns = ReferenceDataCache::applicationStatuses();
             $this->locations = JobLocation::all();
             $this->jobs = Job::all();
-            $this->skills = Skill::all();
+            $this->skills = ReferenceDataCache::skills();
             $this->clients = Client::all();
             // $this->users 					=	User::company()->get();
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::orderBy('np_id')->get());
@@ -118,7 +118,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
-        $this->job = Job::withoutGlobalScopes()->findOrFail($id);
+        $this->job = $this->job ?? Job::withoutGlobalScopes()->findOrFail($id);
 
         $this->custome_count = $this->custome_count($id);
 
@@ -129,11 +129,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->public_bench_counter = $return_data->public_bench_counter;
         $this->recomnded_counter = $return_data->recomnded_counter;
         $this->career_counter = $return_data->career_counter;
-        // dd($return_data->existing_counter);
-        // dd($this->custome_count);
         session()->put('job_id', $id);
 
-        $this->jobclient = Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
+        $this->jobclient = $this->jobclient ?? Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
 
         return view('service_company.apptracker.index', $this->data);
     }
@@ -400,7 +398,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
     protected function prepareRowMaps(array $data, int $companyId, int $appDuplicate, int $appDuplicateDays): array
     {
         if (empty($data)) {
-            return ['jobs' => [], 'skills' => [], 'duplicates' => []];
+            return [
+                'jobs' => [],
+                'skills' => [],
+                'duplicates' => [],
+                'interviews' => [],
+                'spokperson_map' => [],
+                'child_status_map' => [],
+            ];
         }
 
         $jobIds = collect($data)
@@ -457,10 +462,66 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        // Batch latest interview_schedules per (job_application_id, interview_job_id) (eliminates 2 per-row N+1 queries in all_apptracker.blade.php)
+        $candIds = collect($data)
+            ->map(fn ($r) => (int) ($r['candidate_id'] ?? $r['id'] ?? 0))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $interviewsMap = [];
+        if (! empty($candIds) && ! empty($jobIds)) {
+            $intRows = DB::table('interview_schedules')
+                ->whereIn('job_application_id', $candIds)
+                ->whereIn('interview_job_id', $jobIds)
+                ->orderBy('id', 'DESC')
+                ->get();
+            foreach ($intRows as $ir) {
+                $iKey = $ir->job_application_id.'_'.$ir->interview_job_id;
+                if (! isset($interviewsMap[$iKey])) {
+                    $interviewsMap[$iKey] = $ir;
+                }
+            }
+        }
+
+        // Batch spokesperson lookup for third-party client job assignments (eliminates per-row job_assign query in all_apptracker.blade.php)
+        $spokpersonMap = [];
+        $clientComIds = collect($data)
+            ->map(fn ($r) => (int) ($r['ClientComID'] ?? 0))
+            ->filter(fn ($cid) => $cid > 0 && $cid !== $companyId)
+            ->unique()
+            ->values()
+            ->all();
+        if (! empty($clientComIds) && ! empty($jobIds)) {
+            $spokRows = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                ->whereIn('job_assign.job_id', $jobIds)
+                ->whereIn('job_assign.company_id', $clientComIds)
+                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->get();
+            foreach ($spokRows as $sr) {
+                $spokpersonMap[$sr->job_id.'_'.$sr->company_id] = $sr->name;
+            }
+        }
+
+        // Batch child status lookup (eliminates per-row candidate_status query in all_apptracker.blade.php)
+        $childStatusIds = collect($data)
+            ->flatMap(fn ($r) => [(int) ($r['childStatus'] ?? 0), (int) ($r['childStatusId'] ?? 0)])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+        $childStatusMap = ! empty($childStatusIds)
+            ? DB::table('candidate_status')->whereIn('id', $childStatusIds)->pluck('name', 'id')->toArray()
+            : [];
+
         return [
             'jobs' => $jobsMap,
             'skills' => $skillsByJob,
             'duplicates' => $duplicateMap,
+            'interviews' => $interviewsMap,
+            'spokperson_map' => $spokpersonMap,
+            'child_status_map' => $childStatusMap,
         ];
     }
 
@@ -693,12 +754,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $mstatus_id = $request->mstatus_id;
         $jobid = $request->jobid;
 
-        $interviewStatus = [];
-        $interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
-
         $chkAdminRole = $this->user->hasRole('admin');
-
-        // $chkAdminRole = DB::table('roles')->select('*')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
 
         $feedback_status = ReferenceDataCache::feedbackStatus();
 
@@ -716,12 +772,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $filters = [];
         $customOrder = [8, 1, 2, 3, 4, 5, 6, 7];
 
-        // Job's own required skills (job_metronics_skills — same source
-        // skill_percentage() reads for the row Match % badge), used by the
-        // "Higher Match" sort option below to rank candidates against this
-        // job specifically. Fetched once here, not per-row.
-        $jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn ($s) => strtolower(trim($s)))->values()->toArray();
-
         $cachePayload = [
             'company' => $company_id,
             'page' => $page,
@@ -736,17 +786,23 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'format' => $request->input('format', 'html'),
         ];
 
-        // dd($cachePayload );
-
         $versionKey = 'allapptracker_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allapptracker:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
-        ⚡ Check DragonflyDB first
+        ⚡ Check DragonflyDB first (0 DB queries on cache hit)
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
         }
+
+        $interviewStatus = ReferenceDataCache::masterStatuses();
+
+        // Job's own required skills (job_metronics_skills — same source
+        // skill_percentage() reads for the row Match % badge), used by the
+        // "Higher Match" sort option below to rank candidates against this
+        // job specifically. Fetched once on cache miss only.
+        $jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn ($s) => strtolower(trim($s)))->values()->toArray();
 
         switch ($valCheck) {
             case 1:
@@ -1208,15 +1264,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ],
         ];
 
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
-            $total = 0;
-            $data = [];
-        } else {
+        try {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
             $data = array_map(function ($hit) {
                 return $hit['_source'];
-            }, $response['hits']['hits']);
+            }, $response['hits']['hits'] ?? []);
+        } catch (\Throwable $e) {
+            $total = 0;
+            $data = [];
         }
 
         $pagination = [
