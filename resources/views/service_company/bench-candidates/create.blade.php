@@ -1666,17 +1666,39 @@ if($snp_mode== 1){
                         $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
                         $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
 
-                        $isEuCitizen  = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
-                        $isEuBlue     = in_array($currentVisa, ['EU Blue Card']);
-                        $isUaeGolden  = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa']);
-                        $isAuthWp     = in_array($currentVisa, ['Authorized Work Permit']);
-                        $isReqSpons   = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
+                        $isUaeGolden    = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']);
+                        $isUaeGreen     = in_array($currentVisa, ['UAE Green Visa', 'Green Visa']);
+                        $isUaeEmpVisa   = in_array($currentVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']);
+                        $isUaeFreelance = in_array($currentVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']);
+                        $isUaeNational  = in_array($currentVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']);
+                        $isGccIqama     = in_array($currentVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']);
+
+                        $isSgCitizen    = in_array($currentVisa, ['Singapore Citizen']);
+                        $isSgPr         = in_array($currentVisa, ['Singapore PR', 'Singapore Permanent Resident']);
+                        $isSgEp         = in_array($currentVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']);
+                        $isSgSpass      = in_array($currentVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']);
+                        $isSgOnePass    = in_array($currentVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']);
+                        $isSgLocDp      = in_array($currentVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']);
+
+                        $isAuCitizenPr  = in_array($currentVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']);
+                        $isAuTss482     = in_array($currentVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']);
+                        $isAuSkilled    = in_array($currentVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']);
+                        $isAuGrad485    = in_array($currentVisa, ['Australia Graduate 485', 'Subclass 485']);
+                        $isNzCitizen    = in_array($currentVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']);
+
+                        $isEuCitizen    = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
+                        $isEuBlue       = in_array($currentVisa, ['EU Blue Card']);
+                        $isAuthWp       = in_array($currentVisa, ['Authorized Work Permit']);
+                        $isReqSpons     = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
 
                         $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
                                          || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
                                          || $isInCitizen || $isInOci || $isInVisa
                                          || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
-                                         || $isEuCitizen || $isEuBlue || $isUaeGolden || $isAuthWp || $isReqSpons;
+                                         || $isUaeGolden || $isUaeGreen || $isUaeEmpVisa || $isUaeFreelance || $isUaeNational || $isGccIqama
+                                         || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
+                                         || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
+                                         || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
                       @endphp
                       <select name="visastatu" id="visastatu">
                         <option value="">Select work authorization or visa status</option>
@@ -1717,10 +1739,35 @@ if($snp_mode== 1){
                           <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
                         </optgroup>
 
-                        <optgroup label="European Union & Global">
+                        <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
+                          <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                          <option value="UAE Green Visa" {{ $isUaeGreen ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                          <option value="UAE Employment Visa" {{ $isUaeEmpVisa ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
+                          <option value="UAE Freelance Visa" {{ $isUaeFreelance ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                          <option value="UAE National" {{ $isUaeNational ? 'selected' : '' }}>UAE / GCC National</option>
+                          <option value="GCC Iqama" {{ $isGccIqama ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                        </optgroup>
+
+                        <optgroup label="Singapore (SG)">
+                          <option value="Singapore Citizen" {{ $isSgCitizen ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                          <option value="Singapore PR" {{ $isSgPr ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                          <option value="Singapore EP" {{ $isSgEp ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                          <option value="Singapore S Pass" {{ $isSgSpass ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                          <option value="Singapore ONE Pass" {{ $isSgOnePass ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                          <option value="Singapore LOC / DP" {{ $isSgLocDp ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
+                        </optgroup>
+
+                        <optgroup label="Australia & New Zealand (AU / NZ)">
+                          <option value="Australia Citizen / PR" {{ $isAuCitizenPr ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                          <option value="Australia TSS 482" {{ $isAuTss482 ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
+                          <option value="Australia Skilled 189/190" {{ $isAuSkilled ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
+                          <option value="Australia Graduate 485" {{ $isAuGrad485 ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
+                          <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                        </optgroup>
+
+                        <optgroup label="European Union & Global (EU / Global)">
                           <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
                           <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
-                          <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden / Green Visa</option>
                           <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
                           <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
                         </optgroup>

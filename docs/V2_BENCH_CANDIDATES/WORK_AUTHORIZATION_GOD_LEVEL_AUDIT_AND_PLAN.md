@@ -101,11 +101,14 @@ To transform JERO into the premier B2B talent marketplace, recruiters need four 
 
 ### Pillar 1: Right to Work & Visa Taxonomy (Primary)
 - Categorized dropdown with intuitive groups:
-  - **United States:** US Citizen (USC), Green Card (Permanent Resident), GC-EAD, H-1B (Active / Transferrable), H-4 EAD, L-2 EAD, TN Permit, OPT-EAD, STEM-OPT, E-3, O-1.
-  - **Canada:** Canadian Citizen, Permanent Resident (PR), Open Work Permit, PGWP.
-  - **India:** Indian Citizen / Domestic Right to Work, OCI / PIO.
-  - **United Kingdom:** British Citizen, Indefinite Leave to Remain (ILR), Skilled Worker Visa.
-  - **European Union / Global:** EU Citizen, EU Blue Card, Open Work Permit, Other / Requires Sponsorship.
+  - **United States (US):** US Citizen (USC), Green Card (Permanent Resident), GC-EAD, H-1B (Active / Transferrable), H-4 EAD, L-2 EAD, TN Permit, OPT-EAD, STEM-OPT, E-3, O-1.
+  - **Canada (CA):** Canadian Citizen, Permanent Resident (PR), Open Work Permit, PGWP, LMIA Closed Work Permit.
+  - **India (IN):** Indian Citizen / Domestic Right to Work, OCI / PIO Cardholder, India Employment Visa.
+  - **United Kingdom (UK):** British Citizen, Indefinite Leave to Remain (ILR), Skilled Worker Visa, Graduate Visa.
+  - **United Arab Emirates & GCC (Dubai / UAE):** UAE Golden Visa (10-Year), UAE Green Visa (5-Year), UAE Employment Residence Visa, UAE Freelance / Remote Visa, UAE / GCC National, GCC Resident Work Permit / Iqama.
+  - **Singapore (SG):** Singapore Citizen (SC), Singapore PR, Employment Pass (EP), S Pass, ONE Pass / Tech.Pass / PEP, Letter of Consent (LOC / DP).
+  - **Australia & New Zealand (AU / NZ):** Australian Citizen / PR, TSS Visa Subclass 482, Skilled Work Visa Subclass 189/190, Temporary Graduate 485, New Zealand Citizen / Resident.
+  - **European Union & Global:** EU Citizen, EU Blue Card, Open Work Permit, Other / Requires Sponsorship.
 
 ### Pillar 2: Sponsorship Requirement (Crucial Decision Filter)
 Recruiters immediately filter candidates based on whether their client company allows sponsorship:
