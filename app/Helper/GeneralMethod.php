@@ -958,38 +958,29 @@ END:VCALENDAR";
 
     public static function getCountryName($country)
     {
-        // dd($country);
-        if (! empty($country)) {
-            $exists = DB::table('countries')->select('countries.*')->where('countries.id', $country)->first();
-            if ($exists == null) {
-                // dd($country);
-                $filteredStates = [];
-
-                return $filteredStates;
-
-            }
-            $countriesArray = json_decode(file_get_contents(public_path('country-state-city/countries.json')), true)['countries'];
-            $countryId = $country;
-
-            $countriesArray = DB::table('countries')->select('countries.*')->where('countries.id', $countryId)->orderBy('countries.country_name')->get()->map(function ($item, $key) {
-                return [
-                    'id' => (int) @$item->id,
-                    'name' => @$item->country_name,
-                    'sortname' => (string) @$item->country_code,
-                ];
-            })->toArray();
-
-            $filteredStates = array_filter($countriesArray, function ($value) use ($countryId) {
-                if ($value['id'] == $countryId) {
-                    return $value;
-                }
-            });
-        } else {
-            $filteredStates = [];
+        if (empty($country)) {
+            return [];
         }
 
-        // dd($filteredStates);
-        return $filteredStates;
+        /* Intent: 24h Redis caching for static country reference lookup, eliminating hot-path DB reads */
+        return Cache::remember("ref_country_name:{$country}", 86400, function () use ($country) {
+            $countryRow = DB::table('countries')
+                ->select('id', 'country_name', 'country_code')
+                ->where('id', $country)
+                ->first();
+
+            if (! $countryRow) {
+                return [];
+            }
+
+            return [
+                [
+                    'id' => (int) $countryRow->id,
+                    'name' => $countryRow->country_name,
+                    'sortname' => (string) $countryRow->country_code,
+                ],
+            ];
+        });
     }
 
     public static function getStateName($country, $state)
@@ -2786,12 +2777,9 @@ END:VCALENDAR";
 
     public static function openCompanyDetails($jobid, $company_id)
     {
-        $logos = DB::table('companies')
-            ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions')
-            ->join('jobs', 'companies.id', 'jobs.company_id')
-            ->join('clients', 'clients.id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
-
-        $logos = DB::table('jobs')
+        /* Intent: Redis cache for job company logo (TTL 300s) to eliminate repeated joins and aggregations */
+        return Cache::remember("job_company_details_logo:{$jobid}:{$company_id}", 300, function () use ($jobid, $company_id) {
+            $logos = DB::table('jobs')
             ->select(
                 'jobs.id',
                 'jobs.title',
@@ -2892,282 +2880,270 @@ END:VCALENDAR";
         }
 
         return $logo_path;
+        });
     }
 
     public static function openDefaultTimeFormat($company_id)
     {
+        /* Intent: 24h Redis cache for company time format to eliminate hot-path SQL query */
+        return Cache::remember("tenant_time_format:{$company_id}", 86400, function () use ($company_id) {
+            $defaultTimeFormat = DB::table('companies')
+                ->select('companies.time_format')
+                ->where('companies.id', $company_id)
+                ->first();
 
-        $defaultTimeFormat = DB::table('companies')
-            ->select('companies.time_format')
-            ->where('companies.id', $company_id)
-            ->first();
+            $timeformat = 1;
+            if ($defaultTimeFormat) {
+                $timeformat = ($defaultTimeFormat->time_format);
+            }
 
-        // dd($defaultTimeFormat );
-
-        $timeformat = 1;
-        if ($defaultTimeFormat) {
-            $timeformat = ($defaultTimeFormat->time_format);
-        }
-
-        return $timeformat;
-
+            return $timeformat;
+        });
     }
 
     public static function openCountryCodeFun($company_id)
     {
-        $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
-        $client_location = DB::table('client_location')
-            ->join('countries', 'countries.id', '=', 'client_location.country_id')
-            ->select('countries.country_code', 'countries.country_name')
-            ->where('client_location.client_id', @$client->id)
-            ->first();
-        $country_code = 'in';
-        if ($client_location) {
-            $country_code = strtolower($client_location->country_code);
-        }
+        /* Intent: 24h Redis cache for tenant country code */
+        return Cache::remember("tenant_country_code:{$company_id}", 86400, function () use ($company_id) {
+            $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
+            $client_location = DB::table('client_location')
+                ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                ->select('countries.country_code', 'countries.country_name')
+                ->where('client_location.client_id', @$client->id)
+                ->first();
+            $country_code = 'in';
+            if ($client_location) {
+                $country_code = strtolower($client_location->country_code);
+            }
 
-        return $country_code;
-
+            return $country_code;
+        });
     }
 
     public static function openDefaultCurrency($company_id)
     {
+        /* Intent: 24h Redis cache for tenant default currency code */
+        return Cache::remember("tenant_currency_code:{$company_id}", 86400, function () use ($company_id) {
+            $defaultCurrency = DB::table('companies')
+                ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
+                ->select('master_currency.code')
+                ->where('companies.id', $company_id)
+                ->first();
 
-        $defaultCurrency = DB::table('companies')
-            ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-            ->select('master_currency.code')
-            ->where('companies.id', $company_id)
-            ->first();
+            $currency_code = 'INR';
+            if ($defaultCurrency) {
+                $currency_code = ($defaultCurrency->code);
+            }
 
-        // dd($defaultCurrency );
-
-        $currency_code = 'INR';
-        if ($defaultCurrency) {
-            $currency_code = ($defaultCurrency->code);
-        }
-
-        return $currency_code;
-
+            return $currency_code;
+        });
     }
 
     public static function oepnCompanyDetails($jobid, $company_id)
     {
-        $logos = DB::table('companies')
-            ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions')
-            ->join('jobs', 'companies.id', 'jobs.company_id')
-            ->join('clients', 'clients.id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
+        /* Intent: Redis cache for job company logo and metadata (TTL 300s) to prevent repetitive N+1 database queries */
+        return Cache::remember("job_company_details:{$jobid}:{$company_id}", 300, function () use ($jobid, $company_id) {
+            $logos = DB::table('jobs')
+                ->select(
+                    'jobs.id',
+                    'jobs.title',
+                    'jobs.work_type',
+                    'jobs.show_vendor',
+                    'jobs.total_positions',
+                    'jobs.priority',
+                    'jobs.status',
+                    'jobs.min_exp',
+                    'jobs.max_exp',
+                    'jobs.created_at',
+                    'jobs.start_date',
+                    'jobs.end_date',
+                    'jobs.min_salary',
+                    'jobs.max_salary',
+                    'jobs.min_sal_mode',
+                    'jobs.max_sal_mode',
+                    'jobs.min_salary_currency',
+                    'jobs.max_salary_currency',
+                    'clients.name as clients_name',
+                    'clients.logo_logical_path',
+                    'clients.self_company',
+                    'clients.company_id as client_company_id',
+                    'companies.company_name',
+                    'companies.logo',
+                    DB::raw('COUNT(job_applications.id) as allCandidate'),
 
-        $logos = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.title',
-                'jobs.work_type',
-                'jobs.show_vendor',
-                'jobs.total_positions',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
-                'clients.name as clients_name',
-                'clients.logo_logical_path',
-                'clients.self_company',
-                'clients.company_id as client_company_id',
-                'companies.company_name',
-                'companies.logo',
-                DB::raw('COUNT(job_applications.id) as allCandidate'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
 
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),       // MEANS COMPANY OWN UPLOAD APP
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
 
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
+                    DB::raw('SUM(
+                    CASE 
+                            WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
+                            WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
+                            ELSE 0 END
+                 ) AS thirdparty_Rejected'
+                    ),
+                    'recommendation_relation.id as recommendation_id',
+                    'recommendation_relation.from_company_id',
+                    'recommendation_relation.final_status',
+                    'recommendation_relation.to_company_id'
+                )
+                ->join('clients', 'clients.id', 'jobs.client_id')
+                ->join('companies', 'companies.id', 'jobs.company_id')
+                ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
+                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                ->where('jobs.id', $jobid);
 
-                DB::raw('SUM(
-				CASE 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
-						ELSE 0 END
-			 ) AS thirdparty_Rejected'
-                ),
-                // DB::raw("SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = ".$company_id." AND job_applications.master_status_id = 9 THEN 1 ELSE 0 END) AS thirdparty_InReview_Rejected"),
+            $row = $logos->first();
 
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.from_company_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.to_company_id'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'jobs.company_id')
-            ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('jobs.id', '>', '0');
-        $row = $logos->where('jobs.id', $jobid)->first();
+            $recommendation_id = $row->recommendation_id ?? null;
+            $logo_path = '';
 
-        $recommendation_id = '';
-        $recommendation_id = $row->recommendation_id;
-        $recommendation_text = '&nbsp;<i class="bi bi-house" style="color:#00CC00"></i>';
+            if (! empty($row->logo_logical_path)) {
+                $logo_path = @$row->logo_logical_path;
+                if (@$row->to_company_id == $company_id) {
+                    $logo_path = @$row->logo;
+                }
 
-        $logo_path = '';
-        // $logo_path				=	url('img/client-default.png');
-        if (! empty($row->logo_logical_path)) {
-            $logo_path = @$row->logo_logical_path;
-            if (@$row->to_company_id == $company_id) {
-                $logo_path = @$row->logo;
+                if (($row->thirdparty_counter ?? 0) > 0 && $recommendation_id > 0 && @$row->to_company_id == $company_id) {
+                    $logo_path = @$row->logo;
+                }
             }
 
-            if ($row->thirdparty_counter > 0 && $recommendation_id > 0 && @$row->to_company_id == $company_id) {
-                $logo_path = @$row->logo;
+            if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+                if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                    $logo_path = @$row->logo;
+                }
             }
-        }
 
-        if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
-            $recommendation_text = '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
-            $profile_detail_class = 'client-show-detail';
-            $clients_name = ucwords(substr(@$row->company_name, 0, 15));
-
-            if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                $logo_path = @$row->logo;
+            if (@$row->self_company == 1) {
+                if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                    $logo_path = @$row->logo;
+                }
             }
-        }
 
-        if (@$row->self_company == 1) {
-            if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                $logo_path = @$row->logo;
-            }
-        }
-
-        return $logo_path;
+            return $logo_path;
+        });
     }
 
     public static function openCompanyDetailsByClient($jobid, $company_id)
     {
-        $logos = DB::table('companies')
-            ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions')
-            ->join('jobs', 'companies.id', 'jobs.company_id')
-            ->join('clients', 'clients.id', 'jobs.client_id')->where('jobs.id', $jobid)->first();
+        /* Intent: Redis cache for job company display name by client (TTL 300s) */
+        return Cache::remember("job_company_details_client:{$jobid}:{$company_id}", 300, function () use ($jobid, $company_id) {
+            $logos = DB::table('jobs')
+                ->select(
+                    'jobs.id',
+                    'jobs.title',
+                    'jobs.work_type',
+                    'jobs.show_vendor',
+                    'jobs.total_positions',
+                    'jobs.priority',
+                    'jobs.status',
+                    'jobs.min_exp',
+                    'jobs.max_exp',
+                    'jobs.created_at',
+                    'jobs.start_date',
+                    'jobs.end_date',
+                    'jobs.min_salary',
+                    'jobs.max_salary',
+                    'jobs.min_sal_mode',
+                    'jobs.max_sal_mode',
+                    'jobs.company_id',
+                    'jobs.min_salary_currency',
+                    'jobs.max_salary_currency',
+                    'clients.name as clients_name',
+                    'clients.logo_logical_path',
+                    'clients.self_company',
+                    'clients.company_id as client_company_id',
+                    'companies.company_name',
+                    'companies.logo',
+                    DB::raw('COUNT(job_applications.id) as allCandidate'),
 
-        $logos = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.title',
-                'jobs.work_type',
-                'jobs.show_vendor',
-                'jobs.total_positions',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
-                'jobs.company_id',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
-                'clients.name as clients_name',
-                'clients.logo_logical_path',
-                'clients.self_company',
-                'clients.company_id as client_company_id',
-                'companies.company_name',
-                'companies.logo',
-                DB::raw('COUNT(job_applications.id) as allCandidate'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
 
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),       // MEANS COMPANY OWN UPLOAD APP
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
 
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
+                    DB::raw('SUM(
+                    CASE 
+                            WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
+                            WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
+                            ELSE 0 END
+                 ) AS thirdparty_Rejected'
+                    ),
+                    'recommendation_relation.id as recommendation_id',
+                    'recommendation_relation.from_company_id',
+                    'recommendation_relation.final_status',
+                    'recommendation_relation.to_company_id'
+                )
+                ->join('clients', 'clients.id', 'jobs.client_id')
+                ->join('companies', 'companies.id', 'jobs.company_id')
+                ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
+                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                ->where('jobs.id', $jobid);
 
-                DB::raw('SUM(
-				CASE 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
-						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
-						ELSE 0 END
-			 ) AS thirdparty_Rejected'
-                ),
-                // DB::raw("SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = ".$company_id." AND job_applications.master_status_id = 9 THEN 1 ELSE 0 END) AS thirdparty_InReview_Rejected"),
+            $row = $logos->first();
 
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.from_company_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.to_company_id'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'jobs.company_id')
-            ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('jobs.id', '>', '0');
-        $row = $logos->where('jobs.id', $jobid)->first();
+            $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
+            $is_direct_client = (($row->company_id ?? null) != $company_id);
 
-        $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
-        $is_direct_client = ($row->company_id != $company_id);
+            if ($is_direct_client) {
+                $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
+            } elseif ($is_self_company) {
+                $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
+            } else {
+                $displayName = ! empty($row->clients_name) ? $row->clients_name : @$row->company_name;
+            }
 
-        if ($is_direct_client) {
-            $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
-        } elseif ($is_self_company) {
-            $displayName = ! empty($row->company_name) ? $row->company_name : @$row->clients_name;
-        } else {
-            $displayName = ! empty($row->clients_name) ? $row->clients_name : @$row->company_name;
-        }
-
-        return ucwords(substr((string) $displayName, 0, 50));
+            return ucwords(substr((string) $displayName, 0, 50));
+        });
     }
 
     public static function openJobcities($cityID, $company_id)
     {
+        /* Intent: Redis cache for job cities list (TTL 3600s) */
+        return Cache::remember("job_cities_list:{$cityID}", 3600, function () use ($cityID) {
+            $citylistSelect = DB::table('client_city_jobs')
+                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
+                ->where('city_list.city', '!=', '')
+                ->where('client_city_jobs.job_id', $cityID)
+                ->get()->map(function ($city) {
+                    return $city->city_name;
+                });
 
-        $citylistSelect = DB::table('client_city_jobs')
-            ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-            ->join('countries', 'countries.id', '=', 'state_list.country_id')
-            ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
-            ->where('city_list.city', '!=', '')
-            ->where('client_city_jobs.job_id', $cityID)
-            // ->where('client_city_jobs.company_id', $Company_id)
-            ->get()->map(function ($city) {
-                return $city->city_name;
-            });
-        // $jobCitySelectedTag  =
-        $jobCitySelectedTag = $citylistSelect->toArray();
+            $jobCitySelectedTag = $citylistSelect->toArray();
 
-        return ($jobCitySelectedTag) ? implode(' , ', $jobCitySelectedTag) : '';
-
+            return ($jobCitySelectedTag) ? implode(' , ', $jobCitySelectedTag) : '';
+        });
     }
 
     public static function openChecksubscription($company_id)
@@ -3808,8 +3784,14 @@ END:VCALENDAR";
 
     public static function qualification($id = '')
     {
+        if (empty($id)) {
+            return null;
+        }
 
-        return DB::table('qualification_master')->select('qualification_master.name')->where('id', '=', $id)->first();
+        /* Intent: Redis cache for static qualification master data (24h TTL) */
+        return Cache::remember("qualification_master_{$id}", 86400, function () use ($id) {
+            return DB::table('qualification_master')->select('qualification_master.name')->where('id', '=', $id)->first();
+        });
     }
 
     public static function companiesType()
@@ -4969,9 +4951,93 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Resolve the primary city, state, tooltip of additional cities, and "+N Other City" badge for a job.
+     *
+     * Intent: Serve job header location display in toolbar.blade.php from Elasticsearch (ELASTIC_JOBS
+     * client_city_jobs + cached ELASTIC_LOCATIONS state lookup) with 0 MySQL reads instead of a ~200ms
+     * 4-table MySQL JOIN across client_city_jobs + city_list + state_list + countries (Rule 1 & Rule 2).
+     * Tenancy: Job location metadata keyed by job_id.
+     */
     public static function firstJobcities($id)
     {
-        $Company_id = auth()->user()->company_id;
+        static $memo = [];
+        $jobId = (int) $id;
+        if ($jobId <= 0) {
+            return [
+                'display' => '',
+                'tooltip' => '',
+                'countPlus' => '',
+            ];
+        }
+        if (isset($memo[$jobId])) {
+            return $memo[$jobId];
+        }
+
+        try {
+            $jobEsDoc = self::jobDefaultsFromEs($jobId, false)->jobEsDoc ?? null;
+            if ($jobEsDoc && isset($jobEsDoc->client_city_jobs) && is_array($jobEsDoc->client_city_jobs)) {
+                $cities = [];
+                $firstCityId = 0;
+                $firstStateName = '';
+                foreach ($jobEsDoc->client_city_jobs as $cRow) {
+                    $cObj = (object) $cRow;
+                    $cName = trim((string) ($cObj->city_name ?? $cObj->city ?? ''));
+                    if ($cName !== '') {
+                        $cities[] = $cName;
+                        if ($firstCityId === 0 && ! empty($cObj->city_id)) {
+                            $firstCityId = (int) $cObj->city_id;
+                        }
+                        if ($firstStateName === '' && ! empty($cObj->state_name)) {
+                            $firstStateName = trim((string) $cObj->state_name);
+                        }
+                    }
+                }
+
+                $total = count($cities);
+                if ($total === 0) {
+                    return $memo[$jobId] = [
+                        'display' => '',
+                        'tooltip' => '',
+                        'countPlus' => '',
+                    ];
+                }
+
+                if ($firstStateName === '' && $firstCityId > 0) {
+                    $firstStateName = (string) Cache::remember("es_city_state_name:{$firstCityId}", 86400, function () use ($firstCityId) {
+                        try {
+                            $elasticService = app(ElasticService::class);
+                            $res = $elasticService->getClient()->search([
+                                'index' => ELASTIC_LOCATIONS,
+                                'body' => [
+                                    'size' => 1,
+                                    '_source' => ['state_name'],
+                                    'query' => ['term' => ['city_id' => $firstCityId]],
+                                ],
+                            ]);
+
+                            return trim((string) ($res['hits']['hits'][0]['_source']['state_name'] ?? ''));
+                        } catch (\Throwable) {
+                            return '';
+                        }
+                    });
+                }
+
+                $cityName = $cities[0];
+                $otherCities = array_slice($cities, 1);
+                $tooltip = implode(', ', $otherCities);
+                $countPlus = $total > 1 ? ' +'.($total - 1).' Other City' : '';
+                $display = $cityName.'`,`'.$firstStateName;
+
+                return $memo[$jobId] = [
+                    'display' => $display,
+                    'tooltip' => $tooltip,
+                    'countPlus' => $countPlus,
+                ];
+            }
+        } catch (\Throwable) {
+            // Fall through to DB circuit-breaker fallback
+        }
 
         $citylistSelect = DB::table('client_city_jobs')
             ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
@@ -4979,13 +5045,12 @@ END:VCALENDAR";
             ->join('countries', 'countries.id', '=', 'state_list.country_id')
             ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
             ->where('city_list.city', '!=', '')
-            ->where('client_city_jobs.job_id', $id)
-            // ->where('client_city_jobs.company_id', $Company_id)
+            ->where('client_city_jobs.job_id', $jobId)
             ->get();
 
         $total = $citylistSelect->count();
         if ($total == 0) {
-            return [
+            return $memo[$jobId] = [
                 'display' => '',
                 'tooltip' => '',
                 'countPlus' => '',
@@ -5005,7 +5070,7 @@ END:VCALENDAR";
         }
         $display .= '`,`'.$stateName;
 
-        return [
+        return $memo[$jobId] = [
             'display' => $display,
             'tooltip' => $tooltip,
             'countPlus' => $countPlus,
@@ -7462,603 +7527,595 @@ END:VCALENDAR";
         $response = '';
         $elasticService = app(ElasticService::class);
 
-        // $add_job_wise_condidates = DB::table('add_job_wise_condidates')->select('id', 'job_id')->orderByDesc(column: 'created_at')->limit(50)->get();
+        $id = $getId;
+        if (empty($id)) {
+            return true;
+        }
 
-        $add_job_wise_condidates = DB::table('add_job_wise_condidates')
-            ->where('id', '=', $getId)
-            ->select('add_job_wise_condidates.id', 'add_job_wise_condidates.job_id')
-            ->get();
+        $applications = JobApplication::withoutGlobalScopes()->select(
+            'job_applications.id',
+            'job_applications.thirdparty_company_id',
+            'job_applications.full_name',
+            'job_applications.email',
+            'job_applications.phone',
+            'job_applications.np_id',
+            'job_applications.last_working_date',
+            'job_applications.serving_notice_period_mode',
+            'job_applications.country',
+            'job_applications.state',
+            'job_applications.city',
+            'job_applications.city_id',
+            'job_applications.gender',
+            'job_applications.skills',
+            'job_applications.photo',
+            'job_applications.job_id',
+            'job_applications.total_exp',
+            'job_applications.rel_exp',
+            'job_applications.ctc',
+            'job_applications.current_ctc_cur',
+            'job_applications.current_ctc_mode',
+            'job_applications.current_designation',
+            'job_applications.ectc',
+            'job_applications.current_ectc_cur',
+            'job_applications.current_ectc_mode',
+            'job_applications.current_company',
+            'job_applications.ctc_hourly',
+            'job_applications.ctc_monthly',
+            'job_applications.ctc_yearly',
+            'job_applications.ectc_hourly',
+            'job_applications.ectc_monthly',
+            'job_applications.ectc_yearly',
+            'job_applications.status',
+            'add_job_wise_condidates.skill_match',
+            'add_job_wise_condidates.existing',
+            'add_job_wise_condidates.placed_end_date',
+            'add_job_wise_condidates.rec_candidate_assign_id',
+            'job_applications.duplicate',
+            'job_applications.bill_rate_currency',
+            'job_applications.bill_rate_amount',
+            'job_applications.bill_rate_mode',
+            'job_applications.condidate_type',
+            'job_applications.master_status_id',
+            'job_applications.is_viewed',
+            'job_applications.column_priority',
+            'job_applications.phone_code',
+            'job_applications.second_phone_code',
+            'job_applications.secondary_mobile',
+            'job_applications.resume',
+            'job_applications.rating',
+            'job_applications.skype_id',
+            'job_applications.cover_letter',
+            'job_applications.passport',
+            'job_applications.process_id',
+            'job_applications.qualification',
+            'job_applications.secondrary_email',
+            'job_applications.city',
+            'job_applications.pincode',
+            'job_applications.percentage_hike',
+            'job_applications.comment',
+            'job_applications.dob',
+            'job_applications.interviewDateOne',
+            'job_applications.interviewDateTwo',
+            'job_applications.interviewDateThree',
+            'job_applications.interviewDateFour',
+            'job_applications.interviewDateFive',
+            'job_applications.interviewDateSix',
+            'job_applications.linkedin',
+            'job_applications.github',
+            'job_applications.behance',
+            'job_applications.otherLink',
+            'job_applications.interview_mode_one',
+            'job_applications.interview_mode_two',
+            'job_applications.interview_mode_three',
+            'job_applications.interview_mode_four',
+            'job_applications.interview_mode_five',
+            'job_applications.interview_mode_six',
+            'job_applications.company_id as other_company',
+            'jobs.title',
+            'jobs.client_id',
+            'jobs.employment_type',
+            'job_applications.outsourcing_type',
+            'job_applications.pay_rate_currency',
+            'job_applications.pay_rate_amount',
+            'job_applications.pay_rate_mode',
+            'job_applications.careersummary',
+            'job_applications.nationality',
+            'job_applications.wm',
+            'job_applications.employmentType',
+            'job_applications.oh',
+            'job_applications.visastatu',
+            'job_applications.referencename',
+            'job_applications.recruiter_note',
+            'job_applications.reason_for_job_change',
+            'jobs.company_id as client_comapny_id',
+            'job_locations.location',
+            'clients.name as client_name',
+            'users.name as posted_by',
+            'users.image as posted_by_image',
+            'master_status.name',
+            'master_status.css_style',
+            'qualification_master.name as qualification_name',
+            'state_list.state as state_name',
+            'city_list.city as city_name',
+            'countries.country_name',
+            'recommendation_relation.final_status',
+            'recommendation_relation.id as recommendation_id',
+            'recommendation_relation.from_company_id',
+            'recommendation_relation.to_company_id',
+            'companies.company_name',
+            'documents.hashname',
+            'app_com.company_name as apl_company_name',
+            'owncom.company_name as post_company_name',
+            'cur_com.company_name as cur_company_name',
+            'jobs.status as job_status',
+            'add_job_wise_condidates.child_status_id as childStatus',
+            'add_job_wise_condidates.id as wiseId',
+            'add_job_wise_condidates.master_status_id as job_master_status_id',
+            'offer_job_applications.proposed_ctc',
+            'offer_job_applications.any_offer as of_any_offer',
+            'offer_job_applications.offer_approved as of_offer_approved',
+            'offer_job_applications.offer_release as of_offer_release',
+            'offer_job_applications.offer_acceptance as of_offer_acceptance',
+            'offer_job_applications.joined as of_joined',
+            'offer_job_applications.joined_date as of_joined_date',
+            'offer_job_applications.offer_currency as of_offer_currency',
+            'offer_job_applications.offer_mode as of_offer_mode',
+            'offer_job_applications.offer_amount as of_offer_amount',
+            'offer_job_applications.id as offer_id',
+            'offer_job_applications.document',
+            'offer_job_applications.sub_for_approval',
+            'add_job_wise_condidates.thirdparty_company_id as ClientComID',
+            'add_job_wise_condidates.updated_at',
+            'add_job_wise_condidates.created_at',
+            'add_job_wise_condidates.company_id',
+            'add_job_wise_condidates.submitted_by',
+            'job_applications.deleted_at',
+            'add_job_wise_condidates.job_id as jobId'
+        )
+            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+            ->join('master_status', function ($join) {
+                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
+            })
+            ->leftJoin('jobs', function ($join) {
+                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+            })
+            ->leftJoin('recommendation_relation', function ($join) {
+                $join->on('recommendation_relation.job_id', 'jobs.id');
+            })
+            ->leftJoin('companies', function ($join) {
+                $join->on('companies.id', 'add_job_wise_condidates.company_id');
+            })
+            ->leftJoin('companies as owncom', function ($join) {
+                $join->on('owncom.id', 'job_applications.thirdparty_company_id');
+            })
+            ->leftjoin('companies as app_com', function ($join) {
+                $join->on('app_com.id', 'job_applications.company_id');
+            })
+            ->leftjoin('companies as cur_com', function ($join) {
+                $join->on('cur_com.id', 'jobs.company_id');
+            })
+            ->leftJoin('offer_job_applications', function ($join) {
+                $join->on('offer_job_applications.application_id', 'job_applications.id')
+                    ->on('offer_job_applications.job_id', 'add_job_wise_condidates.job_id');
+            })
+            ->leftjoin('clients', 'clients.id', 'jobs.client_id')
+            ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
+            ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
+            ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
+            ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->where('add_job_wise_condidates.id', $id)
+            ->orderByDesc('documents.id')->get();
 
-        foreach ($add_job_wise_condidates as $add_job_wise) {
+        $bulkData = [];
 
-            $id = $add_job_wise->id;
-            $jobId = $add_job_wise->job_id;
-            $applications = JobApplication::withoutGlobalScopes()->select(
-                'job_applications.id',
-                'job_applications.thirdparty_company_id',
-                'job_applications.full_name',
-                'job_applications.email',
-                'job_applications.phone',
-                'job_applications.np_id',
-                'job_applications.last_working_date',
-                'job_applications.serving_notice_period_mode',
-                'job_applications.country',
-                'job_applications.state',
-                'job_applications.city',
-                'job_applications.city_id',
-                'job_applications.gender',
-                'job_applications.skills',
-                'job_applications.photo',
-                'job_applications.job_id',
-                'job_applications.total_exp',
-                'job_applications.rel_exp',
-                'job_applications.ctc',
-                'job_applications.current_ctc_cur',
-                'job_applications.current_ctc_mode',
-                'job_applications.current_designation',
-                'job_applications.ectc',
-                'job_applications.current_ectc_cur',
-                'job_applications.current_ectc_mode',
-                'job_applications.current_company',
-                'job_applications.ctc_hourly',
-                'job_applications.ctc_monthly',
-                'job_applications.ctc_yearly',
-                'job_applications.ectc_hourly',
-                'job_applications.ectc_monthly',
-                'job_applications.ectc_yearly',
-                'job_applications.status',
-                'add_job_wise_condidates.skill_match',
-                'add_job_wise_condidates.existing',
-                'add_job_wise_condidates.placed_end_date',
-                'add_job_wise_condidates.rec_candidate_assign_id',
-                'job_applications.duplicate',
-                'job_applications.bill_rate_currency',
-                'job_applications.bill_rate_amount',
-                'job_applications.bill_rate_mode',
-                'job_applications.condidate_type',
-                'job_applications.master_status_id',
-                'job_applications.is_viewed',
-                'job_applications.column_priority',
-                'job_applications.phone_code',
-                'job_applications.second_phone_code',
-                'job_applications.secondary_mobile',
-                'job_applications.resume',
-                'job_applications.rating',
-                'job_applications.skype_id',
-                'job_applications.cover_letter',
-                'job_applications.passport',
-                'job_applications.process_id',
-                'job_applications.qualification',
-                'job_applications.secondrary_email',
-                'job_applications.city',
-                'job_applications.pincode',
-                'job_applications.percentage_hike',
-                'job_applications.comment',
-                'job_applications.dob',
-                'job_applications.interviewDateOne',
-                'job_applications.interviewDateTwo',
-                'job_applications.interviewDateThree',
-                'job_applications.interviewDateFour',
-                'job_applications.interviewDateFive',
-                'job_applications.interviewDateSix',
-                'job_applications.linkedin',
-                'job_applications.github',
-                'job_applications.behance',
-                'job_applications.otherLink',
-                'job_applications.interview_mode_one',
-                'job_applications.interview_mode_two',
-                'job_applications.interview_mode_three',
-                'job_applications.interview_mode_four',
-                'job_applications.interview_mode_five',
-                'job_applications.interview_mode_six',
-                'job_applications.company_id as other_company',
-                'jobs.title',
-                'jobs.client_id',
-                'jobs.employment_type',
-                'job_applications.outsourcing_type',
-                'job_applications.pay_rate_currency',
-                'job_applications.pay_rate_amount',
-                'job_applications.pay_rate_mode',
-                'job_applications.careersummary',
-                'job_applications.nationality',
-                'job_applications.wm',
-                'job_applications.employmentType',
-                'job_applications.oh',
-                'job_applications.visastatu',
-                'job_applications.referencename',
-                'job_applications.recruiter_note',
-                'job_applications.reason_for_job_change',
-                'jobs.company_id as client_comapny_id',
-                'job_locations.location',
-                'clients.name as client_name',
-                'users.name as posted_by',
-                'users.image as posted_by_image',
-                'master_status.name',
-                'master_status.css_style',
-                'qualification_master.name as qualification_name',
-                'state_list.state as state_name',
-                'city_list.city as city_name',
-                'countries.country_name',
-                'recommendation_relation.final_status',
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.from_company_id',
-                'recommendation_relation.to_company_id',
-                'companies.company_name',
-                'documents.hashname',
-                'app_com.company_name as apl_company_name',
-                'owncom.company_name as post_company_name',
-                'cur_com.company_name as cur_company_name',
-                'jobs.status as job_status',
-                'add_job_wise_condidates.child_status_id as childStatus',
-                'add_job_wise_condidates.id as wiseId',
-                'add_job_wise_condidates.master_status_id as job_master_status_id',
-                'offer_job_applications.proposed_ctc',
-                'offer_job_applications.any_offer as of_any_offer',
-                'offer_job_applications.offer_approved as of_offer_approved',
-                'offer_job_applications.offer_release as of_offer_release',
-                'offer_job_applications.offer_acceptance as of_offer_acceptance',
-                'offer_job_applications.joined as of_joined',
-                'offer_job_applications.joined_date as of_joined_date',
-                'offer_job_applications.offer_currency as of_offer_currency',
-                'offer_job_applications.offer_mode as of_offer_mode',
-                'offer_job_applications.offer_amount as of_offer_amount',
-                'offer_job_applications.id as offer_id',
-                'offer_job_applications.document',
-                'offer_job_applications.sub_for_approval',
-                'add_job_wise_condidates.thirdparty_company_id as ClientComID',
-                'add_job_wise_condidates.updated_at',
-                'add_job_wise_condidates.created_at',
-                'add_job_wise_condidates.company_id',
-                'add_job_wise_condidates.submitted_by',
-                'job_applications.deleted_at',
-                'add_job_wise_condidates.job_id as jobId'
-            )
-                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-                ->join('master_status', function ($join) {
-                    $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-                })
-                ->leftJoin('jobs', function ($join) {
-                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-                })
-                ->leftJoin('recommendation_relation', function ($join) {
-                    $join->on('recommendation_relation.job_id', 'jobs.id');
-                })
-                // ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-                ->leftJoin('companies', function ($join) {
-                    $join->on('companies.id', 'add_job_wise_condidates.company_id');
-                })
-                ->leftJoin('companies as owncom', function ($join) {
-                    $join->on('owncom.id', 'job_applications.thirdparty_company_id');
-                })
-                ->leftjoin('companies as app_com', function ($join) {
-                    $join->on('app_com.id', 'job_applications.company_id');
-                })
-                ->leftjoin('companies as cur_com', function ($join) {
-                    $join->on('cur_com.id', 'jobs.company_id');
-                })
-                ->leftJoin('offer_job_applications', function ($join) use ($jobId) {
-                    $join->on('offer_job_applications.application_id', 'job_applications.id');
-                    $join->where('offer_job_applications.job_id', $jobId);
-                })
-                ->leftjoin('clients', 'clients.id', 'jobs.client_id')
-                ->leftjoin('job_locations', 'job_locations.id', 'jobs.location_id')
-                ->leftjoin('users', 'users.id', 'add_job_wise_condidates.submitted_by')
-                ->leftjoin('documents', 'documents.documentable_id', 'job_applications.id')
-                ->leftjoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
-                ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-                ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-                ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
-                ->where('add_job_wise_condidates.id', $id)
-                ->orderByDesc('documents.id')->get();
+        foreach ($applications as $application) {
 
-            // dd($applications);
+            $wiseId = $application->wiseId;
 
-            $bulkData = [];
+            $client_name_com = '';
+            $client_name = @$application->client_name;
+            $activeCompanyId = $companyIdOverride ?: (auth()->check() ? auth()->user()->company_id : ($application->company_id ?: ($application->other_company ?: null)));
+            if ($activeCompanyId && @$application->client_comapny_id != $activeCompanyId) {
+                $client_name = @$application->cur_company_name;
+                $client_name = ucwords(substr(@$client_name, 0, 30));
+            }
 
-            foreach ($applications as $application) {
-                $wiseId = $application->wiseId;
-
-                $client_name_com = '';
-                $client_name = @$application->client_name;
-                $activeCompanyId = $companyIdOverride ?: (auth()->check() ? auth()->user()->company_id : ($application->company_id ?: ($application->other_company ?: null)));
-                if ($activeCompanyId && @$application->client_comapny_id != $activeCompanyId) {
-                    $client_name = @$application->cur_company_name;
-                    $client_name = ucwords(substr(@$client_name, 0, 30));
-                }
-
-                $client_name_com = $client_name;
-                //  dd($application->wiseId,$application->jobId);
-                $params = [
-                    'index' => ELASTIC_INERTVIEW_TRACKER,
-                    'body' => [
-                        'size' => 1,
-                        'query' => [
-                            'bool' => [
-                                'must' => [
-                                    ['term' => ['interview_job_wise_con_id' => @$application->wiseId]],
-                                    ['term' => ['interview_job_id' => @$application->jobId]],
-                                ],
+            $client_name_com = $client_name;
+            //  dd($application->wiseId,$application->jobId);
+            $params = [
+                'index' => ELASTIC_INERTVIEW_TRACKER,
+                'body' => [
+                    'size' => 1,
+                    'query' => [
+                        'bool' => [
+                            'must' => [
+                                ['term' => ['interview_job_wise_con_id' => @$application->wiseId]],
+                                ['term' => ['interview_job_id' => @$application->jobId]],
                             ],
                         ],
-                        'sort' => [
-                            ['updated_at' => ['order' => 'desc']],
-                        ],
                     ],
+                    'sort' => [
+                        ['updated_at' => ['order' => 'desc']],
+                    ],
+                ],
+            ];
+            $result = $elasticService->getClient()->search($params);
+            $intRow = isset($result['hits']['hits'][0]) ? (object) $result['hits']['hits'][0]['_source'] : null;
+
+            // $jobSkill = DB::table('job_metronics_skills')
+            // ->leftJoin('candidate_job_skill_exp', function($join) use($application) {
+            // 	$join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+            // 		->where('candidate_job_skill_exp.candidate_id', '=', $application->id); // Add the candidate condition
+            // })
+            // ->select('job_metronics_skills.*','candidate_job_skill_exp.skill_value')
+            // ->where('job_metronics_skills.job_id', '=', $application->jobId)
+            // ->get();
+
+            // // dd($jobSkill);
+
+            // if (count($jobSkill)>0) {
+            //     foreach ($jobSkill as $sval) {
+
+            //          $skillValue = str_replace(['Years','Year',' '],'',$sval->skill_value);
+            //                     // dd($skillValue);
+            //          if(!is_null($skillValue) && !empty($skillValue) && $skillValue !='0.'){
+            //             $values = array(
+            //                 'job_application_id' => $application->id,
+            //                 'skills' => $sval->skill_name
+            //             );
+            //             if(!DB::table('job_application_skills')->where('job_application_id','=',$application->id)->where('skills','LIKE', '%'.$sval->skill_name.'%')->exists()){
+            //                 DB::table('job_application_skills')->insert($values);
+            //             }
+            //         }
+
+            //     }
+            // }
+
+            $skills = DB::table('job_application_skills')
+                ->where('job_application_id', $application->id)
+                ->get();
+
+            $job_application_skills = $skills->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'job_application_id' => $s->job_application_id,   // ← FIXED (you had wrong value)
+                    'skills' => strtolower((string) $s->skills),
                 ];
-                $result = $elasticService->getClient()->search($params);
-                $intRow = isset($result['hits']['hits'][0]) ? (object) $result['hits']['hits'][0]['_source'] : null;
+            })->toArray();
 
-                // $jobSkill = DB::table('job_metronics_skills')
-                // ->leftJoin('candidate_job_skill_exp', function($join) use($application) {
-                // 	$join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                // 		->where('candidate_job_skill_exp.candidate_id', '=', $application->id); // Add the candidate condition
-                // })
-                // ->select('job_metronics_skills.*','candidate_job_skill_exp.skill_value')
-                // ->where('job_metronics_skills.job_id', '=', $application->jobId)
-                // ->get();
+            $application_skills = $skills
+                ->pluck('skills')
+                ->map(fn ($skill) => strtolower((string) $skill))
+                ->implode(',');
 
-                // // dd($jobSkill);
+            $duplicate = (int) ($application->duplicate ?? 0);
 
-                // if (count($jobSkill)>0) {
-                //     foreach ($jobSkill as $sval) {
+            // Intent: Evaluate candidate duplicate status in static method context without $this or undefined variables.
+            // TENANCY NOTE: Scope company duplicate checks by application company_id.
+            $companyId = $companyIdOverride ?: ($application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null)));
+            if ($companyId) {
+                static $companyDupSettingsCache = [];
+                if (! array_key_exists((int) $companyId, $companyDupSettingsCache)) {
+                    $companyDupSettingsCache[(int) $companyId] = DB::table('companies')
+                        ->select('app_duplicate', 'app_duplicate_days')
+                        ->where('id', $companyId)
+                        ->first();
+                }
+                $company = $companyDupSettingsCache[(int) $companyId];
+                $appDuplicate = $company->app_duplicate ?? 0;
+                $appDuplicateDays = $company->app_duplicate_days ?? 0;
 
-                //          $skillValue = str_replace(['Years','Year',' '],'',$sval->skill_value);
-                //                     // dd($skillValue);
-                //          if(!is_null($skillValue) && !empty($skillValue) && $skillValue !='0.'){
-                //             $values = array(
-                //                 'job_application_id' => $application->id,
-                //                 'skills' => $sval->skill_name
-                //             );
-                //             if(!DB::table('job_application_skills')->where('job_application_id','=',$application->id)->where('skills','LIKE', '%'.$sval->skill_name.'%')->exists()){
-                //                 DB::table('job_application_skills')->insert($values);
-                //             }
-                //         }
+                if ($appDuplicate == 1 || $appDuplicate == 2) {
+                    $applicationEmail = $application->email ?? '';
+                    $applicationPhone = $application->phone ?? '';
+                    $targetJobId = $application->jobId ?? ($application->job_id ?? null);
 
-                //     }
-                // }
-
-                $skills = DB::table('job_application_skills')
-                    ->where('job_application_id', $application->id)
-                    ->get();
-
-                $job_application_skills = $skills->map(function ($s) {
-                    return [
-                        'id' => $s->id,
-                        'job_application_id' => $s->job_application_id,   // ← FIXED (you had wrong value)
-                        'skills' => strtolower((string) $s->skills),
-                    ];
-                })->toArray();
-
-                $application_skills = $skills
-                    ->pluck('skills')
-                    ->map(fn ($skill) => strtolower((string) $skill))
-                    ->implode(',');
-
-                $duplicate = (int) ($application->duplicate ?? 0);
-
-                // Intent: Evaluate candidate duplicate status in static method context without $this or undefined variables.
-                // TENANCY NOTE: Scope company duplicate checks by application company_id.
-                $companyId = $companyIdOverride ?: ($application->company_id ?: ($application->other_company ?: (auth()->check() ? auth()->user()->company_id : null)));
-                if ($companyId) {
-                    static $companyDupSettingsCache = [];
-                    if (! array_key_exists((int) $companyId, $companyDupSettingsCache)) {
-                        $companyDupSettingsCache[(int) $companyId] = DB::table('companies')
-                            ->select('app_duplicate', 'app_duplicate_days')
-                            ->where('id', $companyId)
-                            ->first();
-                    }
-                    $company = $companyDupSettingsCache[(int) $companyId];
-                    $appDuplicate = $company->app_duplicate ?? 0;
-                    $appDuplicateDays = $company->app_duplicate_days ?? 0;
-
-                    if ($appDuplicate == 1 || $appDuplicate == 2) {
-                        $applicationEmail = $application->email ?? '';
-                        $applicationPhone = $application->phone ?? '';
-                        $targetJobId = $application->jobId ?? ($application->job_id ?? null);
+                    if (! empty($applicationEmail) || ! empty($applicationPhone)) {
+                        $days = (int) ($appDuplicateDays ?? 0);
 
                         if (! empty($applicationEmail) || ! empty($applicationPhone)) {
-                            $days = (int) ($appDuplicateDays ?? 0);
-
-                            if (! empty($applicationEmail) || ! empty($applicationPhone)) {
-                                $filters = [];
-                                /*
-                                * company_id OR thirdparty_company_id
-                                */
-                                $filters[] = [
-                                    'bool' => [
-                                        'should' => [
-                                            [
-                                                'term' => [
-                                                    'company_id' => (int) $companyId,
-                                                ],
-                                            ],
-                                            [
-                                                'term' => [
-                                                    'thirdparty_company_id' => (int) $companyId,
-                                                ],
+                            $filters = [];
+                            /*
+                            * company_id OR thirdparty_company_id
+                            */
+                            $filters[] = [
+                                'bool' => [
+                                    'should' => [
+                                        [
+                                            'term' => [
+                                                'company_id' => (int) $companyId,
                                             ],
                                         ],
+                                        [
+                                            'term' => [
+                                                'thirdparty_company_id' => (int) $companyId,
+                                            ],
+                                        ],
+                                    ],
+                                    'minimum_should_match' => 1,
+                                ],
+                            ];
+
+                            /*
+                            * appDuplicate = 1
+                            * Check duplicate for SAME JOB
+                            *
+                            * appDuplicate = 2
+                            * Check duplicate across ALL JOBS
+                            */
+                            if ((int) $appDuplicate === 1) {
+                                $filters[] = [
+                                    'term' => [
+                                        'jobId' => (int) $targetJobId,
+                                    ],
+                                ];
+                            }
+
+                            /*
+                            * Email OR Phone
+                            *
+                            * Same behavior as:
+                            *
+                            * where('email', $applicationEmail)
+                            * ->orWhere('phone', $applicationPhone)
+                            */
+                            $duplicateFields = [];
+
+                            if (! empty($applicationEmail)) {
+                                $duplicateFields[] = [
+                                    'term' => [
+                                        'email.keyword' => trim($applicationEmail),
+                                    ],
+                                ];
+                            }
+
+                            if (! empty($applicationPhone)) {
+                                $duplicateFields[] = [
+                                    'term' => [
+                                        'phone.keyword' => trim($applicationPhone),
+                                    ],
+                                ];
+                            }
+
+                            if (! empty($duplicateFields)) {
+                                $filters[] = [
+                                    'bool' => [
+                                        'should' => $duplicateFields,
                                         'minimum_should_match' => 1,
                                     ],
                                 ];
+                            }
 
-                                /*
-                                * appDuplicate = 1
-                                * Check duplicate for SAME JOB
-                                *
-                                * appDuplicate = 2
-                                * Check duplicate across ALL JOBS
-                                */
-                                if ((int) $appDuplicate === 1) {
-                                    $filters[] = [
-                                        'term' => [
-                                            'jobId' => (int) $targetJobId,
-                                        ],
-                                    ];
-                                }
-
-                                /*
-                                * Email OR Phone
-                                *
-                                * Same behavior as:
-                                *
-                                * where('email', $applicationEmail)
-                                * ->orWhere('phone', $applicationPhone)
-                                */
-                                $duplicateFields = [];
-
-                                if (! empty($applicationEmail)) {
-                                    $duplicateFields[] = [
-                                        'term' => [
-                                            'email.keyword' => trim($applicationEmail),
-                                        ],
-                                    ];
-                                }
-
-                                if (! empty($applicationPhone)) {
-                                    $duplicateFields[] = [
-                                        'term' => [
-                                            'phone.keyword' => trim($applicationPhone),
-                                        ],
-                                    ];
-                                }
-
-                                if (! empty($duplicateFields)) {
-                                    $filters[] = [
-                                        'bool' => [
-                                            'should' => $duplicateFields,
-                                            'minimum_should_match' => 1,
-                                        ],
-                                    ];
-                                }
-
-                                /*
-                                * Date condition
-                                *
-                                * MySQL:
-                                *
-                                * created_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY)
-                                */
-                                if ($days > 0) {
-                                    $filters[] = [
-                                        'range' => [
-                                            'created_at' => [
-                                                'gte' => "now-{$days}d/d",
-                                            ],
-                                        ],
-                                    ];
-                                }
-
-                                /*
-                                * Elasticsearch query
-                                */
-                                $params = [
-                                    'index' => ELASTIC_CANDIDATES,
-                                    'size' => 1,
-                                    'body' => [
-                                        'query' => [
-                                            'bool' => [
-                                                'filter' => $filters,
-                                            ],
+                            /*
+                            * Date condition
+                            *
+                            * MySQL:
+                            *
+                            * created_at >= DATE_SUB(CURDATE(), INTERVAL $days DAY)
+                            */
+                            if ($days > 0) {
+                                $filters[] = [
+                                    'range' => [
+                                        'created_at' => [
+                                            'gte' => "now-{$days}d/d",
                                         ],
                                     ],
                                 ];
-
-                                /*
-                                * Execute Elasticsearch query
-                                */
-                                $response = $elasticService->getClient()->search($params);
-
-                                /*
-                                * Duplicate count
-                                */
-                                $duplicate = $response['hits']['total']['value'] ?? 0;
                             }
 
-                            if ($duplicate > 0 || ($application->duplicate ?? 0) == 1) {
-                                $duplicate = 1;
-                            }
+                            /*
+                            * Elasticsearch query
+                            */
+                            $params = [
+                                'index' => ELASTIC_CANDIDATES,
+                                'size' => 1,
+                                'body' => [
+                                    'query' => [
+                                        'bool' => [
+                                            'filter' => $filters,
+                                        ],
+                                    ],
+                                ],
+                            ];
+
+                            /*
+                            * Execute Elasticsearch query
+                            */
+                            $response = $elasticService->getClient()->search($params);
+
+                            /*
+                            * Duplicate count
+                            */
+                            $duplicate = $response['hits']['total']['value'] ?? 0;
+                        }
+
+                        if ($duplicate > 0 || ($application->duplicate ?? 0) == 1) {
+                            $duplicate = 1;
                         }
                     }
                 }
-                // if (($application->duplicate ?? 0) == 1) {
-                //     $duplicate = 1;
-                // }
-
-                try {
-                    $response = $elasticService->getClient()->update([
-                        'index' => ELASTIC_CANDIDATES,
-                        'id' => $wiseId,
-                        'retry_on_conflict' => 5,
-                        'body' => [
-                            'doc' => [
-                                'id' => $wiseId,
-                                'candidate_id' => $application->id,
-                                'thirdparty_company_id' => $application->thirdparty_company_id,
-                                'full_name' => strtolower((string) $application->full_name),
-                                'email' => $application->email,
-                                'phone' => $application->phone,
-                                'gender' => $application->gender,
-                                'np_id' => $application->np_id,
-                                'last_working_date' => $application->last_working_date,
-                                'immediate_join' => $application->np_id,
-                                'serving_notice_period_mode' => $application->serving_notice_period_mode,
-                                'country_name' => strtolower((string) $application->country_name),
-                                'state_name' => strtolower((string) $application->state_name),
-                                'city_name' => strtolower((string) $application->city_name),
-                                'city_id' => $application->city_id,
-                                'skills' => $application_skills,
-                                'photo' => $application->photo,
-                                'job_id' => $application->job_id,
-                                'jobId' => $application->jobId,
-                                'careersummary' => $application->careersummary,
-                                'nationality' => $application->nationality,
-                                'wm' => $application->wm,
-                                'employmentType' => $application->employmentType,
-                                'oh' => $application->oh,
-                                'visastatu' => $application->visastatu,
-                                'referencename' => $application->referencename,
-                                'recruiter_note' => $application->recruiter_note,
-                                'reason_for_job_change' => $application->reason_for_job_change,
-                                'total_exp' => $application->total_exp,
-                                'rel_exp' => $application->rel_exp,
-                                'ctc' => $application->ctc,
-                                'outsourcing_type' => $application->outsourcing_type,
-                                'pay_rate_currency' => $application->pay_rate_currency,
-                                'pay_rate_amount' => $application->pay_rate_amount,
-                                'pay_rate_mode' => $application->pay_rate_mode,
-                                'job_application_skills' => $job_application_skills,
-                                'current_ctc_cur' => $application->current_ctc_cur,
-                                'current_ctc_mode' => $application->current_ctc_mode,
-                                'current_designation' => $application->current_designation,
-                                'ectc' => $application->ectc,
-                                'current_ectc_cur' => $application->current_ectc_cur,
-                                'current_ectc_mode' => $application->current_ectc_mode,
-                                'current_company' => $application->current_company,
-                                'duplicate' => (int) ($duplicate ?? $application->duplicate ?? 0),
-                                'is_duplicate' => (bool) (($duplicate ?? $application->duplicate ?? 0) == 1),
-                                'bill_rate_currency' => $application->bill_rate_currency,
-                                'bill_rate_amount' => $application->bill_rate_amount,
-                                'bill_rate_mode' => $application->bill_rate_mode,
-                                'condidate_type' => $application->condidate_type,
-                                'master_status_id' => $application->master_status_id,
-                                'title' => strtolower((string) $application->title),
-                                'client_id' => $application->client_id,
-                                'employment_type' => $application->employment_type,
-                                'client_comapny_id' => $application->client_comapny_id,
-                                'location' => $application->location,
-                                'client_name' => strtolower((string) $application->client_name),
-                                'posted_by' => strtolower((string) $application->posted_by),
-                                'posted_by_image' => $application->posted_by_image,
-                                'name' => $application->name,
-                                'post_company_name' => $application->post_company_name,
-                                'css_style' => $application->css_style,
-                                'qualification_name' => strtolower((string) $application->qualification_name),
-                                'final_status' => $application->final_status,
-                                'recommendation_id' => $application->recommendation_id,
-                                'from_company_id' => $application->from_company_id,
-                                'to_company_id' => $application->to_company_id,
-                                'company_id' => $application->company_id,
-                                'company_name' => strtolower((string) $application->company_name),
-                                'apl_company_name' => strtolower((string) $application->apl_company_name),
-                                'cur_company_name' => strtolower((string) $application->cur_company_name),
-                                'job_status' => $application->job_status,
-                                'childStatus' => $application->childStatus,
-                                'wiseId' => $application->wiseId,
-                                'job_master_status_id' => $application->job_master_status_id,
-                                'of_any_offer' => $application->of_any_offer,
-                                'of_offer_approved' => $application->of_offer_approved,
-                                'of_offer_release' => $application->of_offer_release,
-                                'of_offer_acceptance' => $application->of_offer_acceptance,
-                                'of_joined' => $application->of_joined,
-                                'of_joined_date' => (! empty($application->of_joined_date) && $application->of_joined_date != '0000-00-00 00:00:00') ? Carbon::parse($application->of_joined_date)->toIso8601String() : null,
-                                'of_offer_currency' => $application->of_offer_currency,
-                                'of_offer_mode' => $application->of_offer_mode,
-                                'of_offer_amount' => $application->of_offer_amount,
-                                'offer_id' => $application->offer_id,
-                                'ClientComID' => $application->ClientComID,
-                                'is_viewed' => $application->is_viewed,
-                                'column_priority' => $application->column_priority,
-                                'phone_code' => $application->phone_code,
-                                'second_phone_code' => $application->second_phone_code,
-                                'secondary_mobile' => $application->secondary_mobile,
-                                'ctc_hourly' => $application->ctc_hourly,
-                                'ctc_monthly' => $application->ctc_monthly,
-                                'ctc_yearly' => $application->ctc_yearly,
-                                'ectc_hourly' => $application->ectc_hourly,
-                                'ectc_monthly' => $application->ectc_monthly,
-                                'ectc_yearly' => $application->ectc_yearly,
-                                'status' => $application->status,
-                                'skill_match' => $application->skill_match,
-                                'existing' => $application->existing,
-                                'placed_end_date' => $application->placed_end_date,
-                                'rec_candidate_assign_id' => $application->rec_candidate_assign_id,
-                                'resume' => $application->resume,
-                                'rating' => $application->rating,
-                                'skype_id' => $application->skype_id,
-                                'cover_letter' => $application->cover_letter,
-                                'passport' => $application->passport,
-                                'updated_at' => ($application->updated_at) ? Carbon::parse($application->updated_at)->toIso8601String() : null,
-                                'created_at' => ($application->created_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
-                                'deleted_at' => ($application->deleted_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
-                                'process_id' => $application->process_id,
-                                'qualification' => $application->qualification,
-                                'secondrary_email' => $application->secondrary_email,
-                                'city' => $application->city,
-                                'country' => $application->country,
-                                'pincode' => $application->pincode,
-                                'state' => $application->state,
-                                'percentage_hike' => $application->percentage_hike,
-                                'comment' => $application->comment,
-                                'dob' => $application->dob,
-                                'other_company' => $application->other_company,
-                                'master_status_name' => $application->master_status_name,
-                                'proposed_ctc' => $application->proposed_ctc,
-                                'document' => $application->document,
-                                'sub_for_approval' => $application->sub_for_approval,
-                                'own_company_name' => $application->own_company_name,
-                                'client_or_company_name' => strtolower((string) $client_name_com),
-                                'rjobid' => $application->rjobid,
-                                'submitted_by' => $application->submitted_by,
-                                'hashname' => $application->hashname,
-                                'linkedin' => $application->linkedin,
-                                'github' => $application->github,
-                                'behance' => $application->behance,
-                                'otherLink' => $application->otherLink,
-                                'interviewDateOne' => ($application->interviewDateOne) ? Carbon::parse($application->interviewDateOne)->toIso8601String() : null,
-                                'interview_mode_one' => $application->interview_mode_one,
-                                'interviewDateTwo' => ($application->interviewDateTwo) ? Carbon::parse($application->interviewDateTwo)->toIso8601String() : null,
-                                'interview_mode_two' => $application->interview_mode_two,
-                                'interviewDateThree' => ($application->interviewDateThree) ? Carbon::parse($application->interviewDateThree)->toIso8601String() : null,
-                                'interview_mode_three' => $application->interview_mode_three,
-                                'interviewDateFour' => ($application->interviewDateFour) ? Carbon::parse($application->interviewDateFour)->toIso8601String() : null,
-                                'interview_mode_four' => $application->interview_mode_four,
-                                'interviewDateFive' => ($application->interviewDateFive) ? Carbon::parse($application->interviewDateFive)->toIso8601String() : null,
-                                'interview_mode_five' => $application->interview_mode_five,
-                                'interviewDateSix' => ($application->interviewDateSix) ? Carbon::parse($application->interviewDateSix)->toIso8601String() : null,
-                                'interview_mode_six' => $application->interview_mode_six,
-                                'schedule_date' => ($intRow) ? Carbon::parse($intRow->schedule_date)->toIso8601String() : null,
-                                'timezone_abbreviation' => ($intRow) ? $intRow->timezone_abbreviation : null,
-                                'schedule_to_time' => ($intRow) ? $intRow->schedule_to_time : null,
-                            ],
-                            'doc_as_upsert' => true,
-                            'detect_noop' => false,
-                        ],
-                    ]);
-
-                    self::addCompanyCandidate($application->company_id, $wiseId);
-
-                    $resultStatus = $response['result'] ?? '';
-                    $hasHits = ! empty($response['_id']);
-                    $success = in_array($resultStatus, ['updated', 'created', 'noop']) || $hasHits;
-                } catch (\Exception $e) {
-                    Log::error('JobApplicationsAddEditUpload ES sync failed', [
-                        'wise_id' => $wiseId,
-                        'error' => $e->getMessage(),
-                    ]);
-                    $success = false;
-                }
             }
+            // if (($application->duplicate ?? 0) == 1) {
+            //     $duplicate = 1;
+            // }
+
+            try {
+                $response = $elasticService->getClient()->update([
+                    'index' => ELASTIC_CANDIDATES,
+                    'id' => $wiseId,
+                    'retry_on_conflict' => 5,
+                    'body' => [
+                        'doc' => [
+                            'id' => $wiseId,
+                            'candidate_id' => $application->id,
+                            'thirdparty_company_id' => $application->thirdparty_company_id,
+                            'full_name' => strtolower((string) $application->full_name),
+                            'email' => $application->email,
+                            'phone' => $application->phone,
+                            'gender' => $application->gender,
+                            'np_id' => $application->np_id,
+                            'last_working_date' => $application->last_working_date,
+                            'immediate_join' => $application->np_id,
+                            'serving_notice_period_mode' => $application->serving_notice_period_mode,
+                            'country_name' => strtolower((string) $application->country_name),
+                            'state_name' => strtolower((string) $application->state_name),
+                            'city_name' => strtolower((string) $application->city_name),
+                            'city_id' => $application->city_id,
+                            'skills' => $application_skills,
+                            'photo' => $application->photo,
+                            'job_id' => $application->job_id,
+                            'jobId' => $application->jobId,
+                            'careersummary' => $application->careersummary,
+                            'nationality' => $application->nationality,
+                            'wm' => $application->wm,
+                            'employmentType' => $application->employmentType,
+                            'oh' => $application->oh,
+                            'visastatu' => $application->visastatu,
+                            'referencename' => $application->referencename,
+                            'recruiter_note' => $application->recruiter_note,
+                            'reason_for_job_change' => $application->reason_for_job_change,
+                            'total_exp' => $application->total_exp,
+                            'rel_exp' => $application->rel_exp,
+                            'ctc' => $application->ctc,
+                            'outsourcing_type' => $application->outsourcing_type,
+                            'pay_rate_currency' => $application->pay_rate_currency,
+                            'pay_rate_amount' => $application->pay_rate_amount,
+                            'pay_rate_mode' => $application->pay_rate_mode,
+                            'job_application_skills' => $job_application_skills,
+                            'current_ctc_cur' => $application->current_ctc_cur,
+                            'current_ctc_mode' => $application->current_ctc_mode,
+                            'current_designation' => $application->current_designation,
+                            'ectc' => $application->ectc,
+                            'current_ectc_cur' => $application->current_ectc_cur,
+                            'current_ectc_mode' => $application->current_ectc_mode,
+                            'current_company' => $application->current_company,
+                            'duplicate' => (int) ($duplicate ?? $application->duplicate ?? 0),
+                            'is_duplicate' => (bool) (($duplicate ?? $application->duplicate ?? 0) == 1),
+                            'bill_rate_currency' => $application->bill_rate_currency,
+                            'bill_rate_amount' => $application->bill_rate_amount,
+                            'bill_rate_mode' => $application->bill_rate_mode,
+                            'condidate_type' => $application->condidate_type,
+                            'master_status_id' => $application->master_status_id,
+                            'title' => strtolower((string) $application->title),
+                            'client_id' => $application->client_id,
+                            'employment_type' => $application->employment_type,
+                            'client_comapny_id' => $application->client_comapny_id,
+                            'location' => $application->location,
+                            'client_name' => strtolower((string) $application->client_name),
+                            'posted_by' => strtolower((string) $application->posted_by),
+                            'posted_by_image' => $application->posted_by_image,
+                            'name' => $application->name,
+                            'post_company_name' => $application->post_company_name,
+                            'css_style' => $application->css_style,
+                            'qualification_name' => strtolower((string) $application->qualification_name),
+                            'final_status' => $application->final_status,
+                            'recommendation_id' => $application->recommendation_id,
+                            'from_company_id' => $application->from_company_id,
+                            'to_company_id' => $application->to_company_id,
+                            'company_id' => $application->company_id,
+                            'company_name' => strtolower((string) $application->company_name),
+                            'apl_company_name' => strtolower((string) $application->apl_company_name),
+                            'cur_company_name' => strtolower((string) $application->cur_company_name),
+                            'job_status' => $application->job_status,
+                            'childStatus' => $application->childStatus,
+                            'wiseId' => $application->wiseId,
+                            'job_master_status_id' => $application->job_master_status_id,
+                            'of_any_offer' => $application->of_any_offer,
+                            'of_offer_approved' => $application->of_offer_approved,
+                            'of_offer_release' => $application->of_offer_release,
+                            'of_offer_acceptance' => $application->of_offer_acceptance,
+                            'of_joined' => $application->of_joined,
+                            'of_joined_date' => (! empty($application->of_joined_date) && $application->of_joined_date != '0000-00-00 00:00:00') ? Carbon::parse($application->of_joined_date)->toIso8601String() : null,
+                            'of_offer_currency' => $application->of_offer_currency,
+                            'of_offer_mode' => $application->of_offer_mode,
+                            'of_offer_amount' => $application->of_offer_amount,
+                            'offer_id' => $application->offer_id,
+                            'ClientComID' => $application->ClientComID,
+                            'is_viewed' => $application->is_viewed,
+                            'column_priority' => $application->column_priority,
+                            'phone_code' => $application->phone_code,
+                            'second_phone_code' => $application->second_phone_code,
+                            'secondary_mobile' => $application->secondary_mobile,
+                            'ctc_hourly' => $application->ctc_hourly,
+                            'ctc_monthly' => $application->ctc_monthly,
+                            'ctc_yearly' => $application->ctc_yearly,
+                            'ectc_hourly' => $application->ectc_hourly,
+                            'ectc_monthly' => $application->ectc_monthly,
+                            'ectc_yearly' => $application->ectc_yearly,
+                            'status' => $application->status,
+                            'skill_match' => $application->skill_match,
+                            'existing' => $application->existing,
+                            'placed_end_date' => $application->placed_end_date,
+                            'rec_candidate_assign_id' => $application->rec_candidate_assign_id,
+                            'resume' => $application->resume,
+                            'rating' => $application->rating,
+                            'skype_id' => $application->skype_id,
+                            'cover_letter' => $application->cover_letter,
+                            'passport' => $application->passport,
+                            'updated_at' => ($application->updated_at) ? Carbon::parse($application->updated_at)->toIso8601String() : null,
+                            'created_at' => ($application->created_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
+                            'deleted_at' => ($application->deleted_at) ? Carbon::parse($application->created_at)->toIso8601String() : null,
+                            'process_id' => $application->process_id,
+                            'qualification' => $application->qualification,
+                            'secondrary_email' => $application->secondrary_email,
+                            'city' => $application->city,
+                            'country' => $application->country,
+                            'pincode' => $application->pincode,
+                            'state' => $application->state,
+                            'percentage_hike' => $application->percentage_hike,
+                            'comment' => $application->comment,
+                            'dob' => $application->dob,
+                            'other_company' => $application->other_company,
+                            'master_status_name' => $application->master_status_name,
+                            'proposed_ctc' => $application->proposed_ctc,
+                            'document' => $application->document,
+                            'sub_for_approval' => $application->sub_for_approval,
+                            'own_company_name' => $application->own_company_name,
+                            'client_or_company_name' => strtolower((string) $client_name_com),
+                            'rjobid' => $application->rjobid,
+                            'submitted_by' => $application->submitted_by,
+                            'hashname' => $application->hashname,
+                            'linkedin' => $application->linkedin,
+                            'github' => $application->github,
+                            'behance' => $application->behance,
+                            'otherLink' => $application->otherLink,
+                            'interviewDateOne' => ($application->interviewDateOne) ? Carbon::parse($application->interviewDateOne)->toIso8601String() : null,
+                            'interview_mode_one' => $application->interview_mode_one,
+                            'interviewDateTwo' => ($application->interviewDateTwo) ? Carbon::parse($application->interviewDateTwo)->toIso8601String() : null,
+                            'interview_mode_two' => $application->interview_mode_two,
+                            'interviewDateThree' => ($application->interviewDateThree) ? Carbon::parse($application->interviewDateThree)->toIso8601String() : null,
+                            'interview_mode_three' => $application->interview_mode_three,
+                            'interviewDateFour' => ($application->interviewDateFour) ? Carbon::parse($application->interviewDateFour)->toIso8601String() : null,
+                            'interview_mode_four' => $application->interview_mode_four,
+                            'interviewDateFive' => ($application->interviewDateFive) ? Carbon::parse($application->interviewDateFive)->toIso8601String() : null,
+                            'interview_mode_five' => $application->interview_mode_five,
+                            'interviewDateSix' => ($application->interviewDateSix) ? Carbon::parse($application->interviewDateSix)->toIso8601String() : null,
+                            'interview_mode_six' => $application->interview_mode_six,
+                            'schedule_date' => ($intRow) ? Carbon::parse($intRow->schedule_date)->toIso8601String() : null,
+                            'timezone_abbreviation' => ($intRow) ? $intRow->timezone_abbreviation : null,
+                            'schedule_to_time' => ($intRow) ? $intRow->schedule_to_time : null,
+                        ],
+                        'doc_as_upsert' => true,
+                        'detect_noop' => false,
+                    ],
+                ]);
+
+                self::addCompanyCandidate($application->company_id, $wiseId);
+
+                $resultStatus = $response['result'] ?? '';
+                $hasHits = ! empty($response['_id']);
+                $success = in_array($resultStatus, ['updated', 'created', 'noop']) || $hasHits;
+            } catch (\Exception $e) {
+                Log::error('JobApplicationsAddEditUpload ES sync failed', [
+                    'wise_id' => $wiseId,
+                    'error' => $e->getMessage(),
+                ]);
+                $success = false;
+            }
+
         }
 
         return $success ?? true;
@@ -13223,13 +13280,16 @@ END:VCALENDAR";
     }
 
     /**
-     * Safely increments the cache version integer for the given key.
-     * Handles non-numeric values (e.g. stdClass objects previously cached under $key) safely to avoid type conversion errors.
+     * Safely increments the cache version integer for the given key and its corresponding
+     * tenant-scoped version key (*_version_company_{companyId}) so all organization users
+     * immediately see fresh data in real time (Rule 6: Multi-Tenant Atomic Cache Invalidation).
+     * Handles non-numeric values (e.g. stdClass objects previously cached under $key) safely.
      *
      * @param  string|mixed  $key
+     * @param  int|null  $companyId
      * @return bool
      */
-    public static function cacheClean($key)
+    public static function cacheClean($key, $companyId = null)
     {
         if (is_object($key)) {
             $key = $key->key ?? $key->id ?? null;
@@ -13241,33 +13301,56 @@ END:VCALENDAR";
 
         $key = (string) $key;
 
-        Cache::lock('lock_'.$key, 2)->block(2, function () use ($key) {
-            $val = cache()->get($key, 1);
+        $bumpVersion = static function (string $targetKey): void {
+            $val = cache()->get($targetKey, 1);
             $currentVal = is_numeric($val) ? (int) $val : 1;
-            cache()->forever($key, $currentVal + 1);
-        });
+            cache()->forever($targetKey, $currentVal + 1);
+        };
+
+        $bumpVersion($key);
+
+        // Rule 6: Automatically bump tenant-wide version key whenever a per-user version key is cleaned
+        if (preg_match('/^([a-zA-Z0-9_]+_version)_user_\d+$/', $key, $matches)) {
+            $resolvedCompanyId = $companyId ?: (auth()->check() ? (int) auth()->user()->company_id : 0);
+            if ($resolvedCompanyId > 0) {
+                $bumpVersion($matches[1].'_company_'.$resolvedCompanyId);
+            }
+        }
 
         return true;
     }
 
+    /**
+     * Fetch company default currency code and bench salary display mode.
+     * Cached in Redis and per-request static memory to eliminate MySQL queries on Bench Talents read paths (Rule 1).
+     * Tenancy note: Keyed strictly by company ID ($id).
+     */
     public static function getCompanyCurrencyBenchshowMode($id)
     {
-
-        $defaultCurrency = DB::table('companies')
-            ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-            ->select('master_currency.code', 'companies.bench_show_mode')
-            ->where('companies.id', $id)
-            ->first();
-        $currency_code = 'INR';
-        if ($defaultCurrency) {
-            $currency_code = ($defaultCurrency->code);
+        static $memo = [];
+        $companyId = (int) $id;
+        if ($companyId <= 0) {
+            return (object) ['currency_code' => 'INR', 'show_mode' => 0];
         }
 
-        return (object) [
-            'currency_code' => $currency_code ?? 'INR',
-            'show_mode' => $defaultCurrency->bench_show_mode ?? 0,
-        ];
+        if (isset($memo[$companyId])) {
+            return $memo[$companyId];
+        }
 
+        $data = Cache::remember("tenant:{$companyId}:currency_bench_show_mode", 300, static function () use ($companyId) {
+            $defaultCurrency = DB::table('companies')
+                ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
+                ->select('master_currency.code', 'companies.bench_show_mode')
+                ->where('companies.id', $companyId)
+                ->first();
+
+            return [
+                'currency_code' => ($defaultCurrency && ! empty($defaultCurrency->code)) ? $defaultCurrency->code : 'INR',
+                'show_mode' => (int) ($defaultCurrency->bench_show_mode ?? 0),
+            ];
+        });
+
+        return $memo[$companyId] = (object) $data;
     }
 
     public static function agencyCandidatesCount($ClientComID, $jobId)
@@ -15396,5 +15479,33 @@ END:VCALENDAR";
             'evaluated' => $evaluated,
             'all_interview' => $allInterview,
         ];
+    }
+
+    /**
+     * Invalidate tenant career Redis caches (Rule 6).
+     *
+     * Intent:
+     * Destroys tenant career caches so all organization users and public visitors
+     * see fresh job/application data in real time without stale caches.
+     */
+    public static function invalidateCareerTenantCache($company_id, $jobId = null): void
+    {
+        try {
+            Cache::forget("tenant_career_meta:{$company_id}");
+            Cache::forget("tenant_active_jobs_dropdown:{$company_id}");
+
+            for ($p = 1; $p <= 20; $p++) {
+                Cache::forget("tenant_career_jobs_page:{$company_id}:{$p}");
+            }
+
+            if ($jobId) {
+                Cache::forget("job_details_public_bundle:{$jobId}:{$company_id}");
+                Cache::forget("job_apply_spec:{$jobId}:{$company_id}");
+                Cache::forget("job_company_details_logo:{$jobId}:{$company_id}");
+                Cache::forget("job_company_details_client:{$jobId}:{$company_id}");
+            }
+        } catch (\Throwable $e) {
+            // Failsafe against cache store anomalies
+        }
     }
 }

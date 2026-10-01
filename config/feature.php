@@ -73,7 +73,19 @@ return [
     | decoupled static assets, and direct Cloudflare R2 uploads.
     | Defaults to true.
     |--------------------------------------------------------------------------
-    */
     'fwd_resume_v4_enabled' => (bool) env('FEATURE_FWD_RESUME_V4_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bench Talent Requests V2 Engine
+    |
+    | Intent: Master feature flag for V2 Client-First Bench Talent Requests engine.
+    | Controls Browser RAM store, 250ms debouncing, tenant-epoch versioning,
+    | Reverb WebSocket delta broadcasting, Blade N+1 elimination, and atomic
+    | concurrency idempotency locks.
+    | Defaults to true.
+    |--------------------------------------------------------------------------
+    */
+    'bench_talent_requests_v2_enabled' => (bool) env('FEATURE_BENCH_TALENT_REQUESTS_V2_ENABLED', true),
 
 ];

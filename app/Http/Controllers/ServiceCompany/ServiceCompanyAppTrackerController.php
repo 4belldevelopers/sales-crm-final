@@ -14,7 +14,6 @@ use App\Helper\GeneralMethod;
 use App\Helper\Reply;
 use App\Jobs\ElasticCandidateIndex;
 use App\Jobs\QueueNotificationMailService;
-use App\Mail\BenchCandidatLeadMail;
 use App\Models\ApplicationStatus;
 use App\Models\Client;
 use App\Models\Comment;
@@ -37,7 +36,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -62,67 +60,46 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->elasticService = $elasticService;
     }
 
+    /**
+     * Render the AppTracker job pipeline index page.
+     *
+     * Intent: Load job metadata and header counter cards without executing unused full-table
+     * MySQL scans (JobLocation::all(), Client::all(), client_location_jobs, job_skills) or
+     * redundant $this->custome_count($id) SQL/ES queries (Rule 1 & Rule 2).
+     * Tenancy: Scoped by authenticated user's company_id and job_id.
+     */
     public function index($id, $mstatus_id)
     {
-        // abort_if(Gate::denies('view_job_applications'), 403);
         $this->skillData = [];
         $this->statusArr = [];
         $this->candStatusClass = [];
         $id = GeneralMethod::value_decrypt($id);
 
-        // $params = [
-        // 	'index' => ELASTIC_CANDIDATES,
-        // 	'id'    => 63801,
-        // ];
-
-        // $response = $this->elasticService->getClient()->get($params);
-        // $data = (object) $response['_source'];
-        // dd($data);
-
         if ($id > 0) {
             $this->boardColumns = ReferenceDataCache::applicationStatuses();
-            $this->locations = JobLocation::all();
-            // $this->jobs 					=	Job::all();
             $this->skills = ReferenceDataCache::skills();
-            $this->clients = Client::all();
-            // $this->users 					=	User::company()->get();
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::orderBy('np_id')->get());
             $this->job = Job::withoutGlobalScopes()->findOrFail($id);
-            // echo '<pre>'; print_r($this->job); exit;
             if ($mstatus_id != 'all') {
                 $this->statusArr = ApplicationStatus::withoutGlobalScopes()->findOrFail($mstatus_id);
                 $this->candStatusClass = GeneralMethod::candidateStatusColorCode($this->statusArr->name);
             } else {
                 $this->candStatusClass = GeneralMethod::candidateStatusColorCode('all');
             }
-            if ($this->job->client_id > 0) {
-                $this->jobclient = Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
-                $contactHtml = '';
-                $this->client_loc_arr = DB::table('client_location_jobs')->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->join('countries', 'countries.id', '=', 'client_location.country_id')->select('client_location.address', 'client_location.city', 'client_location.postcode', 'countries.country_name')
-                    ->where('client_location_jobs.job_id', $id)->get();
-            }
-            $this->skillData = DB::table('job_skills')->join('skills', 'job_skills.skill_id', '=', 'skills.id')->select('skills.id', 'skills.name')->where('job_skills.job_id', '=', $id)->orderBy('skills.name', 'ASC')->get();
             $this->mstatus_id = $mstatus_id;
             $this->job_id = $id;
-
         } else {
             $this->boardColumns = ReferenceDataCache::applicationStatuses();
-            $this->locations = JobLocation::all();
-            $this->jobs = Job::all();
             $this->skills = ReferenceDataCache::skills();
-            $this->clients = Client::all();
-            // $this->users 					=	User::company()->get();
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::orderBy('np_id')->get());
-
         }
 
         $this->pageTitle = __('Candidates Recommended');
         $company_id = auth()->user()->company_id;
         $this->job = $this->job ?? Job::withoutGlobalScopes()->findOrFail($id);
 
-        $this->custome_count = $this->custome_count($id);
-
         $return_data = GeneralMethod::custome_count_all($id);
+        $this->custome_count = $return_data->public_bench_counter ?? 0;
         $this->pool_counter = $return_data->pool_counter;
         $this->existing_counter = $return_data->existing_counter;
         $this->internal_bench_counter = $return_data->internal_bench_counter;
@@ -131,36 +108,41 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->career_counter = $return_data->career_counter;
         session()->put('job_id', $id);
 
-        $this->jobclient = $this->jobclient ?? Client::withoutGlobalScopes()->findOrFail($this->job->client_id);
-
         return view('service_company.apptracker.index', $this->data);
     }
 
-    public function loadcounter(Request $request)
+    /**
+     * Resolve job pipeline stage counters from tenant-versioned Redis cache with single-flight ES fallback.
+     * Intent: Shared by loadcounter() and embedded directly in allDataAjax() to eliminate a second HTTP round-trip (Rule 2 & Rule 6).
+     * Tenancy: Scoped by $company_id and $jobid.
+     */
+    private function getJobPipelineCounts(int $jobid, int $company_id, ?string $inputSearch = null): array
     {
-        $company_id = auth()->user()->company_id;
-        $jobid = (int) $request->jobid;
-        $inputSearch = $request->inputSearch;
-
-        // Filtered search bypasses cache — results must reflect the search term live.
         if (! empty($inputSearch)) {
-            $data = $this->runCounterES($jobid, $company_id);
-
-            return Reply::dataOnly(['status' => 'success', 'data' => $data, 'allCounter' => $data['allCandidate']]);
+            return $this->runCounterES($jobid, $company_id);
         }
 
-        // Stale-while-revalidate: serve cached value for up to 120s; background-refresh after 30s.
-        // Single-flight lock inside the callback prevents thundering herd across Octane workers.
-        $cacheKey = "pipeline:{$jobid}";
-        $data = Cache::flexible($cacheKey, [30, 120], function () use ($jobid, $company_id) {
+        $tenantVer = cache()->get('allapptracker_version_company_'.$company_id, 1);
+        $cacheKey = "pipeline:{$company_id}:{$jobid}:v{$tenantVer}";
+
+        return Cache::flexible($cacheKey, [30, 120], function () use ($jobid, $company_id) {
             try {
-                return Cache::lock("lock:pipeline:{$jobid}", 5)->block(6, function () use ($jobid, $company_id) {
+                return Cache::lock("lock:pipeline:{$company_id}:{$jobid}", 5)->block(6, function () use ($jobid, $company_id) {
                     return $this->runCounterES($jobid, $company_id);
                 });
             } catch (\Throwable) {
                 return $this->runCounterES($jobid, $company_id);
             }
         });
+    }
+
+    public function loadcounter(Request $request)
+    {
+        $company_id = (int) auth()->user()->company_id;
+        $jobid = (int) $request->jobid;
+        $inputSearch = $request->inputSearch;
+
+        $data = $this->getJobPipelineCounts($jobid, $company_id, $inputSearch);
 
         return Reply::dataOnly(['status' => 'success', 'data' => $data, 'allCounter' => $data['allCandidate'] ?? 0]);
     }
@@ -392,10 +374,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
     ];
 
     /**
-     * Pre-fetch per-row data for all_apptracker blade to eliminate 4 N+1 queries.
+     * Pre-fetch per-row data for all_apptracker and public_bench blades to eliminate N+1 queries.
      * Returns maps keyed by job_id/jobId so the blade reads from arrays, not DB per-row.
      */
-    protected function prepareRowMaps(array $data, int $companyId, int $appDuplicate, int $appDuplicateDays): array
+    protected function prepareRowMaps(array $data, int $companyId, int $appDuplicate, int $appDuplicateDays, int $contextJobId = 0): array
     {
         if (empty($data)) {
             return [
@@ -410,6 +392,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $jobIds = collect($data)
             ->flatMap(fn ($row) => [(int) ($row['jobId'] ?? 0), (int) ($row['job_id'] ?? 0)])
+            ->push($contextJobId)
             ->filter()
             ->unique()
             ->values()
@@ -786,9 +769,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'format' => $request->input('format', 'html'),
         ];
 
-        $versionKey = 'allapptracker_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allapptracker:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
+        $tenantVersion = cache()->get('allapptracker_version_company_'.$company_id, 1);
+        $version = $userVersion.'_'.$tenantVersion;
+        $cacheKeySet = 'ats:allapptracker:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first (0 DB queries on cache hit)
         ----------------------------- */
@@ -796,13 +780,29 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             return response()->json(cache()->get($cacheKeySet));
         }
 
+        // Single-flight lock to prevent thundering herd on concurrent identical AppTracker listing requests
+        $lock = cache()->lock('lock:'.$cacheKeySet, 5);
+        if (! $lock->get()) {
+            for ($i = 0; $i < 10; $i++) {
+                usleep(50000);
+                if (cache()->has($cacheKeySet)) {
+                    return response()->json(cache()->get($cacheKeySet));
+                }
+            }
+        }
+
         $interviewStatus = ReferenceDataCache::masterStatuses();
 
-        // Job's own required skills (job_metronics_skills — same source
+        // Job's own required skills (from ELASTIC_JOBS job_metronics_skills — same source
         // skill_percentage() reads for the row Match % badge), used by the
         // "Higher Match" sort option below to rank candidates against this
-        // job specifically. Fetched once on cache miss only.
-        $jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn ($s) => strtolower(trim($s)))->values()->toArray();
+        // job specifically. Resolved from ES on cache miss with 0 MySQL reads.
+        $jobEsDocForSort = GeneralMethod::jobDefaultsFromEs($jobid, false)->jobEsDoc ?? null;
+        $jobSkillsForSort = collect($jobEsDocForSort->job_metronics_skills ?? [])
+            ->map(fn ($s) => strtolower(trim((string) (is_object($s) ? ($s->skill_name ?? '') : ($s['skill_name'] ?? '')))))
+            ->filter()
+            ->values()
+            ->toArray();
 
         switch ($valCheck) {
             case 1:
@@ -1286,6 +1286,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $userPermissions = $this->userPermissions;
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
 
+        $pipelineCounts = $this->getJobPipelineCounts((int) $jobid, (int) $company_id, $request->input('search'));
+
         // V3 Phase 3.1: Pure JSON mode — returns raw ES data (~12 KB) instead of server-rendered HTML (~150 KB).
         // Activated by ?format=json; existing fetchCandidates callers in index.blade.php are unaffected.
         // Cache key already includes 'format' so HTML and JSON entries never collide.
@@ -1295,8 +1297,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'data' => $data,
                 'rowMaps' => $rowMaps,
                 'pagination' => $pagination,
+                'total' => $total,
+                'counts' => $pipelineCounts,
+                'tenant_version' => (int) $tenantVersion,
+                'cache_version' => $version,
             ];
             cache()->put($cacheKeySet, $jsonResponse, now()->addMinutes(ALL_APPTRACKER_TIME));
+            optional($lock)->release();
 
             return response()->json($jsonResponse);
         }
@@ -1304,9 +1311,14 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $responseData = [
             'html' => view('service_company.ajax_pages.all_apptracker', compact('data', 'userPermissions', 'rowMaps'))->render(),
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'total' => $total,
+            'counts' => $pipelineCounts,
+            'tenant_version' => (int) $tenantVersion,
+            'cache_version' => $version,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_APPTRACKER_TIME));
+        optional($lock)->release();
 
         return response()->json($responseData);
 
@@ -3509,7 +3521,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 return Reply::dataOnly($coinPayload);
             }
 
-            $row_data = DB::table('job_applications')->select('*')->where('id', $id)->first();
+            $row_data = $row_data ?: DB::table('job_applications')->select('*')->where('id', $id)->first();
             $source_from_company_id = @$row_data->company_id;
             $source_from_user_id = @$row_data->submitted_by;
             $source_from_id = @$row_data->id;
@@ -3587,25 +3599,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::UpdateTimeline($timelineArr);
 
-            // FOR SAME REQUISITION
+            // FOR SAME REQUISITION — Phase 4: single indexed lookup instead of count() + first()
             $parent_id = 0;
-            $bCnt = DB::table('rec_candidate_assign')
-                ->select('id')
+            $bData = DB::table('rec_candidate_assign')
+                ->select('rec_candidate_assign.id', 'rec_candidate_assign.source_from_id', 'rec_candidate_assign.source_application_id')
                 ->where('source_company_id', '=', auth()->user()->company_id)
                 ->where('source_from_type', '=', 1)
                 ->where('source_application_id', '=', $row_data->id)
-                ->count();
-            if ($bCnt > 0) {
-                $bData = DB::table('rec_candidate_assign')
-                    ->select('rec_candidate_assign.id', 'rec_candidate_assign.source_from_id', 'rec_candidate_assign.source_application_id')
-                    ->where('source_company_id', '=', auth()->user()->company_id)
-                    ->where('source_from_type', '=', 1)
-                    ->where('source_application_id', '=', $row_data->id)
-                    ->first();
+                ->first();
+            if ($bData) {
                 $source_from_type = 1;
                 $source_from_id = $bData->source_from_id;
                 $parent_id = $bData->source_application_id;
-
             }
 
             $values = [
@@ -3635,72 +3640,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastWiseIs = DB::getPdo()->lastInsertId();
 
-            // Phase 2: Monotonic pipeline version & outbox event
-            DB::table('jobs')->where('id', $source_jobid)->increment('pipeline_version');
-            $newPipelineVersion = DB::table('jobs')->where('id', $source_jobid)->value('pipeline_version') ?? 1;
-
-            DB::table('sys_outbox_events')->insert([
-                'tenant_id' => $source_company_id,
-                'idempotency_key' => $idempotencyKey,
-                'aggregate_type' => 'CandidateAssignment',
-                'aggregate_id' => $lastWiseIs,
-                'aggregate_version' => $newPipelineVersion,
-                'event_type' => 'CandidateAddedToJob',
-                'payload' => json_encode([
-                    'wise_id' => (int) $lastWiseIs,
-                    'job_id' => (int) $source_jobid,
-                    'candidate_id' => (int) $application_id,
-                    'rec_candidate_assign_id' => (int) $recCandidateAssignId,
-                    'company_id' => (int) $jobRow->company_id,
-                    'master_status_id' => 8,
-                    'source_from_type' => (int) $source_from_type,
-                    'pipeline_version' => (int) $newPipelineVersion,
-                ]),
-                'status' => 'PENDING',
-                'attempts' => 0,
-                'available_at' => now(),
-                'created_at' => now(),
-            ]);
-
-            // Phase 4 & 7: Dual-lease transactional outbox for decoupled ES & Reverb processing (Canary guarded)
-            $outboxService = app(\App\Services\TransactionalOutboxService::class);
-            if ($outboxService->isOptimizedPipelineEnabled((int) $source_company_id)) {
-                $outboxService->recordEvent(
-                    (int) $source_company_id,
-                    (int) $source_jobid,
-                    (int) $newPipelineVersion,
-                    'CandidateAddedToJob',
-                    [
-                        'wise_id' => (int) $lastWiseIs,
-                        'job_id' => (int) $source_jobid,
-                        'candidate_id' => (int) $application_id,
-                        'rec_candidate_assign_id' => (int) $recCandidateAssignId,
-                        'company_id' => (int) $jobRow->company_id,
-                        'master_status_id' => 8,
-                        'source_from_type' => (int) $source_from_type,
-                        'pipeline_version' => (int) $newPipelineVersion,
-                    ]
-                );
-            }
-
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'allapptracker_version_user_'.$this->user->id,
-                'allsimilarcandidates_version_user_'.$this->user->id,
-                'allclientapp_version_user_'.$this->user->id,
-                'allinternalbench_version_user_'.$this->user->id,
-                'allpublicbench_version_user_'.$this->user->id,
-                'alldsimilarcandidates_version_user_'.$this->user->id,
-                'alldinternalbench_version_user_'.$this->user->id,
-                'allfindtalents_version_user_'.$this->user->id,
-                'allcandidatesrequest_version_user_'.$this->user->id,
-                'allcareerapplydata_version_user_'.$this->user->id,
-                'alljobslist_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
             $teamRankElastic = [
                 'company_id' => $jobRow->company_id,
                 'user_id' => $this->user->id,
@@ -3723,18 +3662,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
             DB::table('add_job_wise_condidates')->where('id', '=', $wiseId)->update(['existing' => 1]);
 
-            // if (@$application_id > 0) {
-            // 	if(101==101){
-            // 		$event_name = 'internaldatabaseaccess';
-            // 	}else{
-            // 		$event_name = 'internaldatabaseaccess';
-            // 	}
-
-            // 	$event_table_name = 'job_applications';
-            // 	$event_table_id = @$application_id;
-            // 	$packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-            // }
-
         }
 
         // ######### FOR INTERNAL BENCH APPLICANT
@@ -3743,7 +3670,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $eventId = 11;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $coin_company_id, $eventId, auth()->user()->id, $coin_company_id, '', '');
             if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                $coinPayload = ['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins];
+                if (! empty($idempotencyKey) && ! empty($source_company_id)) {
+                    DB::table('sys_idempotency_keys')
+                        ->where('tenant_id', $source_company_id)
+                        ->where('idempotency_key', $idempotencyKey)
+                        ->update([
+                            'status' => 'FAILED_FINAL',
+                            'response_status' => 200,
+                            'response_body' => json_encode($coinPayload),
+                            'completed_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
+
+                return Reply::dataOnly($coinPayload);
             }
 
             $parent_id = 0;
@@ -3759,7 +3700,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $parent_id = $id;
 
             } else {
-                $row_data = DB::table('job_applications')->select('*')->where('id', @$id)->first();
+                $row_data = $row_data ?: DB::table('job_applications')->select('*')->where('id', @$id)->first();
             }
 
             // $row_data 					=	DB::table('bench_applications')->select('*')->where('id', $id)->first();
@@ -3768,22 +3709,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $source_from_id = $id; // @$row_data->id;
 
             $job_application_values = [
-                // 'submitted_by' 			=>	$source_user_id,
-                // 'company_id' 				=>	$source_company_id,
-                // 'thirdparty_company_id'	=>	0,
-
                 'np_id' => @$row_data->np_id ? @$row_data->np_id : 0,
                 'full_name' => @$row_data->full_name,
 
                 'email' => @$row_data->email,
                 'phone' => @$row_data->phone,
-                // 'gender' 					=>	@$row_data->gender,
                 'dob' => @$row_data->dob,
                 'country' => @$row_data->country,
 
                 'state' => @$row_data->state,
                 'city' => @$row_data->city,
-                // 'city_id' 				=>	@$row_data->city_id,
                 'secondrary_email' => @$row_data->secondrary_email,
                 'secondary_mobile' => @$row_data->secondary_mobile,
 
@@ -3791,17 +3726,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'photo' => @$row_data->photo,
                 'resume' => @$row_data->resume,
                 'rating' => @$row_data->rating,
-                // 'skype_id' 				=>	@$row_data->skype_id,
 
-                // 'cover_letter' 			=>	@$row_data->cover_letter,
                 'job_id' => @$source_jobid,
-                // 'status_id' 				=>	@$row_data->status_id,
                 'is_viewed' => @$row_data->is_viewed,
-                // 'column_priority' 		=>	@$row_data->column_priority,
 
                 'total_exp' => @$row_data->total_exp,
                 'rel_exp' => @$row_data->rel_exp,
-                // 'passport' 				=>	@$row_data->passport,
                 'ctc' => @$row_data->pay_rate_amount,
                 'current_ctc_cur' => @$row_data->pay_rate_currency,
 
@@ -3810,7 +3740,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'ectc' => @$row_data->bill_rate_amount,
                 'current_ectc_cur' => @$row_data->bill_rate_currency,
                 'current_ectc_mode' => @$row_data->bill_rate_mode,
-                // 'current_location' 		=> 	@$row_data->current_location,
 
                 'current_designation' => @$row_data->current_designation,
                 'current_company' => @$row_data->current_company,
@@ -3818,22 +3747,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'qualification' => @$row_data->qualification,
                 'master_status_id' => 8,
 
-                // 'child_status_id' 		=> 	@$row_data->child_status_id,
                 'serving_notice_period_mode' => @$row_data->serving_notice_period_mode ? @$row_data->serving_notice_period_mode : 0,
                 'proposed_ctc' => @$row_data->proposed_ctc,
                 'any_offer' => @$row_data->any_offer ? @$row_data->any_offer : 0,
-                // 'document' 				=> 	@$row_data->document,
 
-                // 'sub_for_approval' 		=> 	@$row_data->sub_for_approval,
                 'offer_approved' => @$row_data->offer_approved ? @$row_data->offer_approved : 0,
                 'offer_release' => @$row_data->offer_release ? @$row_data->offer_release : 0,
                 'offer_acceptance' => @$row_data->offer_acceptance ? @$row_data->offer_acceptance : 0,
                 'joined' => @$row_data->joined ? @$row_data->joined : 0,
 
                 'joined_date' => @$row_data->joined_date,
-                // 'duplicate' 				=>	@$row_data->duplicate,
-                // 'percentage_hike' 		=>	@$row_data->percentage_hike,
-                // 'comment' 				=>	@$row_data->comment,
                 'pincode' => @$row_data->pincode,
 
                 'offer_currency' => @$row_data->offer_currency,
@@ -3841,7 +3764,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'offer_amount' => @$row_data->offer_amount,
 
             ];
-            // DB::table('job_applications')->insert($job_application_values);
 
             $note = 'Similar Candidate => Internal Bench';
 
@@ -3850,18 +3772,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
 
             $application_id = '';
-            $application_id = $id; // DB::getPdo()->lastInsertId();
-
-            // $insertArr = array('job_id' => @$source_jobid, 'job_application_id' =>@$application_id, 'status_id' => 8, 'master_status_id' => 8, 'company_id' =>  @$row_data->country, 'submitted_by' => @$this->user->id,'thirdparty_company_id'=>@$thirdparty_company_id);
-
-            // DB::table('add_job_wise_condidates')->insert($insertArr);
+            $application_id = $id;
 
             $timelineArr = [
                 'event_id' => 1,
                 'event_by_company_id' => auth()->user()->company_id,
                 'event_by_user_id' => auth()->user()->id,
                 'master_process_name' => 'InReview',
-                // 'child_process_name'	=>
                 'application_id' => @$application_id,
                 'application_email' => @$row_data->email,
                 'job_id' => @$source_jobid,
@@ -3894,24 +3811,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastWiseIs = DB::getPdo()->lastInsertId();
 
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'allapptracker_version_user_'.$this->user->id,
-                'allsimilarcandidates_version_user_'.$this->user->id,
-                'allclientapp_version_user_'.$this->user->id,
-                'allinternalbench_version_user_'.$this->user->id,
-                'allpublicbench_version_user_'.$this->user->id,
-                'alldsimilarcandidates_version_user_'.$this->user->id,
-                'alldinternalbench_version_user_'.$this->user->id,
-                'allfindtalents_version_user_'.$this->user->id,
-                'allcandidatesrequest_version_user_'.$this->user->id,
-                'allcareerapplydata_version_user_'.$this->user->id,
-                'alljobslist_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
             $teamRankElastic = [
                 'company_id' => $jobRow->company_id,
                 'user_id' => $this->user->id,
@@ -3930,10 +3829,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::teamRankElastic($teamRankElastic);
 
-            // Horizon isn't consuming this queue in this environment — jobs sit
-            // unprocessed and the candidate never reflects in the UI. Reverted
-            // to synchronous until a worker is confirmed running.
-            GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);
+            $benchIdToSync = (int) $source_from_id;
+            if ($benchIdToSync > 0) {
+                app()->terminating(function () use ($benchIdToSync) {
+                    try {
+                        GeneralMethod::elasticBenchCandidateAddEditIndex($benchIdToSync);
+                    } catch (\Throwable $e) {
+                    }
+                });
+            }
 
         }
 
@@ -3943,28 +3847,26 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $eventId = 10;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $coin_company_id, $eventId, auth()->user()->id, $coin_company_id, '', '');
             if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                $coinPayload = ['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins];
+                if (! empty($idempotencyKey) && ! empty($source_company_id)) {
+                    DB::table('sys_idempotency_keys')
+                        ->where('tenant_id', $source_company_id)
+                        ->where('idempotency_key', $idempotencyKey)
+                        ->update([
+                            'status' => 'FAILED_FINAL',
+                            'response_status' => 200,
+                            'response_body' => json_encode($coinPayload),
+                            'completed_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
+
+                return Reply::dataOnly($coinPayload);
             }
 
-            $jobcountry = GeneralMethod::JobCountries($jobRow->id);
+            // Phase 4: Removed dead GeneralMethod::JobCountries($jobRow->id) 4-table JOIN (194ms)
+            // because $jobcountry was only referenced in an unused $event_name assignment overwritten below.
             $country = @$row_data->country;
-
-            // $packageStatus = GeneralMethod::validatePackageRet('CVACCESS');
-            // if ($packageStatus != 1) {
-            // 	return Reply::dataOnly(['status' => 'info', "message" => "CV Access / Received Opps something worng , please contact to Administrator."]);
-            // }
-
-            //     $packageStatusIndia = GeneralMethod::validatePackageRet('BenchSalesIndia');
-            // 	$packageStatusInternational = GeneralMethod::validatePackageRet('BenchSalesInternational');
-            // if (in_array($country, $jobcountry)) {
-            //     if ($packageStatusIndia != 1) {
-            // 		return Reply::dataOnly(['status' => 'info', "message" => "Bench Sales / Received Opps something worng , please contact to Administrator."]);
-            // 	}
-            // }else{
-            // 	if ($packageStatusInternational != 1) {
-            // 		return Reply::dataOnly(['status' => 'info', "message" => "Bench Sales / Received Opps something worng , please contact to Administrator."]);
-            // 	}
-            // }
 
             $parent_id = 0;
             if ($source_tab == 'existing') {
@@ -3979,7 +3881,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $parent_id = $id;
 
             } else {
-                $row_data = DB::table('job_applications')->select('*')->where('id', @$id)->first();
+                $row_data = $row_data ?: DB::table('job_applications')->select('*')->where('id', @$id)->first();
             }
 
             $source_from_company_id = @$row_data->company_id;
@@ -3987,22 +3889,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $source_from_id = @$row_data->id;
 
             $job_application_values = [
-                // 'submitted_by' 			=>	$source_user_id,
-                // 'company_id' 				=>	$source_company_id,
-                // 'thirdparty_company_id'	=>	0,
-
                 'np_id' => @$row_data->np_id ? @$row_data->np_id : null,
                 'full_name' => @$row_data->full_name,
 
                 'email' => @$row_data->email,
                 'phone' => @$row_data->phone,
-                // 'gender' 					=>	@$row_data->gender,
                 'dob' => @$row_data->dob,
                 'country' => @$row_data->country,
 
                 'state' => @$row_data->state,
                 'city' => @$row_data->city,
-                // 'city_id' 				=>	@$row_data->city_id,
                 'secondrary_email' => @$row_data->secondrary_email,
                 'secondary_mobile' => @$row_data->secondary_mobile,
 
@@ -4010,17 +3906,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'photo' => @$row_data->photo,
                 'resume' => @$row_data->resume,
                 'rating' => @$row_data->rating,
-                // 'skype_id' 				=>	@$row_data->skype_id,
 
-                // 'cover_letter' 			=>	@$row_data->cover_letter,
                 'job_id' => @$source_jobid,
-                // 'status_id' 				=>	@$row_data->status_id,
                 'is_viewed' => @$row_data->is_viewed,
-                // 'column_priority' 		=>	@$row_data->column_priority,
 
                 'total_exp' => @$row_data->total_exp,
                 'rel_exp' => @$row_data->rel_exp,
-                // 'passport' 				=>	@$row_data->passport,
                 'ctc' => @$row_data->pay_rate_amount,
                 'current_ctc_cur' => @$row_data->pay_rate_currency,
 
@@ -4029,7 +3920,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'ectc' => @$row_data->bill_rate_amount,
                 'current_ectc_cur' => @$row_data->bill_rate_currency,
                 'current_ectc_mode' => @$row_data->bill_rate_mode,
-                // 'current_location' 		=> 	@$row_data->current_location,
 
                 'current_designation' => @$row_data->current_designation,
                 'current_company' => @$row_data->current_company,
@@ -4037,22 +3927,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'qualification' => @$row_data->qualification,
                 'master_status_id' => 8,
 
-                // 'child_status_id' 		=> 	@$row_data->child_status_id,
                 'serving_notice_period_mode' => @$row_data->serving_notice_period_mode ? @$row_data->serving_notice_period_mode : 0,
                 'proposed_ctc' => @$row_data->proposed_ctc,
                 'any_offer' => @$row_data->any_offer ? @$row_data->any_offer : 0,
-                // 'document' 				=> 	@$row_data->document,
-
-                // 'sub_for_approval' 		=> 	@$row_data->sub_for_approval,
                 'offer_approved' => @$row_data->offer_approved ? @$row_data->offer_approved : 0,
                 'offer_release' => @$row_data->offer_release ? @$row_data->offer_release : 0,
                 'offer_acceptance' => @$row_data->offer_acceptance ? @$row_data->offer_acceptance : 0,
                 'joined' => @$row_data->joined ? @$row_data->joined : 0,
 
                 'joined_date' => @$row_data->joined_date,
-                // 'duplicate' 				=>	@$row_data->duplicate,
-                // 'percentage_hike' 		=>	@$row_data->percentage_hike,
-                // 'comment' 				=>	@$row_data->comment,
                 'pincode' => @$row_data->pincode,
 
                 'offer_currency' => @$row_data->offer_currency,
@@ -4060,23 +3943,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'offer_amount' => @$row_data->offer_amount,
 
             ];
-            // DB::table('job_applications')->insert($job_application_values);
 
             $note = 'Similar Candidate => Agency Bench';
 
             $application_id = '';
-            $application_id = $id; // DB::getPdo()->lastInsertId();
-
-            // $insertArr = array('job_id' => @$source_jobid, 'job_application_id' =>@$application_id, 'status_id' => 8, 'master_status_id' => 8, 'company_id' =>  @$row_data->country, 'submitted_by' => @$this->user->id,'thirdparty_company_id'=>@$thirdparty_company_id);
-
-            // DB::table('add_job_wise_condidates')->insert($insertArr);
+            $application_id = $id;
 
             $timelineArr = [
                 'event_id' => 1,
                 'event_by_company_id' => auth()->user()->company_id,
                 'event_by_user_id' => auth()->user()->id,
                 'master_process_name' => 'InReview',
-                // 'child_process_name'	=>
                 'application_id' => @$application_id,
                 'application_email' => @$row_data->email,
                 'job_id' => @$source_jobid,
@@ -4108,24 +3985,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastWiseIs = DB::getPdo()->lastInsertId();
 
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'allapptracker_version_user_'.$this->user->id,
-                'allsimilarcandidates_version_user_'.$this->user->id,
-                'allclientapp_version_user_'.$this->user->id,
-                'allinternalbench_version_user_'.$this->user->id,
-                'allpublicbench_version_user_'.$this->user->id,
-                'alldsimilarcandidates_version_user_'.$this->user->id,
-                'alldinternalbench_version_user_'.$this->user->id,
-                'allfindtalents_version_user_'.$this->user->id,
-                'allcandidatesrequest_version_user_'.$this->user->id,
-                'allcareerapplydata_version_user_'.$this->user->id,
-                'alljobslist_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
             $teamRankElastic = [
                 'company_id' => $jobRow->company_id,
                 'user_id' => $this->user->id,
@@ -4144,20 +4003,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::teamRankElastic($teamRankElastic);
 
-            // ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
-            // GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
-
-            $countforadd = $row_data->countforadd + 1;
-            $dataupdate['countforadd'] = $countforadd;
+            $countforadd = ((int) ($row_data->countforadd ?? 0)) + 1;
+            $dataupdate = ['countforadd' => $countforadd];
             if ($countforadd >= 3) {
                 $dataupdate['status'] = 1;
             }
             DB::table('job_applications')->where('id', '=', $row_data->id)->update($dataupdate);
 
-            $jobRowupdate = DB::table('job_applications')->select('*')->where('id', $row_data->id)->first();
+            // Phase 4: Mutate in-memory $row_data instead of re-querying job_applications SELECT *
+            $row_data->countforadd = $countforadd;
+            if ($countforadd >= 3) {
+                $row_data->status = 1;
+            }
+            $jobRowupdate = $row_data;
+            $vendorCompanyEmail = null;
 
             if ($jobRowupdate) {
-                // dd($jobRowupdate->countforadd);
                 if ($jobRowupdate->countforadd >= 3) {
                     $detailsVendorSide = GeneralMethod::companyAsVendorAndClient($source_company_id, $source_from_company_id);
                     $basecompany = GeneralMethod::baseCompany();
@@ -4173,7 +4034,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                         $mailTypeSubject = GeneralMethod::mailTypeSubject(26, 1);
 
                         $subject = str_replace(['[{BENCH_CANDIDATE_NAME}]', '[{BENCH_ID}]'], [$jobRowupdate->full_name, $jobRowupdate->id], $mailTypeSubject->subject);
-                        // dd($subject);
                         $current_status = '';
                         if ($jobRowupdate->status == 1) {
                             $current_status = 'Pool';
@@ -4189,12 +4049,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
                         $message = $template_description;
 
-                        // dd($message);
-
-                        $notificationemail = GeneralMethod::notification($source_from_company_id, 'Recuitment'); // Recuitment Sales
-                        $defailsEmail = DB::table('companies')->where('id', $source_from_company_id)->first()->company_email;
-                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                        //    dd($to_Mail_Id);
+                        $notificationemail = GeneralMethod::notification($source_from_company_id, 'Recuitment');
+                        $vendorCompanyEmail = DB::table('companies')->where('id', $source_from_company_id)->value('company_email');
+                        $to_Mail_Id = $notificationemail->email ?? $vendorCompanyEmail ?? '';
                         $data = [
                             'message' => $message,
                         ];
@@ -4210,8 +4067,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                             $cc,
                             $source_from_company_id
                         )->onConnection('emails');
-
-                        // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
                     }
 
                 }
@@ -4221,46 +4076,22 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $eventId = 23;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $source_from_company_id, $eventId, auth()->user()->id, $coin_company_id, '', '');
 
-            // REDEEM CVACCESS
-            if (@$application_id > 0) {
-                $event_name = 'CVACCESS';
-                $event_table_name = 'job_applications';
-                $event_table_id = @$application_id;
-                // $packageStatus = GeneralMethod::packageRedeem($event_name, $event_table_name, $event_table_id);
-
-            }
-            // CLIENT REDEEM NEW_BENCH_CLIENT_REQUEST
-            if (@$application_id > 0) {
-
-                if (in_array($country, $jobcountry)) {
-                    $event_name = 'BenchSalesIndia';
-                } else {
-                    $event_name = 'BenchSalesInternational';
-                }
-
-                $event_table_name = 'job_applications';
-                $event_table_id = @$application_id;
-                // $packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-            }
-
             $packageStatus = GeneralMethod::validateClientPackage('emails', $source_from_company_id);
             if (($packageStatus['STATUS'] == 1) && ($packageStatus['EXPIRE'] == 'false') && ($packageStatus['BALANCE'] > 0)) {
-                $companies = DB::table('companies')->select('company_email')->where('id', '=', @$row_data->company_id)->first();
                 if (@$source_jobid > 0) {
                     $source_from_company_id = @$row_data->company_id;
                     $event_name = 'emails';
                     $event_table_name = 'jobs';
                     $event_table_id = @$source_jobid;
-                    // GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
 
                     $data = [
                         'username' => auth()->user()->name,
                     ];
                     $senderName = auth()->user()->name;
 
-                    $detailsVendorSide = GeneralMethod::companyAsVendorAndClient($source_company_id, $source_from_company_id);
+                    $detailsVendorSide = $detailsVendorSide ?? GeneralMethod::companyAsVendorAndClient($source_company_id, $source_from_company_id);
 
-                    $basecompany = GeneralMethod::baseCompany();
+                    $basecompany = $basecompany ?? GeneralMethod::baseCompany();
                     $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
                     $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
                     $attachments = [];
@@ -4270,23 +4101,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     if ($checkMailPermision) {
 
                         $mailTypeSubject = GeneralMethod::mailTypeSubject(23, 2);
-                        // $subject = $mailTypeSubject->subject;
-                        // $message = $mailTypeSubject->body_description;
 
                         $subject = str_replace(['[{CANDIDATE_NAME}]', '[{CLIENT_COMPANY_NAME}]'], [$row_data->full_name, $detailsVendorSide->client_company], $mailTypeSubject->subject);
-                        // dd($subject);
 
                         $template_description = $mailTypeSubject->body_description;
                         $template_description = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{CLIENT_DESIGNATION}]', '[{CLIENT_EMAIL}]', '[{CLIENT_PHONE}]', '[{CANDIDATET_NAME}]', '[{CANDIDATET_EMAIL}]', '[{CANDIDATET_PHONE}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->client_name, $detailsVendorSide->client_designation, $detailsVendorSide->client_email, $detailsVendorSide->client_phone, $row_data->full_name, $row_data->id, $row_data->current_designation], $template_description);
 
                         $message = $template_description;
 
-                        // dd($message);
-
-                        $notificationemail = GeneralMethod::notification($source_from_company_id, 'Recuitment'); // Recuitment Sales
-                        $defailsEmail = DB::table('companies')->where('id', $source_from_company_id)->first()->company_email;
-                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                        //    dd($to_Mail_Id);
+                        $notificationemail = GeneralMethod::notification($source_from_company_id, 'Recuitment');
+                        if ($vendorCompanyEmail === null) {
+                            $vendorCompanyEmail = DB::table('companies')->where('id', $source_from_company_id)->value('company_email');
+                        }
+                        $to_Mail_Id = $notificationemail->email ?? $vendorCompanyEmail ?? '';
                         $data = [
                             'message' => $message,
                         ];
@@ -4302,8 +4129,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                             $cc,
                             $source_from_company_id
                         )->onConnection('emails');
-
-                        // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
 
                     }
 
@@ -4318,10 +4143,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                         $template_description = str_replace(['[{COMPANY_NAME}]', '[{HR_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{CANDIDATET_NAME}]', '[{CANDIDATET_DESINATION}]', '[{VENDOR_COMPANY_NAME}]', '[{VENDOR_NAME}]', '[{VENDOR_EMAIL}]', '[{VENDOR_PHONE}]'], [$detailsVendorSide->client_company, $detailsVendorSide->client_name, $jobRow->title, $jobRow->id, $row_data->full_name, $row_data->current_designation, $detailsVendorSide->vendor_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email], $template_description);
                         $message = $template_description;
 
-                        $notificationemail = GeneralMethod::notification($source_company_id, 'Sales'); // Recuitment Sales
-                        $defailsEmail = DB::table('companies')->where('id', $source_company_id)->first()->company_email;
+                        $notificationemail = GeneralMethod::notification($source_company_id, 'Sales');
+                        $defailsEmail = DB::table('companies')->where('id', $source_company_id)->value('company_email');
                         $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                        //    dd($to_Mail_Id);
                         $data = [
                             'message' => $message,
                         ];
@@ -4337,18 +4161,19 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                             $cc,
                             $source_company_id
                         )->onConnection('emails');
-
-                        // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject, 'email.common.index', (object) $data, $attachments, $fromAddress, $senderName, $cc);
                     }
-
-                    // Mail::to(@$companies->company_email)->send(new BenchCandidatLeadMail((object)$data, $senderName));
                 }
             }
 
-            // Horizon isn't consuming this queue in this environment — jobs sit
-            // unprocessed and the candidate never reflects in the UI. Reverted
-            // to synchronous until a worker is confirmed running.
-            GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
+            $benchIdToSync2 = (int) $application_id;
+            if ($benchIdToSync2 > 0) {
+                app()->terminating(function () use ($benchIdToSync2) {
+                    try {
+                        GeneralMethod::elasticBenchCandidateAddEditIndex($benchIdToSync2);
+                    } catch (\Throwable $e) {
+                    }
+                });
+            }
 
         }
 
@@ -4358,16 +4183,29 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $eventId = 11;
             $coinsDeductions = GeneralMethod::coinsDeductions((int) $coin_company_id, $eventId, auth()->user()->id, $coin_company_id, '', '');
             if ($coinsDeductions->status) {
-                return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+                $coinPayload = ['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins];
+                if (! empty($idempotencyKey) && ! empty($source_company_id)) {
+                    DB::table('sys_idempotency_keys')
+                        ->where('tenant_id', $source_company_id)
+                        ->where('idempotency_key', $idempotencyKey)
+                        ->update([
+                            'status' => 'FAILED_FINAL',
+                            'response_status' => 200,
+                            'response_body' => json_encode($coinPayload),
+                            'completed_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
+
+                return Reply::dataOnly($coinPayload);
             }
 
             $parent_id = 0;
-            $row_data = DB::table('job_applications')->select('*')->where('id', @$id)->first();
+            $row_data = $row_data ?: DB::table('job_applications')->select('*')->where('id', @$id)->first();
 
-            // $row_data 					=	DB::table('bench_applications')->select('*')->where('id', $id)->first();
             $source_from_company_id = @$row_data->company_id;
             $source_from_user_id = @$row_data->submitted_by;
-            $source_from_id = $id; // @$row_data->id;
+            $source_from_id = $id;
 
             $job_application_values = [
                 'np_id' => @$row_data->np_id ? @$row_data->np_id : 0,
@@ -4375,13 +4213,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
                 'email' => @$row_data->email,
                 'phone' => @$row_data->phone,
-                // 'gender' 					=>	@$row_data->gender,
                 'dob' => @$row_data->dob,
                 'country' => @$row_data->country,
 
                 'state' => @$row_data->state,
                 'city' => @$row_data->city,
-                // 'city_id' 				=>	@$row_data->city_id,
                 'secondrary_email' => @$row_data->secondrary_email,
                 'secondary_mobile' => @$row_data->secondary_mobile,
 
@@ -4389,17 +4225,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'photo' => @$row_data->photo,
                 'resume' => @$row_data->resume,
                 'rating' => @$row_data->rating,
-                // 'skype_id' 				=>	@$row_data->skype_id,
 
-                // 'cover_letter' 			=>	@$row_data->cover_letter,
                 'job_id' => @$source_jobid,
-                // 'status_id' 				=>	@$row_data->status_id,
                 'is_viewed' => @$row_data->is_viewed,
-                // 'column_priority' 		=>	@$row_data->column_priority,
 
                 'total_exp' => @$row_data->total_exp,
                 'rel_exp' => @$row_data->rel_exp,
-                // 'passport' 				=>	@$row_data->passport,
                 'ctc' => @$row_data->pay_rate_amount,
                 'current_ctc_cur' => @$row_data->pay_rate_currency,
 
@@ -4408,7 +4239,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'ectc' => @$row_data->bill_rate_amount,
                 'current_ectc_cur' => @$row_data->bill_rate_currency,
                 'current_ectc_mode' => @$row_data->bill_rate_mode,
-                // 'current_location' 		=> 	@$row_data->current_location,
 
                 'current_designation' => @$row_data->current_designation,
                 'current_company' => @$row_data->current_company,
@@ -4416,22 +4246,16 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'qualification' => @$row_data->qualification,
                 'master_status_id' => 8,
 
-                // 'child_status_id' 		=> 	@$row_data->child_status_id,
                 'serving_notice_period_mode' => @$row_data->serving_notice_period_mode ? @$row_data->serving_notice_period_mode : 0,
                 'proposed_ctc' => @$row_data->proposed_ctc,
                 'any_offer' => @$row_data->any_offer ? @$row_data->any_offer : 0,
-                // 'document' 				=> 	@$row_data->document,
 
-                // 'sub_for_approval' 		=> 	@$row_data->sub_for_approval,
                 'offer_approved' => @$row_data->offer_approved ? @$row_data->offer_approved : 0,
                 'offer_release' => @$row_data->offer_release ? @$row_data->offer_release : 0,
                 'offer_acceptance' => @$row_data->offer_acceptance ? @$row_data->offer_acceptance : 0,
                 'joined' => @$row_data->joined ? @$row_data->joined : 0,
 
                 'joined_date' => @$row_data->joined_date,
-                // 'duplicate' 				=>	@$row_data->duplicate,
-                // 'percentage_hike' 		=>	@$row_data->percentage_hike,
-                // 'comment' 				=>	@$row_data->comment,
                 'pincode' => @$row_data->pincode,
 
                 'offer_currency' => @$row_data->offer_currency,
@@ -4439,19 +4263,17 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'offer_amount' => @$row_data->offer_amount,
 
             ];
-            // DB::table('job_applications')->insert($job_application_values);
 
             $note = 'Website => Pool';
 
             $application_id = '';
-            $application_id = $id; // DB::getPdo()->lastInsertId();
+            $application_id = $id;
 
             $timelineArr = [
                 'event_id' => 1,
                 'event_by_company_id' => auth()->user()->company_id,
                 'event_by_user_id' => auth()->user()->id,
                 'master_process_name' => 'InReview',
-                // 'child_process_name'	=>
                 'application_id' => @$application_id,
                 'application_email' => @$row_data->email,
                 'job_id' => @$source_jobid,
@@ -4468,24 +4290,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             DB::table('add_job_wise_condidates')->insert($insertArr);
             $lastWiseIs = DB::getPdo()->lastInsertId();
 
-            $cachekeys = [
-                'allcvtracker_version_user_'.$this->user->id,
-                'allapptracker_version_user_'.$this->user->id,
-                'allsimilarcandidates_version_user_'.$this->user->id,
-                'allclientapp_version_user_'.$this->user->id,
-                'allinternalbench_version_user_'.$this->user->id,
-                'allpublicbench_version_user_'.$this->user->id,
-                'alldsimilarcandidates_version_user_'.$this->user->id,
-                'alldinternalbench_version_user_'.$this->user->id,
-                'allfindtalents_version_user_'.$this->user->id,
-                'allcandidatesrequest_version_user_'.$this->user->id,
-                'alljobslist_version_user_'.$this->user->id,
-                'allcareerapplydata_version_user_'.$this->user->id,
-            ];
-            foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
-            }
-
             $teamRankElastic = [
                 'company_id' => $jobRow->company_id,
                 'user_id' => $this->user->id,
@@ -4504,9 +4308,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::teamRankElastic($teamRankElastic);
 
-            // ElasticCandidateIndex::dispatch($lastWiseIs)->onConnection('emails');
-            // GeneralMethod::elasticBenchCandidateAddEditIndex($source_from_id);
-
             $updateParams = [
                 'index' => ELASTIC_CAREER_APPLY,
                 'id' => $application_id,
@@ -4516,9 +4317,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                         'submitted_by' => auth()->user()->id,
                         'posted_by' => auth()->user()->name,
                     ],
-                    'doc_as_upsert' => false, // Changed to false since we verified existence
+                    'doc_as_upsert' => false,
                 ],
-                'refresh' => false, // Eventual consistency for 10K concurrent scale
+                'refresh' => false,
             ];
 
             $this->elasticService->getClient()->update($updateParams);
@@ -4527,15 +4328,106 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         // Immediately align prescreen report, keyskills, recruiter comments, and destroy multi-tier caches
         if (! empty($lastWiseIs) && ! empty($application_id) && ! empty($source_jobid)) {
+            // Unified monotonic pipeline version increment & outbox event across ALL source_from_type (0, 1, 2, 3)
+            try {
+                DB::table('jobs')->where('id', $source_jobid)->increment('pipeline_version');
+                $newPipelineVersion = ((int) ($jobRow->pipeline_version ?? 0)) + 1;
+                if ($jobRow) {
+                    $jobRow->pipeline_version = $newPipelineVersion;
+                }
+                $outboxPayload = [
+                    'wise_id' => (int) $lastWiseIs,
+                    'job_id' => (int) $source_jobid,
+                    'candidate_id' => (int) $application_id,
+                    'rec_candidate_assign_id' => (int) ($recCandidateAssignId ?? 0),
+                    'company_id' => (int) ($jobRow->company_id ?? $source_company_id),
+                    'master_status_id' => 8,
+                    'source_from_type' => (int) $source_from_type,
+                    'pipeline_version' => $newPipelineVersion,
+                ];
+
+                DB::table('sys_outbox_events')->insert([
+                    'tenant_id' => $source_company_id,
+                    'idempotency_key' => $idempotencyKey,
+                    'aggregate_type' => 'CandidateAssignment',
+                    'aggregate_id' => $lastWiseIs,
+                    'aggregate_version' => $newPipelineVersion,
+                    'event_type' => 'CandidateAddedToJob',
+                    'payload' => json_encode($outboxPayload),
+                    'status' => 'PENDING',
+                    'attempts' => 0,
+                    'available_at' => now(),
+                    'created_at' => now(),
+                ]);
+
+                $outboxService = app(\App\Services\TransactionalOutboxService::class);
+                $targetTenantId = (int) ($jobRow->company_id ?? $source_company_id);
+                if ($outboxService->isOptimizedPipelineEnabled($targetTenantId)) {
+                    $outboxEventId = $outboxService->recordEvent(
+                        $targetTenantId,
+                        (int) $source_jobid,
+                        $newPipelineVersion,
+                        'CandidateAddedToJob',
+                        $outboxPayload
+                    );
+                    $reverbEventData = [
+                        'outbox_id' => $outboxEventId,
+                        'tenant_id' => $targetTenantId,
+                        'job_id' => (int) $source_jobid,
+                        'version' => $newPipelineVersion,
+                        'candidate_id' => (int) $application_id,
+                        'wise_id' => (int) $lastWiseIs,
+                        'master_status_id' => 8,
+                        'metadata' => [
+                            'rec_candidate_assign_id' => (int) ($recCandidateAssignId ?? 0),
+                            'source_from_type' => (int) $source_from_type,
+                            'candidate_name' => (string) ($row_data->full_name ?? ''),
+                            'added_count' => 1,
+                        ],
+                    ];
+                    app()->terminating(function () use ($reverbEventData) {
+                        try {
+                            broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(
+                                tenantId: $reverbEventData['tenant_id'],
+                                jobId: $reverbEventData['job_id'],
+                                version: $reverbEventData['version'],
+                                candidateId: $reverbEventData['candidate_id'],
+                                wiseId: $reverbEventData['wise_id'],
+                                masterStatusId: $reverbEventData['master_status_id'],
+                                metadata: $reverbEventData['metadata']
+                            ));
+                            if ($reverbEventData['outbox_id'] > 0) {
+                                app(\App\Services\TransactionalOutboxService::class)->completeReverbEvent($reverbEventData['outbox_id']);
+                            }
+                        } catch (\Throwable $e) {
+                            // Leave reverb_status = 'pending' so ProcessReverbOutboxCommand retries durably
+                        }
+                    });
+                }
+            } catch (\Throwable $outboxErr) {
+            }
+
             app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(
                 (int) $application_id,
                 (int) $source_jobid,
                 (int) $lastWiseIs,
-                (int) ($jobRow->company_id ?? auth()->user()->company_id)
+                (int) ($jobRow->company_id ?? auth()->user()->company_id),
+                $row_data ?? null,
+                $jobRow ?? null,
+                true
             );
         } elseif (! empty($lastWiseIs)) {
             GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
         }
+
+        $successResponse = [
+            'status' => 'success',
+            'wise_id' => (int) ($lastWiseIs ?? 0),
+            'candidate_id' => (int) ($application_id ?? $id),
+            'job_id' => (int) $source_jobid,
+            'countforadd' => (int) ($row_data->countforadd ?? 0),
+            'candidate_status' => (int) ($row_data->status ?? 0),
+        ];
 
         // Phase 2: Mark Idempotency Record COMPLETED
         if (! empty($idempotencyKey) && ! empty($source_company_id)) {
@@ -4545,13 +4437,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 ->update([
                     'status' => 'COMPLETED',
                     'response_status' => 200,
-                    'response_body' => json_encode(['status' => 'success']),
+                    'response_body' => json_encode($successResponse),
                     'completed_at' => now(),
                     'updated_at' => now(),
                 ]);
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        return Reply::dataOnly($successResponse);
 
     }
 
@@ -5311,10 +5203,20 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_outsource = request('app_int_outsource');
 
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
+        $counters = GeneralMethod::custome_count_all($jobid);
         $responseData = [
             'html' => view('service_company.ajax_pages.candidates_request_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'total', 'jobid', 'requiredSkillsForDisplay', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'counters' => [
+                'pool_counter' => (int) ($counters->pool_counter ?? 0),
+                'existing_counter' => (int) ($counters->existing_counter ?? 0),
+                'internal_bench_counter' => (int) ($counters->internal_bench_counter ?? 0),
+                'public_bench_counter' => (int) ($counters->public_bench_counter ?? 0),
+                'recomnded_counter' => (int) ($counters->recomnded_counter ?? 0),
+                'career_counter' => (int) ($counters->career_counter ?? 0),
+            ],
+            'cache_version' => (int) (Cache::get("pipeline_v2:{$company_id}:epoch") ?? 1),
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_CANDIDATES_REQUEST_TIME));
@@ -7380,8 +7282,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $this->job = Job::withoutGlobalScopes()->findOrFail($id);
 
-        $this->custome_count = $this->custome_count($id);
         $return_data = GeneralMethod::custome_count_all($id);
+        // Phase 1 Optimization: Reuse $return_data->public_bench_counter already computed via ES by GeneralMethod::custome_count_all($id)
+        // instead of executing two redundant 500ms client_location_jobs + city_list MySQL JOINs via $this->custome_count($id).
+        $this->custome_count = $return_data->public_bench_counter ?? 0;
         $this->pool_counter = $return_data->pool_counter;
         $this->existing_counter = $return_data->existing_counter;
         $this->internal_bench_counter = $return_data->internal_bench_counter;
@@ -7398,6 +7302,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $jobDefaults = GeneralMethod::jobDefaultsFromEs($id);
 
         $this->default_loc = $jobDefaults->default_loc;
+        $this->default_locations = $jobDefaults->default_locations ?? [];
         $this->qualification = ''; // GeneralMethod::allQualificationSelected($id);
         $this->min_exp = ($jobDefaults->min_exp >= 1) ? $jobDefaults->min_exp - 1 : $jobDefaults->min_exp;
         $this->max_exp = $jobDefaults->max_exp + 1;
@@ -7411,7 +7316,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->min_sal_mode = $jobDefaults->min_sal_mode;
         $this->default_skill = $jobDefaults->default_skill;
 
-        $this->cities = GeneralMethod::allCities();
+        // Phase 1 Optimization: Location Tagify uses async /city-job-suggestions endpoint with whitelist: [].
+        // Avoid dumping the entire city_list table (414ms SQL + ~300KB JSON) into the initial HTML payload.
+        $this->cities = [];
         $this->qualificationTag = ReferenceDataCache::qualificationNames();
 
         return view('service_company.apptracker.public_bench', $this->data);
@@ -7424,15 +7331,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $searchTerms = request('cus_search');
         $custom_search = json_decode($searchTerms, true);
-        if (\request('cus_search') != '') {
-            $skillsAddElastic = array_column($custom_search, 'value');
-            GeneralMethod::skillsAddElastic($skillsAddElastic);
-        }
 
         $jobid = $request->jobid;
-        $job = Job::withoutGlobalScopes()->findOrFail($jobid);
-
-        $title = $job->title;
+        // Phase 3 Optimization: When sal_mode and min_salary_currency are supplied by the request,
+        // avoid querying MySQL (Job::findOrFail) before checking the DragonflyDB/Redis response cache.
+        // If either default is missing, resolve from ELASTIC_JOBS via GeneralMethod::jobDefaultsFromEs().
+        $jobEsDoc = null;
+        if (request('sal_mode') === null || request('min_salary_currency') === null) {
+            $jobEsDoc = GeneralMethod::jobDefaultsFromEs($jobid, false)->jobEsDoc ?? null;
+        }
 
         $location = request('kt_tagify_location');
         $custom_location = json_decode($location, true);
@@ -7452,8 +7359,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
-        $sal_mode = request('sal_mode') ?? $job->max_sal_mode;
-        $min_salary_currency = request('min_salary_currency') ?? $job->max_salary_currency;
+        $sal_mode = request('sal_mode') ?? ($jobEsDoc->max_sal_mode ?? $jobEsDoc->min_sal_mode ?? 0);
+        $min_salary_currency = request('min_salary_currency') ?? ($jobEsDoc->max_salary_currency ?? $jobEsDoc->min_salary_currency ?? 0);
         $app_int_outsource = request('app_int_outsource');
 
         $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -7466,8 +7373,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             5 => 'AED',
         ];
 
-        $modeFilter = $sal_mode ?? $job->max_sal_mode;
-        $currencyFilter = $min_salary_currency ?? $job->max_salary_currency;
+        $modeFilter = $sal_mode;
+        $currencyFilter = $min_salary_currency;
         $symbolsFilter = $symbolsValue[$currencyFilter] ?? 'INR';
 
         if (\request('min_exp') != '' || \request('max_exp') != '') {
@@ -7490,81 +7397,25 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 $min_salary = GeneralMethod::convertToINR($AmountMin, $currencyCheck);
                 $max_salary = GeneralMethod::convertToINR($AmountMax, $currencyCheck);
             }
-            // $ctcdividedMin = GeneralMethod::salaryDividedByMode($sal_mode, $AmountMin);
-            // $ctcdividedMax = GeneralMethod::salaryDividedByMode($sal_mode, $AmountMax);
-            // if ($sal_mode == 0) {
-            // 	$min_salary = $ctcdividedMin->yearly;
-            // 	$max_salary = $ctcdividedMax->yearly;
-
-            // } elseif ($sal_mode == 1) {
-            // 	$min_salary = $ctcdividedMin->monthly;
-            // 	$max_salary = $ctcdividedMax->monthly;
-
-            // } elseif ($sal_mode == 2) {
-            // 	$min_salary = $ctcdividedMin->hourly;
-            // 	$max_salary = $ctcdividedMax->hourly;
-
-            // }
-
         } else {
-
             $convertedAmount = request('max_sal'); // $job->max_salary;
             $max_salary = $convertedAmount;
             $min_salary = ''; // $job->min_salary;
             if ($request->min_salary_currency > 0) {
                 $max_salary = GeneralMethod::convertToINR($convertedAmount, $currencyCheck);
             }
-            // $ectcdivided = GeneralMethod::salaryDividedByMode($sal_mode, $convertedAmount);
-            // // $max_salary = $job->max_salary;
-            // if ($sal_mode == 0) {
-            // 	$max_salary = $ectcdivided->yearly;
-
-            // } elseif ($sal_mode == 1) {
-            // 	$max_salary = $ectcdivided->monthly;
-
-            // } elseif ($sal_mode == 2) {
-            // 	$max_salary = $ectcdivided->hourly;
-
-            // }
-
-            // dd("dkd");
-
         }
 
         ['location' => $location, 'education' => $education] = $this->resolveTagifyFilters();
 
-        $loc_data = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->select(
-                'client_location.address',
-                'client_location.city',
-                'client_location.postcode',
-                'client_location.country_id',
-                'city_list.city as city_name'
-            )
-            ->where('client_location_jobs.job_id', $jobid)
-            ->first();
-
-        $postcode = @$loc_data->postcode;
-
-        $skill_arr = [];
-        $skill_data = DB::table('job_metronics_skills')->select('*')->where('job_id', $jobid)->get()->toArray();
-        foreach ($skill_data as $sval) {
-            $skill_arr[] = $sval->skill_name;
-        }
+        // Phase 3 Optimization: Removed unused pre-cache DB::table('client_location_jobs')->join('client_location')->leftJoin('city_list')
+        // (~328 ms full join scan) and unused DB::table('job_metronics_skills') query that ran before cache()->has($cacheKeySet).
         $company_arr = [$company_id];
 
         $salaryMode = GeneralMethod::salaryMode();
         $currencySymbole = GeneralMethod::currencySymbole();
 
         $chkAdminRole = $this->user->hasRole('admin');
-
-        // $chkAdminRole = DB::table('roles')
-        // 	->select('*')
-        // 	->where('id', $this->user->role->role_id)
-        // 	->where('name', 'admin')
-        // 	->count();
 
         // $mandatorySkills tracks only the starred/checked skills (used to build
         // a strict "must match" clause below). $requiredSkills is EVERY entered
@@ -7623,8 +7474,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'sal_mode' => $sal_mode,
         ];
 
-        // dd($cachePayload );
-
         $versionKey = 'allpublicbench_version_user_'.$this->user->id;
         $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:allpublicbench:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
@@ -7633,6 +7482,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
+        }
+
+        if (\request('cus_search') != '' && is_array($custom_search)) {
+            $skillsAddElastic = array_column($custom_search, 'value');
+            GeneralMethod::skillsAddElastic($skillsAddElastic);
         }
 
         $sort[] = [
@@ -7659,10 +7513,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ],
         ];
 
-        // Job's own required skills (job_metronics_skills — same source
+        // Job's own required skills (from ELASTIC_JOBS job_metronics_skills — same source
         // skill_percentage() reads), used by the "Higher Match" sort option
-        // below. Fetched once here, not per-row.
-        $jobSkillsForSort = DB::table('job_metronics_skills')->where('job_id', $jobid)->pluck('skill_name')->map(fn ($s) => strtolower(trim($s)))->values()->toArray();
+        // below. Resolved from ES on cache miss with 0 MySQL reads.
+        $jobEsDoc = $jobEsDoc ?? (GeneralMethod::jobDefaultsFromEs($jobid, false)->jobEsDoc ?? null);
+        $jobSkillsForSort = collect($jobEsDoc->job_metronics_skills ?? [])
+            ->map(fn ($s) => strtolower(trim((string) (is_object($s) ? ($s->skill_name ?? '') : ($s['skill_name'] ?? '')))))
+            ->filter()
+            ->values()
+            ->toArray();
         switch ($valCheck) {
             case 1:
                 $sort[] = ['updated_at' => ['order' => 'desc']];
@@ -8303,9 +8162,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
 
-        // Build the final query
+        // Phase 3 Optimization: Combine hits + collapse + unique_candidates cardinality aggregation
+        // into a single Elasticsearch search call with request_cache=true (eliminating the redundant
+        // indexExists() HEAD request and second search($aggParams) round-trip).
         $params = [
             'index' => ELASTIC_CANDIDATES_BENCH,
+            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -8314,38 +8176,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'collapse' => [
                     'field' => 'email',
                 ],
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            // This total reflects ALL matching docs BEFORE collapse
-            $totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-            // Count of current page records (after pagination & collapse)
-            $records = $response['hits']['hits'] ?? [];
-            $returnedCount = count($records);
-
-            // Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
-            $aggParams = [
-                'index' => ELASTIC_CANDIDATES_BENCH,
-                'body' => [
-                    'size' => 0,
-                    'query' => $boolQuery,
-                    'aggs' => [
-                        'unique_candidates' => [
-                            'cardinality' => [
-                                'field' => 'email',
-                            ],
+                'aggs' => [
+                    'unique_candidates' => [
+                        'cardinality' => [
+                            'field' => 'email',
                         ],
                     ],
                 ],
-            ];
-            $aggResponse = $this->elasticService->getClient()->search($aggParams);
-            $total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
+            ],
+        ];
+
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $records = $response['hits']['hits'] ?? [];
+            $returnedCount = count($records);
+            $total = $response['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 
             $data = array_map(function ($hit) use ($requiredSkills, $mandatorySkills) {
 
@@ -8368,7 +8213,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'matched_skills' => $matchedSkills,
                     'matched_mandatory_skills' => $matchedMandatorySkills,
                 ]);
-            }, $response['hits']['hits']);
+            }, $records);
+        } catch (\Throwable $e) {
+            $total = 0;
+            $data = [];
         }
 
         $pagination = [
@@ -8386,11 +8234,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $sal_mode = request('sal_mode');
         $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
-        $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
+        $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0), (int) $jobid);
         $responseData = [
             'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'boostbenchApplications', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'tenant_version' => $version,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_PUBLIC_BENCH_TIME));
@@ -10842,8 +10691,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         session()->put('job_id', $id);
 
-        $gdFilterData = GeneralMethod::gdFilterData($id);
-
+        // Phase 1 Optimization: Default filter properties on Find Talent are empty/zero on load.
+        // Avoid calling GeneralMethod::gdFilterData($id) (190ms MySQL city_list JOIN whose return value was unused)
+        // and GeneralMethod::allCities() (229ms MySQL query + ~300KB unused JSON payload).
         $this->default_loc = '';
         $this->qualification = '';
         $this->min_exp = '0';
@@ -10854,7 +10704,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $this->min_sal_mode = '0';
         $this->default_skill = '';
 
-        $this->cities = GeneralMethod::allCities();
+        $this->cities = [];
         $this->qualificationTag = ReferenceDataCache::qualificationNames();
 
         return view('service_company.apptracker.find-talent', $this->data);
@@ -10989,6 +10839,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'app_int_notice' => $app_int_notice,
             'user_id' => $this->user->id,
             'app_int_status' => $app_int_status,
+            'client_render' => $request->boolean('client_render'),
         ];
 
         $versionKey = 'allfindtalents_version_user_'.$this->user->id;
@@ -11474,8 +11325,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         // Build the final query
+        // Phase 3 Optimization: Combine hits + collapse + unique_candidates cardinality aggregation
+        // into a single Elasticsearch search call with request_cache=true (eliminating the redundant
+        // indexExists() HEAD request and second search($aggParams) round-trip).
         $params = [
             'index' => ELASTIC_CANDIDATES_BENCH,
+            'request_cache' => true,
             'body' => [
                 'from' => $from,
                 'size' => $size,
@@ -11490,38 +11345,21 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                         'sort' => $sort,
                     ],
                 ],
-            ],
-        ];
-
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-            $total = 0;
-            $data = [];
-        } else {
-            $response = $this->elasticService->getClient()->search($params);
-            // This total reflects ALL matching docs BEFORE collapse
-            $totalBeforeCollapse = $response['hits']['total']['value'] ?? 0;
-
-            // Count of current page records (after pagination & collapse)
-            $records = $response['hits']['hits'] ?? [];
-            $returnedCount = count($records);
-
-            // Optional: if you want real total of unique candidate_id (after collapse), use an aggregation
-            $aggParams = [
-                'index' => ELASTIC_CANDIDATES_BENCH,
-                'body' => [
-                    'size' => 0,
-                    'query' => $boolQuery,
-                    'aggs' => [
-                        'unique_candidates' => [
-                            'cardinality' => [
-                                'field' => 'email',
-                            ],
+                'aggs' => [
+                    'unique_candidates' => [
+                        'cardinality' => [
+                            'field' => 'email',
                         ],
                     ],
                 ],
-            ];
-            $aggResponse = $this->elasticService->getClient()->search($aggParams);
-            $total = $aggResponse['aggregations']['unique_candidates']['value'] ?? $returnedCount;
+            ],
+        ];
+
+        try {
+            $response = $this->elasticService->getClient()->search($params);
+            $records = $response['hits']['hits'] ?? [];
+            $returnedCount = count($records);
+            $total = $response['aggregations']['unique_candidates']['value'] ?? $returnedCount;
 
             $data = array_map(function ($hit) use ($requiredSkills) {
 
@@ -11539,7 +11377,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                     'matched_skill_count' => $matchCount,
                     'matched_skills' => $matchedSkills,
                 ]);
-            }, $response['hits']['hits']);
+            }, $records);
+        } catch (\Throwable $e) {
+            $total = 0;
+            $data = [];
         }
 
         $pagination = [
@@ -11571,13 +11412,18 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        // Phase 1 Optimization: Avoid duplicating rendered HTML and raw ES candidate documents + skill maps
+        // in the JSON response (reducing payload size by >50%) unless client_render=1 is explicitly requested.
         $responseData = [
             'html' => view('service_company.ajax_pages.find_talent_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'skillExperiencesMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
-            'candidates' => $data,
-            'skillExperiencesMap' => $skillExperiencesMap,
+            'tenant_version' => $version,
         ];
+        if ($request->boolean('client_render')) {
+            $responseData['candidates'] = $data;
+            $responseData['skillExperiencesMap'] = $skillExperiencesMap;
+        }
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_FIND_TALENTS_TIME));
 

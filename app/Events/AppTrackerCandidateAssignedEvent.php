@@ -29,9 +29,12 @@ class AppTrackerCandidateAssignedEvent implements ShouldBroadcastNow
         public readonly array $metadata = []
     ) {}
 
-    public function broadcastOn(): PrivateChannel
+    public function broadcastOn(): array
     {
-        return new PrivateChannel("tenant.{$this->tenantId}.job.{$this->jobId}");
+        return [
+            new PrivateChannel("tenant.{$this->tenantId}.job.{$this->jobId}"),
+            new PrivateChannel("company.{$this->tenantId}"),
+        ];
     }
 
     public function broadcastAs(): string

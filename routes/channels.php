@@ -16,3 +16,9 @@ Broadcast::channel('company.{companyId}.dashboard', function ($user, int $compan
 Broadcast::channel('tenant.{companyId}.job.{jobId}', function ($user, int $companyId, int $jobId) {
     return (int) $user->company_id === (int) $companyId;
 });
+
+// Bench Talent Requests — private tenant-isolated channel for job candidate request events
+Broadcast::channel('company.{companyId}.job.{jobId}', function ($user, int $companyId, int $jobId) {
+    return (int) $user->company_id === (int) $companyId;
+});
+

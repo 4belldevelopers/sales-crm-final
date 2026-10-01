@@ -1792,14 +1792,27 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'candidateSkills' => $request->candidateSkills ?? '',
         ];
 
-        $versionKey = 'allcopyjobslist_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allcopyjobslist:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $userVersion = cache()->get('allcopyjobslist_version_user_'.$this->user->id, 1);
+        $tenantCopyVer = cache()->get('allcopyjobslist_version_company_'.$company_id, 1);
+        $tenantJobsVer = cache()->get('alljobslist_version_company_'.$company_id, 1);
+        $version = $userVersion.'_'.$tenantCopyVer.'_'.$tenantJobsVer;
+        $cacheKeySet = 'ats:allcopyjobslist:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
+        }
+
+        // Single-flight lock to prevent concurrent duplicate ES searches
+        $lock = cache()->lock('lock:'.$cacheKeySet, 5);
+        if (! $lock->get()) {
+            for ($i = 0; $i < 10; $i++) {
+                usleep(50000);
+                if (cache()->has($cacheKeySet)) {
+                    return response()->json(cache()->get($cacheKeySet));
+                }
+            }
         }
 
         $statusArr = ['active', 'hold', 'inactive', '2'];
@@ -1996,6 +2009,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'size' => $size,
                 'sort' => $sort,
                 'track_total_hits' => true,
+                '_source' => [
+                    'excludes' => ['job_description', 'roles_responsibility', 'other_details'],
+                ],
                 'query' => [
                     'bool' => [
                         'must' => $must,
@@ -2036,9 +2052,11 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.all_copyjobtable_ajax', compact('data', 'userPermissions', 'company_id', 'candidateSkills', 'findTalentAdd'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'tenant_version' => $version,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_COPY_LIST_TIME));
+        optional($lock)->release();
 
         return response()->json($responseData);
 
@@ -2544,9 +2562,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->get()
                 ->keyBy('id');
 
-            // 4. Pre-resolve ES candidate _source documents once per candidate (using direct get() in try/catch instead of exists()+get())
+            // 4. Pre-resolve candidate rows: for bench_condidate, $dbAppsMap already holds the authoritative
+            // MySQL job_applications row; only fetch ELASTIC_CANDIDATES when copying an 'other' applicant with wiseId.
             $resolvedAppsMap = [];
-            $esClient = $this->elasticService->getClient();
+            $esClient = null;
             foreach ($selectedApplicantListing as $key => $app_id) {
                 $applicationRow = $dbAppsMap->get($app_id);
                 if (! $applicationRow) {
@@ -2557,6 +2576,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $addJobWiseCondidate_id = $selectedApplicantListingOld[$key] ?? null;
                     if (! empty($addJobWiseCondidate_id)) {
                         try {
+                            $esClient = $esClient ?: $this->elasticService->getClient();
                             $response = $esClient->get([
                                 'index' => ELASTIC_CANDIDATES,
                                 'id' => $addJobWiseCondidate_id,
@@ -2568,17 +2588,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                             }
                         } catch (\Throwable $e) {
                         }
-                    }
-                } else {
-                    try {
-                        $response = $esClient->get([
-                            'index' => ELASTIC_CANDIDATES_BENCH,
-                            'id' => $app_id,
-                        ]);
-                        if (isset($response['_source'])) {
-                            $resolvedRow = (object) $response['_source'];
-                        }
-                    } catch (\Throwable $e) {
                     }
                 }
                 $resolvedAppsMap[$app_id] = $resolvedRow;
@@ -2605,8 +2614,21 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 ->map(fn ($items) => $items->pluck('skill_name')->all())
                 ->toArray();
 
+            // 7. Batch-fetch existing (job_id, job_application_id) pairs in add_job_wise_condidates to prevent duplicate assignments across concurrent recruiters
+            $existingWisePairs = [];
+            $existingWiseRows = DB::table('add_job_wise_condidates')
+                ->whereIn('job_id', $selectedJobListing)
+                ->whereIn('job_application_id', $selectedApplicantListing)
+                ->select('job_id', 'job_application_id')
+                ->get();
+            foreach ($existingWiseRows as $ewRow) {
+                $existingWisePairs[$ewRow->job_id.'_'.$ewRow->job_application_id] = true;
+            }
+
             $alignmentService = app(\App\Services\CandidateJobAlignmentService::class);
+            $outboxService = app(\App\Services\TransactionalOutboxService::class);
             $benchCandidateIdsToSync = [];
+            $reverbEventsToBroadcast = [];
 
             foreach ($selectedJobListing as $jval) {
                 $jobRow = $jobsMap->get($jval);
@@ -2621,6 +2643,14 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if (! $applicationRow) {
                         continue;
                     }
+                    $dbAppRow = $dbAppsMap->get($app_id) ?: $applicationRow;
+
+                    // Skip if candidate is already assigned to this target job (prevents duplicate rows and double coin deduction)
+                    $pairKey = $jval.'_'.$app_id;
+                    if (isset($existingWisePairs[$pairKey])) {
+                        continue;
+                    }
+                    $existingWisePairs[$pairKey] = true;
 
                     if ($customClient == 1) {
                         $thirdparty_company_id = $company_id;
@@ -2633,66 +2663,94 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     }
 
                     $now = now();
-                    $values = [
-                        'submitted_by' => $submitted_by,
-                        'thirdparty_company_id' => $thirdparty_company_id,
-                        'np_id' => @$applicationRow->np_id,
-                        'full_name' => @$applicationRow->full_name,
-                        'email' => @$applicationRow->email,
-                        'phone' => @$applicationRow->phone,
-                        'dob' => @$applicationRow->dob,
-                        'country' => @$applicationRow->country,
-                        'state' => @$applicationRow->state,
-                        'city' => @$applicationRow->city,
-                        'city_id' => @$applicationRow->city_id,
-                        'secondrary_email' => @$applicationRow->secondrary_email,
-                        'secondary_mobile' => @$applicationRow->secondary_mobile,
-                        'skills' => @$applicationRow->skills,
-                        'photo' => @$applicationRow->photo,
-                        'resume' => @$applicationRow->resume,
-                        'rating' => @$applicationRow->rating,
-                        'job_id' => @$jval,
-                        'status_id' => $default_master_status,
-                        'total_exp' => @$applicationRow->total_exp,
-                        'rel_exp' => @$applicationRow->rel_exp,
-                        'passport' => @$applicationRow->passport,
-                        'ctc' => @$applicationRow->ctc,
-                        'current_ctc_cur' => @$applicationRow->current_ctc_cur,
-                        'current_ctc_mode' => @$applicationRow->current_ctc_mode,
-                        'ectc' => @$applicationRow->ectc,
-                        'current_ectc_cur' => @$applicationRow->current_ectc_cur,
-                        'current_ectc_mode' => @$applicationRow->current_ectc_mode,
-                        'current_location' => @$applicationRow->current_location,
-                        'current_designation' => @$applicationRow->current_designation,
-                        'current_company' => @$applicationRow->current_company,
-                        'process_id' => @$applicationRow->process_id,
-                        'qualification' => @$applicationRow->qualification,
-                        'master_status_id' => $default_master_status,
-                        'child_status_id' => @$applicationRow->child_status_id,
-                        'serving_notice_period_mode' => @$applicationRow->serving_notice_period_mode,
-                        'proposed_ctc' => @$applicationRow->proposed_ctc,
-                        'any_offer' => null,
-                        'document' => @$applicationRow->document,
-                        'sub_for_approval' => @$applicationRow->sub_for_approval,
-                        'offer_approved' => null,
-                        'offer_release' => null,
-                        'offer_acceptance' => null,
-                        'joined' => null,
-                        'joined_date' => null,
-                        'duplicate' => @$applicationRow->duplicate,
-                        'percentage_hike' => @$applicationRow->percentage_hike,
-                        'comment' => @$applicationRow->comment,
-                        'pincode' => @$applicationRow->pincode,
-                        'offer_currency' => null,
-                        'offer_mode' => null,
-                        'offer_amount' => null,
-                        'recruiter_note' => null,
-                        'updated_at' => $now,
-                    ];
+                    $isBenchCandidate = (($dbAppRow->condidate_type ?? $applicationRow->condidate_type ?? '') === 'bench_condidate');
+                    $candCompanyId = (int) ($dbAppRow->company_id ?? $applicationRow->company_id ?? 0);
+                    $isCrossCompanyBench = $isBenchCandidate && ($candCompanyId !== $company_id);
 
-                    DB::table('job_applications')->where('id', '=', $applicationRow->id)->update($values);
+                    /**
+                     * Intent: Preserve vendor/bench candidate ownership and rate columns on job_applications (Phase 4).
+                     * When adding a bench_condidate from Find Bench Talents / Agency Bench, do NOT overwrite the
+                     * vendor company's job_applications row (submitted_by, job_id, master_status_id, ctc/ectc).
+                     * Instead, increment countforadd (and set status=1 when countforadd >= 3) for cross-company bench.
+                     */
+                    if ($isBenchCandidate) {
+                        if ($isCrossCompanyBench) {
+                            $newCountForAdd = ((int) ($dbAppRow->countforadd ?? 0)) + 1;
+                            $benchUpdate = ['countforadd' => $newCountForAdd];
+                            if ($newCountForAdd >= 3) {
+                                $benchUpdate['status'] = 1;
+                            }
+                            DB::table('job_applications')->where('id', '=', $dbAppRow->id)->update($benchUpdate);
+                            $dbAppRow->countforadd = $newCountForAdd;
+                            if ($newCountForAdd >= 3) {
+                                $dbAppRow->status = 1;
+                            }
+                        }
+                    } else {
+                        $values = [
+                            'submitted_by' => $submitted_by,
+                            'thirdparty_company_id' => $thirdparty_company_id,
+                            'np_id' => @$applicationRow->np_id,
+                            'full_name' => @$applicationRow->full_name,
+                            'email' => @$applicationRow->email,
+                            'phone' => @$applicationRow->phone,
+                            'dob' => @$applicationRow->dob,
+                            'country' => @$applicationRow->country,
+                            'state' => @$applicationRow->state,
+                            'city' => @$applicationRow->city,
+                            'city_id' => @$applicationRow->city_id,
+                            'secondrary_email' => @$applicationRow->secondrary_email,
+                            'secondary_mobile' => @$applicationRow->secondary_mobile,
+                            'skills' => @$applicationRow->skills,
+                            'photo' => @$applicationRow->photo,
+                            'resume' => @$applicationRow->resume,
+                            'rating' => @$applicationRow->rating,
+                            'job_id' => @$jval,
+                            'status_id' => $default_master_status,
+                            'total_exp' => @$applicationRow->total_exp,
+                            'rel_exp' => @$applicationRow->rel_exp,
+                            'passport' => @$applicationRow->passport,
+                            'ctc' => @$applicationRow->ctc,
+                            'current_ctc_cur' => @$applicationRow->current_ctc_cur,
+                            'current_ctc_mode' => @$applicationRow->current_ctc_mode,
+                            'ectc' => @$applicationRow->ectc,
+                            'current_ectc_cur' => @$applicationRow->current_ectc_cur,
+                            'current_ectc_mode' => @$applicationRow->current_ectc_mode,
+                            'current_location' => @$applicationRow->current_location,
+                            'current_designation' => @$applicationRow->current_designation,
+                            'current_company' => @$applicationRow->current_company,
+                            'process_id' => @$applicationRow->process_id,
+                            'qualification' => @$applicationRow->qualification,
+                            'master_status_id' => $default_master_status,
+                            'child_status_id' => @$applicationRow->child_status_id,
+                            'serving_notice_period_mode' => @$applicationRow->serving_notice_period_mode,
+                            'proposed_ctc' => @$applicationRow->proposed_ctc,
+                            'any_offer' => null,
+                            'document' => @$applicationRow->document,
+                            'sub_for_approval' => @$applicationRow->sub_for_approval,
+                            'offer_approved' => null,
+                            'offer_release' => null,
+                            'offer_acceptance' => null,
+                            'joined' => null,
+                            'joined_date' => null,
+                            'duplicate' => @$applicationRow->duplicate,
+                            'percentage_hike' => @$applicationRow->percentage_hike,
+                            'comment' => @$applicationRow->comment,
+                            'pincode' => @$applicationRow->pincode,
+                            'offer_currency' => null,
+                            'offer_mode' => null,
+                            'offer_amount' => null,
+                            'recruiter_note' => null,
+                            'updated_at' => $now,
+                        ];
+
+                        DB::table('job_applications')->where('id', '=', $applicationRow->id)->update($values);
+                    }
 
                     $application_id = $app_id;
+                    $timelineNote = $isCrossCompanyBench
+                        ? 'Similar Candidate => Agency Bench'
+                        : ($isBenchCandidate ? 'Similar Candidate => Internal Bench' : 'Copy Application');
                     $timelineArr = [
                         'event_id' => 1,
                         'event_by_company_id' => $company_id,
@@ -2701,7 +2759,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                         'application_id' => @$application_id,
                         'application_email' => @$applicationRow->email,
                         'job_id' => @$jval,
-                        'note' => 'Copy Application',
+                        'note' => $timelineNote,
                     ];
                     GeneralMethod::UpdateTimeline($timelineArr);
 
@@ -2709,7 +2767,20 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     $sel_job_id = @$jval;
                     $benchAssignRow = $existingRecAssignMap->get($sel_app_id);
 
-                    if ($benchAssignRow) {
+                    if ($isBenchCandidate) {
+                        $recValues = [
+                            'source_from_company_id' => @$dbAppRow->company_id,
+                            'source_from_user_id' => @$dbAppRow->submitted_by,
+                            'source_from_id' => @$sel_app_id,
+                            'source_from_type' => $isCrossCompanyBench ? 2 : 1,
+                            'parent_id' => 0,
+                            'source_company_id' => $company_id,
+                            'source_user_id' => $userId,
+                            'source_application_id' => @$application_id,
+                            'ac_status' => 1,
+                            'source_jobid' => @$sel_job_id,
+                        ];
+                    } elseif ($benchAssignRow) {
                         $recValues = [
                             'source_from_company_id' => @$benchAssignRow->source_from_company_id,
                             'source_from_user_id' => @$benchAssignRow->source_from_user_id,
@@ -2780,27 +2851,93 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     if ($result) {
                         GeneralMethod::coinsDeductions((int) @$jobRow->company_id, $eventId, $userId, @$thirdparty_company_id, '', '');
 
+                        // Monotonic pipeline version increment & transactional outbox event for real-time AppTracker WebSocket sync
+                        try {
+                            DB::table('jobs')->where('id', $sel_job_id)->increment('pipeline_version');
+                            $newPipelineVersion = ((int) ($jobRow->pipeline_version ?? 0)) + 1;
+                            $jobRow->pipeline_version = $newPipelineVersion;
+                            $targetTenantId = (int) ($jobRow->company_id ?? $company_id);
+
+                            if ($outboxService->isOptimizedPipelineEnabled($targetTenantId)) {
+                                $candidateName = (string) ($applicationRow->full_name ?? '');
+                                $sourceFromType = (int) ($recValues['source_from_type'] ?? 0);
+                                $outboxEventId = $outboxService->recordEvent(
+                                    $targetTenantId,
+                                    (int) $sel_job_id,
+                                    $newPipelineVersion,
+                                    'CandidateAddedToJob',
+                                    [
+                                        'wise_id' => (int) $lastWiseIs,
+                                        'job_id' => (int) $sel_job_id,
+                                        'candidate_id' => (int) $application_id,
+                                        'rec_candidate_assign_id' => (int) $recCandidateAssignId,
+                                        'company_id' => $targetTenantId,
+                                        'master_status_id' => (int) $default_master_status,
+                                        'source_from_type' => $sourceFromType,
+                                        'candidate_name' => $candidateName,
+                                        'added_count' => 1,
+                                        'pipeline_version' => $newPipelineVersion,
+                                    ]
+                                );
+                                $reverbEventsToBroadcast[] = [
+                                    'outbox_id' => $outboxEventId,
+                                    'tenant_id' => $targetTenantId,
+                                    'job_id' => (int) $sel_job_id,
+                                    'version' => $newPipelineVersion,
+                                    'candidate_id' => (int) $application_id,
+                                    'wise_id' => (int) $lastWiseIs,
+                                    'master_status_id' => (int) $default_master_status,
+                                    'metadata' => [
+                                        'rec_candidate_assign_id' => (int) $recCandidateAssignId,
+                                        'source_from_type' => $sourceFromType,
+                                        'candidate_name' => $candidateName,
+                                        'added_count' => 1,
+                                    ],
+                                ];
+                            }
+                        } catch (\Throwable $outboxErr) {
+                        }
+
                         $alignmentService->alignCandidateToJob(
                             (int) $application_id,
                             (int) $sel_job_id,
                             (int) $lastWiseIs,
                             (int) ($jobRow->company_id ?? $company_id),
-                            $dbAppsMap->get($app_id) ?: $applicationRow,
+                            $dbAppRow,
                             $jobRow,
                             true
                         );
 
-                        if (($applicationRow->condidate_type ?? '') !== 'other') {
+                        if (($dbAppRow->condidate_type ?? $applicationRow->condidate_type ?? '') !== 'other') {
                             $benchCandidateIdsToSync[(int) $applicationRow->id] = (int) $applicationRow->id;
                         }
                     }
                 }
             }
 
-            // Offload non-blocking bench index sync (ELASTIC_CANDIDATES_BENCH jobs array) after HTTP response
-            if (! empty($benchCandidateIdsToSync)) {
+            // Offload non-blocking Reverb broadcast & bench index sync after HTTP response
+            if (! empty($reverbEventsToBroadcast) || ! empty($benchCandidateIdsToSync)) {
                 $idsToSync = array_values($benchCandidateIdsToSync);
-                app()->terminating(function () use ($idsToSync) {
+                $eventsToPush = $reverbEventsToBroadcast;
+                app()->terminating(function () use ($eventsToPush, $idsToSync) {
+                    foreach ($eventsToPush as $ev) {
+                        try {
+                            broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(
+                                tenantId: $ev['tenant_id'],
+                                jobId: $ev['job_id'],
+                                version: $ev['version'],
+                                candidateId: $ev['candidate_id'],
+                                wiseId: $ev['wise_id'],
+                                masterStatusId: $ev['master_status_id'],
+                                metadata: $ev['metadata']
+                            ));
+                            if ($ev['outbox_id'] > 0) {
+                                app(\App\Services\TransactionalOutboxService::class)->completeReverbEvent($ev['outbox_id']);
+                            }
+                        } catch (\Throwable $e) {
+                            // Leave reverb_status = 'pending' so ProcessReverbOutboxCommand retries durably
+                        }
+                    }
                     foreach ($idsToSync as $bId) {
                         try {
                             GeneralMethod::elasticBenchCandidateAddEditIndex($bId);

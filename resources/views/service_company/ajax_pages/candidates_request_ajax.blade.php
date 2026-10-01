@@ -9,9 +9,11 @@
     $job_status_arr = GeneralMethod::job_status();
     $job_status = GeneralMethod::job_status();
 
-    // Valid days from features table (id=4) — same source candidateRequestAutoExpiredAfterValidDate() uses.
-    $benchExpireFeature = DB::table('features')->where('id', 4)->first();
-    $benchExpireDays = (int) (@$benchExpireFeature->days ?: 30);
+    // Valid days from features table (id=4) — cached for 24h to eliminate per-request MySQL hit.
+    $benchExpireDays = cache()->remember('feature:expire_days:4', 86400, function () {
+        $benchExpireFeature = DB::table('features')->where('id', 4)->first();
+        return (int) (@$benchExpireFeature->days ?: 30);
+    });
 
 @endphp
 @if (count($data) > 0)
@@ -378,14 +380,19 @@
 
                     $city = $row_city_name = '';
 
-                    if (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
+                    if (!empty($row->city_name)) {
+                        $row_city_name = $row->city_name;
+                    } elseif (@$row->country == 101 && !empty($row->city_id)) {
+                        // Memoized fallback if older document didn't include city_name
+                        $row_city_name = cache()->remember('city_name:' . (int) $row->city_id, 86400, function () use ($row) {
+                            $row_city = DB::table('city_list')
+                                ->select('city')
+                                ->where('city_id', (int) $row->city_id)
+                                ->first();
+                            return $row_city ? $row_city->city : '';
+                        });
                     } else {
-                        $row_city_name = @$row->city;
+                        $row_city_name = @$row->city ?: '';
                     }
 
                     // Row 2 is now Education (merged in from the removed Education

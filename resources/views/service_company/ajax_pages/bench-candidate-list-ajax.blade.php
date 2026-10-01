@@ -61,7 +61,7 @@
                 return implode(' ', array_slice($words, 0, $limit)) . '...';
             };
         @endphp
-        <tr style="height: 102px; position: relative;">
+        <tr data-bench-row-id="{{ $row->id }}" style="height: 102px; position: relative;">
             {{-- Checkbox --}}
             <td class="col-select">
                 <div class="form-check form-check-sm form-check-custom form-check-solid">
@@ -264,21 +264,9 @@
                         $managerName = !empty($hmEntry['first_name']) ? ucwords($hmEntry['first_name']) : 'Unassigned';
                         $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
                     } else {
-                        $hmCount = DB::table('bench_assign')
-                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                            ->where('bench_assign.bench_applications_id', $row->id)
-                            ->where('bench_assign.company_id', $company_id)
-                            ->where('users.company_id', $company_id)
-                            ->count();
-                        $hmData = DB::table('bench_assign')
-                            ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                            ->select('users.name')
-                            ->where('bench_assign.bench_applications_id', $row->id)
-                            ->where('bench_assign.company_id', $company_id)
-                            ->where('users.company_id', $company_id)
-                            ->orderBy('users.name', 'ASC')->take(1)->first();
-                        $managerName = @$hmData->name ? ucwords($hmData->name) : 'Unassigned';
-                        $extra = $hmCount > 1 ? ' +' . ($hmCount - 1) : '';
+                        $hmCount = 0;
+                        $managerName = 'Unassigned';
+                        $extra = '';
                     }
                     $displayManagerName = $limitWords($managerName . $extra, 20);
                 @endphp
@@ -298,17 +286,17 @@
                         <div class="pipe-grid">
                             <div class="h">INW</div><div class="h">SOU</div><div class="h">SCR</div><div class="h">EVA</div><div class="h">NEG</div><div class="h">OFF</div><div class="h">JOI</div><div class="h">REJ</div>
                             {{-- Intent: Clicking INW (InReview) opens the full bench explore list with stage = 'all' --}}
-                            <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary">{{ $row->InReview }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary">{{ $row->Sourcing }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary">{{ $row->Screening }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary">{{ $row->Evaluation }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary">{{ $row->Negotiation }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary">{{ $row->Offered }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary">{{ $row->Joined }}</a></div>
-                            <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary">{{ $row->Rejected }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/all" class="text-hover-primary" data-bench-pipe="inreview">{{ $row->InReview }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/1" class="text-hover-primary" data-bench-pipe="sourcing">{{ $row->Sourcing }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/2" class="text-hover-primary" data-bench-pipe="screening">{{ $row->Screening }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/3" class="text-hover-primary" data-bench-pipe="evaluation">{{ $row->Evaluation }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/4" class="text-hover-primary" data-bench-pipe="negotiation">{{ $row->Negotiation }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/5" class="text-hover-primary" data-bench-pipe="offered">{{ $row->Offered }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/6" class="text-hover-primary" data-bench-pipe="joined">{{ $row->Joined }}</a></div>
+                            <div class="v"><a href="{{ $exploreBase }}/7" class="text-hover-primary" data-bench-pipe="rejected">{{ $row->Rejected }}</a></div>
                         </div>
                         <div class="pipe-foot">
-                            Interview: {{ $row->InReview }}
+                            Interview: <span data-bench-pipe-interview="{{ $row->id }}">{{ $row->InReview }}</span>
                             <span class="pipe-stat">Views: {{ $viewCount }}</span>
                             <span class="pipe-stat">Downloads: {{ $downloadCount }}</span>
                         </div>

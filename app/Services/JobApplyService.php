@@ -69,10 +69,28 @@ class JobApplyService
         $company_id = (int) $request->input('company_id');
         $email = trim((string) $request->input('email'));
         $jobId = (int) $request->input('job_id');
+        $submissionToken = trim((string) $request->input('submission_token'));
+
+        /* Intent: Phase 5 atomic submission token lock (60s TTL) to prevent concurrent double-clicks */
+        $lockKey = ! empty($submissionToken) ? "career_apply_lock:{$company_id}:{$submissionToken}" : null;
+        if ($lockKey) {
+            $acquired = Cache::add($lockKey, 1, 60);
+            if (! $acquired) {
+                return Reply::dataOnly([
+                    'status' => 'error',
+                    'msgType' => 'warning',
+                    'message' => 'Your application is already being processed. Please do not submit multiple times.',
+                ]);
+            }
+        }
 
         /* Intent: Fast Redis atomic key lock check to prevent duplicate submission race conditions */
         $dedupKey = "apply:dedup:{$company_id}:{$jobId}:".md5(strtolower($email));
         if (Cache::has($dedupKey)) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
             return Reply::redirectValidation(
                 url('job-details/'.GeneralMethod::value_encrypt($jobId).'/'.$company_id),
                 __('menu.jobApplications').' '.__('You have already applied for this job')
@@ -82,6 +100,10 @@ class JobApplyService
         /* Intent: Elasticsearch read-check fallback for candidate existence */
         $esDuplicateCheck = $this->checkElasticDuplicate($email, $jobId);
         if ($esDuplicateCheck !== null) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
             return $esDuplicateCheck;
         }
 
@@ -291,7 +313,8 @@ class JobApplyService
         DB::beginTransaction();
         try {
             $jobApplication->save();
-             GeneralMethod::careerStore($jobApplication->id);
+
+            /* Intent: ES indexing is asynchronously dispatched via SyncCandidateToElasticJob post-commit */
 
             /* Atomic claim & R2 validation for session resume uploads */
             if ($resumeSession) {
@@ -548,6 +571,30 @@ class JobApplyService
                 IndexCandidateSkillsToElasticJob::dispatch($esSkillRecords);
             }
 
+            /* Intent: Real-time Reverb broadcast to notify recruiter App Tracker instantly without page refresh */
+            try {
+                broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(
+                    tenantId: $company_id,
+                    jobId: $jobId,
+                    version: 1,
+                    candidateId: $jobApplication->id,
+                    wiseId: $jobApplication->id,
+                    masterStatusId: 8,
+                    metadata: [
+                        'candidate_name' => $jobApplication->full_name,
+                        'email' => $jobApplication->email,
+                        'phone' => $jobApplication->phone,
+                        'source' => 'CAREER_PORTAL',
+                        'added_count' => 1,
+                    ]
+                ));
+            } catch (\Throwable $e) {
+                Log::warning('AppTrackerCandidateAssignedEvent broadcast warning: '.$e->getMessage());
+            }
+
+            /* Intent: Invalidate tenant career caches so application counts and candidate state are fresh (Rule 6) */
+            GeneralMethod::invalidateCareerTenantCache($company_id, $jobId);
+
             $message = 'messages.createdSuccessfully';
 
             return Reply::redirect(
@@ -557,6 +604,9 @@ class JobApplyService
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            if (isset($lockKey) && $lockKey) {
+                Cache::forget($lockKey);
+            }
             Log::error('JobApplyService submitApplication failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);

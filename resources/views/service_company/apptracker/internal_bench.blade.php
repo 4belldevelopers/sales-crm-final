@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @push('head-script')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
     <style>
@@ -2188,13 +2188,18 @@
                     .html(originalHtml);
             }
 
+            var idemKey = 'ibf_assign_' + source_jobid + '_' + id + '_' + (source_from_type || 1);
             $.ajax({
                 type: 'GET',
                 url: url,
+                headers: {
+                    'X-Idempotency-Key': idemKey
+                },
                 data: {
                     'id': id,
                     'source_from_type': source_from_type,
-                    'source_jobid': source_jobid
+                    'source_jobid': source_jobid,
+                    'idempotency_key': idemKey
                 },
                 success: function(response) {
                     if (response.status == 'coinCheck') {
@@ -2205,6 +2210,25 @@
                     if (response.status == 'success') {
                         ibfMarkCandidateRowAdded($btn);
                         ibfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
+                        try {
+                            var numJobId = parseInt(source_jobid, 10);
+                            var numAppId = parseInt(id, 10);
+                            window.dispatchEvent(new CustomEvent('jero:candidate-added-to-job', {
+                                detail: { jobIds: [numJobId], applicantIds: [numAppId], masterStatusId: 8 }
+                            }));
+                            var _atsCompanyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+                            if (typeof BroadcastChannel !== 'undefined' && _atsCompanyId !== '0') {
+                                var _atsBc = new BroadcastChannel('jero_ats_sync_' + _atsCompanyId);
+                                _atsBc.postMessage({
+                                    type: 'CANDIDATE_ADDED_TO_JOB',
+                                    jobIds: [numJobId],
+                                    applicantIds: [numAppId],
+                                    masterStatusId: 8,
+                                    ts: Date.now()
+                                });
+                                _atsBc.close();
+                            }
+                        } catch (e) {}
                     } else {
                         restoreButton();
                     }

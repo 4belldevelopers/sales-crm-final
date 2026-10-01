@@ -578,10 +578,138 @@
 			 showToastr('error', 'Multiple Jobs removed successfully!', 'Removed');
 		}
 	});
-     // Phase 1 Optimization: Prevent duplicate document pagination listeners on repeated drawer opens,
-     // return jqXHR promise for pagination .then()/.catch(), and abort stale in-flight requests.
+     // Phase 1 & Phase 5 Optimization: Prevent duplicate document pagination listeners on repeated drawer opens,
+     // abort stale in-flight requests, and serve visited pages/searches in <2ms from CopyJobRamStore (Rule 3, 5, 6, 17).
      var _copyJobTableXhr = null;
      var _copyJobReqSeq = 0;
+
+     var CopyJobRamStore = (function() {
+         var companyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+         var storagePrefix = 'jero_copyjob_v1_' + companyId + '_';
+         var ramMap = new Map();
+         var maxEntries = 25;
+         var ttlMs = 60000;
+         var latestTenantVersion = null;
+         var bcChannel = null;
+
+         try {
+             if (typeof BroadcastChannel !== 'undefined' && companyId !== '0') {
+                 bcChannel = new BroadcastChannel('jero_ats_sync_' + companyId);
+             }
+         } catch (e) {}
+
+         function normalizeSkills(rawSkills) {
+             var str = Array.isArray(rawSkills) ? rawSkills.join(',') : String(rawSkills || '');
+             if (!str) return '';
+             var parts = str.split(',').map(function(s) {
+                 return s.trim().toLowerCase();
+             }).filter(Boolean);
+             return Array.from(new Set(parts)).sort().join(',');
+         }
+
+         return {
+             buildKey: function(page, params) {
+                 return [
+                     page,
+                     params.findTalentAdd || '',
+                     String(params.search || '').trim().toLowerCase(),
+                     normalizeSkills(params.candidateSkills)
+                 ].join('|');
+             },
+             get: function(key) {
+                 var now = Date.now();
+                 var entry = ramMap.get(key);
+                 if (!entry) {
+                     try {
+                         var raw = sessionStorage.getItem(storagePrefix + key);
+                         if (raw) {
+                             entry = JSON.parse(raw);
+                             ramMap.set(key, entry);
+                         }
+                     } catch (e) {}
+                 }
+                 if (!entry) return null;
+                 if ((now - (entry.ts || 0)) > ttlMs) {
+                     this.remove(key);
+                     return null;
+                 }
+                 if (latestTenantVersion && entry.tenant_version && entry.tenant_version !== latestTenantVersion) {
+                     this.invalidate();
+                     return null;
+                 }
+                 return entry.data;
+             },
+             set: function(key, response) {
+                 if (!response || !response.html) return;
+                 if (response.tenant_version) {
+                     if (latestTenantVersion && latestTenantVersion !== response.tenant_version) {
+                         this.invalidate();
+                     }
+                     latestTenantVersion = response.tenant_version;
+                 }
+                 if (ramMap.size >= maxEntries) {
+                     var oldestKey = ramMap.keys().next().value;
+                     this.remove(oldestKey);
+                 }
+                 var record = {
+                     ts: Date.now(),
+                     tenant_version: response.tenant_version || null,
+                     data: response
+                 };
+                 ramMap.set(key, record);
+                 try {
+                     sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
+                 } catch (e) {}
+             },
+             broadcastCandidateAdded: function(jobIds, applicantIds) {
+                 this.invalidate();
+                 var normJobs = Array.isArray(jobIds) ? jobIds.map(function(j) { return parseInt(j, 10); }) : [];
+                 var normApps = Array.isArray(applicantIds) ? applicantIds.map(function(a) { return parseInt(a, 10); }) : [];
+                 try {
+                     window.dispatchEvent(new CustomEvent('jero:candidate-added-to-job', {
+                         detail: { jobIds: normJobs, applicantIds: normApps, masterStatusId: 8 }
+                     }));
+                 } catch (e) {}
+                 try {
+                     if (bcChannel) {
+                         bcChannel.postMessage({
+                             type: 'CANDIDATE_ADDED_TO_JOB',
+                             jobIds: normJobs,
+                             applicantIds: normApps,
+                             masterStatusId: 8,
+                             ts: Date.now()
+                         });
+                     }
+                 } catch (e) {}
+             },
+             remove: function(key) {
+                 ramMap.delete(key);
+                 try { sessionStorage.removeItem(storagePrefix + key); } catch (e) {}
+             },
+             invalidate: function() {
+                 ramMap.clear();
+                 try {
+                     for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                         var k = sessionStorage.key(i);
+                         if (k && k.indexOf(storagePrefix) === 0) {
+                             sessionStorage.removeItem(k);
+                         }
+                     }
+                 } catch (e) {}
+             }
+         };
+     })();
+
+     function renderCopyJobTableResponse(response) {
+         $('.loadingMessage').css({ display: 'none' });
+         $('.loader_search').css({ display: 'none' });
+         $('.page-loader').css('display', 'none');
+         $('#copyJobTable').html(response.html);
+         $('#paginationcopy').html(response.pagination);
+         markAddedButtons();
+         updateHeroStats();
+         updateBenchHero();
+     }
 
      fetchCandidates();
      $(document).off('click.acCopyPagination', '#paginationcopy .page-link').on('click.acCopyPagination', '#paginationcopy .page-link', function(e) {
@@ -596,35 +724,38 @@
                 });
             });
 
-	function fetchCandidates(page = 1, search = '') {
+	function fetchCandidates(page = 1, search = '', forceRefresh = false) {
             var seq = ++_copyJobReqSeq;
             if (_copyJobTableXhr && _copyJobTableXhr.readyState !== 4) {
                 _copyJobTableXhr.abort();
             }
-            var clientid = '1';
-            if($('#kt_tagify_2').val()!=''){
+            var requestParams = {
+                search: $('#inputCopySearch').val(),
+                findTalentAdd: '{{ @$findTalentAdd }}',
+                candidateSkills: (typeof window._candidateSkills !== 'undefined' ? window._candidateSkills : '')
+            };
+            var cacheKey = CopyJobRamStore.buildKey(page, requestParams);
+            if (!forceRefresh) {
+                var cachedResponse = CopyJobRamStore.get(cacheKey);
+                if (cachedResponse) {
+                    renderCopyJobTableResponse(cachedResponse);
+                    return $.Deferred().resolve(cachedResponse).promise();
+                }
+            }
+
+            if ($('#kt_tagify_2').val() != '') {
                 $('.loader_search').css({ display: 'block' });
-            }else{
+            } else {
                 $('.page-loader').css('display', 'flex');
             }
             _copyJobTableXhr = $.ajax({
                 url: `{!! route('service_company.cvtracker.copyjobtable') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                  search : $('#inputCopySearch').val(),
-				  findTalentAdd : '{{ @$findTalentAdd }}',
-                  candidateSkills: (typeof window._candidateSkills !== 'undefined' ? window._candidateSkills : '')
-                },
+                data: requestParams,
                 success: function(response) {
                     if (seq !== _copyJobReqSeq) return;
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#copyJobTable').html(response.html);
-                    $('#paginationcopy').html(response.pagination);
-                    markAddedButtons();
-                    updateHeroStats();
-                    updateBenchHero();
+                    CopyJobRamStore.set(cacheKey, response);
+                    renderCopyJobTableResponse(response);
                 },
                 error: function(xhr, status) {
                     if (status === 'abort' || seq !== _copyJobReqSeq) return;
@@ -830,6 +961,10 @@
                         '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added On Job'
                     ).prop('disabled', true);
                     updateHeroStats();
+                    updateBenchHero();
+                    if (typeof CopyJobRamStore !== 'undefined') {
+                        CopyJobRamStore.broadcastCandidateAdded([numericJobId], selectedApplicantListing);
+                    }
                     return;
                 } else if (response.status == 'coinCheck') {
                     Swal.fire('Failed', response.message, 'warning');
@@ -902,7 +1037,12 @@
 																		  			alreadyAddedJobIds.push(numJid);
 																		  		}
 																		  	});
-																		  	fetchCandidates();
+																		  	markAddedButtons();
+																		  	updateHeroStats();
+																		  	updateBenchHero();
+																		  	if (typeof CopyJobRamStore !== 'undefined') {
+																		  		CopyJobRamStore.broadcastCandidateAdded(arr, selectedApplicantListing);
+																		  	}
 																			swalWithBootstrapButtons.fire(
 																											  'Success!',
 																											  'Selected Applicant Copy to Selected Requisitions.',

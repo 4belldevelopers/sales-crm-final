@@ -13421,6 +13421,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         try {
             $jobService->updateJob($job, $request->all(), auth()->user());
 
+            /* Intent: Invalidate tenant career Redis caches so public page shows updated job details immediately */
+            GeneralMethod::invalidateCareerTenantCache($company_id, $id);
+
             return Reply::redirect(route('service_company.jobs.index'), __('menu.jobs').' '.__('messages.updatedSuccessfully'));
         } catch (\Throwable $e) {
             \Log::error('jobs update() transaction failed: '.$e->getMessage(), ['exception' => $e]);
@@ -13570,6 +13573,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         if (config('feature.use_three_drawers_v3')) {
             Cache::forget("v3:status_job:{$job_id}");
             Cache::forget("v3:status_log:{$job_id}");
+        }
+
+        /* Intent: Atomic tenant career cache invalidation (Rule 6) and real-time status change broadcast */
+        GeneralMethod::invalidateCareerTenantCache($company_id, $job_id);
+        try {
+            broadcast(new \App\Events\JobStatusChanged(
+                companyId: (int) $company_id,
+                jobId: (int) $job_id,
+                oldStatus: (string) $job->status,
+                newStatus: (string) $rawToStatus,
+                jobTitle: (string) ($job->title ?? '')
+            ));
+        } catch (\Throwable $e) {
+            \Log::warning('JobStatusChanged broadcast warning: '.$e->getMessage());
         }
 
         // Status Timeline audit row for the Job Status drawer — one append-only entry per transition.
@@ -14314,6 +14331,45 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ];
             GeneralMethod::teamRankElastic($teamRankElastic);
 
+        }
+
+        $sourceFromComp = (int) ($rec_candidate_assign->source_from_company_id ?? 0);
+        $sourceComp = (int) ($rec_candidate_assign->source_company_id ?? 0);
+        $targetJobId = (int) ($jobId ?: ($rec_candidate_assign->source_jobid ?? 0));
+
+        // Phase 2 & 4: Invalidate tenant cache epoch & broadcast Reverb delta
+        if ($sourceFromComp > 0) {
+            \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$sourceFromComp}:epoch");
+        }
+        if ($sourceComp > 0 && $sourceComp !== $sourceFromComp) {
+            \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$sourceComp}:epoch");
+        }
+
+        try {
+            if ($sourceFromComp > 0 && $targetJobId > 0) {
+                event(new \App\Events\BenchRequestStatusUpdated(
+                    $sourceFromComp,
+                    $targetJobId,
+                    (int) $recomndedId,
+                    0,
+                    1,
+                    'internal_bench',
+                    'existing'
+                ));
+            }
+            if ($sourceComp > 0 && $sourceComp !== $sourceFromComp && $targetJobId > 0) {
+                event(new \App\Events\BenchRequestStatusUpdated(
+                    $sourceComp,
+                    $targetJobId,
+                    (int) $recomndedId,
+                    0,
+                    1,
+                    'internal_bench',
+                    'existing'
+                ));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('BenchRequestStatusUpdated broadcast failed: ' . $e->getMessage());
         }
 
         if ($lastWiseIs) {

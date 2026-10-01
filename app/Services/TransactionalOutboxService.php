@@ -85,27 +85,57 @@ class TransactionalOutboxService
      */
     public function claimEsBatch(string $claimToken, int $limit = 50, int $leaseSeconds = 30): Collection
     {
-        // 1. Claim batch with single update
         $now = now();
         $lockedUntil = now()->addSeconds($leaseSeconds);
 
-        DB::update(
-            "UPDATE transactional_outboxes
-             SET es_claim_token = ?,
-                 es_status = 'processing',
-                 es_locked_until = ?,
-                 es_attempts = es_attempts + 1
-             WHERE (
-                 es_status IN ('pending', 'failed')
-                 OR (es_status = 'processing' AND es_locked_until < ?)
-             )
-             AND (es_locked_until IS NULL OR es_locked_until < ?)
-             AND es_available_at <= ?
-             AND es_attempts < 5
-             ORDER BY id ASC
-             LIMIT ?",
-            [$claimToken, $lockedUntil, $now, $now, $now, $limit]
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::update(
+                "UPDATE transactional_outboxes
+                 SET es_claim_token = ?,
+                     es_status = 'processing',
+                     es_locked_until = ?,
+                     es_attempts = es_attempts + 1
+                 WHERE (
+                     es_status IN ('pending', 'failed')
+                     OR (es_status = 'processing' AND es_locked_until < ?)
+                 )
+                 AND (es_locked_until IS NULL OR es_locked_until < ?)
+                 AND es_available_at <= ?
+                 AND es_attempts < 5
+                 ORDER BY id ASC
+                 LIMIT ?",
+                [$claimToken, $lockedUntil, $now, $now, $now, $limit]
+            );
+        } else {
+            $ids = DB::table('transactional_outboxes')
+                ->where(function ($q) use ($now) {
+                    $q->whereIn('es_status', ['pending', 'failed'])
+                        ->orWhere(function ($q2) use ($now) {
+                            $q2->where('es_status', 'processing')
+                                ->where('es_locked_until', '<', $now);
+                        });
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('es_locked_until')
+                        ->orWhere('es_locked_until', '<', $now);
+                })
+                ->where('es_available_at', '<=', $now)
+                ->where('es_attempts', '<', 5)
+                ->orderBy('id', 'asc')
+                ->limit($limit)
+                ->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+                DB::table('transactional_outboxes')
+                    ->whereIn('id', $ids)
+                    ->update([
+                        'es_claim_token' => $claimToken,
+                        'es_status' => 'processing',
+                        'es_locked_until' => $lockedUntil,
+                        'es_attempts' => DB::raw('es_attempts + 1'),
+                    ]);
+            }
+        }
 
         // 2. Fetch claimed rows
         return DB::table('transactional_outboxes')
@@ -166,23 +196,54 @@ class TransactionalOutboxService
         $now = now();
         $lockedUntil = now()->addSeconds($leaseSeconds);
 
-        DB::update(
-            "UPDATE transactional_outboxes
-             SET reverb_claim_token = ?,
-                 reverb_status = 'processing',
-                 reverb_locked_until = ?,
-                 reverb_attempts = reverb_attempts + 1
-             WHERE (
-                 reverb_status IN ('pending', 'failed')
-                 OR (reverb_status = 'processing' AND reverb_locked_until < ?)
-             )
-             AND (reverb_locked_until IS NULL OR reverb_locked_until < ?)
-             AND reverb_available_at <= ?
-             AND reverb_attempts < 5
-             ORDER BY id ASC
-             LIMIT ?",
-            [$claimToken, $lockedUntil, $now, $now, $now, $limit]
-        );
+        if (DB::getDriverName() === 'mysql') {
+            DB::update(
+                "UPDATE transactional_outboxes
+                 SET reverb_claim_token = ?,
+                     reverb_status = 'processing',
+                     reverb_locked_until = ?,
+                     reverb_attempts = reverb_attempts + 1
+                 WHERE (
+                     reverb_status IN ('pending', 'failed')
+                     OR (reverb_status = 'processing' AND reverb_locked_until < ?)
+                 )
+                 AND (reverb_locked_until IS NULL OR reverb_locked_until < ?)
+                 AND reverb_available_at <= ?
+                 AND reverb_attempts < 5
+                 ORDER BY id ASC
+                 LIMIT ?",
+                [$claimToken, $lockedUntil, $now, $now, $now, $limit]
+            );
+        } else {
+            $ids = DB::table('transactional_outboxes')
+                ->where(function ($q) use ($now) {
+                    $q->whereIn('reverb_status', ['pending', 'failed'])
+                        ->orWhere(function ($q2) use ($now) {
+                            $q2->where('reverb_status', 'processing')
+                                ->where('reverb_locked_until', '<', $now);
+                        });
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('reverb_locked_until')
+                        ->orWhere('reverb_locked_until', '<', $now);
+                })
+                ->where('reverb_available_at', '<=', $now)
+                ->where('reverb_attempts', '<', 5)
+                ->orderBy('id', 'asc')
+                ->limit($limit)
+                ->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+                DB::table('transactional_outboxes')
+                    ->whereIn('id', $ids)
+                    ->update([
+                        'reverb_claim_token' => $claimToken,
+                        'reverb_status' => 'processing',
+                        'reverb_locked_until' => $lockedUntil,
+                        'reverb_attempts' => DB::raw('reverb_attempts + 1'),
+                    ]);
+            }
+        }
 
         return DB::table('transactional_outboxes')
             ->where('reverb_claim_token', $claimToken)
