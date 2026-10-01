@@ -1635,7 +1635,7 @@ if($snp_mode== 1){
               <div class="fsc addl-body">
                 <section class="addl-section addl-section--details">
                   <div class="addl-wide-field fv-row">
-                    <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info" title="Select the candidate's active legal work authorization or visa classification."></i></label>
+                    <label><i class="fa-solid fa-passport"></i> Work Authorization <i class="fa-solid fa-circle-info addl-label-info" title="Select the candidate's active legal work authorization or visa classification."></i></label>
                     <div class="wa-popular-chips-wrap">
                       <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
                       <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
