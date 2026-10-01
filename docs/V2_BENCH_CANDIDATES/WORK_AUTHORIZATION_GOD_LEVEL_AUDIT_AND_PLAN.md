@@ -330,7 +330,30 @@ Rather than overwhelming the recruiter with a giant compliance block, the card u
   - Verification State (`Self-Declared` vs `Document Provided`).
   - Sponsorship Context / Notes (e.g. I-140 approval date, petition receipt number).
 
-### 3. Responsive Metronic Standards (Rule 14)
+### 3. Global Country Coverage & Search Architecture (All 240+ Countries)
+To serve a true worldwide talent marketplace without hardcoding restrictions:
+1. **Tier 1: Popular Hiring Hubs (Quick-Select Chips):**
+   - Clickable interactive pills above the search select for instant 1-click focus:
+     `[ 🇺🇸 United States ] [ 🇨🇦 Canada ] [ 🇮🇳 India ] [ 🇬🇧 United Kingdom ] [ 🇦🇪 Dubai / UAE ] [ 🇸🇬 Singapore ] [ 🇦🇺 Australia ] [ 🇪🇺 European Union ] [ 🌐 All Countries ]`
+2. **Tier 2: Instant Search Box at the Top:**
+   - Client-side search input directly at the top of the select dropdown.
+   - Recruiters can type:
+     - **Any country name:** (e.g. *"Germany"*, *"Japan"*, *"Brazil"*, *"France"*, *"Mexico"*, *"South Africa"*, *"Netherlands"*, *"Poland"*).
+     - **Any visa or permit type:** (e.g. *"H-1B"*, *"Golden Visa"*, *"Blue Card"*, *"PR"*, *"Citizen"*, *"TSS 482"*, *"E-3"*, *"OPT"*).
+   - Zero-delay real-time filtering executed in browser memory (Client-First / User RAM, 0% server read strain).
+3. **Tier 3: Comprehensive Country-Wise Work Authorization (All 240+ Countries):**
+   - Integrates the global ISO country dataset (`countries.json` / cached master lookup).
+   - For all countries worldwide, standardizes right-to-work legal options:
+     - `[Country] - Citizen / National`
+     - `[Country] - Permanent Resident (PR)`
+     - `[Country] - Work Visa / Employment Permit (Company Sponsored)`
+     - `[Country] - Open / Temporary Work Permit`
+     - `[Country] - Student Work Authorization`
+     - `[Country] - Digital Nomad / Remote Contractor Visa`
+     - `[Country] - Requires Visa Sponsorship`
+   - Plus universal fallback: `Authorized Work Permit (Country Specific)` and `Not Applicable / Remote Contractor`.
+
+### 4. Responsive Metronic Standards (Rule 14)
 - Scoped strictly under `#talent_create_app`.
 - Poppins font, max font 14px, 12px for badges/hints.
 - 100% responsive for 1366×768 (standard laptop) and 1920×1080 (full HD desktop) with internal scrolling and zero viewport overflow.
