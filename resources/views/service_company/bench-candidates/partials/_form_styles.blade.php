@@ -121,19 +121,40 @@ body { overflow-x: hidden; }
 }
 
 /* Work Authorization Select2 Enhancement */
+#talent_create_app .addl-select-wrap {
+    position: relative !important;
+    width: 100% !important;
+    cursor: pointer !important;
+}
+
+#talent_create_app .addl-select-wrap select.select2-hidden-accessible {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
 #talent_create_app .addl-select-wrap .select2-container {
     width: 100% !important;
+    display: block !important;
+    cursor: pointer !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single {
-    min-height: 40px !important;
-    height: 40px !important;
+    min-height: 42px !important;
+    height: 42px !important;
     border: 1px solid #CDD7EB !important;
     border-radius: 6px !important;
-    padding: 6px 14px !important;
+    padding: 0 36px 0 14px !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: flex-start !important;
     background-color: #FFFFFF !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
 }
 
@@ -149,23 +170,37 @@ body { overflow-x: hidden; }
     font-size: 13px !important;
     font-weight: 500 !important;
     color: #0B1545 !important;
-    line-height: 26px !important;
-    padding-left: 0 !important;
+    line-height: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__placeholder {
     color: #64748B !important;
     font-size: 13px !important;
     font-weight: 400 !important;
+    line-height: 40px !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear {
+    position: absolute !important;
+    right: 32px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     color: #94A3B8 !important;
     font-size: 16px !important;
     font-weight: bold !important;
-    margin-right: 22px !important;
-    line-height: 26px !important;
+    line-height: 1 !important;
     cursor: pointer !important;
+    z-index: 2 !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear:hover {
@@ -173,13 +208,21 @@ body { overflow-x: hidden; }
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 38px !important;
+    height: 40px !important;
+    top: 1px !important;
     right: 12px !important;
+    width: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow b {
+    display: block !important;
     border-color: #5570A8 transparent transparent transparent !important;
     border-width: 5px 4px 0 4px !important;
+    margin-top: 0 !important;
 }
 
 #talent_create_app .addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {

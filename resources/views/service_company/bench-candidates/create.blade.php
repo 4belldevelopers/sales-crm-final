@@ -812,84 +812,6 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <!-- Professional Details -->
-            <div class="fs pd-card">
-              <div class="pd-hero">
-                <div class="pd-hero-title">
-                  <span class="pd-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
-                  <span>
-                    <strong>Professional Profile</strong>
-                    <small>Define the professional experience and role for this talent. This helps position them correctly in the marketplace.</small>
-                  </span>
-                </div>
-                <span class="pd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
-              </div>
-              <div class="fsc pd-body">
-                <div class="pd-info-strip">
-                  <i class="fa-regular fa-circle-info"></i>
-                  <span>Some details may be pre-filled from your internal employee records. Please review and update if needed.</span>
-                </div>
-
-                <div class="pd-field-grid pd-field-grid--two">
-                  <div class="fg fv-row pd-field">
-                    <label>Current Company <span class="rq">*</span></label>
-                    <div class="pd-control">
-                      <i class="fa-regular fa-building"></i>
-                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company ?: $account_company_name }}" placeholder="Enter current company" />
-                    </div>
-                    <small>Auto-filled from employee records</small>
-                  </div>
-                  <div class="fg fv-row pd-field">
-                    <label>Current Designation <span class="rq">*</span></label>
-                    <div class="pd-control">
-                      <i class="fa-solid fa-briefcase"></i>
-                      <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
-                  <div class="fg fv-row pd-field">
-                    <label>Client Engagement Model <span class="rq">*</span></label>
-                    <div class="pd-control pd-control--select">
-                      <i class="fa-solid fa-handshake"></i>
-                      <select name="employmentType" id="EmploymentType">
-                        <option value="">Select engagement model</option>
-                        <option value="Contract" {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract / C2C / C2H / Staff Augmentation</option>
-                        <option value="Full Time" {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Direct Hire / Permanent Placement</option>
-                        <option value="Freelance" {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance / Fractional Consulting</option>
-                        <option value="Part Time" {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part-Time Contract</option>
-                      </select>
-                    </div>
-                    <small>Select how this talent will be deployed to clients in the marketplace.</small>
-                  </div>
-                  <div class="fg fv-row d-none">
-                      <label>Commission Type <span class="rq">*</span></label>
-                      @php
-                          $selected = '';
-                            if(@$application->comission_type==''){
-                              $selected = 'selected';
-                            }
-                      @endphp
-                      <select name="comission_type" id="comission_type">
-                        <option value="">Select Commision type</option>
-                        <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
-                        <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
-                      </select>
-                  </div>
-                  <div class="fg fv-row pd-field">
-                    <label>Employee ID <span>(Optional)</span></label>
-                    <div class="pd-control">
-                      <i class="fa-regular fa-id-card"></i>
-                      <input type="text" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
-                    </div>
-                    <small>Internal employee identifier</small>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
             <div class="fs pd-experience-section-card">
               <div class="pd-experience-hero">
                 <div class="pd-experience-hero-title">
@@ -1053,143 +975,80 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <div class="fs aw-card {{ ($snp_mode===1) ? 'is-date-availability' : 'is-immediate-availability' }}">
-              <div class="aw-hero">
-                <div class="aw-hero-title">
-                  <span class="aw-hero-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
+            <!-- Professional Details -->
+            <div class="fs pd-card">
+              <div class="pd-hero">
+                <div class="pd-hero-title">
+                  <span class="pd-hero-icon"><i class="fa-solid fa-briefcase"></i></span>
                   <span>
-                    <strong>Availability &amp; Work Preferences</strong>
-                    <small>Define the availability and work preferences for this talent.</small>
+                    <strong>Professional Profile</strong>
+                    <small>Define the professional experience and role for this talent. This helps position them correctly in the marketplace.</small>
                   </span>
                 </div>
-                <span class="aw-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
+                <span class="pd-talent-badge"><i class="fa-regular fa-building"></i> In-House Talent</span>
               </div>
-              <div class="fsc aw-body">
-                <div class="aw-grid">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Availability <span class="rq">*</span></label>
-                    <small class="aw-field-help">Select when this talent can start.</small>
-                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
-                    </select>
-                    <div class="aw-option-grid" data-aw-options>
-                      <button type="button" class="aw-option aw-option--now {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2" aria-pressed="{{ ($snp_mode===2) ? 'true' : 'false' }}">
-                        <span class="aw-radio"></span>
-                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
-                        <span class="aw-option-copy">
-                          <strong>Immediate Joiner</strong>
-                          <small>This talent can start immediately.</small>
-                        </span>
-                        <span class="aw-recommended">Recommended</span>
-                      </button>
-                      <button type="button" class="aw-option aw-option--date {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1" aria-pressed="{{ ($snp_mode===1) ? 'true' : 'false' }}">
-                        <span class="aw-radio"></span>
-                        <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
-                        <span class="aw-option-copy">
-                          <strong>Available From (Date)</strong>
-                          <small>This talent will be available from a specific date.</small>
-                        </span>
-                      </button>
+              <div class="fsc pd-body">
+                <div class="pd-info-strip">
+                  <i class="fa-regular fa-circle-info"></i>
+                  <span>Some details may be pre-filled from your internal employee records. Please review and update if needed.</span>
+                </div>
+
+                <div class="pd-field-grid pd-field-grid--two">
+                  <div class="fg fv-row pd-field">
+                    <label>Current Company <span class="rq">*</span></label>
+                    <div class="pd-control">
+                      <i class="fa-regular fa-building"></i>
+                      <input type="text" name="current_company" id="current_company" value="{{ @$application->current_company ?: $account_company_name }}" placeholder="Enter current company" />
+                    </div>
+                    <small>Auto-filled from employee records</small>
+                  </div>
+                  <div class="fg fv-row pd-field">
+                    <label>Current Designation <span class="rq">*</span></label>
+                    <div class="pd-control">
+                      <i class="fa-solid fa-briefcase"></i>
+                      <input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" />
                     </div>
                   </div>
+                </div>
 
-                  <div class="fg fv-row aw-field">
-                    <label class="aw-date-label d-inline-flex align-items-center" for="np_id_display">
-                      Available From Date <span class="rq">*</span>
-                      <span class="aw-date-info-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Click or hover for availability SLA guidance">
-                        <i class="fa-solid fa-circle-info"></i>
-                        <span class="aw-date-hover-card" role="tooltip">
-                          <span class="aw-hover-card-header">
-                            <span class="aw-hover-card-title">
-                              <i class="fa-regular fa-calendar-check text-primary"></i>
-                              <span>Deployment &amp; Availability SLA</span>
-                            </span>
-                            <span class="aw-hover-card-pill">Marketplace SLA</span>
-                          </span>
-                          <span class="aw-hover-card-content">
-                            <span class="aw-hover-item">
-                              <span class="aw-hover-icon aw-hover-icon--blue"><i class="fa-solid fa-magnifying-glass"></i></span>
-                              <span class="aw-hover-text">
-                                <strong>Marketplace Search Visibility &amp; Ranking</strong>
-                                <small>Hiring clients filter candidates by this start date. Talent with verified accurate availability receives up to 3× higher shortlist volume.</small>
-                              </span>
-                            </span>
-                            <span class="aw-hover-item">
-                              <span class="aw-hover-icon aw-hover-icon--amber"><i class="fa-regular fa-clock"></i></span>
-                              <span class="aw-hover-text">
-                                <strong>Serving Notice Period (LWD + 1)</strong>
-                                <small>If candidate is currently employed, select the first working day immediately following their official Last Working Day (LWD).</small>
-                              </span>
-                            </span>
-                            <span class="aw-hover-item">
-                              <span class="aw-hover-icon aw-hover-icon--emerald"><i class="fa-solid fa-bolt"></i></span>
-                              <span class="aw-hover-text">
-                                <strong>Immediate Joining (Bench Talent)</strong>
-                                <small>If this talent is on bench and ready to deploy today, toggle "Immediate Joiner" above for instant priority matching.</small>
-                              </span>
-                            </span>
-                          </span>
-                          <span class="aw-hover-card-footer">
-                            <i class="fa-solid fa-shield-halved text-success"></i>
-                            <span>Guarantees verified availability SLA to eliminate deployment disputes with clients.</span>
-                          </span>
-                        </span>
-                      </span>
-                    </label>
-                    <small class="aw-field-help">Enter the date from which this talent will be available.</small>
-                    <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
-                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
-                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly data-bs-toggle="tooltip" data-bs-placement="top" title="Deployment start date visible to clients in marketplace search">
-                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
+                <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
+                  <div class="fg fv-row pd-field">
+                    <label>Client Engagement Model <span class="rq">*</span></label>
+                    <div class="pd-control pd-control--select">
+                      <i class="fa-solid fa-handshake"></i>
+                      <select name="employmentType" id="EmploymentType">
+                        <option value="">Select engagement model</option>
+                        <option value="Contract" {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract / C2C / C2H / Staff Augmentation</option>
+                        <option value="Full Time" {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Direct Hire / Permanent Placement</option>
+                        <option value="Freelance" {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance / Fractional Consulting</option>
+                        <option value="Part Time" {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part-Time Contract</option>
+                      </select>
                     </div>
-                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show to clients in the talents marketplace.</span></div>
-                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
-                      <option value="">Select Notice Period</option>
+                    <small>Select how this talent will be deployed to clients in the marketplace.</small>
+                  </div>
+                  <div class="fg fv-row d-none">
+                      <label>Commission Type <span class="rq">*</span></label>
                       @php
-                          for ($i = 1; $i <= 200; $i++) {
-                                  $s = 'Day';
-                                  if($i > 1){
-                                      $s = 'Days';
-                                  }
-                                $selected = ($i == @$application->np_id) ? 'selected' : '';
-                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
-                          }
+                          $selected = '';
+                            if(@$application->comission_type==''){
+                               $selected = 'selected';
+                            }
                       @endphp
-                    </select>
-                    <input type="text" id="calender" name="calender" style="display:none">
+                      <select name="comission_type" id="comission_type">
+                        <option value="">Select Commision type</option>
+                        <option value="1" {{ (@$application->comission_type==1) ? 'selected' : '' }}>Free (Not charged from Clients)</option>
+                        <option value="2" {{ (@$application->comission_type==2 || @$application->comission_type=='') ? 'selected' : '' }}>Paid Service</option>
+                      </select>
                   </div>
-                </div>
-
-                <div class="aw-grid aw-grid--work">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
-                    <div class="aw-work-grid">
-                      <label class="aw-work-option aw-work-option--remote" for="wr">
-                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--office" for="wo">
-                        <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-users" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span>
-                      </label>
+                  <div class="fg fv-row pd-field">
+                    <label>Employee ID <span>(Optional)</span></label>
+                    <div class="pd-control">
+                      <i class="fa-regular fa-id-card"></i>
+                      <input type="text" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
                     </div>
+                    <small>Internal employee identifier</small>
                   </div>
                 </div>
-
-                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
 
               </div>
             </div>
@@ -1514,6 +1373,148 @@ if($snp_mode== 1){
               </div>
             </div>
 
+            <!-- Availability & Work Preferences -->
+            <div class="fs aw-card {{ ($snp_mode===1) ? 'is-date-availability' : 'is-immediate-availability' }}">
+              <div class="aw-hero">
+                <div class="aw-hero-title">
+                  <span class="aw-hero-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
+                  <span>
+                    <strong>Availability &amp; Work Preferences</strong>
+                    <small>Define the availability and work preferences for this talent.</small>
+                  </span>
+                </div>
+                <span class="aw-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
+              </div>
+              <div class="fsc aw-body">
+                <div class="aw-grid">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Availability <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select when this talent can start.</small>
+                    <select name="serving_notice_period" id="serving_notice_period" class="aw-native-select">
+                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }} hidden></option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Available From Date</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                    </select>
+                    <div class="aw-option-grid" data-aw-options>
+                      <button type="button" class="aw-option aw-option--now {{ ($snp_mode===2) ? 'is-selected' : '' }}" data-snp-value="2" aria-pressed="{{ ($snp_mode===2) ? 'true' : 'false' }}">
+                        <span class="aw-radio"></span>
+                        <span class="aw-option-icon aw-option-icon--now"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Immediate Joiner</strong>
+                          <small>This talent can start immediately.</small>
+                        </span>
+                        <span class="aw-recommended">Recommended</span>
+                      </button>
+                      <button type="button" class="aw-option aw-option--date {{ ($snp_mode===1) ? 'is-selected' : '' }}" data-snp-value="1" aria-pressed="{{ ($snp_mode===1) ? 'true' : 'false' }}">
+                        <span class="aw-radio"></span>
+                        <span class="aw-option-icon aw-option-icon--date"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
+                        <span class="aw-option-copy">
+                          <strong>Available From (Date)</strong>
+                          <small>This talent will be available from a specific date.</small>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="fg fv-row aw-field">
+                    <label class="aw-date-label d-inline-flex align-items-center" for="np_id_display">
+                      Available From Date <span class="rq">*</span>
+                      <span class="aw-date-info-trigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Click or hover for availability SLA guidance">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span class="aw-date-hover-card" role="tooltip">
+                          <span class="aw-hover-card-header">
+                            <span class="aw-hover-card-title">
+                              <i class="fa-regular fa-calendar-check text-primary"></i>
+                              <span>Deployment &amp; Availability SLA</span>
+                            </span>
+                            <span class="aw-hover-card-pill">Marketplace SLA</span>
+                          </span>
+                          <span class="aw-hover-card-content">
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--blue"><i class="fa-solid fa-magnifying-glass"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Marketplace Search Visibility &amp; Ranking</strong>
+                                <small>Hiring clients filter candidates by this start date. Talent with verified accurate availability receives up to 3× higher shortlist volume.</small>
+                              </span>
+                            </span>
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--amber"><i class="fa-regular fa-clock"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Serving Notice Period (LWD + 1)</strong>
+                                <small>If candidate is currently employed, select the first working day immediately following their official Last Working Day (LWD).</small>
+                              </span>
+                            </span>
+                            <span class="aw-hover-item">
+                              <span class="aw-hover-icon aw-hover-icon--emerald"><i class="fa-solid fa-bolt"></i></span>
+                              <span class="aw-hover-text">
+                                <strong>Immediate Joining (Bench Talent)</strong>
+                                <small>If this talent is on bench and ready to deploy today, toggle "Immediate Joiner" above for instant priority matching.</small>
+                              </span>
+                            </span>
+                          </span>
+                          <span class="aw-hover-card-footer">
+                            <i class="fa-solid fa-shield-halved text-success"></i>
+                            <span>Guarantees verified availability SLA to eliminate deployment disputes with clients.</span>
+                          </span>
+                        </span>
+                      </span>
+                    </label>
+                    <small class="aw-field-help">Enter the date from which this talent will be available.</small>
+                    <div class="aw-date-wrap" id="snp-immediate" style="display:flex">
+                      <input type="text" id="text_display" value="{{ ($snp_mode===1) ? 'Available From' : 'Immediate' }}" class="form-control form-control-solid" placeholder="" readonly>
+                      <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" readonly data-bs-toggle="tooltip" data-bs-placement="top" title="Deployment start date visible to clients in marketplace search">
+                      <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ ($snp_last_working) ? date('Y-m-d',strtotime(@$snp_last_working)) : '' }}" style="opacity: 0; position: absolute; z-index: -1;top: 0;">
+                    </div>
+                    <div class="aw-date-guidance"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>This date will be used to show to clients in the talents marketplace.</span></div>
+                    <select class="form-select form-select-solid aw-notice-days" arial-label="Select ddl_np_id" id="ddl_np_id" name="ddl_np_id" style="display:none;">
+                      <option value="">Select Notice Period</option>
+                      @php
+                          for ($i = 1; $i <= 200; $i++) {
+                                  $s = 'Day';
+                                  if($i > 1){
+                                      $s = 'Days';
+                                  }
+                                $selected = ($i == @$application->np_id) ? 'selected' : '';
+                              echo "<option value=\"$i\" $selected>{$i} {$s}</option>";
+                          }
+                      @endphp
+                    </select>
+                    <input type="text" id="calender" name="calender" style="display:none">
+                  </div>
+                </div>
+
+                <div class="aw-grid aw-grid--work">
+                  <div class="fg fv-row aw-field aw-field--wide">
+                    <label>Preferred Work Mode <span class="rq">*</span></label>
+                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
+                    <div class="aw-work-grid">
+                      <label class="aw-work-option aw-work-option--remote" for="wr">
+                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
+                      </label>
+                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
+                        <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-building" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
+                      </label>
+                      <label class="aw-work-option aw-work-option--office" for="wo">
+                        <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
+                        <span class="aw-radio"></span>
+                        <i class="fa-solid fa-users" aria-hidden="true"></i>
+                        <span class="aw-work-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
+
+              </div>
+            </div>
+
              <!-- Relationship Manager -->
             @php
               $rmInitialList = [];
@@ -1725,7 +1726,7 @@ if($snp_mode== 1){
                             });
                         }
                       @endphp
-                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-control="select2" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
                         <option value="">Select work authorization or visa status</option>
 
                         {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
@@ -2120,6 +2121,17 @@ $(document).ready(function () {
 
     $(document).on('change', '#visastatu', function () {
         syncWorkAuthActiveChip();
+    });
+
+    // Make dropdown container click trigger Select2 open reliably
+    $(document).on('click', '.addl-select-wrap', function (e) {
+        if ($(e.target).closest('.select2-selection__clear').length) return;
+        var $visaSelect = $('#visastatu');
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            if (!$visaSelect.data('select2') || !$visaSelect.data('select2').isOpen()) {
+                $visaSelect.select2('open');
+            }
+        }
     });
 
     // Boot engine safely with multi-stage checks
@@ -5514,7 +5526,14 @@ function detectMissingFields(formEl, validatorInstance) {
     var gen = ($('#gender').val() || '').trim();
     if (!gen) addMissing('gender', 'Gender', '#gender');
 
-    // 4. Professional Profile: except Employee ID (Optional)
+    // 4. Experience Details
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp', 'Relevant Experience', '#rel_exp_year');
+
+    // 5. Professional Profile: except Employee ID (Optional)
     var cc = ($('#current_company').val() || '').trim();
     if (!cc) addMissing('current_company', 'Current Company', '#current_company');
 
@@ -5524,26 +5543,7 @@ function detectMissingFields(formEl, validatorInstance) {
     var et = ($('#EmploymentType').val() || '').trim();
     if (!et) addMissing('employmentType', 'Client Engagement Model', '#EmploymentType');
 
-    var te = $('#total_exp_year').val();
-    if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
-
-    var re = $('#rel_exp_year').val();
-    if (re === '' || re === null || re === undefined) addMissing('rel_exp', 'Relevant Experience', '#rel_exp_year');
-
-    var snp = $('#serving_notice_period').val();
-    if (!snp || snp === '0') {
-        addMissing('serving_notice_period', 'Availability', '#serving_notice_period');
-    } else if (snp === '1') {
-        var npDate = ($('#np_id').val() || $('#np_id_display').val() || '').trim();
-        if (!npDate) {
-            addMissing('np_id', 'Available From Date', '#np_id_display');
-        }
-    }
-
-    var wm = $('input[name="wm"]:checked').val();
-    if (!wm) addMissing('wm', 'Preferred Work Mode', '#wr');
-
-    // 5. Candidate Cost (Pay Rate) & Client Bill Rate
+    // 6. Commercials & Bill Rates: Candidate Cost (Pay Rate) & Client Bill Rate
     var payVal = $('#pay_annual').val() || $('#hidden_pay_annual').val();
     if (!payVal || isNaN(payVal) || parseFloat(payVal) <= 0) {
         addMissing('pay_rate', 'Candidate Cost (Pay Rate)', '#pay_annual');
@@ -5558,13 +5558,27 @@ function detectMissingFields(formEl, validatorInstance) {
         }
     }
 
-    // 6. Skills & Expertise: at least 3 skills with complete details
+    // 7. Skills & Expertise: at least 3 skills with complete details
     var skillsCheck = validateSkillsAndExpertise();
     if (!skillsCheck.valid) {
         addMissing('skills', skillsCheck.label, '#skillExperienceWrapper', skillsCheck.type === 'incomplete' ? 'Please complete all fields (Skill name, Experience, Rating) or remove the row.' : 'At least 3 complete skills (Skill name, Experience, Rating) are required.');
     }
 
-    // 7. Relationship Manager
+    // 8. Availability & Work Preferences
+    var snp = $('#serving_notice_period').val();
+    if (!snp || snp === '0') {
+        addMissing('serving_notice_period', 'Availability', '#serving_notice_period');
+    } else if (snp === '1') {
+        var npDate = ($('#np_id').val() || $('#np_id_display').val() || '').trim();
+        if (!npDate) {
+            addMissing('np_id', 'Available From Date', '#np_id_display');
+        }
+    }
+
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm', 'Preferred Work Mode', '#wr');
+
+    // 9. Relationship Manager
     var rec = ($('#recruiter').val() || '').trim();
     var recId = ($('#recruiter_id').val() || '').trim();
     if (!rec || !recId) {
