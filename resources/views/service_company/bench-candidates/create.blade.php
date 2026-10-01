@@ -1645,6 +1645,7 @@ if($snp_mode== 1){
                         <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
                         <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
                         <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
+                        <button type="button" class="wa-chip-btn" data-region="Germany" data-filter="Germany" title="Filter Germany Visas">🇩🇪 Germany</button>
                         <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
                       </div>
                     </div>
@@ -1712,10 +1713,22 @@ if($snp_mode== 1){
                                          || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
                                          || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
                                          || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
+
+                        // Load comprehensive 240+ countries taxonomy
+                        $allGlobalCountries = !empty($countries) ? (is_array($countries) ? $countries : $countries->toArray()) : [];
+                        if (empty($allGlobalCountries) && file_exists(base_path('country-state-city/countries.json'))) {
+                            $allGlobalCountries = json_decode(file_get_contents(base_path('country-state-city/countries.json')), true)['countries'] ?? [];
+                        }
+                        if (!empty($allGlobalCountries)) {
+                            usort($allGlobalCountries, function($a, $b) {
+                                return strcmp($a['name'] ?? '', $b['name'] ?? '');
+                            });
+                        }
                       @endphp
-                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work (e.g. H-1B, Green Card, UAE Golden Visa, PR, Citizen)...">
+                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
                         <option value="">Select work authorization or visa status</option>
 
+                        {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
                         <optgroup label="United States (US)">
                           <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
                           <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
@@ -1778,11 +1791,49 @@ if($snp_mode== 1){
                           <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
                         </optgroup>
 
-                        <optgroup label="European Union & Global (EU / Global)">
+                        <optgroup label="European Union (EU)">
                           <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
                           <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
+                          <option value="Germany - Opportunity Card / Work Visa" {{ ($currentVisa === 'Germany - Opportunity Card / Work Visa') ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                          <option value="Netherlands - Highly Skilled Migrant" {{ ($currentVisa === 'Netherlands - Highly Skilled Migrant') ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                          <option value="Ireland - Critical Skills Employment Permit" {{ ($currentVisa === 'Ireland - Critical Skills Employment Permit') ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
                           <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
                           <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                        </optgroup>
+
+                        {{-- 240+ COUNTRIES & TERRITORIES WORLDWIDE --}}
+                        @if(!empty($allGlobalCountries))
+                          @foreach($allGlobalCountries as $countryItem)
+                            @php
+                              $cName = trim($countryItem['name'] ?? '');
+                              $cCode = trim($countryItem['sortname'] ?? '');
+                              if (empty($cName)) continue;
+                              // Skip top hubs already covered with detailed specific visa types
+                              if (in_array($cCode, ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'NZ'])) continue;
+
+                              $optCitizen = $cName . ' - Citizen / Domestic Right to Work';
+                              $optPr      = $cName . ' - Permanent Resident (PR)';
+                              $optVisa    = $cName . ' - Work Visa / Employment Permit';
+
+                              $isOptCitizenSelected = ($currentVisa === $optCitizen);
+                              $isOptPrSelected      = ($currentVisa === $optPr);
+                              $isOptVisaSelected    = ($currentVisa === $optVisa);
+
+                              if ($isOptCitizenSelected || $isOptPrSelected || $isOptVisaSelected) {
+                                  $hasMatchedOption = true;
+                              }
+                            @endphp
+                            <optgroup label="{{ $cName }} ({{ $cCode }})">
+                              <option value="{{ $optCitizen }}" {{ $isOptCitizenSelected ? 'selected' : '' }}>{{ $optCitizen }}</option>
+                              <option value="{{ $optPr }}" {{ $isOptPrSelected ? 'selected' : '' }}>{{ $optPr }}</option>
+                              <option value="{{ $optVisa }}" {{ $isOptVisaSelected ? 'selected' : '' }}>{{ $optVisa }}</option>
+                            </optgroup>
+                          @endforeach
+                        @endif
+
+                        <optgroup label="Global & International">
+                          <option value="Requires International Visa Sponsorship" {{ ($currentVisa === 'Requires International Visa Sponsorship') ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                          <option value="Global Remote / Freelance Contract" {{ ($currentVisa === 'Global Remote / Freelance Contract') ? 'selected' : '' }}>Global Remote / Freelance Contract Authorization</option>
                         </optgroup>
 
                         @if(!empty($currentVisa) && !$hasMatchedOption)
@@ -1791,7 +1842,7 @@ if($snp_mode== 1){
                       </select>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                    <small class="text-muted mt-1 d-block">Search by country name, visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
+                    <small class="text-muted mt-1 d-block">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                   </div>
                   {{-- Professional Reference removed from UI (data preserved via hidden input) --}}
                   <input type="hidden" name="referencename" id="referencename" value="{{ @$application->referencename }}" />
@@ -1803,6 +1854,152 @@ if($snp_mode== 1){
                 </div>
               </div>
             </div>
+
+            {{-- Isolated Work Authorization & 240+ Country Compliance Engine (Client-First Execution - Rule 3, Rule 17) --}}
+            <script>
+            (function ($) {
+                'use strict';
+
+                function initWorkAuthorizationEngine() {
+                    if (typeof $ === 'undefined' || !$.fn || !$.fn.select2) {
+                        return false;
+                    }
+
+                    var $select = $('#visastatu');
+                    if (!$select.length) return false;
+
+                    if ($select.hasClass('select2-hidden-accessible')) {
+                        $select.select2('destroy');
+                    }
+
+                    $select.select2({
+                        width: '100%',
+                        dropdownParent: $(document.body),
+                        dropdownCssClass: 'wa-select2-dropdown',
+                        placeholder: 'Search visa / work authorization or country...',
+                        allowClear: true,
+                        minimumResultsForSearch: 0,
+                        matcher: function (params, data) {
+                            if (!params.term || $.trim(params.term) === '') {
+                                return data;
+                            }
+                            var term = params.term.toLowerCase().trim();
+
+                            // If optgroup
+                            if (data.children && data.children.length > 0) {
+                                var groupLabel = (data.text || '').toLowerCase();
+                                if (groupLabel.indexOf(term) > -1) {
+                                    return data;
+                                }
+
+                                var matchedChildren = [];
+                                for (var i = 0; i < data.children.length; i++) {
+                                    var child = data.children[i];
+                                    var childText = (child.text || '').toLowerCase();
+                                    var childVal = (child.id || '').toLowerCase();
+                                    if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
+                                        matchedChildren.push(child);
+                                    }
+                                }
+                                if (matchedChildren.length > 0) {
+                                    var cloned = $.extend({}, data, true);
+                                    cloned.children = matchedChildren;
+                                    return cloned;
+                                }
+                                return null;
+                            }
+
+                            // Leaf option
+                            var text = (data.text || '').toLowerCase();
+                            var val = (data.id || '').toLowerCase();
+                            if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
+                                return data;
+                            }
+                            return null;
+                        }
+                    });
+
+                    // Hide static chevron icon
+                    $select.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
+
+                    syncWorkAuthActiveChip();
+                    return true;
+                }
+
+                function syncWorkAuthActiveChip() {
+                    var val = $('#visastatu').val();
+                    $('.wa-chip-btn').removeClass('is-active');
+                    if (!val) return;
+
+                    var $selectedOpt = $('#visastatu').find('option:selected');
+                    var $optgroup = $selectedOpt.closest('optgroup');
+                    var groupLabel = ($optgroup.attr('label') || '').toLowerCase();
+                    var optVal = (val || '').toLowerCase();
+
+                    $('.wa-chip-btn').each(function () {
+                        var filter = ($(this).data('filter') || '').toLowerCase();
+                        var region = ($(this).data('region') || '').toLowerCase();
+                        if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
+                            optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
+                            $(this).addClass('is-active');
+                            return false;
+                        }
+                    });
+                }
+
+                // Handle Quick Hub Chip click
+                $(document).on('click', '.wa-chip-btn', function (e) {
+                    e.preventDefault();
+                    var $btn = $(this);
+                    var filterTerm = $btn.data('filter') || '';
+                    var wasActive = $btn.hasClass('is-active');
+
+                    $('.wa-chip-btn').removeClass('is-active');
+
+                    var $visaSelect = $('#visastatu');
+                    if (wasActive) {
+                        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+                            if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                                var $sf = $('.wa-select2-dropdown .select2-search__field');
+                                if ($sf.length) {
+                                    $sf.val('').trigger('input').trigger('keyup');
+                                }
+                            }
+                        }
+                        return;
+                    }
+
+                    $btn.addClass('is-active');
+
+                    if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+                        $visaSelect.select2('open');
+                        setTimeout(function () {
+                            var $searchField = $('.wa-select2-dropdown .select2-search__field');
+                            if ($searchField.length) {
+                                $searchField.val(filterTerm).trigger('input').trigger('keyup');
+                            }
+                        }, 50);
+                    } else {
+                        $visaSelect.focus();
+                    }
+                });
+
+                $(document).on('change', '#visastatu', function () {
+                    syncWorkAuthActiveChip();
+                });
+
+                // Multi-stage safe initialization
+                $(document).ready(function () {
+                    initWorkAuthorizationEngine();
+                    setTimeout(initWorkAuthorizationEngine, 300);
+                    setTimeout(initWorkAuthorizationEngine, 800);
+                });
+
+                if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                    setTimeout(initWorkAuthorizationEngine, 100);
+                }
+            })(jQuery);
+            </script>
           </div>
           </form>
         </main>
@@ -2476,7 +2673,10 @@ $(document).ready(function () {
       });
     };
   });
+</script>
 
+<script>
+  $(document).ready(function () {
     const HOURS_PER_MONTH = 160;
     const MONTHS_PER_YEAR = 12;
     const currencyRates = @json($rates);
@@ -2949,139 +3149,6 @@ $(document).ready(function () {
     }
 
     /**
-     * Initializes enterprise Select2 on #visastatu with full text & optgroup search,
-     * quick-select popular hub chip synchronization, and Metronic Poppins styling.
-     */
-    function initWorkAuthorizationSelect2() {
-        if (!$.fn.select2) return;
-        let $visaSelect = $('#visastatu');
-        if (!$visaSelect.length) return;
-
-        if ($visaSelect.hasClass('select2-hidden-accessible')) {
-            $visaSelect.select2('destroy');
-        }
-
-        $visaSelect.select2({
-            width: '100%',
-            dropdownParent: $(document.body),
-            dropdownCssClass: 'wa-select2-dropdown',
-            placeholder: 'Search visa or work authorization status...',
-            allowClear: true,
-            minimumResultsForSearch: 0,
-            matcher: function (params, data) {
-                if ($.trim(params.term) === '') {
-                    return data;
-                }
-                var term = params.term.toLowerCase().trim();
-
-                // If this is an optgroup (it has children)
-                if (data.children && data.children.length > 0) {
-                    var groupLabel = (data.text || '').toLowerCase();
-                    // If optgroup label matches the term (e.g. "Dubai", "UAE", "India", "United States", "Canada")
-                    if (groupLabel.indexOf(term) > -1) {
-                        return data;
-                    }
-
-                    // Otherwise test each child within the optgroup
-                    var filteredChildren = [];
-                    for (var i = 0; i < data.children.length; i++) {
-                        var child = data.children[i];
-                        var childText = (child.text || '').toLowerCase();
-                        var childVal = (child.id || '').toLowerCase();
-                        if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
-                            filteredChildren.push(child);
-                        }
-                    }
-
-                    if (filteredChildren.length > 0) {
-                        var modifiedData = $.extend({}, data, true);
-                        modifiedData.children = filteredChildren;
-                        return modifiedData;
-                    }
-                    return null;
-                }
-
-                // If this is a standalone option
-                var text = (data.text || '').toLowerCase();
-                var val = (data.id || '').toLowerCase();
-                if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
-                    return data;
-                }
-                return null;
-            }
-        });
-
-        // Hide static chevron if Select2 is initialized
-        $visaSelect.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
-
-        // Sync active state of popular hub chips based on current selection
-        syncWorkAuthActiveChip();
-    }
-
-    function syncWorkAuthActiveChip() {
-        let val = $('#visastatu').val();
-        $('.wa-chip-btn').removeClass('is-active');
-        if (!val) return;
-
-        let $selectedOpt = $('#visastatu').find('option:selected');
-        let $optgroup = $selectedOpt.closest('optgroup');
-        let groupLabel = ($optgroup.attr('label') || '').toLowerCase();
-        let optVal = (val || '').toLowerCase();
-
-        $('.wa-chip-btn').each(function () {
-            let filter = ($(this).data('filter') || '').toLowerCase();
-            let region = ($(this).data('region') || '').toLowerCase();
-            if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
-                optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
-                $(this).addClass('is-active');
-                return false;
-            }
-        });
-    }
-
-    $(document).on('change', '#visastatu', function () {
-        syncWorkAuthActiveChip();
-    });
-
-    // Handle Quick Hub Chip click
-    $(document).on('click', '.wa-chip-btn', function (e) {
-        e.preventDefault();
-        let $btn = $(this);
-        let filterTerm = $btn.data('filter') || '';
-        let wasActive = $btn.hasClass('is-active');
-
-        $('.wa-chip-btn').removeClass('is-active');
-
-        let $visaSelect = $('#visastatu');
-        if (wasActive) {
-            // If already active, toggle off and reset search if dropdown open
-            if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
-                if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
-                    let $searchField = $('.wa-select2-dropdown .select2-search__field');
-                    if ($searchField.length) {
-                        $searchField.val('').trigger('input').trigger('keyup');
-                    }
-                }
-            }
-            return;
-        }
-
-        $btn.addClass('is-active');
-
-        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
-            $visaSelect.select2('open');
-            setTimeout(function () {
-                let $searchField = $('.wa-select2-dropdown .select2-search__field');
-                if ($searchField.length) {
-                    $searchField.val(filterTerm).trigger('input').trigger('keyup');
-                }
-            }, 60);
-        } else {
-            $visaSelect.focus();
-        }
-    });
-
-    /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
      * active Pay Rate input using canonical currency code read from #pay_rate_currency.
      */
@@ -3229,11 +3296,9 @@ $(document).ready(function () {
     });
 
     initPayRateCurrencySelect2();
-    initWorkAuthorizationSelect2();
 
     setTimeout(() => {
         initPayRateCurrencySelect2();
-        initWorkAuthorizationSelect2();
         let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
