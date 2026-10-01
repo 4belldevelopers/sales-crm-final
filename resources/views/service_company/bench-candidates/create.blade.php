@@ -465,7 +465,7 @@ if($snp_mode== 1){
                     <label>Full Name <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-user"></i>
-                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" />
+                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ !empty($application->full_name) ? ucwords(strtolower($application->full_name)) : '' }}" placeholder="Enter full name" autocomplete="off" spellcheck="false" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
@@ -1635,7 +1635,6 @@ if($snp_mode== 1){
               <div class="fsc addl-body">
                 <section class="addl-section addl-section--details">
                   <div class="addl-wide-field fv-row">
-                    <label><i class="fa-solid fa-passport"></i> Work Authorization <i class="fa-solid fa-circle-info addl-label-info" title="Select the candidate's active legal work authorization or visa classification."></i></label>
                     <div class="wa-popular-chips-wrap">
                       <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
                       <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
@@ -2184,6 +2183,37 @@ $(document).ready(function () {
         });
     });
     window.syncTalentStageAction();
+
+    // ── Enterprise Full Name Title-Casing (1st letter capital, rest small) ──
+    window.formatCandidateTitleCase = function (str) {
+        if (!str) return '';
+        return String(str)
+            .toLowerCase()
+            .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
+                return separator + char.toUpperCase();
+            })
+            .trim();
+    };
+
+    $(document).on('blur change', '#full_name', function () {
+        var val = $(this).val();
+        if (val) {
+            var formatted = window.formatCandidateTitleCase(val);
+            if (formatted !== val) {
+                $(this).val(formatted);
+            }
+        }
+    });
+
+    $(document).on('paste', '#full_name', function () {
+        var self = this;
+        setTimeout(function () {
+            var val = $(self).val();
+            if (val) {
+                $(self).val(window.formatCandidateTitleCase(val));
+            }
+        }, 15);
+    });
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
@@ -6000,6 +6030,9 @@ var KTAddCandidate = function () {
                     $('#client_submission_uuid').val(clientUuid);
                 }
 
+                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+                }
                 window.normalizeCreateTalentPhones();
                 var formData = new FormData($('#createForm')[0]);
                 $.ajax({
@@ -6206,6 +6239,9 @@ var KTEditCandidate = function () {
                     $('#client_submission_uuid').val(clientUuid);
                 }
 
+                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+                }
                 window.normalizeCreateTalentPhones();
                 var formData = new FormData($('#createForm')[0]);
                 $.ajax({
