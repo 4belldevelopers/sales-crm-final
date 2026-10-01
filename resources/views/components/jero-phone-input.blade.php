@@ -30,7 +30,8 @@
         'BR' => '+55', 'MX' => '+52', 'JP' => '+81', 'KR' => '+82', 'PK' => '+92',
         'BD' => '+880', 'LK' => '+94', 'NP' => '+977', 'NG' => '+234', 'KE' => '+254',
         'EG' => '+20', 'TR' => '+90', 'PL' => '+48', 'RO' => '+40', 'UA' => '+380',
-        'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972'
+        'VN' => '+84', 'TH' => '+66', 'HK' => '+852', 'TW' => '+886', 'IL' => '+972',
+        'RU' => '+7', 'MV' => '+960', 'YE' => '+967', 'SY' => '+963', 'IR' => '+98'
     ];
 
     $dialToIso = [
@@ -44,7 +45,8 @@
         '+92' => 'PK', '+880' => 'BD', '+94' => 'LK', '+977' => 'NP',
         '+234' => 'NG', '+254' => 'KE', '+20' => 'EG', '+90' => 'TR',
         '+48' => 'PL', '+40' => 'RO', '+380' => 'UA', '+84' => 'VN',
-        '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL'
+        '+66' => 'TH', '+852' => 'HK', '+886' => 'TW', '+972' => 'IL',
+        '+7' => 'RU', '+960' => 'MV', '+967' => 'YE', '+963' => 'SY', '+98' => 'IR'
     ];
 
     $dialToLen = [
@@ -58,11 +60,34 @@
         '+92' => 10, '+880' => 10, '+94' => 9, '+977' => 10,
         '+234' => 10, '+254' => 9, '+20' => 10, '+90' => 10,
         '+48' => 9, '+40' => 9, '+380' => 9, '+84' => 9,
-        '+66' => 9, '+852' => 8, '+886' => 9, '+972' => 9
+        '+66' => 9, '+852' => 8, '+886' => 9, '+972' => 9,
+        '+7' => 10, '+960' => 7, '+967' => 9, '+963' => 9, '+98' => 10
+    ];
+
+    $aliasToIso = [
+        'UAE' => 'AE', 'ARE' => 'AE', 'DUBAI' => 'AE',
+        'USA' => 'US', 'AMERICA' => 'US',
+        'UK' => 'GB', 'GBR' => 'GB', 'ENGLAND' => 'GB', 'BRITAIN' => 'GB',
+        'KSA' => 'SA', 'SAU' => 'SA',
+        'IND' => 'IN', 'BHARAT' => 'IN',
+        'AUS' => 'AU', 'CAN' => 'CA', 'SGP' => 'SG', 'DEU' => 'DE', 'FRA' => 'FR',
+        'NZL' => 'NZ', 'ZAF' => 'ZA', 'IRL' => 'IE', 'NLD' => 'NL', 'SWE' => 'SE',
+        'CHE' => 'CH', 'JPN' => 'JP', 'KOR' => 'KR', 'CHN' => 'CN', 'HKG' => 'HK',
+        'TWN' => 'TW', 'THA' => 'TH', 'VNM' => 'VN', 'ESP' => 'ES', 'ITA' => 'IT',
+        'PRT' => 'PT', 'BEL' => 'BE', 'AUT' => 'AT', 'NOR' => 'NO', 'DNK' => 'DK',
+        'FIN' => 'FI', 'POL' => 'PL', 'CZE' => 'CZ', 'ROU' => 'RO', 'HUN' => 'HU',
+        'GRC' => 'GR', 'TUR' => 'TR', 'ISR' => 'IL', 'EGY' => 'EG', 'NGA' => 'NG',
+        'KEN' => 'KE', 'GHA' => 'GH', 'PAK' => 'PK', 'BGD' => 'BD', 'LKA' => 'LK',
+        'NPL' => 'NP', 'MEX' => 'MX', 'BRA' => 'BR', 'ARG' => 'AR', 'CHL' => 'CL',
+        'COL' => 'CO', 'PER' => 'PER', 'RUS' => 'RU', 'QAT' => 'QA', 'KWT' => 'KW',
+        'OMN' => 'OM', 'BHR' => 'BH', 'MYS' => 'MY', 'PHL' => 'PH', 'IDN' => 'ID'
     ];
 
     $rawCode = trim((string) old($countryCodeName, $countryCode));
     $upperRaw = strtoupper($rawCode);
+    if (isset($aliasToIso[$upperRaw])) {
+        $upperRaw = $aliasToIso[$upperRaw];
+    }
 
     if (isset($isoToDial[$upperRaw])) {
         $initialCode = $isoToDial[$upperRaw];
@@ -150,7 +175,7 @@
             <i class="fa fa-search text-gray-500 ms-2 me-2 fs-7" aria-hidden="true"></i>
             <input type="text"
                    class="form-control form-control-sm form-control-solid fs-7 border-0 bg-white jero-search-input pe-6"
-                   placeholder="Search country or code (e.g. India, +91)..."
+                   placeholder="Search country, code, or alias (e.g. UAE, USA, +91)..."
                    id="{{ $id }}_search"
                    autocomplete="off"
                    spellcheck="false"
@@ -611,7 +636,20 @@
     { iso: "UG", name: "Uganda", dial: "+256", len: 9 },
     { iso: "UA", name: "Ukraine", dial: "+380", len: 9 },
     { iso: "UY", name: "Uruguay", dial: "+598", len: 8 },
-    { iso: "UZ", name: "Uzbekistan", dial: "+998", len: 9 }
+    { iso: "UZ", name: "Uzbekistan", dial: "+998", len: 9 },
+    { iso: "RU", name: "Russia", dial: "+7", len: 10 },
+    { iso: "MV", name: "Maldives", dial: "+960", len: 7 },
+    { iso: "YE", name: "Yemen", dial: "+967", len: 9 },
+    { iso: "SY", name: "Syria", dial: "+963", len: 9 },
+    { iso: "IR", name: "Iran", dial: "+98", len: 10 },
+    { iso: "ZW", name: "Zimbabwe", dial: "+263", len: 9 },
+    { iso: "ZM", name: "Zambia", dial: "+260", len: 9 },
+    { iso: "RW", name: "Rwanda", dial: "+250", len: 9 },
+    { iso: "SN", name: "Senegal", dial: "+221", len: 9 },
+    { iso: "CI", name: "Ivory Coast", dial: "+225", len: 10 },
+    { iso: "TT", name: "Trinidad and Tobago", dial: "+1868", len: 7 },
+    { iso: "DO", name: "Dominican Republic", dial: "+1809", len: 7 },
+    { iso: "PR", name: "Puerto Rico", dial: "+1787", len: 7 }
   ];
 
   window.__JERO_FLAGS_SVG__ = {
@@ -659,8 +697,173 @@
     'TH': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="80" fill="#a51931"/><rect y="80" width="640" height="80" fill="#f4f5f8"/><rect y="160" width="640" height="160" fill="#2d2a4a"/><rect y="320" width="640" height="80" fill="#f4f5f8"/><rect y="400" width="640" height="80" fill="#a51931"/></svg>',
     'HK': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#de2910"/><circle cx="320" cy="240" r="90" fill="#ffffff"/><circle cx="320" cy="240" r="70" fill="#de2910"/><circle cx="320" cy="240" r="30" fill="#ffffff"/></svg>',
     'TW': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#fe0000"/><rect width="320" height="240" fill="#000095"/><circle cx="160" cy="120" r="60" fill="#ffffff"/><circle cx="160" cy="120" r="45" fill="#000095"/><circle cx="160" cy="120" r="30" fill="#ffffff"/></svg>',
-    'IL': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><rect y="50" width="640" height="60" fill="#0038b8"/><rect y="370" width="640" height="60" fill="#0038b8"/><polygon points="320,180 370,270 270,270" stroke="#0038b8" stroke-width="12" fill="none"/><polygon points="320,300 370,210 270,210" stroke="#0038b8" stroke-width="12" fill="none"/></svg>'
+    'IL': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#ffffff"/><rect y="50" width="640" height="60" fill="#0038b8"/><rect y="370" width="640" height="60" fill="#0038b8"/><polygon points="320,180 370,270 270,270" stroke="#0038b8" stroke-width="12" fill="none"/><polygon points="320,300 370,210 270,210" stroke="#0038b8" stroke-width="12" fill="none"/></svg>',
+    'RU': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ffffff"/><rect y="160" width="640" height="160" fill="#0039a6"/><rect y="320" width="640" height="160" fill="#d52b1e"/></svg>',
+    'MV': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#d21034"/><rect x="120" y="90" width="400" height="300" fill="#007e3a"/><circle cx="340" cy="240" r="75" fill="#ffffff"/><circle cx="365" cy="240" r="75" fill="#007e3a"/></svg>',
+    'YE': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/></svg>',
+    'SY': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#ce1126"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><circle cx="240" cy="240" r="24" fill="#007a3d"/><circle cx="400" cy="240" r="24" fill="#007a3d"/></svg>',
+    'IR': '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#239f40"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#da0000"/><circle cx="320" cy="240" r="30" fill="#da0000"/></svg>'
   };
+
+  // Master ISO-3 and Recruiter Aliases / Synonyms / Regional Names Dictionary
+  const COUNTRY_EXTRAS = {
+    IN: { iso3: "IND", aliases: ["bharat", "hindustan", "ind", "india", "delhi", "mumbai", "bangalore"] },
+    US: { iso3: "USA", aliases: ["usa", "america", "united states of america", "us of a", "states", "american", "us", "u.s.a", "u.s."] },
+    GB: { iso3: "GBR", aliases: ["uk", "britain", "great britain", "england", "scotland", "wales", "northern ireland", "gbr", "british", "london", "u.k."] },
+    AE: { iso3: "ARE", aliases: ["uae", "emirates", "dubai", "dxb", "abu dhabi", "sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "are", "united arab emirates", "u.a.e."] },
+    CA: { iso3: "CAN", aliases: ["can", "canada", "toronto", "vancouver", "montreal"] },
+    AU: { iso3: "AUS", aliases: ["aus", "aussie", "oz", "australia", "sydney", "melbourne"] },
+    SG: { iso3: "SGP", aliases: ["sgp", "sng", "singa", "singapore", "sing"] },
+    SA: { iso3: "SAU", aliases: ["ksa", "kingdom of saudi arabia", "saudi", "riyadh", "jeddah", "sau", "k.s.a."] },
+    DE: { iso3: "DEU", aliases: ["deutschland", "ger", "deu", "germany", "aleman", "allemagne", "berlin", "munich", "frankfurt"] },
+    FR: { iso3: "FRA", aliases: ["fra", "france", "french", "paris", "republique francaise"] },
+    QA: { iso3: "QAT", aliases: ["qat", "doha", "qatar"] },
+    KW: { iso3: "KWT", aliases: ["kwt", "kuwait city", "kuwait"] },
+    OM: { iso3: "OMN", aliases: ["omn", "muscat", "oman"] },
+    BH: { iso3: "BHR", aliases: ["bhr", "manama", "bahrain"] },
+    MY: { iso3: "MYS", aliases: ["mys", "mas", "malay", "malaysia", "kuala lumpur", "kl"] },
+    PH: { iso3: "PHL", aliases: ["phl", "phi", "phils", "phil", "philippines", "filipino", "pinoy", "manila", "rp"] },
+    ID: { iso3: "IDN", aliases: ["idn", "ina", "indo", "indonesia", "jakarta"] },
+    NZ: { iso3: "NZL", aliases: ["nzl", "aotearoa", "kiwi", "new zealand", "auckland", "wellington", "nz"] },
+    ZA: { iso3: "ZAF", aliases: ["rsa", "zaf", "south africa", "mzansi", "johannesburg", "cape town"] },
+    IE: { iso3: "IRL", aliases: ["irl", "eire", "ireland", "republic of ireland", "dublin"] },
+    NL: { iso3: "NLD", aliases: ["nld", "ned", "holland", "nederland", "dutch", "the netherlands", "amsterdam", "rotterdam"] },
+    SE: { iso3: "SWE", aliases: ["swe", "sverige", "sweden", "stockholm"] },
+    CH: { iso3: "CHE", aliases: ["che", "sui", "swiss", "schweiz", "suisse", "svizzera", "switzerland", "zurich", "geneva"] },
+    JP: { iso3: "JPN", aliases: ["jpn", "nippon", "nihon", "japan", "tokyo"] },
+    KR: { iso3: "KOR", aliases: ["kor", "rok", "korea", "south korea", "republic of korea", "seoul"] },
+    CN: { iso3: "CHN", aliases: ["chn", "prc", "china", "people's republic of china", "mainland china", "beijing", "shanghai"] },
+    HK: { iso3: "HKG", aliases: ["hkg", "hk", "hong kong", "hongkong"] },
+    TW: { iso3: "TWN", aliases: ["twn", "roc", "taiwan", "chinese taipei", "taipei"] },
+    TH: { iso3: "THA", aliases: ["tha", "siam", "thailand", "bangkok"] },
+    VN: { iso3: "VNM", aliases: ["vnm", "vie", "viet nam", "vietnam", "saigon", "hanoi"] },
+    ES: { iso3: "ESP", aliases: ["esp", "espana", "spain", "madrid", "barcelona"] },
+    IT: { iso3: "ITA", aliases: ["ita", "italia", "italy", "rome", "milan"] },
+    PT: { iso3: "PRT", aliases: ["prt", "por", "portugal", "lisbon"] },
+    BE: { iso3: "BEL", aliases: ["bel", "belgique", "belgie", "belgium", "brussels"] },
+    AT: { iso3: "AUT", aliases: ["aut", "osterreich", "austria", "vienna"] },
+    NO: { iso3: "NOR", aliases: ["nor", "norge", "norway", "oslo"] },
+    DK: { iso3: "DNK", aliases: ["dnk", "den", "danmark", "denmark", "copenhagen"] },
+    FI: { iso3: "FIN", aliases: ["fin", "suomi", "finland", "helsinki"] },
+    PL: { iso3: "POL", aliases: ["pol", "polska", "poland", "warsaw"] },
+    CZ: { iso3: "CZE", aliases: ["cze", "czechia", "czech republic", "prague"] },
+    RO: { iso3: "ROU", aliases: ["rou", "rom", "romania", "bucharest"] },
+    HU: { iso3: "HUN", aliases: ["hun", "magyar", "hungary", "budapest"] },
+    GR: { iso3: "GRC", aliases: ["grc", "gre", "hellas", "greece", "athens"] },
+    TR: { iso3: "TUR", aliases: ["tur", "turkiye", "turkey", "istanbul", "ankara"] },
+    IL: { iso3: "ISR", aliases: ["isr", "israel", "tel aviv", "jerusalem"] },
+    EG: { iso3: "EGY", aliases: ["egy", "misr", "egypt", "cairo"] },
+    NG: { iso3: "NGA", aliases: ["nga", "naija", "nigeria", "lagos", "abuja"] },
+    KE: { iso3: "KEN", aliases: ["ken", "kenya", "nairobi"] },
+    GH: { iso3: "GHA", aliases: ["gha", "ghana", "accra"] },
+    PK: { iso3: "PAK", aliases: ["pak", "pakistan", "islamabad", "karachi", "lahore"] },
+    BD: { iso3: "BGD", aliases: ["bgd", "bangla", "bangladesh", "dhaka"] },
+    LK: { iso3: "LKA", aliases: ["lka", "ceylon", "sri lanka", "colombo"] },
+    NP: { iso3: "NPL", aliases: ["npl", "nepal", "kathmandu"] },
+    MX: { iso3: "MEX", aliases: ["mex", "mexico", "mexico city"] },
+    BR: { iso3: "BRA", aliases: ["bra", "brasil", "brazil", "sao paulo", "rio"] },
+    AR: { iso3: "ARG", aliases: ["arg", "argentina", "buenos aires"] },
+    CL: { iso3: "CHL", aliases: ["chl", "chile", "santiago"] },
+    CO: { iso3: "COL", aliases: ["col", "colombia", "bogota"] },
+    PE: { iso3: "PER", aliases: ["per", "peru", "lima"] },
+    RU: { iso3: "RUS", aliases: ["rus", "russia", "russian federation", "rossiya", "moscow"] },
+    AF: { iso3: "AFG", aliases: ["afg", "afghanistan", "kabul"] },
+    AL: { iso3: "ALB", aliases: ["alb", "albania", "tirana"] },
+    DZ: { iso3: "DZA", aliases: ["dza", "algeria", "algiers"] },
+    AD: { iso3: "AND", aliases: ["and", "andorra"] },
+    AO: { iso3: "AGO", aliases: ["ago", "angola", "luanda"] },
+    AM: { iso3: "ARM", aliases: ["arm", "armenia", "yerevan"] },
+    AZ: { iso3: "AZE", aliases: ["aze", "azerbaijan", "baku"] },
+    BS: { iso3: "BHS", aliases: ["bhs", "bahamas", "nassau"] },
+    BB: { iso3: "BRB", aliases: ["brb", "barbados", "bridgetown"] },
+    BY: { iso3: "BLR", aliases: ["blr", "belarus", "minsk"] },
+    BZ: { iso3: "BLZ", aliases: ["blz", "belize"] },
+    BJ: { iso3: "BEN", aliases: ["ben", "benin", "cotonou"] },
+    BM: { iso3: "BMU", aliases: ["bmu", "bermuda"] },
+    BT: { iso3: "BTN", aliases: ["btn", "bhutan", "thimphu"] },
+    BO: { iso3: "BOL", aliases: ["bol", "bolivia", "la paz"] },
+    BA: { iso3: "BIH", aliases: ["bih", "bosnia", "herzegovina", "bosnia and herzegovina", "sarajevo"] },
+    BW: { iso3: "BWA", aliases: ["bwa", "botswana", "gaborone"] },
+    BN: { iso3: "BRN", aliases: ["brn", "brunei"] },
+    BG: { iso3: "BGR", aliases: ["bgr", "bulgaria", "sofia"] },
+    BF: { iso3: "BFA", aliases: ["bfa", "burkina faso", "ouagadougou"] },
+    KH: { iso3: "KHM", aliases: ["khm", "cambodia", "phnom penh"] },
+    CM: { iso3: "CMR", aliases: ["cmr", "cameroon", "yaounde"] },
+    CR: { iso3: "CRI", aliases: ["cri", "costa rica", "san jose"] },
+    HR: { iso3: "HRV", aliases: ["hrv", "croatia", "hrvatska", "zagreb"] },
+    CU: { iso3: "CUB", aliases: ["cub", "cuba", "havana"] },
+    CY: { iso3: "CYP", aliases: ["cyp", "cyprus", "nicosia"] },
+    EC: { iso3: "ECU", aliases: ["ecu", "ecuador", "quito"] },
+    EE: { iso3: "EST", aliases: ["est", "estonia", "tallinn"] },
+    ET: { iso3: "ETH", aliases: ["eth", "ethiopia", "addis ababa"] },
+    FJ: { iso3: "FJI", aliases: ["fji", "fiji", "suva"] },
+    GE: { iso3: "GEO", aliases: ["geo", "georgia", "tbilisi"] },
+    GI: { iso3: "GIB", aliases: ["gib", "gibraltar"] },
+    GT: { iso3: "GTM", aliases: ["gtm", "guatemala", "guatemala city"] },
+    IS: { iso3: "ISL", aliases: ["isl", "iceland", "reykjavik"] },
+    IQ: { iso3: "IRQ", aliases: ["irq", "iraq", "baghdad"] },
+    JM: { iso3: "JAM", aliases: ["jam", "jamaica", "kingston"] },
+    JO: { iso3: "JOR", aliases: ["jor", "jordan", "amman"] },
+    KZ: { iso3: "KAZ", aliases: ["kaz", "kazakhstan", "almaty", "astana"] },
+    KG: { iso3: "KGZ", aliases: ["kgz", "kyrgyzstan", "bishkek"] },
+    LA: { iso3: "LAO", aliases: ["lao", "laos", "vientiane"] },
+    LV: { iso3: "LVA", aliases: ["lva", "latvia", "riga"] },
+    LB: { iso3: "LBN", aliases: ["lbn", "lebanon", "beirut"] },
+    LT: { iso3: "LTU", aliases: ["ltu", "lithuania", "vilnius"] },
+    LU: { iso3: "LUX", aliases: ["lux", "luxembourg"] },
+    MT: { iso3: "MLT", aliases: ["mlt", "malta", "valletta"] },
+    MU: { iso3: "MUS", aliases: ["mus", "mauritius", "port louis"] },
+    MD: { iso3: "MDA", aliases: ["mda", "moldova", "chisinau"] },
+    MC: { iso3: "MCO", aliases: ["mco", "monaco"] },
+    MA: { iso3: "MAR", aliases: ["mar", "morocco", "maroc", "casablanca", "rabat"] },
+    MM: { iso3: "MMR", aliases: ["mmr", "myanmar", "burma", "yangon"] },
+    PA: { iso3: "PAN", aliases: ["pan", "panama", "panama city"] },
+    RS: { iso3: "SRB", aliases: ["srb", "serbia", "belgrade"] },
+    SK: { iso3: "SVK", aliases: ["svk", "slovakia", "bratislava"] },
+    SI: { iso3: "SVN", aliases: ["svn", "slovenia", "ljubljana"] },
+    TZ: { iso3: "TZA", aliases: ["tza", "tanzania", "zanzibar", "dar es salaam"] },
+    UG: { iso3: "UGA", aliases: ["uga", "uganda", "kampala"] },
+    UA: { iso3: "UKR", aliases: ["ukr", "ukraine", "kyiv", "kiev"] },
+    UY: { iso3: "URY", aliases: ["ury", "uruguay", "montevideo"] },
+    UZ: { iso3: "UZB", aliases: ["uzb", "uzbekistan", "tashkent"] },
+    MV: { iso3: "MDV", aliases: ["mdv", "maldives", "male"] },
+    YE: { iso3: "YEM", aliases: ["yem", "yemen", "sanaa"] },
+    SY: { iso3: "SYR", aliases: ["syr", "syria", "damascus"] },
+    IR: { iso3: "IRN", aliases: ["irn", "iran", "persia", "tehran"] },
+    ZW: { iso3: "ZWE", aliases: ["zwe", "zimbabwe", "harare"] },
+    ZM: { iso3: "ZMB", aliases: ["zmb", "zambia", "lusaka"] },
+    RW: { iso3: "RWA", aliases: ["rwa", "rwanda", "kigali"] },
+    SN: { iso3: "SEN", aliases: ["sen", "senegal", "dakar"] },
+    CI: { iso3: "CIV", aliases: ["civ", "ivory coast", "cote d'ivoire", "abidjan"] },
+    TT: { iso3: "TTO", aliases: ["tto", "trinidad", "tobago", "trinidad and tobago"] },
+    DO: { iso3: "DOM", aliases: ["dom", "dominican republic", "santo domingo"] },
+    PR: { iso3: "PRI", aliases: ["pri", "puerto rico", "san juan"] }
+  };
+
+  // Enrich each country object with iso3, auto-computed acronym, normalized aliases, and digits
+  window.__JERO_COUNTRIES_DB__.forEach(function(c) {
+    var extra = COUNTRY_EXTRAS[c.iso] || {};
+    c.iso3 = extra.iso3 || '';
+
+    // Auto-generate acronym for multi-word country names (e.g. "United Arab Emirates" -> "uae", "New Zealand" -> "nz")
+    var words = c.name.replace(/[^a-zA-Z\s]/g, '').split(/\s+/).filter(function(w) {
+      return !['and', 'of', 'the', 'da', 'de', 'la'].includes(w.toLowerCase());
+    });
+    c.autoAcronym = words.length > 1 ? words.map(function(w) { return w[0]; }).join('').toLowerCase() : '';
+
+    var aliasList = extra.aliases ? extra.aliases.slice() : [];
+    if (c.iso3) aliasList.push(c.iso3.toLowerCase());
+    if (c.autoAcronym) aliasList.push(c.autoAcronym);
+    aliasList.push(c.iso.toLowerCase());
+    
+    // Deduplicate aliases
+    var uniqueAliases = [];
+    aliasList.forEach(function(a) {
+      if (a && uniqueAliases.indexOf(a) === -1) uniqueAliases.push(a);
+    });
+    c.aliases = uniqueAliases;
+    c.dialDigits = c.dial.replace(/[^\d]/g, '');
+  });
 
   window.getJeroFlagSvg = function(iso) {
     const code = (iso || 'IN').toUpperCase();
@@ -700,8 +903,14 @@
     // Resolve initial country
     let initialDial = (hiddenCode.value || '').trim();
     if (initialDial) {
-      if (initialDial.length === 2 && /^[a-zA-Z]{2}$/.test(initialDial)) {
-        currentCountry = window.__JERO_COUNTRIES_DB__.find(c => c.iso === initialDial.toUpperCase());
+      if (/^[a-zA-Z]{2,4}$/.test(initialDial)) {
+        const codeUpper = initialDial.toUpperCase();
+        const codeLower = initialDial.toLowerCase();
+        currentCountry = window.__JERO_COUNTRIES_DB__.find(c => 
+          c.iso === codeUpper || 
+          (c.iso3 && c.iso3 === codeUpper) ||
+          (c.aliases && c.aliases.includes(codeLower))
+        );
       } else {
         const clean = initialDial.startsWith('+') ? initialDial : ('+' + initialDial);
         currentCountry = window.__JERO_COUNTRIES_DB__.find(c => c.dial === clean && c.iso === defaultIso) ||
@@ -767,25 +976,133 @@
     }
 
     function renderList(query = '') {
-      const q = query.trim().toLowerCase();
-      const qDigits = q.replace(/[^\d]/g, '');
-      const filtered = window.__JERO_COUNTRIES_DB__.filter(c => {
-        if (!q) return true;
-        return c.name.toLowerCase().includes(q) ||
-               c.iso.toLowerCase() === q ||
-               c.dial.includes(q) ||
-               (qDigits && c.dial.replace(/[^\d]/g, '').includes(qDigits));
-      });
+      const qRaw = (query || '').trim().toLowerCase();
+      // Clean query of punctuation, periods, hyphens for acronym matching (e.g., "u.a.e." -> "uae", "u.s.a." -> "usa")
+      const qClean = qRaw.replace(/[\.\-_\s,]/g, '');
+      const qDigits = qRaw.replace(/[^\d]/g, '');
 
-      if (filtered.length === 0) {
+      let scoredResults = [];
+
+      if (!qRaw) {
+        scoredResults = window.__JERO_COUNTRIES_DB__.map(c => ({ country: c, score: 0 }));
+      } else {
+        window.__JERO_COUNTRIES_DB__.forEach(c => {
+          let score = 0;
+          let matchedAlias = null;
+
+          const isoLower = c.iso.toLowerCase();
+          const iso3Lower = (c.iso3 || '').toLowerCase();
+          const nameLower = c.name.toLowerCase();
+          const dialLower = c.dial.toLowerCase();
+          const autoAcronym = (c.autoAcronym || '').toLowerCase();
+
+          // 1. EXACT MATCHES (Top Tier: 2500 - 3000)
+          if (isoLower === qRaw || isoLower === qClean) {
+            score = 3000;
+          } else if (iso3Lower && (iso3Lower === qRaw || iso3Lower === qClean)) {
+            score = 2900;
+            matchedAlias = c.iso3;
+          } else if (autoAcronym && (autoAcronym === qRaw || autoAcronym === qClean)) {
+            score = 2800;
+            matchedAlias = autoAcronym.toUpperCase();
+          } else if (nameLower === qRaw) {
+            score = 2700;
+          } else if (qDigits && (dialLower === qRaw || c.dialDigits === qDigits)) {
+            score = 2600;
+          } else if (c.aliases && c.aliases.length) {
+            for (let i = 0; i < c.aliases.length; i++) {
+              const a = c.aliases[i];
+              if (a === qRaw || a === qClean) {
+                score = 2500;
+                matchedAlias = a;
+                break;
+              }
+            }
+          }
+
+          // 2. PREFIX MATCHES (High Tier: 1100 - 1500)
+          if (score === 0) {
+            if (nameLower.startsWith(qRaw)) {
+              score = 1500;
+            } else {
+              const words = nameLower.split(/\s+/);
+              for (let i = 0; i < words.length; i++) {
+                if (words[i].startsWith(qRaw)) {
+                  score = 1400;
+                  break;
+                }
+              }
+            }
+
+            if (score === 0 && iso3Lower && iso3Lower.startsWith(qClean)) {
+              score = 1350;
+              matchedAlias = c.iso3;
+            }
+
+            if (score === 0 && autoAcronym && autoAcronym.startsWith(qClean)) {
+              score = 1300;
+              matchedAlias = autoAcronym.toUpperCase();
+            }
+
+            if (score === 0 && qDigits && (dialLower.startsWith(qRaw) || c.dialDigits.startsWith(qDigits))) {
+              score = 1250;
+            }
+
+            if (score === 0 && c.aliases && c.aliases.length) {
+              for (let i = 0; i < c.aliases.length; i++) {
+                const a = c.aliases[i];
+                if (a.startsWith(qRaw) || (qClean.length >= 2 && a.startsWith(qClean))) {
+                  score = 1100;
+                  matchedAlias = a;
+                  break;
+                }
+              }
+            }
+          }
+
+          // 3. SUBSTRING / CONTAINS MATCHES (Standard Tier: 300 - 600)
+          if (score === 0) {
+            if (nameLower.includes(qRaw)) {
+              score = 600;
+            } else if (c.aliases && c.aliases.length) {
+              for (let i = 0; i < c.aliases.length; i++) {
+                const a = c.aliases[i];
+                if (a.includes(qRaw) || (qClean.length >= 2 && a.includes(qClean))) {
+                  score = 500;
+                  matchedAlias = a;
+                  break;
+                }
+              }
+            } else if (qDigits && (dialLower.includes(qRaw) || c.dialDigits.includes(qDigits))) {
+              score = 300;
+            }
+          }
+
+          if (score > 0) {
+            scoredResults.push({ country: c, score, matchedAlias });
+          }
+        });
+
+        // Sort descending by match score; ties keep standard priority
+        scoredResults.sort((a, b) => b.score - a.score);
+      }
+
+      if (scoredResults.length === 0) {
         countryList.innerHTML = `<div class="p-4 text-center text-muted fs-8">No country matching "${query}"</div>`;
         return;
       }
 
       let html = '';
-      filtered.forEach((c, index) => {
+      scoredResults.forEach((res, index) => {
+        const c = res.country;
         const isSelected = currentCountry && currentCountry.iso === c.iso;
         const flagSvg = window.getJeroFlagSvg(c.iso);
+
+        let aliasBadge = '';
+        if (res.matchedAlias && !c.name.toLowerCase().includes(res.matchedAlias.toLowerCase())) {
+          aliasBadge = `<span class="badge bg-light-primary text-primary ms-1 px-1 py-0 fs-9 fw-semibold text-uppercase" style="font-size:9.5px !important; line-height:1.2;">${res.matchedAlias}</span>`;
+        }
+
         html += `
           <div class="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer jero-country-item ${isSelected ? 'bg-light-primary text-primary fw-bold' : 'text-gray-800'}"
                data-dial="${c.dial}"
@@ -797,6 +1114,8 @@
             <div class="d-flex align-items-center text-truncate me-2">
               <span class="me-2 d-inline-flex align-items-center flex-shrink-0" style="width: 20px; height: 15px;">${flagSvg}</span>
               <span class="text-truncate">${c.name}</span>
+              <span class="text-muted fs-8 ms-1 flex-shrink-0">(${c.iso3 || c.iso})</span>
+              ${aliasBadge}
             </div>
             <div class="d-flex align-items-center flex-shrink-0">
               <span class="text-muted fs-8 me-2">(${c.len} digits)</span>
@@ -816,6 +1135,13 @@
           if (found) selectCountry(found);
         });
       });
+
+      // Auto-highlight first item on search filter so Enter key directly confirms
+      if (qRaw && scoredResults.length > 0) {
+        selectedIndex = 0;
+        const allItems = countryList.querySelectorAll('.jero-country-item');
+        if (allItems.length > 0) highlightItem(allItems);
+      }
     }
 
     function openDropdown() {
