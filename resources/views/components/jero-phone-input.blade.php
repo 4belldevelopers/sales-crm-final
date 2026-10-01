@@ -436,6 +436,8 @@
 .jero-phone-input-group > .fv-plugins-message-container,
 .jero-phone-input-group > .invalid-feedback,
 .jero-phone-input-group > label.error,
+.jero-phone-input-group > .field-error-message,
+.jero-phone-input-group .field-error-message,
 .jero-phone-input-group .fv-plugins-icon,
 .jero-phone-input-group i.fv-plugins-icon {
   display: none !important;
@@ -1310,21 +1312,28 @@
               const isFeedback = node.classList && (
                 node.classList.contains('fv-plugins-message-container') ||
                 node.classList.contains('invalid-feedback') ||
+                node.classList.contains('field-error-message') ||
                 (node.tagName === 'LABEL' && node.classList.contains('error'))
               );
               const isIcon = node.classList && (
                 node.classList.contains('fv-plugins-icon') ||
-                node.classList.contains('fv-plugins-bootstrap5-icon')
+                node.classList.contains('fv-plugins-bootstrap5-icon') ||
+                node.classList.contains('fe-icon') ||
+                (node.tagName === 'svg' && node.classList.contains('fe-icon'))
               );
 
               if (isFeedback) {
-                const text = (node.innerText || node.textContent || '').trim();
-                if (text && errorContainer) {
-                  errorContainer.innerHTML = node.innerHTML || `<div class="fv-help-block">${text}</div>`;
-                  errorContainer.style.display = 'block';
-                  inputGroup.classList.add('is-invalid');
+                if (node.classList.contains('field-error-message')) {
+                  wrapper.after(node);
+                } else {
+                  const text = (node.innerText || node.textContent || '').trim();
+                  if (text && errorContainer) {
+                    errorContainer.innerHTML = node.innerHTML || `<div class="fv-help-block">${text}</div>`;
+                    errorContainer.style.display = 'block';
+                    inputGroup.classList.add('is-invalid');
+                  }
+                  try { node.remove(); } catch (e) {}
                 }
-                try { node.remove(); } catch (e) {}
               } else if (isIcon) {
                 try { node.remove(); } catch (e) {}
               }
