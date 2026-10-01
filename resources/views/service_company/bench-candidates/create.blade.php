@@ -1373,14 +1373,14 @@ if($snp_mode== 1){
               </div>
             </div>
 
-            <!-- Availability & Work Preferences -->
+            <!-- Availability & Joining Time -->
             <div class="fs aw-card {{ ($snp_mode===1) ? 'is-date-availability' : 'is-immediate-availability' }}">
               <div class="aw-hero">
                 <div class="aw-hero-title">
                   <span class="aw-hero-icon"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>
                   <span>
-                    <strong>Availability &amp; Work Preferences</strong>
-                    <small>Define the availability and work preferences for this talent.</small>
+                    <strong>Availability &amp; Joining Time</strong>
+                    <small>Define the availability and joining timeline for this talent.</small>
                   </span>
                 </div>
                 <span class="aw-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
@@ -1483,35 +1483,50 @@ if($snp_mode== 1){
                   </div>
                 </div>
 
-                <div class="aw-grid aw-grid--work">
-                  <div class="fg fv-row aw-field aw-field--wide">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <small class="aw-field-help">Select the preferred work mode for this talent.</small>
-                    <div class="aw-work-grid">
-                      <label class="aw-work-option aw-work-option--remote" for="wr">
-                        <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--hybrid" for="wh">
-                        <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-building" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
-                      </label>
-                      <label class="aw-work-option aw-work-option--office" for="wo">
-                        <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
-                        <span class="aw-radio"></span>
-                        <i class="fa-solid fa-users" aria-hidden="true"></i>
-                        <span class="aw-work-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span>
-                      </label>
-                    </div>
+                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and joining timeline help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
+
+              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs wm-card" id="wm-card">
+              <div class="wm-hero">
+                <div class="wm-hero-title">
+                  <span class="wm-hero-icon"><i class="fa-solid fa-laptop-house" aria-hidden="true"></i></span>
+                  <span>
+                    <strong>Preferred Work Mode <span class="rq">*</span></strong>
+                    <small>Specify whether this talent works remotely, hybrid, or on-site.</small>
+                  </span>
+                </div>
+                <span class="wm-talent-badge"><i class="fa-solid fa-house" aria-hidden="true"></i> In-House Talent</span>
+              </div>
+              <div class="fsc wm-body">
+                <div class="fg fv-row wm-field" style="margin-bottom: 0;">
+                  <label>Preferred Work Mode <span class="rq">*</span></label>
+                  <small class="aw-field-help d-block">Select the preferred work mode for this talent.</small>
+                  <div class="aw-work-grid">
+                    <label class="aw-work-option aw-work-option--remote" for="wr">
+                      <input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
+                      <span class="aw-radio"></span>
+                      <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                      <span class="aw-work-copy"><strong>Remote</strong><small>Can work from any location.</small></span>
+                    </label>
+                    <label class="aw-work-option aw-work-option--hybrid" for="wh">
+                      <input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" />
+                      <span class="aw-radio"></span>
+                      <i class="fa-solid fa-building" aria-hidden="true"></i>
+                      <span class="aw-work-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span>
+                    </label>
+                    <label class="aw-work-option aw-work-option--office" for="wo">
+                      <input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || (@$page_event != 'EDIT' && empty(@$application->wm))) ? 'checked' : '' }} value="office" />
+                      <span class="aw-radio"></span>
+                      <i class="fa-solid fa-users" aria-hidden="true"></i>
+                      <span class="aw-work-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span>
+                    </label>
                   </div>
                 </div>
 
-                <div class="aw-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Why this information is important?</strong><small>Availability and work preferences help us match the right opportunities and show accurate information to clients in the marketplace.</small></span></div>
-
+                <div class="wm-info-strip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span><strong>Work flexibility matters</strong><small>Clear work mode preferences prevent location mismatches when matching client requirements in the marketplace.</small></span></div>
               </div>
             </div>
 
@@ -5564,7 +5579,7 @@ function detectMissingFields(formEl, validatorInstance) {
         addMissing('skills', skillsCheck.label, '#skillExperienceWrapper', skillsCheck.type === 'incomplete' ? 'Please complete all fields (Skill name, Experience, Rating) or remove the row.' : 'At least 3 complete skills (Skill name, Experience, Rating) are required.');
     }
 
-    // 8. Availability & Work Preferences
+    // 8. Availability & Joining Time
     var snp = $('#serving_notice_period').val();
     if (!snp || snp === '0') {
         addMissing('serving_notice_period', 'Availability', '#serving_notice_period');
@@ -5575,10 +5590,11 @@ function detectMissingFields(formEl, validatorInstance) {
         }
     }
 
+    // 9. Preferred Work Mode
     var wm = $('input[name="wm"]:checked').val();
     if (!wm) addMissing('wm', 'Preferred Work Mode', '#wr');
 
-    // 9. Relationship Manager
+    // 10. Relationship Manager
     var rec = ($('#recruiter').val() || '').trim();
     var recId = ($('#recruiter_id').val() || '').trim();
     if (!rec || !recId) {

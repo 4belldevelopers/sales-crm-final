@@ -2602,6 +2602,208 @@ textarea.has-validation-error:focus,
         right: 62px !important;
     }
 }
+
+/* ==========================================================================
+   Preferred Work Mode Card Styling (Isolated Card)
+   ========================================================================== */
+#talent_create_app .wm-card {
+    position: relative;
+}
+#talent_create_app .wm-card .wm-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #E1E8F5;
+    background: linear-gradient(90deg, #F5FBFD 0%, #FFFFFF 82%) !important;
+}
+#talent_create_app .wm-card .wm-hero-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+#talent_create_app .wm-card .wm-hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #0284C7, #38BDF8) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 8px 18px rgba(2, 132, 199, .18) !important;
+}
+#talent_create_app .wm-card .wm-hero-icon i {
+    font-size: 16px !important;
+    color: #FFFFFF !important;
+}
+#talent_create_app .wm-card .wm-hero-title strong {
+    display: block;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #181C32 !important;
+    line-height: 1.25 !important;
+}
+#talent_create_app .wm-card .wm-hero-title small {
+    display: block;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11px !important;
+    color: #58658F !important;
+    line-height: 1.35 !important;
+}
+#talent_create_app .wm-card .wm-talent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 7px !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #0284C7 !important;
+    background: #E0F2FE !important;
+}
+#talent_create_app .wm-card .wm-body {
+    padding: 16px 18px 18px !important;
+}
+#talent_create_app .wm-card .wm-field > label {
+    margin-bottom: 2px;
+    color: #0B1545 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+#talent_create_app .wm-card .aw-field-help {
+    margin-bottom: 10px;
+    color: #58658F !important;
+    font-size: 11px !important;
+}
+#talent_create_app .wm-card .aw-work-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+#talent_create_app .wm-card .aw-work-option--remote {
+    --aw-accent: #079B59;
+    --aw-soft: #E9FAF1;
+    --aw-light: #F5FCF8;
+}
+#talent_create_app .wm-card .aw-work-option--hybrid {
+    --aw-accent: #2563EB;
+    --aw-soft: #EAF2FF;
+    --aw-light: #F5F9FF;
+}
+#talent_create_app .wm-card .aw-work-option--office {
+    --aw-accent: #E46B16;
+    --aw-soft: #FFF2E8;
+    --aw-light: #FFFAF5;
+}
+#talent_create_app .wm-card .aw-work-option {
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 76px;
+    padding: 12px;
+    border: 1px solid #D8E1F0 !important;
+    border-radius: 8px !important;
+    background: #FFFFFF !important;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+#talent_create_app .wm-card .aw-work-option:hover,
+#talent_create_app .wm-card .aw-work-option:focus-within {
+    border-color: var(--aw-accent) !important;
+}
+#talent_create_app .wm-card .aw-work-option:has(input:checked) {
+    border-color: var(--aw-accent) !important;
+    background: linear-gradient(105deg, var(--aw-light), #FFFFFF) !important;
+    box-shadow: inset 0 0 0 1px var(--aw-accent) !important;
+}
+#talent_create_app .wm-card .aw-work-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+#talent_create_app .wm-card .aw-work-option .aw-radio {
+    width: 18px;
+    height: 18px;
+    flex-basis: 18px;
+    flex-shrink: 0;
+    border: 2px solid #CBD5E1;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+#talent_create_app .wm-card .aw-work-option:has(input:checked) .aw-radio {
+    border-color: var(--aw-accent) !important;
+    background: radial-gradient(circle, var(--aw-accent) 0 36%, transparent 40%) !important;
+}
+#talent_create_app .wm-card .aw-work-option > i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px !important;
+    font-size: 17px;
+    color: #64748B;
+    transition: color 0.2s ease;
+}
+#talent_create_app .wm-card .aw-work-option:has(input:checked) > i {
+    color: var(--aw-accent) !important;
+}
+#talent_create_app .wm-card .aw-work-copy {
+    display: block;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+#talent_create_app .wm-card .aw-work-copy strong {
+    display: block;
+    color: #0B1545;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 700;
+}
+#talent_create_app .wm-card .aw-work-copy small {
+    display: block;
+    margin-top: 3px;
+    color: #58658F;
+    font-size: 10px;
+    line-height: 1.35;
+}
+#talent_create_app .wm-card .wm-info-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #0369A1;
+}
+#talent_create_app .wm-card .wm-info-strip i {
+    font-size: 14px;
+    color: #0284C7;
+    flex-shrink: 0;
+}
+#talent_create_app .wm-card .wm-info-strip span strong {
+    font-weight: 600;
+    color: #0369A1;
+    margin-right: 4px;
+}
+#talent_create_app .wm-card .wm-info-strip span small {
+    color: #0C4A6E;
+    font-size: 11.5px;
+}
+@media (max-width: 768px) {
+    #talent_create_app .wm-card .aw-work-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />
