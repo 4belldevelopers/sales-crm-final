@@ -28,6 +28,36 @@ body { overflow-x: hidden; }
     max-width: 100%;
 }
 
+/* Work Authorization & Compliance Card Polish */
+#talent_create_app .addl-card--details .addl-hero-title strong {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #181C32 !important;
+}
+
+#talent_create_app .addl-select-wrap select optgroup {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #4F566B !important;
+    background-color: #F8FAFC !important;
+    padding: 6px 10px !important;
+}
+
+#talent_create_app .addl-select-wrap select option {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #181C32 !important;
+    background-color: #FFFFFF !important;
+    padding: 6px 12px !important;
+}
+
+#talent_create_app .addl-info-strip i.fa-shield-halved {
+    color: #2563EB !important;
+}
+
 /* Equal Height Flex Pairing for Resume Upload and Career Summary */
 #talent_create_app .equal-height-row {
     display: flex;

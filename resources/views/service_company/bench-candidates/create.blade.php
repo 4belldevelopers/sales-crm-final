@@ -1624,37 +1624,122 @@ if($snp_mode== 1){
             <div class="fs addl-card addl-card--details">
               <div class="addl-hero">
                 <div class="addl-hero-title">
-                  <span class="addl-hero-icon"><i class="fa-solid fa-user"></i></span>
+                  <span class="addl-hero-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF;"><i class="fa-solid fa-passport"></i></span>
                   <span>
-                    <strong>Additional Details</strong>
-                    <small>Provide any other relevant information about your professional background.</small>
+                    <strong>Work Authorization & Compliance</strong>
+                    <small>Specify legal right-to-work status and visa category for client submissions.</small>
                   </span>
                 </div>
               </div>
               <div class="fsc addl-body">
                 <section class="addl-section addl-section--details">
                   <div class="addl-wide-field fv-row">
-                    <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info"></i></label>
+                    <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info" title="Select the candidate's active legal work authorization or visa classification."></i></label>
                     <div class="addl-select-wrap">
+                      @php
+                        $currentVisa  = trim((string) @$application->visastatu);
+                        $isUsCitizen  = in_array($currentVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']);
+                        $isGreenCard  = in_array($currentVisa, ['Green Card', 'Permanent Resident (Green Card)']);
+                        $isGcEad      = in_array($currentVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']);
+                        $isH1b        = in_array($currentVisa, ['H1B', 'H-1B', 'H1-B']);
+                        $isH4Ead      = in_array($currentVisa, ['H4-EAD', 'H4 EAD', 'H-4 EAD']);
+                        $isL2Ead      = in_array($currentVisa, ['L2-EAD', 'L2 EAD', 'L-2 EAD']);
+                        $isTn         = in_array($currentVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']);
+                        $isOpt        = in_array($currentVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']);
+                        $isCpt        = in_array($currentVisa, ['CPT']);
+                        $isE3         = in_array($currentVisa, ['E-3', 'E3']);
+                        $isO1         = in_array($currentVisa, ['O-1', 'O1']);
+                        $isL1         = in_array($currentVisa, ['L1', 'L-1']);
+                        $isOtherUsEad = in_array($currentVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']);
+
+                        $isCaCitizen  = in_array($currentVisa, ['Canadian Citizen']);
+                        $isCaPr       = in_array($currentVisa, ['Canada PR', 'Canadian Permanent Resident']);
+                        $isCaOpenWp   = in_array($currentVisa, ['Canada Open Work Permit', 'PGWP']);
+                        $isCaClosedWp = in_array($currentVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']);
+
+                        $isInCitizen  = in_array($currentVisa, ['Indian Citizen']);
+                        $isInOci      = in_array($currentVisa, ['OCI / PIO', 'OCI', 'PIO']);
+                        $isInVisa     = in_array($currentVisa, ['India Work Visa', 'Employment Visa (India)']);
+
+                        $isUkCitizen  = in_array($currentVisa, ['UK Citizen', 'British Citizen']);
+                        $isUkIlr      = in_array($currentVisa, ['UK ILR', 'Indefinite Leave to Remain']);
+                        $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
+                        $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
+
+                        $isEuCitizen  = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
+                        $isEuBlue     = in_array($currentVisa, ['EU Blue Card']);
+                        $isUaeGolden  = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa']);
+                        $isAuthWp     = in_array($currentVisa, ['Authorized Work Permit']);
+                        $isReqSpons   = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
+
+                        $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
+                                         || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
+                                         || $isInCitizen || $isInOci || $isInVisa
+                                         || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
+                                         || $isEuCitizen || $isEuBlue || $isUaeGolden || $isAuthWp || $isReqSpons;
+                      @endphp
                       <select name="visastatu" id="visastatu">
-                        <option value="">Select work authorization status</option>
-                        <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
-                        <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
-                        <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
-                        <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
-                        <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
+                        <option value="">Select work authorization or visa status</option>
+
+                        <optgroup label="United States (US)">
+                          <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
+                          <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                          <option value="GC-EAD" {{ $isGcEad ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                          <option value="H1B" {{ $isH1b ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                          <option value="H-4 EAD" {{ $isH4Ead ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                          <option value="L-2 EAD" {{ $isL2Ead ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                          <option value="TN Permit" {{ $isTn ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                          <option value="OPT-EAD" {{ $isOpt ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                          <option value="CPT" {{ $isCpt ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                          <option value="E-3" {{ $isE3 ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                          <option value="O-1" {{ $isO1 ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                          <option value="L1" {{ $isL1 ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                          <option value="Other US EAD" {{ $isOtherUsEad ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                        </optgroup>
+
+                        <optgroup label="Canada (CA)">
+                          <option value="Canadian Citizen" {{ $isCaCitizen ? 'selected' : '' }}>Canadian Citizen</option>
+                          <option value="Canada PR" {{ $isCaPr ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                          <option value="Canada Open Work Permit" {{ $isCaOpenWp ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                          <option value="Canada Closed Work Permit" {{ $isCaClosedWp ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                        </optgroup>
+
+                        <optgroup label="India (IN)">
+                          <option value="Indian Citizen" {{ $isInCitizen ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                          <option value="OCI / PIO" {{ $isInOci ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                          <option value="India Work Visa" {{ $isInVisa ? 'selected' : '' }}>India Employment Visa</option>
+                        </optgroup>
+
+                        <optgroup label="United Kingdom (UK)">
+                          <option value="UK Citizen" {{ $isUkCitizen ? 'selected' : '' }}>British Citizen</option>
+                          <option value="UK ILR" {{ $isUkIlr ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                          <option value="UK Skilled Worker" {{ $isUkSkilled ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                          <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
+                        </optgroup>
+
+                        <optgroup label="European Union & Global">
+                          <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
+                          <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
+                          <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden / Green Visa</option>
+                          <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
+                          <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                        </optgroup>
+
+                        @if(!empty($currentVisa) && !$hasMatchedOption)
+                          <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
+                        @endif
                       </select>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                    <small>Select your current visa or work authorization status, if applicable.</small>
+                    <small>Select the active visa or legal right-to-work status for this candidate.</small>
                   </div>
                   {{-- Professional Reference removed from UI (data preserved via hidden input) --}}
                   <input type="hidden" name="referencename" id="referencename" value="{{ @$application->referencename }}" />
                  </section>
 
                 <div class="addl-info-strip">
-                  <span><i class="fa-solid fa-info"></i></span>
-                  <p>All fields in this section are optional. Adding relevant links and details can help clients better understand your expertise and background.</p>
+                  <span><i class="fa-solid fa-shield-halved"></i></span>
+                  <p>Specifying accurate work authorization ensures quick client alignment and prevents right-to-work compliance delays during submission.</p>
                 </div>
               </div>
             </div>
