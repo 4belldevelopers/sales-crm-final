@@ -1741,7 +1741,7 @@ if($snp_mode== 1){
                             });
                         }
                       @endphp
-                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                      <select name="visastatu" id="visastatu" class="wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
                         <option value="">Select work authorization or visa status</option>
 
                         {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
@@ -1856,7 +1856,6 @@ if($snp_mode== 1){
                           <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
                         @endif
                       </select>
-                      <i class="fa-solid fa-chevron-down"></i>
                     </div>
                     <small class="text-muted mt-1 d-block">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                   </div>
@@ -2002,24 +2001,33 @@ if($snp_mode== 1){
 $(document).ready(function () {
     function initWorkAuthorizationEngine() {
         if (!$.fn || !$.fn.select2) {
-            setTimeout(initWorkAuthorizationEngine, 100);
+            setTimeout(initWorkAuthorizationEngine, 50);
             return;
         }
 
         var $select = $('#visastatu');
         if (!$select.length) return;
 
+        // Idempotency check: if already active, sync chips and return
         if ($select.hasClass('select2-hidden-accessible')) {
-            $select.select2('destroy');
+            syncWorkAuthActiveChip();
+            return;
         }
 
         $select.select2({
+            theme: 'default',
             width: '100%',
             dropdownParent: $(document.body),
             dropdownCssClass: 'wa-select2-dropdown',
             placeholder: 'Search visa / work authorization or country...',
             allowClear: true,
             minimumResultsForSearch: 0,
+            templateSelection: function (item) {
+                if (!item || !item.id || item.id === '') {
+                    return item ? (item.text || 'Select work authorization or visa status') : 'Select work authorization or visa status';
+                }
+                return item.text;
+            },
             matcher: function (params, data) {
                 if (!params.term || $.trim(params.term) === '') {
                     return data;
@@ -2060,9 +2068,6 @@ $(document).ready(function () {
             }
         });
 
-        // Hide static chevron icon in select wrapper
-        $select.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
-
         syncWorkAuthActiveChip();
     }
 
@@ -2087,14 +2092,16 @@ $(document).ready(function () {
         });
     }
 
-    // Ensure search field is instantly focused upon opening
-    $(document).on('select2:open', '#visastatu', function () {
+    // Force search field visibility and focus upon opening
+    $(document).on('select2:open select2:opening', '#visastatu', function () {
+        var $dropdown = $('.wa-select2-dropdown');
+        $dropdown.find('.select2-search, .select2-search--dropdown').removeClass('select2-search--hide').css('display', 'block');
         setTimeout(function () {
             var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
             if (searchField) {
                 searchField.focus();
             }
-        }, 50);
+        }, 30);
     });
 
     // Handle Quick Hub Chip click
@@ -2107,13 +2114,15 @@ $(document).ready(function () {
         $('.wa-chip-btn').removeClass('is-active');
 
         var $visaSelect = $('#visastatu');
+        if (!$.fn.select2 || !$visaSelect.hasClass('select2-hidden-accessible')) {
+            initWorkAuthorizationEngine();
+        }
+
         if (wasActive) {
-            if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
-                if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
-                    var $sf = $('.wa-select2-dropdown .select2-search__field');
-                    if ($sf.length) {
-                        $sf.val('').trigger('input').trigger('keyup');
-                    }
+            if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                var $sf = $('.wa-select2-dropdown .select2-search__field');
+                if ($sf.length) {
+                    $sf.val('').trigger('input').trigger('keyup');
                 }
             }
             return;
@@ -2128,7 +2137,7 @@ $(document).ready(function () {
                 if ($searchField.length) {
                     $searchField.val(filterTerm).trigger('input').trigger('keyup');
                 }
-            }, 60);
+            }, 50);
         } else {
             $visaSelect.focus();
         }
@@ -2138,21 +2147,25 @@ $(document).ready(function () {
         syncWorkAuthActiveChip();
     });
 
-    // Make dropdown container click trigger Select2 open reliably
+    // Make dropdown container click trigger Select2 open reliably without interfering with internal toggle
     $(document).on('click', '.addl-select-wrap', function (e) {
+        if ($(e.target).closest('.select2-container').length) return;
         if ($(e.target).closest('.select2-selection__clear').length) return;
         var $visaSelect = $('#visastatu');
         if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
             if (!$visaSelect.data('select2') || !$visaSelect.data('select2').isOpen()) {
                 $visaSelect.select2('open');
             }
+        } else {
+            initWorkAuthorizationEngine();
+            if ($visaSelect.hasClass('select2-hidden-accessible')) {
+                $visaSelect.select2('open');
+            }
         }
     });
 
-    // Boot engine safely with multi-stage checks
+    // Initial boot
     initWorkAuthorizationEngine();
-    setTimeout(initWorkAuthorizationEngine, 200);
-    setTimeout(initWorkAuthorizationEngine, 600);
 });
 </script>
 

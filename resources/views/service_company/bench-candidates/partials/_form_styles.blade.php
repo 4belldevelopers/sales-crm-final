@@ -120,11 +120,30 @@ body { overflow-x: hidden; }
     box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
 }
 
-/* Work Authorization Select2 Enhancement */
+/* Work Authorization Select & Select2 Enhancement */
 #talent_create_app .addl-select-wrap {
     position: relative !important;
     width: 100% !important;
     cursor: pointer !important;
+}
+
+/* Fallback/initial native select styled identically to 38px enterprise standard */
+#talent_create_app .addl-select-wrap select.wa-select {
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    border: 1px solid #CDD7EB !important;
+    border-radius: 6px !important;
+    padding: 0 38px 0 14px !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background-color: #FFFFFF !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    line-height: 36px !important;
 }
 
 #talent_create_app .addl-select-wrap select.select2-hidden-accessible {
@@ -143,35 +162,51 @@ body { overflow-x: hidden; }
     cursor: pointer !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single {
-    min-height: 42px !important;
-    height: 42px !important;
+/* Enterprise standard height 38px strictly locked across default & bootstrap5 themes */
+#talent_create_app .addl-select-wrap .select2-selection,
+#talent_create_app .addl-select-wrap .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-selection.form-select,
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5 .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container .select2-selection--single {
+    min-height: 38px !important;
+    height: 38px !important;
+    max-height: 38px !important;
     border: 1px solid #CDD7EB !important;
     border-radius: 6px !important;
-    padding: 0 36px 0 14px !important;
+    padding: 0 38px 0 14px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
     background-color: #FFFFFF !important;
+    background-image: none !important; /* Strips out any duplicate Bootstrap 5 SVG chevron */
     box-sizing: border-box !important;
     cursor: pointer !important;
     transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
 }
 
+#talent_create_app .addl-select-wrap .select2-container.select2-container--open .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container.select2-container--focus .select2-selection--single,
 #talent_create_app .addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single,
-#talent_create_app .addl-select-wrap .select2-container--default.select2-container--focus .select2-selection--single {
+#talent_create_app .addl-select-wrap .select2-container--default.select2-container--focus .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5.select2-container--open .select2-selection--single,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5.select2-container--focus .select2-selection--single {
     border-color: #3B82F6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
     outline: none !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered {
+/* High-contrast crisp enterprise text formatting for selected value across all themes */
+#talent_create_app .addl-select-wrap .select2-selection__rendered,
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__rendered,
+#talent_create_app .addl-select-wrap .select2-container .select2-selection--single .select2-selection__rendered {
     font-family: 'Poppins', sans-serif !important;
     font-size: 13px !important;
     font-weight: 500 !important;
-    color: #0B1545 !important;
-    line-height: 40px !important;
-    height: 40px !important;
+    color: #0f172a !important;
+    line-height: 36px !important;
+    height: 36px !important;
     padding: 0 !important;
     margin: 0 !important;
     display: block !important;
@@ -183,32 +218,44 @@ body { overflow-x: hidden; }
     box-sizing: border-box !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #64748B !important;
+/* Muted placeholder text strictly when no option is chosen */
+#talent_create_app .addl-select-wrap .select2-selection__placeholder,
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__placeholder,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__placeholder,
+#talent_create_app .addl-select-wrap .select2-selection__rendered .select2-selection__placeholder {
+    color: #8A94B4 !important;
     font-size: 13px !important;
     font-weight: 400 !important;
-    line-height: 40px !important;
+    line-height: 36px !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear {
+/* Clear button (x) */
+#talent_create_app .addl-select-wrap .select2-selection__clear,
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__clear {
     position: absolute !important;
     right: 32px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     color: #94A3B8 !important;
     font-size: 16px !important;
-    font-weight: bold !important;
+    font-weight: 700 !important;
     line-height: 1 !important;
     cursor: pointer !important;
-    z-index: 2 !important;
+    z-index: 3 !important;
+    padding: 2px !important;
+    transition: color 0.15s ease !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear:hover {
+#talent_create_app .addl-select-wrap .select2-selection__clear:hover {
     color: #EF4444 !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 40px !important;
+/* Sleek dropdown chevron arrow centered vertically at 38px */
+#talent_create_app .addl-select-wrap .select2-selection__arrow,
+#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow,
+#talent_create_app .addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
     top: 1px !important;
     right: 12px !important;
     width: 20px !important;
@@ -218,24 +265,35 @@ body { overflow-x: hidden; }
     pointer-events: none !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow b {
-    display: block !important;
-    border-color: #5570A8 transparent transparent transparent !important;
-    border-width: 5px 4px 0 4px !important;
-    margin-top: 0 !important;
+/* Hide default Select2 b triangle and use clean rotating chevron */
+#talent_create_app .addl-select-wrap .select2-selection__arrow b {
+    display: none !important;
 }
 
-#talent_create_app .addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-    border-color: transparent transparent #5570A8 transparent !important;
-    border-width: 0 4px 5px 4px !important;
+#talent_create_app .addl-select-wrap .select2-selection__arrow::after {
+    content: "\f078";
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    color: #64748B !important;
+    transition: transform 0.2s ease, color 0.2s ease !important;
 }
 
+#talent_create_app .addl-select-wrap .select2-container.select2-container--open .select2-selection__arrow::after,
+#talent_create_app .addl-select-wrap .select2-container--open .select2-selection__arrow::after {
+    transform: rotate(180deg) !important;
+    color: #2563EB !important;
+}
+
+/* Suppress redundant icons */
+#talent_create_app .addl-select-wrap > i.fa-chevron-down,
 #talent_create_app .addl-select-wrap .select2-container ~ i.fa-chevron-down {
     display: none !important;
 }
 
 /* Work Authorization Select2 Dropdown Menu (Appended to Body) */
-.wa-select2-dropdown {
+.wa-select2-dropdown,
+.select2-dropdown.wa-select2-dropdown {
     font-family: 'Poppins', sans-serif !important;
     font-size: 13px !important;
     border: 1px solid #CBD5E1 !important;
@@ -243,29 +301,50 @@ body { overflow-x: hidden; }
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
     overflow: hidden !important;
     z-index: 99999 !important;
+    background: #FFFFFF !important;
 }
 
-.wa-select2-dropdown .select2-search--dropdown {
+/* Dropdown Search Bar: ALWAYS visible, never hidden */
+.wa-select2-dropdown .select2-search,
+.wa-select2-dropdown .select2-search--dropdown,
+.wa-select2-dropdown .select2-search.select2-search--dropdown,
+.wa-select2-dropdown .select2-search--hide,
+.wa-select2-dropdown .select2-search--dropdown.select2-search--hide,
+.select2-dropdown.wa-select2-dropdown .select2-search,
+.select2-dropdown.wa-select2-dropdown .select2-search--dropdown,
+.select2-dropdown.wa-select2-dropdown .select2-search--dropdown.select2-search--hide {
     display: block !important;
-    padding: 10px 12px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding: 8px 10px !important;
     background: #F8FAFC !important;
     border-bottom: 1px solid #E2E8F0 !important;
+    box-sizing: border-box !important;
+    height: auto !important;
 }
 
-.wa-select2-dropdown .select2-search--dropdown .select2-search__field {
+.wa-select2-dropdown .select2-search__field,
+.select2-dropdown.wa-select2-dropdown .select2-search__field {
     display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     border: 1px solid #CBD5E1 !important;
     border-radius: 6px !important;
-    padding: 8px 12px !important;
-    font-size: 12.5px !important;
+    padding: 7px 12px !important;
+    font-size: 13px !important;
     outline: none !important;
     font-family: 'Poppins', sans-serif !important;
     background-color: #FFFFFF !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    line-height: normal !important;
+    color: #0f172a !important;
 }
 
-.wa-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+.wa-select2-dropdown .select2-search__field:focus,
+.select2-dropdown.wa-select2-dropdown .select2-search__field:focus {
     border-color: #3B82F6 !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
 }
@@ -273,11 +352,12 @@ body { overflow-x: hidden; }
 .wa-select2-dropdown .select2-results__options {
     max-height: 320px !important;
     overflow-y: auto !important;
+    padding: 4px 0 !important;
 }
 
 .wa-select2-dropdown .select2-results__group {
     font-family: 'Poppins', sans-serif !important;
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
@@ -286,6 +366,7 @@ body { overflow-x: hidden; }
     padding: 6px 12px !important;
     border-top: 1px solid #E2E8F0 !important;
     border-bottom: 1px solid #E2E8F0 !important;
+    line-height: 1.4 !important;
 }
 
 .wa-select2-dropdown .select2-results__group:first-child {
@@ -293,8 +374,8 @@ body { overflow-x: hidden; }
 }
 
 .wa-select2-dropdown .select2-results__option {
-    padding: 7px 14px !important;
-    font-size: 12.5px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
     color: #1E293B !important;
     line-height: 1.4 !important;
