@@ -1,0 +1,197 @@
+/**
+ * JERO Enterprise Mobile Number Box Styles (V7.0 Pure In-Place Architecture)
+ * Metronic 15.6" Screen Fit | WCAG 2.1 AA | Poppins Typography (max 14px)
+ */
+
+.jero-phone-box-wrapper {
+  position: relative;
+  font-family: 'Poppins', Helvetica, sans-serif;
+  width: 100%;
+}
+
+.jero-phone-input-group {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d8deec !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper .jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper.is-invalid .jero-phone-input-group,
+.jero-phone-box-wrapper:has(.is-invalid) .jero-phone-input-group,
+.jero-phone-box-wrapper .jero-phone-input-group:has(.is-invalid) {
+  border-color: #f1416c !important;
+  box-shadow: 0 0 0 3px rgba(241, 65, 108, 0.12) !important;
+}
+
+.jero-country-picker-btn {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 none transparent !important;
+  color: #181c32 !important;
+  font-weight: 600 !important;
+  height: 100% !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  white-space: nowrap;
+  user-select: none;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 10px 0 12px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  flex-shrink: 0 !important;
+  gap: 6px !important;
+}
+
+.jero-selected-flag {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  overflow: visible !important;
+}
+
+.jero-selected-flag svg {
+  width: 20px !important;
+  height: 15px !important;
+  min-width: 20px !important;
+  min-height: 15px !important;
+  max-width: 20px !important;
+  max-height: 15px !important;
+  display: block !important;
+  vertical-align: middle !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  flex-shrink: 0 !important;
+}
+
+.jero-selected-flag img {
+  width: 20px !important;
+  height: 14px !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  display: block !important;
+  vertical-align: middle !important;
+}
+
+.jero-selected-dial {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #181c32 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.jero-phone-main-input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  border: 0 none transparent !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #181c32 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  font-family: 'Poppins', Helvetica, sans-serif !important;
+  padding: 0 54px 0 10px !important;
+  margin: 0 !important;
+  letter-spacing: 0.3px !important;
+  box-sizing: border-box !important;
+}
+
+/* Neutralize Bootstrap / FormValidation invalid state on input (suppress red exclamation icon, maintain padding) */
+.jero-phone-main-input.is-invalid,
+.jero-phone-main-input:invalid,
+.jero-phone-input-group input.is-invalid,
+.jero-phone-input-group input:invalid {
+  border: 0 none transparent !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  padding: 0 54px 0 10px !important;
+}
+
+/* Hide any rogue validation message container or plugin icon injected inside the 38px flex group */
+.jero-phone-input-group > .fv-plugins-message-container,
+.jero-phone-input-group > .invalid-feedback,
+.jero-phone-input-group > label.error,
+.jero-phone-input-group .fv-plugins-icon,
+.jero-phone-input-group i.fv-plugins-icon {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Dedicated validation error message outside the 38px input group */
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg,
+.jero-phone-box-wrapper > .fv-plugins-message-container {
+  display: block;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #f1416c !important;
+  margin-top: 4px !important;
+  padding-left: 2px !important;
+  line-height: 1.3 !important;
+  width: 100% !important;
+  clear: both !important;
+}
+
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg:empty,
+.jero-phone-box-wrapper > .fv-plugins-message-container:empty {
+  display: none !important;
+}
+
+.jero-digit-counter {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  letter-spacing: 0.2px !important;
+  pointer-events: none !important;
+  border-radius: 4px !important;
+  z-index: 4 !important;
+  line-height: 1.2 !important;
+}

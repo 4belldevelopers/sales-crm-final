@@ -450,44 +450,7 @@
 @push('footer-script')
     <script>
 
-$(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#cp_number_0"), {
-      separateDialCode: true,
-      initialCountry: "{{ $country_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
 
-
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-
-    }
-    // Update country code on input or country flag selection
-    $("#cp_number_0").on("input change", function () {
-      updateCountryCode(primaryPhoneInput, "#phone_country_code");
-    });
-
-   
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#cp_number_0")) {
-        updateCountryCode(primaryPhoneInput, "#phone_country_code");
-      } 
-      
-    });
-
-    setTimeout(function () {	
-      $(".iti__flag-container").click();
-    },500);
-
-  });
 
 
         tinymce.init({

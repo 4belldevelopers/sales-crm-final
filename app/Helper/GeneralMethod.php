@@ -4234,17 +4234,17 @@ END:VCALENDAR";
 
     public static function currency()
     {
-
         $currencies = Cache::remember('currency_codesww', 86400, function () {
             return DB::table('currencies')
                 ->orderBy('getKey', 'ASC')
-                ->pluck('currency_code')
+                ->pluck('currency_code', 'getKey')
                 ->toArray();
         });
         if ($currencies) {
             return $currencies;
         }
-        $array = [
+
+        return [
             0 => 'INR',
             1 => 'EUR',
             2 => 'JPY',
@@ -4252,22 +4252,34 @@ END:VCALENDAR";
             4 => 'USD',
             5 => 'AED',
         ];
-
-        return $array;
     }
 
     public static function currencySymbole()
     {
-        $array = [
-            0 => '<i class="fa fa-inr" aria-hidden="true"></i>',
-            1 => '<i class="fa fa-eur" aria-hidden="true"></i>',
-            2 => '<i class="fa fa-jpy" aria-hidden="true"></i>',
-            3 => '<i class="fa fa-gbp" aria-hidden="true"></i>',
-            4 => '<i class="fa fa-usd" aria-hidden="true"></i>',
-            5 => '<i class="fa fa-usd" aria-hidden="true"></i>',
-        ];
+        return Cache::remember('currency_symbols_all', 86400, function () {
+            $currencies = DB::table('currencies')->get();
+            $iconMap = [
+                'INR' => '<i class="fa fa-inr" aria-hidden="true"></i>',
+                'EUR' => '<i class="fa fa-eur" aria-hidden="true"></i>',
+                'JPY' => '<i class="fa fa-jpy" aria-hidden="true"></i>',
+                'GBP' => '<i class="fa fa-gbp" aria-hidden="true"></i>',
+                'USD' => '<i class="fa fa-usd" aria-hidden="true"></i>',
+                'AED' => '<span class="fw-bold">AED </span>',
+                'CAD' => '<span class="fw-bold">C$ </span>',
+                'AUD' => '<span class="fw-bold">A$ </span>',
+                'SGD' => '<span class="fw-bold">S$ </span>',
+            ];
 
-        return $array;
+            $array = [];
+            foreach ($currencies as $curr) {
+                $code = strtoupper(trim($curr->currency_code));
+                $html = $iconMap[$code] ?? ('<span class="fw-bold">' . e($curr->currency_symbol ?: $code) . ' </span>');
+                $array[$curr->getKey] = $html;
+                $array[$code] = $html;
+            }
+
+            return $array;
+        });
     }
 
     public static function currencySymboleforexcell()
@@ -4293,6 +4305,372 @@ END:VCALENDAR";
         ];
 
         return $array;
+    }
+
+    /**
+     * Enterprise Currency Metadata lookup.
+     * Returns structured descriptive details for all global ATS trading currencies:
+     * ISO code, full descriptive name, symbol, enterprise label (e.g. 'INR — Indian Rupee (₹)', 'USD — US Dollar ($)'),
+     * and search keywords for Select2 instant autocomplete.
+     *
+     * @param string|null $code
+     * @return array
+     */
+    public static function currencyEnterpriseMeta(?string $code = null): array
+    {
+        static $metaMap = [
+            'USD' => [
+                'code' => 'USD',
+                'name' => 'US Dollar',
+                'symbol' => '$',
+                'label' => 'USD — US Dollar ($)',
+                'keywords' => 'usd us dollar america united states american usd dollars $',
+            ],
+            'INR' => [
+                'code' => 'INR',
+                'name' => 'Indian Rupee',
+                'symbol' => '₹',
+                'label' => 'INR — Indian Rupee (₹)',
+                'keywords' => 'inr indian rupee india rupees indian currency ₹ in',
+            ],
+            'EUR' => [
+                'code' => 'EUR',
+                'name' => 'Euro',
+                'symbol' => '€',
+                'label' => 'EUR — Euro (€)',
+                'keywords' => 'eur euro europe european union € eu',
+            ],
+            'GBP' => [
+                'code' => 'GBP',
+                'name' => 'British Pound',
+                'symbol' => '£',
+                'label' => 'GBP — British Pound (£)',
+                'keywords' => 'gbp british pound pound sterling uk united kingdom britain england £',
+            ],
+            'AED' => [
+                'code' => 'AED',
+                'name' => 'UAE Dirham',
+                'symbol' => 'د.إ',
+                'label' => 'AED — UAE Dirham (د.إ)',
+                'keywords' => 'aed uae dirham emirates dubai abu dhabi dirhams',
+            ],
+            'CAD' => [
+                'code' => 'CAD',
+                'name' => 'Canadian Dollar',
+                'symbol' => 'C$',
+                'label' => 'CAD — Canadian Dollar (C$)',
+                'keywords' => 'cad canadian dollar canada c$',
+            ],
+            'AUD' => [
+                'code' => 'AUD',
+                'name' => 'Australian Dollar',
+                'symbol' => 'A$',
+                'label' => 'AUD — Australian Dollar (A$)',
+                'keywords' => 'aud australian dollar australia a$',
+            ],
+            'SGD' => [
+                'code' => 'SGD',
+                'name' => 'Singapore Dollar',
+                'symbol' => 'S$',
+                'label' => 'SGD — Singapore Dollar (S$)',
+                'keywords' => 'sgd singapore dollar singapore s$',
+            ],
+            'CHF' => [
+                'code' => 'CHF',
+                'name' => 'Swiss Franc',
+                'symbol' => 'CHF',
+                'label' => 'CHF — Swiss Franc (CHF)',
+                'keywords' => 'chf swiss franc switzerland francs',
+            ],
+            'JPY' => [
+                'code' => 'JPY',
+                'name' => 'Japanese Yen',
+                'symbol' => '¥',
+                'label' => 'JPY — Japanese Yen (¥)',
+                'keywords' => 'jpy japanese yen japan yen ¥',
+            ],
+            'NZD' => [
+                'code' => 'NZD',
+                'name' => 'New Zealand Dollar',
+                'symbol' => 'NZ$',
+                'label' => 'NZD — New Zealand Dollar (NZ$)',
+                'keywords' => 'nzd new zealand dollar kiwi nz$',
+            ],
+            'ZAR' => [
+                'code' => 'ZAR',
+                'name' => 'South African Rand',
+                'symbol' => 'R',
+                'label' => 'ZAR — South African Rand (R)',
+                'keywords' => 'zar south african rand south africa rand',
+            ],
+            'BRL' => [
+                'code' => 'BRL',
+                'name' => 'Brazilian Real',
+                'symbol' => 'R$',
+                'label' => 'BRL — Brazilian Real (R$)',
+                'keywords' => 'brl brazilian real brazil reais',
+            ],
+            'PHP' => [
+                'code' => 'PHP',
+                'name' => 'Philippine Peso',
+                'symbol' => '₱',
+                'label' => 'PHP — Philippine Peso (₱)',
+                'keywords' => 'php philippine peso philippines pesos ₱',
+            ],
+            'MYR' => [
+                'code' => 'MYR',
+                'name' => 'Malaysian Ringgit',
+                'symbol' => 'RM',
+                'label' => 'MYR — Malaysian Ringgit (RM)',
+                'keywords' => 'myr malaysian ringgit malaysia ringgits rm',
+            ],
+            'THB' => [
+                'code' => 'THB',
+                'name' => 'Thai Baht',
+                'symbol' => '฿',
+                'label' => 'THB — Thai Baht (฿)',
+                'keywords' => 'thb thai baht thailand baht ฿',
+            ],
+            'IDR' => [
+                'code' => 'IDR',
+                'name' => 'Indonesian Rupiah',
+                'symbol' => 'Rp',
+                'label' => 'IDR — Indonesian Rupiah (Rp)',
+                'keywords' => 'idr indonesian rupiah indonesia rp',
+            ],
+            'VND' => [
+                'code' => 'VND',
+                'name' => 'Vietnamese Dong',
+                'symbol' => '₫',
+                'label' => 'VND — Vietnamese Dong (₫)',
+                'keywords' => 'vnd vietnamese dong vietnam ₫',
+            ],
+            'SEK' => [
+                'code' => 'SEK',
+                'name' => 'Swedish Krona',
+                'symbol' => 'kr',
+                'label' => 'SEK — Swedish Krona (kr)',
+                'keywords' => 'sek swedish krona sweden kronor kr',
+            ],
+            'NOK' => [
+                'code' => 'NOK',
+                'name' => 'Norwegian Krone',
+                'symbol' => 'kr',
+                'label' => 'NOK — Norwegian Krone (kr)',
+                'keywords' => 'nok norwegian krone norway kroner kr',
+            ],
+            'DKK' => [
+                'code' => 'DKK',
+                'name' => 'Danish Krone',
+                'symbol' => 'kr',
+                'label' => 'DKK — Danish Krone (kr)',
+                'keywords' => 'dkk danish krone denmark kroner kr',
+            ],
+            'PLN' => [
+                'code' => 'PLN',
+                'name' => 'Polish Zloty',
+                'symbol' => 'zł',
+                'label' => 'PLN — Polish Zloty (zł)',
+                'keywords' => 'pln polish zloty poland zlotych zł',
+            ],
+            'MXN' => [
+                'code' => 'MXN',
+                'name' => 'Mexican Peso',
+                'symbol' => 'Mex$',
+                'label' => 'MXN — Mexican Peso (Mex$)',
+                'keywords' => 'mxn mexican peso mexico pesos mex$',
+            ],
+            'HKD' => [
+                'code' => 'HKD',
+                'name' => 'Hong Kong Dollar',
+                'symbol' => 'HK$',
+                'label' => 'HKD — Hong Kong Dollar (HK$)',
+                'keywords' => 'hkd hong kong dollar hk$',
+            ],
+            'TWD' => [
+                'code' => 'TWD',
+                'name' => 'Taiwan New Dollar',
+                'symbol' => 'NT$',
+                'label' => 'TWD — Taiwan New Dollar (NT$)',
+                'keywords' => 'twd taiwan new dollar taiwan nt$',
+            ],
+            'KRW' => [
+                'code' => 'KRW',
+                'name' => 'South Korean Won',
+                'symbol' => '₩',
+                'label' => 'KRW — South Korean Won (₩)',
+                'keywords' => 'krw south korean won korea won ₩',
+            ],
+            'TRY' => [
+                'code' => 'TRY',
+                'name' => 'Turkish Lira',
+                'symbol' => '₺',
+                'label' => 'TRY — Turkish Lira (₺)',
+                'keywords' => 'try turkish lira turkey ₺',
+            ],
+            'SAR' => [
+                'code' => 'SAR',
+                'name' => 'Saudi Riyal',
+                'symbol' => '﷼',
+                'label' => 'SAR — Saudi Riyal (﷼)',
+                'keywords' => 'sar saudi riyal saudi arabia riyals ﷼',
+            ],
+            'QAR' => [
+                'code' => 'QAR',
+                'name' => 'Qatari Riyal',
+                'symbol' => '﷼',
+                'label' => 'QAR — Qatari Riyal (﷼)',
+                'keywords' => 'qar qatari riyal qatar riyals ﷼',
+            ],
+            'KWD' => [
+                'code' => 'KWD',
+                'name' => 'Kuwaiti Dinar',
+                'symbol' => 'KD',
+                'label' => 'KWD — Kuwaiti Dinar (KD)',
+                'keywords' => 'kwd kuwaiti dinar kuwait dinars kd',
+            ],
+            'BHD' => [
+                'code' => 'BHD',
+                'name' => 'Bahraini Dinar',
+                'symbol' => 'BD',
+                'label' => 'BHD — Bahraini Dinar (BD)',
+                'keywords' => 'bhd bahraini dinar bahrain dinars bd',
+            ],
+            'OMR' => [
+                'code' => 'OMR',
+                'name' => 'Omani Rial',
+                'symbol' => 'RO',
+                'label' => 'OMR — Omani Rial (RO)',
+                'keywords' => 'omr omani rial oman rials ro',
+            ],
+            'EGP' => [
+                'code' => 'EGP',
+                'name' => 'Egyptian Pound',
+                'symbol' => 'E£',
+                'label' => 'EGP — Egyptian Pound (E£)',
+                'keywords' => 'egp egyptian pound egypt pounds e£',
+            ],
+            'ILS' => [
+                'code' => 'ILS',
+                'name' => 'Israeli Shekel',
+                'symbol' => '₪',
+                'label' => 'ILS — Israeli Shekel (₪)',
+                'keywords' => 'ils israeli shekel israel new shekel ₪',
+            ],
+            'CZK' => [
+                'code' => 'CZK',
+                'name' => 'Czech Koruna',
+                'symbol' => 'Kč',
+                'label' => 'CZK — Czech Koruna (Kč)',
+                'keywords' => 'czk czech koruna czech republic korunas kč',
+            ],
+            'HUF' => [
+                'code' => 'HUF',
+                'name' => 'Hungarian Forint',
+                'symbol' => 'Ft',
+                'label' => 'HUF — Hungarian Forint (Ft)',
+                'keywords' => 'huf hungarian forint hungary forints ft',
+            ],
+            'RON' => [
+                'code' => 'RON',
+                'name' => 'Romanian Leu',
+                'symbol' => 'lei',
+                'label' => 'RON — Romanian Leu (lei)',
+                'keywords' => 'ron romanian leu romania lei',
+            ],
+            'CLP' => [
+                'code' => 'CLP',
+                'name' => 'Chilean Peso',
+                'symbol' => 'CLP$',
+                'label' => 'CLP — Chilean Peso (CLP$)',
+                'keywords' => 'clp chilean peso chile pesos clp$',
+            ],
+            'COP' => [
+                'code' => 'COP',
+                'name' => 'Colombian Peso',
+                'symbol' => 'COL$',
+                'label' => 'COP — Colombian Peso (COL$)',
+                'keywords' => 'cop colombian peso colombia pesos col$',
+            ],
+            'ARS' => [
+                'code' => 'ARS',
+                'name' => 'Argentine Peso',
+                'symbol' => 'AR$',
+                'label' => 'ARS — Argentine Peso (AR$)',
+                'keywords' => 'ars argentine peso argentina pesos ar$',
+            ],
+            'NGN' => [
+                'code' => 'NGN',
+                'name' => 'Nigerian Naira',
+                'symbol' => '₦',
+                'label' => 'NGN — Nigerian Naira (₦)',
+                'keywords' => 'ngn nigerian naira nigeria naira ₦',
+            ],
+            'KES' => [
+                'code' => 'KES',
+                'name' => 'Kenyan Shilling',
+                'symbol' => 'KSh',
+                'label' => 'KES — Kenyan Shilling (KSh)',
+                'keywords' => 'kes kenyan shilling kenya shillings ksh',
+            ],
+            'PKR' => [
+                'code' => 'PKR',
+                'name' => 'Pakistani Rupee',
+                'symbol' => '₨',
+                'label' => 'PKR — Pakistani Rupee (₨)',
+                'keywords' => 'pkr pakistani rupee pakistan rupees ₨',
+            ],
+            'BDT' => [
+                'code' => 'BDT',
+                'name' => 'Bangladeshi Taka',
+                'symbol' => '৳',
+                'label' => 'BDT — Bangladeshi Taka (৳)',
+                'keywords' => 'bdt bangladeshi taka bangladesh taka ৳',
+            ],
+            'LKR' => [
+                'code' => 'LKR',
+                'name' => 'Sri Lankan Rupee',
+                'symbol' => 'Rs',
+                'label' => 'LKR — Sri Lankan Rupee (Rs)',
+                'keywords' => 'lkr sri lankan rupee sri lanka rupees rs',
+            ],
+            'NPR' => [
+                'code' => 'NPR',
+                'name' => 'Nepalese Rupee',
+                'symbol' => 'रू',
+                'label' => 'NPR — Nepalese Rupee (रू)',
+                'keywords' => 'npr nepalese rupee nepal rupees रू',
+            ],
+        ];
+
+        if ($code === null) {
+            return $metaMap;
+        }
+
+        $upper = strtoupper(trim($code));
+        if (isset($metaMap[$upper])) {
+            return $metaMap[$upper];
+        }
+
+        return [
+            'code' => $upper,
+            'name' => $upper,
+            'symbol' => $upper,
+            'label' => $upper,
+            'keywords' => strtolower($upper),
+        ];
+    }
+
+    /**
+     * Get enterprise formatted label for a currency code (e.g. 'USD — US Dollar ($)').
+     *
+     * @param string|null $code
+     * @return string
+     */
+    public static function currencyEnterpriseLabel(?string $code): string
+    {
+        $meta = self::currencyEnterpriseMeta($code);
+        return $meta['label'] ?? ($code ?: 'INR');
     }
 
     public static function thousandsCurrencyFormat_old($num)
@@ -4325,25 +4703,141 @@ END:VCALENDAR";
         return $num;
     }
 
+    /**
+     * Intent: Fetch latest immutable FX snapshot from currency_snapshots table with self-healing fallback.
+     */
+    public static function getLatestFxSnapshot(?string $version = null): array
+    {
+        $cacheKey = $version ? "fx_snapshot:{$version}" : 'fx_snapshot:active';
+
+        return Cache::remember($cacheKey, 86400, function () use ($version) {
+            $query = DB::table('currency_snapshots');
+            if ($version) {
+                $query->where('version', $version);
+            } else {
+                $query->where('is_active', 1)->orderBy('effective_from', 'desc');
+            }
+            $snapshot = $query->first();
+
+            if ($snapshot) {
+                $rates = is_string($snapshot->rates_json) ? json_decode($snapshot->rates_json, true) : (array) $snapshot->rates_json;
+
+                return [
+                    'version' => $snapshot->version,
+                    'base_currency' => $snapshot->base_currency,
+                    'rates_json' => $rates,
+                    'effective_from' => $snapshot->effective_from,
+                ];
+            }
+
+            // Self-healing: seed initial snapshot from currencies table
+            $currencies = DB::table('currencies')->get();
+            $rates = [];
+            foreach ($currencies as $curr) {
+                $code = strtoupper(trim($curr->currency_code));
+                $rates[$code] = (float) $curr->usd_based_rates;
+            }
+            $rates['USD'] = 1.0;
+            if (empty($rates)) {
+                $rates = ['USD' => 1.0, 'INR' => 83.50, 'EUR' => 0.92, 'GBP' => 0.79, 'AED' => 3.67];
+            }
+
+            $v = '202609-001';
+            $json = json_encode($rates);
+            try {
+                DB::table('currency_snapshots')->updateOrInsert(
+                    ['version' => $v],
+                    [
+                        'base_currency' => 'USD',
+                        'rates_json' => $json,
+                        'rates_hash' => hash('sha256', $json),
+                        'effective_from' => '2026-09-01 00:00:00',
+                        'is_active' => 1,
+                        'source' => 'monthly_reference_v4',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Self-healing currency_snapshot insert exception: '.$e->getMessage());
+            }
+
+            return [
+                'version' => $v,
+                'base_currency' => 'USD',
+                'rates_json' => $rates,
+                'effective_from' => '2026-09-01 00:00:00',
+            ];
+        });
+    }
+
+    /**
+     * Intent: Universal, high-precision cross-currency conversion using USD as the base pivot.
+     * Formula: Converted = (Amount / RateFromUSD) * RateToUSD
+     */
+    public static function convertCurrency($amount, $fromCurrency, $toCurrency = 'USD', ?string $version = null): float
+    {
+        if ($amount === null || ! is_numeric($amount)) {
+            return 0.0;
+        }
+        $amount = (float) $amount;
+        if ($amount == 0.0) {
+            return 0.0;
+        }
+
+        $allCurrencies = self::currency();
+        $from = is_numeric($fromCurrency) ? ($allCurrencies[(int) $fromCurrency] ?? 'INR') : strtoupper(trim($fromCurrency));
+        $to = is_numeric($toCurrency) ? ($allCurrencies[(int) $toCurrency] ?? 'USD') : strtoupper(trim($toCurrency));
+
+        if ($from === $to) {
+            return $amount;
+        }
+
+        $snapshot = self::getLatestFxSnapshot($version);
+        $rates = $snapshot['rates_json'] ?? [];
+
+        $rateFrom = isset($rates[$from]) ? (float) $rates[$from] : null;
+        $rateTo = isset($rates[$to]) ? (float) $rates[$to] : null;
+
+        if ($rateFrom && $rateTo && $rateFrom > 0 && $rateTo > 0) {
+            return ($amount / $rateFrom) * $rateTo;
+        }
+
+        // Fallback: check currencies table rates directly
+        $ratesFallback = self::currencyConverter()['usd_based_rates'] ?? [];
+        $rfFrom = isset($ratesFallback[$from]) ? (float) $ratesFallback[$from] : 1.0;
+        $rfTo = isset($ratesFallback[$to]) ? (float) $ratesFallback[$to] : 1.0;
+        if ($rfFrom > 0 && $rfTo > 0) {
+            return ($amount / $rfFrom) * $rfTo;
+        }
+
+        return $amount;
+    }
+
+    /**
+     * Intent: Normalize candidate salary or bill rate to standard USD hourly basis for Elasticsearch indexing and range queries.
+     */
+    public static function convertToUSDHourly($amount, $currency, int $mode = 0, int $annualHours = 2080): float
+    {
+        if ($amount === null || ! is_numeric($amount) || (float) $amount <= 0) {
+            return 0.0;
+        }
+        $rawAmount = (float) $amount;
+
+        $annual = match ($mode) {
+            1 => $rawAmount * 12.0,
+            2 => $rawAmount * (float) $annualHours,
+            default => $rawAmount,
+        };
+
+        $annualUSD = self::convertCurrency($annual, $currency, 'USD');
+
+        return $annualHours > 0 ? round($annualUSD / (float) $annualHours, 4) : 0.0;
+    }
+
     public static function convertToINR($amount, $currency)
     {
-
-        $exchangeRates = self::currencyConverter()['inr_based_rates'] ?? [];
-
-        $exchangeRates = ! empty($exchangeRates) ? $exchangeRates : [
-            'INR' => 1,
-            'EUR' => 88.50,
-            'JPY' => 0.68,
-            'GBP' => 103.70,
-            'USD' => 83,
-            'AED' => 20.38,
-        ];
-
-        if (array_key_exists($currency, $exchangeRates)) {
-            return $amount * $exchangeRates[$currency];
-        } else {
-            return 0;
-        }
+        return self::convertCurrency($amount, $currency, 'INR');
     }
 
     public static function salaryDividedByMode($mode, $amount)
@@ -6729,23 +7223,51 @@ END:VCALENDAR";
 
     public static function defaultCurrency()
     {
+        if (! auth()->check()) {
+            return 'USD';
+        }
         $company_id = auth()->user()->company_id;
 
-        $defaultCurrency = DB::table('companies')
-            ->join('master_currency', 'master_currency.id', '=', 'companies.currency')
-            ->select('master_currency.code')
-            ->where('companies.id', $company_id)
-            ->first();
+        return Cache::remember("tenant_default_currency:{$company_id}", 3600, function () use ($company_id) {
+            $company = DB::table('companies')
+                ->select('currency', 'calling_code')
+                ->where('id', $company_id)
+                ->first();
 
-        // dd($defaultCurrency );
+            if ($company && ! empty($company->currency)) {
+                if (is_numeric($company->currency)) {
+                    $code = DB::table('master_currency')->where('id', (int) $company->currency)->value('code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                    $code = DB::table('currencies')->where('getKey', (int) $company->currency)->value('currency_code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
+                } else {
+                    return strtoupper(trim($company->currency));
+                }
+            }
 
-        $currency_code = 'INR';
-        if ($defaultCurrency) {
-            $currency_code = ($defaultCurrency->code);
-        }
+            // HQ / Country Auto-Detection from calling code
+            if ($company && ! empty($company->calling_code)) {
+                $code = (string) $company->calling_code;
+                if ($code === '91' || $code === '+91') {
+                    return 'INR';
+                }
+                if ($code === '44' || $code === '+44') {
+                    return 'GBP';
+                }
+                if ($code === '971' || $code === '+971') {
+                    return 'AED';
+                }
+                if (in_array($code, ['33', '+33', '49', '+49', '34', '+34', '39', '+39', '31', '+31', '32', '+32'], true)) {
+                    return 'EUR';
+                }
+            }
 
-        return $currency_code;
-
+            return 'USD'; // Safe global default for all other international accounts
+        });
     }
 
     public static function defaultTimeZone()

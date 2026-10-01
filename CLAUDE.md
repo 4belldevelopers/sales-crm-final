@@ -44,6 +44,7 @@ be made inside this folder.
 9. **Zero Business Logic Alteration & Strict Blast Radius Isolation (Zero Regressions):** For any change or upgrade on any page/feature, existing core business logic (scoring, pipelines, billing, status workflows) must remain 100% untouched, and NO other page, modal, drawer, or module must be affected or broken.
 10. **Complete Page/Blade Isolation (Strict Anti-Entanglement Mandate):** Every page/blade designed, developed, or updated must be completely isolated to that page. Never reuse or share stateful JS/drawers/scripts across pages (e.g. CV Tracker vs App Tracker vs Client App); changes to one page must NEVER touch, affect, or break another page or module.
 11. **15.6-Inch Screen Sizing & Small-Screen Responsiveness:** All UI/UX designs, tables, modals, cards, and drawers must perfectly fit a standard 15.6-inch laptop screen (1366×768 & 1920×1080) and smaller screens with zero horizontal page scroll, internal drawer scroll, and max 14px Poppins font.
+12. **Product Company & Staffing Company Code Freeze Mandate:** Files under `resources/views/product_company/` and `resources/views/staffing_company/` (and their respective controllers/modules) are strictly frozen. Do NOT edit, refactor, or apply UI/feature changes to Product Company or Staffing Company files unless explicitly instructed otherwise. Active development, currency enhancements, and ATS feature work are strictly scoped to **Service Company** (`resources/views/service_company/`) and **Admin** (`resources/views/admin/`).
 
 ---
 

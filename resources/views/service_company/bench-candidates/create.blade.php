@@ -465,7 +465,7 @@ if($snp_mode== 1){
                     <label>Full Name <span class="rq">*</span></label>
                     <div class="bd-control">
                       <i class="fa-regular fa-user"></i>
-                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" />
+                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ !empty($application->full_name) ? ucwords(strtolower($application->full_name)) : '' }}" placeholder="Enter full name" autocomplete="off" spellcheck="false" />
                     </div>
                   </div>
                   <div class="fg fv-row bd-field">
@@ -477,11 +477,16 @@ if($snp_mode== 1){
                   </div>
                   <div class="fg fv-row bd-field">
                     <label>Mobile Number (Not Disclosed to Client) <span class="rq">*</span></label>
-                    <div class="bd-phone-control">
-                      <i class="fa-solid fa-mobile-screen-button"></i>
-                      <input type="tel" name="phone" id="phone" value="{{ @$application->phone }}" placeholder="Enter mobile number" inputmode="tel" autocomplete="tel" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter mobile number" />
                   </div>
                 </div>
 
@@ -845,17 +850,18 @@ if($snp_mode== 1){
 
                 <div class="pd-field-grid pd-field-grid--two pd-field-grid--employee-row">
                   <div class="fg fv-row pd-field">
-                    <label>Employment Type <span class="rq">*</span></label>
+                    <label>Client Engagement Model <span class="rq">*</span></label>
                     <div class="pd-control pd-control--select">
-                      <i class="fa-solid fa-users"></i>
+                      <i class="fa-solid fa-handshake"></i>
                       <select name="employmentType" id="EmploymentType">
-                        <option value="">Select employment type</option>
-                        <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                        <option {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract</option>
-                        <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                        <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                        <option value="">Select engagement model</option>
+                        <option value="Contract" {{ (@$application->employmentType==='Contract' || (@$page_event != 'EDIT' && empty(@$application->employmentType))) ? 'selected' : '' }}>Contract / C2C / C2H / Staff Augmentation</option>
+                        <option value="Full Time" {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Direct Hire / Permanent Placement</option>
+                        <option value="Freelance" {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance / Fractional Consulting</option>
+                        <option value="Part Time" {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part-Time Contract</option>
                       </select>
                     </div>
+                    <small>Select how this talent will be deployed to clients in the marketplace.</small>
                   </div>
                   <div class="fg fv-row d-none">
                       <label>Commission Type <span class="rq">*</span></label>
@@ -875,7 +881,7 @@ if($snp_mode== 1){
                     <label>Employee ID <span>(Optional)</span></label>
                     <div class="pd-control">
                       <i class="fa-regular fa-id-card"></i>
-                      <input type="email" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
+                      <input type="text" class="form-control form-control-solid" name="employee_number" id="employee_number" placeholder="Enter employee number" value="{{ @$application->employee_number }}">
                     </div>
                     <small>Internal employee identifier</small>
                   </div>
@@ -1246,24 +1252,27 @@ if($snp_mode== 1){
                     </div>
                     <div class="br-currency">
                       <label for="pay_rate_currency">Currency</label>
-                      <select id="pay_rate_currency" name="pay_rate_currency">
+                      <select id="pay_rate_currency" name="pay_rate_currency" class="form-select form-select-solid br-currency-select" data-control="select2" data-placeholder="Search currency...">
                           @php
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->pay_rate_currency;
+                              $current_ctc_cur = @$application->pay_rate_currency;
 
-                              foreach($currency as $key=>$val){
-                                  $sel	=	'';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel	=	'selected="selected"';
-                                    }
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';
-                                  }
+                              foreach($currency as $key => $val){
+                                  $sel = '';
+                                  if($current_ctc_cur === null || $current_ctc_cur === ''){
+                                      if($currency_code == $val){
+                                          $sel = 'selected="selected"';
+                                      }
+                                  } else {
+                                      if((string)$current_ctc_cur === (string)$key || (string)$current_ctc_cur === (string)$val){
+                                          $sel = 'selected="selected"';
+                                      }
                                   }
 
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';
+                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                                  $entLabel = $cMeta['label'];
+                                  $keywords = $cMeta['keywords'];
+
+                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';
                               }
                           @endphp
                       </select>
@@ -1283,41 +1292,39 @@ if($snp_mode== 1){
                     </select>
                     <select name="bill_rate_currency" id="bill_rate_currency">
                         @php
-                            $current_ectc_cur	=	"";
-                            $current_ectc_cur	=	@$application->bill_rate_currency;
-                            foreach($currency as $key=>$val){
-                              $sel	=	'';
-                              if($current_ectc_cur===null){
-                                if($currency_code==$val){
-                                  $sel	=	'selected="selected"';
-                                }
-                              }else{
-                                if($current_ectc_cur == $key){
-                                $sel	=	'selected="selected"';
-                                }
+                            $current_ectc_cur = @$application->bill_rate_currency;
+                            foreach($currency as $key => $val){
+                              $sel = '';
+                              if($current_ectc_cur === null || $current_ectc_cur === ''){
+                                  if($currency_code == $val){
+                                      $sel = 'selected="selected"';
+                                  }
+                              } else {
+                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
+                                      $sel = 'selected="selected"';
+                                  }
                               }
 
-                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                             }
                         @endphp
                     </select>
                     <select name="current_th_cur" id="current_th_cur">
                         @php
-                            $current_ectc_cur	=	"";
-                            $current_ectc_cur	=	@$application->bill_rate_currency;
-                            foreach($currency as $key=>$val){
-                              $sel	=	'';
-                              if($current_ectc_cur===null){
-                                if($currency_code==$val){
-                                  $sel	=	'selected="selected"';
-                                }
-                              }else{
-                                if($current_ectc_cur == $key){
-                                $sel	=	'selected="selected"';
-                                }
+                            $current_ectc_cur = @$application->bill_rate_currency;
+                            foreach($currency as $key => $val){
+                              $sel = '';
+                              if($current_ectc_cur === null || $current_ectc_cur === ''){
+                                  if($currency_code == $val){
+                                      $sel = 'selected="selected"';
+                                  }
+                              } else {
+                                  if((string)$current_ectc_cur === (string)$key || (string)$current_ectc_cur === (string)$val){
+                                      $sel = 'selected="selected"';
+                                  }
                               }
 
-                              echo '<option value="'.$key.'"   '.$sel.' >'.$val.'</option>';
+                              echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
                             }
                         @endphp
                     </select>
@@ -1618,37 +1625,232 @@ if($snp_mode== 1){
             <div class="fs addl-card addl-card--details">
               <div class="addl-hero">
                 <div class="addl-hero-title">
-                  <span class="addl-hero-icon"><i class="fa-solid fa-user"></i></span>
+                  <span class="addl-hero-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF;"><i class="fa-solid fa-passport"></i></span>
                   <span>
-                    <strong>Additional Details</strong>
-                    <small>Provide any other relevant information about your professional background.</small>
+                    <strong>Work Authorization & Compliance</strong>
+                    <small>Specify legal right-to-work status and visa category for client submissions.</small>
                   </span>
                 </div>
               </div>
               <div class="fsc addl-body">
                 <section class="addl-section addl-section--details">
                   <div class="addl-wide-field fv-row">
-                    <label><i class="fa-solid fa-passport"></i> Work Authorization <span>(Optional)</span> <i class="fa-solid fa-circle-info addl-label-info"></i></label>
+                    <div class="wa-popular-chips-wrap">
+                      <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
+                      <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
+                        <button type="button" class="wa-chip-btn" data-region="United States" data-filter="United States" title="Filter United States Visas">🇺🇸 US</button>
+                        <button type="button" class="wa-chip-btn" data-region="Canada" data-filter="Canada" title="Filter Canada Visas">🇨🇦 Canada</button>
+                        <button type="button" class="wa-chip-btn" data-region="India" data-filter="India" title="Filter India Work Status">🇮🇳 India</button>
+                        <button type="button" class="wa-chip-btn" data-region="United Kingdom" data-filter="United Kingdom" title="Filter UK Visas">🇬🇧 UK</button>
+                        <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
+                        <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
+                        <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
+                        <button type="button" class="wa-chip-btn" data-region="Germany" data-filter="Germany" title="Filter Germany Visas">🇩🇪 Germany</button>
+                        <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
+                      </div>
+                    </div>
                     <div class="addl-select-wrap">
-                      <select name="visastatu" id="visastatu">
-                        <option value="">Select work authorization status</option>
-                        <option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option>
-                        <option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option>
-                        <option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option>
-                        <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
-                        <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
+                      @php
+                        $currentVisa  = trim((string) @$application->visastatu);
+                        $isUsCitizen  = in_array($currentVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']);
+                        $isGreenCard  = in_array($currentVisa, ['Green Card', 'Permanent Resident (Green Card)']);
+                        $isGcEad      = in_array($currentVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']);
+                        $isH1b        = in_array($currentVisa, ['H1B', 'H-1B', 'H1-B']);
+                        $isH4Ead      = in_array($currentVisa, ['H4-EAD', 'H4 EAD', 'H-4 EAD']);
+                        $isL2Ead      = in_array($currentVisa, ['L2-EAD', 'L2 EAD', 'L-2 EAD']);
+                        $isTn         = in_array($currentVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']);
+                        $isOpt        = in_array($currentVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']);
+                        $isCpt        = in_array($currentVisa, ['CPT']);
+                        $isE3         = in_array($currentVisa, ['E-3', 'E3']);
+                        $isO1         = in_array($currentVisa, ['O-1', 'O1']);
+                        $isL1         = in_array($currentVisa, ['L1', 'L-1']);
+                        $isOtherUsEad = in_array($currentVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']);
+
+                        $isCaCitizen  = in_array($currentVisa, ['Canadian Citizen']);
+                        $isCaPr       = in_array($currentVisa, ['Canada PR', 'Canadian Permanent Resident']);
+                        $isCaOpenWp   = in_array($currentVisa, ['Canada Open Work Permit', 'PGWP']);
+                        $isCaClosedWp = in_array($currentVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']);
+
+                        $isInCitizen  = in_array($currentVisa, ['Indian Citizen']);
+                        $isInOci      = in_array($currentVisa, ['OCI / PIO', 'OCI', 'PIO']);
+                        $isInVisa     = in_array($currentVisa, ['India Work Visa', 'Employment Visa (India)']);
+
+                        $isUkCitizen  = in_array($currentVisa, ['UK Citizen', 'British Citizen']);
+                        $isUkIlr      = in_array($currentVisa, ['UK ILR', 'Indefinite Leave to Remain']);
+                        $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
+                        $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
+
+                        $isUaeGolden    = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']);
+                        $isUaeGreen     = in_array($currentVisa, ['UAE Green Visa', 'Green Visa']);
+                        $isUaeEmpVisa   = in_array($currentVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']);
+                        $isUaeFreelance = in_array($currentVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']);
+                        $isUaeNational  = in_array($currentVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']);
+                        $isGccIqama     = in_array($currentVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']);
+
+                        $isSgCitizen    = in_array($currentVisa, ['Singapore Citizen']);
+                        $isSgPr         = in_array($currentVisa, ['Singapore PR', 'Singapore Permanent Resident']);
+                        $isSgEp         = in_array($currentVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']);
+                        $isSgSpass      = in_array($currentVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']);
+                        $isSgOnePass    = in_array($currentVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']);
+                        $isSgLocDp      = in_array($currentVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']);
+
+                        $isAuCitizenPr  = in_array($currentVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']);
+                        $isAuTss482     = in_array($currentVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']);
+                        $isAuSkilled    = in_array($currentVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']);
+                        $isAuGrad485    = in_array($currentVisa, ['Australia Graduate 485', 'Subclass 485']);
+                        $isNzCitizen    = in_array($currentVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']);
+
+                        $isEuCitizen    = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
+                        $isEuBlue       = in_array($currentVisa, ['EU Blue Card']);
+                        $isAuthWp       = in_array($currentVisa, ['Authorized Work Permit']);
+                        $isReqSpons     = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
+
+                        $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
+                                         || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
+                                         || $isInCitizen || $isInOci || $isInVisa
+                                         || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
+                                         || $isUaeGolden || $isUaeGreen || $isUaeEmpVisa || $isUaeFreelance || $isUaeNational || $isGccIqama
+                                         || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
+                                         || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
+                                         || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
+
+                        // Load comprehensive 240+ countries taxonomy
+                        $allGlobalCountries = !empty($countries) ? (is_array($countries) ? $countries : $countries->toArray()) : [];
+                        if (empty($allGlobalCountries) && file_exists(base_path('country-state-city/countries.json'))) {
+                            $allGlobalCountries = json_decode(file_get_contents(base_path('country-state-city/countries.json')), true)['countries'] ?? [];
+                        }
+                        if (!empty($allGlobalCountries)) {
+                            usort($allGlobalCountries, function($a, $b) {
+                                return strcmp($a['name'] ?? '', $b['name'] ?? '');
+                            });
+                        }
+                      @endphp
+                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-control="select2" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                        <option value="">Select work authorization or visa status</option>
+
+                        {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
+                        <optgroup label="United States (US)">
+                          <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
+                          <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                          <option value="GC-EAD" {{ $isGcEad ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                          <option value="H1B" {{ $isH1b ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                          <option value="H-4 EAD" {{ $isH4Ead ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                          <option value="L-2 EAD" {{ $isL2Ead ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                          <option value="TN Permit" {{ $isTn ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                          <option value="OPT-EAD" {{ $isOpt ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                          <option value="CPT" {{ $isCpt ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                          <option value="E-3" {{ $isE3 ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                          <option value="O-1" {{ $isO1 ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                          <option value="L1" {{ $isL1 ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                          <option value="Other US EAD" {{ $isOtherUsEad ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                        </optgroup>
+
+                        <optgroup label="Canada (CA)">
+                          <option value="Canadian Citizen" {{ $isCaCitizen ? 'selected' : '' }}>Canadian Citizen</option>
+                          <option value="Canada PR" {{ $isCaPr ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                          <option value="Canada Open Work Permit" {{ $isCaOpenWp ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                          <option value="Canada Closed Work Permit" {{ $isCaClosedWp ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                        </optgroup>
+
+                        <optgroup label="India (IN)">
+                          <option value="Indian Citizen" {{ $isInCitizen ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                          <option value="OCI / PIO" {{ $isInOci ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                          <option value="India Work Visa" {{ $isInVisa ? 'selected' : '' }}>India Employment Visa</option>
+                        </optgroup>
+
+                        <optgroup label="United Kingdom (UK)">
+                          <option value="UK Citizen" {{ $isUkCitizen ? 'selected' : '' }}>British Citizen</option>
+                          <option value="UK ILR" {{ $isUkIlr ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                          <option value="UK Skilled Worker" {{ $isUkSkilled ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                          <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
+                        </optgroup>
+
+                        <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
+                          <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                          <option value="UAE Green Visa" {{ $isUaeGreen ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                          <option value="UAE Employment Visa" {{ $isUaeEmpVisa ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
+                          <option value="UAE Freelance Visa" {{ $isUaeFreelance ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                          <option value="UAE National" {{ $isUaeNational ? 'selected' : '' }}>UAE / GCC National</option>
+                          <option value="GCC Iqama" {{ $isGccIqama ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                        </optgroup>
+
+                        <optgroup label="Singapore (SG)">
+                          <option value="Singapore Citizen" {{ $isSgCitizen ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                          <option value="Singapore PR" {{ $isSgPr ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                          <option value="Singapore EP" {{ $isSgEp ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                          <option value="Singapore S Pass" {{ $isSgSpass ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                          <option value="Singapore ONE Pass" {{ $isSgOnePass ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                          <option value="Singapore LOC / DP" {{ $isSgLocDp ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
+                        </optgroup>
+
+                        <optgroup label="Australia & New Zealand (AU / NZ)">
+                          <option value="Australia Citizen / PR" {{ $isAuCitizenPr ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                          <option value="Australia TSS 482" {{ $isAuTss482 ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
+                          <option value="Australia Skilled 189/190" {{ $isAuSkilled ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
+                          <option value="Australia Graduate 485" {{ $isAuGrad485 ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
+                          <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                        </optgroup>
+
+                        <optgroup label="European Union (EU)">
+                          <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
+                          <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
+                          <option value="Germany - Opportunity Card / Work Visa" {{ ($currentVisa === 'Germany - Opportunity Card / Work Visa') ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                          <option value="Netherlands - Highly Skilled Migrant" {{ ($currentVisa === 'Netherlands - Highly Skilled Migrant') ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                          <option value="Ireland - Critical Skills Employment Permit" {{ ($currentVisa === 'Ireland - Critical Skills Employment Permit') ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
+                          <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
+                          <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                        </optgroup>
+
+                        {{-- 240+ COUNTRIES & TERRITORIES WORLDWIDE --}}
+                        @if(!empty($allGlobalCountries))
+                          @foreach($allGlobalCountries as $countryItem)
+                            @php
+                              $cName = trim($countryItem['name'] ?? '');
+                              $cCode = trim($countryItem['sortname'] ?? '');
+                              if (empty($cName)) continue;
+                              // Skip top hubs already covered with detailed specific visa types
+                              if (in_array($cCode, ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'NZ'])) continue;
+
+                              $optCitizen = $cName . ' - Citizen / Domestic Right to Work';
+                              $optPr      = $cName . ' - Permanent Resident (PR)';
+                              $optVisa    = $cName . ' - Work Visa / Employment Permit';
+
+                              $isOptCitizenSelected = ($currentVisa === $optCitizen);
+                              $isOptPrSelected      = ($currentVisa === $optPr);
+                              $isOptVisaSelected    = ($currentVisa === $optVisa);
+
+                              if ($isOptCitizenSelected || $isOptPrSelected || $isOptVisaSelected) {
+                                  $hasMatchedOption = true;
+                              }
+                            @endphp
+                            <optgroup label="{{ $cName }} ({{ $cCode }})">
+                              <option value="{{ $optCitizen }}" {{ $isOptCitizenSelected ? 'selected' : '' }}>{{ $optCitizen }}</option>
+                              <option value="{{ $optPr }}" {{ $isOptPrSelected ? 'selected' : '' }}>{{ $optPr }}</option>
+                              <option value="{{ $optVisa }}" {{ $isOptVisaSelected ? 'selected' : '' }}>{{ $optVisa }}</option>
+                            </optgroup>
+                          @endforeach
+                        @endif
+
+                        <optgroup label="Global & International">
+                          <option value="Requires International Visa Sponsorship" {{ ($currentVisa === 'Requires International Visa Sponsorship') ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                          <option value="Global Remote / Freelance Contract" {{ ($currentVisa === 'Global Remote / Freelance Contract') ? 'selected' : '' }}>Global Remote / Freelance Contract Authorization</option>
+                        </optgroup>
+
+                        @if(!empty($currentVisa) && !$hasMatchedOption)
+                          <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
+                        @endif
                       </select>
                       <i class="fa-solid fa-chevron-down"></i>
                     </div>
-                    <small>Select your current visa or work authorization status, if applicable.</small>
+                    <small class="text-muted mt-1 d-block">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                   </div>
                   {{-- Professional Reference removed from UI (data preserved via hidden input) --}}
                   <input type="hidden" name="referencename" id="referencename" value="{{ @$application->referencename }}" />
                  </section>
 
                 <div class="addl-info-strip">
-                  <span><i class="fa-solid fa-info"></i></span>
-                  <p>All fields in this section are optional. Adding relevant links and details can help clients better understand your expertise and background.</p>
+                  <span><i class="fa-solid fa-shield-halved"></i></span>
+                  <p>Specifying accurate work authorization ensures quick client alignment and prevents right-to-work compliance delays during submission.</p>
                 </div>
               </div>
             </div>
@@ -1752,28 +1954,180 @@ if($snp_mode== 1){
 @endsection
 
 @php
-    $rates = $currencyConverter['usd_based_rates'] ?? [
+    $currencyConverterData = $currencyConverter ?? \App\Helper\GeneralMethod::currencyConverter();
+    $rates = $currencyConverterData['usd_based_rates'] ?? [
         'USD' => 1,
-        'INR' => 83,
-        'EUR' => 0.87,
-        'JPY' => 159.65,
+        'INR' => 96.06,
+        'EUR' => 0.88,
+        'JPY' => 157.39,
         'GBP' => 0.76,
         'AED' => 3.67
     ];
 
-    $currencyKeys = $currencyConverter['getKey'] ?? [
-        'INR',
-        'EUR',
-        'JPY',
-        'GBP',
-        'USD',
-        'AED'
+    $currencyKeys = $currencyConverterData['getKey'] ?? [
+        0 => 'INR',
+        1 => 'EUR',
+        2 => 'JPY',
+        3 => 'GBP',
+        4 => 'USD',
+        5 => 'AED'
     ];
 @endphp
 
 @push('footer-script')
 <script src="{{ asset('js/resume-presign.js') }}?v=20260929-godlevel"></script>
 @include('service_company.bench-candidates.jero-bench-parser')
+
+<script>
+/**
+ * Enterprise Work Authorization & 240+ Country Compliance Engine
+ * Client-First Execution (User RAM & Browser CPU First - Rule 3, Rule 17)
+ */
+$(document).ready(function () {
+    function initWorkAuthorizationEngine() {
+        if (!$.fn || !$.fn.select2) {
+            setTimeout(initWorkAuthorizationEngine, 100);
+            return;
+        }
+
+        var $select = $('#visastatu');
+        if (!$select.length) return;
+
+        if ($select.hasClass('select2-hidden-accessible')) {
+            $select.select2('destroy');
+        }
+
+        $select.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'wa-select2-dropdown',
+            placeholder: 'Search visa / work authorization or country...',
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            matcher: function (params, data) {
+                if (!params.term || $.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase().trim();
+
+                // If optgroup
+                if (data.children && data.children.length > 0) {
+                    var groupLabel = (data.text || '').toLowerCase();
+                    if (groupLabel.indexOf(term) > -1) {
+                        return data;
+                    }
+
+                    var matchedChildren = [];
+                    for (var i = 0; i < data.children.length; i++) {
+                        var child = data.children[i];
+                        var childText = (child.text || '').toLowerCase();
+                        var childVal = (child.id || '').toLowerCase();
+                        if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
+                            matchedChildren.push(child);
+                        }
+                    }
+                    if (matchedChildren.length > 0) {
+                        var cloned = $.extend({}, data, true);
+                        cloned.children = matchedChildren;
+                        return cloned;
+                    }
+                    return null;
+                }
+
+                // Leaf option
+                var text = (data.text || '').toLowerCase();
+                var val = (data.id || '').toLowerCase();
+                if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+
+        // Hide static chevron icon in select wrapper
+        $select.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
+
+        syncWorkAuthActiveChip();
+    }
+
+    function syncWorkAuthActiveChip() {
+        var val = $('#visastatu').val();
+        $('.wa-chip-btn').removeClass('is-active');
+        if (!val) return;
+
+        var $selectedOpt = $('#visastatu').find('option:selected');
+        var $optgroup = $selectedOpt.closest('optgroup');
+        var groupLabel = ($optgroup.attr('label') || '').toLowerCase();
+        var optVal = (val || '').toLowerCase();
+
+        $('.wa-chip-btn').each(function () {
+            var filter = ($(this).data('filter') || '').toLowerCase();
+            var region = ($(this).data('region') || '').toLowerCase();
+            if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
+                optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
+                $(this).addClass('is-active');
+                return false;
+            }
+        });
+    }
+
+    // Ensure search field is instantly focused upon opening
+    $(document).on('select2:open', '#visastatu', function () {
+        setTimeout(function () {
+            var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 50);
+    });
+
+    // Handle Quick Hub Chip click
+    $(document).on('click', '.wa-chip-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var filterTerm = $btn.data('filter') || '';
+        var wasActive = $btn.hasClass('is-active');
+
+        $('.wa-chip-btn').removeClass('is-active');
+
+        var $visaSelect = $('#visastatu');
+        if (wasActive) {
+            if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+                if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                    var $sf = $('.wa-select2-dropdown .select2-search__field');
+                    if ($sf.length) {
+                        $sf.val('').trigger('input').trigger('keyup');
+                    }
+                }
+            }
+            return;
+        }
+
+        $btn.addClass('is-active');
+
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            $visaSelect.select2('open');
+            setTimeout(function () {
+                var $searchField = $('.wa-select2-dropdown .select2-search__field');
+                if ($searchField.length) {
+                    $searchField.val(filterTerm).trigger('input').trigger('keyup');
+                }
+            }, 60);
+        } else {
+            $visaSelect.focus();
+        }
+    });
+
+    $(document).on('change', '#visastatu', function () {
+        syncWorkAuthActiveChip();
+    });
+
+    // Boot engine safely with multi-stage checks
+    initWorkAuthorizationEngine();
+    setTimeout(initWorkAuthorizationEngine, 200);
+    setTimeout(initWorkAuthorizationEngine, 600);
+});
+</script>
 
 <script>
 $(document).ready(function () {
@@ -1822,13 +2176,44 @@ $(document).ready(function () {
     $('input[name="talent_stage"]').on('change', window.syncTalentStageAction);
     $('#talent-stage-placed').on('click', function () {
         Swal.fire({
-            title: 'Talent Already Placed',
-            html: 'No client has selected this talent yet. Change the stage to <strong>Bench</strong> to make the talent available for new client opportunities.',
+            title: 'Direct Placement Requires an Active Client Requisition',
+            html: 'Talent cannot be added directly as <strong>Placed</strong> during initial creation. Please save this talent under <strong>Bench</strong> or <strong>Pool</strong> first, then place them directly through a client job pipeline.',
             icon: 'info',
             confirmButtonText: 'Got it'
         });
     });
     window.syncTalentStageAction();
+
+    // ── Enterprise Full Name Title-Casing (1st letter capital, rest small) ──
+    window.formatCandidateTitleCase = function (str) {
+        if (!str) return '';
+        return String(str)
+            .toLowerCase()
+            .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
+                return separator + char.toUpperCase();
+            })
+            .trim();
+    };
+
+    $(document).on('blur change', '#full_name', function () {
+        var val = $(this).val();
+        if (val) {
+            var formatted = window.formatCandidateTitleCase(val);
+            if (formatted !== val) {
+                $(this).val(formatted);
+            }
+        }
+    });
+
+    $(document).on('paste', '#full_name', function () {
+        var self = this;
+        setTimeout(function () {
+            var val = $(self).val();
+            if (val) {
+                $(self).val(window.formatCandidateTitleCase(val));
+            }
+        }, 15);
+    });
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     @if(config('resumes.features.browser_upload') && \Illuminate\Support\Facades\Schema::hasTable('resume_uploads'))
@@ -2292,23 +2677,9 @@ $(document).ready(function () {
 <script>
 
   $(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-      separateDialCode: true,
-      initialCountry: "{{ $phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-    const secMobileEl = document.querySelector("#secondary_mobile");
-    const secondaryPhoneInput = (secMobileEl && secMobileEl.type !== 'hidden') ? window.intlTelInput(secMobileEl, {
-      separateDialCode: true,
-      initialCountry: "{{ $second_phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    }) : null;
-    window.createTalentPhoneInputs = {
-      primary: primaryPhoneInput,
-      secondary: secondaryPhoneInput
-    };
+    if (window.JeroPhoneBox) {
+      window.JeroPhoneBox.initAll();
+    }
 
     window.normalizeCreateTalentPhoneDigits = function (value) {
       return String(value || '').replace(/[^\d]/g, '');
@@ -2325,14 +2696,6 @@ $(document).ready(function () {
         return !required;
       }
 
-      const itiInstance = inputId === 'secondary_mobile'
-        ? window.createTalentPhoneInputs?.secondary
-        : window.createTalentPhoneInputs?.primary;
-
-      if (window.intlTelInputUtils && itiInstance && typeof itiInstance.isValidNumber === 'function') {
-        return itiInstance.isValidNumber();
-      }
-
       const digits = window.normalizeCreateTalentPhoneDigits(rawValue);
       return digits.length >= 6 && digits.length <= 15;
     };
@@ -2345,37 +2708,11 @@ $(document).ready(function () {
         }
       });
     };
+  });
+</script>
 
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      if (!inputField || typeof inputField.getSelectedCountryData !== 'function') return;
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-      
-    }
-    // Update country code on input or country flag selection
-    $("#phone").on("countrychange input change", function () {
-      updateCountryCode(primaryPhoneInput, "#primary_country_code");
-    });
-
-    if (secondaryPhoneInput) {
-      $("#secondary_mobile").on("countrychange input change", function () {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      });
-    }
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#phone")) {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      } else if (targetInput.is("#secondary_mobile") && secondaryPhoneInput) {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      }
-    });
-
+<script>
+  $(document).ready(function () {
     const HOURS_PER_MONTH = 160;
     const MONTHS_PER_YEAR = 12;
     const currencyRates = @json($rates);
@@ -2546,8 +2883,9 @@ $(document).ready(function () {
         $('#br_pay_hourly_display').text(commercialFormat(modeConfig.payAutoTwoValue));
         $('#br_summary_pay_annual').text(commercialFormat(modeConfig.basePay));
 
-        let activeCurrName = $('#pay_rate_currency option:selected').text().trim() || 
-                             $('.br-pay-currency-select option:selected').first().text().trim() || '';
+        let activeCurrName = ($('#pay_rate_currency option:selected').data('code') || 
+                             $('#pay_rate_currency option:selected').text().split('—')[0].trim() || 
+                             $('.br-pay-currency-select option:selected').first().text().split('—')[0].trim() || 'INR').toUpperCase();
 
         if (isFree) {
             $('#br_bill_monthly_display').text('No billing');
@@ -2795,11 +3133,63 @@ $(document).ready(function () {
         isUpdating = false;
     });
     /**
+     * Extracts canonical 3-letter currency code from the active #pay_rate_currency option.
+     * Prevents long enterprise label text (e.g. "USD — US Dollar ($)") from breaking
+     * rate conversion lookups or overflowing input currency badges.
+     */
+    function getSelectedCommercialCurrencyCode() {
+        let $selected = $('#pay_rate_currency option:selected');
+        let code = $selected.data('code');
+        if (!code) {
+            let txt = ($selected.text() || '').trim();
+            code = txt.split('—')[0].split('-')[0].trim();
+        }
+        return (code || 'INR').toUpperCase();
+    }
+
+    /**
+     * Initializes enterprise Select2 on #pay_rate_currency with search box,
+     * fuzzy country/keyword matching, and Metronic Poppins styling.
+     */
+    function initPayRateCurrencySelect2() {
+        if (!$.fn.select2) return;
+        let $currencySelect = $('#pay_rate_currency');
+        if ($currencySelect.hasClass('select2-hidden-accessible')) {
+            $currencySelect.select2('destroy');
+        }
+        $currencySelect.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'br-currency-select2-dropdown',
+            placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+            minimumResultsForSearch: 0,
+            matcher: function (params, data) {
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+                if (typeof data.text === 'undefined') {
+                    return null;
+                }
+                let term = params.term.toLowerCase();
+                let text = data.text.toLowerCase();
+                let $el = $(data.element);
+                let code = ($el.data('code') || '').toString().toLowerCase();
+                let searchKw = ($el.data('search') || '').toString().toLowerCase();
+
+                if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+    }
+
+    /**
      * updatePayUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Pay Rate input using the currency code read from #pay_rate_currency.
+     * active Pay Rate input using canonical currency code read from #pay_rate_currency.
      */
     function updatePayUI() {
-        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
+        let currencyCode = getSelectedCommercialCurrencyCode();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2813,17 +3203,21 @@ $(document).ready(function () {
         if (!payAnnual && payMonthly) payAnnual = payMonthly * MONTHS_PER_YEAR;
 
         if (isUSD) {
-            $('#pay_rate_hourly_usd').text('');
-            $('#pay_rate_monthly_usd').text('');
-            $('#pay_rate_annual_usd').text('');
+            $('#pay_rate_hourly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#pay_rate_monthly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#pay_rate_annual_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
         } else {
             let hourlyUSD  = payHourly / currencyRate;
             let monthlyUSD = payMonthly / currencyRate;
             let annualUSD  = payAnnual / currencyRate;
 
-            $('#pay_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
-            $('#pay_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
-            $('#pay_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
+            let hStr = hourlyUSD > 0 ? '$ ' + parseFloat(hourlyUSD).toFixed(2) : '$ 0.00';
+            let mStr = monthlyUSD > 0 ? '$ ' + parseFloat(monthlyUSD).toFixed(2) : '$ 0.00';
+            let aStr = annualUSD > 0 ? '$ ' + parseFloat(annualUSD).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$ 0.00';
+
+            $('#pay_rate_hourly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + hStr + ' / hr USD</span>');
+            $('#pay_rate_monthly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + mStr + ' / mo USD</span>');
+            $('#pay_rate_annual_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + aStr + ' / yr USD</span>');
         }
         updateCTCFields();
         refreshCommercialSummary();
@@ -2831,7 +3225,7 @@ $(document).ready(function () {
 
     /**
      * updateBillUI — Recomputes and shows the USD equivalent ("Approx $ X") for the
-     * active Bill Rate input using the currency code read from #pay_rate_currency.
+     * active Bill Rate input using canonical currency code read from #pay_rate_currency.
      */
     function updateBillUI() {
         if (isFreeCommercialMode()) {
@@ -2842,7 +3236,7 @@ $(document).ready(function () {
             return false;
         }
 
-        let currencyCode = ($('#pay_rate_currency option:selected').text().trim() || 'INR').toUpperCase();
+        let currencyCode = getSelectedCommercialCurrencyCode();
         let currencyRate = currencyRates[currencyCode] || 1;
         let isUSD = (currencyCode === 'USD');
 
@@ -2856,17 +3250,21 @@ $(document).ready(function () {
         if (!billAnnual && billMonthly) billAnnual = billMonthly * MONTHS_PER_YEAR;
 
         if (isUSD) {
-            $('#bill_rate_hourly_usd').text('');
-            $('#bill_rate_monthly_usd').text('');
-            $('#bill_rate_annual_usd').text('');
+            $('#bill_rate_hourly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#bill_rate_monthly_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
+            $('#bill_rate_annual_usd').html('<span class="badge badge-light-success fs-8 py-0 px-2 ms-2">Base USD</span>');
         } else {
             let hourlyUSD  = billHourly / currencyRate;
             let monthlyUSD = billMonthly / currencyRate;
             let annualUSD  = billAnnual / currencyRate;
 
-            $('#bill_rate_hourly_usd').text('Approx $ ' + (hourlyUSD > 0 ? parseFloat(hourlyUSD).toFixed(2) : '0'));
-            $('#bill_rate_monthly_usd').text('Approx $ ' + (monthlyUSD > 0 ? parseFloat(monthlyUSD).toFixed(2) : '0'));
-            $('#bill_rate_annual_usd').text('Approx $ ' + (annualUSD > 0 ? parseFloat(annualUSD).toFixed(2) : '0'));
+            let hStr = hourlyUSD > 0 ? '$ ' + parseFloat(hourlyUSD).toFixed(2) : '$ 0.00';
+            let mStr = monthlyUSD > 0 ? '$ ' + parseFloat(monthlyUSD).toFixed(2) : '$ 0.00';
+            let aStr = annualUSD > 0 ? '$ ' + parseFloat(annualUSD).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '$ 0.00';
+
+            $('#bill_rate_hourly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + hStr + ' / hr USD</span>');
+            $('#bill_rate_monthly_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + mStr + ' / mo USD</span>');
+            $('#bill_rate_annual_usd').html('<span class="badge badge-light-primary fs-8 py-0 px-2 ms-2"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + aStr + ' / yr USD</span>');
         }
         updateCTCFields();
         refreshCommercialSummary();
@@ -2900,14 +3298,19 @@ $(document).ready(function () {
         if (!currencyVal) return;
 
         // 1. Sync header currency & hidden selects
-        $('#pay_rate_currency').val(currencyVal);
+        if ($('#pay_rate_currency').val() != currencyVal) {
+            $('#pay_rate_currency').val(currencyVal);
+            if ($.fn.select2 && $('#pay_rate_currency').hasClass('select2-hidden-accessible')) {
+                $('#pay_rate_currency').trigger('change.select2');
+            }
+        }
         $('#bill_rate_currency').val(currencyVal);
         $('#current_th_cur').val(currencyVal);
 
-        // 2. Update text for all integrated rate currency badges
-        let selectedText = $('#pay_rate_currency option:selected').text().trim() || 'INR';
-        if (selectedText) {
-            $('.changeTextCurrency').text(selectedText);
+        // 2. Update text for all integrated rate currency badges (canonical 3-letter code)
+        let selectedCode = getSelectedCommercialCurrencyCode();
+        if (selectedCode) {
+            $('.changeTextCurrency').text(selectedCode);
         }
 
         updatePayUI();
@@ -2921,10 +3324,17 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.br-rate-field .changeTextCurrency, .br-rate-field .ig-a', function () {
-        $('#pay_rate_currency').focus();
+        if ($.fn.select2 && $('#pay_rate_currency').hasClass('select2-hidden-accessible')) {
+            $('#pay_rate_currency').select2('open');
+        } else {
+            $('#pay_rate_currency').focus();
+        }
     });
 
+    initPayRateCurrencySelect2();
+
     setTimeout(() => {
+        initPayRateCurrencySelect2();
         let initCurr = $('#pay_rate_currency').val();
         if (initCurr) {
             syncAllCommercialCurrencies(initCurr);
@@ -2933,7 +3343,7 @@ $(document).ready(function () {
         payRateUpdate();
         billRateUpdate();
         refreshCommercialSummary();
-    }, 500);
+    }, 400);
 
     
 
@@ -4935,7 +5345,7 @@ var fieldConfigMap = {
     'gender': { label: 'Gender', selector: '#gender', message: 'Gender is required.' },
     'current_company': { label: 'Current Company', selector: '#current_company', message: 'Current company is required.' },
     'current_designation': { label: 'Current Designation', selector: '#current_designation', message: 'Current designation is required.' },
-    'employmentType': { label: 'Employment Type', selector: '#EmploymentType', message: 'Employment type is required.' },
+    'employmentType': { label: 'Client Engagement Model', selector: '#EmploymentType', message: 'Client engagement model is required.' },
     'total_exp': { label: 'Total Experience', selector: '#total_exp_year', message: 'Total experience is required.' },
     'rel_exp': { label: 'Relevant Experience', selector: '#rel_exp_year', message: 'Relevant experience is required.' },
     'serving_notice_period': { label: 'Availability', selector: '#serving_notice_period', message: 'Availability is required.' },
@@ -5112,7 +5522,7 @@ function detectMissingFields(formEl, validatorInstance) {
     if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation');
 
     var et = ($('#EmploymentType').val() || '').trim();
-    if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType');
+    if (!et) addMissing('employmentType', 'Client Engagement Model', '#EmploymentType');
 
     var te = $('#total_exp_year').val();
     if (te === '' || te === null || te === undefined) addMissing('total_exp', 'Total Experience', '#total_exp_year');
@@ -5568,7 +5978,7 @@ var KTAddCandidate = function () {
                     'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
                     'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
                     'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
-                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Client Engagement Model is required"}} },
                     'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
                     'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
                     'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
@@ -5620,6 +6030,9 @@ var KTAddCandidate = function () {
                     $('#client_submission_uuid').val(clientUuid);
                 }
 
+                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+                }
                 window.normalizeCreateTalentPhones();
                 var formData = new FormData($('#createForm')[0]);
                 $.ajax({
@@ -5778,7 +6191,7 @@ var KTEditCandidate = function () {
                     'kt_tagify_work_location':	{validators:{notEmpty: {message: "Current Location is required"}} },
                     'current_company'		:	{validators:{notEmpty: {message: "Current company is required"}} },
                     'current_designation'	:	{validators:{notEmpty: {message: "Current designation is required"}} },
-                    'employmentType'		:	{validators:{notEmpty: {message: "Employment Type is required"}} },
+                    'employmentType'		:	{validators:{notEmpty: {message: "Client Engagement Model is required"}} },
                     'nationality'			:	{validators:{notEmpty: {message: "Nationality is required"}} },
                     'gender'				:	{validators:{notEmpty: {message: "Gender is required"}} },
                     'phone'					:	{validators:{notEmpty: {message: "Primary number is required"},callback:{message: "Enter a valid mobile number for the selected country", callback: function () { return window.validateCreateTalentPhone('phone', true); }}}},
@@ -5826,6 +6239,9 @@ var KTEditCandidate = function () {
                     $('#client_submission_uuid').val(clientUuid);
                 }
 
+                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+                }
                 window.normalizeCreateTalentPhones();
                 var formData = new FormData($('#createForm')[0]);
                 $.ajax({

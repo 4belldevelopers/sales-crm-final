@@ -31,7 +31,53 @@ body {overflow-x:hidden; }
     background: #8a878d;
     opacity: 0.5;
 }
-
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
 </style>
 
 
@@ -381,23 +427,29 @@ body {overflow-x:hidden; }
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="secondary_mobile"
+                        name="secondary_mobile"
+                        countryCodeName="secondary_country_code"
+                        countryCodeId="secondary_country_code"
+                        :value="@$application->secondary_mobile"
+                        :countryCode="@$second_phone_code"
+                        label=""
+                        :required="false"
+                        placeholder="Enter secondary number" />
                   </div>
                 </div>
                 <div class="g4">
@@ -699,7 +751,7 @@ body {overflow-x:hidden; }
                         </select>
                       </div>
 
-                      <select id="current_ctc_cur" name="current_ctc_cur">
+                      <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                           @php 
                               $current_ctc_cur	=	"";
                               $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
@@ -715,8 +767,11 @@ body {overflow-x:hidden; }
                                       $sel	=	'selected="selected"';	
                                   }	
                                   }
+                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                                  $entLabel = $cMeta['label'];
+                                  $keywords = $cMeta['keywords'];
                                                       
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';	
                               }
                           @endphp
                       </select>
@@ -741,7 +796,7 @@ body {overflow-x:hidden; }
                       <label style="color: var(--p)">Monthly Salary</label>
                       <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
                       </div>
-                      <select name="current_ectc_cur" id="current_ectc_cur">
+                      <select name="current_ectc_cur" id="current_ectc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                           @php 
                               $current_ctc_cur	=	"";
                               $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
@@ -757,8 +812,11 @@ body {overflow-x:hidden; }
                                       $sel	=	'selected="selected"';	
                                   }	
                                   }
+                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                                  $entLabel = $cMeta['label'];
+                                  $keywords = $cMeta['keywords'];
                                                       
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';	
                               }
                           @endphp
                       </select>
@@ -781,7 +839,7 @@ body {overflow-x:hidden; }
                     <div class="fg fv-row"><label style="color: var(--p)">Hourly Salary</label>
                       <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
                       </div>
-                      <select name="current_th_cur" id="current_th_cur">
+                      <select name="current_th_cur" id="current_th_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                           @php 
                               $current_ctc_cur	=	"";
                               $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
@@ -797,8 +855,11 @@ body {overflow-x:hidden; }
                                       $sel	=	'selected="selected"';	
                                   }	
                                   }
+                                  $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                                  $entLabel = $cMeta['label'];
+                                  $keywords = $cMeta['keywords'];
                                                       
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
+                                  echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';	
                               }
                           @endphp
                       </select>
@@ -2064,50 +2125,9 @@ $(document).ready(function () {
 
 localStorage.setItem('currentPage', "{{ @$currentPage }}");
   $(document).ready(function () {
-    // Initialize intl-tel-input for Primary and Secondary phone fields
-    const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-      separateDialCode: true,
-      initialCountry: "{{ $phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-    const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
-      separateDialCode: true,
-      initialCountry: "{{ $second_phone_code }}",
-      preferredCountries: ["in", "us", "gb", "ca", "au"],
-    });
-
-      // Function to update hidden country code inputs
-    function updateCountryCode(inputField, hiddenField) {
-      const selectedCountryData = inputField.getSelectedCountryData();
-      //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-      const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-      $(hiddenField).val(countryCode);
-
+    if (window.JeroPhoneBox) {
+      window.JeroPhoneBox.initAll();
     }
-    // Update country code on input or country flag selection
-    $("#phone").on("input change", function () {
-      updateCountryCode(primaryPhoneInput, "#primary_country_code");
-    });
-
-    $("#secondary_mobile").on("input change", function () {
-      updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-    });
-    // Update country code dynamically when the user selects a different country flag
-    $(".iti__flag-container").on("click", function (event) {
-      const targetInput = $(event.target).closest(".iti").find("input");
-
-      if (targetInput.is("#phone")) {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      } else if (targetInput.is("#secondary_mobile")) {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      }
-    });
-
-    setTimeout(function () {	
-      $(".iti__flag-container").click();
-    },500);
-
   });
 
 
@@ -2674,8 +2694,8 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Primary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -2684,8 +2704,8 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}
+                            digits:{ message: "Secondary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
                             
                         }
                     },
@@ -3028,13 +3048,96 @@ KTUtil.onDOMContentLoaded(function () {
 						});	
    								
    	});	
+   function updateCandidateCurrencyBadges(code) {
+       if (code) {
+           $('.changeTextCurrency').text(code);
+       }
+   }
+
+   function initClientCandidateCurrencySelect2() {
+       if (window.jQuery && $.fn.select2) {
+           $('#current_ctc_cur, #current_ectc_cur, #current_th_cur').each(function() {
+               var $el = $(this);
+               if ($el.hasClass('select2-hidden-accessible')) {
+                   $el.select2('destroy');
+               }
+               $el.select2({
+                   width: '100%',
+                   dropdownParent: $(document.body),
+                   dropdownCssClass: 'br-currency-select2-dropdown',
+                   placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+                   minimumResultsForSearch: 0,
+                   matcher: function (params, data) {
+                       if ($.trim(params.term) === '') {
+                           return data;
+                       }
+                       if (typeof data.text === 'undefined') {
+                           return null;
+                       }
+                       var term = params.term.toLowerCase();
+                       var text = data.text.toLowerCase();
+                       var $opt = $(data.element);
+                       var code = ($opt.data('code') || '').toString().toLowerCase();
+                       var searchKw = ($opt.data('search') || '').toString().toLowerCase();
+
+                       if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                           return data;
+                       }
+                       return null;
+                   }
+               });
+           });
+       }
+   }
+
    $('body').on('change', '#current_ctc_cur', function(){
-   			var	current_ctc_cur		=	$(this).val();
-			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
+       var val = $(this).val();
+       var opt = this.options[this.selectedIndex];
+       var code = opt ? (opt.getAttribute('data-code') || opt.text.split('—')[0].trim()) : 'INR';
+       updateCandidateCurrencyBadges(code);
+
+       if ($('#current_ectc_cur').val() !== val) {
+           $('#current_ectc_cur').val(val).trigger('change.select2');
+       }
+       if ($('#current_th_cur').val() !== val) {
+           $('#current_th_cur').val(val).trigger('change.select2');
+       }
    });
    $('body').on('change', '#current_ectc_cur', function(){
-   			var	current_ectc_cur	=	$(this).val();
-			document.getElementById("current_ctc_cur").selectedIndex = current_ectc_cur;
+       var val = $(this).val();
+       var opt = this.options[this.selectedIndex];
+       var code = opt ? (opt.getAttribute('data-code') || opt.text.split('—')[0].trim()) : 'INR';
+       updateCandidateCurrencyBadges(code);
+
+       if ($('#current_ctc_cur').val() !== val) {
+           $('#current_ctc_cur').val(val).trigger('change.select2');
+       }
+       if ($('#current_th_cur').val() !== val) {
+           $('#current_th_cur').val(val).trigger('change.select2');
+       }
+   });
+   $('body').on('change', '#current_th_cur', function(){
+       var val = $(this).val();
+       var opt = this.options[this.selectedIndex];
+       var code = opt ? (opt.getAttribute('data-code') || opt.text.split('—')[0].trim()) : 'INR';
+       updateCandidateCurrencyBadges(code);
+
+       if ($('#current_ctc_cur').val() !== val) {
+           $('#current_ctc_cur').val(val).trigger('change.select2');
+       }
+       if ($('#current_ectc_cur').val() !== val) {
+           $('#current_ectc_cur').val(val).trigger('change.select2');
+       }
+   });
+
+   $(document).ready(function() {
+       initClientCandidateCurrencySelect2();
+       var initSel = document.getElementById('current_ctc_cur');
+       if (initSel && initSel.selectedIndex >= 0) {
+           var opt = initSel.options[initSel.selectedIndex];
+           var code = opt ? (opt.getAttribute('data-code') || opt.text.split('—')[0].trim()) : 'INR';
+           updateCandidateCurrencyBadges(code);
+       }
    });
    $('body').on('change', '#current_ctc_mode', function(){
    			var	current_ctc_mode	=	$(this).val();

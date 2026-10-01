@@ -377,7 +377,7 @@
     letter-spacing: 0;
 }
 
-.job-candidate-create .candidate-card input:not([type="radio"]):not([type="checkbox"]):not([type="file"]),
+.job-candidate-create .candidate-card input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not(.jero-phone-main-input):not(.jero-phone-country-code-input):not(.jero-search-input),
 .job-candidate-create .candidate-card select,
 .job-candidate-create .candidate-card textarea,
 .job-candidate-create .candidate-card .tagify {
@@ -392,7 +392,7 @@
     letter-spacing: 0;
 }
 
-.job-candidate-create .candidate-card input:focus,
+.job-candidate-create .candidate-card input:focus:not(.jero-phone-main-input):not(.jero-search-input),
 .job-candidate-create .candidate-card select:focus,
 .job-candidate-create .candidate-card textarea:focus,
 .job-candidate-create .candidate-card .tagify--focus {
@@ -413,8 +413,8 @@
 }
 
 .job-candidate-create .bd-card .iti,
-.job-candidate-create .bd-card #phone,
-.job-candidate-create .bd-card #secondary_mobile {
+.job-candidate-create .bd-card #phone:not(.jero-phone-main-input),
+.job-candidate-create .bd-card #secondary_mobile:not(.jero-phone-main-input) {
     width: 100% !important;
 }
 
