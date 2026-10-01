@@ -1725,7 +1725,7 @@ if($snp_mode== 1){
                             });
                         }
                       @endphp
-                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                      <select name="visastatu" id="visastatu" class="form-select wa-select" data-control="select2" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
                         <option value="">Select work authorization or visa status</option>
 
                         {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
@@ -1854,152 +1854,6 @@ if($snp_mode== 1){
                 </div>
               </div>
             </div>
-
-            {{-- Isolated Work Authorization & 240+ Country Compliance Engine (Client-First Execution - Rule 3, Rule 17) --}}
-            <script>
-            (function ($) {
-                'use strict';
-
-                function initWorkAuthorizationEngine() {
-                    if (typeof $ === 'undefined' || !$.fn || !$.fn.select2) {
-                        return false;
-                    }
-
-                    var $select = $('#visastatu');
-                    if (!$select.length) return false;
-
-                    if ($select.hasClass('select2-hidden-accessible')) {
-                        $select.select2('destroy');
-                    }
-
-                    $select.select2({
-                        width: '100%',
-                        dropdownParent: $(document.body),
-                        dropdownCssClass: 'wa-select2-dropdown',
-                        placeholder: 'Search visa / work authorization or country...',
-                        allowClear: true,
-                        minimumResultsForSearch: 0,
-                        matcher: function (params, data) {
-                            if (!params.term || $.trim(params.term) === '') {
-                                return data;
-                            }
-                            var term = params.term.toLowerCase().trim();
-
-                            // If optgroup
-                            if (data.children && data.children.length > 0) {
-                                var groupLabel = (data.text || '').toLowerCase();
-                                if (groupLabel.indexOf(term) > -1) {
-                                    return data;
-                                }
-
-                                var matchedChildren = [];
-                                for (var i = 0; i < data.children.length; i++) {
-                                    var child = data.children[i];
-                                    var childText = (child.text || '').toLowerCase();
-                                    var childVal = (child.id || '').toLowerCase();
-                                    if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
-                                        matchedChildren.push(child);
-                                    }
-                                }
-                                if (matchedChildren.length > 0) {
-                                    var cloned = $.extend({}, data, true);
-                                    cloned.children = matchedChildren;
-                                    return cloned;
-                                }
-                                return null;
-                            }
-
-                            // Leaf option
-                            var text = (data.text || '').toLowerCase();
-                            var val = (data.id || '').toLowerCase();
-                            if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
-                                return data;
-                            }
-                            return null;
-                        }
-                    });
-
-                    // Hide static chevron icon
-                    $select.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
-
-                    syncWorkAuthActiveChip();
-                    return true;
-                }
-
-                function syncWorkAuthActiveChip() {
-                    var val = $('#visastatu').val();
-                    $('.wa-chip-btn').removeClass('is-active');
-                    if (!val) return;
-
-                    var $selectedOpt = $('#visastatu').find('option:selected');
-                    var $optgroup = $selectedOpt.closest('optgroup');
-                    var groupLabel = ($optgroup.attr('label') || '').toLowerCase();
-                    var optVal = (val || '').toLowerCase();
-
-                    $('.wa-chip-btn').each(function () {
-                        var filter = ($(this).data('filter') || '').toLowerCase();
-                        var region = ($(this).data('region') || '').toLowerCase();
-                        if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
-                            optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
-                            $(this).addClass('is-active');
-                            return false;
-                        }
-                    });
-                }
-
-                // Handle Quick Hub Chip click
-                $(document).on('click', '.wa-chip-btn', function (e) {
-                    e.preventDefault();
-                    var $btn = $(this);
-                    var filterTerm = $btn.data('filter') || '';
-                    var wasActive = $btn.hasClass('is-active');
-
-                    $('.wa-chip-btn').removeClass('is-active');
-
-                    var $visaSelect = $('#visastatu');
-                    if (wasActive) {
-                        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
-                            if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
-                                var $sf = $('.wa-select2-dropdown .select2-search__field');
-                                if ($sf.length) {
-                                    $sf.val('').trigger('input').trigger('keyup');
-                                }
-                            }
-                        }
-                        return;
-                    }
-
-                    $btn.addClass('is-active');
-
-                    if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
-                        $visaSelect.select2('open');
-                        setTimeout(function () {
-                            var $searchField = $('.wa-select2-dropdown .select2-search__field');
-                            if ($searchField.length) {
-                                $searchField.val(filterTerm).trigger('input').trigger('keyup');
-                            }
-                        }, 50);
-                    } else {
-                        $visaSelect.focus();
-                    }
-                });
-
-                $(document).on('change', '#visastatu', function () {
-                    syncWorkAuthActiveChip();
-                });
-
-                // Multi-stage safe initialization
-                $(document).ready(function () {
-                    initWorkAuthorizationEngine();
-                    setTimeout(initWorkAuthorizationEngine, 300);
-                    setTimeout(initWorkAuthorizationEngine, 800);
-                });
-
-                if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                    setTimeout(initWorkAuthorizationEngine, 100);
-                }
-            })(jQuery);
-            </script>
           </div>
           </form>
         </main>
@@ -2123,6 +1977,157 @@ if($snp_mode== 1){
 @push('footer-script')
 <script src="{{ asset('js/resume-presign.js') }}?v=20260929-godlevel"></script>
 @include('service_company.bench-candidates.jero-bench-parser')
+
+<script>
+/**
+ * Enterprise Work Authorization & 240+ Country Compliance Engine
+ * Client-First Execution (User RAM & Browser CPU First - Rule 3, Rule 17)
+ */
+$(document).ready(function () {
+    function initWorkAuthorizationEngine() {
+        if (!$.fn || !$.fn.select2) {
+            setTimeout(initWorkAuthorizationEngine, 100);
+            return;
+        }
+
+        var $select = $('#visastatu');
+        if (!$select.length) return;
+
+        if ($select.hasClass('select2-hidden-accessible')) {
+            $select.select2('destroy');
+        }
+
+        $select.select2({
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'wa-select2-dropdown',
+            placeholder: 'Search visa / work authorization or country...',
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            matcher: function (params, data) {
+                if (!params.term || $.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase().trim();
+
+                // If optgroup
+                if (data.children && data.children.length > 0) {
+                    var groupLabel = (data.text || '').toLowerCase();
+                    if (groupLabel.indexOf(term) > -1) {
+                        return data;
+                    }
+
+                    var matchedChildren = [];
+                    for (var i = 0; i < data.children.length; i++) {
+                        var child = data.children[i];
+                        var childText = (child.text || '').toLowerCase();
+                        var childVal = (child.id || '').toLowerCase();
+                        if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
+                            matchedChildren.push(child);
+                        }
+                    }
+                    if (matchedChildren.length > 0) {
+                        var cloned = $.extend({}, data, true);
+                        cloned.children = matchedChildren;
+                        return cloned;
+                    }
+                    return null;
+                }
+
+                // Leaf option
+                var text = (data.text || '').toLowerCase();
+                var val = (data.id || '').toLowerCase();
+                if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+
+        // Hide static chevron icon in select wrapper
+        $select.closest('.addl-select-wrap').find('> i.fa-chevron-down').hide();
+
+        syncWorkAuthActiveChip();
+    }
+
+    function syncWorkAuthActiveChip() {
+        var val = $('#visastatu').val();
+        $('.wa-chip-btn').removeClass('is-active');
+        if (!val) return;
+
+        var $selectedOpt = $('#visastatu').find('option:selected');
+        var $optgroup = $selectedOpt.closest('optgroup');
+        var groupLabel = ($optgroup.attr('label') || '').toLowerCase();
+        var optVal = (val || '').toLowerCase();
+
+        $('.wa-chip-btn').each(function () {
+            var filter = ($(this).data('filter') || '').toLowerCase();
+            var region = ($(this).data('region') || '').toLowerCase();
+            if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
+                optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
+                $(this).addClass('is-active');
+                return false;
+            }
+        });
+    }
+
+    // Ensure search field is instantly focused upon opening
+    $(document).on('select2:open', '#visastatu', function () {
+        setTimeout(function () {
+            var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 50);
+    });
+
+    // Handle Quick Hub Chip click
+    $(document).on('click', '.wa-chip-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var filterTerm = $btn.data('filter') || '';
+        var wasActive = $btn.hasClass('is-active');
+
+        $('.wa-chip-btn').removeClass('is-active');
+
+        var $visaSelect = $('#visastatu');
+        if (wasActive) {
+            if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+                if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                    var $sf = $('.wa-select2-dropdown .select2-search__field');
+                    if ($sf.length) {
+                        $sf.val('').trigger('input').trigger('keyup');
+                    }
+                }
+            }
+            return;
+        }
+
+        $btn.addClass('is-active');
+
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            $visaSelect.select2('open');
+            setTimeout(function () {
+                var $searchField = $('.wa-select2-dropdown .select2-search__field');
+                if ($searchField.length) {
+                    $searchField.val(filterTerm).trigger('input').trigger('keyup');
+                }
+            }, 60);
+        } else {
+            $visaSelect.focus();
+        }
+    });
+
+    $(document).on('change', '#visastatu', function () {
+        syncWorkAuthActiveChip();
+    });
+
+    // Boot engine safely with multi-stage checks
+    initWorkAuthorizationEngine();
+    setTimeout(initWorkAuthorizationEngine, 200);
+    setTimeout(initWorkAuthorizationEngine, 600);
+});
+</script>
 
 <script>
 $(document).ready(function () {
