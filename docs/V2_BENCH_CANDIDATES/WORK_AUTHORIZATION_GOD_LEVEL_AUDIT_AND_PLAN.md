@@ -205,10 +205,35 @@ In B2B bench sharing, recruiters need to know if the talent can be placed on:
                 <option value="UK Graduate Visa" {{ @$application->visastatu == 'UK Graduate Visa' ? 'selected' : '' }}>UK Graduate / Youth Mobility Visa</option>
               </optgroup>
 
-              <optgroup label="Other & Global">
+              <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
+                <option value="UAE Golden Visa" {{ @$application->visastatu == 'UAE Golden Visa' ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                <option value="UAE Green Visa" {{ @$application->visastatu == 'UAE Green Visa' ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                <option value="UAE Employment Visa" {{ @$application->visastatu == 'UAE Employment Visa' ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
+                <option value="UAE Freelance Visa" {{ @$application->visastatu == 'UAE Freelance Visa' ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                <option value="UAE National" {{ @$application->visastatu == 'UAE National' ? 'selected' : '' }}>UAE / GCC National</option>
+                <option value="GCC Iqama" {{ @$application->visastatu == 'GCC Iqama' ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+              </optgroup>
+
+              <optgroup label="Singapore (SG)">
+                <option value="Singapore Citizen" {{ @$application->visastatu == 'Singapore Citizen' ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                <option value="Singapore PR" {{ @$application->visastatu == 'Singapore PR' ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                <option value="Singapore EP" {{ @$application->visastatu == 'Singapore EP' ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                <option value="Singapore S Pass" {{ @$application->visastatu == 'Singapore S Pass' ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                <option value="Singapore ONE Pass" {{ @$application->visastatu == 'Singapore ONE Pass' ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                <option value="Singapore LOC / DP" {{ @$application->visastatu == 'Singapore LOC / DP' ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
+              </optgroup>
+
+              <optgroup label="Australia & New Zealand (AU / NZ)">
+                <option value="Australia Citizen / PR" {{ @$application->visastatu == 'Australia Citizen / PR' ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                <option value="Australia TSS 482" {{ @$application->visastatu == 'Australia TSS 482' ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
+                <option value="Australia Skilled 189/190" {{ @$application->visastatu == 'Australia Skilled 189/190' ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
+                <option value="Australia Graduate 485" {{ @$application->visastatu == 'Australia Graduate 485' ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
+                <option value="New Zealand Citizen / PR" {{ @$application->visastatu == 'New Zealand Citizen / PR' ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+              </optgroup>
+
+              <optgroup label="European Union & Global (EU / Global)">
                 <option value="EU Citizen" {{ @$application->visastatu == 'EU Citizen' ? 'selected' : '' }}>EU / EEA Citizen</option>
                 <option value="EU Blue Card" {{ @$application->visastatu == 'EU Blue Card' ? 'selected' : '' }}>EU Blue Card</option>
-                <option value="UAE Golden Visa" {{ @$application->visastatu == 'UAE Golden Visa' ? 'selected' : '' }}>UAE Golden / Green Visa</option>
                 <option value="Authorized Work Permit" {{ @$application->visastatu == 'Authorized Work Permit' ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
                 <option value="Requires Sponsorship" {{ @$application->visastatu == 'Requires Sponsorship' ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
               </optgroup>
