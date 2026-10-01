@@ -4835,4 +4835,6 @@ ALTER TABLE `bench_count_view_download` ADD INDEX `idx_bcvd_cand_type_status` (`
 ALTER TABLE `bench_assign` ADD INDEX `idx_ba_bench_app_comp` (`bench_applications_id`, `company_id`, `user_id`);
 ALTER TABLE `client_city_jobs` ADD INDEX `idx_ccj_job_city` (`job_id`, `city_id`);
 ALTER TABLE `job_metronics_skills` ADD INDEX `idx_jms_job_id` (`job_id`, `skill_name`);
+ALTER TABLE `bench_additional_detail` ADD INDEX `idx_bench_id` (`bench_id`);
+ALTER TABLE `bench_assign` ADD INDEX `idx_bench_app_company` (`bench_applications_id`, `company_id`);
 

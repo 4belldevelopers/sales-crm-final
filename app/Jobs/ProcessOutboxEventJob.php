@@ -185,9 +185,13 @@ class ProcessOutboxEventJob implements ShouldQueue
                 case 'talent.bench.stage_changed':
                     if ($candidateId > 0) {
                         try {
-                            GeneralMethod::elasticBenchCandidateAddEditIndex($candidateId);
+                            app(\App\Services\ElasticBenchCandidatesIndex::class)->benchCandidateIndexElastic($candidateId);
+                            $companyId = (int) ($event->company_id ?: ($payload['company_id'] ?? 0));
+                            if ($companyId > 0) {
+                                GeneralMethod::addCompanyBenchCandidate($companyId, $candidateId);
+                            }
                         } catch (\Throwable $esEx) {
-                            Log::warning('ProcessOutboxEventJob: elasticBenchCandidateAddEditIndex warning', [
+                            Log::warning('ProcessOutboxEventJob: ElasticBenchCandidatesIndex warning', [
                                 'candidate_id' => $candidateId,
                                 'error' => $esEx->getMessage(),
                             ]);
@@ -203,7 +207,11 @@ class ProcessOutboxEventJob implements ShouldQueue
                 default:
                     if ($event->aggregate_type === 'bench_candidate' && $candidateId > 0) {
                         try {
-                            GeneralMethod::elasticBenchCandidateAddEditIndex($candidateId);
+                            app(\App\Services\ElasticBenchCandidatesIndex::class)->benchCandidateIndexElastic($candidateId);
+                            $companyId = (int) ($event->company_id ?: ($payload['company_id'] ?? 0));
+                            if ($companyId > 0) {
+                                GeneralMethod::addCompanyBenchCandidate($companyId, $candidateId);
+                            }
                         } catch (\Throwable $esEx) {
                             Log::warning('ProcessOutboxEventJob: bench_candidate fallback index error', [
                                 'candidate_id' => $candidateId,

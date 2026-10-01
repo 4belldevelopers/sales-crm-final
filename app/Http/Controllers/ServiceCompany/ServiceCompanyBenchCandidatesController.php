@@ -553,65 +553,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $data = [];
         }
 
-        // Bulk pre-fetch work-preference (wm), view/download counts, ES pipeline stage counts,
-        // and fallback relationship manager assignments so bench-candidate-list-ajax.blade.php runs 0 per-row queries.
+        // Rule 1 & Rule 2: 0% MySQL reads - map work-preference (wm), view/download counts,
+        // and relationship managers directly from Elasticsearch _source hits.
         $pageIds = array_values(array_filter(array_column($data, 'id')));
         if (! empty($pageIds)) {
-            $wmMap = DB::table('job_applications')
-                ->where('company_id', $company_id)
-                ->whereIn('id', $pageIds)
-                ->pluck('wm', 'id');
-
             // Single bulk ES aggregation for stage counters across all candidates on the page
             $benchExploreCounters = GeneralMethod::bench_explore_listing_counter_bulk($pageIds, $company_id);
 
-            // Bulk fetch view and download counts using index idx_bcvd_cand_type_stat
-            $counts = DB::table('bench_count_view_download')
-                ->select('candidate_id', 'type', DB::raw('COUNT(*) as total'))
-                ->whereIn('candidate_id', $pageIds)
-                ->where('status', 0)
-                ->groupBy('candidate_id', 'type')
-                ->get();
-
-            foreach ($counts as $c) {
-                if ($c->type == 1) {
-                    $viewCounts[$c->candidate_id] = $c->total;
-                } elseif ($c->type == 2) {
-                    $downloadCounts[$c->candidate_id] = $c->total;
-                }
-            }
-
-            // Bulk fetch relationship managers only for rows missing hiring_hr in ES _source
-            $missingHrIds = [];
-            foreach ($data as $r) {
-                if (empty($r['hiring_hr']) && ! empty($r['id'])) {
-                    $missingHrIds[] = (int) $r['id'];
-                }
-            }
-            if (! empty($missingHrIds)) {
-                $hmRows = DB::table('bench_assign')
-                    ->join('users', 'users.id', '=', 'bench_assign.user_id')
-                    ->select('bench_assign.bench_applications_id as cand_id', 'users.name')
-                    ->whereIn('bench_assign.bench_applications_id', $missingHrIds)
-                    ->where('bench_assign.company_id', $company_id)
-                    ->where('users.company_id', $company_id)
-                    ->orderBy('users.name', 'ASC')
-                    ->get();
-                foreach ($hmRows as $hmRow) {
-                    $cid = (int) $hmRow->cand_id;
-                    if (! isset($benchManagersMap[$cid])) {
-                        $benchManagersMap[$cid] = [
-                            'count' => 0,
-                            'first_name' => $hmRow->name,
-                        ];
-                    }
-                    $benchManagersMap[$cid]['count']++;
-                }
-            }
-
             foreach ($data as &$row) {
                 $candId = $row['id'] ?? null;
-                $row['wm'] = $wmMap[$candId] ?? $row['wm'] ?? null;
+                if ($candId) {
+                    $viewCounts[$candId] = (int) ($row['viewCount'] ?? 0);
+                    $downloadCounts[$candId] = (int) ($row['downloadCount'] ?? 0);
+                    if (! empty($row['hiring_hr']) && is_array($row['hiring_hr'])) {
+                        $benchManagersMap[$candId] = [
+                            'count' => count($row['hiring_hr']),
+                            'first_name' => $row['hiring_hr'][0]['name'] ?? 'Unassigned',
+                        ];
+                    }
+                }
 
                 if ($candId && isset($benchExploreCounters[$candId])) {
                     $ac = $benchExploreCounters[$candId]->applicationCounter;
@@ -793,38 +753,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             $candidates = [];
             if (! empty($rawHits)) {
-                $pageIds = array_values(array_filter(array_column($rawHits, 'id')));
-                if (! empty($pageIds)) {
-                    $wmMap = DB::table('job_applications')
-                        ->where('company_id', $company_id)
-                        ->whereIn('id', $pageIds)
-                        ->pluck('wm', 'id');
-
-                    $counts = DB::table('bench_count_view_download')
-                        ->select('candidate_id', 'type', DB::raw('COUNT(*) as total'))
-                        ->whereIn('candidate_id', $pageIds)
-                        ->where('status', 0)
-                        ->groupBy('candidate_id', 'type')
-                        ->get();
-
-                    foreach ($counts as $c) {
-                        if ($c->type == 1) {
-                            $viewCounts[$c->candidate_id] = $c->total;
-                        } elseif ($c->type == 2) {
-                            $downloadCounts[$c->candidate_id] = $c->total;
-                        }
-                    }
-
-                    foreach ($rawHits as &$r) {
-                        $r['wm'] = $wmMap[$r['id'] ?? null] ?? $r['wm'] ?? null;
-                    }
-                    unset($r);
-                }
-
                 $salaryMode = GeneralMethod::salaryMode();
                 $currencySymbole = GeneralMethod::currencySymbole();
 
-                $candidates = array_map(function ($row) use ($viewCounts, $downloadCounts, $companyCurrencyBenchshowMode, $salaryMode, $currencySymbole) {
+                $candidates = array_map(function ($row) use ($companyCurrencyBenchshowMode, $salaryMode, $currencySymbole) {
                     $billFormatViewSalary = GeneralMethod::formatViewSalary($row['ectc_yearly'] ?? 0, $companyCurrencyBenchshowMode->currency_code, $companyCurrencyBenchshowMode->show_mode);
                     $bill_rate_currency = $currencySymbole[$billFormatViewSalary->currency] ?? '₹';
                     $bill_rate_mode = $salaryMode[$billFormatViewSalary->mode] ?? 'Yearly';
@@ -851,8 +783,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'master_status_name' => $row['master_status_name'] ?? 'Bench',
                         'css_style' => $row['css_style'] ?? 'text-primary',
                         'created_at' => $row['created_at'] ?? null,
-                        'views' => $viewCounts[$row['id']] ?? $row['viewCount'] ?? 0,
-                        'downloads' => $downloadCounts[$row['id']] ?? $row['downloadCount'] ?? 0,
+                        'views' => (int) ($row['viewCount'] ?? 0),
+                        'downloads' => (int) ($row['downloadCount'] ?? 0),
                         'hiring_hr' => $row['hiring_hr'] ?? [],
                         'pipeline' => [
                             'sourcing' => $row['sourcing_count'] ?? 0,
@@ -1258,29 +1190,35 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $eventId = 5;
         $coinsRequ = 1;
         $companyId = (int) auth()->user()->company_id;
-        $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+        $userId = (int) auth()->user()->id;
+
+        $packageStatus = Cache::remember("company:coins_val:{$companyId}:{$eventId}:{$coinsRequ}", 60, function () use ($companyId, $eventId, $coinsRequ) {
+            return GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+        });
         if ($packageStatus->status) {
-            session()->flash('packageStatus', $packageStatus->message); // or false depending on your condition
+            session()->flash('packageStatus', $packageStatus->message);
             $url = url('service_company/bench-candidates');
 
             return redirect($url);
         }
 
-        $this->client = DB::table('users')
-            ->join('companies', 'companies.id', 'users.company_id')
-            ->join('clients', 'clients.company_id', 'companies.id')
-            ->select('clients.id')
-            ->where('users.id', auth()->user()->id)->first();
+        $this->client = Cache::remember("user:{$userId}:client_id", 3600, function () use ($userId) {
+            return DB::table('users')
+                ->join('companies', 'companies.id', 'users.company_id')
+                ->join('clients', 'clients.company_id', 'companies.id')
+                ->select('clients.id')
+                ->where('users.id', $userId)->first();
+        });
 
-        $country = User::join('companies', 'companies.id', '=', 'users.company_id')
-            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->select('users_profile.country', 'companies.logo', 'companies.company_name')
-            ->with('company')
-            ->where('users.id', '=', auth()->user()->id)
-            ->company()
-            ->first();
-
-        // dd($country);
+        $country = Cache::remember("user:{$userId}:company_profile", 3600, function () use ($userId) {
+            return User::join('companies', 'companies.id', '=', 'users.company_id')
+                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+                ->select('users_profile.country', 'companies.logo', 'companies.company_name')
+                ->with('company')
+                ->where('users.id', '=', $userId)
+                ->company()
+                ->first();
+        });
 
         $this->country = @$country->country;
         $this->companylogo = @$country->logo;
@@ -1288,34 +1226,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $this->recruiterlist = [];
 
-        // Phase 1 Optimization: Cache static master datasets and avoid unneeded DB calls on Add Candidate view load
-        if (config('feature.talents_v2_enabled')) {
-            $this->qualification = Cache::remember('qualification_master_list', 86400, function () {
-                return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
-            });
-            $this->currency = GeneralMethod::currency();
-            $this->salaryMode = GeneralMethod::salaryMode();
-            $this->countries = Cache::remember('country_list_json', 86400, function () {
-                return GeneralMethod::getAllCountryList();
-            });
+        // Phase 1 Optimization: Cache static master datasets permanently and avoid unneeded DB calls on Add Candidate view load
+        $this->qualification = Cache::rememberForever('qualification_master_list', function () {
+            return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+        });
+        $this->currency = GeneralMethod::currency();
+        $this->salaryMode = GeneralMethod::salaryMode();
+        $this->countries = Cache::rememberForever('country_list_json', function () {
+            return GeneralMethod::getAllCountryList();
+        });
 
-            $this->cities = [];
-            $this->default_loc = '';
-            $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
-                return GeneralMethod::currencyConverter();
-            });
-            $this->skillExperiences = [];
-        } else {
-            $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
-            $this->currency = GeneralMethod::currency();
-            $this->salaryMode = GeneralMethod::salaryMode();
-            $this->countries = GeneralMethod::getAllCountryList();
-
-            $this->cities = []; // GeneralMethod::allCities();
-            $this->default_loc = GeneralMethod::allCitiesSelected([]);
-            $this->currencyConverter = GeneralMethod::currencyConverter();
-            $this->skillExperiences = [];
-        }
+        $this->cities = [];
+        $this->default_loc = '';
+        $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
+            return GeneralMethod::currencyConverter();
+        });
+        $this->skillExperiences = [];
 
         return response()->view('service_company.bench-candidates.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -1936,6 +1862,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 Redis::connection('default')->del("bench:hero:pool:{$companyId}");
                 Redis::connection('default')->del("bench:hero:hold:{$companyId}");
                 Redis::connection('default')->del("ats:allbenchcandidates:{$companyId}");
+                cache()->increment("allbenchcandidates_version_company_{$companyId}");
+                Cache::forget("company:coins_val:{$companyId}:5:1");
+                GeneralMethod::cacheClean("candidate:{$benchApplication->id}");
             } catch (\Throwable $e) {
                 Log::warning('POST_COMMIT_CACHE_CLEAR_FAILED', ['error' => $e->getMessage()]);
             }

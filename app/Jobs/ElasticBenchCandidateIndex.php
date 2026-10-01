@@ -16,9 +16,9 @@ class ElasticBenchCandidateIndex implements ShouldQueue
 
     public $comid;
 
-    public int $tries = 5;
+    public int $tries = 3;
 
-    public array $backoff = [10, 30, 60, 120, 300];
+    public array $backoff = [5, 15, 60];
 
     public int $timeout = 60;
 
