@@ -3790,7 +3790,12 @@ CREATE TABLE `rec_candidate_assign` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `ac_status` int(11) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_rca_job_app_from` (`source_jobid`,`source_application_id`,`source_from_id`),
+  KEY `idx_rca_source_app` (`source_application_id`),
+  KEY `idx_rca_source_from` (`source_from_id`,`source_application_id`),
+  KEY `idx_rca_source_company` (`source_company_id`),
+  KEY `idx_rec_cand_comp_job_status` (`source_company_id`,`source_jobid`,`ac_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `recommendation_relation`;
@@ -4819,4 +4824,15 @@ ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_tenant_job_status` (`c
 ALTER TABLE `add_job_wise_condidates` ADD INDEX `idx_ajwc_thirdparty_job_status` (`thirdparty_company_id`, `job_id`, `master_status_id`);
 ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_source_from` (`source_from_id`, `source_application_id`);
 ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_source_company` (`source_company_id`);
+ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_job_app_from` (`source_jobid`, `source_application_id`, `source_from_id`);
+ALTER TABLE `rec_candidate_assign` ADD INDEX `idx_rca_source_app` (`source_application_id`);
+ALTER TABLE `application_additional_detail` ADD INDEX `idx_aad_app_job_q` (`application_id`, `job_id`, `question_id`);
+ALTER TABLE `city_list` ADD INDEX `idx_city_list_city_id` (`city_id`);
+ALTER TABLE `city_list` ADD INDEX `idx_city_list_state_id` (`state_id`);
+ALTER TABLE `documents` ADD INDEX `idx_documents_documentable` (`documentable_id`, `id`);
+ALTER TABLE `offer_job_applications` ADD INDEX `idx_oja_app_job` (`application_id`, `job_id`);
+ALTER TABLE `bench_count_view_download` ADD INDEX `idx_bcvd_cand_type_status` (`candidate_id`, `type`, `status`);
+ALTER TABLE `bench_assign` ADD INDEX `idx_ba_bench_app_comp` (`bench_applications_id`, `company_id`, `user_id`);
+ALTER TABLE `client_city_jobs` ADD INDEX `idx_ccj_job_city` (`job_id`, `city_id`);
 ALTER TABLE `job_metronics_skills` ADD INDEX `idx_jms_job_id` (`job_id`, `skill_name`);
+

@@ -11,3 +11,20 @@ Artisan::command('inspire', function () {
 // Add scheduler here
 Schedule::command('interview:send-reminder')->everyMinute();
 Schedule::command('temp-attachments:clean')->hourly();
+
+// AppTracker Transactional Outbox: Process pending ES & Reverb events and prune completed events
+Schedule::command('outbox:process-es --limit=100')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->runInBackground();
+
+Schedule::command('outbox:process-reverb --limit=100')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->runInBackground();
+
+Schedule::command('apptracker:prune-outbox --days=7')
+    ->dailyAt('03:30')
+    ->withoutOverlapping(10)
+    ->runInBackground();
+

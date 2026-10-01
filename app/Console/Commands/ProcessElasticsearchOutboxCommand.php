@@ -73,6 +73,14 @@ class ProcessElasticsearchOutboxCommand extends Command
                     if ($wiseId > 0) {
                         GeneralMethod::JobApplicationsAddEditUpload($wiseId);
                     }
+                    $benchCandidateId = (int) ($payload['candidate_id'] ?? 0);
+                    if ($benchCandidateId > 0 && (int) ($payload['source_from_type'] ?? 0) > 0) {
+                        try {
+                            GeneralMethod::elasticBenchCandidateAddEditIndex($benchCandidateId);
+                        } catch (\Throwable $e) {
+                            Log::warning("ProcessElasticsearchOutboxCommand: bench sync failed for candidate #{$benchCandidateId}: ".$e->getMessage());
+                        }
+                    }
                     break;
 
                 default:

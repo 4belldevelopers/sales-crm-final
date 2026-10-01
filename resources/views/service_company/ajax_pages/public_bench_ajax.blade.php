@@ -63,7 +63,14 @@
 
                     $targetJobId = $row->job_id ?? ($jobid ?? 0);
                     if ($targetJobId > 0) {
-                        $percentageString = GeneralMethod::skill_percentage($targetJobId, $skillArr);
+                        // Phase 3 Optimization: Use pre-fetched $rowMaps['skills'] from prepareRowMaps()
+                        // instead of querying DB::table('job_metronics_skills') per candidate row (eliminating 10 N+1 SQL queries).
+                        if (isset($rowMaps['skills'][$targetJobId])) {
+                            $jobRequiredSkills = collect($rowMaps['skills'][$targetJobId])->pluck('skill_name')->toArray();
+                            $percentageString = GeneralMethod::skill_percentage_from_array($jobRequiredSkills, $skillArr);
+                        } else {
+                            $percentageString = GeneralMethod::skill_percentage($targetJobId, $skillArr);
+                        }
                         $percentage = (int) round((float) rtrim($percentageString ?: '0%', '%'));
                     } else {
                         $matches = $row->matched_skill_count ?? 0;

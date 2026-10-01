@@ -7,7 +7,6 @@ use App\Helper\GeneralMethod;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 
 /**
  * CandidateJobAlignmentService
@@ -304,65 +303,58 @@ class CandidateJobAlignmentService
         $targetIds = array_values(array_unique(array_filter(array_merge([$candidateId, $wiseId], $allWiseIds))));
         $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule', 'similar_candidates', 'internal_bench', 'public_bench'];
 
-        // 1. Invalidate candidate details drawer HTML/JSON cache
-        foreach ($targetIds as $tid) {
-            foreach ($slugs as $slug) {
-                Cache::forget('tenant:'.$companyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
-                Cache::forget('tenant:'.$companyId.':candidate_details:'.$tid);
-            }
-        }
+        $authCompanyId = auth()->user()?->company_id ? (int) auth()->user()->company_id : 0;
+        $tenantIdsToInvalidate = array_values(array_unique(array_filter([(int) $companyId, $authCompanyId])));
 
-        // Redis scan & delete pattern for any wildcard drawer keys
-        try {
-            $redis = Redis::connection();
+        // 1. Invalidate candidate details drawer HTML/JSON cache deterministically (O(1) per key; 0 blocking Redis::keys scans)
+        foreach ($tenantIdsToInvalidate as $tCompanyId) {
             foreach ($targetIds as $tid) {
-                $keys = $redis->keys("*tenant:{$companyId}:candidate_details:{$tid}*");
-                if (! empty($keys)) {
-                    foreach ($keys as $k) {
-                        $redis->del($k);
-                    }
+                foreach ($slugs as $slug) {
+                    Cache::forget('tenant:'.$tCompanyId.':candidate_details:'.$tid.':'.md5($slug).':view:'.$drawerViewVersion);
+                    Cache::forget('tenant:'.$tCompanyId.':candidate_details:'.$tid);
                 }
             }
-        } catch (\Throwable $re) {
-            // Non-critical if Redis keys command fails
+            // 2. Invalidate Forward Resume caches
+            Cache::forget("tenant:{$tCompanyId}:fwd_branding");
+            Cache::forget("tenant:{$tCompanyId}:fwd_template_metadata");
         }
 
-        // 2. Invalidate Forward Resume caches
-        Cache::forget("tenant:{$companyId}:fwd_branding");
-        Cache::forget("tenant:{$companyId}:fwd_template_metadata");
+        // 3. Invalidate Datatable tenant-scoped and user-scoped version counters (Rule 6: Multi-Tenant Atomic Cache Invalidation)
+        $versionPrefixes = [
+            'allcvtracker_version',
+            'allapptracker_version',
+            'allbenchcandidates_version',
+            'allcopyjobslist_version',
+            'allsimilarcandidates_version',
+            'allclientapp_version',
+            'allinternalbench_version',
+            'allpublicbench_version',
+            'alldsimilarcandidates_version',
+            'alldinternalbench_version',
+            'allfindtalents_version',
+            'allcandidatesrequest_version',
+            'allcareerapplydata_version',
+            'alljobslist_version',
+            'allbenchexplore_version',
+            'candidateDetails_version',
+        ];
 
-        // 3. Invalidate Datatable user version counters (including Bench Candidates list)
         $userId = auth()->user()?->id;
-        if ($userId) {
-            $versionKeys = [
-                'allcvtracker_version_user_'.$userId,
-                'allapptracker_version_user_'.$userId,
-                'allbenchcandidates_version_user_'.$userId,
-                'allsimilarcandidates_version_user_'.$userId,
-                'allclientapp_version_user_'.$userId,
-                'allinternalbench_version_user_'.$userId,
-                'allpublicbench_version_user_'.$userId,
-                'alldsimilarcandidates_version_user_'.$userId,
-                'alldinternalbench_version_user_'.$userId,
-                'allfindtalents_version_user_'.$userId,
-                'allcandidatesrequest_version_user_'.$userId,
-                'allcareerapplydata_version_user_'.$userId,
-                'alljobslist_version_user_'.$userId,
-                'allbenchexplore_version_user_'.$userId,
-                'candidateDetails_version_user_'.$userId,
-            ];
-            foreach ($versionKeys as $vk) {
-                GeneralMethod::cacheClean($vk);
+        foreach ($versionPrefixes as $prefix) {
+            if ($userId) {
+                GeneralMethod::cacheClean($prefix.'_user_'.$userId, (int) $companyId);
+            }
+            foreach ($tenantIdsToInvalidate as $tCompanyId) {
+                GeneralMethod::cacheClean($prefix.'_company_'.$tCompanyId, $tCompanyId);
             }
         }
 
-        // Intent: Invalidate header counter cache (custome_count_all) AND AppTracker stage pipeline counter cache (pipeline:{jobId})
+        // Intent: Invalidate header counter cache (custome_count_all) AND AppTracker stage pipeline counter cache
         // so Total Candidates In Job and all stage pills update with 0ms staleness when navigating to AppTracker.
-        Cache::forget("custome_count_all:{$companyId}:{$targetJobId}");
         Cache::forget("pipeline:{$targetJobId}");
-        $authCompanyId = auth()->user()?->company_id;
-        if ($authCompanyId && (int) $authCompanyId !== (int) $companyId) {
-            Cache::forget("custome_count_all:{$authCompanyId}:{$targetJobId}");
+        foreach ($tenantIdsToInvalidate as $tCompanyId) {
+            Cache::forget("custome_count_all:{$tCompanyId}:{$targetJobId}");
+            Cache::forget("pipeline:{$tCompanyId}:{$targetJobId}");
         }
 
         // 4. Real-time WebSocket Reverb broadcast to clear client RAM & IndexedDB

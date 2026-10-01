@@ -98,6 +98,22 @@ class Kernel extends ConsoleKernel
             ->dailyAt('02:00')
             ->withoutOverlapping(50)
             ->runInBackground();
+
+        // AppTracker Transactional Outbox: Process pending ES & Reverb events and prune completed events
+        $schedule->command('outbox:process-es --limit=100')
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->runInBackground();
+
+        $schedule->command('outbox:process-reverb --limit=100')
+            ->everyMinute()
+            ->withoutOverlapping(2)
+            ->runInBackground();
+
+        $schedule->command('apptracker:prune-outbox --days=7')
+            ->dailyAt('03:30')
+            ->withoutOverlapping(10)
+            ->runInBackground();
     }
 
     protected function commands()

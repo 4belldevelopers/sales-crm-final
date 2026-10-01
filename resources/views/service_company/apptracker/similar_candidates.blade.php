@@ -2664,6 +2664,25 @@
                                     $btn.removeData('idempotency-key');
                                     simfMarkCandidateRowAdded($btn);
                                     simfToast.fire({ icon: 'success', title: 'Candidate added to Job — In-Review stage' });
+                                    try {
+                                        var numJobId = parseInt(source_jobid, 10);
+                                        var numAppId = parseInt(id, 10);
+                                        window.dispatchEvent(new CustomEvent('jero:candidate-added-to-job', {
+                                            detail: { jobIds: [numJobId], applicantIds: [numAppId], masterStatusId: 8 }
+                                        }));
+                                        var _atsCompanyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+                                        if (typeof BroadcastChannel !== 'undefined' && _atsCompanyId !== '0') {
+                                            var _atsBc = new BroadcastChannel('jero_ats_sync_' + _atsCompanyId);
+                                            _atsBc.postMessage({
+                                                type: 'CANDIDATE_ADDED_TO_JOB',
+                                                jobIds: [numJobId],
+                                                applicantIds: [numAppId],
+                                                masterStatusId: 8,
+                                                ts: Date.now()
+                                            });
+                                            _atsBc.close();
+                                        }
+                                    } catch (e) {}
                                 } else {
                                     restoreButton();
                                 }

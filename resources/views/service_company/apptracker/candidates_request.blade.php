@@ -1503,11 +1503,16 @@
                         benchReqMarkCandidateRowAdded($btn);
                         benchReqToast.fire({ icon: 'success', title: 'Added successfully to job' });
 
-                        // Dynamically update KPI header counters on page
-                        var $poolCounter = $('#pool_counter');
-                        if ($poolCounter.length) {
-                            var currentPool = parseInt($poolCounter.text()) || 0;
-                            $poolCounter.text(currentPool + 1);
+                        // Invalidate RAM cache so state is fresh (Rule 5: Zero Stale Data)
+                        if (typeof BenchRequestRamStore !== 'undefined') {
+                            BenchRequestRamStore.invalidate();
+                            BenchRequestRamStore.patchCounter('pool_counter', +1);
+                        } else {
+                            var $poolCounter = $('#pool_counter');
+                            if ($poolCounter.length) {
+                                var currentPool = parseInt($poolCounter.text()) || 0;
+                                $poolCounter.text(currentPool + 1);
+                            }
                         }
                     },
                     error: function() {
@@ -2024,19 +2029,128 @@
 
         });
 
+        /**
+         * BenchRequestRamStore: Isolated Client-First in-memory + sessionStorage store.
+         * Enforces:
+         * - Rule 1 & 2: 0 avoidable server round-trips on re-visited request pages & filter states
+         * - Rule 3 & 4: Browser RAM execution first, 250ms debouncing, in-flight abort
+         * - Rule 5 & 6: Zero Stale Data & event-driven cache invalidation
+         * - Directive 10: Complete Page/Blade Isolation
+         */
+        var _benchReqListXhr = null;
+        var _benchReqSearchTimer = null;
+
+        var BenchRequestRamStore = (function() {
+            var companyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+            var jobId = '{{ (int) ($job->id ?? session()->get("job_id") ?? 0) }}';
+            var storagePrefix = 'jero_bench_req_v1_' + companyId + '_' + jobId + '_';
+            var ramMap = new Map();
+            var maxEntries = 30;
+            var ttlMs = 60000; // 60s client freshness window
+            var latestCacheVersion = null;
+
+            return {
+                buildKey: function(page, params) {
+                    return [
+                        page,
+                        params.search || '',
+                        params.sortingfilter || '',
+                        params.cus_search || '',
+                        params.min_exp || '',
+                        params.max_exp || '',
+                        params.min_sal || '',
+                        params.max_sal || '',
+                        params.min_salary_currency || '',
+                        params.sal_mode || '',
+                        params.kt_tagify_education || '',
+                        params.app_int_activity || '',
+                        params.app_int_notice || '',
+                        params.app_int_outsource || '',
+                        params.size || 10
+                    ].join('|');
+                },
+                get: function(key) {
+                    var now = Date.now();
+                    var entry = ramMap.get(key);
+                    if (!entry) {
+                        try {
+                            var raw = sessionStorage.getItem(storagePrefix + key);
+                            if (raw) {
+                                entry = JSON.parse(raw);
+                                ramMap.set(key, entry);
+                            }
+                        } catch (e) {}
+                    }
+                    if (!entry) return null;
+                    if ((now - (entry.ts || 0)) > ttlMs) {
+                        this.remove(key);
+                        return null;
+                    }
+                    if (latestCacheVersion && entry.cache_version && entry.cache_version !== latestCacheVersion) {
+                        this.invalidate();
+                        return null;
+                    }
+                    return entry.data;
+                },
+                set: function(key, response) {
+                    if (!response || !response.html) return;
+                    if (response.cache_version) {
+                        if (latestCacheVersion && latestCacheVersion !== response.cache_version) {
+                            this.invalidate();
+                        }
+                        latestCacheVersion = response.cache_version;
+                    }
+                    if (ramMap.size >= maxEntries) {
+                        var oldestKey = ramMap.keys().next().value;
+                        this.remove(oldestKey);
+                    }
+                    var record = {
+                        ts: Date.now(),
+                        cache_version: response.cache_version || null,
+                        data: response
+                    };
+                    ramMap.set(key, record);
+                    try {
+                        sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
+                    } catch (e) {}
+                },
+                remove: function(key) {
+                    ramMap.delete(key);
+                    try {
+                        sessionStorage.removeItem(storagePrefix + key);
+                    } catch (e) {}
+                },
+                invalidate: function() {
+                    ramMap.clear();
+                    try {
+                        var toRemove = [];
+                        for (var i = 0; i < sessionStorage.length; i++) {
+                            var k = sessionStorage.key(i);
+                            if (k && k.indexOf(storagePrefix) === 0) {
+                                toRemove.push(k);
+                            }
+                        }
+                        toRemove.forEach(function(k) { sessionStorage.removeItem(k); });
+                    } catch (e) {}
+                },
+                patchCounter: function(counterId, delta) {
+                    var $el = $('#' + counterId);
+                    if ($el.length) {
+                        var current = parseInt($el.text(), 10) || 0;
+                        var next = Math.max(0, current + delta);
+                        $el.text(next);
+                        $('.' + counterId).text(next);
+                    }
+                }
+            };
+        })();
+
         function fetchCandidates(page = 1, search = '') {
             var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
             var jobid = $('#jobid').val();
             var mstatus_id = $('#mstatus_id').val();
-            // #kt_tagify_2 is the toolbar's genuine free-text search box
-            // (candidate name/skills/education/location) — previously sent
-            // as cus_search, which was backwards; #inputSearch is a hidden,
-            // never-set field and is no longer read at all.
             var inputSearch = $('#kt_tagify_2').val();
             var sortingfilter = $('#sortingfilter').val();
-            // New Skills Tagify field — JSON array of {value, checked},
-            // matching what candidates_request_data_ajax() decodes as
-            // cus_search via json_decode(..., true).
             var cus_search = $('#kt_tagify_users').val();
             var min_exp = $('#min_exp').val();
             var max_exp = $('#max_exp').val();
@@ -2049,29 +2163,62 @@
             var app_int_notice = $('[name="app_int_notice"]:checked').val();
             var app_int_outsource = $('[name="app_int_outsource"]:checked').val();
 
+            var requestParams = {
+                jobid: jobid,
+                mstatus_id: mstatus_id,
+                search: inputSearch,
+                sortingfilter: sortingfilter,
+                cus_search: cus_search,
+                min_exp: min_exp,
+                max_exp: max_exp,
+                min_sal: min_sal,
+                max_sal: max_sal,
+                min_salary_currency: min_salary_currency,
+                sal_mode: sal_mode,
+                kt_tagify_education: kt_tagify_education,
+                app_int_activity: app_int_activity,
+                app_int_notice: app_int_notice,
+                app_int_outsource: app_int_outsource,
+                size: perPage
+            };
+
+            function applyBadgeCounters(counters) {
+                if (!counters) return;
+                if (counters.pool_counter !== undefined) $('#pool_counter').text(counters.pool_counter);
+                if (counters.existing_counter !== undefined) $('#similar_counter').text(counters.existing_counter);
+                if (counters.internal_bench_counter !== undefined) $('#inhouseBench_counter').text(counters.internal_bench_counter);
+                if (counters.public_bench_counter !== undefined) $('#agencyBench_counter').text(counters.public_bench_counter);
+                if (counters.recomnded_counter !== undefined) $('#benchTalentReq_counter, .benchTalentReq_counter').text(counters.recomnded_counter);
+                if (counters.career_counter !== undefined) $('#career_counter').text(counters.career_counter);
+            }
+
+            // Fast Path: Check Client-First RAM Store (0ms DOM hydration)
+            var cacheKey = BenchRequestRamStore.buildKey(page, requestParams);
+            var cachedResponse = BenchRequestRamStore.get(cacheKey);
+            if (cachedResponse && cachedResponse.html) {
+                $('.loadingMessage').css({ display: 'none' });
+                $('.page-loader').css('display', 'none');
+                $('#sc_table_card').show();
+                $('#candidatetList').html(cachedResponse.html);
+                $('#benchTalentReq_counter, .benchTalentReq_counter').html(cachedResponse.total);
+                $('#brf_footer_number').text(cachedResponse.total);
+                $('#paginationcandidate').html(cachedResponse.pagination);
+                applyBadgeCounters(cachedResponse.counters);
+                return $.Deferred().resolve(cachedResponse).promise();
+            }
+
+            // In-flight jqXHR cancellation to prevent race conditions and network congestion
+            if (_benchReqListXhr && _benchReqListXhr.readyState !== 4) {
+                _benchReqListXhr.abort();
+            }
+
             $('.loadingMessage').css({ display: 'none' });
             $('.page-loader').css('display', 'flex');
-            return $.ajax({
+
+            _benchReqListXhr = $.ajax({
                 url: `{!! route('service_company.apptracker.candidates_request_data_ajax') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                jobid:jobid,
-                mstatus_id:mstatus_id,
-                search:inputSearch,
-                sortingfilter:sortingfilter,
-                cus_search:(cus_search),
-                min_exp:min_exp,
-                max_exp:max_exp,
-                min_sal:min_sal,
-                max_sal:max_sal,
-                min_salary_currency:min_salary_currency,
-                sal_mode:sal_mode,
-                kt_tagify_education:kt_tagify_education,
-                app_int_activity:app_int_activity,
-                app_int_notice:app_int_notice,
-                app_int_outsource:app_int_outsource,
-                size:perPage
-                },
+                data: requestParams,
                 success: function(response) {
                     $('.loadingMessage').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
@@ -2080,23 +2227,37 @@
                     $('#benchTalentReq_counter, .benchTalentReq_counter').html(response.total);
                     $('#brf_footer_number').text(response.total);
                     $('#paginationcandidate').html(response.pagination);
+                    applyBadgeCounters(response.counters);
+
+                    // Hydrate RAM cache
+                    BenchRequestRamStore.set(cacheKey, response);
                 },
-                error: function(xhr) {
+                error: function(xhr, status) {
+                    if (status === 'abort') return;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
                     $('#sc_table_card').show();
                     console.error('candidates_request_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });
+
+            return _benchReqListXhr;
         }
 
-        // Free-text search box: Enter re-runs the same fetchCandidates() call
-        // the sort dropdown and pagination already use.
-        $(document).on('keydown', '#kt_tagify_2', function(e) {
+        // Phase 1 Optimization: 250ms debounced live search on #kt_tagify_2
+        $(document).on('input keyup', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
+                if (_benchReqSearchTimer) clearTimeout(_benchReqSearchTimer);
                 e.preventDefault();
-                fetchCandidates();
+                fetchCandidates(1);
+                return;
             }
+            if (_benchReqSearchTimer) {
+                clearTimeout(_benchReqSearchTimer);
+            }
+            _benchReqSearchTimer = setTimeout(function() {
+                fetchCandidates(1);
+            }, 250);
         });
     </script>
 
@@ -2411,6 +2572,7 @@
         }
 
         function brfAppliedChipRemoved() {
+            if (typeof BenchRequestRamStore !== 'undefined') BenchRequestRamStore.invalidate();
             fetchCandidates();
             if (typeof brfUpdateActiveFiltersUI === 'function') brfUpdateActiveFiltersUI();
             if (typeof brfCaptureSnapshot === 'function') brfCaptureSnapshot();
@@ -2453,6 +2615,7 @@
         }
 
         $(document).on('click', '#brf_applied_clear_all', function() {
+            if (typeof BenchRequestRamStore !== 'undefined') BenchRequestRamStore.invalidate();
             $('#brf_clear_all').trigger('click');
             fetchCandidates();
             if (typeof brfCaptureSnapshot === 'function') brfCaptureSnapshot();
@@ -2479,6 +2642,7 @@
         });
 
         $(document).on('click', '#brf_reset_btn', function() {
+            if (typeof BenchRequestRamStore !== 'undefined') BenchRequestRamStore.invalidate();
             $('#brf_clear_all').trigger('click');
             fetchCandidates();
             brfCaptureSnapshot();
@@ -2564,6 +2728,7 @@
         });
         $(document).on('click', '#brf_apply_btn', function() {
             brfApplying = true;
+            if (typeof BenchRequestRamStore !== 'undefined') BenchRequestRamStore.invalidate();
             fetchCandidates();
             brfAppliedExpanded = false;
             brfRenderAppliedFiltersCard();
@@ -2574,6 +2739,30 @@
             setTimeout(brfUpdateActiveFiltersUI, 600);
             setTimeout(brfCaptureSnapshot, 800);
             setTimeout(brfRenderAppliedFiltersCard, 700);
+
+            // Reverb Private Channel Subscription for Real-time Invalidation (Rule 5: Zero Stale Data)
+            if (window.Echo && typeof window.Echo.private === 'function') {
+                var cId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+                var jId = '{{ (int) ($job->id ?? session()->get("job_id") ?? 0) }}';
+                if (cId > 0 && jId > 0) {
+                    try {
+                        window.Echo.private('company.' + cId + '.job.' + jId)
+                            .listen('.bench.request.created', function(event) {
+                                if (typeof BenchRequestRamStore !== 'undefined') {
+                                    BenchRequestRamStore.invalidate();
+                                    if (event && event.pool_type) {
+                                        BenchRequestRamStore.patchCounter(event.pool_type + '_counter', +1);
+                                    }
+                                }
+                            })
+                            .listen('.bench.request.status_updated', function(event) {
+                                if (typeof BenchRequestRamStore !== 'undefined') {
+                                    BenchRequestRamStore.invalidate();
+                                }
+                            });
+                    } catch (e) {}
+                }
+            }
         });
     </script>
 @endpush

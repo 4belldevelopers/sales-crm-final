@@ -1075,6 +1075,25 @@ window.CareerJobsTabManager = {
     abortController: null,
     requestSeq: 0,
     searchTimer: null,
+    companyId: "{{ $company_id }}",
+    jobDetailsBaseUrl: "{{ url('job-details') }}",
+    jobApplyBaseUrl: "{{ url('job-apply') }}",
+    avGradients: [
+        'linear-gradient(135deg,#6366f1,#8b5cf6)',
+        'linear-gradient(135deg,#06b6d4,#0ea5e9)',
+        'linear-gradient(135deg,#10b981,#059669)',
+        'linear-gradient(135deg,#f59e0b,#d97706)',
+        'linear-gradient(135deg,#ec4899,#d946ef)',
+        'linear-gradient(135deg,#84cc16,#65a30d)',
+        'linear-gradient(135deg,#f43f5e,#e11d48)'
+    ],
+    state: {
+        jobsById: {},
+        currentData: [],
+        total: {{ (int)@$total }},
+        currentPage: {{ (int)@$current_page }},
+        lastPage: {{ (int)@$last_page }}
+    },
     
     /**
      * Intent: Handle debounced search typing (350ms timer) to prevent API floods.
@@ -1233,6 +1252,23 @@ window.CareerJobsTabManager = {
         this.requestSeq++;
         var seq = this.requestSeq;
 
+        // Check sessionStorage cache (300-second TTL) for instant 0ms client-side rendering
+        var cacheKey = 'career_cache_' + companyId + '_' + (queryString || 'default');
+        try {
+            var cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                var cachedObj = JSON.parse(cached);
+                if (cachedObj && (Date.now() - cachedObj.timestamp < 300000)) {
+                    self.isLoading = false;
+                    if (skel) skel.style.display = 'none';
+                    if (cont) cont.style.opacity = '1';
+                    self.renderJobs(cachedObj.data);
+                    if (typeof sendHeight === 'function') sendHeight();
+                    return;
+                }
+            }
+        } catch(e) {}
+
         if (this.abortController) {
             this.abortController.abort();
         }
@@ -1260,6 +1296,12 @@ window.CareerJobsTabManager = {
             if (cont) cont.style.opacity = '1';
             
             if (res && res.status === 'success') {
+                try {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                        timestamp: Date.now(),
+                        data: res
+                    }));
+                } catch(e) {}
                 self.renderJobs(res);
                 if (typeof sendHeight === 'function') sendHeight();
             }
@@ -1277,14 +1319,178 @@ window.CareerJobsTabManager = {
     },
 
     /**
-     * Intent: Dynamically update open positions count and job list DOM container.
+     * Intent: Sanitize string to prevent XSS vulnerabilities in client-rendered DOM.
+     */
+    escapeHtml: function(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
+    /**
+     * Intent: Dynamically build pagination DOM controls matching Metronic blade design.
+     */
+    renderPagination: function(cPage, tPages) {
+        if (tPages <= 1) return '';
+        var side = 2;
+        var pStart = Math.max(1, cPage - side);
+        var pEnd = Math.min(tPages, cPage + side);
+        var html = '<div class="pag">';
+
+        // Previous button
+        html += '<a href="#" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(' + Math.max(1, cPage - 1) + ');" class="pag-btn ' + (cPage <= 1 ? 'off' : '') + '">';
+        html += '<i class="fa-solid fa-chevron-left" style="font-size:9px;"></i>&nbsp;Previous</a>';
+
+        if (pStart > 2) {
+            html += '<a href="#" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(1);" class="pag-btn">1</a><span class="pag-dots">…</span>';
+        }
+
+        for (var p = pStart; p <= pEnd; p++) {
+            html += '<a href="#" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(' + p + ');" class="pag-btn ' + (cPage === p ? 'on' : '') + '">' + p + '</a>';
+        }
+
+        if (pEnd < tPages - 1) {
+            html += '<span class="pag-dots">…</span><a href="#" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(' + tPages + ');" class="pag-btn">' + tPages + '</a>';
+        }
+
+        // Next button
+        html += '<a href="#" onclick="event.preventDefault(); CareerJobsTabManager.onPageChange(' + Math.min(tPages, cPage + 1) + ');" class="pag-btn ' + (cPage >= tPages ? 'off' : '') + '">';
+        html += 'Next&nbsp;<i class="fa-solid fa-chevron-right" style="font-size:9px;"></i></a>';
+
+        html += '</div>';
+        return html;
+    },
+
+    /**
+     * Intent: Dynamically render job card listings and pagination in user browser RAM without page reloads.
      * @param {Object} res 
      */
     renderJobs: function(res) {
+        var self = this;
         var countEl = document.querySelector('.jobs-count');
         if (countEl && typeof res.total !== 'undefined') {
             countEl.innerText = res.total + ' Open Positions';
         }
+
+        this.state.total = res.total || 0;
+        this.state.currentPage = res.current_page || 1;
+        this.state.lastPage = res.last_page || 1;
+        this.state.currentData = res.data || [];
+
+        var cont = document.getElementById('jobsContent');
+        if (!cont) return;
+
+        if (!res.data || res.data.length === 0) {
+            cont.innerHTML = '<div class="jobs-empty">' +
+                '<i class="fa-solid fa-briefcase"></i>' +
+                '<div class="jobs-empty-t">No open positions right now</div>' +
+                '<div class="jobs-empty-s">Check back soon — we\'re always growing!</div>' +
+                '</div>';
+            return;
+        }
+
+        var html = '';
+        res.data.forEach(function(row, idx) {
+            self.state.jobsById[row.id] = row;
+            var avGrad = self.avGradients[idx % self.avGradients.length];
+            var logoPath = row.logo_path ? row.logo_path.replace('index.php', '') : '';
+            var displayCo = row.display_company || '';
+            var title = row.formatted_title || row.title || 'Position';
+            var firstLetter = row.first_letter || 'J';
+            var cat = row.job_category_name || '';
+            var locLabel = row.location_label || 'Remote';
+            var workMode = row.work_mode || (row.work_type === 'yes' ? 'Remote' : 'Hybrid');
+            var badgeLabel = row.badge_label || 'Hiring';
+            var badgeClass = row.badge_class || 'badge-hiring';
+            var timeAgo = row.time_ago || '';
+            var skills = row.skills_list || [];
+
+            html += '<div class="job-card">';
+            
+            // Main row
+            html += '<div class="jc-main">';
+            html += '<div class="jc-drag"><span></span><span></span><span></span><span></span><span></span><span></span></div>';
+
+            // Avatar
+            html += '<div class="jc-av" style="background:' + avGrad + ';">';
+            if (logoPath) {
+                html += '<img src="' + self.escapeHtml(logoPath) + '" alt="' + self.escapeHtml(displayCo) + '" loading="lazy" decoding="async">';
+            } else {
+                html += self.escapeHtml(firstLetter);
+            }
+            html += '</div>';
+
+            // Info
+            html += '<div class="jc-info">';
+            html += '<div class="jc-title">' + self.escapeHtml(title) + '</div>';
+            if (cat) {
+                html += '<div class="jc-cat">' + self.escapeHtml(cat) + '</div>';
+            }
+            html += '<div class="jc-co">' + self.escapeHtml(displayCo) + '</div>';
+            html += '</div>';
+
+            // 2-Col Meta Grid
+            html += '<div class="jc-meta-cols">';
+            if (row.has_exp || row.min_exp || row.max_exp) {
+                var expText = (row.min_exp || 0) + ' – ' + (row.max_exp || 0) + ' Years';
+                html += '<div class="jc-mi"><i class="fa-regular fa-clock"></i> ' + self.escapeHtml(expText) + '</div>';
+            } else {
+                html += '<div></div>';
+            }
+            html += '<div class="jc-mi"><i class="fa-solid fa-location-dot"></i> ' + self.escapeHtml(locLabel) + '</div>';
+
+            if (row.has_salary || row.min_salary || row.max_salary) {
+                var salText = (row.min_cur_sym || '') + (row.min_salary_fmt || row.min_salary || '') + (row.min_sal_mode_str || '') +
+                    ' – ' + (row.max_cur_sym || '') + (row.max_salary_fmt || row.max_salary || '') + (row.max_sal_mode_str || '');
+                html += '<div class="jc-mi sal"><i class="fa-solid fa-indian-rupee-sign"></i> ' + self.escapeHtml(salText) + '</div>';
+            } else {
+                html += '<div></div>';
+            }
+            html += '<div class="jc-mi"><i class="fa-solid fa-house"></i> ' + self.escapeHtml(workMode) + '</div>';
+            html += '<div class="jc-mi jid"><i class="fa-solid fa-tag"></i> Job ID: ' + row.id + '</div>';
+            html += '</div>';
+
+            // Right: Badge & Bookmark
+            html += '<div class="jc-right">';
+            html += '<div class="jc-right-top">';
+            html += '<span class="jc-badge ' + self.escapeHtml(badgeClass) + '">' + self.escapeHtml(badgeLabel) + '</span>';
+            html += '<div class="jc-bm"><i class="fa-regular fa-bookmark"></i></div>';
+            html += '</div>';
+            html += '<span class="jc-time">' + self.escapeHtml(timeAgo) + '</span>';
+            html += '</div>'; // /jc-right
+            html += '</div>'; // /jc-main
+
+            // Bottom: Skills + Action buttons
+            html += '<div class="jc-bottom">';
+            html += '<div class="jc-skills-row">';
+            if (skills.length > 0) {
+                html += '<span class="jc-skills-lbl">Skills:</span>';
+                skills.forEach(function(sk) {
+                    var sName = typeof sk === 'object' ? (sk.skill_name || '') : sk;
+                    if (sName) {
+                        html += '<span class="jc-skill">' + self.escapeHtml(sName.charAt(0).toUpperCase() + sName.slice(1)) + '</span>';
+                    }
+                });
+            }
+            html += '</div>'; // /jc-skills-row
+
+            html += '<div class="jc-actions">';
+            html += '<a href="' + self.jobDetailsBaseUrl + '/' + row.id + '/' + self.companyId + '" class="btn-view">View Job</a>';
+            html += '<a href="' + self.jobApplyBaseUrl + '/' + row.id + '/' + self.companyId + '" class="btn-apply">Apply</a>';
+            html += '</div>'; // /jc-actions
+            html += '</div>'; // /jc-bottom
+
+            html += '</div>'; // /job-card
+        });
+
+        // Append dynamic pagination
+        html += self.renderPagination(res.current_page || 1, res.last_page || 1);
+
+        cont.innerHTML = html;
     },
 
     /**
@@ -1294,6 +1500,23 @@ window.CareerJobsTabManager = {
     loadTabData: function(tabName) {
         this.isLoading = true;
         this.fetchJobs('tab=' + encodeURIComponent(tabName));
+    },
+
+    /**
+     * Intent: Invalidate client-side sessionStorage cache entries for this company.
+     */
+    clearLocalCache: function() {
+        try {
+            var prefix = 'career_cache_' + this.companyId;
+            var toRemove = [];
+            for (var i = 0; i < sessionStorage.length; i++) {
+                var k = sessionStorage.key(i);
+                if (k && k.indexOf(prefix) === 0) {
+                    toRemove.push(k);
+                }
+            }
+            toRemove.forEach(function(k) { sessionStorage.removeItem(k); });
+        } catch(e) {}
     }
 };
 
@@ -1306,6 +1529,29 @@ function sendHeight(){
 }
 window.onload = sendHeight;
 window.onresize = sendHeight;
+
+/* Intent: Restore active query and cards on browser Back/Forward navigation without full page reload */
+window.addEventListener('popstate', function() {
+    var qs = window.location.search.replace(/^\?/, '');
+    if (window.CareerJobsTabManager) {
+        CareerJobsTabManager.fetchJobs(qs);
+    }
+});
+
+/* Intent: Automatically invalidate sessionStorage cache if tab was hidden for > 60s to prevent stale listings */
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && window.CareerJobsTabManager) {
+        var lastVisible = window._lastVisibleTime || Date.now();
+        if (Date.now() - lastVisible > 60000) {
+            CareerJobsTabManager.clearLocalCache();
+            var qs = window.location.search.replace(/^\?/, '');
+            CareerJobsTabManager.fetchJobs(qs);
+        }
+        window._lastVisibleTime = Date.now();
+    } else if (document.visibilityState === 'hidden') {
+        window._lastVisibleTime = Date.now();
+    }
+});
 </script>
 
 </body>

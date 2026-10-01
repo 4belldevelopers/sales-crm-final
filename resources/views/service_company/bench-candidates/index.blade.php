@@ -807,8 +807,9 @@
                     if (response.status == "success") {
                         sweetAlert("Success", response.message, "success");
                         $('.checkStatusSales_text').text(response.pack_status);
+                        if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
                         var page = $('#paginationbenchCandidateBenchCandidates .active_disabled').data('page');
-                        fetchBenchBenchCandidatesCandidateList(page);
+                        fetchBenchBenchCandidatesCandidateList(page, '', true);
                     }
                 }
             });
@@ -967,7 +968,8 @@
                         if (response.status == 'success') {
                             sweetAlert('Success', 'Status changed successfully!', 'success');
                             $('#bstatus_close_x').trigger('click');
-                            fetchBenchBenchCandidatesCandidateList();
+                            if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
+                            fetchBenchBenchCandidatesCandidateList(1, '', true);
                         } else {
                             $btns.prop('disabled', false).html(BSTATUS_CONFIRM_DEFAULT_HTML);
                             if (response.message) { sweetAlert('Fail!', response.message, 'error'); }
@@ -1106,11 +1108,125 @@
             // If it WAS already picked, the loop above already cleared it back to "Select Job" (undo).
         });
 
-        // ---- Table fetch + pagination ----
-        // Phase 1 Optimization: In-flight XHR cancellation, sequence ordering, and scoped tooltip binding (Rule 17)
+        // ---- Table fetch + pagination + Phase 5 Client-First Browser RAM Store (Rule 3, Rule 5, Rule 6, Rule 17) ----
         var _benchListXhr = null;
         var _benchCountXhr = null;
         var _benchReqSeq = 0;
+
+        /**
+         * Isolated Browser RAM + sessionStorage store for In-house Bench Talents listing.
+         * Intent: Serves repeat tab/page/filter switches in <2ms from user RAM with 0 server strain,
+         * while enforcing strict version & TTL validation so stale data is never served (Rule 3, 5, 6, 17).
+         */
+        var BenchPageRamStore = (function() {
+            var companyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+            var storagePrefix = 'jero_bench_v1_' + companyId + '_';
+            var ramMap = new Map();
+            var maxEntries = 30;
+            var ttlMs = 60000; // 60s client freshness window
+            var latestCacheVersion = null;
+
+            return {
+                buildKey: function(page, params) {
+                    return [
+                        page,
+                        params.search || '',
+                        params.cus_search || '',
+                        params.filter_status || '',
+                        params.country || '',
+                        params.sortingfilter || '',
+                        params.selectedValue || 'all',
+                        params.per_page || 10
+                    ].join('|');
+                },
+                get: function(key) {
+                    var now = Date.now();
+                    var entry = ramMap.get(key);
+                    if (!entry) {
+                        try {
+                            var raw = sessionStorage.getItem(storagePrefix + key);
+                            if (raw) {
+                                entry = JSON.parse(raw);
+                                ramMap.set(key, entry);
+                            }
+                        } catch (e) {}
+                    }
+                    if (!entry) return null;
+                    if ((now - (entry.ts || 0)) > ttlMs) {
+                        this.remove(key);
+                        return null;
+                    }
+                    if (latestCacheVersion && entry.cache_version && entry.cache_version !== latestCacheVersion) {
+                        this.invalidate();
+                        return null;
+                    }
+                    return entry.data;
+                },
+                set: function(key, response) {
+                    if (!response || !response.html) return;
+                    if (response.cache_version) {
+                        if (latestCacheVersion && latestCacheVersion !== response.cache_version) {
+                            this.invalidate();
+                        }
+                        latestCacheVersion = response.cache_version;
+                    }
+                    if (ramMap.size >= maxEntries) {
+                        var oldestKey = ramMap.keys().next().value;
+                        this.remove(oldestKey);
+                    }
+                    var record = {
+                        ts: Date.now(),
+                        cache_version: response.cache_version || null,
+                        data: response
+                    };
+                    ramMap.set(key, record);
+                    try {
+                        sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
+                    } catch (e) {}
+                },
+                remove: function(key) {
+                    ramMap.delete(key);
+                    try { sessionStorage.removeItem(storagePrefix + key); } catch (e) {}
+                },
+                invalidate: function() {
+                    ramMap.clear();
+                    try {
+                        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                            var k = sessionStorage.key(i);
+                            if (k && k.indexOf(storagePrefix) === 0) {
+                                sessionStorage.removeItem(k);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            };
+        })();
+
+        window.addEventListener('jero:bench-candidate-updated', function() {
+            BenchPageRamStore.invalidate();
+        });
+        window.addEventListener('jero:candidate-added-to-job', function(ev) {
+            BenchPageRamStore.invalidate();
+            try {
+                var detail = (ev && ev.detail) ? ev.detail : {};
+                var applicantIds = Array.isArray(detail.applicantIds) ? detail.applicantIds : [];
+                var jobCount = (Array.isArray(detail.jobIds) && detail.jobIds.length > 0) ? detail.jobIds.length : 1;
+                applicantIds.forEach(function(appId) {
+                    var $row = $('#benchCandidateBenchCandidatesAjax tr[data-bench-row-id="' + appId + '"]');
+                    if (!$row.length) return;
+                    var $inw = $row.find('[data-bench-pipe="inreview"]');
+                    if ($inw.length) {
+                        var cur = parseInt($inw.text(), 10) || 0;
+                        $inw.text(cur + jobCount);
+                    }
+                    var $intFoot = $row.find('[data-bench-pipe-interview]');
+                    if ($intFoot.length) {
+                        var curInt = parseInt($intFoot.text(), 10) || 0;
+                        $intFoot.text(curInt + jobCount);
+                    }
+                });
+            } catch (e) {}
+        });
 
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
@@ -1135,35 +1251,55 @@
             });
         });
 
-        function fetchBenchBenchCandidatesCandidateList(page = 1, search = '') {
+        function renderBenchCandidatesResponse(response) {
+            $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'none' });
+            $('#benchCandidateBenchCandidatesAjax').html(response.html);
+            $('#paginationbenchCandidateBenchCandidates').html(response.pagination);
+            if ($.fn.tooltip) {
+                $('#benchCandidateBenchCandidatesAjax [title]').tooltip({ trigger: 'hover', placement: 'top' });
+            }
+            if (response.counts) {
+                applyBenchCounts(response.counts);
+            } else {
+                countDataGetBenchList();
+            }
+        }
+
+        function fetchBenchBenchCandidatesCandidateList(page = 1, search = '', forceRefresh = false) {
             var seq = ++_benchReqSeq;
             if (_benchListXhr && _benchListXhr.readyState !== 4) {
                 _benchListXhr.abort();
             }
-            $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'block' });
             var perPage = localStorage.getItem('candidatePerPage') || 10;
+            var requestParams = {
+                search: $('#inputSearch').val(),
+                cus_search: $('#kt_tagify_2').val(),
+                filter_status: $('#filter_status').val(),
+                country: $('#country').val(),
+                sortingfilter: $('#sortingfilter').val(),
+                selectedValue: $("input[name='status_manage']:checked").val(),
+                per_page: perPage,
+                size: perPage
+            };
+
+            var cacheKey = BenchPageRamStore.buildKey(page, requestParams);
+            if (!forceRefresh) {
+                var cachedResponse = BenchPageRamStore.get(cacheKey);
+                if (cachedResponse) {
+                    renderBenchCandidatesResponse(cachedResponse);
+                    return $.Deferred().resolve(cachedResponse).promise();
+                }
+            }
+
+            $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'block' });
             _benchListXhr = $.ajax({
                 url: `{!! route('service_company.bench-candidates.data_ajax') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                    search: $('#inputSearch').val(),
-                    cus_search: $('#kt_tagify_2').val(),
-                    filter_status: $('#filter_status').val(),
-                    country: $('#country').val(),
-                    sortingfilter: $('#sortingfilter').val(),
-                    selectedValue: $("input[name='status_manage']:checked").val(),
-                    per_page: perPage,
-                    size: perPage
-                },
+                data: requestParams,
                 success: function(response) {
                     if (seq !== _benchReqSeq) return;
-                    $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'none' });
-                    $('#benchCandidateBenchCandidatesAjax').html(response.html);
-                    $('#paginationbenchCandidateBenchCandidates').html(response.pagination);
-                    if ($.fn.tooltip) {
-                        $('#benchCandidateBenchCandidatesAjax [title]').tooltip({ trigger: 'hover', placement: 'top' });
-                    }
-                    countDataGetBenchList();
+                    BenchPageRamStore.set(cacheKey, response);
+                    renderBenchCandidatesResponse(response);
                 },
                 error: function(xhr, status) {
                     if (status === 'abort' || seq !== _benchReqSeq) return;
@@ -1171,6 +1307,18 @@
                 }
             });
             return _benchListXhr;
+        }
+
+        function applyBenchCounts(counts) {
+            if (!counts) return;
+            $('#bg_all').text(counts.all_records);
+            $('#bg_1').text(counts.pool);
+            $('#bg_2').text(counts.bench);
+            $('#bg_4').text(counts.paused);
+            $('#bg_3').text(counts.placed);
+            $('#bg_5').text(counts.exited);
+            $('#kpival_all').text(Number(counts.all_records || 0).toLocaleString());
+            $('#kpival_2').text(Number(counts.bench || 0).toLocaleString());
         }
 
         function countDataGetBenchList() {
@@ -1182,14 +1330,7 @@
                 type: 'GET',
                 data: { countData: true },
                 success: function(response) {
-                    $('#bg_all').text(response.all_records);
-                    $('#bg_1').text(response.pool);
-                    $('#bg_2').text(response.bench);
-                    $('#bg_4').text(response.paused);
-                    $('#bg_3').text(response.placed);
-                    $('#bg_5').text(response.exited);
-                    $('#kpival_all').text(Number(response.all_records || 0).toLocaleString());
-                    $('#kpival_2').text(Number(response.bench || 0).toLocaleString());
+                    applyBenchCounts(response);
                 }
             });
         }

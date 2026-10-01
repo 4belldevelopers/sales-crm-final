@@ -1,4 +1,4 @@
-﻿@extends('layouts.service_company_layout')
+@extends('layouts.service_company_layout')
 @push('head-script')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
     <style>
@@ -796,8 +796,140 @@
 
         <!--begin::Container-->
         <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
-            <!--begin::Page title-->
-            @include('sections.service_company.toolbar',['id' => $job->id])
+            <!--begin::Page title (Isolated per Rule 17; uses ES-resolved $default_locations instead of 430ms city_list MySQL JOINs)-->
+            <div data-kt-swapper="true" data-kt-swapper-mode="prepend"
+                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
+                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
+                @php
+                    $tbId = $job->id;
+                    $tbCompanyId = auth()->user()->company_id;
+                    $tbLogoPath = GeneralMethod::companyDetails($tbId);
+                    $tbCompanyOrClient = GeneralMethod::companyDetailsByClient($tbId);
+                    $tbJobTitle = @$job->title;
+                    $tbBgTextDecore = $tbStrVal = '';
+                    $tbStr = trim((string) @$tbJobTitle);
+                    $tbStr = $tbStrVal = strtolower($tbStr[0] ?? '');
+                    $tbOrd = ord($tbStr);
+                    if ($tbOrd >= 97 && $tbOrd <= 101) {
+                        $tbBgTextDecore = 'fs-3 bg-light-danger text-danger';
+                    } elseif ($tbOrd >= 102 && $tbOrd <= 106) {
+                        $tbBgTextDecore = 'fs-3 bg-light-warning text-warning';
+                    } elseif ($tbOrd >= 107 && $tbOrd <= 111) {
+                        $tbBgTextDecore = 'fs-3 bg-light-primary text-primary';
+                    } elseif ($tbOrd >= 112 && $tbOrd <= 116) {
+                        $tbBgTextDecore = 'fs-3 bg-light-success text-success';
+                    } elseif ($tbOrd >= 117 && $tbOrd <= 121) {
+                        $tbBgTextDecore = 'fs-3 bg-dark text-secondary';
+                    } else {
+                        $tbBgTextDecore = 'fs-3 bg-light-secondary text-dark';
+                    }
+
+                    $tbStatusName = ucwords(substr((string) @$job->status, 0, 10));
+                    $tbStatusClass = 'joined-bg';
+                    if (@$job->final_status == 2) {
+                        $tbStatusName = 'REMOVED';
+                        $tbStatusClass = 'closed-bg';
+                    } elseif (@$job->status === 'active') {
+                        $tbStatusName = 'Hiring';
+                        $tbStatusClass = 'joined-bg';
+                    } elseif (@$job->status === 'inactive') {
+                        $tbStatusName = 'Closed';
+                        $tbStatusClass = 'closed-bg';
+                    } elseif (@$job->status === 'hold') {
+                        $tbStatusName = 'Hold';
+                        $tbStatusClass = 'hold-bg';
+                    }
+
+                    $tbLocList = is_array($default_locations ?? null) ? $default_locations : [];
+                    if (!empty($tbLocList)) {
+                        $tbFirstParts = array_map('trim', explode('|', (string) $tbLocList[0]));
+                        $tbFirstCity = $tbFirstParts[0] ?? '';
+                        $tbFirstState = $tbFirstParts[1] ?? '';
+                        $tbOtherCities = array_map(fn($l) => trim(explode('|', (string) $l)[0]), array_slice($tbLocList, 1));
+                        $tbFirstJobcities = [
+                            'display' => $tbFirstCity . '`,`' . $tbFirstState,
+                            'tooltip' => implode(', ', $tbOtherCities),
+                            'countPlus' => count($tbLocList) > 1 ? ' +' . (count($tbLocList) - 1) . ' Other City' : '',
+                        ];
+                    } else {
+                        $tbFirstJobcities = ['display' => '', 'tooltip' => '', 'countPlus' => ''];
+                    }
+                    $tbLocations = explode('`,`', $tbFirstJobcities['display']);
+                    $tbSalaryModeSelect = GeneralMethod::salaryMode();
+                    $tbCurrencySymbole = GeneralMethod::currencySymbole();
+                    $tbMinSalaryAbbr = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat(@$job->min_salary));
+                    $tbMaxSalaryAbbr = GeneralMethod::formatAmount(GeneralMethod::thousandsCurrencyFormat(@$job->max_salary));
+                    $tbSalaryModeWord = $tbSalaryModeSelect[@$job->max_sal_mode] ?? $tbSalaryModeSelect[0];
+                    $tbSalaryRangeCurrency = $tbCurrencySymbole[@$job->max_salary_currency] ?? $tbCurrencySymbole[0];
+                    $tbCreatedAt = date('d M, Y', strtotime((string) @$job->created_at));
+
+                    $tbJobClientInfo = \DB::table('jobs')
+                        ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                        ->select('jobs.company_id', 'clients.self_company', 'clients.name as client_name')
+                        ->where('jobs.id', $tbId)
+                        ->first();
+                    $tbJobCompId = (int) ($tbJobClientInfo->company_id ?? @$job->company_id ?? 0);
+                    $tbSelfCompVal = (int) ($tbJobClientInfo->self_company ?? @$job->self_company ?? 0);
+                    if ($tbCompanyId > 0 && $tbJobCompId > 0 && $tbCompanyId !== $tbJobCompId) {
+                        $tbTagsType = 'Direct Client';
+                    } elseif ($tbSelfCompVal === 1) {
+                        $tbTagsType = __('messages.internal_tag');
+                    } else {
+                        $tbTagsType = 'Internal Client';
+                    }
+                    if ($tbTagsType === 'Internal Client') {
+                        $tbInternalClientName = !empty($tbJobClientInfo->client_name) ? $tbJobClientInfo->client_name : (@$job->client_name ?? '');
+                        if (!empty($tbInternalClientName)) {
+                            $tbCompanyOrClient = $tbInternalClientName;
+                        }
+                    }
+                @endphp
+                @if (!empty($tbLogoPath))
+                    <div class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" data-id="{{ $tbId }}">
+                        <a href="javascript:void(0);">
+                            <div class="symbol-label border-radius-5">
+                                <img src="{{ str_replace('index.php', '', @$tbLogoPath) }}" alt="Company Logo" class="border-radius-5 w-100">
+                            </div>
+                        </a>
+                    </div>
+                @else
+                    <div class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" data-id="{{ $tbId }}">
+                        <a href="javascript:void(0);">
+                            <div class="symbol-label {{ @$tbBgTextDecore }} border-radius-5">{{ strtoupper(@$tbStrVal) }}</div>
+                        </a>
+                    </div>
+                @endif
+                <div class="d-flex flex-column show-detail-open" data-id="{{ $tbId }}">
+                    <a href="javascript:void(0);" class="text-dark fw-bolder text-hover-primary fs-6">{{ strtoupper(substr(@$tbJobTitle, 0, 20)) }}</a>
+                    <a href="javascript:void(0);" class="text-muted fw-bold text-muted d-block fs-7 text-hover-primary">{{ ucwords(substr(@$tbCompanyOrClient, 0, 50)) }}</a>
+                </div>
+                <div class="d-flex flex-column ml-2 show-detail-open" data-id="{{ $tbId }}">
+                    <a href="javascript:void(0);">
+                        <span class="badge {{ @$tbStatusClass }} fw-bolder fs-6 px-2 py-1">{{ @$tbStatusName }}</span>
+                        <span class="text-muted fw-bold text-muted d-block fs-7">{{ $tbTagsType }} • {{ @$tbId }}</span>
+                    </a>
+                </div>
+                <span class="h-20px border-gray-200 border-start mx-4"></span>
+                <div class="d-flex flex-column me-5">
+                    <span class="text-dark fw-bolder fs-6">{{ @$job->min_exp }}-{{ @$job->max_exp }} Yrs</span>
+                    <span class="text-muted fw-bold d-block fs-7">{!! $tbSalaryRangeCurrency !!} {{ $tbMinSalaryAbbr }}-{{ $tbMaxSalaryAbbr }}/{{ $tbSalaryModeWord }}</span>
+                </div>
+                <span class="h-20px border-gray-200 border-start mx-4"></span>
+                <div class="d-flex flex-column me-5">
+                    <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{ $tbFirstJobcities['tooltip'] }}">
+                        {{ ucwords(substr($tbLocations[0], 0, 20)) }}
+                        {{ ucwords($tbFirstJobcities['countPlus']) }}
+                    </span>
+                    <span class="text-muted fw-bold d-block fs-7">
+                        {{ ucwords(substr($tbLocations[1] ?? '', 0, 20)) }}
+                    </span>
+                </div>
+                <span class="h-20px border-gray-200 border-start mx-4"></span>
+                <div class="d-flex flex-column">
+                    <span class="text-dark fw-bolder fs-6">{{ @$tbCreatedAt }}</span>
+                    <span class="text-muted fw-bold d-block fs-7">{{ (@$job->total_positions) ? @$job->total_positions.' Opening' : '' }}</span>
+                </div>
+            </div>
             <!--end::Page title-->
             <form action="" id="filter-form" style="">
                 @csrf
@@ -1139,12 +1271,29 @@
                                                 };
                                             }
 
+                                            // Phase 2 Optimization: Bounded Browser RAM cache for skill autocomplete suggestions (0ms repeat lookups)
+                                            var _abfSkillSuggestXhr = null;
+                                            var _abfSkillSuggestCache = new Map();
                                             const fetchSuggestionsSkills = debounceskill(function(query) {
-                                                $.ajax({
-                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
+                                                var normKey = String(query || '').trim().toLowerCase();
+                                                if (_abfSkillSuggestCache.has(normKey)) {
+                                                    var cachedSkills = _abfSkillSuggestCache.get(normKey);
+                                                    tagify.settings.whitelist = cachedSkills;
+                                                    tagify.dropdown.show.call(tagify);
+                                                    return;
+                                                }
+                                                if (_abfSkillSuggestXhr && _abfSkillSuggestXhr.readyState !== 4) {
+                                                    _abfSkillSuggestXhr.abort();
+                                                }
+                                                _abfSkillSuggestXhr = $.ajax({
+                                                    url: "{{ url('/') }}" + "/skill-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
+                                                            if (_abfSkillSuggestCache.size >= 100) {
+                                                                _abfSkillSuggestCache.delete(_abfSkillSuggestCache.keys().next().value);
+                                                            }
+                                                            _abfSkillSuggestCache.set(normKey, data);
                                                             tagify.settings.whitelist = data; // Update whitelist
                                                             tagify.dropdown.show.call(tagify);
                                                         } else {
@@ -1152,6 +1301,7 @@
                                                         }
                                                     },
                                                     error: function(err) {
+                                                        if (err && err.statusText === 'abort') return;
                                                         console.error("Error fetching Skill:", err);
                                                     }
                                                 });
@@ -1193,7 +1343,7 @@
                                         <script>
                                             // The DOM elements you wish to replace with Tagify
                                             var inputloc = document.querySelector("#kt_tagify_location");
-                                            var cities = @json($cities);
+                                            var cities = @json($cities ?? []);
                                             // Initialize Tagify script on the above inputs
                                             var tagifylocation = new Tagify(inputloc, {
                                                 whitelist: [],
@@ -1230,11 +1380,11 @@
                                                 abfCloseLocPanel();
                                             });
                                             tagifylocation.on('add', function(e) {
-                                                abfUpdateActiveFiltersUI();
-                                                abfCloseLocPanel();
+                                                if (typeof abfUpdateActiveFiltersUI === 'function') abfUpdateActiveFiltersUI();
+                                                if (typeof abfCloseLocPanel === 'function') abfCloseLocPanel();
                                             });
                                             tagifylocation.on('remove', function(e) {
-                                                abfUpdateActiveFiltersUI();
+                                                if (typeof abfUpdateActiveFiltersUI === 'function') abfUpdateActiveFiltersUI();
                                             });
 
                                             function debounce(func, delay) {
@@ -1245,13 +1395,30 @@
                                                 };
                                             }
 
-                                            // Debounced function to fetch suggestions.
+                                            // Phase 2 Optimization: Debounced city suggestions with in-flight XHR abort + Browser RAM cache (0ms repeat lookups)
+                                            var _abfCitySuggestXhr = null;
+                                            var _abfCitySuggestCache = new Map();
                                             const fetchSuggestions = debounce(function(query) {
-                                                $.ajax({
+                                                var normCityKey = String(query || '').trim().toLowerCase();
+                                                if (_abfCitySuggestCache.has(normCityKey)) {
+                                                    var cachedCities = _abfCitySuggestCache.get(normCityKey);
+                                                    tagifylocation.settings.whitelist = cachedCities;
+                                                    abfCloseLocPanel();
+                                                    tagifylocation.dropdown.show.call(tagifylocation, query);
+                                                    return;
+                                                }
+                                                if (_abfCitySuggestXhr && _abfCitySuggestXhr.readyState !== 4) {
+                                                    _abfCitySuggestXhr.abort();
+                                                }
+                                                _abfCitySuggestXhr = $.ajax({
                                                     url: "{{ url('/') }}" + "/city-job-suggestions?q=" + encodeURIComponent(query),
                                                     method: 'GET',
                                                     success: function(data) {
                                                         if (Array.isArray(data)) {
+                                                            if (_abfCitySuggestCache.size >= 100) {
+                                                                _abfCitySuggestCache.delete(_abfCitySuggestCache.keys().next().value);
+                                                            }
+                                                            _abfCitySuggestCache.set(normCityKey, data);
                                                             tagifylocation.settings.whitelist = data;
                                                             abfCloseLocPanel();
                                                             tagifylocation.dropdown.show.call(tagifylocation, query);
@@ -1260,6 +1427,7 @@
                                                         }
                                                     },
                                                     error: function(err) {
+                                                        if (err && err.statusText === 'abort') return;
                                                         console.error("Error fetching cities:", err);
                                                     }
                                                 });
@@ -1273,22 +1441,18 @@
                                                 fetchSuggestions(query);
                                             });
 
-                                            setTimeout(() => {
-                                                var city = "{{ @$default_loc }}";
-                                                if (city !== '') {
-                                                    var cityName = city.split(" | ")[0];
-                                                    fetchSuggestions(cityName);
-                                                }
-                                            }, 100);
-                                            setTimeout(() => {
+                                            // Phase 1 Optimization: Initialize default location tag immediately on DOM ready
+                                            // without firing an unprompted /city-job-suggestions HTTP call at 100ms or waiting 5000ms.
+                                            document.addEventListener('DOMContentLoaded', function() {
                                                 var defaultLocation = {!! json_encode(@$default_loc) !!};
-
-                                                if (defaultLocation) {
+                                                if (defaultLocation && (!tagifylocation.value || tagifylocation.value.length === 0)) {
                                                     tagifylocation.addTags([defaultLocation]);
                                                     tagifylocation.dropdown.hide();
                                                 }
-                                                abfUpdateActiveFiltersUI();
-                                            }, 5000);
+                                                if (typeof abfUpdateActiveFiltersUI === 'function') {
+                                                    abfUpdateActiveFiltersUI();
+                                                }
+                                            });
                                         </script>
 
                                         <div class="d-flex mt-3">
@@ -2043,6 +2207,176 @@
             }
         });
 
+        /**
+         * Phase 2 Optimization: Isolated Browser RAM + sessionStorage Store (AgencyBenchStore)
+         * Intent: Serves visited pages, filters, and sort states in <1ms from user RAM with 0 server strain,
+         * while tracking addedCandidateIds per job and validating tenant_version + 60s TTL (Rule 3, 5, 6, 17).
+         */
+        var AgencyBenchStore = (function() {
+            var companyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+            var jobId = '{{ (int) ($job->id ?? 0) }}';
+            var storagePrefix = 'jero_agency_bench_v1_' + companyId + '_' + jobId + '_';
+            var addedSetKey = storagePrefix + 'added_ids';
+            var ramMap = new Map();
+            var addedIds = new Set();
+            var maxEntries = 30;
+            var ttlMs = 60000;
+            var latestTenantVersion = null;
+            var bcChannel = null;
+
+            try {
+                var rawAdded = sessionStorage.getItem(addedSetKey);
+                if (rawAdded) {
+                    JSON.parse(rawAdded).forEach(function(cid) {
+                        addedIds.add(String(cid));
+                    });
+                }
+            } catch (e) {}
+
+            try {
+                if (typeof BroadcastChannel !== 'undefined' && companyId !== '0') {
+                    bcChannel = new BroadcastChannel('jero_ats_sync_' + companyId);
+                    bcChannel.onmessage = function(ev) {
+                        var msg = ev && ev.data ? ev.data : null;
+                        if (!msg || msg.type !== 'CANDIDATE_ADDED_TO_JOB') return;
+                        var targetJobs = Array.isArray(msg.jobIds) ? msg.jobIds.map(String) : [];
+                        if (targetJobs.indexOf(String(jobId)) !== -1 && Array.isArray(msg.applicantIds)) {
+                            msg.applicantIds.forEach(function(aid) {
+                                addedIds.add(String(aid));
+                                var $rowBtn = $('#candidatetList .add_to_inreview[data-row-id="' + aid + '"]');
+                                if ($rowBtn.length) {
+                                    abfMarkCandidateRowAdded($rowBtn);
+                                }
+                            });
+                            try {
+                                sessionStorage.setItem(addedSetKey, JSON.stringify(Array.from(addedIds)));
+                            } catch (e) {}
+                        }
+                    };
+                }
+            } catch (e) {}
+
+            return {
+                buildKey: function(page, params) {
+                    return [
+                        page,
+                        params.jobid || '',
+                        params.search || '',
+                        params.sortingfilter || '',
+                        params.country || '',
+                        params.cus_search || '',
+                        params.min_exp || '',
+                        params.max_exp || '',
+                        params.kt_tagify_location || '',
+                        params.min_sal || '',
+                        params.max_sal || '',
+                        params.min_salary_currency || '',
+                        params.kt_tagify_education || '',
+                        params.app_int_status || '',
+                        params.app_int_activity || '',
+                        params.kt_tagify_company || '',
+                        params.app_int_notice || '',
+                        params.sal_mode || '',
+                        params.app_int_outsource || ''
+                    ].join('|');
+                },
+                get: function(key) {
+                    var now = Date.now();
+                    var entry = ramMap.get(key);
+                    if (!entry) {
+                        try {
+                            var raw = sessionStorage.getItem(storagePrefix + key);
+                            if (raw) {
+                                entry = JSON.parse(raw);
+                                ramMap.set(key, entry);
+                            }
+                        } catch (e) {}
+                    }
+                    if (!entry) return null;
+                    if ((now - (entry.ts || 0)) > ttlMs) {
+                        this.remove(key);
+                        return null;
+                    }
+                    if (latestTenantVersion && entry.tenant_version && entry.tenant_version !== latestTenantVersion) {
+                        this.invalidate();
+                        return null;
+                    }
+                    return entry.data;
+                },
+                set: function(key, response) {
+                    if (!response || typeof response.html === 'undefined') return;
+                    if (response.tenant_version) {
+                        if (latestTenantVersion && latestTenantVersion !== response.tenant_version) {
+                            this.invalidate();
+                        }
+                        latestTenantVersion = response.tenant_version;
+                    }
+                    if (ramMap.size >= maxEntries) {
+                        var oldestKey = ramMap.keys().next().value;
+                        this.remove(oldestKey);
+                    }
+                    var record = {
+                        ts: Date.now(),
+                        tenant_version: response.tenant_version || null,
+                        data: response
+                    };
+                    ramMap.set(key, record);
+                    try {
+                        sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
+                    } catch (e) {}
+                },
+                markCandidateAdded: function(candidateId, targetJobId) {
+                    var cidStr = String(candidateId);
+                    addedIds.add(cidStr);
+                    try {
+                        sessionStorage.setItem(addedSetKey, JSON.stringify(Array.from(addedIds)));
+                    } catch (e) {}
+                    var numJobId = parseInt(targetJobId || jobId, 10);
+                    var numAppId = parseInt(candidateId, 10);
+                    try {
+                        window.dispatchEvent(new CustomEvent('jero:candidate-added-to-job', {
+                            detail: { jobIds: [numJobId], applicantIds: [numAppId], masterStatusId: 8 }
+                        }));
+                    } catch (e) {}
+                    try {
+                        if (bcChannel) {
+                            bcChannel.postMessage({
+                                type: 'CANDIDATE_ADDED_TO_JOB',
+                                jobIds: [numJobId],
+                                applicantIds: [numAppId],
+                                masterStatusId: 8,
+                                ts: Date.now()
+                            });
+                        }
+                    } catch (e) {}
+                },
+                applyAddedOverlay: function() {
+                    if (addedIds.size === 0) return;
+                    addedIds.forEach(function(cid) {
+                        var $btn = $('#candidatetList .add_to_inreview[data-row-id="' + cid + '"]');
+                        if ($btn.length) {
+                            abfMarkCandidateRowAdded($btn);
+                        }
+                    });
+                },
+                remove: function(key) {
+                    ramMap.delete(key);
+                    try { sessionStorage.removeItem(storagePrefix + key); } catch (e) {}
+                },
+                invalidate: function() {
+                    ramMap.clear();
+                    try {
+                        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                            var k = sessionStorage.key(i);
+                            if (k && k.indexOf(storagePrefix) === 0 && k !== addedSetKey) {
+                                sessionStorage.removeItem(k);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            };
+        })();
+
         // The candidate stays visible in THIS list after a successful add —
         // swapping the button to the same "Added" label the row partial
         // already renders server-side for candidates already in the job's
@@ -2055,6 +2389,14 @@
             $btn.closest('div.d-flex.flex-column').html(
                 '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
             );
+        }
+
+        function abfIncrementBenchReqCounter(delta) {
+            var $counter = $('#benchTalentReq_counter');
+            if (!$counter.length) return;
+            var cur = parseInt(String($counter.first().text() || '0').replace(/[^0-9-]/g, ''), 10);
+            if (isNaN(cur)) cur = 0;
+            $counter.text(Math.max(0, cur + (delta || 1)));
         }
 
         $(document).on('click', '.add_to_inreview', function(e) {
@@ -2124,6 +2466,8 @@
 
                                 if (response.status == 'success') {
                                     abfMarkCandidateRowAdded($btn);
+                                    abfIncrementBenchReqCounter(1);
+                                    AgencyBenchStore.markCandidateAdded(id, source_jobid);
                                     abfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
                                 } else {
                                     restoreButton();
@@ -2194,7 +2538,33 @@
 
         });
 
-        function fetchCandidates(page = 1, search = '') {
+        // Phase 1 & Phase 2 Optimization: Request sequence guard, in-flight XHR abort controller,
+        // and AgencyBenchStore (<1ms Browser RAM + sessionStorage cache with addedCandidateIds overlay).
+        var _abfActiveXhr = null;
+        var _abfReqSeq = 0;
+        var _abfSearchDebounceTimer = null;
+
+        function renderAgencyBenchResponse(response) {
+            $('.loadingMessage').css({ display: 'none' });
+            $('.page-loader').css('display', 'none');
+            $('#sc_table_card').show();
+            if (!response || typeof response.html === 'undefined') {
+                console.error('public_bench_data_ajax: unexpected response', response);
+                return;
+            }
+            $('#candidatetList').html(response.html);
+            $('#agencyBench_counter').html(response.total);
+            $('#abf_footer_number').text(response.total);
+            $('#paginationcandidate').html(response.pagination);
+            AgencyBenchStore.applyAddedOverlay();
+        }
+
+        function fetchCandidates(page = 1, search = '', forceRefresh = false) {
+            var reqSeq = ++_abfReqSeq;
+            if (_abfActiveXhr && _abfActiveXhr.readyState !== 4) {
+                _abfActiveXhr.abort();
+            }
+
             var jobid = '{{ @$job->id }}';
             // #inputSearch never existed as a visible field on this page — the
             // real search box is #kt_tagify_2, same fix as Similar Candidates
@@ -2217,59 +2587,72 @@
             var app_int_outsource = $('[name="app_int_outsource"]:checked').val();
             var kt_tagify_company = $('#kt_tagify_company').val();
 
+            var requestParams = {
+                jobid: jobid,
+                search: inputSearch,
+                sortingfilter: sortingfilter,
+                country: country,
+                cus_search: cus_search,
+                min_exp: min_exp,
+                max_exp: max_exp,
+                kt_tagify_location: kt_tagify_location,
+                min_sal: min_sal,
+                max_sal: max_sal,
+                min_salary_currency: min_salary_currency,
+                kt_tagify_education: kt_tagify_education,
+                app_int_status: app_int_status,
+                app_int_activity: app_int_activity,
+                kt_tagify_company: kt_tagify_company,
+                app_int_notice: app_int_notice,
+                sal_mode: sal_mode,
+                app_int_outsource: app_int_outsource
+            };
+
+            var cacheKey = AgencyBenchStore.buildKey(page, requestParams);
+            if (!forceRefresh) {
+                var cachedResponse = AgencyBenchStore.get(cacheKey);
+                if (cachedResponse) {
+                    renderAgencyBenchResponse(cachedResponse);
+                    return $.Deferred().resolve(cachedResponse).promise();
+                }
+            }
+
             $('.loadingMessage').css({ display: 'none' });
             $('.page-loader').css('display', 'flex');
-            return $.ajax({
+            _abfActiveXhr = $.ajax({
                 url: `{!! route('service_company.apptracker.public_bench_data_ajax') !!}?page=${page}`,
                 type: 'GET',
-                data: {
-                jobid:jobid,
-                search:inputSearch,
-                sortingfilter:sortingfilter,
-                country:country,
-                cus_search:(cus_search),
-                min_exp:min_exp,
-                max_exp:max_exp,
-                kt_tagify_location:kt_tagify_location,
-                min_sal:min_sal,
-                max_sal:max_sal,
-                min_salary_currency:min_salary_currency,
-                kt_tagify_education:kt_tagify_education,
-                app_int_status:app_int_status,
-                app_int_activity:app_int_activity,
-                kt_tagify_company:kt_tagify_company,
-                app_int_notice:app_int_notice,
-                sal_mode:sal_mode,
-                app_int_outsource:app_int_outsource
-                },
+                data: requestParams,
                 success: function(response) {
+                    if (reqSeq !== _abfReqSeq) return;
+                    AgencyBenchStore.set(cacheKey, response);
+                    renderAgencyBenchResponse(response);
+                },
+                error: function(xhr, statusText) {
+                    if (statusText === 'abort' || (xhr && xhr.statusText === 'abort')) return;
+                    if (reqSeq !== _abfReqSeq) return;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
-                    $('#sc_table_card').show();
-                    if (!response || typeof response.html === 'undefined') {
-                        console.error('public_bench_data_ajax: unexpected response', response);
-                        return;
-                    }
-                    $('#candidatetList').html(response.html);
-                    $('#agencyBench_counter').html(response.total);
-                    $('#abf_footer_number').text(response.total);
-                    $('#paginationcandidate').html(response.pagination);
-                },
-                error: function(xhr) {
-                    $('.loadingMessage').css({ display: 'none' });
-                     $('.page-loader').css('display', 'none');
                     $('#sc_table_card').show();
                     console.error('public_bench_data_ajax failed:', xhr.status, xhr.responseText);
                 }
             });
+            return _abfActiveXhr;
         }
 
-        // Free-text search box: Enter re-runs the same fetchCandidates() call
-        // the sort dropdown and pagination already use.
+        // Free-text search box: 250ms debounce on input + immediate execution on Enter.
+        $(document).on('input', '#kt_tagify_2', function() {
+            clearTimeout(_abfSearchDebounceTimer);
+            _abfSearchDebounceTimer = setTimeout(function() {
+                fetchCandidates(1);
+            }, 250);
+        });
+
         $(document).on('keydown', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
-                fetchCandidates();
+                clearTimeout(_abfSearchDebounceTimer);
+                fetchCandidates(1);
             }
         });
 

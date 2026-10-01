@@ -1639,14 +1639,28 @@ $(document).ready(function () {
         const ext = file.name.split('.').pop().toLowerCase();
 
         if ($.inArray(ext, ['pdf', 'doc', 'docx']) === -1) {
-            alert('Only PDF, DOC and DOCX files are allowed.');
+            Swal.fire({
+                title: 'Invalid File Format',
+                text: 'Only PDF, DOC, and DOCX files are allowed.',
+                icon: 'warning',
+                confirmButtonText: 'Ok, got it!',
+                customClass: { confirmButton: 'btn btn-primary' }
+            });
+            backToDropzone();
             return;
         }
 
         const sizeMB = file.size / (1024 * 1024);
 
-        if (sizeMB > 6) {
-            alert('Maximum file size is 6 MB.');
+        if (sizeMB > 5) {
+            Swal.fire({
+                title: 'File Too Large',
+                text: 'Maximum file size allowed is 5 MB.',
+                icon: 'warning',
+                confirmButtonText: 'Ok, got it!',
+                customClass: { confirmButton: 'btn btn-primary' }
+            });
+            backToDropzone();
             return;
         }
 
@@ -2849,7 +2863,7 @@ var KTAddCandidate = function () {
                 if (status == 'Valid') {
                   $("#save-form").prop("disabled", true);
                   $("#save-form").html(
-                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                    `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`
                   );
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
@@ -2862,11 +2876,14 @@ var KTAddCandidate = function () {
                             return;
                         }
 					
-												var formData = new FormData($('#createForm')[0]);							
+												var formData = new FormData($('#createForm')[0]);
+												var submissionToken = 'sub_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+												formData.append('submission_token', submissionToken);
 												$.ajax({
 														   url 				: '{{route('get.careerStore')}}'+'?_token=' + '{{ csrf_token() }}',								   
 														   type 			: 'POST',
 														   data 			: formData,
+														   timeout			: 30000,
 														   processData		: false,  	// tell jQuery not to process the data
 														   contentType		: false,  	// tell jQuery not to set contentType
 														   redirect			: true,
@@ -2925,6 +2942,9 @@ var KTAddCandidate = function () {
                                             confirmButton: "btn btn-primary"
                                           }
                                   }).then(function (result) {
+                                      if (window.CareerApplyDraftManager) {
+                                          window.CareerApplyDraftManager.clearDraft();
+                                      }
                                       if (result.isConfirmed) {
                                           window.open('', '_self');
                                           window.close();
@@ -2940,11 +2960,15 @@ var KTAddCandidate = function () {
                                  
 
 																},
-																error			: function (xhr) {
+																error			: function (xhr, textStatus) {
                                 $("#save-form").prop("disabled", false).html("Submit");
                                 submitButton.removeAttribute('data-kt-indicator');
                                 submitButton.disabled = false;
-                                if (xhr.status === 0 || !navigator.onLine) {
+                                if (textStatus === 'timeout') {
+                                    Swal.fire({ title: "Request Timed Out", text: "The server took too long to respond. Please check your internet connection and try submitting again.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                } else if (xhr.status === 429) {
+                                    Swal.fire({ title: "Too Many Requests", text: "You are submitting too fast. Please wait a moment before trying again.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                                } else if (xhr.status === 0 || !navigator.onLine) {
                                     Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
                                 } else {
                                     Swal.fire("Error", "Something went wrong. Please try again.", "error");
@@ -2953,7 +2977,7 @@ var KTAddCandidate = function () {
 													});
 							
                   
-                    }, 2000);
+                    }, 50);
                 } 
 				else 
 				{
@@ -2983,7 +3007,81 @@ var KTAddCandidate = function () {
 
 KTUtil.onDOMContentLoaded(function () {
     KTAddCandidate.init();
+    if (window.CareerApplyDraftManager) {
+        window.CareerApplyDraftManager.init();
+    }
 });
+
+/**
+ * Intent: Client-side draft autosave & restore engine using sessionStorage.
+ * Tenancy: Scoped strictly by company_id and job_id to prevent cross-tenant or cross-job contamination.
+ */
+window.CareerApplyDraftManager = {
+    draftKey: 'career_apply_draft_{{ $company_id }}_{{ $jobId ?? (@$jobDetail->id ?? "general") }}',
+    timer: null,
+
+    init: function() {
+        var self = this;
+        this.restoreDraft();
+
+        // Listen for input changes on createForm (debounced 400ms)
+        $('#createForm').on('input change', 'input:not([type=file]):not([type=hidden][name=_token]):not([name=password]):not([name=password1]), select, textarea', function() {
+            clearTimeout(self.timer);
+            self.timer = setTimeout(function() {
+                self.saveDraft();
+            }, 400);
+        });
+    },
+
+    saveDraft: function() {
+        var form = document.getElementById('createForm');
+        if (!form) return;
+        var draft = {};
+        var elements = form.querySelectorAll('input:not([type=file]):not([type=hidden][name=_token]):not([name=password]):not([name=password1]), select, textarea');
+        elements.forEach(function(el) {
+            if (el.name && el.value) {
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    if (el.checked) draft[el.name] = el.value;
+                } else {
+                    draft[el.name] = el.value;
+                }
+            }
+        });
+        try {
+            sessionStorage.setItem(this.draftKey, JSON.stringify(draft));
+        } catch(e) {}
+    },
+
+    restoreDraft: function() {
+        try {
+            var raw = sessionStorage.getItem(this.draftKey);
+            if (!raw) return;
+            var draft = JSON.parse(raw);
+            if (!draft || typeof draft !== 'object') return;
+
+            var form = document.getElementById('createForm');
+            if (!form) return;
+
+            Object.keys(draft).forEach(function(name) {
+                var el = form.querySelector('[name="' + name + '"]');
+                if (el && !el.value) {
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = (el.value === draft[name]);
+                    } else {
+                        el.value = draft[name];
+                        $(el).trigger('change');
+                    }
+                }
+            });
+        } catch(e) {}
+    },
+
+    clearDraft: function() {
+        try {
+            sessionStorage.removeItem(this.draftKey);
+        } catch(e) {}
+    }
+};
 
 function re_test(text){
   var jobId = "{{ @$jobId }}";

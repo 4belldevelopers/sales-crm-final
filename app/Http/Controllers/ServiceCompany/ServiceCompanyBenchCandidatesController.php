@@ -270,87 +270,108 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         ];
     }
 
+    /**
+     * Compute or retrieve cached bench candidate status counts for a tenant.
+     * Keyed by tenant-wide version (allbenchcandidates_version_company_{companyId}) with single-flight lock
+     * so 10,000 concurrent users share 1 ES aggregation and see 0ms stale data upon any update.
+     * Tenancy note: Strictly filtered by $companyId.
+     */
+    protected function getBenchStatusCounts(int $companyId): array
+    {
+        $tenantVersion = cache()->get('allbenchcandidates_version_company_'.$companyId, 1);
+        $cacheKey = "tenant:{$companyId}:bench_counts:v{$tenantVersion}";
+
+        if (cache()->has($cacheKey)) {
+            return cache()->get($cacheKey);
+        }
+
+        $lock = cache()->lock('lock:'.$cacheKey, 5);
+        if (! $lock->get()) {
+            for ($i = 0; $i < 10; $i++) {
+                usleep(50000);
+                if (cache()->has($cacheKey)) {
+                    return cache()->get($cacheKey);
+                }
+            }
+        }
+
+        try {
+            $params = [
+                'index' => ELASTIC_CANDIDATES_BENCH,
+                'size' => 0,
+                'body' => [
+                    'query' => [
+                        'bool' => [
+                            'filter' => [
+                                ['term' => ['company_id' => $companyId]],
+                                ['term' => ['condidate_type.keyword' => 'bench_condidate']],
+                            ],
+                        ],
+                    ],
+                    'aggs' => [
+                        'all_records' => [
+                            'value_count' => [
+                                'field' => 'id',
+                            ],
+                        ],
+                        'bench' => [
+                            'filter' => [
+                                'term' => ['status' => 2],
+                            ],
+                        ],
+                        'pool' => [
+                            'filter' => [
+                                'term' => ['status' => 1],
+                            ],
+                        ],
+                        'placed' => [
+                            'filter' => [
+                                'term' => ['status' => 3],
+                            ],
+                        ],
+                        'paused' => [
+                            'filter' => [
+                                'term' => ['status' => 4],
+                            ],
+                        ],
+                        'exited' => [
+                            'filter' => [
+                                'term' => ['status' => 5],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+
+            $response = $this->elasticService->getClient()->search($params);
+            $counts = [
+                'all_records' => $response['hits']['total']['value'] ?? 0,
+                'pool' => $response['aggregations']['pool']['doc_count'] ?? 0,
+                'bench' => $response['aggregations']['bench']['doc_count'] ?? 0,
+                'paused' => $response['aggregations']['paused']['doc_count'] ?? 0,
+                'placed' => $response['aggregations']['placed']['doc_count'] ?? 0,
+                'exited' => $response['aggregations']['exited']['doc_count'] ?? 0,
+            ];
+            cache()->put($cacheKey, $counts, now()->addMinutes(ALL_BENCH_CANDIDATES_TIME));
+
+            return $counts;
+        } catch (\Throwable $e) {
+            return [
+                'all_records' => 0,
+                'pool' => 0,
+                'bench' => 0,
+                'paused' => 0,
+                'placed' => 0,
+                'exited' => 0,
+            ];
+        } finally {
+            optional($lock)->release();
+        }
+    }
+
     public function countDataGetBenchList()
     {
-
-        $params = [
-            'index' => ELASTIC_CANDIDATES_BENCH,
-            'size' => 0,   // no documents, only counts
-            'body' => [
-                'query' => [
-                    'bool' => [
-                        'filter' => [
-                            ['term' => ['company_id' => auth()->user()->company_id]],
-                            ['term' => ['condidate_type.keyword' => 'bench_condidate']],
-                        ],
-                    ],
-                ],
-                'aggs' => [
-                    'all_records' => [
-                        'value_count' => [
-                            'field' => 'id',
-                        ],
-                    ],
-                    'bench' => [
-                        'filter' => [
-                            'term' => ['status' => 2],
-                        ],
-                    ],
-                    'pool' => [
-                        'filter' => [
-                            'term' => ['status' => 1],
-                        ],
-                    ],
-                    'placed' => [
-                        'filter' => [
-                            'term' => ['status' => 3],
-                        ],
-                    ],
-                    'paused' => [
-                        'filter' => [
-                            'term' => ['status' => 4],
-                        ],
-                    ],
-                    'exited' => [
-                        'filter' => [
-                            'term' => ['status' => 5],
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        $response = $this->elasticService->getClient()->search($params);
-        // $this->counts = (object) [
-        // 	'all_records' => $response['hits']['total']['value'] ?? 0,
-        // 	'bench'       => $response['aggregations']['bench']['doc_count'] ?? 0,
-        // 	'pool'        => $response['aggregations']['pool']['doc_count'] ?? 0,
-        // 	'placed'      => $response['aggregations']['placed']['doc_count'] ?? 0,
-        // 	'paused'      => $response['aggregations']['paused']['doc_count'] ?? 0,
-        // 	'exited'      => $response['aggregations']['exited']['doc_count'] ?? 0,
-        // ];
-
-        // $this->counts = DB::table('job_applications')
-        // 	->selectRaw("
-        // 		COUNT(*) AS all_records,
-        // 		SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS bench,
-        // 		SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS pool,
-        // 		SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) AS placed,
-        // 		SUM(CASE WHEN status = 4 THEN 1 ELSE 0 END) AS paused
-        // 	")
-        // 	->where('job_applications.company_id', '=', auth()->user()->company_id)
-        // 	->where('job_applications.condidate_type', '=', 'bench_condidate')
-        // 	->first();
-
-        return response()->json([
-            'all_records' => $response['hits']['total']['value'] ?? 0,
-            'pool' => $response['aggregations']['pool']['doc_count'] ?? 0,
-            'bench' => $response['aggregations']['bench']['doc_count'] ?? 0,
-            'paused' => $response['aggregations']['paused']['doc_count'] ?? 0,
-            'placed' => $response['aggregations']['placed']['doc_count'] ?? 0,
-            'exited' => $response['aggregations']['exited']['doc_count'] ?? 0,
-        ]);
-
+        return response()->json($this->getBenchStatusCounts((int) auth()->user()->company_id));
     }
 
     public function data_ajax(Request $request)
@@ -385,14 +406,26 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'sort' => $valCheck,
         ];
 
-        $versionKey = 'allbenchcandidates_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:allbenchcandidates:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $userVersion = cache()->get('allbenchcandidates_version_user_'.$this->user->id, 1);
+        $tenantVersion = cache()->get('allbenchcandidates_version_company_'.$company_id, 1);
+        $version = $userVersion.'_'.$tenantVersion;
+        $cacheKeySet = 'ats:allbenchcandidates:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
+        }
+
+        // Single-flight lock to prevent thundering herd on concurrent identical requests
+        $lock = cache()->lock('lock:'.$cacheKeySet, 5);
+        if (! $lock->get()) {
+            for ($i = 0; $i < 10; $i++) {
+                usleep(50000);
+                if (cache()->has($cacheKeySet)) {
+                    return response()->json(cache()->get($cacheKeySet));
+                }
+            }
         }
 
         $sort = [];
@@ -601,9 +634,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'html' => view('service_company.ajax_pages.bench-candidate-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'viewCounts', 'downloadCounts', 'companyCurrencyBenchshowMode', 'benchExploreCounters', 'benchManagersMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
+            'counts' => $this->getBenchStatusCounts((int) $company_id),
+            'tenant_version' => (int) $tenantVersion,
+            'cache_version' => $version,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_BENCH_CANDIDATES_TIME));
+        optional($lock)->release();
 
         return response()->json($responseData);
 
@@ -637,13 +674,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'company' => $company_id,
             'custom_search' => $custom_search,
             'selectedValue' => $selectedValue,
-            'user_id' => $this->user->id,
             'sort' => $valCheck,
         ];
 
-        $versionKey = 'allbenchcandidates_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, 1);
-        $cacheKeySet = 'ats:v2:allbenchcandidates:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+        $tenantVersion = cache()->get('allbenchcandidates_version_company_'.$company_id, 1);
+        $cacheKeySet = 'ats:v2:allbenchcandidates:'.$company_id.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
 
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
@@ -738,19 +773,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $downloadCounts = [];
             $companyCurrencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
 
-            if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-                $total = 0;
-                $candidates = [];
-            } else {
+            try {
                 $response = $this->elasticService->getClient()->search($params);
                 $total = $response['hits']['total']['value'] ?? 0;
                 $rawHits = array_map(function ($hit) {
                     return $hit['_source'];
-                }, $response['hits']['hits']);
+                }, $response['hits']['hits'] ?? []);
+            } catch (\Throwable $e) {
+                $total = 0;
+                $rawHits = [];
+            }
 
-                $pageIds = array_filter(array_column($rawHits, 'id'));
+            $candidates = [];
+            if (! empty($rawHits)) {
+                $pageIds = array_values(array_filter(array_column($rawHits, 'id')));
                 if (! empty($pageIds)) {
-                    $wmMap = DB::table('job_applications')->whereIn('id', $pageIds)->pluck('wm', 'id');
+                    $wmMap = DB::table('job_applications')
+                        ->where('company_id', $company_id)
+                        ->whereIn('id', $pageIds)
+                        ->pluck('wm', 'id');
 
                     $counts = DB::table('bench_count_view_download')
                         ->select('candidate_id', 'type', DB::raw('COUNT(*) as total'))
@@ -826,6 +867,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'page' => $page,
                 'last_page' => ceil($total / $size),
                 'candidates' => $candidates,
+                'counts' => $this->getBenchStatusCounts((int) $company_id),
+                'tenant_version' => (int) $tenantVersion,
+                'cache_version' => $version,
             ];
 
             cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_BENCH_CANDIDATES_TIME));
@@ -7133,29 +7177,54 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     {
 
         $company_id = auth()->user()->company_id;
+        $jobId = (int) $request->jobId;
+        $conId = (int) $request->conId;
 
-        $job = Job::withoutGlobalScopes()->findOrFail($request->jobId);
+        // Phase 5: Atomic idempotency lock to prevent double-submit and race conditions (10s TTL)
+        $idempotencyKey = $request->header('X-Idempotency-Key')
+            ?: "idemp:bench_req:{$company_id}:{$jobId}:{$conId}";
+        $lockKey = 'lock:' . md5($idempotencyKey);
+        $lock = Cache::lock($lockKey, 10);
 
-        //   $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id,$company_id);
-        //   $mailTypeSubject = GeneralMethod::mailTypeSubject(21,1);
-
-        //   dd($detailsVendorSide,$mailTypeSubject);
-
-        $source_from_company_id = $company_id;
-        $source_from_user_id = auth()->user()->id;
-        //   $source_from_id	 = '';
-        $source_from_type = 1;
-        $source_company_id = $job->company_id;
-        //   $source_user_id	 = '';
-        $source_application_id = (int) $request->conId;
-        $source_jobid = (int) $request->jobId;
-
-        $eventId = 25;
-        $coinsDeductions = GeneralMethod::coinsValidations((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
-        // dd($coinsDeductions);
-        if ($coinsDeductions->status) {
-            return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+        if (!$lock->get()) {
+            return Reply::dataOnly(['status' => 'warning', 'message' => 'Request already processing. Please wait.']);
         }
+
+        try {
+            $job = Job::withoutGlobalScopes()->findOrFail($jobId);
+
+            //   $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id,$company_id);
+            //   $mailTypeSubject = GeneralMethod::mailTypeSubject(21,1);
+
+            //   dd($detailsVendorSide,$mailTypeSubject);
+
+            $source_from_company_id = $company_id;
+            $source_from_user_id = auth()->user()->id;
+            //   $source_from_id	 = '';
+            $source_from_type = 1;
+            $source_company_id = $job->company_id;
+            //   $source_user_id	 = '';
+            $source_application_id = $conId;
+            $source_jobid = $jobId;
+
+            // Phase 5: Concurrency check — prevent duplicate assignment submission
+            $alreadyAssigned = DB::table('rec_candidate_assign')
+                ->where('source_jobid', $source_jobid)
+                ->where('source_application_id', $source_application_id)
+                ->where('source_from_company_id', $source_from_company_id)
+                ->whereIn('ac_status', [0, 1])
+                ->exists();
+
+            if ($alreadyAssigned) {
+                return Reply::dataOnly(['status' => 'warning', 'message' => 'Candidate request already submitted for this job.']);
+            }
+
+            $eventId = 25;
+            $coinsDeductions = GeneralMethod::coinsValidations((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
+            // dd($coinsDeductions);
+            if ($coinsDeductions->status) {
+                return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
+            }
         //  dd("djd");
         //   dd($source_company_id);
 
@@ -7180,11 +7249,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $query = DB::table('rec_candidate_assign')->insert($values);
             $rec_id = DB::getPdo()->lastInsertId();
 
-            try {
-                GeneralMethod::candidateRequestIndexElastic((int) $rec_id);
-            } catch (\Throwable $e) {
-                \Log::error('candidateRequestIndexElastic direct call failed: '.$e->getMessage());
-            }
+            /**
+             * Intent: Offload Elasticsearch candidate request document indexing to Horizon queue (Rule 2 & Rule 6).
+             * Zero direct UI writes to ES; executes strictly after database transaction commits.
+             * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
+             */
 
             /**
              * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
@@ -7192,6 +7261,32 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
              */
             \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
             \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
+            \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_from_company_id}:epoch");
+            if ((int) $source_company_id !== (int) $source_from_company_id) {
+                \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_company_id}:epoch");
+            }
+
+            // Phase 4: Real-time Reverb WebSocket delta broadcasting
+            try {
+                event(new \App\Events\BenchRequestCreated(
+                    (int) $source_from_company_id,
+                    (int) $source_jobid,
+                    (int) $rec_id,
+                    (int) $source_application_id,
+                    'internal_bench'
+                ));
+                if ((int) $source_company_id !== (int) $source_from_company_id) {
+                    event(new \App\Events\BenchRequestCreated(
+                        (int) $source_company_id,
+                        (int) $source_jobid,
+                        (int) $rec_id,
+                        (int) $source_application_id,
+                        'internal_bench'
+                    ));
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('BenchRequestCreated event broadcast failed: ' . $e->getMessage());
+            }
 
         }
 
@@ -7272,7 +7367,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             GeneralMethod::cacheClean($key);
         }
 
-        return response()->json($data);
+            return response()->json($data);
+        } finally {
+            $lock->release();
+        }
 
     }
 

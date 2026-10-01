@@ -1461,6 +1461,27 @@
 
 
 
+        function applyAptkCounts(counts) {
+            if (!counts) return;
+            var allCandidate = counts.allCandidate || 0;
+            var Sourcing = counts.Sourcing || 0;
+            var Screening = counts.Screening || 0;
+            var Rejected = counts.Rejected || 0;
+            var Offered = counts.Offered || 0;
+            var Negotiation = counts.Negotiation || 0;
+            var Joined = counts.Joined || 0;
+            var Interview = counts.Interview || 0;
+
+            $('#bg_1').html(Sourcing);
+            $('#bg_2').html(Screening);
+            $('#bg_3').html(Interview);
+            $('#bg_4').html(Negotiation);
+            $('#bg_5').html(Offered);
+            $('#bg_6').html(Joined);
+            $('#bg_7').html(Rejected);
+            $('#totalcnt').html(allCandidate);
+        }
+
         function countder() {
             if (_aptkCounterXhr && _aptkCounterXhr.readyState !== 4) {
                 _aptkCounterXhr.abort();
@@ -1477,44 +1498,9 @@
                 type: 'GET',
                 url: url,
                 success: function(response) {
-
-                    var allCandidate = 0;
-                    var Sourcing = 0;
-                    var Screening = 0;
-                    var Rejected = 0;
-                    var Offered = 0;
-
-                    var Negotiation = 0;
-                    var Joined = 0;
-                    var Interview = 0;
-
-                    if (response.status === 'success' && response.data) {
-                        allCandidate = response.data.allCandidate || 0;
-                        Sourcing = response.data.Sourcing || 0;
-                        Screening = response.data.Screening || 0;
-                        Rejected = response.data.Rejected || 0;
-                        Offered = response.data.Offered || 0;
-
-                        Negotiation = response.data.Negotiation || 0;
-                        Joined = response.data.Joined || 0;
-                        Interview = response.data.Interview || 0;
+                    if (response && response.status === 'success' && response.data) {
+                        applyAptkCounts(response.data);
                     }
-
-                    setTimeout(() => {
-                        $('#bg_1').html(Sourcing);
-                        $('#bg_2').html(Screening);
-                        $('#bg_3').html(Interview);
-                        $('#bg_4').html(Negotiation);
-                        $('#bg_5').html(Offered);
-
-                        $('#bg_6').html(Joined);
-                        $('#bg_7').html(Rejected);
-                        $('#totalcnt').html(allCandidate);
-
-                    }, 100);
-
-
-
                 }
             });
             return _aptkCounterXhr;
@@ -1678,9 +1664,9 @@
                                     // $('#stage_sub_stage').modal('hide');
                                     $("#stage_sub_stage_close").click();
                                 });
-                                countder();
+                                if (typeof AppTrackerRamStore !== 'undefined') { AppTrackerRamStore.invalidate(); }
                                 var page = $('#paginationcandidate .pagi-page.pagi-active').data('page') || 1;
-                                fetchCandidates(page);
+                                fetchCandidates(page, '', true);
                                 //  	var table;
                                 // 				tableLoad('load');
                                 // table._fnDraw();
@@ -2133,9 +2119,105 @@
             });
         });
 
-        $(document).ready(function() {
-            // $.noConflict();
+        var page_no = localStorage.getItem('currentPage') || 1;
+        var _aptkListXhr = null;
+        var _aptkReqSeq = 0;
 
+        /**
+         * Isolated Browser RAM + sessionStorage store for AppTracker candidate pipeline listing.
+         * Intent: Serves repeat stage tab switches and pagination in <2ms from user RAM with 0 server strain,
+         * while enforcing strict version & TTL validation so stale candidate data is never served (Rule 3, 5, 6, 17).
+         */
+        var AppTrackerRamStore = (function() {
+            var tenantId = $('#tenant_id').val() || '{{ (int) (auth()->user()->company_id ?? 0) }}';
+            var jobId = $('#jobid').val() || '{{ (int) ($job->id ?? 0) }}';
+            var storagePrefix = 'jero_apptracker_v1_' + tenantId + '_' + jobId + '_';
+            var ramMap = new Map();
+            var maxEntries = 30;
+            var ttlMs = 60000;
+            var latestCacheVersion = null;
+
+            return {
+                buildKey: function(page, params) {
+                    return [
+                        page,
+                        params.jobid || '',
+                        params.mstatus_id || 'all',
+                        params.search || '',
+                        params.sortingfilter || '',
+                        params.country || '',
+                        params.cus_search || '',
+                        params.size || 10
+                    ].join('|');
+                },
+                get: function(key) {
+                    var now = Date.now();
+                    var entry = ramMap.get(key);
+                    if (!entry) {
+                        try {
+                            var raw = sessionStorage.getItem(storagePrefix + key);
+                            if (raw) {
+                                entry = JSON.parse(raw);
+                                ramMap.set(key, entry);
+                            }
+                        } catch (e) {}
+                    }
+                    if (!entry) return null;
+                    if ((now - (entry.ts || 0)) > ttlMs) {
+                        this.remove(key);
+                        return null;
+                    }
+                    if (latestCacheVersion && entry.cache_version && entry.cache_version !== latestCacheVersion) {
+                        this.invalidate();
+                        return null;
+                    }
+                    return entry.data;
+                },
+                set: function(key, response) {
+                    if (!response || !response.html) return;
+                    if (response.cache_version) {
+                        if (latestCacheVersion && latestCacheVersion !== response.cache_version) {
+                            this.invalidate();
+                        }
+                        latestCacheVersion = response.cache_version;
+                    }
+                    if (ramMap.size >= maxEntries) {
+                        var oldestKey = ramMap.keys().next().value;
+                        this.remove(oldestKey);
+                    }
+                    var record = {
+                        ts: Date.now(),
+                        cache_version: response.cache_version || null,
+                        data: response
+                    };
+                    ramMap.set(key, record);
+                    try {
+                        sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
+                    } catch (e) {}
+                },
+                remove: function(key) {
+                    ramMap.delete(key);
+                    try { sessionStorage.removeItem(storagePrefix + key); } catch (e) {}
+                },
+                invalidate: function() {
+                    ramMap.clear();
+                    try {
+                        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                            var k = sessionStorage.key(i);
+                            if (k && k.indexOf(storagePrefix) === 0) {
+                                sessionStorage.removeItem(k);
+                            }
+                        }
+                    } catch (e) {}
+                }
+            };
+        })();
+
+        window.addEventListener('jero:candidate-added-to-job', function() {
+            AppTrackerRamStore.invalidate();
+        });
+
+        $(document).ready(function() {
             fetchCandidates();
 
             var aptkPaginationLoading = false;
@@ -2163,12 +2245,79 @@
             });
         });
 
+        function renderAppTrackerResponse(response, targetPage, mstatus_id) {
+            if (response.counts) {
+                applyAptkCounts(response.counts);
+            } else {
+                countder();
+            }
+            $('.loadingMessage').css({ display: 'none' });
+            $('.loader_search').css({ display: 'none' });
+            $('.page-loader').css('display', 'none');
+            $('#sc_table_card').show();
+            $('#candidatetList').html(response.html);
+            $('#pool_counter').html(response.total);
+            localStorage.setItem('currentPage', targetPage);
+            var mstatusvalue = $('#mstatus_id').val();
+            localStorage.setItem('mstatusValueSet', mstatusvalue);
 
-        var page_no = localStorage.getItem('currentPage') || 1;
-        var _aptkListXhr = null;
-        var _aptkReqSeq = 0;
+            $('#paginationcandidate').html(response.pagination);
 
-        function fetchCandidates(page, search = '') {
+            $('.hp-circle').removeClass('active');
+            $('.hp-label').removeClass('active');
+            $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
+
+            if (mstatus_id == 1) {
+                $('.hp-circle[data-hp="1"]').addClass('active');
+                $('#tx_1').addClass('active');
+                $('.nav_status').html('Sourcing');
+                $('.nav_status').css('background', '#efefef');
+                $('.nav_status').css('color', '#000000');
+            } else if (mstatus_id == 2) {
+                $('.hp-circle[data-hp="2"]').addClass('active');
+                $('#tx_2').addClass('active');
+                $('.nav_status').html('Screening');
+                $('.nav_status').css('background', '#fff9ed');
+                $('.nav_status').css('color', '#ffab00');
+            } else if (mstatus_id == 3) {
+                $('.hp-circle[data-hp="3"]').addClass('active');
+                $('#tx_3').addClass('active');
+                $('.nav_status').html('Interview');
+                $('.nav_status').css('background', '#f0f8ff');
+                $('.nav_status').css('color', '#2896ff');
+            } else if (mstatus_id == 4) {
+                $('.hp-circle[data-hp="4"]').addClass('active');
+                $('#tx_4').addClass('active');
+                $('.nav_status').html('Negotiation');
+                $('.nav_status').css('background', '#ffe6f2');
+                $('.nav_status').css('color', '#ff4098');
+            } else if (mstatus_id == 5) {
+                $('.hp-circle[data-hp="5"]').addClass('active');
+                $('#tx_5').addClass('active');
+                $('.nav_status').html('Offered');
+                $('.nav_status').css('background', '#d4ffde');
+                $('.nav_status').css('color', '#06c732');
+            } else if (mstatus_id == 6) {
+                $('.hp-circle[data-hp="6"]').addClass('active');
+                $('#tx_6').addClass('active');
+                $('.nav_status').html('Joined');
+                $('.nav_status').css('background', '#f7deff');
+                $('.nav_status').css('color', '#c000ff');
+            } else if (mstatus_id == 7) {
+                $('.hp-circle[data-hp="7"]').addClass('active');
+                $('#tx_7').addClass('active');
+                $('.nav_status').html('Rejected');
+                $('.nav_status').css('background', '#ffe2e5');
+                $('.nav_status').css('color', '#ff0202');
+            } else if (mstatus_id == 'all') {
+                $('.nav_status').html('All Candidate');
+                $('.nav_status').css('background', 'linear-gradient(to left, #01e074, #0581d9)');
+                $('.nav_status').css('color', '#FFFFFF');
+                $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
+            }
+        }
+
+        function fetchCandidates(page, search = '', forceRefresh = false) {
             var seq = ++_aptkReqSeq;
             if (_aptkListXhr && _aptkListXhr.readyState !== 4) {
                 _aptkListXhr.abort();
@@ -2181,108 +2330,52 @@
             var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
 
             var mstatus_id = localStorage.getItem('mstatusValueSet');
-          
+
             if (mstatus_id) {
                 try {
                     mstatus_id = JSON.parse(mstatus_id);
                 } catch (e) {
-                      var mstatus_id = $('#mstatus_id').val();
-                   localStorage.setItem('mstatusValueSet', JSON.stringify(mstatus_id));
+                    var mstatus_id = $('#mstatus_id').val();
+                    localStorage.setItem('mstatusValueSet', JSON.stringify(mstatus_id));
                 }
             } else {
                 var mstatus_id = $('#mstatus_id').val();
                 localStorage.setItem('mstatusValueSet', JSON.stringify(mstatus_id));
             }
-           
 
-            var clientid = '1';
+            var requestParams = {
+                jobid: $('#jobid').val(),
+                mstatus_id: mstatus_id,
+                search: $('#inputSearch').val(),
+                sortingfilter: $('#sortingfilter').val(),
+                country: $('#country').val(),
+                cus_search: $('#kt_tagify_2').val(),
+                size: perPage
+            };
+
+            var cacheKey = AppTrackerRamStore.buildKey(targetPage, requestParams);
+            if (!forceRefresh) {
+                var cachedResponse = AppTrackerRamStore.get(cacheKey);
+                if (cachedResponse) {
+                    renderAppTrackerResponse(cachedResponse, targetPage, mstatus_id);
+                    return $.Deferred().resolve(cachedResponse).promise();
+                }
+            }
+
             $('.loadingMessage').css({ display: 'flex' });
-            if($('#kt_tagify_2').val()!=''){
+            if ($('#kt_tagify_2').val() != '') {
                 $('.loader_search').css({ display: 'block' });
-            }else{
+            } else {
                 $('.page-loader').css('display', 'flex');
             }
             _aptkListXhr = $.ajax({
                 url: `{!! route('service_company.apptracker.allDataAjax') !!}?page=${targetPage}`,
                 type: 'GET',
-                data: {
-                  jobid : $('#jobid').val(),
-                  mstatus_id : mstatus_id,
-                  search : $('#inputSearch').val(),
-                  sortingfilter : $('#sortingfilter').val(),
-                  country : $('#country').val(),
-                  cus_search : $('#kt_tagify_2').val(),
-                  size : perPage
-                },
+                data: requestParams,
                 success: function(response) {
                     if (seq !== _aptkReqSeq) return;
-                    countder();
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#sc_table_card').show();
-                    $('#candidatetList').html(response.html);
-                    $('#pool_counter').html(response.total);
-                    localStorage.setItem('currentPage', targetPage);
-                    var mstatusvalue = $('#mstatus_id').val();
-                    localStorage.setItem('mstatusValueSet', mstatusvalue);
-                    
-                    $('#paginationcandidate').html(response.pagination);
-
-
-                    $('.hp-circle').removeClass('active');
-                    $('.hp-label').removeClass('active');
-                    $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
-
-                    if (mstatus_id == 1) {
-                    $('.hp-circle[data-hp="1"]').addClass('active');
-                    $('#tx_1').addClass('active');
-                    $('.nav_status').html('Sourcing');
-                    $('.nav_status').css('background', '#efefef');
-                    $('.nav_status').css('color', '#000000');
-                } else if (mstatus_id == 2) {
-                    $('.hp-circle[data-hp="2"]').addClass('active');
-                    $('#tx_2').addClass('active');
-                    $('.nav_status').html('Screening');
-                    $('.nav_status').css('background', '#fff9ed');
-                    $('.nav_status').css('color', '#ffab00');
-                } else if (mstatus_id == 3) {
-                    $('.hp-circle[data-hp="3"]').addClass('active');
-                    $('#tx_3').addClass('active');
-                    $('.nav_status').html('Interview');
-                    $('.nav_status').css('background', '#f0f8ff');
-                    $('.nav_status').css('color', '#2896ff');
-                } else if (mstatus_id == 4) {
-                    $('.hp-circle[data-hp="4"]').addClass('active');
-                    $('#tx_4').addClass('active');
-                    $('.nav_status').html('Negotiation');
-                    $('.nav_status').css('background', '#ffe6f2');
-                    $('.nav_status').css('color', '#ff4098');
-                } else if (mstatus_id == 5) {
-                    $('.hp-circle[data-hp="5"]').addClass('active');
-                    $('#tx_5').addClass('active');
-                    $('.nav_status').html('Offered');
-                    $('.nav_status').css('background', '#d4ffde');
-                    $('.nav_status').css('color', '#06c732');
-                } else if (mstatus_id == 6) {
-                    $('.hp-circle[data-hp="6"]').addClass('active');
-                    $('#tx_6').addClass('active');
-                    $('.nav_status').html('Joined');
-                    $('.nav_status').css('background', '#f7deff');
-                    $('.nav_status').css('color', '#c000ff');
-                } else if (mstatus_id == 7) {
-                    $('.hp-circle[data-hp="7"]').addClass('active');
-                    $('#tx_7').addClass('active');
-                    $('.nav_status').html('Rejected');
-                    $('.nav_status').css('background', '#ffe2e5');
-                    $('.nav_status').css('color', '#ff0202');
-                } else if (mstatus_id == 'all') {
-                    $('.nav_status').html('All Candidate');
-                    $('.nav_status').css('background', 'linear-gradient(to left, #01e074, #0581d9)');
-                    $('.nav_status').css('color', '#FFFFFF');
-                    $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
-                }
-
+                    AppTrackerRamStore.set(cacheKey, response);
+                    renderAppTrackerResponse(response, targetPage, mstatus_id);
                 },
                 error: function(xhr, status) {
                     if (status === 'abort' || seq !== _aptkReqSeq) return;
@@ -2350,7 +2443,9 @@
         });
 
         // =========================================================================
-        // Phase 5: Reverb Real-Time Delta Synchronization & Gap Recovery Engine
+        // Phase 2, Phase 5 & Phase 6: Cross-Tab BroadcastChannel + Reverb Real-Time
+        // Delta Synchronization, 0ms DOM Counter Patching, Stage-Aware Refresh
+        // Skipping & Gap Recovery Engine
         // Page Isolation: Scoped strictly to AppTracker job pipeline (Rule 17)
         // Concurrency Target: 10K users, 0% server read strain, sub-50ms sync
         // =========================================================================
@@ -2359,8 +2454,105 @@
             var currentTenantId = parseInt($('#tenant_id').val(), 10);
             var currentVersion = parseInt($('#pipeline_version').val(), 10) || 0;
             var isSyncing = false;
+            var _aptkReverbRefreshTimer = null;
+            var _lastLocalPatchTs = 0;
 
-            if (!currentJobId || !currentTenantId || typeof window.Echo === 'undefined') {
+            if (!currentJobId || !currentTenantId) {
+                return;
+            }
+
+            /**
+             * Increment a numeric DOM counter element by delta in 0ms without an HTTP round-trip.
+             * Intent: Eliminates loadcounter AJAX storms when candidates are added in real time (Rule 3 & Rule 4).
+             */
+            function incrementDomBadge(selector, delta) {
+                var $el = $(selector);
+                if (!$el.length) return;
+                var raw = ($el.first().text() || '0').replace(/[^0-9-]/g, '');
+                var currentVal = parseInt(raw, 10);
+                if (isNaN(currentVal)) currentVal = 0;
+                $el.text(Math.max(0, currentVal + delta));
+            }
+
+            /**
+             * Apply 0ms DOM counter delta patch for a newly assigned candidate.
+             * Intent: Updates #totalcnt, #pool_counter, and stage badge (#bg_1..#bg_7 or #benchTalentReq_counter)
+             * directly in browser memory in 0ms without hitting Elasticsearch or MySQL.
+             */
+            function patchAptkDomCountersFromDelta(masterStatusId, addedCount) {
+                var delta = parseInt(addedCount, 10) || 1;
+                var statusId = parseInt(masterStatusId, 10) || 8;
+
+                incrementDomBadge('#totalcnt', delta);
+                incrementDomBadge('#pool_counter', delta);
+
+                if (statusId >= 1 && statusId <= 7) {
+                    incrementDomBadge('#bg_' + statusId, delta);
+                } else if (statusId === 8) {
+                    incrementDomBadge('#benchTalentReq_counter', delta);
+                }
+            }
+
+            /**
+             * Coalesce rapid WebSocket / BroadcastChannel delta bursts (e.g., bulk-adding 10 candidates)
+             * into at most 1 table sync, and skip HTTP table refetch completely if the user is viewing
+             * an unaffected stage tab.
+             */
+            function scheduleCoalescedAptkRefresh(masterStatusId, forceTableSync) {
+                AppTrackerRamStore.invalidate();
+
+                var activeStage = String($('#mstatus_id').val() || 'all').toLowerCase();
+                var eventStage = String(masterStatusId || 8);
+
+                // If user is on a specific stage tab (e.g. Offered=5, Joined=6, Rejected=7) that does not match
+                // the newly assigned candidate's stage, skip the HTTP table refetch completely (0 HTTP calls)!
+                if (!forceTableSync && activeStage !== 'all' && activeStage !== '' && activeStage !== eventStage && !(activeStage === '1' && eventStage === '8')) {
+                    return;
+                }
+
+                if (_aptkReverbRefreshTimer) {
+                    clearTimeout(_aptkReverbRefreshTimer);
+                }
+                _aptkReverbRefreshTimer = setTimeout(function() {
+                    _aptkReverbRefreshTimer = null;
+                    if (typeof fetchCandidates === 'function') {
+                        fetchCandidates(page_no || 1, '', true);
+                    }
+                }, 300);
+            }
+
+            function handleLocalOrCrossTabAddition(detail) {
+                AppTrackerRamStore.invalidate();
+                if (!detail || !Array.isArray(detail.jobIds)) return;
+                var targetJobIds = detail.jobIds.map(function(j) { return parseInt(j, 10); });
+                if (targetJobIds.indexOf(currentJobId) === -1) return;
+
+                var addedCount = Array.isArray(detail.applicantIds) && detail.applicantIds.length > 0
+                    ? detail.applicantIds.length
+                    : 1;
+                var masterStatusId = detail.masterStatusId || 8;
+                _lastLocalPatchTs = Date.now();
+                patchAptkDomCountersFromDelta(masterStatusId, addedCount);
+                scheduleCoalescedAptkRefresh(masterStatusId, false);
+            }
+
+            window.addEventListener('jero:candidate-added-to-job', function(ev) {
+                handleLocalOrCrossTabAddition(ev && ev.detail ? ev.detail : null);
+            });
+
+            try {
+                if (typeof BroadcastChannel !== 'undefined') {
+                    var bcChannel = new BroadcastChannel('jero_ats_sync_' + currentTenantId);
+                    bcChannel.onmessage = function(ev) {
+                        var msg = ev && ev.data ? ev.data : null;
+                        if (msg && msg.type === 'CANDIDATE_ADDED_TO_JOB') {
+                            handleLocalOrCrossTabAddition(msg);
+                        }
+                    };
+                }
+            } catch (e) {}
+
+            if (typeof window.Echo === 'undefined') {
                 return;
             }
 
@@ -2386,23 +2578,19 @@
                                 // Gap exceeds retained deltas -> perform snapshot refresh
                                 console.info('[Reverb AppTracker] Gap exceeds delta window, refreshing snapshot');
                                 currentVersion = res.latest_version || targetVersion || currentVersion;
-                                if (typeof fetchCandidates === 'function') {
-                                    fetchCandidates(page_no || 1);
-                                } else {
-                                    countder();
-                                }
+                                scheduleCoalescedAptkRefresh(null, true);
                             } else if (res.deltas && res.deltas.length > 0) {
-                                // Apply deltas sequentially
+                                // Apply deltas sequentially in 0ms DOM counter patch + 1 coalesced table refresh
                                 console.info('[Reverb AppTracker] Applying ' + res.deltas.length + ' replayed deltas');
+                                var lastMasterStatusId = 8;
                                 res.deltas.forEach(function(d) {
                                     currentVersion = Math.max(currentVersion, d.version);
+                                    var p = d.payload || {};
+                                    lastMasterStatusId = p.master_status_id || 8;
+                                    patchAptkDomCountersFromDelta(lastMasterStatusId, p.added_count || 1);
                                 });
                                 currentVersion = res.latest_version || currentVersion;
-                                if (typeof fetchCandidates === 'function') {
-                                    fetchCandidates(page_no || 1);
-                                } else {
-                                    countder();
-                                }
+                                scheduleCoalescedAptkRefresh(lastMasterStatusId, false);
                             } else {
                                 currentVersion = res.latest_version || currentVersion;
                             }
@@ -2410,11 +2598,7 @@
                     },
                     error: function() {
                         isSyncing = false;
-                        if (typeof fetchCandidates === 'function') {
-                            fetchCandidates(page_no || 1);
-                        } else {
-                            countder();
-                        }
+                        scheduleCoalescedAptkRefresh(null, true);
                     }
                 });
             }
@@ -2432,16 +2616,21 @@
                             return;
                         }
 
-                        // 2. Sequential Event: Exactly the next expected version
+                        // 2. Sequential Event: Exactly the next expected version -> 0ms DOM counter patch
                         if (eventVersion === (currentVersion + 1)) {
                             currentVersion = eventVersion;
-                            if (typeof fetchCandidates === 'function') {
-                                fetchCandidates(page_no || 1);
-                            } else {
-                                countder();
+                            $('#pipeline_version').val(currentVersion);
+                            var addedCount = (event.metadata && event.metadata.added_count) ? event.metadata.added_count : 1;
+                            // Avoid double-incrementing DOM badges if BroadcastChannel / CustomEvent already patched <2s ago
+                            if ((Date.now() - _lastLocalPatchTs) > 2000) {
+                                patchAptkDomCountersFromDelta(event.master_status_id, addedCount);
                             }
+                            scheduleCoalescedAptkRefresh(event.master_status_id, false);
                             if (typeof showToastr === 'function') {
-                                showToastr('info', 'New candidate added to job pipeline', 'Pipeline Updated');
+                                var candLabel = (event.metadata && event.metadata.candidate_name)
+                                    ? ('"' + event.metadata.candidate_name + '" added to job pipeline')
+                                    : 'New candidate added to job pipeline';
+                                showToastr('info', candLabel, 'Pipeline Updated');
                             }
                             return;
                         }

@@ -1537,7 +1537,7 @@ class HomeController extends Controller
         $cacheHash = md5(json_encode($cacheKeyParams));
         $cacheKey = "career_jobs_query:{$company_id}:{$cacheHash}";
 
-        $cachedQueryResult = Cache::remember($cacheKey, 300, function () use ($params, $company_id) {
+        $cachedQueryResult = Cache::remember($cacheKey, 300, function () use ($params, $company_id, $account, $salaryMode, $currencySymbole) {
             if (! $this->elasticService->indexExists(ELASTIC_JOBS)) {
                 $total = 0;
                 $data = [];
@@ -1608,7 +1608,7 @@ class HomeController extends Controller
                     }
                 }
 
-                /* Intent: Precompute job card presentation DTOs upstream in controller to minimize Blade template CPU overhead */
+                /* Intent: Precompute job card presentation DTOs upstream in controller to minimize Blade and Client JS CPU overhead */
                 foreach ($data as &$jobHit) {
                     $jId = (int) ($jobHit['id'] ?? 0);
                     $jobHit['skills_list'] = array_slice($jobSkillsMap[$jId] ?? [], 0, 8);
@@ -1644,6 +1644,44 @@ class HomeController extends Controller
                         default => 'badge-hold',
                     };
                     $jobHit['time_ago'] = Carbon::parse($createdAt)->diffForHumans(['parts' => 1]);
+
+                    /* Recommendation and company display */
+                    $matchRec = collect($jobHit['recommendation_relation'] ?? [])->first(function($item) use ($company_id){
+                        $fromCo = is_array($item) ? ($item['from_company_id'] ?? null) : ($item->from_company_id ?? null);
+                        $toCo   = is_array($item) ? ($item['to_company_id'] ?? null)   : ($item->to_company_id   ?? null);
+                        return $fromCo == $company_id || $toCo == $company_id;
+                    });
+                    $matchToCo = is_array($matchRec) ? ($matchRec['to_company_id'] ?? null) : ($matchRec->to_company_id ?? null);
+                    $isRec = ($matchToCo == $company_id && ($jobHit['to_company_id'] ?? null) == $company_id);
+                    $jobHit['display_company'] = $isRec
+                        ? ucwords(mb_substr($jobHit['company_name'] ?? '', 0, 50))
+                        : ucwords(mb_substr($account->company_name ?? '', 0, 50));
+
+                    /* Title formatting */
+                    $rawTitle = trim($jobHit['title'] ?? 'Job');
+                    $jobHit['formatted_title'] = ucwords(mb_substr($rawTitle, 0, 50));
+                    $jobHit['first_letter'] = strtoupper($rawTitle[0] ?? 'J');
+
+                    /* Work & Employment Types */
+                    $jobHit['work_mode'] = (($jobHit['work_type'] ?? '') === 'yes') ? 'Remote' : 'Hybrid';
+                    $jobHit['emp_type']  = (($jobHit['employment_type'] ?? 0) == 1) ? 'Contract' : 'Full-time';
+
+                    /* Salary and Experience presentation formatting */
+                    $minSalModeStr = strtoupper(mb_substr($salaryMode[$jobHit['min_sal_mode'] ?? 0] ?? '', 0, 1));
+                    $maxSalModeStr = strtoupper(mb_substr($salaryMode[$jobHit['max_sal_mode'] ?? 0] ?? '', 0, 1));
+                    $minCurStr     = strip_tags($currencySymbole[$jobHit['min_salary_currency'] ?? 0] ?? '₹');
+                    $maxCurStr     = strip_tags($currencySymbole[$jobHit['max_salary_currency'] ?? 0] ?? '₹');
+                    $minSalFmt     = GeneralMethod::thousandsCurrencyFormat($jobHit['min_salary'] ?? 0);
+                    $maxSalFmt     = GeneralMethod::thousandsCurrencyFormat($jobHit['max_salary'] ?? 0);
+
+                    $jobHit['min_sal_mode_str'] = $minSalModeStr;
+                    $jobHit['max_sal_mode_str'] = $maxSalModeStr;
+                    $jobHit['min_cur_sym'] = $minCurStr;
+                    $jobHit['max_cur_sym'] = $maxCurStr;
+                    $jobHit['min_salary_fmt'] = $minSalFmt;
+                    $jobHit['max_salary_fmt'] = $maxSalFmt;
+                    $jobHit['has_salary'] = (!empty($jobHit['min_salary']) || !empty($jobHit['max_salary']));
+                    $jobHit['has_exp'] = (!empty($jobHit['min_exp']) || !empty($jobHit['max_exp']));
                 }
                 unset($jobHit);
             }
@@ -1727,25 +1765,46 @@ class HomeController extends Controller
         // dd($jobId);
         $pageTitle = __('Add Candidate');
 
-        $account = DB::table('companies')->select('*')->where('id', $company_id)->first();
-        $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
-        $industries_name = '';
-        if ($account && ! empty($account->industries) && $account->industries > 0) {
-            $industries = DB::table('td_industries')
-                ->select('td_industries.ind_id', 'td_industries.ind_name')
-                ->where('td_industries.ind_id', '=', @$account->industries)
-                ->orderBy('td_industries.ind_name', 'ASC')
+        /* Intent: 1h Redis cache for tenant branding & client metadata on public job application page */
+        $tenantMeta = Cache::remember("tenant_career_meta:{$company_id}", 3600, function () use ($company_id) {
+            $account = DB::table('companies')
+                ->select('id', 'company_name', 'logo', 'industries', 'time_format', 'currency')
+                ->where('id', $company_id)
                 ->first();
-            $industries_name = $industries->ind_name ?? '';
-        }
+            $client = Client::select('clients.id', 'clients.tags')
+                ->where('clients.company_id', '=', $company_id)
+                ->where('clients.self_company', '=', 1)
+                ->first();
+            $industries_name = '';
+            if ($account && ! empty($account->industries) && $account->industries > 0) {
+                $industries = DB::table('td_industries')
+                    ->select('td_industries.ind_id', 'td_industries.ind_name')
+                    ->where('td_industries.ind_id', '=', @$account->industries)
+                    ->orderBy('td_industries.ind_name', 'ASC')
+                    ->first();
+                $industries_name = $industries->ind_name ?? '';
+            }
 
-        /* Intent: Candidate count scoped to company for tenant safety */
-        $candidateCount = JobApplication::where('company_id', $company_id)->count();
+            return compact('account', 'client', 'industries_name');
+        });
+
+        $account = $tenantMeta['account'];
+        $client = $tenantMeta['client'];
+        $industries_name = $tenantMeta['industries_name'];
 
         $gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
 
-        /* Intent: Tenant-scoped active jobs selection query for job apply page dropdown */
-        $jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->leftJoin('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('jobs.company_id', '=', $company_id)->groupBy('jobs.id')->get();
+        /* Intent: Tenant-scoped active jobs selection query for job apply page dropdown cached for 300s */
+        $jobs = Cache::remember("tenant_active_jobs_dropdown:{$company_id}", 300, function () use ($company_id) {
+            return Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+                ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+                ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->where('jobs.status', '=', 'active')
+                ->where('jobs.company_id', '=', $company_id)
+                ->groupBy('jobs.id')
+                ->get();
+        });
 
         /* Intent: Cache static qualification master reference data for 24h to avoid DB query load */
         $qualification = Cache::remember('qualification_master_list', 86400, function () {
@@ -1754,288 +1813,256 @@ class HomeController extends Controller
 
         $appId = null;
 
-        $jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
-            // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-            ->leftJoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
-            ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('jobs.id', '=', $jobId)
-            ->first();
-
-        $page_event = 'ADD';
-        $currency = GeneralMethod::currency();
-        $salaryMode = GeneralMethod::salaryMode();
-        /* Intent: Cache static interview mode reference master data for 24h */
-        $interview_mode = Cache::remember('interview_mode_master_list', 86400, function () {
-            return DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
-        });
-        $statelist = GeneralMethod::statelist(101);
-        $job_additional_detail = '';
-        $job_additional_detail = DB::table('job_additional_detail')
-            ->select('*')
-            ->where('job_additional_detail.company_id', '=', $company_id)
-            ->where('job_additional_detail.job_id', '=', $jobId)
-            ->orderBy('job_additional_detail.id', 'ASC')
-            ->get();
-
-        $jobLocation = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
-            ->where('client_location_jobs.job_id', $jobId)
-            ->orderBy('client_location_jobs.id', 'DESC')
-            ->first();
-
-        $cities = GeneralMethod::allCities();
-
-        $default_loc = GeneralMethod::allCitiesSelected([]);
-
-        $jobSkill = DB::table('job_metronics_skills')
-            ->leftJoin('candidate_job_skill_exp', function ($join) {
-                $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id'); // Add the candidate condition
-            })
-            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
-            ->where('job_metronics_skills.job_id', '=', $jobId)
-            ->groupBy('job_metronics_skills.id')
-            ->get();
-
-        // dd($this->jobSkill);
-        $skillShow = false;
-
-        // $this->countries = GeneralMethod::getAllCountryList();
-        $statelist = '';
-        $cityListArr = '';
-        $currentPage = 1;
-        $this->currencyConverter = GeneralMethod::currencyConverter();
-
-        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'statelist', 'cityListArr', 'currentPage', 'company_id'));
-    }
-
-    public function jobDetails($jobId = null, $company_id = null)
-    {
-
-        // $jobId = GeneralMethod::value_decrypt($jobId);
-        $id = $jobId;
-        // dd($jobId);
-        $pageTitle = __('Add Candidate');
-
-        $account = DB::table('companies')->select('*')->where('id', $company_id)->first();
-        $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
-        $industries_name = '';
-        if ($account && ! empty($account->industries) && $account->industries > 0) {
-            $industries = DB::table('td_industries')
-                ->select('td_industries.ind_id', 'td_industries.ind_name')
-                ->where('td_industries.ind_id', '=', @$account->industries)
-                ->orderBy('td_industries.ind_name', 'ASC')
+        /* Intent: 300s Redis cache for specific target job application metadata (jobDetail, location, additional detail, skills) */
+        $jobSpec = Cache::remember("job_apply_spec:{$jobId}:{$company_id}", 300, function () use ($jobId, $company_id) {
+            $jobDetail = Job::select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+                ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+                ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->where('jobs.id', '=', $jobId)
                 ->first();
-            $industries_name = $industries->ind_name ?? '';
-        }
 
-        $salaryMode = GeneralMethod::salaryMode();
-        $employmentType = GeneralMethod::employmentType();
-
-        $job = Job::Select(
-            'jobs.id',
-            'jobs.title',
-            'jobs.work_type',
-            'jobs.slug',
-            'jobs.company_id as comId',
-            'jobs.job_description',
-            'jobs.job_requirement',
-            'jobs.total_positions',
-            'jobs.work_shifts',
-            'jobs.location_id',
-            'jobs.category_id',
-            'jobs.start_date',
-            'jobs.end_date',
-            'jobs.status',
-            'jobs.required_columns',
-            'jobs.meta_details',
-            'jobs.section_visibility',
-            'jobs.created_at',
-            'jobs.updated_at',
-            'jobs.priority',
-            'jobs.client_id',
-            'jobs.min_exp',
-            'jobs.max_exp',
-            'jobs.min_salary',
-            'jobs.max_salary',
-            'jobs.qualification',
-            'jobs.employment_type',
-            'jobs.min_salary_currency',
-            'jobs.max_salary_currency',
-            'jobs.min_sal_mode',
-            'jobs.max_sal_mode',
-            'jobs.carrier_website',
-            'clients.name as client_name',
-            'clients.self_company',
-            'clients.description as client_description',
-            'companies.description as company_description',
-            'companies.company_name as company_name',
-            'companies.logo as company_logo',
-            'clients.logo_logical_path',
-            'job_categories.name as cat_name',
-            'qualification_master.name as qualification_name'
-        )
-            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-            ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
-            ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
-            ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-            ->where('jobs.id', $id)
-            ->first();
-
-        if (! $job) {
-            abort(404, 'Job opening not found or no longer active.');
-        }
-
-        $skillArr = DB::table('job_metronics_skills')->select('*')->where('job_id', $job->id)->get();
-
-        // Company Data
-        $company_arr = DB::table('companies')->select('*')->where('id', $job->comId)->first();
-        $company_name = @$company_arr->company_name;
-        $category_name = 'N/A';
-
-        $jobLocation = '';
-
-        if ($job->id > 0) {
+            $job_additional_detail = DB::table('job_additional_detail')
+                ->select('*')
+                ->where('job_additional_detail.company_id', '=', $company_id)
+                ->where('job_additional_detail.job_id', '=', $jobId)
+                ->orderBy('job_additional_detail.id', 'ASC')
+                ->get();
 
             $jobLocation = DB::table('client_location_jobs')
                 ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                // ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
+                ->where('client_location_jobs.job_id', $jobId)
+                ->orderBy('client_location_jobs.id', 'DESC')
+                ->first();
+
+            $jobSkill = DB::table('job_metronics_skills')
+                ->leftJoin('candidate_job_skill_exp', function ($join) {
+                    $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
+                })
+                ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
+                ->where('job_metronics_skills.job_id', '=', $jobId)
+                ->groupBy('job_metronics_skills.id')
+                ->get();
+
+            return compact('jobDetail', 'job_additional_detail', 'jobLocation', 'jobSkill');
+        });
+
+        $jobDetail = $jobSpec['jobDetail'];
+        $job_additional_detail = $jobSpec['job_additional_detail'];
+        $jobLocation = $jobSpec['jobLocation'];
+        $jobSkill = $jobSpec['jobSkill'];
+
+        $page_event = 'ADD';
+        $currency = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+
+        /* Intent: Cache static interview mode reference master data for 24h */
+        $interview_mode = Cache::remember('interview_mode_master_list', 86400, function () {
+            return DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
+        });
+
+        $statelist = Cache::remember('statelist_ref_101', 86400, function () {
+            return GeneralMethod::statelist(101);
+        });
+
+        $cities = GeneralMethod::allCities();
+        $default_loc = GeneralMethod::allCitiesSelected([]);
+        $skillShow = false;
+        $cityListArr = '';
+        $currentPage = 1;
+        $this->currencyConverter = GeneralMethod::currencyConverter();
+
+        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'cityListArr', 'currentPage', 'company_id'));
+    }
+
+    public function jobDetails($jobId = null, $company_id = null)
+    {
+        $id = $jobId;
+        $pageTitle = __('Add Candidate');
+
+        /* Intent: Wrap entire public job-details bundle in 300s tenant-scoped Redis cache to achieve 0 SQL reads on warm traffic */
+        $cacheKey = "job_details_public_bundle:{$id}:{$company_id}";
+        $dataBundle = Cache::remember($cacheKey, 300, function () use ($id, $company_id) {
+            $account = DB::table('companies')->select('id', 'company_name', 'logo', 'description', 'industries')->where('id', $company_id)->first();
+            $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
+            $industries_name = '';
+            if ($account && ! empty($account->industries) && $account->industries > 0) {
+                $industries = DB::table('td_industries')
+                    ->select('td_industries.ind_id', 'td_industries.ind_name')
+                    ->where('td_industries.ind_id', '=', @$account->industries)
+                    ->orderBy('td_industries.ind_name', 'ASC')
+                    ->first();
+                $industries_name = $industries->ind_name ?? '';
+            }
+
+            $job = Job::Select(
+                'jobs.id',
+                'jobs.title',
+                'jobs.work_type',
+                'jobs.slug',
+                'jobs.company_id as comId',
+                'jobs.job_description',
+                'jobs.job_requirement',
+                'jobs.total_positions',
+                'jobs.work_shifts',
+                'jobs.location_id',
+                'jobs.category_id',
+                'jobs.start_date',
+                'jobs.end_date',
+                'jobs.status',
+                'jobs.required_columns',
+                'jobs.meta_details',
+                'jobs.section_visibility',
+                'jobs.created_at',
+                'jobs.updated_at',
+                'jobs.priority',
+                'jobs.client_id',
+                'jobs.min_exp',
+                'jobs.max_exp',
+                'jobs.min_salary',
+                'jobs.max_salary',
+                'jobs.qualification',
+                'jobs.employment_type',
+                'jobs.min_salary_currency',
+                'jobs.max_salary_currency',
+                'jobs.min_sal_mode',
+                'jobs.max_sal_mode',
+                'jobs.carrier_website',
+                'clients.name as client_name',
+                'clients.self_company',
+                'clients.description as client_description',
+                'companies.description as company_description',
+                'companies.company_name as company_name',
+                'companies.logo as company_logo',
+                'clients.logo_logical_path',
+                'job_categories.name as cat_name',
+                'qualification_master.name as qualification_name'
+            )
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', '=', 'jobs.company_id')
+                ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
+                ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
+                ->where('jobs.id', $id)
+                ->first();
+
+            if (! $job) {
+                return null;
+            }
+
+            $skillArr = DB::table('job_metronics_skills')->select('id', 'job_id', 'skill_name')->where('job_id', $job->id)->get();
+
+            // Company Data
+            $company_arr = DB::table('companies')->select('id', 'company_name', 'logo', 'description')->where('id', $job->comId)->first();
+            $company_name = @$company_arr->company_name;
+            $category_name = 'N/A';
+
+            $jobLocation = DB::table('client_location_jobs')
+                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
                 ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')
                 ->where('client_location_jobs.job_id', $job->id)
-                // ->orderBy('client_location_jobs.id', 'DESC')
                 ->first();
 
             $jobLocationCount = DB::table('client_location_jobs')
                 ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
                 ->join('countries', 'countries.id', '=', 'client_location.country_id')
-                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'countries.country_name')
                 ->where('client_location_jobs.job_id', $job->id)
-                // ->orderBy('client_location_jobs.id', 'DESC')
                 ->count();
 
-            // if($job->comId==$company_id){
             $clientContactPersonListing = DB::table('client_contact_info_jobs')
                 ->join('client_contact_info', 'client_contact_info.id', '=', 'client_contact_info_jobs.client_contact_info_id')
                 ->select('client_contact_info.contact_person_name')
                 ->where('client_contact_info_jobs.job_id', $job->id)
                 ->get();
 
-        }
+            $assignTeamCount = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.user_id')
+                ->where('job_assign.job_id', $job->id)
+                ->count();
 
-        $assignTeamCount = DB::table('job_assign')
-            ->join('users', 'users.id', '=', 'job_assign.user_id')
-            ->select('users.id', 'users.name', 'users.email')
-            ->where('job_assign.job_id', $job->id)
-            ->orderBy('users.name', 'DESC')
-            ->count();
-        // RECRUITER LIST
-        $recruiterlist = DB::table('job_assign')
-            ->join('users', 'users.id', '=', 'job_assign.user_id')
-            ->join('role_user', 'role_user.user_id', 'users.id')
-            ->join('roles', 'roles.id', 'role_user.role_id')
-            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->leftJoin('add_job_wise_condidates', function ($join) {
-                $join->on('add_job_wise_condidates.job_id', '=', 'job_assign.job_id')
-                    ->on('add_job_wise_condidates.submitted_by', '=', 'users.id');
-            })
-            ->join('companies', 'companies.id', 'users.company_id')
-            ->select(
-                'users.id',
-                'users.name',
-                'users.email',
-                'users.image',
-                'users.mobile',
-                'roles.display_name',
-                'users_profile.designation',
-                DB::raw('count(add_job_wise_condidates.id) as allCandidate'),
-                DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
-                DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined')
-            )
-            ->where('job_assign.job_id', $job->id)
-            // ->where('job_assign.user_id', auth()->user()->id)
-            ->where('companies.id', $company_id)
-            ->where('users.type', '=', 0)
-            ->groupBy('users.id')
-            ->orderBy('users.name', 'DESC')
-            ->get();
+            // Recruiter list
+            $recruiterlist = DB::table('job_assign')
+                ->join('users', 'users.id', '=', 'job_assign.user_id')
+                ->join('role_user', 'role_user.user_id', 'users.id')
+                ->join('roles', 'roles.id', 'role_user.role_id')
+                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+                ->leftJoin('add_job_wise_condidates', function ($join) {
+                    $join->on('add_job_wise_condidates.job_id', '=', 'job_assign.job_id')
+                        ->on('add_job_wise_condidates.submitted_by', '=', 'users.id');
+                })
+                ->join('companies', 'companies.id', 'users.company_id')
+                ->select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'users.image',
+                    'users.mobile',
+                    'roles.display_name',
+                    'users_profile.designation',
+                    DB::raw('count(add_job_wise_condidates.id) as allCandidate'),
+                    DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
+                    DB::raw('SUM(CASE WHEN add_job_wise_condidates.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined')
+                )
+                ->where('job_assign.job_id', $job->id)
+                ->where('companies.id', $company_id)
+                ->where('users.type', '=', 0)
+                ->groupBy('users.id')
+                ->orderBy('users.name', 'DESC')
+                ->get();
 
-        // dd(auth()->user()->id,$company_id,$job->id);
+            $jobCitySel = DB::table('client_city_jobs')
+                ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
+                ->where('client_city_jobs.job_id', $job->id)
+                ->pluck('city_list.city')
+                ->toArray();
 
-        $jobCitySel = DB::table('client_city_jobs')
-            ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-            ->where('client_city_jobs.job_id', $job->id)
-            ->pluck('city_list.city')
-            ->toArray();
+            $jobCitySelected = '';
+            if ($job->work_type == 'yes') {
+                $jobCitySelected = 'Remote';
+            } elseif ($job->work_type == 'no') {
+                $jobCitySelected = implode(',', $jobCitySel);
+            } elseif ($job->work_type == 'any') {
+                $jobCitySelected = 'Remote/'.implode(',', $jobCitySel);
+            } elseif ($job->work_type == 'other') {
+                $jobCitySelected = ''.implode(',', $jobCitySel);
+            }
 
-        if ($job->work_type == 'yes') {
-            $jobCitySelected = 'Remote';
-        } elseif ($job->work_type == 'no') {
-            $jobCitySelected = implode(',', $jobCitySel);
-        } elseif ($job->work_type == 'any') {
-            $jobCitySelected = 'Remote/'.implode(',', $jobCitySel);
-        } elseif ($job->work_type == 'other') {
-            $jobCitySelected = ''.implode(',', $jobCitySel);
-        }
-
-        $jobId = $job->id;
-
-        $contactQuery = DB::table('users')
-            ->join('job_assign', 'job_assign.user_id', 'users.id')
-            ->select('users.name', 'users.image')
-            ->where('users.company_id', $company_id)
-            ->where('job_assign.company_id', $company_id)
-            ->where('job_assign.job_id', $jobId)
-            ->get();
-
-        $recommendedDataList = DB::table('recommendation_relation');
-        $recommendedDataList = $recommendedDataList->select(
-            'companies.id',
-            'companies.company_name',
-            'companies.logo',
-            'companies.industries',
-            'td_industries.ind_name',
-            'jobs.title',
-            'jobs.id as jobid',
-            DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),
-            DB::raw('SUM(CASE WHEN job_applications.id > 0 THEN 1 ELSE 0 END) AS Upload'),
-            DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined')
-
-        );
-        $recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
-        $recommendedDataList = $recommendedDataList->join('jobs', 'jobs.id', 'recommendation_relation.job_id');
-
-        $recommendedDataList = $recommendedDataList->leftJoin('td_industries', 'td_industries.ind_id', 'companies.industries');
-        $recommendedDataList = $recommendedDataList->leftJoin('add_job_wise_condidates as job_applications', function ($join) {
-            $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-            $join->on('job_applications.job_id', '=', 'jobs.id');
+            return compact(
+                'account',
+                'client',
+                'industries_name',
+                'job',
+                'skillArr',
+                'company_arr',
+                'company_name',
+                'category_name',
+                'jobLocation',
+                'jobLocationCount',
+                'clientContactPersonListing',
+                'assignTeamCount',
+                'recruiterlist',
+                'jobCitySelected'
+            );
         });
 
-        $recommendedDataList = $recommendedDataList->where('companies.id', '!=', $company_id);
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $job->id);
-        $recommendedDataList = $recommendedDataList->groupBy('companies.id');
-        $recommendedDataList = $recommendedDataList->get();
+        if (! $dataBundle || empty($dataBundle['job'])) {
+            abort(404, 'Job opening not found or no longer active.');
+        }
 
-        $currencySymbole = GeneralMethod::currencySymbole();
-        $salary_mode = ['Monthly/Annual', 'Monthly', 'Hourly', 'Annual', 'Hourly/Annual'];
+        extract($dataBundle);
+
+        $employmentType = GeneralMethod::employmentType();
+        $salaryMode = GeneralMethod::salaryMode();
+        $currency = GeneralMethod::currency();
 
         $appId = null;
-
         $page_event = 'ADD';
-        $currency = GeneralMethod::currency();
-        $salaryMode = GeneralMethod::salaryMode();
-        $statelist = GeneralMethod::statelist(101);
-        $job_additional_detail = '';
-
-        // dd($this->jobSkill);
-        $skillShow = false;
-
-        // $this->countries = GeneralMethod::getAllCountryList();
         $statelist = '';
+        $job_additional_detail = '';
+        $skillShow = false;
         $cityListArr = '';
         $currentPage = 1;
 

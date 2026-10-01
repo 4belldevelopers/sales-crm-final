@@ -86,6 +86,8 @@ class ProcessReverbOutboxCommand extends Command
                         metadata: [
                             'rec_candidate_assign_id' => $payload['rec_candidate_assign_id'] ?? null,
                             'source_from_type' => $payload['source_from_type'] ?? null,
+                            'candidate_name' => $payload['candidate_name'] ?? null,
+                            'added_count' => (int) ($payload['added_count'] ?? 1),
                         ]
                     ));
                     break;

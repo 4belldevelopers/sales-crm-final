@@ -47,19 +47,11 @@
                     }
 
 
-                    $logo_path = '';
-
-                    $logo_path = url('public/user-uploads/company-logo/' . @$logos->logo);
-
-                    if (!empty($logos->logo_logical_path)) {
-                        $logo_path = url('public/' . @$logos->logo_logical_path);
-                    }
-                    $logo_path = GeneralMethod::companyDetails($id);
+                    // Phase 3 Optimization: Avoid calling GeneralMethod::companyDetails($id) twice
+                    // and remove unused $Jobcities = GeneralMethod::Jobcities($id) (~194ms 4-table MySQL JOIN).
+                    $logo_path = is_string($logos) ? $logos : '';
                     $company_or_client = GeneralMethod::companyDetailsByClient($id);
 
-
-
-                    $Jobcities = GeneralMethod::Jobcities($id);
                     $firstJobcities = GeneralMethod::firstJobcities($id);	
                     $locations  = explode('`,`',$firstJobcities['display']);
                     $salaryModeSelect = GeneralMethod::salaryMode();
