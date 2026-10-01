@@ -45,7 +45,6 @@
         type="text/css" />
     <link href="{{ asset('demo/css/style.bundle.css') }}<?php echo TM_VERSION; ?>" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/css/telephony/jero-phone-box.css') }}<?php echo TM_VERSION; ?>">
     <!--end::Global Stylesheets Bundle-->
     @stack('head-script')
 
@@ -2186,8 +2185,6 @@
     <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}<?php echo TM_VERSION; ?>"></script>
     <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}<?php echo TM_VERSION; ?>"></script>
     <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/js/telephony/countries-data.js') }}<?php echo TM_VERSION; ?>"></script>
-    <script src="{{ asset('assets/js/telephony/jero-phone-box.js') }}<?php echo TM_VERSION; ?>"></script>
     <script>
         $('form input').keydown(function(e) {
             if (e.keyCode == 13) {

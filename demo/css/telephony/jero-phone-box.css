@@ -1,106 +1,140 @@
 /**
- * JERO Enterprise Mobile Number Box Styles
+ * JERO Enterprise Mobile Number Box Styles (V7.0 Pure In-Place Architecture)
  * Metronic 15.6" Screen Fit | WCAG 2.1 AA | Poppins Typography (max 14px)
  */
 
 .jero-phone-box-wrapper {
   position: relative;
   font-family: 'Poppins', Helvetica, sans-serif;
-}
-
-.jero-phone-input-group {
-  position: relative;
-  display: flex;
-  align-items: stretch;
   width: 100%;
 }
 
+.jero-phone-input-group {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d8deec !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
 .jero-country-picker-btn {
-  background-color: #f5f8fa !important;
-  border: 1px solid #e4e6ef !important;
-  border-right: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 none transparent !important;
   color: #181c32 !important;
   font-weight: 600 !important;
-  height: 38px !important;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  height: 100% !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
   white-space: nowrap;
   user-select: none;
-}
-
-.jero-country-picker-btn:hover,
-.jero-country-picker-btn:focus {
-  background-color: #eef3f7 !important;
-  border-color: #b5b5c3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 10px 0 12px !important;
+  margin: 0 !important;
+  box-shadow: none !important;
   outline: none !important;
+  flex-shrink: 0 !important;
+  gap: 6px !important;
 }
 
-.jero-phone-input-group .form-control {
-  height: 38px !important;
-  border: 1px solid #e4e6ef !important;
-  border-left: none !important;
-  background-color: #f5f8fa !important;
+.jero-selected-flag {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  overflow: visible !important;
+}
+
+.jero-selected-flag svg {
+  width: 20px !important;
+  height: 15px !important;
+  min-width: 20px !important;
+  min-height: 15px !important;
+  max-width: 20px !important;
+  max-height: 15px !important;
+  display: block !important;
+  vertical-align: middle !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  flex-shrink: 0 !important;
+}
+
+.jero-selected-flag img {
+  width: 20px !important;
+  height: 14px !important;
+  object-fit: cover !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  display: block !important;
+  vertical-align: middle !important;
+}
+
+.jero-selected-dial {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #181c32 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.2px !important;
+}
+
+.jero-phone-main-input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  border: 0 none transparent !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
   color: #181c32 !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  letter-spacing: 0.3px;
-  padding-right: 70px !important; /* Space for counter badge */
-}
-
-.jero-phone-input-group .form-control:focus {
-  background-color: #ffffff !important;
-  border-color: #009ef7 !important;
-  box-shadow: none !important;
-}
-
-.jero-phone-input-group .form-control:focus + .jero-digit-counter {
-  opacity: 1;
+  font-family: 'Poppins', Helvetica, sans-serif !important;
+  padding: 0 54px 0 10px !important;
+  margin: 0 !important;
+  letter-spacing: 0.3px !important;
+  box-sizing: border-box !important;
 }
 
 .jero-digit-counter {
-  top: 50%;
-  transform: translateY(-50%);
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
   font-size: 11px !important;
-  padding: 3px 6px !important;
-  letter-spacing: 0.2px;
-  pointer-events: none;
-  z-index: 4;
-}
-
-/* Portal Menu */
-.jero-phone-portal-menu {
-  box-sizing: border-box;
-  animation: jeroPortalFadeIn 0.15s ease-out;
-}
-
-@keyframes jeroPortalFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.jero-country-item:hover {
-  background-color: #f1faff !important;
-  color: #009ef7 !important;
-}
-
-.jero-country-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.jero-country-list::-webkit-scrollbar-track {
-  background: #f1f1f4;
-}
-
-.jero-country-list::-webkit-scrollbar-thumb {
-  background: #c4c4d0;
-  border-radius: 3px;
-}
-
-.jero-country-list::-webkit-scrollbar-thumb:hover {
-  background: #a1a1b5;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  letter-spacing: 0.2px !important;
+  pointer-events: none !important;
+  border-radius: 4px !important;
+  z-index: 4 !important;
+  line-height: 1.2 !important;
 }
