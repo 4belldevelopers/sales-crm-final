@@ -149,6 +149,8 @@
 .jero-phone-input-group > .fv-plugins-message-container,
 .jero-phone-input-group > .invalid-feedback,
 .jero-phone-input-group > label.error,
+.jero-phone-input-group > .field-error-message,
+.jero-phone-input-group .field-error-message,
 .jero-phone-input-group .fv-plugins-icon,
 .jero-phone-input-group i.fv-plugins-icon {
   display: none !important;

@@ -5305,6 +5305,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function handleTalentSubmissionSuccess(response) {
     if (!response || response.status !== 'success' || response.msgType === 'danger' || response.msgType === 'warning') {
+        window.__talentIsSubmitting = false;
         Swal.fire({
             title: response && response.msgType === 'warning' ? "Warning" : "Error",
             text: (response && response.message) || "Submission failed. Please check the form and try again.",
@@ -5378,7 +5379,7 @@ var fieldConfigMap = {
     'careersummary': { label: 'Professional Summary', selector: '#careersummary', message: 'Professional summary is required.' },
     'full_name': { label: 'Full Name', selector: '#full_name', message: 'Full name is required.' },
     'email': { label: 'Primary Email', selector: '#email', message: 'A valid primary email is required.' },
-    'phone': { label: 'Primary Phone', selector: '#phone', message: 'Primary mobile number is required.' },
+    'phone': { label: 'Mobile Number', selector: '#phone', message: 'Mobile number is required.' },
     'kt_tagify_work_location': { label: 'Current Location', selector: '#kt_tagify_work_location', message: 'Current location is required.' },
     'qualification': { label: 'Highest Qualification', selector: '#qualification', message: 'Highest qualification is required.' },
     'nationality': { label: 'Nationality', selector: '#nationality', message: 'Nationality is required.' },
@@ -5534,12 +5535,15 @@ function detectMissingFields(formEl, validatorInstance) {
     if (!em || !/\S+@\S+\.\S+/.test(em)) addMissing('email', 'Primary Email', '#email');
 
     if (typeof window.validateCreateTalentPhone === 'function') {
-        if (!window.validateCreateTalentPhone('phone', true)) {
-            addMissing('phone', 'Primary Phone', '#phone');
+        var phVal = ($('#phone').val() || '').trim();
+        if (!phVal) {
+            addMissing('phone', 'Mobile Number', '#phone', 'Mobile number is required.');
+        } else if (!window.validateCreateTalentPhone('phone', true)) {
+            addMissing('phone', 'Mobile Number', '#phone', 'Please enter a valid mobile number.');
         }
     } else {
         var ph = ($('#phone').val() || '').trim();
-        if (!ph) addMissing('phone', 'Primary Phone', '#phone');
+        if (!ph) addMissing('phone', 'Mobile Number', '#phone', 'Mobile number is required.');
     }
 
     var loc = ($('#kt_tagify_work_location').val() || '').trim();
@@ -5810,14 +5814,32 @@ function clearFieldValidationErrors(targetKey) {
         } else if (targetKey === 'skills') {
             $('#skillExperienceWrapper tr').removeClass('has-validation-error');
             $('#skillExperienceWrapper tr input, #skillExperienceWrapper tr select').removeClass('has-validation-error');
+        } else if (targetKey === 'phone' || targetKey === 'secondary_mobile') {
+            var $pEl = $('#' + targetKey);
+            $pEl.removeClass('has-validation-error is-invalid');
+            var $pWrap = $pEl.closest('.jero-phone-box-wrapper');
+            if ($pWrap.length) {
+                $pWrap.removeClass('has-validation-error is-invalid');
+                $pWrap.find('.jero-phone-input-group').removeClass('has-validation-error is-invalid');
+            }
+            $('[data-field-error="' + targetKey + '"]').remove();
         } else {
             var cfg = fieldConfigMap[targetKey];
             var selector = cfg && cfg.selector ? cfg.selector : ('#' + targetKey);
-            $(selector).removeClass('has-validation-error');
+            var $target = $(selector);
+            $target.removeClass('has-validation-error');
+            var $pWrap = $target.closest('.jero-phone-box-wrapper');
+            if ($pWrap.length) {
+                $pWrap.removeClass('has-validation-error is-invalid');
+                $pWrap.find('.jero-phone-input-group').removeClass('has-validation-error is-invalid');
+            }
+            $('[data-field-error="' + targetKey + '"]').remove();
         }
     } else {
         $('.has-validation-error').removeClass('has-validation-error');
         $('.field-error-message').remove();
+        $('.jero-phone-input-group').removeClass('has-validation-error is-invalid');
+        $('.jero-phone-box-wrapper').removeClass('has-validation-error is-invalid');
     }
 }
 window.clearFieldValidationErrors = clearFieldValidationErrors;
@@ -5895,8 +5917,11 @@ function applyFieldValidationErrors(missingFields) {
             if ($combobox.length) $combobox.addClass('has-validation-error');
             if (!$('[data-field-error="kt_tagify_work_location"]').length) {
                 var $ctrl = $loc.closest('.bd-control');
-                if ($ctrl.length) $ctrl.after(errorHtml);
-                else $loc.after(errorHtml);
+                if ($ctrl.length) {
+                    $ctrl.after(errorHtml);
+                } else {
+                    $loc.after(errorHtml);
+                }
             }
         } else if (key === 'wm') {
             var $wmWrap = $('#wr, .aw-mode-grid, .wm-option-grid').first();
@@ -5904,20 +5929,46 @@ function applyFieldValidationErrors(missingFields) {
             if (!$('[data-field-error="wm"]').length) {
                 $wmWrap.after(errorHtml);
             }
+        } else if (key === 'phone' || key === 'secondary_mobile') {
+            var $pEl = $('#' + key);
+            var $phoneWrap = $pEl.closest('.jero-phone-box-wrapper');
+            if ($phoneWrap.length) {
+                $phoneWrap.addClass('has-validation-error');
+                $phoneWrap.find('.jero-phone-input-group').addClass('has-validation-error is-invalid');
+                $pEl.removeClass('has-validation-error');
+                if (!$('[data-field-error="' + key + '"]').length) {
+                    $phoneWrap.after(errorHtml);
+                }
+            } else {
+                $pEl.addClass('has-validation-error');
+                if (!$('[data-field-error="' + key + '"]').length) {
+                    $pEl.after(errorHtml);
+                }
+            }
         } else {
             var cfg = fieldConfigMap[key] || {};
             var sel = f.selector || cfg.selector || ('#' + key);
             var $el = $(sel);
             if (!$el.length) $el = $('[name="' + key + '"]');
             if ($el.length) {
-                $el.addClass('has-validation-error');
-                $el.closest('.bd-control').find('.jero-custom-select').addClass('has-validation-error');
-                if (!$('[data-field-error="' + key + '"]').length) {
-                    var $ctrl = $el.closest('.bd-control, .pd-control, .bd-phone-control, .input-group');
-                    if ($ctrl.length) {
-                        $ctrl.after(errorHtml);
-                    } else {
-                        $el.after(errorHtml);
+                var $phoneWrap = $el.closest('.jero-phone-box-wrapper');
+                if ($phoneWrap.length) {
+                    $phoneWrap.addClass('has-validation-error');
+                    $phoneWrap.find('.jero-phone-input-group').addClass('has-validation-error is-invalid');
+                    $el.removeClass('has-validation-error');
+                    if (!$('[data-field-error="' + key + '"]').length) {
+                        $phoneWrap.after(errorHtml);
+                    }
+                } else {
+                    $el.addClass('has-validation-error');
+                    $el.closest('.bd-control').find('.jero-custom-select').addClass('has-validation-error');
+                    if (!$('[data-field-error="' + key + '"]').length) {
+                        var $ctrl = $el.closest('.bd-control, .pd-control, .bd-phone-control, .input-group');
+                        if ($ctrl.length) {
+                            $ctrl.after(errorHtml);
+                        } else {
+                            $el.after(errorHtml);
+                        }
                     }
                 }
             }
@@ -5936,6 +5987,11 @@ $(document).on('input change focus', 'input, select, textarea', function () {
     if ($this.closest('.has-validation-error').length) {
         $this.closest('.has-validation-error').removeClass('has-validation-error');
         $this.closest('.bd-control').find('.jero-custom-select').removeClass('has-validation-error');
+    }
+    var $pWrap = $this.closest('.jero-phone-box-wrapper');
+    if ($pWrap.length) {
+        $pWrap.removeClass('has-validation-error is-invalid');
+        $pWrap.find('.jero-phone-input-group').removeClass('has-validation-error is-invalid');
     }
     if (key) {
         $('[data-field-error="' + key + '"]').remove();
@@ -6011,7 +6067,9 @@ var KTAddCandidate = function () {
     var form;
     var submitButton;
     var validator;
-    var handleForm = function (e) {
+    var isInitialized = false;
+
+    var handleForm = function () {
         validator = FormValidation.formValidation(
             form,
             {
@@ -6042,104 +6100,132 @@ var KTAddCandidate = function () {
 
         var executeSubmit = function () {
             closeRequiredFieldsModal();
-            $("#save-form").prop("disabled", true);
+            $("#save-form").prop("disabled", true).addClass('disabled');
             $("#save-form").html(
-                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...`
             );
             if (submitButton) {
                 submitButton.setAttribute('data-kt-indicator', 'on');
                 submitButton.disabled = true;
             }
 
-            setTimeout(function () {
+            if (!navigator.onLine) {
+                window.__talentIsSubmitting = false;
+                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                $("#save-form").prop("disabled", false).removeClass('disabled');
+                if (typeof window.syncTalentStageAction === 'function') {
+                    window.syncTalentStageAction();
+                }
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = true;
+                    submitButton.disabled = false;
                 }
-                if (!navigator.onLine) {
-                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                    $("#save-form").prop("disabled", false);
-                    if (typeof window.syncTalentStageAction === 'function') {
-                        window.syncTalentStageAction();
-                    }
-                    if (submitButton) submitButton.disabled = false;
-                    return;
-                }
+                return;
+            }
 
-                // Layer 1: Client-Generated Idempotency UUID
-                let clientUuid = $('#client_submission_uuid').val();
-                if (!clientUuid) {
-                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                    $('#client_submission_uuid').val(clientUuid);
-                }
+            // Layer 1: Client-Generated Idempotency UUID
+            let clientUuid = $('#client_submission_uuid').val();
+            if (!clientUuid) {
+                clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                $('#client_submission_uuid').val(clientUuid);
+            }
 
-                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
-                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
-                }
-                window.normalizeCreateTalentPhones();
-                var formData = new FormData($('#createForm')[0]);
-                $.ajax({
-                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    redirect: true,
-                    success: function (response) {
-                        $("#save-form").prop("disabled", false);
-                        if (submitButton) submitButton.disabled = false;
-                        if(response.status == 'coinCheck'){
-                            if (typeof window.syncTalentStageAction === 'function') {
-                                window.syncTalentStageAction();
-                            }
-                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                            $('#client_submission_uuid').val(freshUuid);
-                            Swal.fire("Warning", ` ${response.message}`, "warning");
-                            return false;
+            if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+            }
+            window.normalizeCreateTalentPhones();
+            var formData = new FormData($('#createForm')[0]);
+            $.ajax({
+                url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                redirect: true,
+                success: function (response) {
+                    if (response.status === 'coinCheck') {
+                        window.__talentIsSubmitting = false;
+                        $("#save-form").prop("disabled", false).removeClass('disabled');
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
                         }
-
-                        if(response.status == 'mailcheck'){
-                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                            $('#client_submission_uuid').val(freshUuid);
-                            if (!navigator.onLine) {
-                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                $("#save-form").prop("disabled", false);
-                                if (typeof window.syncTalentStageAction === 'function') {
-                                    window.syncTalentStageAction();
-                                }
-                                if (submitButton) submitButton.disabled = false;
-                                return;
-                            }
-                            if (typeof window.syncTalentStageAction === 'function') {
-                                window.syncTalentStageAction();
-                            }
-                            Swal.fire("Warning", response.message, "warning").then(function(){});
-                            return false;
-                        }
-
-                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                        handleTalentSubmissionSuccess(response);
-                    },
-                    error: function (xhr) {
-                        $("#save-form").prop("disabled", false);
                         if (typeof window.syncTalentStageAction === 'function') {
                             window.syncTalentStageAction();
                         }
-                        if (submitButton) submitButton.disabled = false;
                         const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
                         $('#client_submission_uuid').val(freshUuid);
-                        if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire("Warning", ` ${response.message}`, "warning");
+                        return false;
+                    }
+
+                    if (response.status === 'mailcheck') {
+                        window.__talentIsSubmitting = false;
+                        $("#save-form").prop("disabled", false).removeClass('disabled');
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
+                        const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                        $('#client_submission_uuid').val(freshUuid);
+                        if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                        } else {
-                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                            return;
+                        }
+                        if (typeof window.syncTalentStageAction === 'function') {
+                            window.syncTalentStageAction();
+                        }
+                        Swal.fire("Warning", response.message, "warning").then(function(){});
+                        return false;
+                    }
+
+                    // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                    handleTalentSubmissionSuccess(response);
+                },
+                error: function (xhr) {
+                    // If server returns HTTP 409 IN_FLIGHT, do not stomp with error modal!
+                    if (xhr.status === 409) {
+                        var errCode = (xhr.responseJSON && (xhr.responseJSON.error || xhr.responseJSON.status)) || '';
+                        if (errCode === 'IN_FLIGHT') {
+                            console.info('[Talent Submit] Submission actively processing on server. Awaiting completion.');
+                            return;
                         }
                     }
-                });
-            }, 500);
+
+                    window.__talentIsSubmitting = false;
+                    $("#save-form").prop("disabled", false).removeClass('disabled');
+                    if (typeof window.syncTalentStageAction === 'function') {
+                        window.syncTalentStageAction();
+                    }
+                    if (submitButton) {
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+                    }
+                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(freshUuid);
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        var errMsg = (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong. Please try again.";
+                        Swal.fire("Error", errMsg, "error");
+                    }
+                }
+            });
         };
 
         var handleCandidateSubmit = async function (e) {
-            if (e && e.preventDefault) e.preventDefault();
+            if (e) {
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+            }
+
+            // Anti-Concurrency / Submission Mutex Lock (Gate G-52/G-53 Defense)
+            if (window.__talentIsSubmitting) {
+                console.warn('[Talent Submit] Submission already actively in progress. Ignoring duplicate trigger.');
+                return false;
+            }
+            window.__talentIsSubmitting = true;
 
             var connected = true;
             try {
@@ -6148,6 +6234,7 @@ var KTAddCandidate = function () {
                 connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
             }
             if (!connected) {
+                window.__talentIsSubmitting = false;
                 Swal.fire({
                     title: "No Internet",
                     text: "You are currently offline or the server is unreachable.",
@@ -6157,12 +6244,13 @@ var KTAddCandidate = function () {
                         confirmButton: "btn btn-warning"
                     }
                 });
-                return;
+                return false;
             }
 
             var missing = detectMissingFields(form, validator);
             if (missing && missing.length > 0) {
-                $("#save-form").prop("disabled", false);
+                window.__talentIsSubmitting = false;
+                $("#save-form").prop("disabled", false).removeClass('disabled');
                 if (typeof window.syncTalentStageAction === 'function') {
                     window.syncTalentStageAction();
                 }
@@ -6172,7 +6260,7 @@ var KTAddCandidate = function () {
                 }
                 var errors = collectFormValidationErrors(form, validator);
                 displayValidationErrorsNotification(errors, form, validator);
-                return;
+                return false;
             }
 
             if (validator && typeof validator.validate === 'function') {
@@ -6180,6 +6268,15 @@ var KTAddCandidate = function () {
                     if (status === 'Valid') {
                         executeSubmit();
                     } else {
+                        window.__talentIsSubmitting = false;
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
+                        $("#save-form").prop("disabled", false).removeClass('disabled');
+                        if (typeof window.syncTalentStageAction === 'function') {
+                            window.syncTalentStageAction();
+                        }
                         var fvErrors = collectFormValidationErrors(form, validator);
                         displayValidationErrorsNotification(fvErrors, form, validator);
                     }
@@ -6192,14 +6289,27 @@ var KTAddCandidate = function () {
             }
         };
 
-        if (submitButton) {
-            submitButton.addEventListener('click', handleCandidateSubmit);
-        }
-        $(document).off('click', '#save-form').on('click', '#save-form', handleCandidateSubmit);
+        // Bind Single Delegated Click Listener with complete propagation stopping
+        $(document).off('click', '#save-form').on('click', '#save-form', function (e) {
+            handleCandidateSubmit(e);
+        });
+
+        // Intercept native form submit to prevent standard POST navigation
+        $(document).off('submit', '#createForm').on('submit', '#createForm', function (e) {
+            if (e) {
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+            }
+            handleCandidateSubmit(e);
+            return false;
+        });
     };
 
     return {
         init: function () {
+            if (isInitialized) return;
+            isInitialized = true;
             form = document.querySelector('#createForm');
             submitButton = document.querySelector('#save-form');
             handleForm();
@@ -6207,8 +6317,11 @@ var KTAddCandidate = function () {
     };
 }();
 
+var ktAddCandidateInitialized = false;
 function initKTAddCandidate() {
+    if (ktAddCandidateInitialized) return;
     if (typeof KTAddCandidate !== 'undefined' && KTAddCandidate.init) {
+        ktAddCandidateInitialized = true;
         KTAddCandidate.init();
     }
 }
@@ -6224,7 +6337,9 @@ var KTEditCandidate = function () {
     var form;
     var submitButton;
     var validator;
-    var handleForm = function (e) {
+    var isInitialized = false;
+
+    var handleForm = function () {
         validator = FormValidation.formValidation(
             form,
             {
@@ -6254,83 +6369,106 @@ var KTEditCandidate = function () {
 
         var executeEditSubmit = function () {
             closeRequiredFieldsModal();
-            $("#edit-form").prop("disabled", true);
+            $("#edit-form").prop("disabled", true).addClass('disabled');
             $("#edit-form").html(
-                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...`
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`
             );
             if (submitButton) {
                 submitButton.setAttribute('data-kt-indicator', 'on');
                 submitButton.disabled = true;
             }
 
-            setTimeout(function () {
+            if (!navigator.onLine) {
+                window.__talentIsSubmitting = false;
+                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = true;
+                    submitButton.disabled = false;
                 }
-                if (!navigator.onLine) {
-                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                    $("#edit-form").prop("disabled", false).html("Update");
-                    if (submitButton) submitButton.disabled = false;
-                    return;
-                }
+                return;
+            }
 
-                // Layer 1: Client-Generated Idempotency UUID
-                let clientUuid = $('#client_submission_uuid').val();
-                if (!clientUuid) {
-                    clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                    $('#client_submission_uuid').val(clientUuid);
-                }
+            // Layer 1: Client-Generated Idempotency UUID
+            let clientUuid = $('#client_submission_uuid').val();
+            if (!clientUuid) {
+                clientUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                $('#client_submission_uuid').val(clientUuid);
+            }
 
-                if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
-                    $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
-                }
-                window.normalizeCreateTalentPhones();
-                var formData = new FormData($('#createForm')[0]);
-                $.ajax({
-                    url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    redirect: true,
-                    success: function (response) {
-                        $("#edit-form").prop("disabled", false).html("Update");
-                        if (submitButton) submitButton.disabled = false;
-                        if(response.status == 'mailcheck'){
-                            const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
-                            $('#client_submission_uuid').val(freshUuid);
-                            if (!navigator.onLine) {
-                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                $("#edit-form").prop("disabled", false).html("Update");
-                                if (submitButton) submitButton.disabled = false;
-                                return;
-                            }
-                            $("#edit-form").html(`Update`);
-                            Swal.fire("Warning", response.message, "warning").then(function(){});
-                            return false;
+            if (typeof window.formatCandidateTitleCase === 'function' && $('#full_name').length) {
+                $('#full_name').val(window.formatCandidateTitleCase($('#full_name').val()));
+            }
+            window.normalizeCreateTalentPhones();
+            var formData = new FormData($('#createForm')[0]);
+            $.ajax({
+                url: '{{route('service_company.bench-candidates.store')}}'+'?_token=' + '{{ csrf_token() }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                redirect: true,
+                success: function (response) {
+                    if (response.status === 'mailcheck') {
+                        window.__talentIsSubmitting = false;
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
                         }
-
-                        // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
-                        handleTalentSubmissionSuccess(response);
-                    },
-                    error: function (xhr) {
-                        $("#edit-form").prop("disabled", false).html("Update");
-                        if (submitButton) submitButton.disabled = false;
                         const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
                         $('#client_submission_uuid').val(freshUuid);
-                        if (xhr.status === 0 || !navigator.onLine) {
+                        if (!navigator.onLine) {
                             Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                        } else {
-                            Swal.fire("Error", "Something went wrong. Please try again.", "error");
+                            return;
+                        }
+                        Swal.fire("Warning", response.message, "warning").then(function(){});
+                        return false;
+                    }
+
+                    // Triple-Redundant Redirect Handler (Gate G-23 & G-24)
+                    handleTalentSubmissionSuccess(response);
+                },
+                error: function (xhr) {
+                    if (xhr.status === 409) {
+                        var errCode = (xhr.responseJSON && (xhr.responseJSON.error || xhr.responseJSON.status)) || '';
+                        if (errCode === 'IN_FLIGHT') {
+                            console.info('[Talent Submit] Submission actively processing on server. Awaiting completion.');
+                            return;
                         }
                     }
-                });
-            }, 500);
+
+                    window.__talentIsSubmitting = false;
+                    $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                    if (submitButton) {
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+                    }
+                    const freshUuid = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('uuid_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36));
+                    $('#client_submission_uuid').val(freshUuid);
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                    } else {
+                        var errMsg = (xhr.responseJSON && xhr.responseJSON.message) || "Something went wrong. Please try again.";
+                        Swal.fire("Error", errMsg, "error");
+                    }
+                }
+            });
         };
 
         var handleEditSubmit = async function (e) {
-            if (e && e.preventDefault) e.preventDefault();
+            if (e) {
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+            }
+
+            // Anti-Concurrency / Submission Mutex Lock
+            if (window.__talentIsSubmitting) {
+                console.warn('[Talent Submit] Edit submission already in progress. Ignoring duplicate trigger.');
+                return false;
+            }
+            window.__talentIsSubmitting = true;
 
             var connected = true;
             try {
@@ -6339,6 +6477,7 @@ var KTEditCandidate = function () {
                 connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
             }
             if (!connected) {
+                window.__talentIsSubmitting = false;
                 Swal.fire({
                     title: "No Internet",
                     text: "You are currently offline or the server is unreachable.",
@@ -6348,18 +6487,20 @@ var KTEditCandidate = function () {
                         confirmButton: "btn btn-warning"
                     }
                 });
-                return;
+                return false;
             }
 
             var missing = detectMissingFields(form, validator);
             if (missing && missing.length > 0) {
+                window.__talentIsSubmitting = false;
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
                 }
                 var errors = collectFormValidationErrors(form, validator);
                 displayValidationErrorsNotification(errors, form, validator);
-                return;
+                return false;
             }
 
             if (validator && typeof validator.validate === 'function') {
@@ -6367,6 +6508,12 @@ var KTEditCandidate = function () {
                     if (status === 'Valid') {
                         executeEditSubmit();
                     } else {
+                        window.__talentIsSubmitting = false;
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
                         var fvErrors = collectFormValidationErrors(form, validator);
                         displayValidationErrorsNotification(fvErrors, form, validator);
                     }
@@ -6379,14 +6526,27 @@ var KTEditCandidate = function () {
             }
         };
 
-        if (submitButton) {
-            submitButton.addEventListener('click', handleEditSubmit);
-        }
-        $(document).off('click', '#edit-form').on('click', '#edit-form', handleEditSubmit);
+        // Bind Single Delegated Click Listener
+        $(document).off('click', '#edit-form').on('click', '#edit-form', function (e) {
+            handleEditSubmit(e);
+        });
+
+        // Intercept native form submit to prevent standard POST navigation
+        $(document).off('submit', '#createForm').on('submit', '#createForm', function (e) {
+            if (e) {
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+            }
+            handleEditSubmit(e);
+            return false;
+        });
     };
 
     return {
         init: function () {
+            if (isInitialized) return;
+            isInitialized = true;
             form = document.querySelector('#createForm');
             submitButton = document.querySelector('#edit-form');
             handleForm();
@@ -6394,8 +6554,11 @@ var KTEditCandidate = function () {
     };
 }();
 
+var ktEditCandidateInitialized = false;
 function initKTEditCandidate() {
+    if (ktEditCandidateInitialized) return;
     if (typeof KTEditCandidate !== 'undefined' && KTEditCandidate.init) {
+        ktEditCandidateInitialized = true;
         KTEditCandidate.init();
     }
 }

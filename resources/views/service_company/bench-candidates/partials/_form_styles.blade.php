@@ -1718,6 +1718,47 @@ textarea.has-validation-error:focus,
     }
 }
 
+/* ── Jero Phone Input Validation Positioning & Styling ── */
+.jero-phone-box-wrapper.has-validation-error,
+.jero-phone-box-wrapper input.has-validation-error {
+    border: 0 none transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.jero-phone-box-wrapper.has-validation-error .jero-phone-input-group,
+.jero-phone-input-group.has-validation-error {
+    border: 1.5px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.jero-phone-box-wrapper.has-validation-error .jero-phone-input-group:focus-within,
+.jero-phone-input-group.has-validation-error:focus-within {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+}
+
+/* Strictly prevent any validation message or icon from floating inside the 38px phone group */
+.jero-phone-input-group > .field-error-message,
+.jero-phone-input-group .field-error-message,
+.jero-phone-input-group > .fv-plugins-message-container,
+.jero-phone-input-group > .invalid-feedback,
+.jero-phone-input-group > label.error,
+.jero-phone-input-group .fv-plugins-icon,
+.jero-phone-input-group i.fv-plugins-icon {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 
 /* ── Fix ITI phone flag floating over Gender label ── */
 /* The .iti__flag-container is position:absolute — contain it strictly inside the phone field */
