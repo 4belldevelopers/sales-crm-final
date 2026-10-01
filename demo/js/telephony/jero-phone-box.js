@@ -6,6 +6,11 @@
 (function (window, document) {
   'use strict';
 
+  // If V7.0 self-contained engine is active, do not override or interfere
+  if (window.JeroPhoneBox && window.JeroPhoneBox._isV7) {
+    return;
+  }
+
   // Singleton Portal Dropdown
   const Portal = {
     el: null,
@@ -223,7 +228,7 @@
   class JeroPhoneBox {
     constructor(wrapper) {
       this.wrapper = typeof wrapper === 'string' ? document.getElementById(wrapper) : wrapper;
-      if (!this.wrapper || this.wrapper._jeroPhoneBoxInstance) return;
+      if (!this.wrapper || this.wrapper._jeroInitialized || this.wrapper._jeroPhoneBoxInstance) return;
 
       const fieldId = this.wrapper.getAttribute('data-field-id') || 'phone';
       this.input = document.getElementById(fieldId) || this.wrapper.querySelector('input[type="tel"]') || this.wrapper.querySelector('input[name="' + fieldId + '"]');
@@ -244,6 +249,7 @@
       this.countries = window.__JERO_COUNTRY_PHONE_DATA__ || [];
       this.currentCountry = null;
 
+      this.wrapper._jeroInitialized = true;
       this.wrapper._jeroPhoneBoxInstance = this;
       this.init();
     }
@@ -284,7 +290,14 @@
       if (!country) return;
       this.currentCountry = country;
       this.hiddenCode.value = country.dial;
-      if (this.flagSpan) this.flagSpan.textContent = country.flag;
+      if (this.flagSpan) {
+        if (typeof window.getJeroFlagSvg === 'function') {
+          this.flagSpan.innerHTML = window.getJeroFlagSvg(country.iso);
+          this.flagSpan.setAttribute('data-iso', country.iso);
+        } else if (country.flag) {
+          this.flagSpan.textContent = country.flag;
+        }
+      }
       if (this.dialSpan) this.dialSpan.textContent = country.dial;
 
       // Update digit limit
@@ -385,40 +398,46 @@
   }
 
   // Global API
-  window.JeroPhoneBox = {
-    init(wrapperOrId) {
-      const el = typeof wrapperOrId === 'string' ? document.getElementById(wrapperOrId) : wrapperOrId;
-      if (el) new JeroPhoneBox(el);
-    },
-    initAll() {
-      document.querySelectorAll('.jero-phone-box-wrapper').forEach(wrapper => {
-        new JeroPhoneBox(wrapper);
-      });
-    },
-    getInstance(fieldId) {
-      const wrapper = document.getElementById(`${fieldId}_wrapper`);
-      return wrapper ? wrapper._jeroPhoneBoxInstance : null;
-    },
-    toggleDropdown(fieldId) {
-      const wrapper = document.getElementById(`${fieldId}_wrapper`) || document.querySelector(`[data-field-id="${fieldId}"]`);
-      if (wrapper) {
-        if (!wrapper._jeroPhoneBoxInstance) {
+  if (!window.JeroPhoneBox || !window.JeroPhoneBox._isV7) {
+    window.JeroPhoneBox = {
+      init(wrapperOrId) {
+        const el = typeof wrapperOrId === 'string' ? document.getElementById(wrapperOrId) : wrapperOrId;
+        if (el) new JeroPhoneBox(el);
+      },
+      initAll() {
+        document.querySelectorAll('.jero-phone-box-wrapper').forEach(wrapper => {
           new JeroPhoneBox(wrapper);
-        }
-        if (wrapper._jeroPhoneBoxInstance) {
-          Portal.toggle(wrapper._jeroPhoneBoxInstance);
+        });
+      },
+      getInstance(fieldId) {
+        const wrapper = document.getElementById(`${fieldId}_wrapper`);
+        return wrapper ? wrapper._jeroPhoneBoxInstance : null;
+      },
+      toggleDropdown(fieldId) {
+        const wrapper = document.getElementById(`${fieldId}_wrapper`) || document.querySelector(`[data-field-id="${fieldId}"]`);
+        if (wrapper) {
+          if (!wrapper._jeroPhoneBoxInstance) {
+            new JeroPhoneBox(wrapper);
+          }
+          if (wrapper._jeroPhoneBoxInstance) {
+            Portal.toggle(wrapper._jeroPhoneBoxInstance);
+          }
         }
       }
-    }
-  };
+    };
+  }
 
   // Delegated Click for Dropdown Toggle (Universal fallback)
   document.addEventListener('click', function(e) {
     const btn = e.target.closest('.jero-country-picker-btn');
     if (btn) {
+      const wrapper = btn.closest('.jero-phone-box-wrapper');
+      if (wrapper && wrapper._jeroInitialized) {
+        // Managed by V7 in-place architecture; do not intercept
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
-      const wrapper = btn.closest('.jero-phone-box-wrapper');
       if (wrapper) {
         if (!wrapper._jeroPhoneBoxInstance) {
           new JeroPhoneBox(wrapper);

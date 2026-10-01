@@ -112,7 +112,6 @@
 <link rel="stylesheet" href="{{ asset('assets/plugins/font-awesome/css/font-awesome.min.css') }}{{ TM_VERSION }}" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="{{ asset('assets/css/telephony/jero-phone-box.css') }}{{ TM_VERSION }}">
 
 {{-- jQuery must load BEFORE @stack('head-script') so pages that push inline
      <script>$(function(){...})</script> into the head (datepicker initialiser on
@@ -1499,8 +1498,6 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
 <script src="{{ asset('demo/js/intlTelInput.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
-<script src="{{ asset('assets/js/telephony/countries-data.js') }}{{ TM_VERSION }}"></script>
-<script src="{{ asset('assets/js/telephony/jero-phone-box.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('demo/js/daterangepicker.min.js') }}{{ TM_VERSION }}"></script>
 {{-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script> --}}
 {{-- <script src="{{ asset('demo/js/select2.min.js') }}{{ TM_VERSION }}"></script> --}}

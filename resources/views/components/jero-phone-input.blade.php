@@ -78,6 +78,23 @@
     $initialLength = $dialToLen[$initialCode] ?? 10;
     $initialValue = old($name, $value);
     $initialDigitsCount = strlen(preg_replace('/[^\d]/', '', (string)$initialValue));
+
+    $getInitialFlagSvg = function ($iso) {
+        $code = strtoupper($iso ?: 'IN');
+        $svgs = [
+            'IN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+            'US' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+            'GB' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="ssr_gb"><rect width="640" height="480"/></clipPath><g clip-path="url(#ssr_gb)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+            'AE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+            'CA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+            'AU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><g transform="scale(0.5)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+            'SG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+            'SA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+            'DE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+            'FR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>',
+        ];
+        return $svgs[$code] ?? ('<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#1e3c72" rx="40"/><text x="320" y="310" fill="#ffffff" font-size="240" font-family="\'Poppins\', sans-serif" font-weight="bold" text-anchor="middle">' . $code . '</text></svg>');
+    };
 @endphp
 
 <div class="jero-phone-box-wrapper w-100 {{ $class }}" 
@@ -109,7 +126,7 @@
                 aria-expanded="false"
                 title="Select country code"
                 style="display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 100% !important; min-height: 36px !important; max-height: 36px !important; background: transparent !important; background-color: transparent !important; border: 0 none transparent !important; border-radius: 5px 0 0 5px !important; padding: 0 10px 0 12px !important; margin: 0 !important; box-shadow: none !important; outline: none !important; flex-shrink: 0 !important;">
-            <span class="jero-selected-flag" id="{{ $id }}_flag" data-iso="{{ $initialIso }}"></span>
+            <span class="jero-selected-flag" id="{{ $id }}_flag" data-iso="{{ $initialIso }}">{!! $getInitialFlagSvg($initialIso) !!}</span>
             <span class="jero-selected-dial" id="{{ $id }}_dial">{{ $initialCode }}</span>
             <i class="fa fa-chevron-down jero-chevron"></i>
         </button>
@@ -264,8 +281,29 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 15px !important;
+  min-height: 15px !important;
+  max-height: 15px !important;
   flex-shrink: 0 !important;
   line-height: 1 !important;
+  overflow: visible !important;
+}
+
+.jero-selected-flag svg {
+  width: 20px !important;
+  height: 15px !important;
+  min-width: 20px !important;
+  min-height: 15px !important;
+  max-width: 20px !important;
+  max-height: 15px !important;
+  display: block !important;
+  vertical-align: middle !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 1px rgba(0,0,0,0.35) !important;
+  flex-shrink: 0 !important;
 }
 
 .jero-selected-flag img {
@@ -602,6 +640,7 @@
   window.setupJeroPhoneBox = function(wrapper) {
     if (!wrapper || wrapper._jeroInitialized) return;
     wrapper._jeroInitialized = true;
+    wrapper._jeroPhoneBoxInstance = true;
 
     const btn = wrapper.querySelector('.jero-country-picker-btn');
     const dropdown = wrapper.querySelector('.jero-country-dropdown');
@@ -635,9 +674,24 @@
       currentCountry = window.__JERO_COUNTRIES_DB__.find(c => c.iso === defaultIso) || window.__JERO_COUNTRIES_DB__[0];
     }
 
-    // Ensure initial flag is synced
+    // Ensure initial flag is present and accurate
     if (currentCountry && flagSpan) {
-      flagSpan.innerHTML = window.getJeroFlagSvg(currentCountry.iso);
+      if (!flagSpan.querySelector('svg') || flagSpan.getAttribute('data-iso') !== currentCountry.iso) {
+        flagSpan.innerHTML = window.getJeroFlagSvg(currentCountry.iso);
+        flagSpan.setAttribute('data-iso', currentCountry.iso);
+      }
+
+      // God-level Flag Protection: Prevent ANY rogue external script from wiping flagSpan or replacing with blank/emoji
+      if (window.MutationObserver && !flagSpan._hasObserver) {
+        flagSpan._hasObserver = true;
+        const mo = new MutationObserver(() => {
+          if (!flagSpan.querySelector('svg') && currentCountry) {
+            flagSpan.innerHTML = window.getJeroFlagSvg(currentCountry.iso);
+            flagSpan.setAttribute('data-iso', currentCountry.iso);
+          }
+        });
+        mo.observe(flagSpan, { childList: true, characterData: true, subtree: true });
+      }
     }
 
     function updateCounter(targetLength) {
@@ -661,6 +715,7 @@
       hiddenCode.value = c.dial;
       dialSpan.textContent = c.dial;
       flagSpan.innerHTML = window.getJeroFlagSvg(c.iso);
+      flagSpan.setAttribute('data-iso', c.iso);
       input.setAttribute('maxlength', c.len);
 
       const digits = (input.value || '').replace(/[^\d]/g, '');
@@ -873,7 +928,8 @@
     updateCounter(currentCountry ? currentCountry.len : 10);
   };
 
-  window.JeroPhoneBox = {
+  const jeroPhoneBoxEngine = {
+    _isV7: true,
     init(wrapperOrId) {
       const el = typeof wrapperOrId === 'string' ? document.getElementById(wrapperOrId) : wrapperOrId;
       if (el) window.setupJeroPhoneBox(el);
@@ -882,6 +938,16 @@
       document.querySelectorAll('.jero-phone-box-wrapper').forEach(w => window.setupJeroPhoneBox(w));
     }
   };
+
+  try {
+    Object.defineProperty(window, 'JeroPhoneBox', {
+      value: jeroPhoneBoxEngine,
+      writable: false,
+      configurable: true
+    });
+  } catch (e) {
+    window.JeroPhoneBox = jeroPhoneBoxEngine;
+  }
 
   // Run on DOM ready
   if (document.readyState === 'loading') {
