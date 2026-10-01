@@ -604,7 +604,7 @@
     <div id="kt_activitiesHMB_toggle"></div>
     <div id="kt_activitiesHMB" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="activities"
         data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
-        data-kt-drawer-width="{default:'550px', 'lg': '1050px'}" data-kt-drawer-direction="end"
+        data-kt-drawer-width="{default:'95%', 'sm': '550px', 'lg': '780px'}" data-kt-drawer-direction="end"
         data-kt-drawer-toggle="#kt_activitiesHMB_toggle" data-kt-drawer-close="#kt_activitiesHMB_close">
         <div class="card shadow-none rounded-0 w-100">
             <div class="card-header px-5 py-0" id="kt_activitiesB_header">
@@ -815,19 +815,85 @@
             });
         });
 
-        // ---- Relationship Manager drawer ----
+        // ---- Relationship Manager drawer (Client-First Execution & Browser RAM Store) ----
+        window.JeroRmStore = {
+            roster: null,
+            epoch: null,
+            fetchRoster: function(cb) {
+                if (this.roster && this.roster.length) {
+                    if (cb) cb(this.roster);
+                    return;
+                }
+                var self = this;
+                var cacheKey = 'jero_rm_roster_{{ auth()->user()->company_id }}';
+                var cachedSession = sessionStorage.getItem(cacheKey);
+                if (cachedSession) {
+                    try {
+                        var parsed = JSON.parse(cachedSession);
+                        if (parsed && Array.isArray(parsed.team)) {
+                            self.roster = parsed.team;
+                            self.epoch = parsed.epoch;
+                            if (cb) cb(self.roster);
+                            return;
+                        }
+                    } catch(e) {}
+                }
+                $.ajax({
+                    url: "{{ route('service_company.bench-candidates.rm-roster') }}",
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(resp) {
+                        if (resp && resp.status === 'success' && resp.team) {
+                            self.roster = resp.team;
+                            self.epoch = resp.epoch;
+                            try {
+                                sessionStorage.setItem(cacheKey, JSON.stringify({ team: resp.team, epoch: resp.epoch }));
+                            } catch(e) {}
+                            if (cb) cb(self.roster);
+                        }
+                    }
+                });
+            }
+        };
+
+        // Pre-warm team roster in Browser RAM on page idle
+        setTimeout(function() { window.JeroRmStore.fetchRoster(); }, 800);
+
+        // Optimistic DOM patching on parent table row (0ms, 0 secondary HTTP roundtrips)
+        window.patchBenchCandidateRmRow = function(candidateId, response) {
+            var $cell = $('a.hmb-listing[data-row-id="' + candidateId + '"]').closest('td.col-manager-name');
+            if ($cell.length && response) {
+                var count = Number(response.assigned_count || 0);
+                var firstName = response.first_manager || 'Unassigned';
+                var extra = count > 1 ? ' +' + (count - 1) : '';
+                var fullText = firstName + extra;
+                var $nameSpan = $cell.find('.manager-name-main');
+                if ($nameSpan.length) {
+                    $nameSpan.text(fullText).attr('title', fullText);
+                }
+            }
+        };
+
         $(document).on('click', '.hmb-listing', function() {
             $('#kt_activitiesHMB_toggle').trigger('click');
             var id = $(this).data('row-id');
             var url = "{{ route('service_company.bench-candidates.hmlisting', ':id') }}".replace(':id', id);
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+            var $body = $('#kt_activitiesHMB_body');
+
+            $body.html('<div style="text-align:center;padding:40px;"><img src="' + baseurl + '" height="35px"></div>');
+
             $.ajax({
-                type: 'GET', url: url,
-                beforeSend: function() { $('#kt_activitiesHMB_body').html('<img src="' + baseurl + '" height="35px" width="100%">'); },
+                type: 'GET',
+                url: url,
+                dataType: 'json',
                 success: function(response) {
-                    setTimeout(() => {
-                        if (response.status == "success") { $('#kt_activitiesHMB_body').html(response.view); }
-                    }, 500);
+                    if (response.status === "success" && response.view) {
+                        $body.html(response.view);
+                    }
+                },
+                error: function() {
+                    $body.html('<div style="padding:24px;text-align:center;color:#ef4444;font-size:13px;">Failed to load relationship managers. Please try again.</div>');
                 }
             });
         });

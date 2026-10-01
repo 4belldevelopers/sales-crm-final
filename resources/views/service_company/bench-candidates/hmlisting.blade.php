@@ -302,46 +302,7 @@
 </style>
 
 @php
-    $rmCompanyId = auth()->user()->company_id;
-    $rmElastic = app(\App\Services\ElasticService::class)->getClient();
-
-    $activeJobsByUser = [];
-    try {
-        $resp = $rmElastic->search([
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'size' => 0,
-                'query' => ['term' => ['status' => 'active']],
-                'aggs' => ['by_user' => ['terms' => ['field' => 'job_assign.user_id', 'size' => 2000]]],
-            ],
-        ]);
-        foreach (($resp['aggregations']['by_user']['buckets'] ?? []) as $b) {
-            $activeJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
-        }
-    } catch (\Throwable $e) { $activeJobsByUser = []; }
-
-    $captainJobsByUser = [];
-    try {
-        $resp = $rmElastic->search([
-            'index' => ELASTIC_JOBS,
-            'body' => [
-                'size' => 0,
-                'query' => ['term' => ['job_assign.company_id' => $rmCompanyId]],
-                'aggs' => ['by_captain' => ['terms' => ['field' => 'job_assign.spok_user_id', 'size' => 2000]]],
-            ],
-        ]);
-        foreach (($resp['aggregations']['by_captain']['buckets'] ?? []) as $b) {
-            $captainJobsByUser[(int) $b['key']] = (int) $b['doc_count'];
-        }
-    } catch (\Throwable $e) { $captainJobsByUser = []; }
-
-    // TRM Talents = bench_assign rows per user (MySQL is authoritative)
-    $trmTalentsByUser = DB::table('bench_assign')
-        ->select('user_id', DB::raw('COUNT(*) as cnt'))
-        ->groupBy('user_id')
-        ->pluck('cnt', 'user_id')
-        ->toArray();
-
+    /* ── Pre-computed workload stats from RelationshipManagerService (0% MySQL / 0% ES strain) ── */
     $rmRows = [];
     foreach ($team as $teamVal) {
         $name = trim(@$teamVal->name) ?: '?';
@@ -357,16 +318,16 @@
         $isAssigned = (@$teamVal->bench_assign_id > 0) && ($currentBenchId == $teamVal->bench_applications_id);
 
         $rmRows[] = [
-            'id'           => $teamVal->id,
+            'id'           => (int) $teamVal->id,
             'name'         => ucwords(substr($name, 0, 15)),
             'fullName'     => ucwords($name),
             'role'         => ucwords(substr(trim(@$teamVal->display_name) ?: 'Team Member', 0, 18)),
             'email'        => (string) @$teamVal->email,
             'initial'      => strtoupper($firstChar),
             'avatarClass'  => $avatarClass,
-            'activeJobs'   => $activeJobsByUser[$teamVal->id] ?? 0,
-            'captainJobs'  => $captainJobsByUser[$teamVal->id] ?? 0,
-            'trmTalents'   => $trmTalentsByUser[$teamVal->id] ?? 0,
+            'activeJobs'   => (int) (@$teamVal->activeJobs ?? 0),
+            'captainJobs'  => (int) (@$teamVal->captainJobs ?? 0),
+            'trmTalents'   => (int) (@$teamVal->trmTalents ?? 0),
             'assigned'     => $isAssigned,
             'workingActive'=> (@$teamVal->working_status == 1),
         ];
@@ -687,19 +648,39 @@ $(document).ready(function () {
 
         var url = "{{ route('service_company.bench-candidates.hmlistingupdate',':id') }}".replace(':id', currentUserId);
         $.ajax({
-            type: 'GET',
+            type: 'POST',
             url: url,
             data: { '_token': "{{ csrf_token() }}", currentBenchId, currentUserId, assignStatus },
             success: function (response) {
                 if (response.status === 'success') {
                     if (assignStatus == 0) {
-                        $('#btn_' + currentUserId).removeClass('add').addClass('remove');
+                        $('#btn_' + currentUserId).removeClass('add').addClass('remove').text('Remove').data('assign', 1);
                     } else {
-                        $('#btn_' + currentUserId).removeClass('remove').addClass('add');
+                        $('#btn_' + currentUserId).removeClass('remove').addClass('add').text('Add').data('assign', 0);
+                    }
+
+                    // Optimistic DOM patching on parent table row (0ms, 0 secondary HTTP roundtrips)
+                    if (typeof window.patchBenchCandidateRmRow === 'function') {
+                        window.patchBenchCandidateRmRow(currentBenchId, response);
+                    }
+                } else {
+                    // Rollback on server error
+                    if (assignStatus == 0) {
+                        $('#btn_' + currentUserId).removeClass('remove').addClass('add').text('Add').data('assign', 0);
+                    } else {
+                        $('#btn_' + currentUserId).removeClass('add').addClass('remove').text('Remove').data('assign', 1);
                     }
                 }
                 renderSelectedRM();
-                fetchBenchBenchCandidatesCandidateList();
+            },
+            error: function () {
+                // Network rollback
+                if (assignStatus == 0) {
+                    $('#btn_' + currentUserId).removeClass('remove').addClass('add').text('Add').data('assign', 0);
+                } else {
+                    $('#btn_' + currentUserId).removeClass('add').addClass('remove').text('Remove').data('assign', 1);
+                }
+                renderSelectedRM();
             }
         });
     });
