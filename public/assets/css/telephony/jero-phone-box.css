@@ -27,6 +27,15 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper .jero-phone-input-group.is-invalid,
+.jero-phone-box-wrapper.is-invalid .jero-phone-input-group,
+.jero-phone-box-wrapper:has(.is-invalid) .jero-phone-input-group,
+.jero-phone-box-wrapper .jero-phone-input-group:has(.is-invalid) {
+  border-color: #f1416c !important;
+  box-shadow: 0 0 0 3px rgba(241, 65, 108, 0.12) !important;
+}
+
 .jero-country-picker-btn {
   background: transparent !important;
   background-color: transparent !important;
@@ -122,6 +131,54 @@
   margin: 0 !important;
   letter-spacing: 0.3px !important;
   box-sizing: border-box !important;
+}
+
+/* Neutralize Bootstrap / FormValidation invalid state on input (suppress red exclamation icon, maintain padding) */
+.jero-phone-main-input.is-invalid,
+.jero-phone-main-input:invalid,
+.jero-phone-input-group input.is-invalid,
+.jero-phone-input-group input:invalid {
+  border: 0 none transparent !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  background-repeat: no-repeat !important;
+  padding: 0 54px 0 10px !important;
+}
+
+/* Hide any rogue validation message container or plugin icon injected inside the 38px flex group */
+.jero-phone-input-group > .fv-plugins-message-container,
+.jero-phone-input-group > .invalid-feedback,
+.jero-phone-input-group > label.error,
+.jero-phone-input-group .fv-plugins-icon,
+.jero-phone-input-group i.fv-plugins-icon {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Dedicated validation error message outside the 38px input group */
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg,
+.jero-phone-box-wrapper > .fv-plugins-message-container {
+  display: block;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #f1416c !important;
+  margin-top: 4px !important;
+  padding-left: 2px !important;
+  line-height: 1.3 !important;
+  width: 100% !important;
+  clear: both !important;
+}
+
+.jero-phone-box-wrapper .invalid-feedback.jero-phone-error-msg:empty,
+.jero-phone-box-wrapper > .fv-plugins-message-container:empty {
+  display: none !important;
 }
 
 .jero-digit-counter {
