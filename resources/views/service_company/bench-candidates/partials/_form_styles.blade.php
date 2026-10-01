@@ -2336,6 +2336,20 @@ textarea.has-validation-error:focus,
     line-height: 1.3 !important;
 }
 
+#talent_create_app #full_name {
+    text-transform: capitalize !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.15px !important;
+}
+
+#talent_create_app #bd-candidate-profile-card .bd-control input:focus,
+#talent_create_app .bd-card:has(#full_name) .bd-control input:focus {
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    outline: none !important;
+}
+
 /* ==========================================================================
    Enterprise Available From Date Hover Notification Card
    ========================================================================== */

@@ -335,10 +335,20 @@
                 }
             }
 
-            // 1. Full Name
+            // 1. Full Name (Enterprise Title Casing: 1st letter capital, rest small)
             if (cand.name) {
-                setVal('#full_name', cand.name);
-                setVal('#name', cand.name);
+                var formatTitleCase = function (str) {
+                    if (!str) return '';
+                    return String(str)
+                        .toLowerCase()
+                        .replace(/(^|[\s\-\'])([a-z])/g, function (match, separator, char) {
+                            return separator + char.toUpperCase();
+                        })
+                        .trim();
+                };
+                var formattedCandName = formatTitleCase(cand.name);
+                setVal('#full_name', formattedCandName);
+                setVal('#name', formattedCandName);
             }
 
             // 2. Primary Email
