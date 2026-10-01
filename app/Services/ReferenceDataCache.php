@@ -209,6 +209,30 @@ class ReferenceDataCache
     }
 
     /**
+     * Intent: Global job_categories map [id => name], cached 24 h to eliminate per-row
+     * DB::table('job_categories') N+1 queries in job listing / Add-to-Job drawer blades.
+     * Tenancy: Global reference table (not tenant-scoped).
+     */
+    public static function jobCategories(): array
+    {
+        return Cache::remember('global_job_categories_map', self::TTL_24H, function () {
+            return DB::table('job_categories')->pluck('name', 'id')->toArray();
+        });
+    }
+
+    /**
+     * Intent: Global skills collection, cached 24 h to eliminate full-table Skill::all()
+     * reads on every AppTracker page load.
+     * Tenancy: Global reference table (not tenant-scoped).
+     */
+    public static function skills(): \Illuminate\Support\Collection
+    {
+        return Cache::remember('global_skills_all', self::TTL_24H, function () {
+            return \App\Models\Skill::all();
+        });
+    }
+
+    /**
      * Bust all global reference caches at once — call from a seeder or
      * an admin action after editing reference data.
      */
@@ -228,5 +252,7 @@ class ReferenceDataCache
         Cache::forget('global_master_statuses');
         Cache::forget('global_interview_modes');
         Cache::forget('global_master_notifications_elastic');
+        Cache::forget('global_job_categories_map');
+        Cache::forget('global_skills_all');
     }
 }

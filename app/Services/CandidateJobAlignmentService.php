@@ -36,14 +36,23 @@ class CandidateJobAlignmentService
     /**
      * Align candidate data points with the target job and purge all stale caches immediately.
      *
-     * @param int $candidateId Core job_applications ID
-     * @param int $targetJobId Target job ID
-     * @param int $wiseId add_job_wise_condidates ID
-     * @param int|null $companyId Tenant company ID
-     * @return bool
+     * @param  int  $candidateId  Core job_applications ID
+     * @param  int  $targetJobId  Target job ID
+     * @param  int  $wiseId  add_job_wise_condidates ID
+     * @param  int|null  $companyId  Tenant company ID
+     * @param  object|null  $candidateObj  Optional pre-loaded candidate row to avoid duplicate SELECT
+     * @param  object|null  $jobObj  Optional pre-loaded job row to avoid duplicate SELECT
+     * @param  bool  $skipSkillMatchUpdate  True when caller already computed and inserted skill_match & reset recruiter_note
      */
-    public function alignCandidateToJob(int $candidateId, int $targetJobId, int $wiseId, ?int $companyId = null): bool
-    {
+    public function alignCandidateToJob(
+        int $candidateId,
+        int $targetJobId,
+        int $wiseId,
+        ?int $companyId = null,
+        ?object $candidateObj = null,
+        ?object $jobObj = null,
+        bool $skipSkillMatchUpdate = false
+    ): bool {
         if ($candidateId <= 0 || $targetJobId <= 0 || $wiseId <= 0) {
             return false;
         }
@@ -53,9 +62,9 @@ class CandidateJobAlignmentService
         $elasticClient = $elasticService->getClient();
 
         try {
-            // 1. Fetch Candidate & Target Job details
-            $candidate = DB::table('job_applications')->where('id', $candidateId)->first();
-            $job = DB::table('jobs')->where('id', $targetJobId)->first();
+            // 1. Fetch Candidate & Target Job details (reuse pre-loaded objects when provided by caller)
+            $candidate = $candidateObj ?: DB::table('job_applications')->where('id', $candidateId)->first();
+            $job = $jobObj ?: DB::table('jobs')->where('id', $targetJobId)->first();
 
             if (! $candidate || ! $job) {
                 Log::warning("[CandidateJobAlignmentService] Missing candidate #{$candidateId} or job #{$targetJobId}");
@@ -65,10 +74,12 @@ class CandidateJobAlignmentService
 
             // 2. Recruiter Comments: Do NOT carry forward recruiter comments from previous jobs.
             // Reset recruiter_note clean for the recruiter to review and update based on the current job.
-            DB::table('job_applications')->where('id', $candidateId)->update([
-                'recruiter_note' => null,
-                'updated_at' => now(),
-            ]);
+            if (! $skipSkillMatchUpdate) {
+                DB::table('job_applications')->where('id', $candidateId)->update([
+                    'recruiter_note' => null,
+                    'updated_at' => now(),
+                ]);
+            }
 
             // 3. Align Key Skills: Follow current target job's skills cleanly without carrying forward previous ratings/exp
             $this->alignKeySkillsClean($candidateId, $targetJobId, $elasticClient);
@@ -76,29 +87,31 @@ class CandidateJobAlignmentService
             // 4. Align Screening Questions: Follow current target job's questions cleanly without carrying forward previous answers
             $this->alignScreeningQuestionsClean($candidateId, $targetJobId, $elasticClient);
 
-            // 5. Update Skill Match Percentage for target job
-            $candSkillsArr = array_values(array_filter(array_map('trim', explode(',', (string) @$candidate->skills))));
-            $matchPercentage = GeneralMethod::skill_match_percentage($targetJobId, $candSkillsArr);
+            // 5. Update Skill Match Percentage for target job (skipped if caller already inserted exact skill_match)
+            if (! $skipSkillMatchUpdate) {
+                $candSkillsArr = array_values(array_filter(array_map('trim', explode(',', (string) @$candidate->skills))));
+                $matchPercentage = GeneralMethod::skill_match_percentage($targetJobId, $candSkillsArr);
 
-            DB::table('add_job_wise_condidates')
-                ->where('id', $wiseId)
-                ->update([
-                    'skill_match' => $matchPercentage,
-                    'updated_at' => now(),
-                ]);
+                DB::table('add_job_wise_condidates')
+                    ->where('id', $wiseId)
+                    ->update([
+                        'skill_match' => $matchPercentage,
+                        'updated_at' => now(),
+                    ]);
+            }
 
             // 6. Synchronous Authoritative Elasticsearch Indexing
             GeneralMethod::JobApplicationsAddEditUpload($wiseId, $companyId);
 
-            // 7. Force index refresh so queries immediately see the latest document
+            // 7. Single combined multi-index refresh (1 ES HTTP round-trip instead of 3) so queries immediately see the latest documents
             try {
                 $candidatesIndex = config('constants.ELASTIC_CANDIDATES', 'elastic_candidates');
                 $skillsExpIndex = config('constants.ELASTIC_CANDIDATE_SKILLS_EXP', 'elastic_candidate_skills_exp');
                 $questionsIndex = config('constants.ELASTIC_CANDIDATE_JOB_QUESTION', 'elastic_candidate_job_question');
 
-                $elasticClient->indices()->refresh(['index' => $candidatesIndex]);
-                $elasticClient->indices()->refresh(['index' => $skillsExpIndex]);
-                $elasticClient->indices()->refresh(['index' => $questionsIndex]);
+                $elasticClient->indices()->refresh([
+                    'index' => implode(',', [$candidatesIndex, $skillsExpIndex, $questionsIndex]),
+                ]);
             } catch (\Throwable $refreshErr) {
                 Log::warning('[CandidateJobAlignmentService] ES refresh exception: '.$refreshErr->getMessage());
             }
@@ -120,7 +133,7 @@ class CandidateJobAlignmentService
     }
 
     /**
-     * Initializes key skills for the target job cleanly.
+     * Initializes key skills for the target job cleanly using batched MySQL reads/writes and 1 ES _bulk call.
      * Follows the current job's skills and does NOT carry forward ratings or experiences from previous jobs.
      */
     protected function alignKeySkillsClean(int $candidateId, int $targetJobId, $elasticClient): void
@@ -133,24 +146,24 @@ class CandidateJobAlignmentService
             return;
         }
 
+        // Batch fetch existing skill experience rows for (candidate, job) in 1 query instead of N queries
+        $existingMap = DB::table('candidate_job_skill_exp')
+            ->where('candidate_id', $candidateId)
+            ->where('job_id', $targetJobId)
+            ->get()
+            ->keyBy('job_skill_id');
+
+        $idsToReset = [];
+        $bulkBody = [];
+        $skillsExpIndex = config('constants.ELASTIC_CANDIDATE_SKILLS_EXP', 'elastic_candidate_skills_exp');
+        $nowIso = now()->toIso8601String();
+
         foreach ($targetJobSkills as $jobSkill) {
             $skillName = trim((string) $jobSkill->skill_name);
-
-            // Clean slate for current job: check if record exists for this job & candidate
-            $existing = DB::table('candidate_job_skill_exp')
-                ->where('candidate_id', $candidateId)
-                ->where('job_id', $targetJobId)
-                ->where('job_skill_id', $jobSkill->id)
-                ->first();
+            $existing = $existingMap->get($jobSkill->id);
 
             if ($existing) {
-                // If existing record was carried over with old ratings, reset to clean state for this job
-                DB::table('candidate_job_skill_exp')
-                    ->where('id', $existing->id)
-                    ->update([
-                        'skill_value' => 0,
-                        'rating' => 0,
-                    ]);
+                $idsToReset[] = $existing->id;
                 $expId = $existing->id;
             } else {
                 $expId = DB::table('candidate_job_skill_exp')->insertGetId([
@@ -162,29 +175,44 @@ class CandidateJobAlignmentService
                 ]);
             }
 
-            try {
-                $elasticClient->index([
-                    'index' => config('constants.ELASTIC_CANDIDATE_SKILLS_EXP', 'elastic_candidate_skills_exp'),
-                    'id' => $expId,
-                    'body' => [
-                        'skill_name' => $skillName,
-                        'job_skill_id' => (int) $jobSkill->id,
-                        'skill_value' => 0,
-                        'job_id' => (int) $targetJobId,
-                        'rating' => 0,
-                        'candidate_id' => (int) $candidateId,
-                        'created_at' => now()->toIso8601String(),
-                        'updated_at' => now()->toIso8601String(),
-                    ],
+            $bulkBody[] = [
+                'index' => [
+                    '_index' => $skillsExpIndex,
+                    '_id' => $expId,
+                ],
+            ];
+            $bulkBody[] = [
+                'skill_name' => $skillName,
+                'job_skill_id' => (int) $jobSkill->id,
+                'skill_value' => 0,
+                'job_id' => (int) $targetJobId,
+                'rating' => 0,
+                'candidate_id' => (int) $candidateId,
+                'created_at' => $nowIso,
+                'updated_at' => $nowIso,
+            ];
+        }
+
+        if (! empty($idsToReset)) {
+            DB::table('candidate_job_skill_exp')
+                ->whereIn('id', $idsToReset)
+                ->update([
+                    'skill_value' => 0,
+                    'rating' => 0,
                 ]);
+        }
+
+        if (! empty($bulkBody)) {
+            try {
+                $elasticClient->bulk(['body' => $bulkBody]);
             } catch (\Throwable $esErr) {
-                Log::warning('[CandidateJobAlignmentService] Skill ES index failed: '.$esErr->getMessage());
+                Log::warning('[CandidateJobAlignmentService] Skill ES bulk index failed: '.$esErr->getMessage());
             }
         }
     }
 
     /**
-     * Initializes screening questions for the target job cleanly.
+     * Initializes screening questions for the target job cleanly using batched MySQL reads and 1 ES _bulk call.
      * Candidate strictly follows current job's questions, and previous answers are NOT carried forward.
      */
     protected function alignScreeningQuestionsClean(int $candidateId, int $targetJobId, $elasticClient): void
@@ -197,18 +225,22 @@ class CandidateJobAlignmentService
             return;
         }
 
+        // Batch fetch existing question rows for (candidate, job) in 1 query instead of N queries
+        $existingMap = DB::table('application_additional_detail')
+            ->where('application_id', $candidateId)
+            ->where('job_id', $targetJobId)
+            ->get()
+            ->keyBy('question_id');
+
+        $bulkBody = [];
+        $questionsIndex = config('constants.ELASTIC_CANDIDATE_JOB_QUESTION', 'elastic_candidate_job_question');
+        $nowIso = now()->toIso8601String();
+
         foreach ($targetQuestions as $q) {
             $qText = trim((string) $q->detail_value);
-
-            // Clean slate for current job: check if record exists for this job & candidate
-            $existing = DB::table('application_additional_detail')
-                ->where('application_id', $candidateId)
-                ->where('job_id', $targetJobId)
-                ->where('question_id', $q->id)
-                ->first();
+            $existing = $existingMap->get($q->id);
 
             if ($existing) {
-                // If existing record was carried over with old answers, reset answer to null
                 DB::table('application_additional_detail')
                     ->where('id', $existing->id)
                     ->update([
@@ -226,25 +258,31 @@ class CandidateJobAlignmentService
                 ]);
             }
 
+            $bulkBody[] = [
+                'update' => [
+                    '_index' => $questionsIndex,
+                    '_id' => $qDetailId,
+                ],
+            ];
+            $bulkBody[] = [
+                'doc' => [
+                    'job_id' => (int) $targetJobId,
+                    'question_id' => (int) $q->id,
+                    'application_id' => (int) $candidateId,
+                    'job_detail_value' => $qText,
+                    'application_detail_value' => null,
+                    'created_at' => $nowIso,
+                    'updated_at' => $nowIso,
+                ],
+                'doc_as_upsert' => true,
+            ];
+        }
+
+        if (! empty($bulkBody)) {
             try {
-                $elasticClient->update([
-                    'index' => config('constants.ELASTIC_CANDIDATE_JOB_QUESTION', 'elastic_candidate_job_question'),
-                    'id' => $qDetailId,
-                    'body' => [
-                        'doc' => [
-                            'job_id' => (int) $targetJobId,
-                            'question_id' => (int) $q->id,
-                            'application_id' => (int) $candidateId,
-                            'job_detail_value' => $qText,
-                            'application_detail_value' => null,
-                            'created_at' => now()->toIso8601String(),
-                            'updated_at' => now()->toIso8601String(),
-                        ],
-                        'doc_as_upsert' => true,
-                    ],
-                ]);
+                $elasticClient->bulk(['body' => $bulkBody]);
             } catch (\Throwable $esErr) {
-                Log::warning('[CandidateJobAlignmentService] Question ES update failed: '.$esErr->getMessage());
+                Log::warning('[CandidateJobAlignmentService] Question ES bulk update failed: '.$esErr->getMessage());
             }
         }
     }
@@ -293,12 +331,13 @@ class CandidateJobAlignmentService
         Cache::forget("tenant:{$companyId}:fwd_branding");
         Cache::forget("tenant:{$companyId}:fwd_template_metadata");
 
-        // 3. Invalidate Datatable user version counters
+        // 3. Invalidate Datatable user version counters (including Bench Candidates list)
         $userId = auth()->user()?->id;
         if ($userId) {
             $versionKeys = [
                 'allcvtracker_version_user_'.$userId,
                 'allapptracker_version_user_'.$userId,
+                'allbenchcandidates_version_user_'.$userId,
                 'allsimilarcandidates_version_user_'.$userId,
                 'allclientapp_version_user_'.$userId,
                 'allinternalbench_version_user_'.$userId,
@@ -317,8 +356,10 @@ class CandidateJobAlignmentService
             }
         }
 
-        // Intent: Invalidate header counter cache (custome_count_all) so Total Candidates In Job count updates instantly
+        // Intent: Invalidate header counter cache (custome_count_all) AND AppTracker stage pipeline counter cache (pipeline:{jobId})
+        // so Total Candidates In Job and all stage pills update with 0ms staleness when navigating to AppTracker.
         Cache::forget("custome_count_all:{$companyId}:{$targetJobId}");
+        Cache::forget("pipeline:{$targetJobId}");
         $authCompanyId = auth()->user()?->company_id;
         if ($authCompanyId && (int) $authCompanyId !== (int) $companyId) {
             Cache::forget("custome_count_all:{$authCompanyId}:{$targetJobId}");

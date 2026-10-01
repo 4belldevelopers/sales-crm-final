@@ -1,10 +1,11 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\ReferenceDataCache;
     use Illuminate\Support\Facades\DB;
 
     $salaryMode      = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
+    $feedback_status = ReferenceDataCache::feedbackStatus();
     $currency        = GeneralMethod::currency();
     $job_status_arr  = GeneralMethod::job_status();
     $job_status      = GeneralMethod::job_status();
@@ -27,14 +28,39 @@
     }
 @endphp
 @if (count($data) > 0)
+    @php
+        /**
+         * Intent: Bulk pre-fetch recommendation relations, company/client logos, cached job categories,
+         * and partner company details once for the entire page so @foreach runs 0 per-row DB or ES queries.
+         * Tenancy: Scoped by $company_id.
+         */
+        $company_id = auth()->user()->company_id;
+        $pageJobIds = array_values(array_filter(array_map(fn($r) => (int) (is_object($r) ? ($r->id ?? 0) : ($r['id'] ?? 0)), $data)));
+        $relationsMap = GeneralMethod::getrRcommendationRelationDataBulk($company_id, $pageJobIds);
+        $logosMap = GeneralMethod::companyDetailsBulk($data, $company_id);
+        $jobCategoriesMap = ReferenceDataCache::jobCategories();
+
+        $toCompanyIds = [];
+        foreach ($data as $rArr) {
+            $rObj = (object) $rArr;
+            $firstRec = collect($rObj->recommendation_relation ?? [])
+                ->where('from_company_id', $company_id)
+                ->where('job_id', $rObj->id ?? 0)
+                ->where('from_status', 1)
+                ->first();
+            if ($firstRec && !empty($firstRec['to_company_id'])) {
+                $toCompanyIds[] = (int) $firstRec['to_company_id'];
+            }
+        }
+        $toCompaniesMap = !empty($toCompanyIds) ? GeneralMethod::companyDetailsGetBulk($toCompanyIds) : [];
+    @endphp
     @foreach ($data as $rowArr)
     @php
         $row = (object) $rowArr;
 
         $targetJobId   = $row->id;
-        $company_id    = auth()->user()->company_id;
 
-        $relationget       = GeneralMethod::getrRcommendationRelationData($company_id, $targetJobId);
+        $relationget       = $relationsMap[$targetJobId] ?? (object) [];
         $from_company_id   = $relationget->from_company_id ?? null;
         $recommendation_id = $relationget->to_company_id   ?? null;
         $final_status      = $relationget->final_status     ?? null;
@@ -61,13 +87,13 @@
         $profile_detail_class = 'show-detail';
         $clients_name = ucwords(mb_substr(@$row->clients_name, 0, 25));
 
-        if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+        if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
             $profile_detail_class = 'client-show-detail';
             $clients_name = ucwords(mb_substr(@$row->company_name, 0, 25));
         }
 
-        /* ── Company logo ── */
-        $logo_path = GeneralMethod::companyDetails($row->id);
+        /* ── Company logo (bulk pre-fetched) ── */
+        $logo_path = $logosMap[(int) $row->id] ?? '';
 
         /* ── Skills + match ── */
         $candSkills = $candidateSkills ?? [];
@@ -122,9 +148,8 @@
         $matchColor = $matchStyle['color'];
         $matchBg    = $matchStyle['bg'];
 
-        /* ── Department ── */
-        $departmentRow = DB::table('job_categories')->where('id', $row->category_id ?? 0)->first();
-        $department = $departmentRow->name ?? '';
+        /* ── Department (cached ReferenceDataCache::jobCategories) ── */
+        $department = $jobCategoriesMap[$row->category_id ?? 0] ?? '';
 
         /* ── Experience ── */
         $min_exp   = @$row->min_exp ?? 0;
@@ -143,7 +168,7 @@
         $jobClass = $job_status[$row->status] ?? '';
         if ($status == 'Active')   { $status = 'Hiring'; }
         if ($status == 'Inactive') { $status = 'Closed'; }
-        if (($row->final_status == 2 || $row->final_status == 3) && @$row->to_company_id == auth()->user()->company_id) {
+        if (($row->final_status == 2 || $row->final_status == 3) && @$row->to_company_id == $company_id) {
             $status = 'Removed'; $jobClass = 'closed-bg';
         }
 
@@ -154,7 +179,7 @@
                 </svg>';
         $badgeClass = 'badge-internal';
         $badgeText  = 'Internal';
-        if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+        if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
             $svg = '<svg width="9" height="9" fill="none" viewBox="0 0 24 24">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2.5"></path>
                         <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2.5"></circle>
@@ -193,12 +218,13 @@
                             ->sortBy('user_name')->first();
         $firstMemberName = $firstMember ? ucwords(mb_substr($firstMember['user_name'] ?? '', 0, 10)) : '—';
 
-        if ($recommendation_id > 0 && @$row->to_company_id == auth()->user()->company_id) {
+        if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
             $recommendationRelation = collect($row->recommendation_relation ?? []);
             $partnersCount   = $recommendationRelation->where('from_company_id', $company_id)->where('job_id', $row->id)->where('from_status', 1)->count();
             $firstRec        = $recommendationRelation->where('from_company_id', $company_id)->where('job_id', $row->id)->where('from_status', 1)->first();
             if ($firstRec) {
-                $cd = GeneralMethod::companyDetailsGet($firstRec['to_company_id'] ?? 0);
+                $toCid = (int) ($firstRec['to_company_id'] ?? 0);
+                $cd = $toCompaniesMap[$toCid] ?? GeneralMethod::companyDetailsGet($toCid);
                 $firstMemberName = ucwords(mb_substr(@$cd->company_name ?? '', 0, 10));
             }
         }

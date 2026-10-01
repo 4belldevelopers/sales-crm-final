@@ -1,11 +1,12 @@
 @php
     use App\Helper\GeneralMethod;
+    use App\Services\ReferenceDataCache;
     use Illuminate\Support\Facades\DB;
     use Carbon\Carbon;
 
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
-    $feedback_status = GeneralMethod::feedback_status();
+    $feedback_status = ReferenceDataCache::feedbackStatus();
     $currency = GeneralMethod::currency();
     $job_status_arr = GeneralMethod::job_status();
     $symbolsValue = GeneralMethod::currencyConverter()['getKey'] ?? [];
@@ -18,6 +19,9 @@
         5	=>	"AED"
      ];
 
+    $company_id = auth()->user()->company_id ?? auth()->user()->roles[0]->company_id;
+    $app_duplicate = auth()->user()->company->app_duplicate ?? 0;
+    $app_duplicate_days = auth()->user()->company->app_duplicate_days ?? 0;
 @endphp
 @if (count($data) > 0)
     @foreach ($data as $rowArr)
@@ -69,9 +73,6 @@
 
                     $flag = 0;
                     $duplicate = $row->duplicate ?? 0;
-                    $company_id = auth()->user()->roles[0]->company_id;
-                    $app_duplicate = auth()->user()->company->app_duplicate;
-                    $app_duplicate_days = auth()->user()->company->app_duplicate_days;
 
                     $covid = '';
                     // BUG-04 fix N+1 #4: look up pre-fetched duplicate map instead of per-row DB count
@@ -458,18 +459,19 @@
             <td>
                 @php
                     $schedule_date = $className = '';
-                    $intRowCount = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->count();
-                    $intRow = DB::table('interview_schedules')
-                        ->select('*')
-                        ->where('job_application_id', $row->id)
-                        ->where('interview_job_id', $row->jobId)
-                        ->orderBy('interview_schedules.id', 'DESC')
-                        ->first();
+                    $iKey = ($row->id ?? 0) . '_' . ($row->jobId ?? 0);
+                    if (isset($rowMaps['interviews'])) {
+                        $intRow = $rowMaps['interviews'][$iKey] ?? null;
+                        $intRowCount = $intRow ? 1 : 0;
+                    } else {
+                        $intRow = DB::table('interview_schedules')
+                            ->select('*')
+                            ->where('job_application_id', $row->id)
+                            ->where('interview_job_id', $row->jobId)
+                            ->orderBy('interview_schedules.id', 'DESC')
+                            ->first();
+                        $intRowCount = $intRow ? 1 : 0;
+                    }
                     $html = '';
                     $schedule_time = '';
                     if ($intRowCount > 0) {
@@ -485,7 +487,7 @@
                     // feedback has actually been recorded on the Interview Tracker page —
                     // once $intRow->feedback is a real status (not the unset/-1 default),
                     // that feedback replaces the mode here, using the same name/classname
-                    // lookup (GeneralMethod::feedback_status()) already used elsewhere.
+                    // lookup (ReferenceDataCache::feedbackStatus()) already used elsewhere.
                     $feedbackGiven = false;
                     $row3Text = '';
                     $row3Class = '';
@@ -568,8 +570,14 @@
                     }
 
                     if($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0){
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? ucwords(@$spokperson->name) : ucwords($row->posted_by);
+                        $spokKey = ($row->jobId ?? 0) . '_' . ($row->ClientComID ?? 0);
+                        if (isset($rowMaps['spokperson_map'])) {
+                            $spokName = $rowMaps['spokperson_map'][$spokKey] ?? null;
+                        } else {
+                            $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                            $spokName = @$spokperson->name;
+                        }
+                        $rowpostedby = (!empty($spokName)) ? ucwords($spokName) : ucwords($row->posted_by);
                         $rowpostedby = $row->rec_candidate_assign_id ? $row->posted_by :  $rowpostedby;
                     }else{
                         $rowpostedby = ucwords($row->posted_by);
@@ -603,13 +611,16 @@
                         $name = 'Private';
                     }
                     if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->childStatus)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
+                        if (isset($rowMaps['child_status_map'])) {
+                            $name = $rowMaps['child_status_map'][(int) $row->childStatus] ?? $name;
+                        } else {
+                            $childStatus = DB::table('candidate_status')
+                                ->select('*')
+                                ->where('id', $row->childStatus)
+                                ->first();
+                            if (!empty($childStatus)) {
+                                $name = @$childStatus->name;
+                            }
                         }
                     }
                     echo '<div class="d-flex flex-column">

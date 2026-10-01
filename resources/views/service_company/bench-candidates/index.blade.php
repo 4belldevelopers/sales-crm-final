@@ -476,7 +476,7 @@
                         <div class="position-relative flex-grow-1">
                             <i class="fa fa-search position-absolute text-muted" style="left:12px; top:11px; font-size:12px !important;"></i>
                             <input type="text" class="form-control dash-search w-100" style="padding-left:30px;" name="inputJobSearch"
-                                placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="filtersdataget()" />
+                                placeholder="Search by name, skills, role, experience, location..." id="kt_tagify_2" onkeyup="debouncedBenchSearch(event)" />
                         </div>
                         <select class="form-select form-select-solid w-200px flex-shrink-0" data-hide-search="true" id="sortingfilter"
                             data-placeholder="Sort" onchange="filtersdataget()">
@@ -758,6 +758,22 @@
                 });
             });
         });
+
+        // Phase 1 Optimization: 250ms debounce for free-text search input (#kt_tagify_2)
+        // Prevents 10-character typing from triggering 20 sequential AJAX calls.
+        var _benchSearchTimer = null;
+        function debouncedBenchSearch(e) {
+            if (_benchSearchTimer) {
+                clearTimeout(_benchSearchTimer);
+            }
+            if (e && (e.key === 'Enter' || e.keyCode === 13)) {
+                filtersdataget();
+                return;
+            }
+            _benchSearchTimer = setTimeout(function() {
+                filtersdataget();
+            }, 250);
+        }
 
         function filtersdataget() {
             fetchBenchBenchCandidatesCandidateList(1);
@@ -1091,12 +1107,13 @@
         });
 
         // ---- Table fetch + pagination ----
+        // Phase 1 Optimization: In-flight XHR cancellation, sequence ordering, and scoped tooltip binding (Rule 17)
+        var _benchListXhr = null;
+        var _benchCountXhr = null;
+        var _benchReqSeq = 0;
+
         $(document).ready(function() {
             fetchBenchBenchCandidatesCandidateList();
-            // Re-init tooltips after each AJAX load so newly inserted chips get tooltips
-            $(document).on('ajaxComplete', function() {
-                $('[title]').tooltip({ trigger: 'hover', placement: 'top' });
-            });
             $(document).on('click', '#paginationbenchCandidateBenchCandidates .pagi-page, #paginationbenchCandidateBenchCandidates .pagi-arrow', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
@@ -1119,9 +1136,13 @@
         });
 
         function fetchBenchBenchCandidatesCandidateList(page = 1, search = '') {
+            var seq = ++_benchReqSeq;
+            if (_benchListXhr && _benchListXhr.readyState !== 4) {
+                _benchListXhr.abort();
+            }
             $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'block' });
             var perPage = localStorage.getItem('candidatePerPage') || 10;
-            return $.ajax({
+            _benchListXhr = $.ajax({
                 url: `{!! route('service_company.bench-candidates.data_ajax') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -1135,16 +1156,28 @@
                     size: perPage
                 },
                 success: function(response) {
+                    if (seq !== _benchReqSeq) return;
                     $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'none' });
                     $('#benchCandidateBenchCandidatesAjax').html(response.html);
                     $('#paginationbenchCandidateBenchCandidates').html(response.pagination);
+                    if ($.fn.tooltip) {
+                        $('#benchCandidateBenchCandidatesAjax [title]').tooltip({ trigger: 'hover', placement: 'top' });
+                    }
                     countDataGetBenchList();
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort' || seq !== _benchReqSeq) return;
+                    $('.loadingMessagebenchCandidateBenchCandidatesAjax').css({ display: 'none' });
                 }
             });
+            return _benchListXhr;
         }
 
         function countDataGetBenchList() {
-            $.ajax({
+            if (_benchCountXhr && _benchCountXhr.readyState !== 4) {
+                _benchCountXhr.abort();
+            }
+            _benchCountXhr = $.ajax({
                 url: `{!! route('service_company.bench-candidates.countDataGetBenchList') !!}`,
                 type: 'GET',
                 data: { countData: true },

@@ -578,8 +578,13 @@
 			 showToastr('error', 'Multiple Jobs removed successfully!', 'Removed');
 		}
 	});
+     // Phase 1 Optimization: Prevent duplicate document pagination listeners on repeated drawer opens,
+     // return jqXHR promise for pagination .then()/.catch(), and abort stale in-flight requests.
+     var _copyJobTableXhr = null;
+     var _copyJobReqSeq = 0;
+
      fetchCandidates();
-	 $(document).on('click', '#paginationcopy .page-link', function(e) {
+     $(document).off('click.acCopyPagination', '#paginationcopy .page-link').on('click.acCopyPagination', '#paginationcopy .page-link', function(e) {
                 e.preventDefault();
                 const page = $(this).data('page');
                 if (!page || $(this).hasClass('disabled')) return;
@@ -592,13 +597,17 @@
             });
 
 	function fetchCandidates(page = 1, search = '') {
+            var seq = ++_copyJobReqSeq;
+            if (_copyJobTableXhr && _copyJobTableXhr.readyState !== 4) {
+                _copyJobTableXhr.abort();
+            }
             var clientid = '1';
             if($('#kt_tagify_2').val()!=''){
                 $('.loader_search').css({ display: 'block' });
             }else{
                 $('.page-loader').css('display', 'flex');
             }
-            $.ajax({
+            _copyJobTableXhr = $.ajax({
                 url: `{!! route('service_company.cvtracker.copyjobtable') !!}?page=${page}`,
                 type: 'GET',
                 data: {
@@ -607,6 +616,7 @@
                   candidateSkills: (typeof window._candidateSkills !== 'undefined' ? window._candidateSkills : '')
                 },
                 success: function(response) {
+                    if (seq !== _copyJobReqSeq) return;
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
@@ -615,18 +625,29 @@
                     markAddedButtons();
                     updateHeroStats();
                     updateBenchHero();
+                },
+                error: function(xhr, status) {
+                    if (status === 'abort' || seq !== _copyJobReqSeq) return;
+                    $('.loadingMessage').css({ display: 'none' });
+                    $('.loader_search').css({ display: 'none' });
+                    $('.page-loader').css('display', 'none');
                 }
             });
+            return _copyJobTableXhr;
         }
 </script>
 <script>
-   /* Pre-compute job IDs that already contain these candidates */
+   /* Pre-compute job IDs that already contain these candidates (provided by controller in Phase 2) */
    var alreadyAddedJobIds = <?php
-        $appIds = collect($applicationData)->pluck('id')->toArray();
-        $addedJobIds = !empty($appIds)
-            ? DB::table('job_applications')->whereIn('id', $appIds)->whereNotNull('job_id')->pluck('job_id')->toArray()
-            : [];
-        echo json_encode(array_values(array_unique($addedJobIds)));
+        if (isset($alreadyAddedJobIds) && is_array($alreadyAddedJobIds)) {
+            echo json_encode(array_values(array_unique(array_map('intval', $alreadyAddedJobIds))));
+        } else {
+            $appIds = collect($applicationData ?? [])->pluck('id')->toArray();
+            $addedJobIds = !empty($appIds)
+                ? DB::table('job_applications')->whereIn('id', $appIds)->whereNotNull('job_id')->pluck('job_id')->toArray()
+                : [];
+            echo json_encode(array_values(array_unique(array_map('intval', $addedJobIds))));
+        }
    ?>;
 
    function markAddedButtons() {
@@ -743,14 +764,32 @@
        fetchCandidates();
    }
 
+   // Phase 1 Optimization: 250ms debounce on #inputCopySearch & deduplicated click binding for .chk_copy_single_add
+   // Prevents duplicate POST submissions when the Add to Job drawer is opened multiple times in a session.
+   var _acCopySearchTimer = null;
    $(document).ready(function() {
-	   $('#inputCopySearch').keyup(function() {
-			 fetchCandidates();
-	   });
+       $('#inputCopySearch').off('keyup.acSearch').on('keyup.acSearch', function(e) {
+           if (_acCopySearchTimer) {
+               clearTimeout(_acCopySearchTimer);
+           }
+           if (e && (e.key === 'Enter' || e.keyCode === 13)) {
+               fetchCandidates(1);
+               return;
+           }
+           _acCopySearchTimer = setTimeout(function() {
+               fetchCandidates(1);
+           }, 250);
+       });
    });
 
-   $(document).on('click', '.chk_copy_single_add', function() {
-        var jobId    = $(this).data('job-id');
+   $(document).off('click.acCopySingleAdd', '.chk_copy_single_add').on('click.acCopySingleAdd', '.chk_copy_single_add', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled') || $btn.data('submitting') === 1 || $btn.hasClass('btn-already-added')) {
+            return false;
+        }
+
+        var jobId    = $btn.data('job-id');
         var token    = "{{ csrf_token() }}";
         var url      = "{{ route('service_company.cvtracker.copy_current_selected_applicant', ':id') }}".replace(':id', 1);
 
@@ -762,26 +801,35 @@
         var wiseIdOld = <?php echo json_encode($wiseId); ?>;
         wiseIdOld.map(function(mval) { selectedApplicantListingOld.push(mval.id); });
 
-        var $btn = $(this);
-        $btn.prop('disabled', true).text('Adding…');
+        var idempotencyKey = 'copy_single_' + jobId + '_' + selectedApplicantListing.join('_');
+        $btn.data('submitting', 1).prop('disabled', true).text('Adding…');
 
         $.ajax({
             type: 'POST',
             url: url,
+            headers: {
+                'X-Idempotency-Key': idempotencyKey
+            },
             data: {
                 '_token': token,
                 '_method': 'POST',
+                'idempotency_key': idempotencyKey,
                 'selectedJobListing': [jobId],
                 'selectedApplicantListing': selectedApplicantListing,
                 'selectedApplicantListingOld': selectedApplicantListingOld
             },
             success: function(response) {
+                $btn.data('submitting', 0);
                 if (response.status == 'success') {
                     showToastr('success', 'Candidate added to job successfully!', 'Success');
-                    alreadyAddedJobIds.push(parseInt(jobId));
+                    var numericJobId = parseInt(jobId, 10);
+                    if (alreadyAddedJobIds.indexOf(numericJobId) === -1) {
+                        alreadyAddedJobIds.push(numericJobId);
+                    }
                     $btn.addClass('btn-already-added').html(
                         '<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Added On Job'
                     ).prop('disabled', true);
+                    updateHeroStats();
                     return;
                 } else if (response.status == 'coinCheck') {
                     Swal.fire('Failed', response.message, 'warning');
@@ -789,6 +837,7 @@
                 $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add to Job');
             },
             error: function() {
+                $btn.data('submitting', 0);
                 showToastr('error', 'Something went wrong.', 'Error');
                 $btn.prop('disabled', false).html('<svg width="11" height="11" fill="none" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg> Add to Job');
             }
@@ -796,7 +845,7 @@
    });
 </script>
 <script>
-	$('.copy_current_selected_applicant').click(function(){
+	$('.copy_current_selected_applicant').off('click.acCopyBulk').on('click.acCopyBulk', function(){
 
 		const swalWithBootstrapButtons = Swal.mixin({
 			  customClass: {
@@ -838,12 +887,21 @@
 										selectedApplicantListingOld.push( mval.id);
 									});
 
+									var bulkIdempotencyKey = 'copy_bulk_' + arr.join('_') + '_' + selectedApplicantListing.join('_');
+
 									$.ajax({
 													type		: 'POST',
 													url			: url,
-													data		: {'_token': token, '_method': 'POST', 'selectedJobListing' : arr, 'selectedApplicantListing': selectedApplicantListing,'selectedApplicantListingOld' :selectedApplicantListingOld},
+													headers		: { 'X-Idempotency-Key': bulkIdempotencyKey },
+													data		: {'_token': token, '_method': 'POST', 'idempotency_key': bulkIdempotencyKey, 'selectedJobListing' : arr, 'selectedApplicantListing': selectedApplicantListing,'selectedApplicantListingOld' :selectedApplicantListingOld},
 													success 	: function (response) {
 																	if (response.status == "success") {
+																		  	arr.forEach(function(jid) {
+																		  		var numJid = parseInt(jid, 10);
+																		  		if (alreadyAddedJobIds.indexOf(numJid) === -1) {
+																		  			alreadyAddedJobIds.push(numJid);
+																		  		}
+																		  	});
 																		  	fetchCandidates();
 																			swalWithBootstrapButtons.fire(
 																											  'Success!',

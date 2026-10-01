@@ -498,79 +498,94 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $viewCounts = [];
         $downloadCounts = [];
+        $benchExploreCounters = [];
+        $benchManagersMap = [];
         $companyCurrencyBenchshowMode = GeneralMethod::getCompanyCurrencyBenchshowMode($company_id);
 
-        if (! $this->elasticService->indexExists(ELASTIC_CANDIDATES_BENCH)) {
-            $total = 0;
-            $data = [];
-        } else {
+        try {
             $response = $this->elasticService->getClient()->search($params);
             $total = $response['hits']['total']['value'] ?? 0;
             $data = array_map(function ($hit) {
                 return $hit['_source'];
-            }, $response['hits']['hits']);
+            }, $response['hits']['hits'] ?? []);
+        } catch (\Throwable $e) {
+            $total = 0;
+            $data = [];
+        }
 
-            // Bulk pre-fetch work-preference (wm), view counts, download counts, and live stage activity counts to prevent N+1 queries in Blade
-            $pageIds = array_filter(array_column($data, 'id'));
-            if (! empty($pageIds)) {
-                $wmMap = DB::table('job_applications')->whereIn('id', $pageIds)->pluck('wm', 'id');
+        // Bulk pre-fetch work-preference (wm), view/download counts, ES pipeline stage counts,
+        // and fallback relationship manager assignments so bench-candidate-list-ajax.blade.php runs 0 per-row queries.
+        $pageIds = array_values(array_filter(array_column($data, 'id')));
+        if (! empty($pageIds)) {
+            $wmMap = DB::table('job_applications')
+                ->where('company_id', $company_id)
+                ->whereIn('id', $pageIds)
+                ->pluck('wm', 'id');
 
-                // Bulk fetch live pipeline activity stage counts from DB
-                $dbStageCounts = DB::table('add_job_wise_condidates')
-                    ->select('job_application_id', 'master_status_id', DB::raw('COUNT(*) as cnt'))
-                    ->whereIn('job_application_id', $pageIds)
-                    ->groupBy('job_application_id', 'master_status_id')
-                    ->get()
-                    ->groupBy('job_application_id');
+            // Single bulk ES aggregation for stage counters across all candidates on the page
+            $benchExploreCounters = GeneralMethod::bench_explore_listing_counter_bulk($pageIds, $company_id);
 
-                $dbTotalJobCounts = DB::table('add_job_wise_condidates')
-                    ->select('job_application_id', DB::raw('COUNT(*) as total_jobs'))
-                    ->whereIn('job_application_id', $pageIds)
-                    ->groupBy('job_application_id')
-                    ->pluck('total_jobs', 'job_application_id');
+            // Bulk fetch view and download counts using index idx_bcvd_cand_type_stat
+            $counts = DB::table('bench_count_view_download')
+                ->select('candidate_id', 'type', DB::raw('COUNT(*) as total'))
+                ->whereIn('candidate_id', $pageIds)
+                ->where('status', 0)
+                ->groupBy('candidate_id', 'type')
+                ->get();
 
-                // Bulk fetch view and download counts using index idx_bcvd_cand_type_stat
-                $counts = DB::table('bench_count_view_download')
-                    ->select('candidate_id', 'type', DB::raw('COUNT(*) as total'))
-                    ->whereIn('candidate_id', $pageIds)
-                    ->where('status', 0)
-                    ->groupBy('candidate_id', 'type')
-                    ->get();
-
-                foreach ($counts as $c) {
-                    if ($c->type == 1) {
-                        $viewCounts[$c->candidate_id] = $c->total;
-                    } elseif ($c->type == 2) {
-                        $downloadCounts[$c->candidate_id] = $c->total;
-                    }
+            foreach ($counts as $c) {
+                if ($c->type == 1) {
+                    $viewCounts[$c->candidate_id] = $c->total;
+                } elseif ($c->type == 2) {
+                    $downloadCounts[$c->candidate_id] = $c->total;
                 }
-
-                foreach ($data as &$row) {
-                    $candId = $row['id'] ?? null;
-                    $row['wm'] = $wmMap[$candId] ?? $row['wm'] ?? null;
-
-                    if ($candId && isset($dbTotalJobCounts[$candId])) {
-                        $cStages = $dbStageCounts->get($candId) ?? collect();
-                        $sourcing = $cStages->where('master_status_id', 1)->sum('cnt');
-                        $screening = $cStages->where('master_status_id', 2)->sum('cnt');
-                        $evaluation = $cStages->where('master_status_id', 3)->sum('cnt');
-                        $negotiation = $cStages->where('master_status_id', 4)->sum('cnt');
-                        $offered = $cStages->where('master_status_id', 5)->sum('cnt');
-                        $joined = $cStages->where('master_status_id', 6)->sum('cnt');
-                        $rejected = $cStages->whereIn('master_status_id', [7, 9])->sum('cnt');
-
-                        $row['InReview'] = $dbTotalJobCounts[$candId];
-                        $row['Sourcing'] = $sourcing;
-                        $row['Screening'] = $screening;
-                        $row['Evaluation'] = $evaluation;
-                        $row['Negotiation'] = $negotiation;
-                        $row['Offered'] = $offered;
-                        $row['Joined'] = $joined;
-                        $row['Rejected'] = $rejected;
-                    }
-                }
-                unset($row);
             }
+
+            // Bulk fetch relationship managers only for rows missing hiring_hr in ES _source
+            $missingHrIds = [];
+            foreach ($data as $r) {
+                if (empty($r['hiring_hr']) && ! empty($r['id'])) {
+                    $missingHrIds[] = (int) $r['id'];
+                }
+            }
+            if (! empty($missingHrIds)) {
+                $hmRows = DB::table('bench_assign')
+                    ->join('users', 'users.id', '=', 'bench_assign.user_id')
+                    ->select('bench_assign.bench_applications_id as cand_id', 'users.name')
+                    ->whereIn('bench_assign.bench_applications_id', $missingHrIds)
+                    ->where('bench_assign.company_id', $company_id)
+                    ->where('users.company_id', $company_id)
+                    ->orderBy('users.name', 'ASC')
+                    ->get();
+                foreach ($hmRows as $hmRow) {
+                    $cid = (int) $hmRow->cand_id;
+                    if (! isset($benchManagersMap[$cid])) {
+                        $benchManagersMap[$cid] = [
+                            'count' => 0,
+                            'first_name' => $hmRow->name,
+                        ];
+                    }
+                    $benchManagersMap[$cid]['count']++;
+                }
+            }
+
+            foreach ($data as &$row) {
+                $candId = $row['id'] ?? null;
+                $row['wm'] = $wmMap[$candId] ?? $row['wm'] ?? null;
+
+                if ($candId && isset($benchExploreCounters[$candId])) {
+                    $ac = $benchExploreCounters[$candId]->applicationCounter;
+                    $row['InReview'] = $ac->Interview ?? 0;
+                    $row['Sourcing'] = $ac->Sourcing ?? 0;
+                    $row['Screening'] = $ac->Screening ?? 0;
+                    $row['Evaluation'] = $ac->Evaluation ?? 0;
+                    $row['Negotiation'] = $ac->Negotiation ?? 0;
+                    $row['Offered'] = $ac->Offered ?? 0;
+                    $row['Joined'] = $ac->Joined ?? 0;
+                    $row['Rejected'] = $ac->Rejected ?? 0;
+                }
+            }
+            unset($row);
         }
 
         $pagination = [
@@ -583,7 +598,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $userPermissions = $this->userPermissions;
         $responseData = [
-            'html' => view('service_company.ajax_pages.bench-candidate-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'viewCounts', 'downloadCounts', 'companyCurrencyBenchshowMode'))->render(),
+            'html' => view('service_company.ajax_pages.bench-candidate-list-ajax', compact('data', 'userPermissions', 'company_id', 'salaryMode', 'currencySymbole', 'viewCounts', 'downloadCounts', 'companyCurrencyBenchshowMode', 'benchExploreCounters', 'benchManagersMap'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -1637,11 +1652,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             // Canonical Fast-Path & Server Trust Boundary (0% MySQL Reads, Rule 1 Compliant)
             if ($request->filled('location_city_id')) {
-                $subCityId = (int)$request->location_city_id;
-                $subStateId = (int)$request->location_state_id;
-                $subCountryId = (int)$request->location_country_id;
-                $subSig = (string)$request->input('location_sig');
-                $expectedSig = hash_hmac('sha256', "{$subCityId}:{$subStateId}:{$subCountryId}", (string)config('app.key'));
+                $subCityId = (int) $request->location_city_id;
+                $subStateId = (int) $request->location_state_id;
+                $subCountryId = (int) $request->location_country_id;
+                $subSig = (string) $request->input('location_sig');
+                $expectedSig = hash_hmac('sha256', "{$subCityId}:{$subStateId}:{$subCountryId}", (string) config('app.key'));
 
                 // Verify cryptographic signature if available, or positive IDs
                 if ($subSig === '' || hash_equals($expectedSig, $subSig) || ($subCityId > 0 && $subCountryId > 0)) {
@@ -1920,6 +1935,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         while (true) {
             try {
                 $candidate->save();
+
                 return;
             } catch (\Illuminate\Database\QueryException $e) {
                 if (isset($e->errorInfo[1]) && $e->errorInfo[1] === 1054) {
@@ -1934,6 +1950,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         ]);
 
                         unset($candidate->{$failedColumn});
+
                         continue;
                     }
                 }
