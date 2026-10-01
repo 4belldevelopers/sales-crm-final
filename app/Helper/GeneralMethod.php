@@ -8801,6 +8801,69 @@ END:VCALENDAR";
                 ->orderBy('users.name', 'ASC')
                 ->get();
 
+            $pipelineCounts = DB::table('add_job_wise_condidates')
+                ->select('master_status_id', DB::raw('COUNT(*) as total'))
+                ->where('job_application_id', $application->id)
+                ->groupBy('master_status_id')
+                ->pluck('total', 'master_status_id')
+                ->toArray();
+
+            $skillExperiences = DB::table('bench_candidate_skill_experience')
+                ->where('candidate_id', $application->id)
+                ->get()
+                ->map(function ($sk) {
+                    return [
+                        'skill_key' => strtolower(trim($sk->skill_key)),
+                        'rating' => (int) ($sk->rating ?? 0),
+                        'year' => (int) ($sk->year ?? 0),
+                        'month' => (int) ($sk->month ?? 0),
+                        'total_months' => (int) ($sk->total_months ?? 0),
+                    ];
+                })
+                ->toArray();
+
+            $ads_switch_rank = (strtolower((string) ($application->ads_switch ?? '')) === 'yes') ? 0 : 1;
+
+            $np_days = 0;
+            if ($application->serving_notice_period_mode == 0) {
+                $np_days = (int) $application->np_id;
+            } elseif ($application->serving_notice_period_mode == 1 && ! empty($application->np_id)) {
+                $lwdTime = strtotime($application->np_id);
+                if ($lwdTime && $lwdTime > time()) {
+                    $np_days = (int) ceil(($lwdTime - time()) / 86400);
+                } else {
+                    $np_days = 0;
+                }
+            } elseif ($application->serving_notice_period_mode == 2) {
+                $np_days = 0;
+            }
+
+            $np_epoch_day = (function ($npId) {
+                $v = trim((string) $npId);
+                if (empty($v)) {
+                    return 999999999;
+                }
+                if (strtolower($v) === 'immediate') {
+                    return -999999998;
+                }
+                if (($comma = strpos($v, ',')) !== false) {
+                    $v = trim(substr($v, 0, $comma));
+                }
+                if (($t = strpos($v, 'T')) !== false) {
+                    $v = substr($v, 0, $t);
+                }
+                $v = str_replace('/', '-', $v);
+                try {
+                    return Carbon::parse($v)->getTimestamp() / 86400;
+                } catch (\Exception $e) {
+                    return 999999999;
+                }
+            })($application->np_id);
+            $np_is_immediate = strtolower(trim((string) ($application->np_id ?? ''))) === 'immediate';
+
+            $snapshot = self::getLatestFxSnapshot();
+            $snapshotVersion = $snapshot['version'] ?? '202609-001';
+
             $response = $elasticService->getClient()->update([
                 'index' => ELASTIC_CANDIDATES_BENCH,
                 'id' => $application->id,
@@ -8808,6 +8871,7 @@ END:VCALENDAR";
                 'body' => [
                     'doc' => [
                         'id' => $application->id,
+                        'bench_id' => $application->id,
                         'thirdparty_company_id' => $application->thirdparty_company_id,
                         'full_name' => $application->full_name,
                         'company_id' => $application->company_id,
@@ -8823,6 +8887,22 @@ END:VCALENDAR";
                         'last_working_date' => $application->last_working_date,
                         'immediate_join' => $application->np_id,
                         'serving_notice_period_mode' => $application->serving_notice_period_mode,
+                        'np_days' => $np_days,
+                        'notice_period_days' => $np_days,
+                        'ads_switch_rank' => $ads_switch_rank,
+                        'ads_switch_order' => $ads_switch_rank,
+                        'candidate_skills' => $skillExperiences,
+                        'skill_experiences' => $skillExperiences,
+                        'sourcing_count' => $pipelineCounts[1] ?? 0,
+                        'screening_count' => $pipelineCounts[2] ?? 0,
+                        'interview_count' => ($pipelineCounts[8] ?? 0) + ($pipelineCounts[3] ?? 0),
+                        'evaluation_count' => $pipelineCounts[3] ?? 0,
+                        'negotiation_count' => $pipelineCounts[4] ?? 0,
+                        'offered_count' => $pipelineCounts[5] ?? 0,
+                        'joined_count' => $pipelineCounts[6] ?? 0,
+                        'rejected_count' => ($pipelineCounts[7] ?? 0) + ($pipelineCounts[9] ?? 0),
+                        'np_epoch_day' => $np_epoch_day,
+                        'np_is_immediate' => $np_is_immediate,
                         'state' => $application->state,
                         'city' => $application->city,
                         'careersummary' => $application->careersummary,
@@ -8869,6 +8949,17 @@ END:VCALENDAR";
                         'bill_rate_currency' => $application->bill_rate_currency,
                         'bill_rate_amount' => $application->bill_rate_amount,
                         'bill_rate_mode' => $application->bill_rate_mode,
+                        'bill_rate_usd_hourly_index' => self::convertToUSDHourly(
+                            $application->bill_rate_amount,
+                            $application->bill_rate_currency,
+                            (int) ($application->bill_rate_mode ?? 0)
+                        ),
+                        'pay_rate_usd_hourly_index' => self::convertToUSDHourly(
+                            $application->ctc,
+                            $application->current_ctc_cur,
+                            (int) ($application->current_ctc_mode ?? 0)
+                        ),
+                        'fx_snapshot_version' => $snapshotVersion,
                         'condidate_type' => $application->condidate_type,
                         'master_status_id' => $application->master_status_id,
                         'posted_by' => $application->posted_by,
