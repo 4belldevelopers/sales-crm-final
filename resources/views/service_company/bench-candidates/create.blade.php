@@ -5417,13 +5417,33 @@ function handleTalentSubmissionSuccess(response) {
     // Hide any previous in-page validation alert
     $('#formValidationNotificationBox').addClass('d-none');
 
+    // Invalidate client-side sessionStorage & browser RAM cache for bench candidates
+    try {
+        var companyId = '{{ (int) (auth()->user()->company_id ?? 0) }}';
+        var storagePrefix = 'jero_bench_v1_' + companyId + '_';
+        for (var i = sessionStorage.length - 1; i >= 0; i--) {
+            var k = sessionStorage.key(i);
+            if (k && k.indexOf(storagePrefix) === 0) {
+                sessionStorage.removeItem(k);
+            }
+        }
+        sessionStorage.setItem('jero_bench_force_refresh', '1');
+    } catch (e) {}
+
+    try {
+        window.dispatchEvent(new CustomEvent('jero:bench-candidate-updated', {
+            detail: { candidateId: response && response.candidate_id }
+        }));
+    } catch (e) {}
+
     const redirectUrl = response.redirect_url || response.url || '{{ route("service_company.bench-candidates.index") }}';
     let redirectExecuted = false;
 
     function executeRedirect() {
         if (!redirectExecuted) {
             redirectExecuted = true;
-            window.location.href = redirectUrl;
+            var sep = redirectUrl.indexOf('?') === -1 ? '?' : '&';
+            window.location.href = redirectUrl + sep + '_fresh=' + Date.now();
         }
     }
 

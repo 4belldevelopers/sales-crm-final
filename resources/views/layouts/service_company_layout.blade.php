@@ -2745,6 +2745,8 @@ $( document ).ready(function() {
 							$.ajax({
 											type  		:	'GET',
 											url   		:	url,
+											cache		:	false,
+											data		:	{ _t: Date.now() },
 											beforeSend	:	function() {
 																$('#public_bench_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
 											},
@@ -2768,6 +2770,8 @@ $( document ).ready(function() {
 						$.ajax({
 										type  		:	'GET',
 										url   		:	url,
+										cache		:	false,
+										data		:	{ _t: Date.now() },
 										beforeSend	:	function() {
 													  				$('#bench_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
 														},
