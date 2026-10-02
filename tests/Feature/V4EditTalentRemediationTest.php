@@ -89,10 +89,14 @@ class V4EditTalentRemediationTest extends TestCase
         $this->assertStringContainsString('Marketplace:', $blade);
         $this->assertStringContainsString('Published', $blade);
 
-        // Sticky Bottom Action Bar
-        $this->assertStringContainsString('talent-sticky-footer', $blade);
-        $this->assertStringContainsString('id="sticky-edit-form"', $blade);
-        $this->assertStringContainsString('Ctrl + S', $blade);
+        // Header Action Cluster with Close button and Update Candidate button
+        $this->assertStringContainsString('id="headerCloseBtn"', $blade);
+        $this->assertStringContainsString('id="edit-form"', $blade);
+        $this->assertStringContainsString('talent-topbar-close-btn', $blade);
+
+        // Sticky Bottom Action Bar is completely removed (no redundant floating row)
+        $this->assertStringNotContainsString('talent-sticky-footer', $blade);
+        $this->assertStringNotContainsString('id="sticky-edit-form"', $blade);
 
         // Responsive resume strip without hardcoded 250px margin
         $this->assertStringNotContainsString('margin-left:250px', $blade);
@@ -105,11 +109,12 @@ class V4EditTalentRemediationTest extends TestCase
         // FormValidation global assignment in KTEditCandidate
         $this->assertStringContainsString('window.benchFormValidator = validator;', $blade);
 
-        // Delegated click listener on both edit-form and sticky-edit-form
-        $this->assertStringContainsString("$(document).off('click', '#edit-form, #sticky-edit-form')", $blade);
+        // Delegated click listener strictly on edit-form
+        $this->assertStringContainsString("$(document).off('click', '#edit-form').on('click', '#edit-form'", $blade);
 
-        // Keyboard Shortcut Ctrl+S
+        // Keyboard Shortcut Ctrl+S triggers header update handler
         $this->assertStringContainsString('keydown.talentEditShortcut', $blade);
+        $this->assertStringContainsString('handleEditSubmit(e);', $blade);
     }
 
     public function test_edit_mode_resume_dropzone_and_info_card_unification(): void
@@ -130,12 +135,37 @@ class V4EditTalentRemediationTest extends TestCase
         $this->assertStringContainsString('Resume Attached & Verified', $blade);
         $this->assertStringContainsString('✓ Verified', $blade);
 
-        // Unified action buttons: Download, Replace, Delete
+        // Download and Delete buttons only (Replace button completely purged)
         $this->assertStringContainsString('id="upDownloadBtn"', $blade);
-        $this->assertStringContainsString('id="upReplaceBtn"', $blade);
+        $this->assertStringNotContainsString('id="upReplaceBtn"', $blade);
         $this->assertStringContainsString('id="upRemoveBtn"', $blade);
 
         // Legacy old fileInfo strip inside uploadBox is cleaned up
         $this->assertStringNotContainsString('class="remove-file btn btn-xs btn-light-danger', $blade);
+    }
+
+    public function test_relationship_manager_query_includes_email_and_mobile(): void
+    {
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php');
+
+        // Recruiter query in edit() must select email, calling_code, mobile to avoid hidden dashes
+        $this->assertStringContainsString("select('users.name', 'users.id', 'users.email', 'users.calling_code', 'users.mobile')", $controller);
+    }
+
+    public function test_cache_invalidation_and_elasticsearch_immediate_refresh(): void
+    {
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php');
+        $helper = $this->source('app/Helper/GeneralMethod.php');
+
+        // Drawer version key invalidation (benchviewmore_version)
+        $this->assertStringContainsString('cache()->increment("benchviewmore_version_company_{$companyId}")', $controller);
+        $this->assertStringContainsString('cache()->increment("benchviewmore_version_user_{$userId}")', $controller);
+
+        // Listing version key invalidation
+        $this->assertStringContainsString('cache()->increment("allbenchcandidates_version_company_{$companyId}")', $controller);
+        $this->assertStringContainsString('cache()->increment("allbenchcandidates_version_user_{$userId}")', $controller);
+
+        // Elasticsearch immediate index refresh
+        $this->assertStringContainsString("'refresh' => true,", $helper);
     }
 }
