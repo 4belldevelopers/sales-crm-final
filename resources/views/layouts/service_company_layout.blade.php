@@ -724,6 +724,17 @@
 <div id="kt_activitiesBenchApplication" class="bg-body bg-custom-bar" data-kt-drawer="true" data-kt-drawer-name="activitiesBenchApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesBenchApplication_toggle" data-kt-drawer-close="#kt_activitiesBenchApplication_close">
   <div class="card bg-custom-bar shadow-none rounded-0 w-100" id="bench_application_show_right_bar" ></div>
 </div>
+<!-- Bench Candidate Forward Resume Drawer -->
+<div id="kt_bench_fwd_resume_drawer_toggle" style="display:none;"></div>
+<div id="kt_bench_fwd_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-fwd-resume"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'95%', 'lg': '85%', 'xl': '1100px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_bench_fwd_resume_drawer_toggle" data-kt-drawer-close="#kt_bench_fwd_resume_drawer_close"
+    style="z-index: 10050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="bench_fwd_resume_body_content"></div>
+  </div>
+</div>
 <div id="kt_activitiesPublicBenchApplication_toggle"></div>
 <div id="kt_activitiesPublicBenchApplication" class="bg-body bg-custom-bar" data-kt-drawer="true" data-kt-drawer-name="activitiesPublicBenchApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesPublicBenchApplication_toggle" data-kt-drawer-close="#kt_activitiesPublicBenchApplication_close">
   <div class="shadow-none bg-custom-bar rounded-0 w-100" id="public_bench_application_show_right_bar" ></div>
@@ -2803,6 +2814,56 @@ $( document ).ready(function() {
       }
     });
   });
+
+  window.openBenchForwardResume = function(candidateId) {
+    if (!candidateId) return;
+
+    var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
+    if (drawerEl && typeof KTDrawer !== 'undefined') {
+      var drawer = KTDrawer.getInstance(drawerEl);
+      if (drawer) {
+        drawer.show();
+      } else {
+        $('#kt_bench_fwd_resume_drawer_toggle').trigger('click');
+      }
+    } else {
+      $('#kt_bench_fwd_resume_drawer').addClass('drawer-on');
+    }
+
+    $('#bench_fwd_resume_body_content').html(
+      '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+      '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
+      '    <span class="visually-hidden">Loading...</span>' +
+      '  </div>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+      '</div>'
+    );
+
+    $.ajax({
+      type: 'POST',
+      url: "{{ route('service_company.bench-candidates.fwd_resume') }}",
+      cache: false,
+      data: {
+        _token: "{{ csrf_token() }}",
+        candidate_id: candidateId
+      },
+      success: function (response) {
+        if (response && response.status === 'success' && response.view) {
+          $('#bench_fwd_resume_body_content').html(response.view);
+        } else {
+          var errMsg = (response && response.message) ? response.message : 'Failed to load forward resume drawer.';
+          $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+        }
+      },
+      error: function(xhr) {
+        var errMsg = 'Failed to load candidate forward resume details. Please try again.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errMsg = xhr.responseJSON.message;
+        }
+        $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+      }
+    });
+  };
 });
 </script>
 <script>

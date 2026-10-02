@@ -198,6 +198,8 @@
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-interview { background: #6366f1; color: #fff; border-color: #6366f1; }
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-stage { background: #059669; color: #fff; border-color: #059669; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-fwd { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 600; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-fwd:hover { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-secondary { background: #fff; color: #475569; border-color: #e2e8f0; }
 #kt_activitiesBenchApplication .cdr-action-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 #kt_activitiesBenchApplication .cdr-topbar-split { width: 1px; height: 20px; background: #e2e8f0; flex-shrink: 0; margin: 0 2px; }
@@ -327,6 +329,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         Add Relationship Manager
       </a>
+
+      <button type="button" onclick="openBenchForwardResume({{ $benchApplication->id }})" class="cdr-action-btn cdr-btn-fwd" id="btnBenchForwardResume" title="Forward candidate resume via email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Forward Resume
+      </button>
 
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
 
@@ -943,6 +950,37 @@
                 window.rcvInitResumeViewer();
             }
         });
+
+        window.openBenchForwardResume = window.openBenchForwardResume || function(candidateId) {
+            var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
+            if (drawerEl && typeof KTDrawer !== 'undefined') {
+                var drawer = KTDrawer.getInstance(drawerEl);
+                if (drawer) { drawer.show(); } else { $('#kt_bench_fwd_resume_drawer_toggle').trigger('click'); }
+            } else {
+                $('#kt_bench_fwd_resume_drawer').addClass('drawer-on');
+            }
+            $('#bench_fwd_resume_body_content').html(
+                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:350px;gap:16px;">' +
+                '  <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
+                '  <span style="font-family:\'Poppins\',sans-serif;font-size:13px;color:#64748b;font-weight:500;">Loading Forward Resume Engine...</span>' +
+                '</div>'
+            );
+            $.ajax({
+                type: 'POST',
+                url: "{{ route('service_company.bench-candidates.fwd_resume') }}",
+                data: { _token: "{{ csrf_token() }}", candidate_id: candidateId },
+                success: function(res) {
+                    if (res && res.status === 'success' && res.view) {
+                        $('#bench_fwd_resume_body_content').html(res.view);
+                    } else {
+                        $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">' + (res.message || 'Error loading drawer') + '</div>');
+                    }
+                },
+                error: function() {
+                    $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">Failed to load forward resume drawer.</div>');
+                }
+            });
+        };
 
         var input = document.querySelector('input[name=tags]'); 
         if (input && !input.__tagify) {
