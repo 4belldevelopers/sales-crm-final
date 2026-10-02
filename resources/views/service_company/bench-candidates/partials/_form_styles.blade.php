@@ -3148,9 +3148,147 @@ textarea.has-validation-error:focus,
     .talent-topbar-right {
         width: 100% !important;
         justify-content: space-between !important;
-        flex-wrap: wrap !important;
         gap: 10px !important;
     }
+}
+
+/* Relationship Manager Comments Card */
+.rm-note-card {
+    overflow: hidden;
+    border: 1px solid #efd36b !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(100, 75, 0, .05) !important;
+    margin-bottom: 20px;
+}
+.rm-note-card .candidate-card-header {
+    min-height: 70px !important;
+    padding: 14px 20px !important;
+    border-bottom: 1px solid #f1dda0 !important;
+    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+    display: flex;
+    align-items: center;
+}
+.rm-note-card .candidate-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.rm-note-card .candidate-card-icon--note {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    flex-basis: 38px !important;
+    border-radius: 8px;
+    border: 1px solid #f3c719 !important;
+    color: #071434 !important;
+    background: linear-gradient(145deg, #ffd946, #ffc400) !important;
+    box-shadow: 0 4px 10px rgba(218, 164, 0, .18) !important;
+    font-size: 15px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.rm-note-card .candidate-card-title strong {
+    color: #071434 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: block;
+}
+.rm-note-card .candidate-card-title small {
+    display: block !important;
+    color: #65708e !important;
+    font-size: 11px !important;
+    line-height: 1.4;
+}
+.rm-note-card .candidate-card-body {
+    padding: 16px 20px !important;
+    display: grid;
+    gap: 14px;
+}
+.rm-note-card .recruiter-template-field label,
+.rm-note-card .recruiter-editor-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #071434 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+.rm-note-card .recruiter-template-field label span,
+.rm-note-card .recruiter-editor-field label span {
+    color: #65708e;
+    font-weight: 400;
+}
+.rm-note-card .recruiter-template-control {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.rm-note-card .recruiter-template-control > i {
+    position: absolute;
+    z-index: 2;
+    left: 13px;
+    color: #8f6b05 !important;
+    font-size: 13px !important;
+    pointer-events: none;
+}
+.rm-note-card #recruiter_note_template_select {
+    width: 100%;
+    height: 40px;
+    padding: 0 36px 0 36px !important;
+    border: 1px solid #e3d69f !important;
+    border-radius: 6px !important;
+    color: #071434 !important;
+    background: #ffffff !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    cursor: pointer;
+}
+.rm-note-card textarea#recruiter_note {
+    width: 100%;
+    min-height: 140px !important;
+    padding: 12px !important;
+    border: 1px solid #e3d69f !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    line-height: 1.6;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1e293b;
+    background-color: #ffffff;
+    resize: vertical;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rm-note-card textarea#recruiter_note:focus {
+    border-color: #d4a72c !important;
+    box-shadow: 0 0 0 3px rgba(212, 167, 44, 0.15);
+    outline: none;
+}
+.rm-note-card textarea#recruiter_note::placeholder {
+    color: #94a3b8;
+    font-style: normal;
+}
+.rm-note-card .recruiter-private-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: fit-content;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border: 1px solid #f0dda0;
+    border-radius: 18px;
+    color: #8b6700;
+    background: #fff8dc;
+    font-size: 11px;
+    font-weight: 500;
+}
+.rm-note-card .recruiter-private-note i {
+    font-size: 11px;
+}
+.rm-note-card.has-validation-error,
+.rm-note-card.field-attention-highlight,
+.rm-note-card .has-validation-error {
+    border-color: #f1416c !important;
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />

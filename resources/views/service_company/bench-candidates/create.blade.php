@@ -1662,6 +1662,37 @@ if($snp_mode== 1){
               </div>
             </div>
 
+            <!-- Relationship Manager Comments -->
+            <div class="fs candidate-card recruiter-note-card rm-note-card" id="rm_comments_section">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
+                  <span><strong>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></strong><small>Add internal context and evaluation notes from the Relationship Manager.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
+                <div class="fg fv-row recruiter-template-field">
+                  <label>Select Template <span>(Pre-fills standard evaluation structure into the box below)</span></label>
+                  <div class="recruiter-template-control">
+                    <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                    <select id="recruiter_note_template_select" class="form-select form-select-solid">
+                      <option value="">Select Note Template...</option>
+                      @foreach($recruiterNoteTemplates as $tpl)
+                        <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                </div>
+                @endif
+                <div class="fg fv-row recruiter-editor-field">
+                  <label>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent...">{{ @$application->recruiter_note }}</textarea>
+                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
+                </div>
+              </div>
+            </div>
+
             <!-- Additional Information -->
             <div class="fs addl-card">
               <div class="addl-hero">
@@ -5486,6 +5517,73 @@ function handleTalentSubmissionSuccess(response) {
     });
 }
 
+// Relationship Manager Comments templates keyed by id
+var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+// Helper to convert HTML templates cleanly to readable plain text in native textarea
+function formatTemplateToPlainText(html) {
+    if (!html) return '';
+    var temp = document.createElement('div');
+    temp.innerHTML = html;
+    // Replace <br> tags with newline
+    temp.querySelectorAll('br').forEach(function(el) { el.replaceWith('\n'); });
+    // Format list items with clean bullets
+    temp.querySelectorAll('li').forEach(function(el) {
+        var bullet = document.createTextNode('• ');
+        el.insertBefore(bullet, el.firstChild);
+        el.after('\n');
+    });
+    // Add newlines after block elements
+    temp.querySelectorAll('p, div, tr').forEach(function(el) { el.after('\n'); });
+    var text = temp.textContent || temp.innerText || '';
+    // Normalize excessive consecutive blank lines
+    return text.replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
+}
+
+// Auto-select and pre-fill default template if comments box is empty
+function applyDefaultRecruiterNotePrefill() {
+    var $rn = $('#recruiter_note');
+    if (!$rn.length) return;
+
+    var currentVal = ($rn.val() || '').trim();
+    if (!currentVal) {
+        var tplKeys = Object.keys(recruiterNoteTemplates);
+        if (tplKeys.length > 0) {
+            var firstKey = tplKeys[0];
+            var firstTpl = recruiterNoteTemplates[firstKey];
+            if (firstTpl && firstTpl.content) {
+                $('#recruiter_note_template_select').val(firstTpl.id);
+                var formatted = formatTemplateToPlainText(firstTpl.content);
+                $rn.val(formatted);
+            }
+        }
+    } else if (/<[a-z][\s\S]*>/i.test(currentVal)) {
+        // Pre-existing HTML content converted to clean plain text
+        $rn.val(formatTemplateToPlainText(currentVal));
+    }
+}
+
+// Template dropdown change event
+$(document).on('change', '#recruiter_note_template_select', function () {
+    var id = $(this).val();
+    if (!id || !recruiterNoteTemplates[id]) return;
+    var content = recruiterNoteTemplates[id].content;
+    var formatted = formatTemplateToPlainText(content);
+    $('#recruiter_note').val(formatted);
+    clearFieldValidationErrors('recruiter_note');
+});
+
+// Live typing in comments box clears validation error
+$(document).on('input', '#recruiter_note', function () {
+    if (($(this).val() || '').trim()) {
+        clearFieldValidationErrors('recruiter_note');
+    }
+});
+
+$(document).ready(function () {
+    applyDefaultRecruiterNotePrefill();
+});
+
 var fieldConfigMap = {
     'resume': { label: 'Upload Resume', selector: '#uploadBox', message: 'Please upload a resume file.' },
     'careersummary': { label: 'Professional Summary', selector: '#careersummary', message: 'Professional summary is required.' },
@@ -5507,7 +5605,8 @@ var fieldConfigMap = {
     'pay_rate': { label: 'Candidate Cost (Pay Rate)', selector: '#pay_annual', message: 'Candidate Cost (Pay Rate) is required.' },
     'bill_rate': { label: 'Client Bill Rate', selector: '#bill_annual', message: 'Client Bill Rate is required.' },
     'skills': { label: 'Skills & Expertise (Min. 3 Complete Skills)', selector: '#skillExperienceWrapper', message: 'At least 3 complete skills (Skill name, Experience, Rating) are required.' },
-    'recruiter': { label: 'Relationship Manager', selector: '#rmPicker', message: 'Please select a Relationship Manager.' }
+    'recruiter': { label: 'Relationship Manager', selector: '#rmPicker', message: 'Please select a Relationship Manager.' },
+    'recruiter_note': { label: 'Relationship Manager Comments', selector: '#rm_comments_section', message: 'Relationship Manager comments are required.' }
 };
 
 window.__currentMissingFields = [];
@@ -5730,6 +5829,12 @@ function detectMissingFields(formEl, validatorInstance) {
         addMissing('recruiter', 'Relationship Manager', '#rmPicker', 'Please select a Relationship Manager.');
     }
 
+    // 11. Relationship Manager Comments (Mandatory)
+    var rnVal = ($('#recruiter_note').val() || '').trim();
+    if (!rnVal) {
+        addMissing('recruiter_note', 'Relationship Manager Comments', '#rm_comments_section', 'Relationship Manager comments are required.');
+    }
+
     return missing;
 }
 
@@ -5797,7 +5902,7 @@ function jumpToField(fieldKey) {
         var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs') || targetEl;
         scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body, .br-rate-field, .bd-field, .pd-field, .pd-exp-card, .resume-card') || targetEl;
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .rm-card-body, .br-rate-field, .bd-field, .pd-field, .pd-exp-card, .resume-card, .rm-note-card') || targetEl;
         $(highlightEl).addClass('field-attention-highlight');
         setTimeout(function () {
             $(highlightEl).removeClass('field-attention-highlight');
@@ -5808,6 +5913,8 @@ function jumpToField(fieldKey) {
                 $('#chooseFileBtn').focus();
             } else if (fieldKey === 'recruiter') {
                 $('#kt_activitiesRecruiter_toggle').trigger('click');
+            } else if (fieldKey === 'recruiter_note') {
+                $('#recruiter_note').focus();
             } else if (fieldKey === 'kt_tagify_work_location') {
                 var tagifyInput = document.querySelector('.tagify__input');
                 if (tagifyInput) tagifyInput.focus();
@@ -5912,6 +6019,9 @@ function clearFieldValidationErrors(targetKey) {
         $('[data-field-error="' + targetKey + '"]').remove();
         if (targetKey === 'recruiter') {
             $('#rmPicker').removeClass('has-validation-error');
+        } else if (targetKey === 'recruiter_note') {
+            $('#rm_comments_section').removeClass('has-validation-error');
+            $('#recruiter_note').removeClass('has-validation-error');
         } else if (targetKey === 'resume') {
             $('#uploadBox').removeClass('has-validation-error');
         } else if (targetKey === 'pay_rate') {
@@ -5977,6 +6087,13 @@ function applyFieldValidationErrors(missingFields) {
                 } else {
                     $picker.after(errorHtml);
                 }
+            }
+        } else if (key === 'recruiter_note') {
+            var $rmSect = $('#rm_comments_section');
+            $rmSect.addClass('has-validation-error');
+            $('#recruiter_note').addClass('has-validation-error');
+            if (!$('[data-field-error="recruiter_note"]').length) {
+                $rmSect.find('.candidate-card-body').append(errorHtml);
             }
         } else if (key === 'resume') {
             var $up = $('#uploadBox');
@@ -6198,7 +6315,8 @@ var KTAddCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},
+                    'recruiter_note'        :   {validators:{notEmpty:{message:"Relationship Manager comments are required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
@@ -6468,7 +6586,8 @@ var KTEditCandidate = function () {
                     'secondary_mobile'		:	{validators:{callback:{message: "Enter a valid secondary number for the selected country", callback: function () { return window.validateCreateTalentPhone('secondary_mobile', false); }}}},
                     'email'					:	{validators:{ notEmpty: {message: 'Primary email is required'}, emailAddress:{message: 'The value is not a valid email address'} } },
                     'qualification'			:	{validators:{notEmpty:{message: 'Qualification is required'}}},
-                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}}
+                    'comission_type' 		:	{validators:{notEmpty:{message:"Comission type is required"}}},
+                    'recruiter_note'        :   {validators:{notEmpty:{message:"Relationship Manager comments are required"}}}
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
