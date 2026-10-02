@@ -390,31 +390,149 @@
 #kt_activitiesBenchApplication #personal_details .content-split { display: grid !important; grid-template-columns: minmax(0, 1fr) 370px; gap: 16px; align-items: start; }
 @media (max-width: 860px) { #kt_activitiesBenchApplication #personal_details .content-split { grid-template-columns: 1fr !important; } }
 
-#kt_activitiesBenchApplication #personal_details .cardshow { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03); margin-bottom: 16px; }
-#kt_activitiesBenchApplication #personal_details .card-header-sidebar { display: flex; align-items: center; gap: 10px; padding: 12px 14px !important; background: #fff; border-bottom: 1px solid #f0f4f8; }
-#kt_activitiesBenchApplication #personal_details .card-title { font-size: 13px !important; font-weight: 700 !important; color: #0f172a; margin: 0; font-family: 'Poppins', sans-serif; }
-#kt_activitiesBenchApplication #personal_details .summary-text { font-size: 12px !important; line-height: 1.65 !important; color: #334155; padding: 12px 14px !important; margin: 0; font-family: 'Poppins', sans-serif; word-break: break-word; }
-#kt_activitiesBenchApplication #personal_details .skills-thead { font-size: 12px !important; }
+#kt_activitiesBenchApplication #personal_details .cardshow {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03);
+    margin-bottom: 16px;
+    padding: 0 !important;
+}
+#kt_activitiesBenchApplication #personal_details .card-header-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    background: #fff;
+    border-bottom: 1px solid #f0f4f8;
+}
+#kt_activitiesBenchApplication #personal_details .card-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #0f172a;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesBenchApplication #personal_details .summary-text {
+    font-size: 12.5px !important;
+    line-height: 1.65 !important;
+    color: #334155;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    font-family: 'Poppins', sans-serif;
+    word-break: break-word;
+    text-align: left !important;
+}
+#kt_activitiesBenchApplication #personal_details .skills-table {
+    padding: 0 16px 14px 16px !important;
+    width: 100% !important;
+}
+#kt_activitiesBenchApplication #personal_details .skills-thead {
+    font-size: 12px !important;
+    display: grid;
+    grid-template-columns: 1fr 100px 140px;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+#kt_activitiesBenchApplication #personal_details .skills-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 140px;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid #f1f5f9;
+    align-items: center;
+}
 #kt_activitiesBenchApplication #personal_details .skill-name-cell { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .skill-exp-cell { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .rating-text { font-size: 12px !important; }
+
+#kt_activitiesBenchApplication #personal_details .comp-list {
+    padding: 6px 16px 14px 16px !important;
+}
 #kt_activitiesBenchApplication #personal_details .comp-label { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .comp-value { font-size: 12px !important; font-weight: 600 !important; }
 #kt_activitiesBenchApplication #personal_details .comp-badge { font-size: 12px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-body { padding: 12px 14px !important; font-size: 12px !important; line-height: 1.6 !important; color: #334155; font-family: 'Poppins', sans-serif; word-break: break-word; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content p { margin: 0 0 6px 0 !important; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content p:last-child { margin-bottom: 0 !important; }
+
+#kt_activitiesBenchApplication #personal_details .contact-list {
+    padding: 8px 16px 10px 16px !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions {
+    padding: 0 16px 14px 16px !important;
+}
+
+#kt_activitiesBenchApplication #personal_details .rm-comments-body {
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
+    color: #334155;
+    font-family: 'Poppins', sans-serif;
+    word-break: break-word;
+}
+#kt_activitiesBenchApplication #personal_details .rm-comments-content {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p {
+    margin: 0 0 6px 0 !important;
+    padding: 0 !important;
+    line-height: 1.6 !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p:last-child {
+    margin-bottom: 0 !important;
+}
 #kt_activitiesBenchApplication #personal_details .rm-comments-content ul,
-#kt_activitiesBenchApplication #personal_details .rm-comments-content ol { margin: 0 0 6px 0 !important; padding-left: 16px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content li { margin-bottom: 3px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content strong { font-weight: 600; color: #0f172a; }
-#kt_activitiesBenchApplication #personal_details .rm-details-body { padding: 12px 14px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-card-content h4 { font-size: 13.5px !important; font-weight: 700 !important; color: #0f172a; margin: 0 0 8px 0 !important; font-family: 'Poppins', sans-serif; }
-#kt_activitiesBenchApplication #personal_details .rm-contact-list { display: flex; flex-direction: column; gap: 7px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-contact-item { display: flex; align-items: center; gap: 8px !important; font-size: 12px !important; color: #334155 !important; }
-#kt_activitiesBenchApplication #personal_details .rm-contact-item svg { width: 14px !important; height: 14px !important; color: #64748b !important; flex-shrink: 0; }
-#kt_activitiesBenchApplication #personal_details .rm-contact-item a { color: #2563eb !important; text-decoration: none !important; font-weight: 500; }
-#kt_activitiesBenchApplication #personal_details .rm-contact-item a:hover { text-decoration: underline !important; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content ol {
+    margin: 0 0 6px 0 !important;
+    padding-left: 18px !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-comments-content li {
+    margin-bottom: 4px !important;
+    line-height: 1.55 !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-comments-content strong {
+    font-weight: 600;
+    color: #0f172a;
+}
+#kt_activitiesBenchApplication #personal_details .rm-details-body {
+    padding: 14px 16px !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-card-content h4 {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a;
+    margin: 0 0 8px 0 !important;
+    font-family: 'Poppins', sans-serif;
+}
+#kt_activitiesBenchApplication #personal_details .rm-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 8px !important;
+    font-size: 12px !important;
+    color: #334155 !important;
+}
+#kt_activitiesBenchApplication #personal_details .rm-contact-item svg {
+    width: 14px !important;
+    height: 14px !important;
+    color: #64748b !important;
+    flex-shrink: 0;
+}
+#kt_activitiesBenchApplication #personal_details .rm-contact-item a {
+    color: #2563eb !important;
+    text-decoration: none !important;
+    font-weight: 500;
+}
+#kt_activitiesBenchApplication #personal_details .rm-contact-item a:hover {
+    text-decoration: underline !important;
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
