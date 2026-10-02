@@ -285,7 +285,10 @@ class RelationshipManagerService
 
             // Invalidate tenant and user cache versions (Rule 6)
             Cache::increment("bench:tenant:{$companyId}:epoch");
+            GeneralMethod::cacheClean("benchviewmore_version_company_{$companyId}");
+            GeneralMethod::cacheClean("allbenchcandidates_version_company_{$companyId}");
             GeneralMethod::cacheClean('allbenchcandidates_version_user_'.$operatorUserId);
+            GeneralMethod::cacheClean('benchviewmore_version_user_'.$operatorUserId);
 
             // Dispatch async queued job on Horizon 'es-index' queue for complete reconciliation
             try {

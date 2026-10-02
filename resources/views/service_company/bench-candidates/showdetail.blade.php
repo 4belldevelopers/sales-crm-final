@@ -8,7 +8,10 @@
         $photo = url('/public/user-uploads/bench_photos/' . $benchApplication->photo);
     }
     $country_id = $country_name = $state_name = $state = $city_name = $posted_by_company = '';
-    $country_id = @$benchApplication->country;
+    $country_id = @$benchApplication->country ?: (@$benchApplication->state_country_id ?: 101);
+    if (!empty($benchApplication->state_country_id)) {
+        $country_id = $benchApplication->state_country_id;
+    }
     $state = @$benchApplication->state;
 
     $country_name_Arr = GeneralMethod::getCountryName($country_id);
@@ -16,17 +19,15 @@
         $country_name = ucwords($cval['name']);
     }
 
-    if ($country_id == 101) {
-        $state_name = @$benchApplication->state_name;
-        $city_name = @$benchApplication->city_name;
-    } else {
-        if ($state > 0) {
-            $state_name_Arr = GeneralMethod::getStateName($country_id, $state);
-            foreach ($state_name_Arr as $sval) {
-                $state_name = ucwords($sval['name']);
-            }
+    // Server-Authoritative State & City Resolution
+    $state_name = @$benchApplication->state_name;
+    $city_name = @$benchApplication->city_name ?: @$benchApplication->city;
+
+    if (empty($state_name) && $state > 0) {
+        $state_name_Arr = GeneralMethod::getStateName($country_id, $state);
+        foreach ($state_name_Arr as $sval) {
+            $state_name = ucwords($sval['name']);
         }
-        $city_name = @$benchApplication->city;
     }
     $currencySymbole = GeneralMethod::currencySymbole();
     $currencySymboleforexcell = GeneralMethod::currencySymboleforexcell();
@@ -80,23 +81,75 @@
     $skillsRaw = trim((string) @$benchApplication->skills);
     $skillsArr = $skillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $skillsRaw)), 'strlen')) : [];
 
-    // Added Date
+    // Added Date with explicit 12-hour AM/PM and IST Timezone
     $created_at = @$benchApplication->created_at;
-    $addedDate = !empty($created_at) ? date("d-M-Y h:i:s", strtotime($created_at)) : '—';
+    $addedDate = !empty($created_at) ? date("d-M-Y h:i:s A", strtotime($created_at)) . ' IST' : '—';
+
+    // Bidirectional ISO <-> Dial Code Normalizer for instant server-rendered flags
+    $isoToDialMap = [
+        'in' => '+91', 'us' => '+1', 'gb' => '+44', 'ae' => '+971', 'ca' => '+1',
+        'au' => '+61', 'sg' => '+65', 'sa' => '+966', 'de' => '+49', 'fr' => '+33',
+        'qa' => '+974', 'kw' => '+965', 'om' => '+968', 'bh' => '+973', 'my' => '+60',
+        'ph' => '+63', 'id' => '+62', 'nz' => '+64', 'za' => '+27', 'ie' => '+353',
+        'nl' => '+31', 'se' => '+46', 'ch' => '+41', 'es' => '+34', 'it' => '+39',
+    ];
+    $dialToIsoMap = [
+        '+91' => 'in', '+1' => 'us', '+44' => 'gb', '+971' => 'ae',
+        '+61' => 'au', '+65' => 'sg', '+966' => 'sa', '+49' => 'de',
+        '+33' => 'fr', '+974' => 'qa', '+965' => 'kw', '+968' => 'om',
+        '+973' => 'bh', '+60' => 'my', '+63' => 'ph', '+62' => 'id',
+        '+64' => 'nz', '+27' => 'za', '+353' => 'ie', '+31' => 'nl',
+    ];
+
+    $resolvePhone = function($rawCode) use ($isoToDialMap, $dialToIsoMap) {
+        $raw = trim((string) $rawCode);
+        $lower = strtolower($raw);
+        if (isset($isoToDialMap[$lower])) {
+            return ['iso' => $lower, 'dial' => $isoToDialMap[$lower]];
+        }
+        $withPlus = str_starts_with($raw, '+') ? $raw : ('+' . $raw);
+        if (isset($dialToIsoMap[$withPlus])) {
+            return ['iso' => $dialToIsoMap[$withPlus], 'dial' => $withPlus];
+        }
+        return ['iso' => 'in', 'dial' => ($raw !== '' ? $withPlus : '+91')];
+    };
+
+    $candidatePhoneData = $resolvePhone(@$benchApplication->phone_code);
+
+    // Dynamic international WhatsApp phone number resolution
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string) @$benchApplication->phone);
+    $dialDigits = preg_replace('/[^0-9]/', '', $candidatePhoneData['dial']);
+    if (empty($dialDigits)) { $dialDigits = '91'; }
+    $whatsAppPhone = str_starts_with($cleanPhone, $dialDigits) ? $cleanPhone : ($dialDigits . $cleanPhone);
 @endphp
 
 <link href="{{ asset('demo/css/candidates-details.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 
 <style>
 .text-justify { text-align: justify !important; }
-.iti__flag { margin-top: 4px !important; }
+.iti__flag { margin-top: 0 !important; }
 
-/* ===== DRAWER SCROLLER FIX ===== */
+/* ===== GLOBAL TYPOGRAPHY & DRAWER STABILITY ===== */
+#kt_activitiesBenchApplication,
+#kt_activitiesBenchApplication * {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
 #kt_activitiesBenchApplication {
+    scrollbar-gutter: stable;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     max-height: 100vh !important;
     height: 100vh !important;
 }
+
+@media only screen and (min-width: 1024px) and (max-width: 1440px) {
+    #kt_activitiesBenchApplication { width: 1025px !important; }
+}
+@media only screen and (min-width: 1440px) {
+    #kt_activitiesBenchApplication { width: 1200px !important; }
+}
+
 #bench_application_show_right_bar {
     min-height: 100vh;
     overflow-y: visible !important;
@@ -231,7 +284,7 @@
 
 /* ===== CARD 3: TABS CARD ===== */
 #kt_activitiesBenchApplication .cdr-tabs-card .page-tabs { border-radius: 0; background: #fff; }
-#kt_activitiesBenchApplication .cdr-tabs-card .page-content { background: #f8fafc; border-radius: 0 0 12px 12px; padding: 16px 20px; }
+#kt_activitiesBenchApplication .cdr-tabs-card .page-content { background: #f8fafc; border-radius: 0 0 12px 12px; padding: 16px 20px; min-height: calc(100vh - 320px); }
 
 /* ===== PROFILE OVERVIEW 2-COL GRID & CARDSHOW ===== */
 #kt_activitiesBenchApplication #personal_details .content-split { display: grid !important; grid-template-columns: minmax(0, 1fr) 370px; gap: 16px; align-items: start; }
@@ -380,25 +433,9 @@
         @endif
       </div>
 
-      {{-- Sub-Card B: Highlights & Metrics --}}
+      {{-- Sub-Card B: Availability & Work Authorisation (Distinct from Experience KPI strip below) --}}
       <div class="cdr-subcard cdr-subcard-metrics">
-        <div class="cdr-metric-list" role="list" aria-label="Candidate metrics">
-          <div class="cdr-metric-row" role="listitem">
-            <div class="cdr-metric-icon ci-blue" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            </div>
-            <span class="cdr-metric-label">Total Experience</span>
-            <span class="cdr-metric-val">{{ @$formattedExperience }} Yrs</span>
-          </div>
-
-          <div class="cdr-metric-row" role="listitem">
-            <div class="cdr-metric-icon ci-green" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-            </div>
-            <span class="cdr-metric-label">Relevant Experience</span>
-            <span class="cdr-metric-val">{{ @$rel_formattedExperience }} Yrs</span>
-          </div>
-
+        <div class="cdr-metric-list" role="list" aria-label="Candidate availability metrics">
           <div class="cdr-metric-row" role="listitem">
             <div class="cdr-metric-icon ci-amber" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -408,11 +445,27 @@
           </div>
 
           <div class="cdr-metric-row" role="listitem">
-            <div class="cdr-metric-icon ci-purple" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <div class="cdr-metric-icon ci-blue" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
-            <span class="cdr-metric-label">Work Mode</span>
-            <span class="cdr-metric-val">{{ ucwords(@$benchApplication->wm ?: '—') }}</span>
+            <span class="cdr-metric-label">Work Auth / Visa</span>
+            <span class="cdr-metric-val" title="{{ ucwords(@$benchApplication->visastatu ?: 'Citizen / Authorised') }}">{{ \Illuminate\Support\Str::limit(ucwords(@$benchApplication->visastatu ?: 'Citizen / Authorised'), 14, '…') }}</span>
+          </div>
+
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-green" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <span class="cdr-metric-label">Employment Type</span>
+            <span class="cdr-metric-val">{{ ucwords(@$benchApplication->employmentType ?: 'Full Time') }}</span>
+          </div>
+
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-purple" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <span class="cdr-metric-label">Serving Notice</span>
+            <span class="cdr-metric-val">{{ @$benchApplication->serving_notice_period_mode == 1 ? 'Yes' : 'No' }}</span>
           </div>
         </div>
       </div>
@@ -621,31 +674,27 @@
                 @endphp
                 <div class="comp-row">
                   <span class="comp-label">Pay Rate</span>
-                  <span class="comp-value">{!! $current_ctc_cur !!} {{ @$benchApplication->pay_rate_amount }} {{ $salaryMode[$pay_rate_mode] ?? '' }}</span>
+                  <span class="comp-value">{!! $current_ctc_cur !!} {{ @$benchApplication->pay_rate_amount }} / {{ $salaryMode[$pay_rate_mode] ?? 'Annual' }}</span>
                 </div>
                 <div class="comp-row">
                   <span class="comp-label">Bill Rate</span>
-                  <span class="comp-value">{!! @$current_ectc_cur !!} {{ @$benchApplication->bill_rate_amount }} {{ $salaryMode[$bill_rate_mode] ?? '' }}</span>
+                  <span class="comp-value">{!! @$current_ectc_cur !!} {{ @$benchApplication->bill_rate_amount }} / {{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label">Compensation Type</span>
-                  <span class="comp-badge">{{ $salaryMode[$bill_rate_mode] ?? 'Hourly' }}</span>
-                </div>
-                <div class="comp-row">
-                  <span class="comp-label">Salary Type</span>
-                  <span class="comp-value">Fixed</span>
+                  <span class="comp-label">Rate Frequency</span>
+                  <span class="comp-badge">{{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
                 </div>
                 <div class="comp-row">
                   <span class="comp-label">Currency</span>
-                  <span class="comp-value">{{ $current_cur }}</span>
+                  <span class="comp-value">{{ $current_cur ?: 'INR' }}</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label">Service Type</span>
+                  <span class="comp-label">Service Tier</span>
                   <span class="comp-value">{{ @$comission_type_name }} Service</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label">Job Type</span>
-                  <span class="comp-value">{{ @$benchApplication->employmentType ?: 'Fulltime' }}</span>
+                  <span class="comp-label">Engagement Type</span>
+                  <span class="comp-value">{{ @$benchApplication->employmentType ?: 'Full Time' }}</span>
                 </div>
               </div>
             </section>
@@ -673,15 +722,18 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                     Contact Number
                   </span>
-                  <a href="javascript:;" class="contact-value" style="display: flex;">
-                    <div id="firstPhoneDisplaybench" class="fw-bolder text-gray-800 fs-6" style="display: flex;"></div>
-                    <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 4px;">{{ @$benchApplication->phone }}</span>
+                  <a href="javascript:;" class="contact-value" style="display: flex; align-items: center;">
+                    <div id="firstPhoneDisplaybench" class="fw-bolder text-gray-800 fs-6" style="display: flex; align-items: center; gap: 4px;">
+                      <div class="iti__flag iti__{{ $candidatePhoneData['iso'] }}"></div>
+                      <span>{{ $candidatePhoneData['dial'] }}</span>
+                    </div>
+                    <span class="fw-bolder text-gray-800 fs-6" style="margin-left: 6px;">{{ @$benchApplication->phone }}</span>
                   </a>
                 </div>
               </div>
               <div class="contact-actions">
                 <button type="button" class="btn btn-sm btn-whatsapp">
-                  <a href="https://api.whatsapp.com/send?phone=91{{@$benchApplication->phone}}" target="_blank" class="contact-value" style="display: flex; text-decoration: none; color: inherit;">
+                  <a href="https://api.whatsapp.com/send?phone={{ $whatsAppPhone }}" target="_blank" class="contact-value" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: inherit;">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                     </svg>
@@ -723,6 +775,9 @@
               </div>
               @if(!empty($bench_assign_row) && count($bench_assign_row) > 0)
                 @foreach($bench_assign_row as $key => $assignVal)
+                  @php
+                    $rmPhoneData = $resolvePhone($assignVal->calling_code ?? 'in');
+                  @endphp
                   <div class="rm-card">
                     <figure class="rm-avatar">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -733,12 +788,15 @@
                     <div class="rm-details">
                       <h4>{{ ucwords(@$assignVal->name) }}</h4>
                       <div class="rm-contact-list">
-                        <div class="rm-contact-item" style="position: relative; display: flex;">
+                        <div class="rm-contact-item" style="position: relative; display: flex; align-items: center; gap: 4px;">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                           </svg>
-                          <div class="iti__flag-container" data-code="{{ $assignVal->calling_code ?? 'in' }}" data-row="{{ $assignVal->id }}" id="phoneDisplayReal_{{ $assignVal->id }}" style="display: flex; position: relative;"></div>
-                          {{ ucwords(@$assignVal->mobile) }}
+                          <div class="iti__flag-container" style="display: inline-flex; align-items: center; gap: 4px;">
+                            <div class="iti__flag iti__{{ $rmPhoneData['iso'] }}"></div>
+                            <span>{{ $rmPhoneData['dial'] }}</span>
+                          </div>
+                          <span>{{ ucwords(@$assignVal->mobile) }}</span>
                         </div>
                         <div class="rm-contact-item">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -896,35 +954,5 @@
             input_show.__tagify = new Tagify(input_show);
         }
 
-        $(document).ready(function() {
-            const firstSavedCountryCode = "{{ @$benchApplication->phone_code }}";
-            const firstPhoneDisplaybenchDiv = document.getElementById("firstPhoneDisplaybench");
-            if (firstPhoneDisplaybenchDiv && firstSavedCountryCode) {
-                const flagDiv = document.createElement("div");
-                flagDiv.className = `iti__flag iti__${firstSavedCountryCode}`;
-                const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[firstSavedCountryCode] : "") || "";
-                const dialCodeSpan = document.createElement("span");
-                dialCodeSpan.textContent = dialCode;
-                firstPhoneDisplaybenchDiv.appendChild(flagDiv);
-                firstPhoneDisplaybenchDiv.appendChild(dialCodeSpan);
-            }
-
-            setTimeout(() => {
-                $('.iti__flag-container').each(function(index) {
-                    var cnt = $(this).attr('data-row');
-                    const flagContainer = document.getElementById(`phoneDisplayReal_${cnt}`);
-                    var calling_code = $(this).attr('data-code');
-                    if (flagContainer && calling_code && !flagContainer.children.length) {
-                        const flagDiv = document.createElement("div");
-                        flagDiv.className = `iti__flag iti__${calling_code}`;
-                        const dialCode = (typeof countryDialCodes !== 'undefined' ? countryDialCodes[calling_code] : "") || "";
-                        const dialCodeSpan = document.createElement("span");
-                        dialCodeSpan.textContent = dialCode;
-                        flagContainer.appendChild(flagDiv);
-                        flagContainer.appendChild(dialCodeSpan);
-                    }
-                });
-            }, 1000);
-        });
     })();
 </script>
