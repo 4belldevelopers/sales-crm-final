@@ -3319,6 +3319,179 @@ textarea.has-validation-error:focus,
 .rm-note-card .has-validation-error {
     border-color: #f1416c !important;
 }
+
+/* Categorized Template Selection Widget (media_1790970788987.png) */
+.rm-template-catalog {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.rm-template-catalog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.rm-template-catalog-header .catalog-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.rm-template-catalog-header .catalog-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.rm-template-scroll {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.rm-template-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.rm-template-scroll::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 4px;
+}
+.rm-template-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.tpl-category-section {
+    margin-bottom: 12px;
+}
+.tpl-category-section:last-child {
+    margin-bottom: 4px;
+}
+
+.tpl-category-heading {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    margin-bottom: 6px;
+}
+
+.tpl-cat--blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.tpl-cat--green {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.tpl-cat--amber {
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.tpl-card-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 12px;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.tpl-card-item:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.tpl-card-item.is-selected {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+
+.tpl-card-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.tpl-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: #2563eb;
+    font-size: 17px;
+    flex-shrink: 0;
+}
+
+.tpl-card-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.tpl-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.35;
+}
+
+.tpl-card-subtitle {
+    font-size: 11.5px;
+    color: #64748b;
+    line-height: 1.35;
+    margin-top: 1px;
+}
+
+.tpl-card-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.tpl-card-check i {
+    font-size: 18px;
+    color: #2563eb;
+    display: none;
+}
+
+.tpl-card-item.is-selected .tpl-card-check i {
+    display: inline-block;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />
