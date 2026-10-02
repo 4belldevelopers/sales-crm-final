@@ -251,10 +251,10 @@ if($snp_mode== 1){
               $stageDetails = match($currentEditStatus) {
                 1 => ['label' => 'Talent Pool', 'badge' => 'badge-light-primary text-primary', 'icon' => 'fa-users', 'market' => 'Internal Pipeline Only', 'marketColor' => 'text-muted', 'marketDesc' => 'Candidate is in your private talent pool and not published to marketplace.'],
                 2 => ['label' => 'Bench', 'badge' => 'badge-light-success text-success', 'icon' => 'fa-user-check', 'market' => 'Published on Marketplace', 'marketColor' => 'text-success', 'marketDesc' => 'Candidate is live on marketplace and actively discoverable by verified clients.'],
-                4 => ['label' => 'On Hold', 'badge' => 'badge-light-warning text-warning', 'icon' => 'fa-clock', 'market' => 'Hidden from Marketplace', 'marketDesc' => 'Candidate is temporarily on hold and hidden from client search listings.'],
-                3 => ['label' => 'Placed', 'badge' => 'badge-light-info text-info', 'icon' => 'fa-briefcase', 'market' => 'Client Engagement Active', 'marketDesc' => 'Candidate is deployed to a client engagement.'],
-                5 => ['label' => 'Exited', 'badge' => 'badge-light-danger text-danger', 'icon' => 'fa-xmark', 'market' => 'Archived from Marketplace', 'marketDesc' => 'Candidate has exited from company bench.'],
-                default => ['label' => 'Bench', 'badge' => 'badge-light-success text-success', 'icon' => 'fa-user', 'market' => 'Published on Marketplace', 'marketDesc' => 'Active talent on bench.'],
+                4 => ['label' => 'On Hold', 'badge' => 'badge-light-warning text-warning', 'icon' => 'fa-clock', 'market' => 'Hidden from Marketplace', 'marketColor' => 'text-warning', 'marketDesc' => 'Candidate is temporarily on hold and hidden from client search listings.'],
+                3 => ['label' => 'Placed', 'badge' => 'badge-light-info text-info', 'icon' => 'fa-briefcase', 'market' => 'Client Engagement Active', 'marketColor' => 'text-info', 'marketDesc' => 'Candidate is deployed to a client engagement.'],
+                5 => ['label' => 'Exited', 'badge' => 'badge-light-danger text-danger', 'icon' => 'fa-xmark', 'market' => 'Archived from Marketplace', 'marketColor' => 'text-danger', 'marketDesc' => 'Candidate has exited from company bench.'],
+                default => ['label' => 'Bench', 'badge' => 'badge-light-success text-success', 'icon' => 'fa-user', 'market' => 'Published on Marketplace', 'marketColor' => 'text-success', 'marketDesc' => 'Active talent on bench.'],
               };
             @endphp
             <section class="fs talent-stage-banner card shadow-xs mb-4 border border-gray-200" style="background: #ffffff; border-radius: 8px;">
