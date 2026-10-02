@@ -2759,27 +2759,50 @@ $( document ).ready(function() {
 </script>
 <script>
 $( document ).ready(function() {
+  let activeBenchDrawerXhr = null;
+  let currentBenchDrawerSeq = 0;
 
-  $(document).on('click','.bench_show_application_detail',function(){
-			//  table.on('click', '.bench_show_application_detail', function (){
-						$('#kt_activitiesBenchApplication_toggle').trigger('click');
-						var id    		=	$(this).data('row-id');
-						var url 		=	"{{ route('service_company.bench-candidates.show',':id') }}";
-						url     		=	url.replace(':id', id);		
-						var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
-						$.ajax({
-										type  		:	'GET',
-										url   		:	url,
-										cache		:	false,
-										data		:	{ _t: Date.now() },
-										beforeSend	:	function() {
-													  				$('#bench_application_show_right_bar').html('<img src="'+baseurl+'" height="35px" width="100%">');
-														},
-										success 	:	function (response) {
-																			$('#bench_application_show_right_bar').html(response.view);
-														}
-								});
-			 });  
+  $(document).on('click', '.bench_show_application_detail', function () {
+    $('#kt_activitiesBenchApplication_toggle').trigger('click');
+    var id = $(this).data('row-id');
+    var url = "{{ route('service_company.bench-candidates.show', ':id') }}".replace(':id', id);
+
+    if (activeBenchDrawerXhr && typeof activeBenchDrawerXhr.abort === 'function') {
+      activeBenchDrawerXhr.abort();
+    }
+
+    var thisSeq = ++currentBenchDrawerSeq;
+
+    $('#bench_application_show_right_bar').html(
+      '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+      '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
+      '    <span class="visually-hidden">Loading...</span>' +
+      '  </div>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading candidate profile...</span>' +
+      '</div>'
+    );
+
+    activeBenchDrawerXhr = $.ajax({
+      type: 'GET',
+      url: url,
+      cache: false,
+      data: { _t: Date.now() },
+      success: function (response) {
+        if (thisSeq === currentBenchDrawerSeq) {
+          if (response && response.view) {
+            $('#bench_application_show_right_bar').html(response.view);
+          } else if (response && response.message) {
+            $('#bench_application_show_right_bar').html('<div class="p-8 text-center text-danger">' + response.message + '</div>');
+          }
+        }
+      },
+      error: function(xhr, status) {
+        if (status !== 'abort' && thisSeq === currentBenchDrawerSeq) {
+          $('#bench_application_show_right_bar').html('<div class="p-8 text-center text-danger">Failed to load candidate details. Please try again.</div>');
+        }
+      }
+    });
+  });
 });
 </script>
 <script>

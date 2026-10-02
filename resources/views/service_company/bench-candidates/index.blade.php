@@ -16,6 +16,17 @@
     <link rel="stylesheet" href="//cdn.datatables.net/responsive/2.2.3/css/responsive.bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/js/all.min.js" type="text/javascript"></script>
     <style>
+        /* ===== Bench Drawer Responsive Width & Scrollbar Stability ===== */
+        @media only screen and (min-width: 1024px) and (max-width: 1440px) {
+            #kt_activitiesBenchApplication { width: 1025px !important; }
+        }
+        @media only screen and (min-width: 1440px) {
+            #kt_activitiesBenchApplication { width: 1200px !important; }
+        }
+        #kt_activitiesBenchApplication {
+            scrollbar-gutter: stable;
+        }
+
         /* ===== Inhouse Talents — redesigned dashboard (white / Poppins / max 13px body) ===== */
         /* +10% pass applied to every size below; page-title/.num/.money were already at/above the
            project's hard 16px ceiling (docs/UI_UX_STANDARDS.md) so they're clamped at 16px instead

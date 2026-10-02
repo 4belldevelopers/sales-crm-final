@@ -951,6 +951,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'qualification_master.name as qualification_name',
             'bench_master_status.name as master_status_name',
             'state_list.state as state_name',
+            'state_list.country_id as state_country_id',
             'city_list.city as city_name',
             'users.name as posted_by',
             'companies.company_name',
@@ -959,13 +960,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->leftjoin('users', 'users.id', '=', 'job_applications.submitted_by')
             ->leftjoin('qualification_master', 'qualification_master.id', '=', 'job_applications.qualification')
             ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status')
-            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
-            ->leftjoin('companies', 'companies.id', '=', 'job_applications.company_id')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+            ->leftJoin('state_list', 'state_list.id', '=', DB::raw('COALESCE(city_list.state_id, job_applications.state)'))
+            ->leftjoin('companies', 'companies.id', '=', 'job_applications.company_id')
             ->where('job_applications.id', $id)
+            ->where('job_applications.company_id', $company_id)
             ->first();
 
-        if (! $this->benchApplication) {
+        if (! $this->benchApplication || (int)$this->benchApplication->company_id !== (int)$company_id) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found.']);
         }
 
@@ -1029,6 +1031,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $benchApplication = DB::table('job_applications')
             ->select('id', 'company_id', 'ads_switch', 'status_type')
             ->where('id', $id)
+            ->where('company_id', $company_id)
             ->first();
 
         if (! $benchApplication) {
@@ -1066,6 +1069,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         )
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
             ->where('job_applications.id', $id)
+            ->where('job_applications.company_id', $company_id)
             ->first();
 
         if (! $benchApplication || empty($benchApplication->resume)) {
@@ -1592,11 +1596,29 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
 
             $benchApplication->pay_rate_currency = @$request->pay_rate_currency;
-            $benchApplication->pay_rate_amount = @$request->pay_rate_amount;
-            $benchApplication->pay_rate_mode = @$request->pay_rate_mode;
             $benchApplication->bill_rate_currency = @$request->bill_rate_currency;
-            $benchApplication->bill_rate_amount = @$request->bill_rate_amount;
-            $benchApplication->bill_rate_mode = @$request->bill_rate_mode;
+
+            $payMode = (int) ($request->pay_rate_mode ?? 0);
+            $billMode = (int) ($request->bill_rate_mode ?? $payMode);
+            $benchApplication->pay_rate_mode = $payMode;
+            $benchApplication->bill_rate_mode = $billMode;
+
+            // Intent: Authoritative salary amount mapping based on selected commercial frequency mode
+            if ($payMode === 0) {
+                $benchApplication->pay_rate_amount = $request->filled('pay_annual') ? $request->pay_annual : (@$request->pay_rate_amount ?: 0);
+            } elseif ($payMode === 1) {
+                $benchApplication->pay_rate_amount = $request->filled('pay_monthly') ? $request->pay_monthly : (@$request->pay_rate_amount ?: 0);
+            } else {
+                $benchApplication->pay_rate_amount = $request->filled('pay_rate_amount') ? $request->pay_rate_amount : ($request->filled('pay_annual') ? round($request->pay_annual / 2080, 2) : 0);
+            }
+
+            if ($billMode === 0) {
+                $benchApplication->bill_rate_amount = $request->filled('bill_annual') ? $request->bill_annual : (@$request->bill_rate_amount ?: 0);
+            } elseif ($billMode === 1) {
+                $benchApplication->bill_rate_amount = $request->filled('bill_monthly') ? $request->bill_monthly : (@$request->bill_rate_amount ?: 0);
+            } else {
+                $benchApplication->bill_rate_amount = $request->filled('bill_rate_amount') ? $request->bill_rate_amount : ($request->filled('bill_annual') ? round($request->bill_annual / 2080, 2) : 0);
+            }
 
             $currencyList = GeneralMethod::currency();
 
@@ -1627,20 +1649,27 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $stateId = '';
             $cityID = '';
             $countryID = '';
+            $cityNameResolved = null;
 
-            // Canonical Fast-Path & Server Trust Boundary (0% MySQL Reads, Rule 1 Compliant)
-            if ($request->filled('location_city_id')) {
+            // Intent: Canonical Server-Authoritative Location Hierarchy Resolution
+            // Browser sends authoritative city_id; Server deterministically derives state_id and country_id
+            if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
                 $subCityId = (int) $request->location_city_id;
-                $subStateId = (int) $request->location_state_id;
-                $subCountryId = (int) $request->location_country_id;
-                $subSig = (string) $request->input('location_sig');
-                $expectedSig = hash_hmac('sha256', "{$subCityId}:{$subStateId}:{$subCountryId}", (string) config('app.key'));
+                $cityRow = DB::table('city_list')
+                    ->leftJoin('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->where('city_list.city_id', $subCityId)
+                    ->select('city_list.city_id', 'city_list.city', 'city_list.state_id', 'state_list.country_id')
+                    ->first();
 
-                // Verify cryptographic signature if available, or positive IDs
-                if ($subSig === '' || hash_equals($expectedSig, $subSig) || ($subCityId > 0 && $subCountryId > 0)) {
+                if ($cityRow) {
+                    $cityID = (int) $cityRow->city_id;
+                    $stateId = (int) $cityRow->state_id;
+                    $countryID = (int) ($cityRow->country_id ?: ($request->location_country_id ?: 101));
+                    $cityNameResolved = $cityRow->city;
+                } else {
                     $cityID = $subCityId;
-                    $stateId = $subStateId;
-                    $countryID = $subCountryId;
+                    $stateId = (int) $request->location_state_id;
+                    $countryID = (int) $request->location_country_id;
                 }
             }
 
@@ -1657,7 +1686,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         $city_row = DB::table('city_list')
                             ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
                             ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                            ->select('city_list.city_id', 'countries.id as country_id')
+                            ->select('city_list.city_id', 'city_list.city', 'countries.id as country_id')
                             ->where('city_list.city', '!=', '')
                             ->where('city_list.city', '=', $cityName)
                             ->where('countries.country_name', '=', $countrName)
@@ -1665,6 +1694,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
                         if ($city_row) {
                             $cityID = (@$city_row) ? $city_row->city_id : '';
+                            $cityNameResolved = (@$city_row) ? $city_row->city : '';
                             $countryID = (@$city_row) ? $city_row->country_id : '';
                             $stateId = GeneralMethod::stateId($cityID);
                         }
@@ -1675,6 +1705,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $benchApplication->country = $countryID;
             $benchApplication->state = $stateId;
             $benchApplication->city_id = $cityID;
+            if ($cityNameResolved) {
+                $benchApplication->city = $cityNameResolved;
+            }
 
             $benchApplication->employee_number = @$request->employee_number;
             $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
@@ -2644,8 +2677,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->leftjoin('state_list', 'state_list.id', 'job_applications.state')
             ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city')
             ->leftJoin('bench_master_status', 'bench_master_status.id', '=', 'job_applications.status');
-        $this->benchApplication = $this->benchApplication->where('job_applications.id', $id);
+        $this->benchApplication = $this->benchApplication->where('job_applications.id', $id)->where('job_applications.company_id', $current_company_id);
         $this->benchApplication = $this->benchApplication->first();
+
+        if (! $this->benchApplication) {
+            abort(404);
+        }
 
         if (! empty($this->benchApplication->qualification) && $this->benchApplication->qualification > 0) {
             $this->qualification = DB::table('qualification_master')->select('name')->where('id', $this->benchApplication->qualification)->first();
@@ -4060,6 +4097,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     'allbenchcandidates_version_user_'.$this->user->id,
                     'benchviewmore_version_user_'.$this->user->id,
                     'allbenchofferListing_version_user_'.$this->user->id,
+                    'allbenchcandidates_version_company_'.$company_id,
+                    'benchviewmore_version_company_'.$company_id,
                     'allbenchofferListing_version_company_'.($this->user->company_id ?? auth()->user()->company_id),
                 ];
                 foreach ($cachekeys as $key) {
@@ -4406,6 +4445,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'benchviewmore_version_user_'.$this->user->id,
                 'allbenchcandidates_version_user_'.$this->user->id,
                 'allbenchofferListing_version_user_'.$this->user->id,
+                'benchviewmore_version_company_'.$company_id,
+                'allbenchcandidates_version_company_'.$company_id,
+                'allbenchofferListing_version_company_'.$company_id,
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
