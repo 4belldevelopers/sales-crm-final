@@ -489,6 +489,9 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('add-update-services-job', [ServiceCompanyJobsController::class, 'jobServicesAddUpdate'])->name('jobs.addUpdateJobServices');
                 Route::post('jobs/updateserviceviewmore', [ServiceCompanyJobsController::class, 'updateserviceviewmore'])->name('jobs.updateserviceviewmore');
                 Route::post('download-resume-bench-candidates/', [ServiceCompanyBenchCandidatesController::class, 'downloadResumeBenchCandidate'])->name('bench-candidates.downloadResumeBenchCandidate');
+                // Intent: Isolated Forward Resume endpoints for Bench Talent Drawer
+                Route::post('bench-candidates/fwd_resume', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume'])->name('bench-candidates.fwd_resume');
+                Route::post('bench-candidates/fwd_resume_send', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_send'])->name('bench-candidates.fwd_resume_send');
 
                 // END
                 // #############       	START CUSTOM REPORT MANAGEMENT
