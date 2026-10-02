@@ -1961,10 +1961,11 @@ if($snp_mode== 1){
               <div class="fsc candidate-card-body">
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
                 @php
-                  // Map templates from bench_rm_note_master into the 3 UI categories matching media_1790970788987.png
-                  $catAvailability = [];
-                  $catEngagement   = [];
-                  $catStrength     = [];
+                  // Map templates into 4 categories: Availability, Engagement, Strength, and Workforce Restructuring
+                  $catAvailability  = [];
+                  $catEngagement    = [];
+                  $catStrength      = [];
+                  $catRestructuring = [];
 
                   $templateMeta = [
                       // 1. Availability & Readiness
@@ -2042,12 +2043,14 @@ if($snp_mode== 1){
                           'subtitle' => 'Job-ready entry-level talent with comprehensive practical training.',
                           'order'    => 4,
                       ],
+
+                      // 4. Workforce Restructuring (Dedicated Category)
                       'Laid-Off Talents' => [
-                          'cat'      => 'strength',
+                          'cat'      => 'restructure',
                           'icon'     => 'fa-solid fa-user-clock',
                           'title'    => 'Laid-Off Talents',
                           'subtitle' => 'Experienced talent available immediately due to workforce restructuring.',
-                          'order'    => 5,
+                          'order'    => 1,
                       ],
                   ];
 
@@ -2072,6 +2075,8 @@ if($snp_mode== 1){
                           $catAvailability[] = $entry;
                       } elseif ($meta['cat'] === 'eng') {
                           $catEngagement[] = $entry;
+                      } elseif ($meta['cat'] === 'restructure') {
+                          $catRestructuring[] = $entry;
                       } else {
                           $catStrength[] = $entry;
                       }
@@ -2079,89 +2084,119 @@ if($snp_mode== 1){
                   usort($catAvailability, fn($a, $b) => $a['order'] <=> $b['order']);
                   usort($catEngagement, fn($a, $b) => $a['order'] <=> $b['order']);
                   usort($catStrength, fn($a, $b) => $a['order'] <=> $b['order']);
+                  usort($catRestructuring, fn($a, $b) => $a['order'] <=> $b['order']);
                 @endphp
 
-                <div class="rm-template-catalog" id="rm_template_catalog">
-                  <div class="rm-template-catalog-header">
-                    <span class="catalog-title">
-                      <i class="fa-solid fa-layer-group text-primary"></i> Select Template Category
-                    </span>
-                    <span class="catalog-badge">Click any template to auto-populate</span>
+                <div class="fg fv-row recruiter-template-field mb-4">
+                  <label class="form-label fw-semibold text-gray-800 fs-7 mb-1">
+                    Select Template <span class="text-muted fw-normal fs-8">(Click dropdown to select categorized template)</span>
+                  </label>
+                  <div class="custom-template-dropdown" id="custom_template_dropdown">
+                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                      <div class="trigger-left">
+                        <i class="fa-regular fa-file-lines trigger-icon"></i>
+                        <span class="trigger-label is-placeholder" id="selected_template_label">Select Note Template...</span>
+                      </div>
+                      <i class="fa-solid fa-chevron-down trigger-arrow"></i>
+                    </div>
+
+                    <div class="custom-template-menu" id="custom_template_menu" style="display: none;" role="listbox">
+                      {{-- 1. Availability & Readiness --}}
+                      @if(count($catAvailability) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--blue">
+                          <span>Availability & Readiness</span>
+                        </div>
+                        @foreach($catAvailability as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+
+                      {{-- 2. Engagement Type --}}
+                      @if(count($catEngagement) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--green">
+                          <span>Engagement Type</span>
+                        </div>
+                        @foreach($catEngagement as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+
+                      {{-- 3. Candidate Strength --}}
+                      @if(count($catStrength) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--amber">
+                          <span>Candidate Strength</span>
+                        </div>
+                        @foreach($catStrength as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+
+                      {{-- 4. Workforce Restructuring --}}
+                      @if(count($catRestructuring) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--purple">
+                          <span>Workforce Restructuring</span>
+                        </div>
+                        @foreach($catRestructuring as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+                    </div>
+
+                    {{-- Hidden input for backward compatibility and JS synchronization --}}
+                    <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="" />
                   </div>
-
-                  <div class="rm-template-scroll">
-                    {{-- 1. Availability & Readiness --}}
-                    @if(count($catAvailability) > 0)
-                    <div class="tpl-category-section">
-                      <div class="tpl-category-heading tpl-cat--blue">
-                        <span>Availability & Readiness</span>
-                      </div>
-                      @foreach($catAvailability as $item)
-                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
-                        <div class="tpl-card-left">
-                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                          <div class="tpl-card-text">
-                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                          </div>
-                        </div>
-                        <span class="tpl-card-check">
-                          <i class="fa-solid fa-circle-check"></i>
-                        </span>
-                      </div>
-                      @endforeach
-                    </div>
-                    @endif
-
-                    {{-- 2. Engagement Type --}}
-                    @if(count($catEngagement) > 0)
-                    <div class="tpl-category-section">
-                      <div class="tpl-category-heading tpl-cat--green">
-                        <span>Engagement Type</span>
-                      </div>
-                      @foreach($catEngagement as $item)
-                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
-                        <div class="tpl-card-left">
-                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                          <div class="tpl-card-text">
-                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                          </div>
-                        </div>
-                        <span class="tpl-card-check">
-                          <i class="fa-solid fa-circle-check"></i>
-                        </span>
-                      </div>
-                      @endforeach
-                    </div>
-                    @endif
-
-                    {{-- 3. Candidate Strength --}}
-                    @if(count($catStrength) > 0)
-                    <div class="tpl-category-section">
-                      <div class="tpl-category-heading tpl-cat--amber">
-                        <span>Candidate Strength</span>
-                      </div>
-                      @foreach($catStrength as $item)
-                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
-                        <div class="tpl-card-left">
-                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                          <div class="tpl-card-text">
-                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                          </div>
-                        </div>
-                        <span class="tpl-card-check">
-                          <i class="fa-solid fa-circle-check"></i>
-                        </span>
-                      </div>
-                      @endforeach
-                    </div>
-                    @endif
-                  </div>
-
-                  {{-- Hidden input for backward compatibility and JS synchronization --}}
-                  <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="" />
                 </div>
                 @endif
                 <div class="fg fv-row recruiter-editor-field">
@@ -5893,7 +5928,10 @@ function applyDefaultRecruiterNotePrefill() {
             if (activeTpl && activeTpl.content) {
                 $('#recruiter_note_template_select').val(activeTpl.id);
                 $('.tpl-card-item').removeClass('is-selected');
-                $('.tpl-card-item[data-template-id="' + activeTpl.id + '"]').addClass('is-selected');
+                var $targetItem = $('.tpl-card-item[data-template-id="' + activeTpl.id + '"]');
+                $targetItem.addClass('is-selected');
+                var title = $targetItem.data('template-title') || activeTpl.title;
+                $('#selected_template_label').text(title).removeClass('is-placeholder');
                 var formatted = formatTemplateToPlainText(activeTpl.content);
                 var interpolated = interpolateTemplateVariables(formatted);
                 $rn.val(interpolated);
@@ -5905,14 +5943,51 @@ function applyDefaultRecruiterNotePrefill() {
     }
 }
 
+// Toggle custom template dropdown
+$(document).on('click', '#custom_template_trigger', function (e) {
+    e.stopPropagation();
+    var $dd = $('#custom_template_dropdown');
+    var $menu = $('#custom_template_menu');
+    var isOpen = $dd.hasClass('is-open');
+
+    if (isOpen) {
+        $dd.removeClass('is-open');
+        $menu.hide();
+        $(this).attr('aria-expanded', 'false');
+    } else {
+        $dd.addClass('is-open');
+        $menu.show();
+        $(this).attr('aria-expanded', 'true');
+    }
+});
+
+// Close custom dropdown when clicking anywhere outside
+$(document).on('click', function (e) {
+    if (!$(e.target).closest('#custom_template_dropdown').length) {
+        $('#custom_template_dropdown').removeClass('is-open');
+        $('#custom_template_menu').hide();
+        $('#custom_template_trigger').attr('aria-expanded', 'false');
+    }
+});
+
 // Interactive Categorized Template Selection Card Click (media_1790970788987.png)
-$(document).on('click', '.tpl-card-item', function () {
+$(document).on('click', '.tpl-card-item', function (e) {
+    e.stopPropagation();
     var id = $(this).data('template-id');
+    var title = $(this).data('template-title') || $(this).find('.tpl-card-title').text();
     if (!id || !recruiterNoteTemplates[id]) return;
 
     $('.tpl-card-item').removeClass('is-selected');
     $(this).addClass('is-selected');
     $('#recruiter_note_template_select').val(id);
+
+    // Update trigger label
+    $('#selected_template_label').text(title).removeClass('is-placeholder');
+
+    // Close dropdown
+    $('#custom_template_dropdown').removeClass('is-open');
+    $('#custom_template_menu').hide();
+    $('#custom_template_trigger').attr('aria-expanded', 'false');
 
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
@@ -5927,7 +6002,12 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     if (!id || !recruiterNoteTemplates[id]) return;
 
     $('.tpl-card-item').removeClass('is-selected');
-    $('.tpl-card-item[data-template-id="' + id + '"]').addClass('is-selected');
+    var $targetItem = $('.tpl-card-item[data-template-id="' + id + '"]');
+    $targetItem.addClass('is-selected');
+    var title = $targetItem.data('template-title') || (recruiterNoteTemplates[id] ? recruiterNoteTemplates[id].title : '');
+    if (title) {
+        $('#selected_template_label').text(title).removeClass('is-placeholder');
+    }
 
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
@@ -5988,7 +6068,10 @@ $(document).on('click', '#btn_sync_rm_template', function (e) {
             baseText = formatTemplateToPlainText(recruiterNoteTemplates[tplKeys[0]].content);
             $('#recruiter_note_template_select').val(recruiterNoteTemplates[tplKeys[0]].id);
             $('.tpl-card-item').removeClass('is-selected');
-            $('.tpl-card-item[data-template-id="' + recruiterNoteTemplates[tplKeys[0]].id + '"]').addClass('is-selected');
+            var $firstItem = $('.tpl-card-item[data-template-id="' + recruiterNoteTemplates[tplKeys[0]].id + '"]');
+            $firstItem.addClass('is-selected');
+            var title = $firstItem.data('template-title') || recruiterNoteTemplates[tplKeys[0]].title;
+            $('#selected_template_label').text(title).removeClass('is-placeholder');
         }
     }
 
