@@ -6000,10 +6000,15 @@ function applyDefaultRecruiterNotePrefill() {
     if (!currentVal) {
         var tplKeys = Object.keys(recruiterNoteTemplates);
         if (tplKeys.length > 0) {
-            // Pick Role Alignment & Skills Match Recommendation if present, or first template
+            // Priority 1: "Core Strengths & Project Fit" (Core Skills & Role Fit) — explicit user default
+            // Priority 2: Any template with 'core' or 'role fit' or 'project fit' in the title
+            // Priority 3: First available template
             var matchKey = tplKeys.find(function(k) {
                 var t = (recruiterNoteTemplates[k].title || '').toLowerCase();
-                return t.includes('alignment') || t.includes('requirement match');
+                return t.includes('core strengths') || t === 'core strengths & project fit';
+            }) || tplKeys.find(function(k) {
+                var t = (recruiterNoteTemplates[k].title || '').toLowerCase();
+                return t.includes('core') || t.includes('role fit') || t.includes('project fit') || t.includes('skill');
             }) || tplKeys[0];
 
             var activeTpl = recruiterNoteTemplates[matchKey];
