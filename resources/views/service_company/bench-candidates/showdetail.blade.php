@@ -181,7 +181,7 @@
 
     // Added Date with explicit 12-hour AM/PM and IST Timezone
     $created_at = @$benchApplication->created_at;
-    $addedDate = !empty($created_at) ? date("d-M-Y h:i:s A", strtotime($created_at)) . ' IST' : '—';
+    $addedDate = !empty($created_at) ? date("d-M-Y h:i A", strtotime($created_at)) . ' IST' : '—';
 
     // Bidirectional ISO <-> Dial Code Normalizer for instant server-rendered flags
     $isoToDialMap = [
@@ -537,6 +537,75 @@
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
 @media (max-width: 640px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } #kt_activitiesBenchApplication .cdr-hero-card { grid-template-columns: 1fr !important; } }
+
+/* ===== FIX: UPLOAD DATE + TIMEZONE META ITEM ===== */
+/* Allow the meta grid to wrap on both cols so the upload date/IST text is never clipped */
+#kt_activitiesBenchApplication .cdr-meta-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px 10px !important;
+}
+#kt_activitiesBenchApplication .cdr-meta-grid .cdr-meta-item {
+    white-space: normal !important;   /* let text wrap instead of hiding */
+    overflow: visible !important;
+    word-break: break-word;
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+    align-items: flex-start !important;
+}
+#kt_activitiesBenchApplication .cdr-meta-grid .cdr-meta-item svg {
+    margin-top: 2px !important;  /* realign icon to first text line */
+    flex-shrink: 0 !important;
+}
+
+/* ===== FIX: CONTACT ACTIONS BUTTONS (WhatsApp + LinkedIn) ===== */
+/* Stack buttons vertically so they each get full width and text is never clipped */
+#kt_activitiesBenchApplication #personal_details .contact-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 16px 14px 16px !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-whatsapp,
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin {
+    background: #0a66c2 !important;
+    color: #fff !important;
+    border: 1px solid #0a66c2 !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin:hover {
+    background: #004182 !important;
+    border-color: #004182 !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-linkedin a,
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-whatsapp a {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+}
+#kt_activitiesBenchApplication #personal_details .contact-actions .btn-icon {
+    width: 15px !important;
+    height: 15px !important;
+    flex-shrink: 0 !important;
+}
 </style>
 
 <div class="page-wrapper">
