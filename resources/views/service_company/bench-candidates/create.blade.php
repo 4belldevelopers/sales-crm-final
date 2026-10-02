@@ -1974,7 +1974,12 @@ if($snp_mode== 1){
                 </div>
                 @endif
                 <div class="fg fv-row recruiter-editor-field">
-                  <label>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="mb-0">Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
+                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8" id="btn_sync_rm_template" title="Automatically prefill and sync comments with current Designation, Skills, and Availability from form">
+                      <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
+                    </button>
+                  </div>
                   <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent...">{{ @$application->recruiter_note }}</textarea>
                   <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
                 </div>
@@ -5540,7 +5545,108 @@ function formatTemplateToPlainText(html) {
     return text.replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
 }
 
-// Auto-select and pre-fill default template if comments box is empty
+// Helper to extract candidate details from the live form in browser RAM (100% Client-First)
+function getCandidateFormVariables() {
+    // 1. Current Designation
+    var designation = ($('#current_designation').val() || '').trim();
+    if (!designation) {
+        designation = ($('#full_name').val() || '').trim() ? 'their professional domain' : 'the required role';
+    }
+
+    // 2. Top Skills (up to 3)
+    var skillsList = [];
+    $('#skillExperienceWrapper tr input[name="skills[]"]').each(function () {
+        var s = (this.value || '').trim();
+        if (s && !skillsList.includes(s)) {
+            skillsList.push(s);
+        }
+    });
+    var skillsStr = '';
+    if (skillsList.length >= 3) {
+        skillsStr = skillsList.slice(0, 3).join(', ');
+    } else if (skillsList.length > 0) {
+        skillsStr = skillsList.join(', ');
+    } else {
+        skillsStr = 'the required technical competencies';
+    }
+
+    // 3. Availability / Joining Status
+    var snp = $('#serving_notice_period').val();
+    var availStr = 'Immediate';
+    if (snp === '2') {
+        availStr = 'Immediate';
+    } else if (snp === '1') {
+        var availDate = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
+        availStr = availDate ? ('Available from ' + availDate) : 'Available on scheduled start date';
+    } else {
+        availStr = 'Immediate';
+    }
+
+    // 4. Most Relevant Requirement
+    var relReq = '';
+    if (skillsList.length > 0) {
+        relReq = skillsList[0] + (skillsList.length > 1 ? (' and ' + skillsList[1]) : '') + ' hands-on delivery';
+    } else if (designation && designation !== 'the required role' && designation !== 'their professional domain') {
+        relReq = designation + ' deliverables';
+    } else {
+        relReq = 'the core position requirements';
+    }
+
+    // 5. Total Experience
+    var expYears = ($('#total_exp_year').val() || '').trim();
+    var expMonths = ($('#total_exp_month').val() || '').trim();
+    var expStr = '';
+    if (expYears && expYears !== '0') {
+        expStr = expYears + ' years' + (expMonths && expMonths !== '0' ? (' ' + expMonths + ' months') : '');
+    }
+
+    // 6. Candidate Name
+    var candidateName = ($('#full_name').val() || '').trim();
+
+    return {
+        designation: designation,
+        skills: skillsStr,
+        availability: availStr,
+        requirement: relReq,
+        experience: expStr,
+        name: candidateName
+    };
+}
+
+// Replaces placeholders like [current designation], [3 skills], [most relevant requirement], [Immediate / X days / Serving notice / Available from date]
+function interpolateTemplateVariables(text, customVars) {
+    if (!text) return '';
+    var vars = customVars || getCandidateFormVariables();
+
+    // Replace [current designation] / [Current Designation] / **[current designation]**
+    text = text.replace(/(\*\*|\[)?\[current designation\](\*\*|\])?/gi, vars.designation);
+
+    // Replace [3 skills] / [3  skills] / [skills] / **[3  skills]** / **[3 skills]**
+    text = text.replace(/(\*\*|\[)?\[3\s+skills\](\*\*|\])?/gi, vars.skills);
+    text = text.replace(/(\*\*|\[)?\[skills\](\*\*|\])?/gi, vars.skills);
+
+    // Replace [most relevant requirement] / **[most relevant requirement]**
+    text = text.replace(/(\*\*|\[)?\[most relevant requirement\](\*\*|\])?/gi, vars.requirement);
+
+    // Replace [Immediate / X days / Serving notice / Available from date]
+    text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\s*\/\s*Available from date\]/gi, vars.availability);
+    text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\]/gi, vars.availability);
+    text = text.replace(/\[Availability\]/gi, vars.availability);
+
+    // Replace [candidate name] / [candidate_name]
+    if (vars.name) {
+        text = text.replace(/\[(candidate name|candidate_name)\]/gi, vars.name);
+    }
+
+    // Replace [experience] / [total experience]
+    if (vars.experience) {
+        text = text.replace(/\[(total experience|experience)\]/gi, vars.experience);
+    }
+
+    return text;
+}
+
+// Auto-select and pre-fill default template with live variables if comments box is empty
 function applyDefaultRecruiterNotePrefill() {
     var $rn = $('#recruiter_note');
     if (!$rn.length) return;
@@ -5549,12 +5655,18 @@ function applyDefaultRecruiterNotePrefill() {
     if (!currentVal) {
         var tplKeys = Object.keys(recruiterNoteTemplates);
         if (tplKeys.length > 0) {
-            var firstKey = tplKeys[0];
-            var firstTpl = recruiterNoteTemplates[firstKey];
-            if (firstTpl && firstTpl.content) {
-                $('#recruiter_note_template_select').val(firstTpl.id);
-                var formatted = formatTemplateToPlainText(firstTpl.content);
-                $rn.val(formatted);
+            // Pick Role Alignment & Skills Match Recommendation if present, or first template
+            var matchKey = tplKeys.find(function(k) {
+                var t = (recruiterNoteTemplates[k].title || '').toLowerCase();
+                return t.includes('alignment') || t.includes('requirement match');
+            }) || tplKeys[0];
+
+            var activeTpl = recruiterNoteTemplates[matchKey];
+            if (activeTpl && activeTpl.content) {
+                $('#recruiter_note_template_select').val(activeTpl.id);
+                var formatted = formatTemplateToPlainText(activeTpl.content);
+                var interpolated = interpolateTemplateVariables(formatted);
+                $rn.val(interpolated);
             }
         }
     } else if (/<[a-z][\s\S]*>/i.test(currentVal)) {
@@ -5563,14 +5675,71 @@ function applyDefaultRecruiterNotePrefill() {
     }
 }
 
-// Template dropdown change event
+// Template dropdown change event with live variable interpolation
 $(document).on('change', '#recruiter_note_template_select', function () {
     var id = $(this).val();
     if (!id || !recruiterNoteTemplates[id]) return;
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
-    $('#recruiter_note').val(formatted);
+    var interpolated = interpolateTemplateVariables(formatted);
+    $('#recruiter_note').val(interpolated);
     clearFieldValidationErrors('recruiter_note');
+});
+
+// Live debounced synchronization when upper form fields change
+var _rmSyncTimer = null;
+function triggerLiveRmCommentsSync() {
+    clearTimeout(_rmSyncTimer);
+    _rmSyncTimer = setTimeout(function () {
+        var selectedId = $('#recruiter_note_template_select').val();
+        if (!selectedId || !recruiterNoteTemplates[selectedId]) return;
+
+        var $rn = $('#recruiter_note');
+        var rawTpl = formatTemplateToPlainText(recruiterNoteTemplates[selectedId].content);
+        if (rawTpl.includes('[current designation]') || rawTpl.includes('[3 skills]') || rawTpl.includes('[most relevant requirement]') || rawTpl.includes('[Immediate / X days / Serving notice / Available from date]')) {
+            var updated = interpolateTemplateVariables(rawTpl);
+            $rn.val(updated);
+        }
+    }, 450);
+}
+
+// Attach live sync to form fields (Role, Skills, Notice Period, Availability Date)
+$(document).on('input blur', '#current_designation', triggerLiveRmCommentsSync);
+$(document).on('input blur', '#skillExperienceWrapper tr input[name="skills[]"]', triggerLiveRmCommentsSync);
+$(document).on('change', '#serving_notice_period, #np_id, #np_id_display', triggerLiveRmCommentsSync);
+$(document).on('click', '.aw-option', function () {
+    setTimeout(triggerLiveRmCommentsSync, 120);
+});
+
+// Manual "Sync Details from Form" button click
+$(document).on('click', '#btn_sync_rm_template', function (e) {
+    e.preventDefault();
+    var selectedId = $('#recruiter_note_template_select').val();
+    var $rn = $('#recruiter_note');
+    var baseText = '';
+
+    if (selectedId && recruiterNoteTemplates[selectedId]) {
+        baseText = formatTemplateToPlainText(recruiterNoteTemplates[selectedId].content);
+    } else {
+        baseText = $rn.val();
+    }
+
+    if (!baseText) {
+        var tplKeys = Object.keys(recruiterNoteTemplates);
+        if (tplKeys.length > 0) {
+            baseText = formatTemplateToPlainText(recruiterNoteTemplates[tplKeys[0]].content);
+            $('#recruiter_note_template_select').val(recruiterNoteTemplates[tplKeys[0]].id);
+        }
+    }
+
+    var interpolated = interpolateTemplateVariables(baseText);
+    $rn.val(interpolated).addClass('field-attention-highlight');
+    setTimeout(function() { $rn.removeClass('field-attention-highlight'); }, 700);
+    clearFieldValidationErrors('recruiter_note');
+
+    if (typeof toastr !== 'undefined') {
+        toastr.success('Comments synchronized with Current Designation, Skills, and Availability!');
+    }
 });
 
 // Live typing in comments box clears validation error
