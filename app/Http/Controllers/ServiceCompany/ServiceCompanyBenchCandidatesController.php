@@ -1820,14 +1820,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'updated_at' => now(),
             ]);
 
-            // Build standardized JSON response
+            // Build standardized JSON response with tab-aware redirect
+            $tabName = match ((int) ($benchApplication->status ?? 2)) {
+                1 => 'pool',
+                2 => 'bench',
+                4 => 'hold',
+                3 => 'placed',
+                5 => 'exited',
+                default => 'bench',
+            };
+            $targetRedirectUrl = url('service_company/bench-candidates').'?tab='.$tabName;
+
             $responsePayload = [
                 'status' => 'success',
                 'message' => $added ? 'Inhouse Talent Added Successfully' : 'Inhouse Talent Updated Successfully',
                 'candidate_id' => $benchApplication->id,
                 'action' => $added ? 'created' : 'updated',
-                'url' => url('service_company/bench-candidates'),
-                'redirect_url' => url('service_company/bench-candidates'),
+                'url' => $targetRedirectUrl,
+                'redirect_url' => $targetRedirectUrl,
+                'tab' => $tabName,
                 'idempotency_uuid' => $clientUuid,
             ];
 
@@ -1983,10 +1994,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $years = (array) $request->input('years', []);
         $months = (array) $request->input('months', []);
         $ratings = (array) $request->input('ratings', []);
+        $submittedSkillKeys = [];
+
         if (! empty($skills)) {
             foreach ($skills as $skillKey => $exp) {
                 $expStr = is_array($exp) ? ($exp['value'] ?? '') : (string) $exp;
                 if (! empty($expStr)) {
+                    $submittedSkillKeys[] = $expStr;
                     DB::table('bench_candidate_skill_experience')->updateOrInsert(
                         [
                             'candidate_id' => $candidateId,
@@ -2001,6 +2015,18 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     );
                 }
             }
+        }
+
+        // Skill Experience Purge: Delete any skills removed from candidate to avoid orphan data drift in ES
+        if (! empty($submittedSkillKeys)) {
+            DB::table('bench_candidate_skill_experience')
+                ->where('candidate_id', $candidateId)
+                ->whereNotIn('skill_key', $submittedSkillKeys)
+                ->delete();
+        } else {
+            DB::table('bench_candidate_skill_experience')
+                ->where('candidate_id', $candidateId)
+                ->delete();
         }
 
         // 3. Bulk Insert Recruiter Assignments (bench_assign) - Zero ES inside transaction!
@@ -2057,93 +2083,52 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         abort_if(Gate::denies('edit_job_applications'), 403);
         $id = GeneralMethod::value_decrypt($id);
 
-        $company_id = '';
         $company_id = auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        // Security Hardening: Enforce strict multi-tenant scoping and 404 abort if candidate does not belong to tenant
+        $this->application = JobApplication::where('company_id', $company_id)->find($id);
+        abort_if(! $this->application, 404, 'Candidate profile not found or access denied.');
 
         // Phase 2 Optimization: Consolidate duplicate DB queries, scope job selection, and cache static master lookups
         if (config('feature.talents_v2_enabled')) {
             $this->statuses = Cache::remember('application_statuses', 86400, fn () => ApplicationStatus::all());
-            $this->application = JobApplication::with('job')->withoutGlobalScopes()->find($id);
-            $this->jobQuestion = @$this->application->job->questions;
-
-            $this->jobs = Job::where('company_id', $company_id)
-                ->select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')
-                ->limit(200)
-                ->get();
-
             $this->noticeperiod = Cache::remember('notice_periods', 86400, fn () => NoticePeriod::all());
-            $this->qualification = Cache::remember('qualification_master_list', 86400, function () {
+            $this->qualification = Cache::rememberForever('qualification_master_list', function () {
                 return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
             });
             $this->interviewStatus = Cache::remember('master_statuses_priority', 86400, fn () => DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get());
-            $this->childArr = DB::table('candidate_status')
-                ->select('*')->where('parent', $this->application->master_status_id)
-                ->where('company_id', $this->user->company_id)
-                ->orderBy('priority', 'ASC')
-                ->get();
+            $this->childArr = [];
 
-            $this->company_id = $this->user->company_id;
-
-            // Consolidated single query for application_additional_detail (eliminates 3x duplicate DB calls)
-            $this->application_add_detail = DB::table('application_additional_detail')
-                ->select('*')
-                ->where('application_id', $this->application->id)
-                ->orderBy('id', 'ASC')
-                ->get();
-            $this->application_add_detail_cnt = $this->application_add_detail->count();
-            $this->application_additional_detail = $this->application_add_detail;
+            $this->company_id = $company_id;
+            $this->application_add_detail = [];
+            $this->application_add_detail_cnt = 0;
+            $this->application_additional_detail = [];
         } else {
             $this->statuses = ApplicationStatus::all();
-            $this->application = JobApplication::withoutGlobalScopes()->find($id);
-            $this->jobQuestion = @$this->application->job->questions;
-
-            $this->jobs = Job::select('id', 'title', 'location_id', 'status', 'start_date', 'end_date', 'section_visibility')->get();
-
             $this->noticeperiod = NoticePeriod::all();
             $this->qualification = DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
             $this->interviewStatus = DB::table('master_status')->select('*')->orderBy('priority', 'ASC')->get();
-            $this->childArr = DB::table('candidate_status')
-                ->select('*')->where('parent', $this->application->master_status_id)
-                ->where('company_id', $this->user->company_id)
-                ->orderBy('priority', 'ASC')
-                ->get();
+            $this->childArr = [];
 
-            $this->company_id = $this->user->company_id;
-            $this->application_add_detail_cnt = DB::table('application_additional_detail')
-                ->select('*')
-                ->where('application_id', $this->application->id)
-                ->orderBy('application_additional_detail.id', 'ASC')
-                ->count();
-
-            $this->application_add_detail = DB::table('application_additional_detail')
-                ->select('*')
-                ->where('application_id', $this->application->id)
-                ->orderBy('application_additional_detail.id', 'ASC')
-                ->get();
+            $this->company_id = $company_id;
+            $this->application_add_detail_cnt = 0;
+            $this->application_add_detail = [];
+            $this->application_additional_detail = [];
         }
 
-        // dd($id);
-        // $jobId 							=	$this->application->job_id;
         $this->jobId = $this->application->job_id;
         $this->appId = $this->application->id;
 
-        // $this->jobDetail = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
-        // 	//->join('job_assign', 'job_assign.job_id', 'jobs.id')
-        // 	->join('clients', 'clients.id', 'jobs.client_id')
-        // 	->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
-        // 	->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-        // 	->where('jobs.id', '=', $this->jobId)->where('jobs.company_id', '=', $this->user->company_id)
-        // 	->first();
-
-        $country = User::join('companies', 'companies.id', '=', 'users.company_id')
-            ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
-            ->select('users_profile.country', 'companies.logo', 'companies.company_name')
-            ->with('company')
-            ->where('users.id', '=', auth()->user()->id)
-            ->company()
-            ->first();
-
-        // dd($country);
+        $country = Cache::remember("user:{$userId}:company_profile", 3600, function () use ($userId) {
+            return User::join('companies', 'companies.id', '=', 'users.company_id')
+                ->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')
+                ->select('users_profile.country', 'companies.logo', 'companies.company_name')
+                ->with('company')
+                ->where('users.id', '=', $userId)
+                ->company()
+                ->first();
+        });
 
         $this->country = @$country->country;
         $this->companylogo = @$country->logo;
@@ -2153,63 +2138,41 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         if (config('feature.talents_v2_enabled')) {
             $this->currency = GeneralMethod::currency();
             $this->salaryMode = GeneralMethod::salaryMode();
-            $this->countries = Cache::remember('country_list_json', 86400, fn () => GeneralMethod::getAllCountryList());
+            $this->countries = Cache::rememberForever('country_list_json', fn () => GeneralMethod::getAllCountryList());
             $this->statelist = GeneralMethod::statelist($this->application->country);
-            $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->first();
-
-            $this->job_additional_detail = DB::table('bench_additional_detail')
-                ->select('*')
-                ->where('bench_additional_detail.bench_id', '=', $this->application->id)
-                ->orderBy('bench_additional_detail.id', 'ASC')
-                ->get();
-
+            $this->documents = null;
+            $this->job_additional_detail = [];
             $this->cities = [];
         } else {
             $this->currency = GeneralMethod::currency();
             $this->salaryMode = GeneralMethod::salaryMode();
             $this->countries = GeneralMethod::getAllCountryList();
             $this->statelist = GeneralMethod::statelist($this->application->country);
-            $this->documents = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', 'Resume')->first();
-
-            $this->job_additional_detail = '';
-            $this->job_additional_detail = DB::table('bench_additional_detail')
-                ->select('*')
-                ->where('bench_additional_detail.bench_id', '=', $this->application->id)
-                ->orderBy('bench_additional_detail.id', 'ASC')
-                ->get();
-
-            $this->application_additional_detail = DB::table('application_additional_detail')
-                ->select('*')
-                ->where('application_additional_detail.application_id', '=', $this->application->id)
-                ->orderBy('application_additional_detail.id', 'ASC')
-                ->get();
-
-            $this->cities = GeneralMethod::allCities();
+            $this->documents = null;
+            $this->job_additional_detail = [];
+            $this->cities = [];
         }
 
         $this->cityListArr = '';
-        if ($this->application->country == 101) {
-            $statelist = DB::table('state_list')
-                ->select('state_list.id', 'state_list.state as name', DB::raw('101 as country_id'))
-                ->orderBy('state_list.state')
-                ->get()->toArray();
-            $this->statelist = json_decode(json_encode($statelist), true);
-            // dd($this->application->state);
-            $citylist = DB::table('city_list')
-                ->select('city_list.city_id as id', 'city_list.city as name')
-                ->where('city_list.state_id', $this->application->state)
-                ->orderBy('city_list.city')
-                ->get()->toArray();
-            $this->cityListArr = json_decode(json_encode($citylist), true);
+        if ($this->application->country == 101 && $this->application->state) {
+            $this->cityListArr = Cache::remember("state:{$this->application->state}:cities", 86400, function () {
+                $citylist = DB::table('city_list')
+                    ->select('city_list.city_id as id', 'city_list.city as name')
+                    ->where('city_list.state_id', $this->application->state)
+                    ->orderBy('city_list.city')
+                    ->get()->toArray();
 
+                return json_decode(json_encode($citylist), true);
+            });
         }
-        // dd($this->cityListArr);
 
-        $this->client = DB::table('users')
-            ->join('companies', 'companies.id', 'users.company_id')
-            ->join('clients', 'clients.company_id', 'companies.id')
-            ->select('clients.id')
-            ->where('users.id', auth()->user()->id)->first();
+        $this->client = Cache::remember("user:{$userId}:client_id", 3600, function () use ($userId) {
+            return DB::table('users')
+                ->join('companies', 'companies.id', 'users.company_id')
+                ->join('clients', 'clients.company_id', 'companies.id')
+                ->select('clients.id')
+                ->where('users.id', $userId)->first();
+        });
 
         $this->recruiterlist = DB::table('bench_assign')
             ->join('users', 'users.id', '=', 'bench_assign.user_id')
@@ -2219,16 +2182,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->where('users.type', '=', 0)
             ->get();
 
-        $this->cities = GeneralMethod::allCities();
-
         $this->default_loc = GeneralMethod::allCitiesSelected([$this->application->city_id]);
 
         $this->skillExperiences = DB::table('bench_candidate_skill_experience')
             ->where('candidate_id', $this->application->id)
             ->get()
-            ->keyBy('skill_key'); // java, php, html
+            ->keyBy('skill_key');
 
-        $this->currencyConverter = GeneralMethod::currencyConverter();
+        $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
+            return GeneralMethod::currencyConverter();
+        });
 
         return response()->view('service_company.bench-candidates.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -2485,10 +2448,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // If client requested pure JSON (Client-First RAM Engine)
         if (request()->wantsJson() || request('format') === 'json') {
             return Reply::dataOnly([
-                'status'       => 'success',
+                'status' => 'success',
                 'candidate_id' => $this->currentBenchId,
                 'assigned_ids' => $assignedIds,
-                'team'         => $roster,
+                'team' => $roster,
             ]);
         }
 
@@ -2497,16 +2460,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $isAssigned = isset($assignedMap[$u['id']]);
 
             return (object) [
-                'id'                    => $u['id'],
-                'name'                  => $u['fullName'],
-                'email'                 => $u['email'],
-                'working_status'        => $u['active'] ? 1 : 0,
-                'bench_assign_id'       => $isAssigned ? 1 : null,
+                'id' => $u['id'],
+                'name' => $u['fullName'],
+                'email' => $u['email'],
+                'working_status' => $u['active'] ? 1 : 0,
+                'bench_assign_id' => $isAssigned ? 1 : null,
                 'bench_applications_id' => $isAssigned ? (int) $id : null,
-                'display_name'          => $u['role'],
-                'activeJobs'            => $u['activeJobs'],
-                'captainJobs'           => $u['captainJobs'],
-                'trmTalents'            => $u['trmTalents'],
+                'display_name' => $u['role'],
+                'activeJobs' => $u['activeJobs'],
+                'captainJobs' => $u['captainJobs'],
+                'trmTalents' => $u['trmTalents'],
             ];
         });
 
@@ -2523,11 +2486,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
      */
     public function hmlistingupdate(Request $request, RelationshipManagerService $rmService)
     {
-        $company_id     = (int) auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
         $operatorUserId = (int) auth()->user()->id;
-        $assignStatus   = (int) $request->assignStatus;
+        $assignStatus = (int) $request->assignStatus;
         $currentBenchId = (int) ($request->currentBenchId ?? $request->candidate_id ?? $request->id);
-        $currentUserId  = (int) ($request->currentUserId ?? $request->user_id);
+        $currentUserId = (int) ($request->currentUserId ?? $request->user_id);
 
         $result = $rmService->updateBenchCandidateRm(
             $currentBenchId,
@@ -2542,15 +2505,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
 
         return Reply::dataOnly([
-            'status'         => 'success',
-            'msg'            => $result['msg'],
-            'action'         => $result['action'],
-            'is_assigned'    => $result['is_assigned'],
-            'candidate_id'   => $currentBenchId,
-            'user_id'        => $currentUserId,
+            'status' => 'success',
+            'msg' => $result['msg'],
+            'action' => $result['action'],
+            'is_assigned' => $result['is_assigned'],
+            'candidate_id' => $currentBenchId,
+            'user_id' => $currentUserId,
             'assigned_count' => $result['assigned_count'],
-            'first_manager'  => $result['first_manager'],
-            'assigned_rms'   => $result['assigned_rms'],
+            'first_manager' => $result['first_manager'],
+            'assigned_rms' => $result['assigned_rms'],
         ]);
     }
 
@@ -2566,8 +2529,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         return response()->json([
             'status' => 'success',
-            'epoch'  => $epoch,
-            'team'   => $roster,
+            'epoch' => $epoch,
+            'team' => $roster,
         ]);
     }
 
@@ -7166,10 +7129,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // Phase 5: Atomic idempotency lock to prevent double-submit and race conditions (10s TTL)
         $idempotencyKey = $request->header('X-Idempotency-Key')
             ?: "idemp:bench_req:{$company_id}:{$jobId}:{$conId}";
-        $lockKey = 'lock:' . md5($idempotencyKey);
+        $lockKey = 'lock:'.md5($idempotencyKey);
         $lock = Cache::lock($lockKey, 10);
 
-        if (!$lock->get()) {
+        if (! $lock->get()) {
             return Reply::dataOnly(['status' => 'warning', 'message' => 'Request already processing. Please wait.']);
         }
 
@@ -7208,147 +7171,147 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             if ($coinsDeductions->status) {
                 return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
             }
-        //  dd("djd");
-        //   dd($source_company_id);
+            //  dd("djd");
+            //   dd($source_company_id);
 
-        $values = ['source_from_company_id' => $source_from_company_id, 'source_from_user_id' => $source_from_user_id, 'source_from_type' => $source_from_type, 'source_company_id' => $source_company_id, 'source_application_id' => $source_application_id, 'source_from_id' => $source_application_id, 'source_jobid' => $source_jobid];
-        $row_data = DB::table('job_applications')->select('*')->where('id', @$source_application_id)->first();
-        $jobcountry = GeneralMethod::JobCountries($source_jobid);
-        $country = @$row_data->country;
+            $values = ['source_from_company_id' => $source_from_company_id, 'source_from_user_id' => $source_from_user_id, 'source_from_type' => $source_from_type, 'source_company_id' => $source_company_id, 'source_application_id' => $source_application_id, 'source_from_id' => $source_application_id, 'source_jobid' => $source_jobid];
+            $row_data = DB::table('job_applications')->select('*')->where('id', @$source_application_id)->first();
+            $jobcountry = GeneralMethod::JobCountries($source_jobid);
+            $country = @$row_data->country;
 
-        // dd($values);
-        $query = false;
-        if (@$source_jobid > 0) {
+            // dd($values);
+            $query = false;
+            if (@$source_jobid > 0) {
 
-            if (in_array($country, $jobcountry)) {
-                $event_name = 'BenchSalesIndia';
-            } else {
-                $event_name = 'BenchSalesInternational';
-            }
+                if (in_array($country, $jobcountry)) {
+                    $event_name = 'BenchSalesIndia';
+                } else {
+                    $event_name = 'BenchSalesInternational';
+                }
 
-            // $source_from_company_id = $source_from_company_id;
-            // $event_name = $event_name;
-            $event_table_name = 'jobs';
-            $query = DB::table('rec_candidate_assign')->insert($values);
-            $rec_id = DB::getPdo()->lastInsertId();
+                // $source_from_company_id = $source_from_company_id;
+                // $event_name = $event_name;
+                $event_table_name = 'jobs';
+                $query = DB::table('rec_candidate_assign')->insert($values);
+                $rec_id = DB::getPdo()->lastInsertId();
 
-            /**
-             * Intent: Offload Elasticsearch candidate request document indexing to Horizon queue (Rule 2 & Rule 6).
-             * Zero direct UI writes to ES; executes strictly after database transaction commits.
-             * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
-             */
+                /**
+                 * Intent: Offload Elasticsearch candidate request document indexing to Horizon queue (Rule 2 & Rule 6).
+                 * Zero direct UI writes to ES; executes strictly after database transaction commits.
+                 * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
+                 */
 
-            /**
-             * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
-             * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
-             */
-            \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
-            \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
-            \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_from_company_id}:epoch");
-            if ((int) $source_company_id !== (int) $source_from_company_id) {
-                \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_company_id}:epoch");
-            }
-
-            // Phase 4: Real-time Reverb WebSocket delta broadcasting
-            try {
-                event(new \App\Events\BenchRequestCreated(
-                    (int) $source_from_company_id,
-                    (int) $source_jobid,
-                    (int) $rec_id,
-                    (int) $source_application_id,
-                    'internal_bench'
-                ));
+                /**
+                 * Intent: Asynchronously offload Elasticsearch candidate request indexing to Horizon queue (es-index queue).
+                 * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
+                 */
+                \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
+                \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
+                \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_from_company_id}:epoch");
                 if ((int) $source_company_id !== (int) $source_from_company_id) {
+                    \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_company_id}:epoch");
+                }
+
+                // Phase 4: Real-time Reverb WebSocket delta broadcasting
+                try {
                     event(new \App\Events\BenchRequestCreated(
-                        (int) $source_company_id,
+                        (int) $source_from_company_id,
                         (int) $source_jobid,
                         (int) $rec_id,
                         (int) $source_application_id,
                         'internal_bench'
                     ));
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('BenchRequestCreated event broadcast failed: ' . $e->getMessage());
-            }
-
-        }
-
-        // $query = true;
-        if ($query) {
-
-            // $packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
-            $eventId = 25;
-            $coinsDeductions = GeneralMethod::coinsDeductions((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
-
-            $data = ['status' => 'success', 'message' => ''];
-
-            $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id, $company_id);
-
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
-
-            $cc = [];
-            $checkMailPermision = GeneralMethod::mailPermission(21);
-            if ($checkMailPermision) {
-
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
-
-                $jobRow = DB::table('job_applications')->select('job_applications.*', 'city_list.city')
-                    ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')->where('job_applications.id', '=', $source_application_id)->first();
-
-                $salaryMode = GeneralMethod::salaryMode();
-                $currencySymbole = GeneralMethod::currencySymbole();
-                $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
-                $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
-                $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
-                $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
-
-                $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
-
-                $template_description = $mailTypeSubject->body_description;
-
-                $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]', '[{BENCH_CANDIDATE_NAME}]', '[{BILL_RATE}]', '[{EXPERENCE}]', '[{LOCATION}]', '[{CONTACT_PERSON_NAME}]', '[{PHONE}]', '[{EMAIL}]', '[{SKILL}]'], [$detailsVendorSide->client_company, $job->title, $job->id, $detailsVendorSide->vendor_company, $jobRow->full_name, $salaryRange, $jobRow->total_exp, $jobRow->city, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $jobRow->skills], $template_description);
-
-                $message = $template_description;
-
-                $notificationemail = GeneralMethod::notification($source_company_id, 'Recuitment'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $source_company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-
-                if (! empty($to_Mail_Id)) {
-                    /**
-                     * Intent: Asynchronously offload email dispatch to Horizon queue (mail queue).
-                     * Tenancy Note: Multi-tenant safe, scoped by tenant notification recipient.
-                     */
-                    \App\Jobs\SendEmailJob::dispatch(
-                        $to_Mail_Id,
-                        $subject,
-                        'email.common.index',
-                        ['message' => $message],
-                        $attachments,
-                        $fromAddress,
-                        $senderName,
-                        $cc
-                    );
+                    if ((int) $source_company_id !== (int) $source_from_company_id) {
+                        event(new \App\Events\BenchRequestCreated(
+                            (int) $source_company_id,
+                            (int) $source_jobid,
+                            (int) $rec_id,
+                            (int) $source_application_id,
+                            'internal_bench'
+                        ));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('BenchRequestCreated event broadcast failed: '.$e->getMessage());
                 }
 
             }
 
-        } else {
-            $data = ['status' => 'warning', 'message' => 'Failed'];
+            // $query = true;
+            if ($query) {
 
-        }
+                // $packageStatus = GeneralMethod::clientPackageRedeem($event_name, $event_table_name, $event_table_id, $source_from_company_id);
+                $eventId = 25;
+                $coinsDeductions = GeneralMethod::coinsDeductions((int) $source_from_company_id, $eventId, auth()->user()->id, $source_company_id, '', '');
 
-        $userId = auth()->user()->id ?? $this->user->id ?? 0;
-        $cachekeys = [
-            'allbenchrecommendreq_version_user_'.$userId,
-            'allbenchrecommendinternalreq_version_user_'.$userId,
-        ];
-        foreach ($cachekeys as $key) {
-            GeneralMethod::cacheClean($key);
-        }
+                $data = ['status' => 'success', 'message' => ''];
+
+                $detailsVendorSide = GeneralMethod::companyAsVendor($job->company_id, $company_id);
+
+                $basecompany = GeneralMethod::baseCompany();
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                $attachments = [];
+
+                $cc = [];
+                $checkMailPermision = GeneralMethod::mailPermission(21);
+                if ($checkMailPermision) {
+
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(21, 1);
+
+                    $jobRow = DB::table('job_applications')->select('job_applications.*', 'city_list.city')
+                        ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')->where('job_applications.id', '=', $source_application_id)->first();
+
+                    $salaryMode = GeneralMethod::salaryMode();
+                    $currencySymbole = GeneralMethod::currencySymbole();
+                    $bill_rate_mode = strtoupper(substr($salaryMode[$jobRow->bill_rate_mode ?? 0] ?? 'Annual', 0, 1));
+                    $bill_rate_currency = $currencySymbole[@$jobRow->bill_rate_currency] ?? '₹';
+                    $bill_rate_amount = GeneralMethod::thousandsCurrencyFormat($jobRow->bill_rate_amount ?? 0);
+                    $salaryRange = $bill_rate_currency.$bill_rate_amount.'/'.$bill_rate_mode;
+
+                    $subject = str_replace(['[{JOB_TITLE}]', '[{JOB_ID}]'], [$job->title, $job->id], $mailTypeSubject->subject);
+
+                    $template_description = $mailTypeSubject->body_description;
+
+                    $template_description = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]', '[{VENDOR_COMPANY_NAME}]', '[{BENCH_CANDIDATE_NAME}]', '[{BILL_RATE}]', '[{EXPERENCE}]', '[{LOCATION}]', '[{CONTACT_PERSON_NAME}]', '[{PHONE}]', '[{EMAIL}]', '[{SKILL}]'], [$detailsVendorSide->client_company, $job->title, $job->id, $detailsVendorSide->vendor_company, $jobRow->full_name, $salaryRange, $jobRow->total_exp, $jobRow->city, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $jobRow->skills], $template_description);
+
+                    $message = $template_description;
+
+                    $notificationemail = GeneralMethod::notification($source_company_id, 'Recuitment'); // Recuitment Sales
+                    $defailsEmail = DB::table('companies')->where('id', $source_company_id)->first()->company_email;
+                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+
+                    if (! empty($to_Mail_Id)) {
+                        /**
+                         * Intent: Asynchronously offload email dispatch to Horizon queue (mail queue).
+                         * Tenancy Note: Multi-tenant safe, scoped by tenant notification recipient.
+                         */
+                        \App\Jobs\SendEmailJob::dispatch(
+                            $to_Mail_Id,
+                            $subject,
+                            'email.common.index',
+                            ['message' => $message],
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc
+                        );
+                    }
+
+                }
+
+            } else {
+                $data = ['status' => 'warning', 'message' => 'Failed'];
+
+            }
+
+            $userId = auth()->user()->id ?? $this->user->id ?? 0;
+            $cachekeys = [
+                'allbenchrecommendreq_version_user_'.$userId,
+                'allbenchrecommendinternalreq_version_user_'.$userId,
+            ];
+            foreach ($cachekeys as $key) {
+                GeneralMethod::cacheClean($key);
+            }
 
             return response()->json($data);
         } finally {

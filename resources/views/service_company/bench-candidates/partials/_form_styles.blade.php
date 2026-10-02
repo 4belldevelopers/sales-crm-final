@@ -691,6 +691,64 @@ body { overflow-x: hidden; }
     color: #dc2626 !important;
 }
 
+#talent_create_app .up-btn-download,
+.resume-card .up-btn-download {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 6px !important;
+    color: #1d4ed8 !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all .15s ease !important;
+}
+
+#talent_create_app .up-btn-download:hover,
+.resume-card .up-btn-download:hover {
+    background: #dbeafe !important;
+    border-color: #93c5fd !important;
+    color: #1e40af !important;
+}
+
+#talent_create_app .up-btn-download i,
+.resume-card .up-btn-download i {
+    font-size: 12px !important;
+    color: #1d4ed8 !important;
+}
+
+#talent_create_app .up-btn-replace,
+.resume-card .up-btn-replace {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    color: #334155 !important;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: all .15s ease !important;
+}
+
+#talent_create_app .up-btn-replace:hover,
+.resume-card .up-btn-replace:hover {
+    background: #f1f5f9 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+#talent_create_app .up-btn-replace i,
+.resume-card .up-btn-replace i {
+    font-size: 12px !important;
+    color: #475569 !important;
+}
+
 /* 3. Resume Details Card (2x2 Grid with Yellow Badges matching Image 2) */
 #talent_create_app .up-details-card,
 .resume-card .up-details-card {
