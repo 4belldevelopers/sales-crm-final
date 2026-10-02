@@ -77,9 +77,107 @@
     }
     if ($initials === '') { $initials = 'BC'; }
 
-    // Skills array
+    // Skills array & count (Point 4: number of skills added on add talent page)
     $skillsRaw = trim((string) @$benchApplication->skills);
     $skillsArr = $skillsRaw !== '' ? array_values(array_filter(array_map('trim', explode(',', $skillsRaw)), 'strlen')) : [];
+    $totalSkillsCount = !empty($skillExperiencesCount) ? (int)$skillExperiencesCount : count($skillsArr);
+    $skillsCountDisplay = $totalSkillsCount . ' ' . ($totalSkillsCount === 1 ? 'Skill' : 'Skills');
+
+    // Country short-code mapping & Work Auth resolver (Point 3)
+    $countryCodeShortMap = [
+        'united states' => 'USA', 'usa' => 'USA', 'us' => 'USA',
+        'india' => 'IND', 'in' => 'IND',
+        'canada' => 'CAN', 'ca' => 'CAN',
+        'united kingdom' => 'UK', 'uk' => 'UK', 'great britain' => 'UK', 'gb' => 'UK',
+        'united arab emirates' => 'UAE', 'uae' => 'UAE', 'ae' => 'UAE',
+        'australia' => 'AUS', 'au' => 'AUS',
+        'singapore' => 'SG', 'sg' => 'SG',
+        'new zealand' => 'NZ', 'nz' => 'NZ',
+        'saudi arabia' => 'KSA', 'sa' => 'KSA',
+        'germany' => 'GER', 'de' => 'GER',
+        'france' => 'FRA', 'fr' => 'FRA',
+        'netherlands' => 'NLD', 'nl' => 'NLD',
+        'ireland' => 'IRL', 'ie' => 'IRL',
+        'switzerland' => 'SUI', 'ch' => 'SUI',
+        'south africa' => 'ZAF', 'za' => 'ZAF',
+        'malaysia' => 'MYS', 'my' => 'MYS',
+        'philippines' => 'PHL', 'ph' => 'PHL',
+        'qatar' => 'QAT', 'qa' => 'QAT',
+        'kuwait' => 'KWT', 'kw' => 'KWT',
+        'oman' => 'OMN', 'om' => 'OMN',
+        'bahrain' => 'BHR', 'bh' => 'BHR',
+    ];
+
+    $defaultCountryShort = '';
+    if (!empty($country_name)) {
+        $cNameLower = strtolower(trim($country_name));
+        $defaultCountryShort = $countryCodeShortMap[$cNameLower] ?? strtoupper(substr($cNameLower, 0, 3));
+    }
+
+    $rawVisa = trim((string) @$benchApplication->visastatu);
+    $formatWorkAuthWithCountry = function($visa, $defaultCountryShort) use ($countryCodeShortMap) {
+        if (empty($visa)) {
+            return !empty($defaultCountryShort) ? "{$defaultCountryShort} - Authorised" : 'Authorised';
+        }
+        $vLower = strtolower($visa);
+
+        // US specific visa types
+        if (preg_match('/^(h-?1b|green card|gc-ead|h-?4 ead|l-?2 ead|tn permit|tn visa|opt-?ead|cpt|e-?3|o-?1|l-?1|other us ead|us citizen|usc)/i', $visa)) {
+            $cleaned = preg_replace('/^(us citizen|usc)/i', 'Citizen', $visa);
+            return 'USA - ' . (strtoupper($cleaned) === 'H1B' ? 'H1B' : $cleaned);
+        }
+        // Canada specific
+        if (preg_match('/^canad(a|ian)/i', $visa)) {
+            $cleaned = preg_replace('/^canad(a|ian)\s+/i', '', $visa);
+            return 'CAN - ' . $cleaned;
+        }
+        // India specific
+        if (preg_match('/^(india|indian|oci)/i', $visa)) {
+            $cleaned = preg_replace('/^indi(a|an)\s+/i', '', $visa);
+            return 'IND - ' . $cleaned;
+        }
+        // UK specific
+        if (preg_match('/^(uk|united kingdom)/i', $visa)) {
+            $cleaned = preg_replace('/^(uk|united kingdom)\s+/i', '', $visa);
+            return 'UK - ' . $cleaned;
+        }
+        // UAE specific
+        if (preg_match('/^(uae|saudi|gcc)/i', $visa)) {
+            return (str_starts_with($vLower, 'saudi') ? 'KSA - ' : 'UAE - ') . preg_replace('/^(uae|saudi)\s+/i', '', $visa);
+        }
+        // Singapore specific
+        if (preg_match('/^singapore/i', $visa)) {
+            $cleaned = preg_replace('/^singapore\s+/i', '', $visa);
+            return 'SG - ' . $cleaned;
+        }
+        // Australia / NZ
+        if (preg_match('/^australi(a|an)/i', $visa)) {
+            $cleaned = preg_replace('/^australi(a|an)\s+/i', '', $visa);
+            return 'AUS - ' . $cleaned;
+        }
+        if (preg_match('/^new zealand/i', $visa)) {
+            $cleaned = preg_replace('/^new zealand\s+/i', '', $visa);
+            return 'NZ - ' . $cleaned;
+        }
+        // EU
+        if (preg_match('/^eu/i', $visa)) {
+            return 'EU - ' . preg_replace('/^eu\s+/i', '', $visa);
+        }
+        // Pattern: "[Country Name] - [Visa]"
+        if (str_contains($visa, ' - ')) {
+            $parts = explode(' - ', $visa, 2);
+            $p0Lower = strtolower(trim($parts[0]));
+            $short = $countryCodeShortMap[$p0Lower] ?? strtoupper(substr($p0Lower, 0, 3));
+            return $short . ' - ' . trim($parts[1]);
+        }
+        // Default: prepend candidate's resolved country short form if available
+        if (!empty($defaultCountryShort)) {
+            return "{$defaultCountryShort} - {$visa}";
+        }
+        return $visa;
+    };
+
+    $workAuthShortDisplay = $formatWorkAuthWithCountry($rawVisa, $defaultCountryShort);
 
     // Added Date with explicit 12-hour AM/PM and IST Timezone
     $created_at = @$benchApplication->created_at;
@@ -293,9 +391,9 @@
 @media (max-width: 860px) { #kt_activitiesBenchApplication #personal_details .content-split { grid-template-columns: 1fr !important; } }
 
 #kt_activitiesBenchApplication #personal_details .cardshow { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 12px rgba(0,0,0,.03); margin-bottom: 16px; }
-#kt_activitiesBenchApplication #personal_details .card-header-sidebar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: #fff; border-bottom: 1px solid #f0f4f8; }
+#kt_activitiesBenchApplication #personal_details .card-header-sidebar { display: flex; align-items: center; gap: 10px; padding: 12px 14px !important; background: #fff; border-bottom: 1px solid #f0f4f8; }
 #kt_activitiesBenchApplication #personal_details .card-title { font-size: 13px !important; font-weight: 700 !important; color: #0f172a; margin: 0; font-family: 'Poppins', sans-serif; }
-#kt_activitiesBenchApplication #personal_details .summary-text { font-size: 12px !important; line-height: 1.7 !important; color: #334155; padding: 16px 20px; margin: 0; font-family: 'Poppins', sans-serif; }
+#kt_activitiesBenchApplication #personal_details .summary-text { font-size: 12px !important; line-height: 1.65 !important; color: #334155; padding: 12px 14px !important; margin: 0; font-family: 'Poppins', sans-serif; word-break: break-word; }
 #kt_activitiesBenchApplication #personal_details .skills-thead { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .skill-name-cell { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .skill-exp-cell { font-size: 12px !important; }
@@ -303,10 +401,20 @@
 #kt_activitiesBenchApplication #personal_details .comp-label { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .comp-value { font-size: 12px !important; font-weight: 600 !important; }
 #kt_activitiesBenchApplication #personal_details .comp-badge { font-size: 12px !important; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-body { padding: 14px 20px; font-size: 12px !important; line-height: 1.6 !important; color: #334155; font-family: 'Poppins', sans-serif; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content p { margin: 0 0 8px 0; }
-#kt_activitiesBenchApplication #personal_details .rm-comments-content p:last-child { margin-bottom: 0; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-body { padding: 12px 14px !important; font-size: 12px !important; line-height: 1.6 !important; color: #334155; font-family: 'Poppins', sans-serif; word-break: break-word; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p { margin: 0 0 6px 0 !important; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p:last-child { margin-bottom: 0 !important; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content ul,
+#kt_activitiesBenchApplication #personal_details .rm-comments-content ol { margin: 0 0 6px 0 !important; padding-left: 16px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content li { margin-bottom: 3px !important; }
 #kt_activitiesBenchApplication #personal_details .rm-comments-content strong { font-weight: 600; color: #0f172a; }
+#kt_activitiesBenchApplication #personal_details .rm-details-body { padding: 12px 14px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-card-content h4 { font-size: 13.5px !important; font-weight: 700 !important; color: #0f172a; margin: 0 0 8px 0 !important; font-family: 'Poppins', sans-serif; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-list { display: flex; flex-direction: column; gap: 7px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item { display: flex; align-items: center; gap: 8px !important; font-size: 12px !important; color: #334155 !important; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item svg { width: 14px !important; height: 14px !important; color: #64748b !important; flex-shrink: 0; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item a { color: #2563eb !important; text-decoration: none !important; font-weight: 500; }
+#kt_activitiesBenchApplication #personal_details .rm-contact-item a:hover { text-decoration: underline !important; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
@@ -410,6 +518,18 @@
             <p class="cdr-role">{{ ucwords(@$benchApplication->current_designation ?: '—') }}</p>
 
             <div class="cdr-meta-grid">
+              {{-- Row 1: Company Name | Location (Point 1: Interchanged with Bench ID & Upload) --}}
+              <span class="cdr-meta-item" title="{{ ucwords($posted_by_company ?: (auth()->user()->company->company_name ?? '—')) }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
+                {{ ucwords($posted_by_company ?: (auth()->user()->company->company_name ?? '—')) }}
+              </span>
+
+              <span class="cdr-meta-item" title="{{ @$city_name ? $city_name . ', ' : '' }}{{ @$state_name ? ucwords($state_name) . ', ' : '' }}{{ ucwords(@$country_name) }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ @$city_name ? $city_name . ', ' : '' }}{{ @$state_name ? ucwords($state_name) . ', ' : '' }}{{ ucwords(@$country_name) ?: '—' }}
+              </span>
+
+              {{-- Row 2: Bench ID | Upload Date (Point 1: Interchanged with Company & Location) --}}
               <span class="cdr-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
                 Bench ID: BJ-{{ @$benchApplication->id }}
@@ -418,18 +538,6 @@
               <span class="cdr-meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 Upload: {{ @$addedDate }}
-              </span>
-
-              @if(!empty($posted_by_company))
-              <span class="cdr-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/></svg>
-                {{ ucwords($posted_by_company) }}
-              </span>
-              @endif
-
-              <span class="cdr-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                {{ @$city_name ? $city_name . ', ' : '' }}{{ @$state_name ? ucwords($state_name) . ', ' : '' }}{{ ucwords(@$country_name) }}
               </span>
             </div>
           </div>
@@ -444,39 +552,43 @@
         @endif
       </div>
 
-      {{-- Sub-Card B: Availability & Work Authorisation (Distinct from Experience KPI strip below) --}}
+      {{-- Sub-Card B: Availability, Skills & Work Authorisation (Points 2, 3, 4, 5) --}}
       <div class="cdr-subcard cdr-subcard-metrics">
         <div class="cdr-metric-list" role="list" aria-label="Candidate availability metrics">
+          {{-- 1. Skills & Expertise (Point 4: number of skills added on add talent page) --}}
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-purple" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <span class="cdr-metric-label">Skills & Expertise</span>
+            <span class="cdr-metric-val">{{ $skillsCountDisplay }}</span>
+          </div>
+
+          {{-- 2. Availability (Point 4: replaced Notice Period with Availability) --}}
           <div class="cdr-metric-row" role="listitem">
             <div class="cdr-metric-icon ci-amber" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-            <span class="cdr-metric-label">Notice Period</span>
+            <span class="cdr-metric-label">Availability</span>
             <span class="cdr-metric-val">{{ @$np }}</span>
           </div>
 
+          {{-- 3. Engagement Type (Point 2: replaced Employment Type with Engagement Type) --}}
+          <div class="cdr-metric-row" role="listitem">
+            <div class="cdr-metric-icon ci-green" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </div>
+            <span class="cdr-metric-label">Engagement Type</span>
+            <span class="cdr-metric-val">{{ ucwords(@$benchApplication->employmentType ?: 'Full Time') }}</span>
+          </div>
+
+          {{-- 4. Work Auth / Visa (Point 3: short form country with visa name) --}}
           <div class="cdr-metric-row" role="listitem">
             <div class="cdr-metric-icon ci-blue" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <span class="cdr-metric-label">Work Auth / Visa</span>
-            <span class="cdr-metric-val" title="{{ ucwords(@$benchApplication->visastatu ?: 'Citizen / Authorised') }}">{{ \Illuminate\Support\Str::limit(ucwords(@$benchApplication->visastatu ?: 'Citizen / Authorised'), 14, '…') }}</span>
-          </div>
-
-          <div class="cdr-metric-row" role="listitem">
-            <div class="cdr-metric-icon ci-green" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            </div>
-            <span class="cdr-metric-label">Employment Type</span>
-            <span class="cdr-metric-val">{{ ucwords(@$benchApplication->employmentType ?: 'Full Time') }}</span>
-          </div>
-
-          <div class="cdr-metric-row" role="listitem">
-            <div class="cdr-metric-icon ci-purple" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-            <span class="cdr-metric-label">Serving Notice</span>
-            <span class="cdr-metric-val">{{ @$benchApplication->serving_notice_period_mode == 1 ? 'Yes' : 'No' }}</span>
+            <span class="cdr-metric-val" title="{{ $workAuthShortDisplay }}">{{ $workAuthShortDisplay }}</span>
           </div>
         </div>
       </div>
@@ -621,13 +733,13 @@
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                   </svg>
                 </div>
-                <h3 class="card-title">Key Skills & Experience</h3>
+                <h3 class="card-title">Talent Key Skills & Experiences</h3>
               </div>
               <div class="skills-table">
                 <div class="skills-thead">
                   <div>Skill</div>
                   <div>Experience</div>
-                  <div>Self Rating (Out of 5)</div>
+                  <div>Ratings</div>
                 </div>
                 @if(@$benchApplication->status_type != 'DIRECT')
                   @php
@@ -635,14 +747,7 @@
                       foreach($skillExperiences as $exp) {
                         echo '<div class="skills-row">
                           <div class="skill-name-cell">
-                            <div class="skill-logo" style="color: #f59e0b;">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                                <path d="M2 17l10 5 10-5"/>
-                                <path d="M2 12l10 5 10-5"/>
-                              </svg>
-                            </div>
-                            '.e($exp->skill_key).'
+                            <span class="skill-name-text" style="font-weight: 600; color: #1e293b;">'.e($exp->skill_key).'</span>
                           </div>
                           <div class="skill-exp-cell">'.e($exp->year ?? '0').'.'.e($exp->month ?? '0').' Years</div>
                           <div class="skill-rating-cell">
@@ -720,7 +825,7 @@
                   <span class="comp-value">{!! @$current_ectc_cur !!} {{ @$benchApplication->bill_rate_amount }} / {{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label">Rate Frequency</span>
+                  <span class="comp-label">Payment Model</span>
                   <span class="comp-badge">{{ $salaryMode[$bill_rate_mode] ?? 'Annual' }}</span>
                 </div>
                 <div class="comp-row">
@@ -728,7 +833,7 @@
                   <span class="comp-value">{{ $current_cur ?: 'INR' }}</span>
                 </div>
                 <div class="comp-row">
-                  <span class="comp-label">Service Tier</span>
+                  <span class="comp-label">Commercial Model</span>
                   <span class="comp-value">{{ @$comission_type_name }} Service</span>
                 </div>
                 <div class="comp-row">
@@ -812,46 +917,43 @@
                 </div>
                 <h3 class="card-title">Relationship Manager Details</h3>
               </div>
-              @if(!empty($bench_assign_row) && count($bench_assign_row) > 0)
-                @foreach($bench_assign_row as $key => $assignVal)
-                  @php
-                    $rmPhoneData = $resolvePhone($assignVal->calling_code ?? 'in');
-                  @endphp
-                  <div class="rm-card">
-                    <figure class="rm-avatar">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                      </svg>
-                    </figure>
-                    <div class="rm-details">
-                      <h4>{{ ucwords(@$assignVal->name) }}</h4>
+              <div class="rm-details-body">
+                @if(!empty($bench_assign_row) && count($bench_assign_row) > 0)
+                  @foreach($bench_assign_row as $key => $assignVal)
+                    @php
+                      $rmPhoneData = $resolvePhone($assignVal->calling_code ?? 'in');
+                    @endphp
+                    <div class="rm-card-content" style="{{ !$loop->first ? 'margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9;' : '' }}">
+                      <h4>{{ ucwords(@$assignVal->name ?: '—') }}</h4>
                       <div class="rm-contact-list">
-                        <div class="rm-contact-item" style="position: relative; display: flex; align-items: center; gap: 4px;">
+                        @if(!empty(@$assignVal->mobile))
+                        <div class="rm-contact-item">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                           </svg>
-                          <div class="iti__flag-container" style="display: inline-flex; align-items: center; gap: 4px;">
-                            <div class="iti__flag iti__{{ $rmPhoneData['iso'] }}"></div>
-                            <span>{{ $rmPhoneData['dial'] }}</span>
-                          </div>
-                          <span>{{ ucwords(@$assignVal->mobile) }}</span>
+                          <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            <span class="iti__flag iti__{{ $rmPhoneData['iso'] }}" style="display: inline-block;"></span>
+                            <span style="font-weight: 600; color: #0f172a;">{{ $rmPhoneData['dial'] }}</span>
+                          </span>
+                          <span style="font-weight: 500; color: #334155;">{{ @$assignVal->mobile }}</span>
                         </div>
+                        @endif
+                        @if(!empty(@$assignVal->email))
                         <div class="rm-contact-item">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                             <polyline points="22,6 12,13 2,6"/>
                           </svg>
-                          {{ @$assignVal->email }}
+                          <a href="mailto:{{ @$assignVal->email }}">{{ @$assignVal->email }}</a>
                         </div>
+                        @endif
                       </div>
                     </div>
-                  </div>
-                  @if(!$loop->last)<hr>@endif
-                @endforeach
-              @else
-                <div style="padding: 16px 20px; font-size: 12px; color: #94a3b8; font-style: italic;">No Relationship Manager assigned.</div>
-              @endif
+                  @endforeach
+                @else
+                  <div style="padding: 12px 14px; font-size: 12px; color: #94a3b8; font-style: italic;">No Relationship Manager assigned yet.</div>
+                @endif
+              </div>
             </section>
           </aside>
         </div>
