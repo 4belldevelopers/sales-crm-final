@@ -358,6 +358,7 @@ class ElasticBenchCandidatesIndex
                 $ik++;
             }
             $response = $this->elasticService->getClient()->bulk([
+                'refresh' => true,
                 'body' => $bulkData,
             ]);
 

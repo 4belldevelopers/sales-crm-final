@@ -258,7 +258,7 @@
   {{-- TOP ACTION BAR --}}
   <div class="cdr-topbar" aria-label="Bench candidate actions">
     <div class="cdr-topbar-group">
-      @if (in_array('edit_job_applications', $userPermissions) && $benchApplication->company_id == auth()->user()->company_id)
+      @if ((isset($userPermissions) && is_array($userPermissions) ? in_array('edit_job_applications', $userPermissions) : (auth()->check() && auth()->user()->can('edit_job_applications'))) && $benchApplication->company_id == auth()->user()->company_id)
         <a href="{{ route('service_company.bench-candidates.edit', [GeneralMethod::value_encrypt($benchApplication->id)]) }}" class="cdr-action-btn cdr-btn-primary" title="Edit candidate profile">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           Edit Profile

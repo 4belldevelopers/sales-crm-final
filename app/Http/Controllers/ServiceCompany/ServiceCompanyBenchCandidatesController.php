@@ -887,6 +887,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return response()->json(cache()->get($cacheKeySet));
         }
 
+        $this->userPermissions = $this->userPermissions ?? ($this->user ? $this->user->permission_type : []);
         $this->currency = GeneralMethod::currency();
         $this->salaryMode = GeneralMethod::salaryMode();
 
@@ -1866,40 +1867,65 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
 
             try {
-                $userId = auth()->user()->id ?? null;
-                Redis::connection('default')->setex("talent:idempotency:{$companyId}:{$clientUuid}", 86400, json_encode($responsePayload));
-                Redis::connection('default')->sadd('bench:dirty_tenants', $companyId);
-                Redis::connection('default')->del("bench:hero:total:{$companyId}");
-                Redis::connection('default')->del("bench:hero:bench:{$companyId}");
-                Redis::connection('default')->del("bench:hero:pool:{$companyId}");
-                Redis::connection('default')->del("bench:hero:hold:{$companyId}");
-                Redis::connection('default')->del("ats:allbenchcandidates:{$companyId}");
+                $userId = (int) (auth()->user()->id ?? 0);
+                $redisDefault = Redis::connection('default');
+                $redisDefault->setex("talent:idempotency:{$companyId}:{$clientUuid}", 86400, json_encode($responsePayload));
+                $redisDefault->sadd('bench:dirty_tenants', $companyId);
+                $redisDefault->del("bench:hero:total:{$companyId}");
+                $redisDefault->del("bench:hero:bench:{$companyId}");
+                $redisDefault->del("bench:hero:pool:{$companyId}");
+                $redisDefault->del("bench:hero:hold:{$companyId}");
 
                 // Multi-Tenant Atomic Cache Invalidation (Rules 5 & 6)
-                // Invalidate listing versions (company & user)
+                // Guaranteed monotonic version bumps for company and user
+                GeneralMethod::cacheClean("allbenchcandidates_version_company_{$companyId}");
                 cache()->increment("allbenchcandidates_version_company_{$companyId}");
-                if ($userId) {
-                    cache()->increment("allbenchcandidates_version_user_{$userId}");
-                }
-
-                // Invalidate bench detail drawer versions (company & user)
+                GeneralMethod::cacheClean("benchviewmore_version_company_{$companyId}");
                 cache()->increment("benchviewmore_version_company_{$companyId}");
-                if ($userId) {
-                    cache()->increment("benchviewmore_version_user_{$userId}");
-                }
-
-                // Invalidate offer listing versions (company & user)
+                GeneralMethod::cacheClean("allbenchofferListing_version_company_{$companyId}");
                 cache()->increment("allbenchofferListing_version_company_{$companyId}");
-                if ($userId) {
+                GeneralMethod::cacheClean("candidate:{$benchApplication->id}");
+
+                if ($userId > 0) {
+                    GeneralMethod::cacheClean("allbenchcandidates_version_user_{$userId}", $companyId);
+                    cache()->increment("allbenchcandidates_version_user_{$userId}");
+                    GeneralMethod::cacheClean("benchviewmore_version_user_{$userId}", $companyId);
+                    cache()->increment("benchviewmore_version_user_{$userId}");
+                    GeneralMethod::cacheClean("allbenchofferListing_version_user_{$userId}", $companyId);
                     cache()->increment("allbenchofferListing_version_user_{$userId}");
                 }
 
-                // Invalidate cached drawer HTML fragments directly
-                GeneralMethod::cacheClean("candidate:{$benchApplication->id}");
-                Cache::forget("ats:bench_detail:{$companyId}:{$benchApplication->id}");
-                Cache::forget("ats:bench_ads_tab:{$companyId}:{$benchApplication->id}");
-                Cache::forget("ats:bench_resume_tab:{$companyId}:{$benchApplication->id}");
-                Cache::forget("company:coins_val:{$companyId}:5:1");
+                // Directly purge matching compound keys in Redis cache store (Connection: 'cache')
+                try {
+                    $redisCache = Redis::connection('cache');
+                    $redisPrefix = config('database.redis.options.prefix', '');
+
+                    // 1. Purge all cached listing queries for this company
+                    $listingCacheKeys = $redisCache->keys('*ats:allbenchcandidates:' . $companyId . ':*');
+                    if (!empty($listingCacheKeys)) {
+                        $cleanListing = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $listingCacheKeys);
+                        $redisCache->del($cleanListing);
+                    }
+
+                    // 2. Purge candidate drawer and sub-tab cached views across all versions
+                    $candidateCacheKeys = $redisCache->keys('*ats:bench_*:' . $companyId . ':' . $benchApplication->id . '*');
+                    if (!empty($candidateCacheKeys)) {
+                        $cleanCandidate = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $candidateCacheKeys);
+                        $redisCache->del($cleanCandidate);
+                    }
+
+                    // 3. Purge hero KPIs and status counts
+                    $countCacheKeys = $redisCache->keys('*tenant:' . $companyId . ':bench_counts:*');
+                    if (!empty($countCacheKeys)) {
+                        $cleanCounts = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $countCacheKeys);
+                        $redisCache->del($cleanCounts);
+                    }
+                } catch (\Throwable $rEx) {
+                    Log::warning('Redis cache key pattern purge notice: ' . $rEx->getMessage());
+                }
+
+                cache()->forget("ats:bench_candidate_hero_kpis:{$benchApplication->id}");
+                cache()->forget("company:coins_val:{$companyId}:5:1");
             } catch (\Throwable $e) {
                 Log::warning('POST_COMMIT_CACHE_CLEAR_FAILED', ['error' => $e->getMessage()]);
             }

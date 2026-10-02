@@ -1295,6 +1295,10 @@
         });
 
         $(document).ready(function() {
+            if (sessionStorage.getItem('jero_bench_force_refresh') === '1' || window.location.search.indexOf('_fresh=') !== -1) {
+                try { sessionStorage.removeItem('jero_bench_force_refresh'); } catch (e) {}
+                BenchPageRamStore.invalidate();
+            }
             fetchBenchBenchCandidatesCandidateList();
             $(document).on('click', '#paginationbenchCandidateBenchCandidates .pagi-page, #paginationbenchCandidateBenchCandidates .pagi-arrow', function(e) {
                 e.preventDefault();
@@ -1348,8 +1352,9 @@
                 size: perPage
             };
 
+            var isFreshReq = window.location.search.indexOf('_fresh=') !== -1;
             var cacheKey = BenchPageRamStore.buildKey(page, requestParams);
-            if (!forceRefresh) {
+            if (!forceRefresh && !isFreshReq) {
                 var cachedResponse = BenchPageRamStore.get(cacheKey);
                 if (cachedResponse) {
                     renderBenchCandidatesResponse(cachedResponse);
