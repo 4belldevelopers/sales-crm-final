@@ -156,8 +156,11 @@ if($snp_mode== 1){
       <div class="talent-topbar-actions">
         @php 
             if(@$page_event == 'EDIT'){ 
-              echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary"><i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i></button>';
+              $cancelTab = match((int)(@$application->status ?? 2)){ 1 => 'pool', 2 => 'bench', 4 => 'hold', 3 => 'placed', 5 => 'exited', default => 'bench' };
+              echo '<a href="'.route('service_company.bench-candidates.index').'?tab='.$cancelTab.'" class="btn btn-sm btn-light fw-bold talent-topbar-close-btn" id="headerCloseBtn" title="Back to In-House Talent Listing"><i class="fa-solid fa-xmark me-1"></i> Close</a>';
+              echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary"><i class="fa-solid fa-check me-1"></i> Update Candidate</button>';
             }else{
+              echo '<a href="'.route('service_company.bench-candidates.index').'" class="btn btn-sm btn-light fw-bold talent-topbar-close-btn" id="headerCloseBtn" title="Back to In-House Talent Listing"><i class="fa-solid fa-xmark me-1"></i> Close</a>';
               echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small>';
             }
         @endphp
@@ -405,10 +408,6 @@ if($snp_mode== 1){
                                         <span>Download</span>
                                     </a>
                                     @endif
-                                    <button type="button" class="up-btn up-btn-replace" id="upReplaceBtn" title="Replace Resume">
-                                        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
-                                        <span>Replace</span>
-                                    </button>
                                     <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn" title="Remove Resume">
                                         <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                                         <span>Delete</span>
@@ -1950,25 +1949,6 @@ if($snp_mode== 1){
             </div>
           </div>
 
-          @if(@$page_event == 'EDIT')
-          {{-- Sticky Bottom Action Bar for Quick Update without Scrolling --}}
-          <div class="talent-sticky-footer card shadow-lg position-sticky bottom-0 z-index-3 py-3 px-6 mt-4 border-top bg-white" style="border-radius: 8px; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); z-index: 100;">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 container-fluid px-0">
-              <div class="d-flex align-items-center gap-2 text-muted fs-7">
-                <span class="badge badge-light-primary fw-bold px-2 py-1" style="font-size: 11px;">PRO TIP</span>
-                <span>Press <kbd class="bg-light text-dark px-2 py-1 rounded border fs-8">Ctrl + S</kbd> to save changes instantly from anywhere on the page</span>
-              </div>
-              <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('service_company.bench-candidates.index') }}?tab={{ match((int)(@$application->status ?? 2)){ 1 => 'pool', 2 => 'bench', 4 => 'hold', 3 => 'placed', 5 => 'exited', default => 'bench' } }}" class="btn btn-light btn-sm fw-bold">
-                  Cancel / Back
-                </a>
-                <button type="button" id="sticky-edit-form" class="btn btn-primary btn-sm fw-bold px-5" style="background: #2563EB; border-color: #2563EB;">
-                  <i class="fa-solid fa-check me-1"></i> Update Candidate
-                </button>
-              </div>
-            </div>
-          </div>
-          @endif
           </form>
         </main>
 
@@ -2703,9 +2683,8 @@ $(document).ready(function () {
         $(this).closest('.up-info-banner').slideUp(180);
     });
 
-    // Replace / Delete inside info card
-    $(document).on('click', '#upReplaceBtn', function (e) { e.preventDefault(); backToDropzone(); resumeInput.click(); });
-    $(document).on('click', '#upRemoveBtn',  function (e) { e.preventDefault(); backToDropzone(); });
+    // Delete inside info card (reverts cleanly back to dropzone)
+    $(document).on('click', '#upRemoveBtn', function (e) { e.preventDefault(); backToDropzone(); });
 
     // Retry parse (strictly in-browser Web Worker / RAM)
     $(document).on('click', '#upRetryBtn', function (e) {
@@ -6479,11 +6458,8 @@ var KTEditCandidate = function () {
 
         var executeEditSubmit = function () {
             closeRequiredFieldsModal();
-            $("#edit-form, #sticky-edit-form").prop("disabled", true).addClass('disabled');
+            $("#edit-form").prop("disabled", true).addClass('disabled');
             $("#edit-form").html(
-                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`
-            );
-            $("#sticky-edit-form").html(
                 `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`
             );
             if (submitButton) {
@@ -6494,8 +6470,7 @@ var KTEditCandidate = function () {
             if (!navigator.onLine) {
                 window.__talentIsSubmitting = false;
                 Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
-                $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
@@ -6525,8 +6500,7 @@ var KTEditCandidate = function () {
                 success: function (response) {
                     if (response.status === 'mailcheck') {
                         window.__talentIsSubmitting = false;
-                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
-                        $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                         if (submitButton) {
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
@@ -6554,8 +6528,7 @@ var KTEditCandidate = function () {
                     }
 
                     window.__talentIsSubmitting = false;
-                    $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
-                    $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
+                    $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                     if (submitButton) {
                         submitButton.removeAttribute('data-kt-indicator');
                         submitButton.disabled = false;
@@ -6609,8 +6582,7 @@ var KTEditCandidate = function () {
             var missing = detectMissingFields(form, validator);
             if (missing && missing.length > 0) {
                 window.__talentIsSubmitting = false;
-                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
-                $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
@@ -6626,8 +6598,7 @@ var KTEditCandidate = function () {
                         executeEditSubmit();
                     } else {
                         window.__talentIsSubmitting = false;
-                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
-                        $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                         if (submitButton) {
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
@@ -6644,8 +6615,8 @@ var KTEditCandidate = function () {
             }
         };
 
-        // Bind Single Delegated Click Listener to topbar button and sticky footer button
-        $(document).off('click', '#edit-form, #sticky-edit-form').on('click', '#edit-form, #sticky-edit-form', function (e) {
+        // Bind Single Delegated Click Listener to topbar Update Candidate button
+        $(document).off('click', '#edit-form').on('click', '#edit-form', function (e) {
             handleEditSubmit(e);
         });
 

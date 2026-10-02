@@ -8868,6 +8868,7 @@ END:VCALENDAR";
                 'index' => ELASTIC_CANDIDATES_BENCH,
                 'id' => $application->id,
                 'retry_on_conflict' => 5,
+                'refresh' => true,
                 'body' => [
                     'doc' => [
                         'id' => $application->id,

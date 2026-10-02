@@ -1866,6 +1866,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
 
             try {
+                $userId = auth()->user()->id ?? null;
                 Redis::connection('default')->setex("talent:idempotency:{$companyId}:{$clientUuid}", 86400, json_encode($responsePayload));
                 Redis::connection('default')->sadd('bench:dirty_tenants', $companyId);
                 Redis::connection('default')->del("bench:hero:total:{$companyId}");
@@ -1873,9 +1874,32 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 Redis::connection('default')->del("bench:hero:pool:{$companyId}");
                 Redis::connection('default')->del("bench:hero:hold:{$companyId}");
                 Redis::connection('default')->del("ats:allbenchcandidates:{$companyId}");
+
+                // Multi-Tenant Atomic Cache Invalidation (Rules 5 & 6)
+                // Invalidate listing versions (company & user)
                 cache()->increment("allbenchcandidates_version_company_{$companyId}");
-                Cache::forget("company:coins_val:{$companyId}:5:1");
+                if ($userId) {
+                    cache()->increment("allbenchcandidates_version_user_{$userId}");
+                }
+
+                // Invalidate bench detail drawer versions (company & user)
+                cache()->increment("benchviewmore_version_company_{$companyId}");
+                if ($userId) {
+                    cache()->increment("benchviewmore_version_user_{$userId}");
+                }
+
+                // Invalidate offer listing versions (company & user)
+                cache()->increment("allbenchofferListing_version_company_{$companyId}");
+                if ($userId) {
+                    cache()->increment("allbenchofferListing_version_user_{$userId}");
+                }
+
+                // Invalidate cached drawer HTML fragments directly
                 GeneralMethod::cacheClean("candidate:{$benchApplication->id}");
+                Cache::forget("ats:bench_detail:{$companyId}:{$benchApplication->id}");
+                Cache::forget("ats:bench_ads_tab:{$companyId}:{$benchApplication->id}");
+                Cache::forget("ats:bench_resume_tab:{$companyId}:{$benchApplication->id}");
+                Cache::forget("company:coins_val:{$companyId}:5:1");
             } catch (\Throwable $e) {
                 Log::warning('POST_COMMIT_CACHE_CLEAR_FAILED', ['error' => $e->getMessage()]);
             }
@@ -2176,7 +2200,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         $this->recruiterlist = DB::table('bench_assign')
             ->join('users', 'users.id', '=', 'bench_assign.user_id')
-            ->select('users.name', 'users.id')
+            ->select('users.name', 'users.id', 'users.email', 'users.calling_code', 'users.mobile')
             ->where('bench_assign.company_id', $company_id)
             ->where('bench_assign.bench_applications_id', $id)
             ->where('users.type', '=', 0)

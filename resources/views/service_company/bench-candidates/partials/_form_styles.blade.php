@@ -2984,6 +2984,73 @@ textarea.has-validation-error:focus,
         grid-template-columns: 1fr;
     }
 }
+
+/* Topbar Edit & Add Mode Single-Row Flex Cluster Polish */
+.talent-topbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 12px 20px !important;
+    min-height: 0 !important;
+    padding: 10px 0 !important;
+}
+.talent-topbar .talent-topbar-copy {
+    flex: 1 1 auto !important;
+    min-width: 260px !important;
+}
+.talent-topbar .talent-topbar-marketplace {
+    flex: 0 0 auto !important;
+}
+.talent-topbar .talent-topbar-actions {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+}
+.talent-topbar .talent-topbar-actions .talent-topbar-close-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 38px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #4b5675 !important;
+    background: #f1f2f6 !important;
+    border: 1px solid #d8dbe0 !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+.talent-topbar .talent-topbar-actions .talent-topbar-close-btn:hover {
+    background: #e4e6ef !important;
+    color: #1b2559 !important;
+    border-color: #c4c8d0 !important;
+}
+.talent-topbar .talent-topbar-actions .talent-topbar-primary {
+    width: auto !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    border-radius: 6px !important;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-primary {
+    background-color: #2563EB !important;
+    border-color: #2563EB !important;
+    color: #ffffff !important;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-primary:hover {
+    background-color: #1D4ED8 !important;
+    border-color: #1D4ED8 !important;
+}
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}&bench_commercials=20260914&professional_profile=20260914&basic_availability=20260914&location_dropdown=20260914&location_typography=20260914&availability_date=20260914&fa6_fix=20260914&skills_header=20260914&location_enterprise=20260914&availability_picker=20260914&resume_summary_cards=20260914&relationship_manager_card=20260914&top_header=20260914&additional_details_card=20260914&enterprise_polish=20260914&professional_row_alignment=20260914&final_enterprise_polish=20260914&rm_summary_fix=20260914&availability_additional_fix=20260914&resume_note_visibility=20260915&create_card_order_icons=20260915&create_field_polish=20260915&create_global_phone_experience=20260915&commercial_state_colors=20260921&talent_stage_privacy=20260921&commercial_blue_green=20260921&availability_work_colors=20260921&skills_expertise=20260921&talent_stage_header=20260921&alignment_icon_comments=20260921&font_aliases=20260921&page_header_flow=20260921&talent_stage_skill_selects=20260921&sticky_compact_header=20260921&create_defaults_icons=20260921&bench_header_lavender=20260928" rel="stylesheet" type="text/css" />

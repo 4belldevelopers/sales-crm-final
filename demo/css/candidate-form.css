@@ -5360,9 +5360,67 @@ select option,
     background: transparent;
     box-shadow: none;
 }
-.talent-topbar-title-row { flex-wrap: wrap; gap: 7px 12px; }
-.talent-topbar--edit { grid-template-columns: minmax(0, 1fr) auto; }
-.talent-topbar--edit .talent-topbar-actions { min-width: 170px; }
+.talent-topbar--edit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.talent-topbar--edit .talent-topbar-copy {
+    flex: 1 1 auto;
+    min-width: 260px;
+}
+.talent-topbar--edit .talent-topbar-marketplace {
+    flex: 0 0 auto;
+}
+.talent-topbar--edit .talent-topbar-actions {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-close-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5675;
+    background: #f1f2f6;
+    border: 1px solid #d8dbe0;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-close-btn:hover {
+    background: #e4e6ef;
+    color: #1b2559;
+    border-color: #c4c8d0;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-primary {
+    width: auto;
+    min-height: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    border-radius: 6px;
+    background-color: #2563EB !important;
+    border-color: #2563EB !important;
+    color: #ffffff !important;
+}
+.talent-topbar--edit .talent-topbar-actions .talent-topbar-primary:hover {
+    background-color: #1D4ED8 !important;
+    border-color: #1D4ED8 !important;
+}
 .talent-topbar h1 { font-size: 16px !important; line-height: 1.2 !important; }
 .talent-topbar p { max-width: 620px; margin-top: 7px !important; color: #58658f !important; font-size: 13px !important; }
 .talent-topbar-badge { gap: 7px; padding: 7px 11px; border-radius: 999px; color: #07844f !important; background: #e3faef !important; }
