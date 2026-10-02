@@ -1954,7 +1954,7 @@ if($snp_mode== 1){
             <div class="fs candidate-card recruiter-note-card rm-note-card" id="rm_comments_section">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-solid fa-note-sticky" aria-hidden="true"></i></span>
                   <span><strong>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></strong><small>Add internal context and evaluation notes from the Relationship Manager.</small></span>
                 </div>
               </div>

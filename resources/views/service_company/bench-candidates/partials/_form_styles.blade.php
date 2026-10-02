@@ -3179,15 +3179,21 @@ textarea.has-validation-error:focus,
     height: 38px !important;
     min-width: 38px !important;
     flex-basis: 38px !important;
-    border-radius: 8px;
+    border-radius: 8px !important;
     border: 0 !important;
     color: #ffffff !important;
     background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important;
-    font-size: 15px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.rm-note-card .candidate-card-icon--note i {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    display: inline-block !important;
 }
 .rm-note-card .candidate-card-title strong {
     color: #071434 !important;
