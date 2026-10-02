@@ -904,6 +904,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'job_applications.submitted_by as editAllow',
             'job_applications.full_name',
             'job_applications.careersummary',
+            'job_applications.recruiter_note',
             'job_applications.nationality',
             'job_applications.gender',
             'job_applications.wm',
@@ -977,6 +978,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->where('bench_id', '=', $this->benchApplication->id)
             ->orderBy('id', 'ASC')
             ->get();
+
+        // Intent: Fetch Relationship Manager Comments from isolated bench_candidate_rm_comments table
+        $rmCommentRow = DB::table('bench_candidate_rm_comments')
+            ->where('company_id', $company_id)
+            ->where('candidate_id', $this->benchApplication->id)
+            ->first();
+        $this->benchApplication->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
 
         // Intent: Fetch Relationship Managers directly from MySQL (eliminating Elasticsearch search overhead under 10K scale)
         $this->bench_assign_row = DB::table('bench_assign')
@@ -1248,6 +1256,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return GeneralMethod::currencyConverter();
         });
         $this->skillExperiences = [];
+        $this->recruiterNoteTemplates = DB::table('bench_rm_note_master')
+            ->where('status', 1)
+            ->where(function ($q) use ($companyId) {
+                $q->whereNull('company_id')->orWhere('company_id', $companyId);
+            })
+            ->orderBy('id')->get();
 
         return response()->view('service_company.bench-candidates.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -1315,11 +1329,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'email:rfc,dns',
                 'disposable_email',
             ],
+            'recruiter_note' => ['required'],
         ], [
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
             'talent_stage.in' => 'Select a valid talent stage.',
+            'recruiter_note.required' => 'Relationship Manager comments are required.',
         ]);
 
         if ($validator->fails()) {
@@ -1329,6 +1345,16 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
 
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
+        }
+
+        $rawNote = trim(strip_tags((string) $request->input('recruiter_note')));
+        if ($rawNote === '' || $rawNote === '&nbsp;') {
+            try {
+                Redis::connection('default')->del($idempotencyKey);
+            } catch (\Throwable $e) {
+            }
+
+            return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Relationship Manager comments cannot be empty.']);
         }
 
         // v2 pre-flight: validate resume_session_uuid before opening transaction
@@ -2158,6 +2184,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 DB::table('bench_additional_detail')->insert($detailRows);
             }
         }
+
+        // 5. Isolated Relationship Manager Comments (bench_candidate_rm_comments)
+        $rmComments = trim((string) $request->input('recruiter_note', ''));
+        if ($rmComments !== '') {
+            $firstRecruiterId = !empty($assignRows) ? $assignRows[0]['user_id'] : (int) ($request->input('recruiter') ?: auth()->user()->id);
+            DB::table('bench_candidate_rm_comments')->updateOrInsert(
+                [
+                    'company_id' => $companyId,
+                    'candidate_id' => $candidateId,
+                ],
+                [
+                    'relationship_manager_id' => $firstRecruiterId ?: null,
+                    'comments' => $rmComments,
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 
     public function edit($id)
@@ -2276,6 +2319,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
             return GeneralMethod::currencyConverter();
         });
+        $this->recruiterNoteTemplates = DB::table('bench_rm_note_master')
+            ->where('status', 1)
+            ->where(function ($q) use ($company_id) {
+                $q->whereNull('company_id')->orWhere('company_id', $company_id);
+            })
+            ->orderBy('id')->get();
+
+        // Intent: Fetch candidate's Relationship Manager comments from isolated bench_candidate_rm_comments
+        $rmCommentRow = DB::table('bench_candidate_rm_comments')
+            ->where('company_id', $company_id)
+            ->where('candidate_id', $this->application->id)
+            ->first();
+        if ($rmCommentRow && filled($rmCommentRow->comments)) {
+            $this->application->recruiter_note = $rmCommentRow->comments;
+        }
 
         return response()->view('service_company.bench-candidates.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')

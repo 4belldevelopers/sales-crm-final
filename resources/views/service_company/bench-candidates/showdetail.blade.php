@@ -303,6 +303,10 @@
 #kt_activitiesBenchApplication #personal_details .comp-label { font-size: 12px !important; }
 #kt_activitiesBenchApplication #personal_details .comp-value { font-size: 12px !important; font-weight: 600 !important; }
 #kt_activitiesBenchApplication #personal_details .comp-badge { font-size: 12px !important; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-body { padding: 14px 20px; font-size: 12px !important; line-height: 1.6 !important; color: #334155; font-family: 'Poppins', sans-serif; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p { margin: 0 0 8px 0; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content p:last-child { margin-bottom: 0; }
+#kt_activitiesBenchApplication #personal_details .rm-comments-content strong { font-weight: 600; color: #0f172a; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1100px) { #kt_activitiesBenchApplication .cdr-pipeline-section { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
@@ -662,6 +666,34 @@
 
           {{-- Sidebar Column --}}
           <aside class="content-sidebar">
+            {{-- Relationship Manager Comments Card --}}
+            <section class="cardshow rm-comments-drawer-card">
+              <div class="card-header-sidebar">
+                <div class="card-icon" style="background: var(--color-primary-50, #eff6ff); color: var(--color-primary-600, #2563eb);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </div>
+                <h3 class="card-title">Relationship Manager Comments</h3>
+              </div>
+              <div class="rm-comments-body">
+                @php
+                  $displayRmComment = !empty($benchApplication->rm_comments) ? $benchApplication->rm_comments : @$benchApplication->recruiter_note;
+                @endphp
+                @if(!empty($displayRmComment))
+                  <div class="rm-comments-content">
+                    @if(strip_tags($displayRmComment) !== $displayRmComment)
+                      {!! clean($displayRmComment) !!}
+                    @else
+                      {!! nl2br(e($displayRmComment)) !!}
+                    @endif
+                  </div>
+                @else
+                  <p class="rm-no-comments text-muted font-italic mb-0" style="font-size: 12px; color: #94a3b8; font-style: italic; margin: 0;">No Relationship Manager comments added yet.</p>
+                @endif
+              </div>
+            </section>
+
             <section class="cardshow">
               <div class="card-header-sidebar">
                 <div class="card-icon" style="background: var(--color-warning-50, #fffbeb); color: var(--color-warning-600, #d97706);">

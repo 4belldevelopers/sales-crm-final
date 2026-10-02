@@ -76,6 +76,7 @@ class ElasticBenchCandidatesIndex
                 'job_applications.rating',
                 'job_applications.skype_id',
                 'job_applications.cover_letter',
+                'job_applications.recruiter_note',
                 'job_applications.passport',
                 'job_applications.process_id',
                 'job_applications.qualification',
@@ -99,7 +100,8 @@ class ElasticBenchCandidatesIndex
                 'qualification_master.name as qualification_name',
                 'state_list.state as state_name',
                 'city_list.city as city_name',
-                'countries.country_name'
+                'countries.country_name',
+                'bench_candidate_rm_comments.comments as rm_comments'
             )->join('bench_master_status', 'bench_master_status.id', 'job_applications.status')
                 ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
                 ->leftjoin('companies', 'companies.id', 'job_applications.company_id')
@@ -107,6 +109,10 @@ class ElasticBenchCandidatesIndex
                 ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
                 ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
                 ->leftJoin('city_list', 'city_list.city_id', '=', 'job_applications.city_id')
+                ->leftJoin('bench_candidate_rm_comments', function ($join) {
+                    $join->on('bench_candidate_rm_comments.candidate_id', '=', 'job_applications.id')
+                        ->on('bench_candidate_rm_comments.company_id', '=', 'job_applications.company_id');
+                })
                 ->where('condidate_type', '=', 'bench_condidate')
                 ->where('job_applications.id', $comid)
                 ->get();
@@ -262,6 +268,8 @@ class ElasticBenchCandidatesIndex
                     'ectc_yearly' => $application->ectc_yearly,
                     'ads_switch' => $application->ads_switch,
                     'job_application_skills' => $job_application_skills,
+                    'recruiter_note' => $application->rm_comments ?? $application->recruiter_note,
+                    'rm_comments' => $application->rm_comments ?? $application->recruiter_note,
                     'hiring_hr' => $hmData,
                     'jobs' => $add_job_wise_condidates,
                     'viewCount' => $viewCount,
