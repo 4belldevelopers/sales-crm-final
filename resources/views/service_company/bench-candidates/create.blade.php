@@ -1960,17 +1960,208 @@ if($snp_mode== 1){
               </div>
               <div class="fsc candidate-card-body">
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
-                <div class="fg fv-row recruiter-template-field">
-                  <label>Select Template <span>(Pre-fills standard evaluation structure into the box below)</span></label>
-                  <div class="recruiter-template-control">
-                    <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
-                    <select id="recruiter_note_template_select" class="form-select form-select-solid">
-                      <option value="">Select Note Template...</option>
-                      @foreach($recruiterNoteTemplates as $tpl)
-                        <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
-                      @endforeach
-                    </select>
+                @php
+                  // Map templates from bench_rm_note_master into the 3 UI categories matching media_1790970788987.png
+                  $catAvailability = [];
+                  $catEngagement   = [];
+                  $catStrength     = [];
+
+                  $templateMeta = [
+                      // 1. Availability & Readiness
+                      'Bench Availability & Deployment Readiness' => [
+                          'cat'      => 'avail',
+                          'icon'     => 'fa-regular fa-clock',
+                          'title'    => 'Bench Availability & Immediate Deployment',
+                          'subtitle' => 'Active on bench and ready for immediate opportunities.',
+                          'order'    => 1,
+                      ],
+                      'Notice Period & Work Authorization' => [
+                          'cat'      => 'avail',
+                          'icon'     => 'fa-regular fa-calendar-days',
+                          'title'    => 'Notice Period & Availability',
+                          'subtitle' => 'Currently serving notice period with defined availability.',
+                          'order'    => 2,
+                      ],
+                      'Remote Opportunity Only' => [
+                          'cat'      => 'avail',
+                          'icon'     => 'fa-solid fa-wifi',
+                          'title'    => 'Remote Only',
+                          'subtitle' => 'Available for remote opportunities only.',
+                          'order'    => 3,
+                      ],
+
+                      // 2. Engagement Type
+                      'Contract/C2C/C2H Engagement Only' => [
+                          'cat'      => 'eng',
+                          'icon'     => 'fa-solid fa-briefcase',
+                          'title'    => 'Contract Engagement',
+                          'subtitle' => 'Available for contract / C2C / C2H engagements only.',
+                          'order'    => 1,
+                      ],
+                      'Direct Hire/Permanent Hiring Engagement Only' => [
+                          'cat'      => 'eng',
+                          'icon'     => 'fa-regular fa-user',
+                          'title'    => 'Direct Hire / Permanent',
+                          'subtitle' => 'Available for full-time / direct-hire opportunities only.',
+                          'order'    => 2,
+                      ],
+                      'Contract or Direct Hire' => [
+                          'cat'      => 'eng',
+                          'icon'     => 'fa-solid fa-right-left',
+                          'title'    => 'Contract or Direct Hire',
+                          'subtitle' => 'Open to both contract and full-time opportunities.',
+                          'order'    => 3,
+                      ],
+
+                      // 3. Candidate Strength
+                      'Core Strengths & Project Fit' => [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-regular fa-star',
+                          'title'    => 'Core Skills & Role Fit',
+                          'subtitle' => 'Strong technical skills and alignment with target roles.',
+                          'order'    => 1,
+                      ],
+                      'Role Alignment & Skills Match Recommendation' => [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-solid fa-wand-magic-sparkles',
+                          'title'    => 'Role Alignment & Skills Match',
+                          'subtitle' => 'Recommendation synced in real-time with role, skills, and availability.',
+                          'order'    => 2,
+                      ],
+                      'Good Communication Skills' => [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-regular fa-comments',
+                          'title'    => 'Good Communication Skills',
+                          'subtitle' => 'Well-rounded professional profile with evaluated communication abilities.',
+                          'order'    => 3,
+                      ],
+                      'Trained & Job-Ready Entry-Level Talent' => [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-solid fa-graduation-cap',
+                          'title'    => 'Trained & Job-Ready Entry-Level Talent',
+                          'subtitle' => 'Job-ready entry-level talent with comprehensive practical training.',
+                          'order'    => 4,
+                      ],
+                      'Laid-Off Talents' => [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-solid fa-user-clock',
+                          'title'    => 'Laid-Off Talents',
+                          'subtitle' => 'Experienced talent available immediately due to workforce restructuring.',
+                          'order'    => 5,
+                      ],
+                  ];
+
+                  foreach ($recruiterNoteTemplates as $tpl) {
+                      $meta = $templateMeta[$tpl->title] ?? [
+                          'cat'      => 'strength',
+                          'icon'     => 'fa-regular fa-note-sticky',
+                          'title'    => $tpl->title,
+                          'subtitle' => 'Standard relationship manager candidate evaluation note.',
+                          'order'    => 99,
+                      ];
+                      $entry = [
+                          'id'       => $tpl->id,
+                          'rawTitle' => $tpl->title,
+                          'title'    => $meta['title'],
+                          'subtitle' => $meta['subtitle'],
+                          'icon'     => $meta['icon'],
+                          'order'    => $meta['order'],
+                      ];
+
+                      if ($meta['cat'] === 'avail') {
+                          $catAvailability[] = $entry;
+                      } elseif ($meta['cat'] === 'eng') {
+                          $catEngagement[] = $entry;
+                      } else {
+                          $catStrength[] = $entry;
+                      }
+                  }
+                  usort($catAvailability, fn($a, $b) => $a['order'] <=> $b['order']);
+                  usort($catEngagement, fn($a, $b) => $a['order'] <=> $b['order']);
+                  usort($catStrength, fn($a, $b) => $a['order'] <=> $b['order']);
+                @endphp
+
+                <div class="rm-template-catalog" id="rm_template_catalog">
+                  <div class="rm-template-catalog-header">
+                    <span class="catalog-title">
+                      <i class="fa-solid fa-layer-group text-primary"></i> Select Template Category
+                    </span>
+                    <span class="catalog-badge">Click any template to auto-populate</span>
                   </div>
+
+                  <div class="rm-template-scroll">
+                    {{-- 1. Availability & Readiness --}}
+                    @if(count($catAvailability) > 0)
+                    <div class="tpl-category-section">
+                      <div class="tpl-category-heading tpl-cat--blue">
+                        <span>Availability & Readiness</span>
+                      </div>
+                      @foreach($catAvailability as $item)
+                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
+                        <div class="tpl-card-left">
+                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                          <div class="tpl-card-text">
+                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                          </div>
+                        </div>
+                        <span class="tpl-card-check">
+                          <i class="fa-solid fa-circle-check"></i>
+                        </span>
+                      </div>
+                      @endforeach
+                    </div>
+                    @endif
+
+                    {{-- 2. Engagement Type --}}
+                    @if(count($catEngagement) > 0)
+                    <div class="tpl-category-section">
+                      <div class="tpl-category-heading tpl-cat--green">
+                        <span>Engagement Type</span>
+                      </div>
+                      @foreach($catEngagement as $item)
+                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
+                        <div class="tpl-card-left">
+                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                          <div class="tpl-card-text">
+                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                          </div>
+                        </div>
+                        <span class="tpl-card-check">
+                          <i class="fa-solid fa-circle-check"></i>
+                        </span>
+                      </div>
+                      @endforeach
+                    </div>
+                    @endif
+
+                    {{-- 3. Candidate Strength --}}
+                    @if(count($catStrength) > 0)
+                    <div class="tpl-category-section">
+                      <div class="tpl-category-heading tpl-cat--amber">
+                        <span>Candidate Strength</span>
+                      </div>
+                      @foreach($catStrength as $item)
+                      <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" role="button" tabindex="0">
+                        <div class="tpl-card-left">
+                          <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                          <div class="tpl-card-text">
+                            <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                            <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                          </div>
+                        </div>
+                        <span class="tpl-card-check">
+                          <i class="fa-solid fa-circle-check"></i>
+                        </span>
+                      </div>
+                      @endforeach
+                    </div>
+                    @endif
+                  </div>
+
+                  {{-- Hidden input for backward compatibility and JS synchronization --}}
+                  <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="" />
                 </div>
                 @endif
                 <div class="fg fv-row recruiter-editor-field">
@@ -5701,6 +5892,8 @@ function applyDefaultRecruiterNotePrefill() {
             var activeTpl = recruiterNoteTemplates[matchKey];
             if (activeTpl && activeTpl.content) {
                 $('#recruiter_note_template_select').val(activeTpl.id);
+                $('.tpl-card-item').removeClass('is-selected');
+                $('.tpl-card-item[data-template-id="' + activeTpl.id + '"]').addClass('is-selected');
                 var formatted = formatTemplateToPlainText(activeTpl.content);
                 var interpolated = interpolateTemplateVariables(formatted);
                 $rn.val(interpolated);
@@ -5712,10 +5905,30 @@ function applyDefaultRecruiterNotePrefill() {
     }
 }
 
-// Template dropdown change event with live variable interpolation
+// Interactive Categorized Template Selection Card Click (media_1790970788987.png)
+$(document).on('click', '.tpl-card-item', function () {
+    var id = $(this).data('template-id');
+    if (!id || !recruiterNoteTemplates[id]) return;
+
+    $('.tpl-card-item').removeClass('is-selected');
+    $(this).addClass('is-selected');
+    $('#recruiter_note_template_select').val(id);
+
+    var content = recruiterNoteTemplates[id].content;
+    var formatted = formatTemplateToPlainText(content);
+    var interpolated = interpolateTemplateVariables(formatted);
+    $('#recruiter_note').val(interpolated);
+    clearFieldValidationErrors('recruiter_note');
+});
+
+// Template dropdown change event with live variable interpolation (backward compatibility)
 $(document).on('change', '#recruiter_note_template_select', function () {
     var id = $(this).val();
     if (!id || !recruiterNoteTemplates[id]) return;
+
+    $('.tpl-card-item').removeClass('is-selected');
+    $('.tpl-card-item[data-template-id="' + id + '"]').addClass('is-selected');
+
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
     var interpolated = interpolateTemplateVariables(formatted);
@@ -5729,6 +5942,10 @@ function triggerLiveRmCommentsSync() {
     clearTimeout(_rmSyncTimer);
     _rmSyncTimer = setTimeout(function () {
         var selectedId = $('#recruiter_note_template_select').val();
+        if (!selectedId && $('.tpl-card-item.is-selected').length) {
+            selectedId = $('.tpl-card-item.is-selected').data('template-id');
+            $('#recruiter_note_template_select').val(selectedId);
+        }
         if (!selectedId || !recruiterNoteTemplates[selectedId]) return;
 
         var $rn = $('#recruiter_note');
@@ -5752,6 +5969,10 @@ $(document).on('click', '.aw-option, .wa-chip-btn', function () {
 $(document).on('click', '#btn_sync_rm_template', function (e) {
     e.preventDefault();
     var selectedId = $('#recruiter_note_template_select').val();
+    if (!selectedId && $('.tpl-card-item.is-selected').length) {
+        selectedId = $('.tpl-card-item.is-selected').data('template-id');
+        $('#recruiter_note_template_select').val(selectedId);
+    }
     var $rn = $('#recruiter_note');
     var baseText = '';
 
@@ -5766,6 +5987,8 @@ $(document).on('click', '#btn_sync_rm_template', function (e) {
         if (tplKeys.length > 0) {
             baseText = formatTemplateToPlainText(recruiterNoteTemplates[tplKeys[0]].content);
             $('#recruiter_note_template_select').val(recruiterNoteTemplates[tplKeys[0]].id);
+            $('.tpl-card-item').removeClass('is-selected');
+            $('.tpl-card-item[data-template-id="' + recruiterNoteTemplates[tplKeys[0]].id + '"]').addClass('is-selected');
         }
     }
 
