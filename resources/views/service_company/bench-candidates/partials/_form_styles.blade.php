@@ -3153,18 +3153,28 @@ textarea.has-validation-error:focus,
 }
 
 /* Relationship Manager Comments Card - Metronic Blue Theme */
+.fs.rm-note-card,
 .rm-note-card {
-    overflow: hidden;
+    overflow: visible !important;
+    position: relative;
+    z-index: 20;
     border: 1px solid #dbeafe !important;
     border-radius: 8px !important;
     background: #ffffff !important;
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05) !important;
     margin-bottom: 20px;
 }
+.rm-note-card.has-open-dropdown,
+.rm-note-card:has(.custom-template-dropdown.is-open) {
+    position: relative !important;
+    z-index: 1060 !important;
+}
 .rm-note-card .candidate-card-header {
     min-height: 58px !important;
     padding: 12px 18px !important;
     border-bottom: 1px solid #dbeafe !important;
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
     background: linear-gradient(90deg, #f0f6ff 0%, #ffffff 82%) !important;
     display: flex;
     align-items: center;
@@ -3207,10 +3217,18 @@ textarea.has-validation-error:focus,
     font-size: 11px !important;
     line-height: 1.4;
 }
-.rm-note-card .candidate-card-body {
+.rm-note-card .candidate-card-body,
+.rm-note-card .fsc {
+    overflow: visible !important;
+    position: relative;
     padding: 16px 20px !important;
     display: grid;
     gap: 14px;
+}
+.rm-note-card .recruiter-template-field {
+    overflow: visible !important;
+    position: relative;
+    z-index: 1062;
 }
 .rm-note-card .recruiter-template-field label,
 .rm-note-card .recruiter-editor-field label {
@@ -3322,8 +3340,13 @@ textarea.has-validation-error:focus,
 
 /* Custom Template Dropdown Selection (media_1790970788987.png) */
 .custom-template-dropdown {
-    position: relative;
+    position: relative !important;
     width: 100%;
+    z-index: 1064;
+}
+
+.custom-template-dropdown.is-open {
+    z-index: 1068 !important;
 }
 
 .custom-template-trigger {
@@ -3398,14 +3421,14 @@ textarea.has-validation-error:focus,
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    z-index: 1060;
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.14), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    z-index: 1080 !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22), 0 4px 12px rgba(15, 23, 42, 0.1) !important;
     padding: 10px 12px;
-    max-height: 380px;
-    overflow-y: auto;
+    max-height: 400px;
+    overflow-y: auto !important;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
 }
