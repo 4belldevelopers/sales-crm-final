@@ -469,20 +469,20 @@ if($snp_mode== 1){
                       <span class="resume-card-icon"><i class="fa-solid fa-file-lines"></i></span>
                       <span class="resume-card-title">
                         <strong>Professional Summary <span class="rq">*</span></strong>
-                        <small>A concise summary of this talent's expertise and experience.</small>
+                        <small>A concise summary of this talent's expertise and experience (maximum 100 words).</small>
                       </span>
                     </div>
                   </div>
                   <div class="fsc summary-card-body">
-                    <textarea placeholder="Enter professional summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
-                    <div class="cc summary-counter">0 / 500</div>
+                    <textarea placeholder="Enter professional summary (strictly up to 100 words)..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
+                    <div class="cc summary-counter" id="summary_counter">0 / 100 words</div>
                     <div class="summary-tip">
                       <span class="summary-tip-icon"><i class="fa-solid fa-lightbulb"></i></span>
                       <div>
                         <strong>Tips for a great summary:</strong>
                         <ul>
                           <li>Highlight key skills, years of experience and major achievements.</li>
-                          <li>Keep it concise and client-facing.</li>
+                          <li>Keep it concise (strictly limited to 100 words) and client-facing.</li>
                         </ul>
                       </div>
                     </div>
@@ -2206,8 +2206,11 @@ if($snp_mode== 1){
                       <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
                     </button>
                   </div>
-                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent...">{{ @$application->recruiter_note }}</textarea>
-                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent (strictly up to 100 words)...">{{ @$application->recruiter_note }}</textarea>
+                  <div class="d-flex align-items-center justify-content-between mt-1">
+                    <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
+                    <div class="rm-comments-counter" id="rm_comments_counter" style="color: #8790AC; font-size: .78rem; font-weight: 500;">0 / 100 words</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -5909,6 +5912,85 @@ function interpolateTemplateVariables(text, customVars) {
     return text;
 }
 
+// Helper to truncate text strictly to a maximum number of words
+function truncateToMaxWords(text, maxWords) {
+    if (!text) return '';
+    var words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ');
+}
+
+window.__lastCsWordToast = 0;
+function updateCareerSummaryCounter(enforceLimit) {
+    var $el = $('#careersummary');
+    if (!$el.length) return;
+    var text = $el.val() || '';
+    var words = text.trim().split(/\s+/).filter(Boolean);
+    var count = words.length;
+
+    if (count > 100) {
+        var clamped = words.slice(0, 100).join(' ');
+        $el.val(clamped);
+        count = 100;
+        if (enforceLimit && typeof toastr !== 'undefined') {
+            if (Date.now() - window.__lastCsWordToast > 2500) {
+                toastr.warning('Professional Summary is limited to 100 words only.');
+                window.__lastCsWordToast = Date.now();
+            }
+        }
+    }
+
+    var $counter = $('#summary_counter');
+    if (!$counter.length) {
+        $counter = $('.summary-counter');
+    }
+    if ($counter.length) {
+        $counter.text(count + ' / 100 words');
+        if (count >= 100) {
+            $counter.css({ 'color': '#f1416c', 'font-weight': '600' });
+        } else if (count >= 90) {
+            $counter.css({ 'color': '#f59e0b', 'font-weight': '600' });
+        } else {
+            $counter.css({ 'color': '#8790AC', 'font-weight': '500' });
+        }
+    }
+}
+window.updateCareerSummaryCounter = updateCareerSummaryCounter;
+
+window.__lastRmWordToast = 0;
+function updateRmCommentsCounter(enforceLimit) {
+    var $el = $('#recruiter_note');
+    if (!$el.length) return;
+    var text = $el.val() || '';
+    var words = text.trim().split(/\s+/).filter(Boolean);
+    var count = words.length;
+
+    if (count > 100) {
+        var clamped = words.slice(0, 100).join(' ');
+        $el.val(clamped);
+        count = 100;
+        if (enforceLimit && typeof toastr !== 'undefined') {
+            if (Date.now() - window.__lastRmWordToast > 2500) {
+                toastr.warning('Relationship Manager Comments are limited to 100 words only.');
+                window.__lastRmWordToast = Date.now();
+            }
+        }
+    }
+
+    var $counter = $('#rm_comments_counter');
+    if ($counter.length) {
+        $counter.text(count + ' / 100 words');
+        if (count >= 100) {
+            $counter.css({ 'color': '#f1416c', 'font-weight': '600' });
+        } else if (count >= 90) {
+            $counter.css({ 'color': '#f59e0b', 'font-weight': '600' });
+        } else {
+            $counter.css({ 'color': '#8790AC', 'font-weight': '500' });
+        }
+    }
+}
+window.updateRmCommentsCounter = updateRmCommentsCounter;
+
 // Auto-select and pre-fill default template with live variables if comments box is empty
 function applyDefaultRecruiterNotePrefill() {
     var $rn = $('#recruiter_note');
@@ -5934,12 +6016,16 @@ function applyDefaultRecruiterNotePrefill() {
                 $('#selected_template_label').text(title).removeClass('is-placeholder');
                 var formatted = formatTemplateToPlainText(activeTpl.content);
                 var interpolated = interpolateTemplateVariables(formatted);
-                $rn.val(interpolated);
+                $rn.val(truncateToMaxWords(interpolated, 100));
+                updateRmCommentsCounter(false);
             }
         }
     } else if (/<[a-z][\s\S]*>/i.test(currentVal)) {
         // Pre-existing HTML content converted to clean plain text
-        $rn.val(formatTemplateToPlainText(currentVal));
+        $rn.val(truncateToMaxWords(formatTemplateToPlainText(currentVal), 100));
+        updateRmCommentsCounter(false);
+    } else {
+        updateRmCommentsCounter(false);
     }
 }
 
@@ -5997,7 +6083,8 @@ $(document).on('click', '.tpl-card-item', function (e) {
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
     var interpolated = interpolateTemplateVariables(formatted);
-    $('#recruiter_note').val(interpolated);
+    $('#recruiter_note').val(truncateToMaxWords(interpolated, 100));
+    updateRmCommentsCounter(false);
     clearFieldValidationErrors('recruiter_note');
 });
 
@@ -6017,7 +6104,8 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     var content = recruiterNoteTemplates[id].content;
     var formatted = formatTemplateToPlainText(content);
     var interpolated = interpolateTemplateVariables(formatted);
-    $('#recruiter_note').val(interpolated);
+    $('#recruiter_note').val(truncateToMaxWords(interpolated, 100));
+    updateRmCommentsCounter(false);
     clearFieldValidationErrors('recruiter_note');
 });
 
@@ -6037,7 +6125,8 @@ function triggerLiveRmCommentsSync() {
         var rawTpl = formatTemplateToPlainText(recruiterNoteTemplates[selectedId].content);
         if (rawTpl.includes('[current designation]') || rawTpl.includes('[3 skills]') || rawTpl.includes('[most relevant requirement]') || rawTpl.includes('[Immediate / X days / Serving notice / Available from date]') || rawTpl.includes('[Availability / Notice Period]') || rawTpl.includes('[Work Authorization / Visa Status]') || rawTpl.includes('[Work Authorization]') || rawTpl.includes('[Notice Period]')) {
             var updated = interpolateTemplateVariables(rawTpl);
-            $rn.val(updated);
+            $rn.val(truncateToMaxWords(updated, 100));
+            updateRmCommentsCounter(false);
         }
     }, 450);
 }
@@ -6081,8 +6170,9 @@ $(document).on('click', '#btn_sync_rm_template', function (e) {
     }
 
     var interpolated = interpolateTemplateVariables(baseText);
-    $rn.val(interpolated).addClass('field-attention-highlight');
+    $rn.val(truncateToMaxWords(interpolated, 100)).addClass('field-attention-highlight');
     setTimeout(function() { $rn.removeClass('field-attention-highlight'); }, 700);
+    updateRmCommentsCounter(false);
     clearFieldValidationErrors('recruiter_note');
 
     if (typeof toastr !== 'undefined') {
@@ -6090,8 +6180,17 @@ $(document).on('click', '#btn_sync_rm_template', function (e) {
     }
 });
 
-// Live typing in comments box clears validation error
-$(document).on('input', '#recruiter_note', function () {
+// Live typing & pasting in careersummary enforces 100 words limit and updates counter
+$(document).on('input paste keyup change', '#careersummary', function () {
+    updateCareerSummaryCounter(true);
+    if (($(this).val() || '').trim()) {
+        clearFieldValidationErrors('careersummary');
+    }
+});
+
+// Live typing & pasting in comments box enforces 100 words limit, updates counter, and clears validation error
+$(document).on('input paste keyup change', '#recruiter_note', function () {
+    updateRmCommentsCounter(true);
     if (($(this).val() || '').trim()) {
         clearFieldValidationErrors('recruiter_note');
     }
@@ -6099,6 +6198,8 @@ $(document).on('input', '#recruiter_note', function () {
 
 $(document).ready(function () {
     applyDefaultRecruiterNotePrefill();
+    updateCareerSummaryCounter(false);
+    updateRmCommentsCounter(false);
 });
 
 var fieldConfigMap = {
