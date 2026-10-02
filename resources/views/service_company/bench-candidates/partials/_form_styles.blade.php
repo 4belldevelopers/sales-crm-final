@@ -3225,6 +3225,22 @@ textarea.has-validation-error:focus,
     color: #65708e;
     font-weight: 400;
 }
+.rm-note-card #btn_sync_rm_template {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #2563eb !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 6px !important;
+    padding: 3px 10px !important;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.rm-note-card #btn_sync_rm_template:hover {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
 .rm-note-card .recruiter-template-control {
     position: relative;
     display: flex;
