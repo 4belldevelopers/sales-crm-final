@@ -132,6 +132,7 @@ if($snp_mode== 1){
           <p>Keep your best people ready for the right opportunities.</p>
         @endif
       </div>
+      <div class="talent-topbar-right">
       @if(@$page_event == 'EDIT')
         @php
           $editStageId = (int) (@$application->status ?? 2);
@@ -161,9 +162,10 @@ if($snp_mode== 1){
               echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary"><i class="fa-solid fa-check me-1"></i> Update Candidate</button>';
             }else{
               echo '<a href="'.route('service_company.bench-candidates.index').'" class="btn btn-sm btn-light fw-bold talent-topbar-close-btn" id="headerCloseBtn" title="Back to In-House Talent Listing"><i class="fa-solid fa-xmark me-1"></i> Close</a>';
-              echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small>';
+              echo '<div class="talent-topbar-btn-group"><button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small></div>';
             }
         @endphp
+      </div>
       </div>
     </div>
   </div>
