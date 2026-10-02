@@ -3152,20 +3152,20 @@ textarea.has-validation-error:focus,
     }
 }
 
-/* Relationship Manager Comments Card */
+/* Relationship Manager Comments Card - Metronic Blue Theme */
 .rm-note-card {
     overflow: hidden;
-    border: 1px solid #efd36b !important;
+    border: 1px solid #dbeafe !important;
     border-radius: 8px !important;
     background: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(100, 75, 0, .05) !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05) !important;
     margin-bottom: 20px;
 }
 .rm-note-card .candidate-card-header {
-    min-height: 70px !important;
-    padding: 14px 20px !important;
-    border-bottom: 1px solid #f1dda0 !important;
-    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+    min-height: 58px !important;
+    padding: 12px 18px !important;
+    border-bottom: 1px solid #dbeafe !important;
+    background: linear-gradient(90deg, #f0f6ff 0%, #ffffff 82%) !important;
     display: flex;
     align-items: center;
 }
@@ -3180,10 +3180,10 @@ textarea.has-validation-error:focus,
     min-width: 38px !important;
     flex-basis: 38px !important;
     border-radius: 8px;
-    border: 1px solid #f3c719 !important;
-    color: #071434 !important;
-    background: linear-gradient(145deg, #ffd946, #ffc400) !important;
-    box-shadow: 0 4px 10px rgba(218, 164, 0, .18) !important;
+    border: 0 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important;
     font-size: 15px !important;
     display: flex;
     align-items: center;
@@ -3228,7 +3228,7 @@ textarea.has-validation-error:focus,
     position: absolute;
     z-index: 2;
     left: 13px;
-    color: #8f6b05 !important;
+    color: #2563eb !important;
     font-size: 13px !important;
     pointer-events: none;
 }
@@ -3236,7 +3236,7 @@ textarea.has-validation-error:focus,
     width: 100%;
     height: 40px;
     padding: 0 36px 0 36px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #dbeafe !important;
     border-radius: 6px !important;
     color: #071434 !important;
     background: #ffffff !important;
@@ -3244,12 +3244,18 @@ textarea.has-validation-error:focus,
     font-weight: 500 !important;
     font-family: 'Poppins', sans-serif !important;
     cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rm-note-card #recruiter_note_template_select:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    outline: none;
 }
 .rm-note-card textarea#recruiter_note {
     width: 100%;
     min-height: 140px !important;
     padding: 12px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #dbeafe !important;
     border-radius: 6px !important;
     font-size: 12px !important;
     line-height: 1.6;
@@ -3260,8 +3266,8 @@ textarea.has-validation-error:focus,
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .rm-note-card textarea#recruiter_note:focus {
-    border-color: #d4a72c !important;
-    box-shadow: 0 0 0 3px rgba(212, 167, 44, 0.15);
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
     outline: none;
 }
 .rm-note-card textarea#recruiter_note::placeholder {
@@ -3274,16 +3280,17 @@ textarea.has-validation-error:focus,
     gap: 7px;
     width: fit-content;
     margin-top: 10px;
-    padding: 6px 12px;
-    border: 1px solid #f0dda0;
+    padding: 6px 14px;
+    border: 1px solid #bfdbfe !important;
     border-radius: 18px;
-    color: #8b6700;
-    background: #fff8dc;
+    color: #1e40af !important;
+    background: #eff6ff !important;
     font-size: 11px;
     font-weight: 500;
 }
 .rm-note-card .recruiter-private-note i {
     font-size: 11px;
+    color: #2563eb !important;
 }
 .rm-note-card.has-validation-error,
 .rm-note-card.field-attention-highlight,

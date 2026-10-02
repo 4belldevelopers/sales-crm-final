@@ -1610,89 +1610,6 @@ if($snp_mode== 1){
               </div>
             </div>
 
-             <!-- Relationship Manager -->
-            @php
-              $rmInitialList = [];
-              if (!empty($recruiterlist) && count($recruiterlist) > 0) {
-                  foreach ($recruiterlist as $rItem) {
-                      $rmInitialList[] = [
-                          'id' => (string)$rItem->id,
-                          'name' => (string)$rItem->name,
-                          'email' => (string)($rItem->email ?? ''),
-                          'phone' => trim((!empty($rItem->calling_code) ? '+'.ltrim($rItem->calling_code, '+').' ' : '').($rItem->mobile ?? '')),
-                      ];
-                  }
-              }
-            @endphp
-            <script>
-              window.__rmInitialList = @json($rmInitialList);
-            </script>
-            <div class="fs rm-card">
-              <div class="rm-hero">
-                <div class="rm-hero-title">
-                  <span class="rm-hero-icon"><i class="fa-solid fa-user"></i></span>
-                  <span>
-                    <strong>Client Relationship Manager</strong>
-                    <small>Select the person who will coordinate with clients regarding this talent.</small>
-                  </span>
-                </div>
-              </div>
-              <div class="fsc fv-row rm-body">
-
-                <!--begin::Relationship Manager Section (media_1790683314858.png)-->
-                <div class="rm-content" id="job_additional_detail">
-                  <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
-
-                  <!-- Hidden Form Inputs for authoritative persistence -->
-                  <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" />
-                  <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" />
-
-                  <!-- Relationship Manager Search Bar (Always at top, directly under label) -->
-                  <div class="rm-picker" id="rmPicker">
-                    <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
-                    <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
-                  </div>
-                  <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
-
-                  <!-- Dynamic Multi-Manager Cards Listing (Displayed BELOW the search bar) -->
-                  <div class="rm-chips-container" id="rmChipsContainer" style="display: none;"></div>
-                </div>
-                <!--end::Relationship Manager Section-->
-              </div>
-            </div>
-
-            <!-- Relationship Manager Comments -->
-            <div class="fs candidate-card recruiter-note-card rm-note-card" id="rm_comments_section">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
-                  <span><strong>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></strong><small>Add internal context and evaluation notes from the Relationship Manager.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
-                <div class="fg fv-row recruiter-template-field">
-                  <label>Select Template <span>(Pre-fills standard evaluation structure into the box below)</span></label>
-                  <div class="recruiter-template-control">
-                    <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
-                    <select id="recruiter_note_template_select" class="form-select form-select-solid">
-                      <option value="">Select Note Template...</option>
-                      @foreach($recruiterNoteTemplates as $tpl)
-                        <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-                </div>
-                @endif
-                <div class="fg fv-row recruiter-editor-field">
-                  <label>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
-                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent...">{{ @$application->recruiter_note }}</textarea>
-                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
-                </div>
-              </div>
-            </div>
-
             <!-- Additional Information -->
             <div class="fs addl-card">
               <div class="addl-hero">
@@ -1977,6 +1894,89 @@ if($snp_mode== 1){
                 <div class="addl-info-strip">
                   <span><i class="fa-solid fa-shield-halved"></i></span>
                   <p>Specifying accurate work authorization ensures quick client alignment and prevents right-to-work compliance delays during submission.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Client Relationship Manager -->
+            @php
+              $rmInitialList = [];
+              if (!empty($recruiterlist) && count($recruiterlist) > 0) {
+                  foreach ($recruiterlist as $rItem) {
+                      $rmInitialList[] = [
+                          'id' => (string)$rItem->id,
+                          'name' => (string)$rItem->name,
+                          'email' => (string)($rItem->email ?? ''),
+                          'phone' => trim((!empty($rItem->calling_code) ? '+'.ltrim($rItem->calling_code, '+').' ' : '').($rItem->mobile ?? '')),
+                      ];
+                  }
+              }
+            @endphp
+            <script>
+              window.__rmInitialList = @json($rmInitialList);
+            </script>
+            <div class="fs rm-card">
+              <div class="rm-hero">
+                <div class="rm-hero-title">
+                  <span class="rm-hero-icon"><i class="fa-solid fa-user"></i></span>
+                  <span>
+                    <strong>Client Relationship Manager</strong>
+                    <small>Select the person who will coordinate with clients regarding this talent.</small>
+                  </span>
+                </div>
+              </div>
+              <div class="fsc fv-row rm-body">
+
+                <!--begin::Relationship Manager Section (media_1790683314858.png)-->
+                <div class="rm-content" id="job_additional_detail">
+                  <label class="rm-label">Relationship Manager <span class="rq">*</span></label>
+
+                  <!-- Hidden Form Inputs for authoritative persistence -->
+                  <input type="hidden" name="recruiter" id="recruiter" value="<?php echo strtolower(@$recruiterData); ?>" />
+                  <input type="hidden" name="recruiter_id" id="recruiter_id" value="<?php echo strtolower(@$recruiterDataId); ?>" />
+
+                  <!-- Relationship Manager Search Bar (Always at top, directly under label) -->
+                  <div class="rm-picker" id="rmPicker">
+                    <span class="rm-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="recruiter_display" placeholder="Search by name or email..." readonly="" />
+                    <span class="rm-picker-action" id="rmPickerAction">Select Relationship Manager</span>
+                  </div>
+                  <small class="rm-help" id="rmHelpText">Search and select a team member from your organization.</small>
+
+                  <!-- Dynamic Multi-Manager Cards Listing (Displayed BELOW the search bar) -->
+                  <div class="rm-chips-container" id="rmChipsContainer" style="display: none;"></div>
+                </div>
+                <!--end::Relationship Manager Section-->
+              </div>
+            </div>
+
+            <!-- Relationship Manager Comments -->
+            <div class="fs candidate-card recruiter-note-card rm-note-card" id="rm_comments_section">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
+                  <span><strong>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></strong><small>Add internal context and evaluation notes from the Relationship Manager.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
+                <div class="fg fv-row recruiter-template-field">
+                  <label>Select Template <span>(Pre-fills standard evaluation structure into the box below)</span></label>
+                  <div class="recruiter-template-control">
+                    <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+                    <select id="recruiter_note_template_select" class="form-select form-select-solid">
+                      <option value="">Select Note Template...</option>
+                      @foreach($recruiterNoteTemplates as $tpl)
+                        <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                </div>
+                @endif
+                <div class="fg fv-row recruiter-editor-field">
+                  <label>Relationship Manager Comments <span class="rq" style="color: #f1416c;">*</span></label>
+                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add Relationship Manager comments about this talent...">{{ @$application->recruiter_note }}</textarea>
+                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
                 </div>
               </div>
             </div>
