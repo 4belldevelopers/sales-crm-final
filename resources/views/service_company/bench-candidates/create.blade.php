@@ -112,23 +112,51 @@ if($snp_mode== 1){
     <div class="talent-topbar{{ @$page_event == 'EDIT' ? ' talent-topbar--edit' : '' }}">
       <div class="talent-topbar-copy">
         <div class="talent-topbar-title-row">
-          <h1>Add In-House Talent</h1>
+          @if(@$page_event == 'EDIT')
+            <h1>Edit In-House Talent: {{ @$application->full_name }}</h1>
+          @else
+            <h1>Add In-House Talent</h1>
+          @endif
         </div>
-        <p>Keep your best people ready for the right opportunities.</p>
+        @if(@$page_event == 'EDIT')
+          <p>
+            Candidate ID: #{{ @$application->id }}
+            @if(!empty(@$application->employee_number))
+              &middot; Code: {{ @$application->employee_number }}
+            @endif
+            @if(!empty(@$application->updated_at))
+              &middot; Last Updated: {{ \Carbon\Carbon::parse(@$application->updated_at)->diffForHumans() }}
+            @endif
+          </p>
+        @else
+          <p>Keep your best people ready for the right opportunities.</p>
+        @endif
       </div>
-      @if(@$page_event != 'EDIT')
-      <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
-        <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
-        <span class="talent-topbar-marketplace-copy">
-          <strong>Marketplace: <span id="talent-marketplace-status">Will be published</span></strong>
-          <small id="talent-marketplace-message">Visible to clients.</small>
-        </span>
-      </div>
+      @if(@$page_event == 'EDIT')
+        @php
+          $editStageId = (int) (@$application->status ?? 2);
+          $isMarketplaceLive = ($editStageId === 2);
+        @endphp
+        <div class="talent-topbar-marketplace" data-stage="{{ $isMarketplaceLive ? 'bench' : 'internal' }}" role="status" aria-live="polite">
+          <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
+          <span class="talent-topbar-marketplace-copy">
+            <strong>Marketplace: <span id="talent-marketplace-status">{{ $isMarketplaceLive ? 'Published' : 'Internal Only' }}</span></strong>
+            <small id="talent-marketplace-message">{{ $isMarketplaceLive ? 'Visible to clients.' : 'Hidden from clients.' }}</small>
+          </span>
+        </div>
+      @else
+        <div class="talent-topbar-marketplace" data-stage="bench" role="status" aria-live="polite">
+          <span class="talent-topbar-marketplace-icon"><i class="fa-solid fa-store" aria-hidden="true"></i></span>
+          <span class="talent-topbar-marketplace-copy">
+            <strong>Marketplace: <span id="talent-marketplace-status">Will be published</span></strong>
+            <small id="talent-marketplace-message">Visible to clients.</small>
+          </span>
+        </div>
       @endif
       <div class="talent-topbar-actions">
         @php 
             if(@$page_event == 'EDIT'){ 
-              echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary">Update Candidate <i class="fa-solid fa-arrow-right"></i></button>';
+              echo '<button type="button" name="edit-form" id="edit-form" value="update" class="talent-topbar-primary"><i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i></button>';
             }else{
               echo '<button type="button" name="save" id="save-form" value="save" class="talent-topbar-primary talent-stage-action--bench"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span class="talent-stage-action-label">Save to Bench Stage</span></button><small class="talent-topbar-action-hint" id="talent-stage-action-hint">Save talent and publish to marketplace</small>';
             }
@@ -211,6 +239,44 @@ if($snp_mode== 1){
                 </label>
               </div>
             </section>
+            @else
+            {{-- Edit Mode: Enterprise Talent Stage & Marketplace Status Banner --}}
+            @php
+              $currentEditStatus = (int) (@$application->status ?? 2);
+              $stageDetails = match($currentEditStatus) {
+                1 => ['label' => 'Talent Pool', 'badge' => 'badge-light-primary text-primary', 'icon' => 'fa-users', 'market' => 'Internal Pipeline Only', 'marketColor' => 'text-muted', 'marketDesc' => 'Candidate is in your private talent pool and not published to marketplace.'],
+                2 => ['label' => 'Bench', 'badge' => 'badge-light-success text-success', 'icon' => 'fa-user-check', 'market' => 'Published on Marketplace', 'marketColor' => 'text-success', 'marketDesc' => 'Candidate is live on marketplace and actively discoverable by verified clients.'],
+                4 => ['label' => 'On Hold', 'badge' => 'badge-light-warning text-warning', 'icon' => 'fa-clock', 'market' => 'Hidden from Marketplace', 'marketDesc' => 'Candidate is temporarily on hold and hidden from client search listings.'],
+                3 => ['label' => 'Placed', 'badge' => 'badge-light-info text-info', 'icon' => 'fa-briefcase', 'market' => 'Client Engagement Active', 'marketDesc' => 'Candidate is deployed to a client engagement.'],
+                5 => ['label' => 'Exited', 'badge' => 'badge-light-danger text-danger', 'icon' => 'fa-xmark', 'market' => 'Archived from Marketplace', 'marketDesc' => 'Candidate has exited from company bench.'],
+                default => ['label' => 'Bench', 'badge' => 'badge-light-success text-success', 'icon' => 'fa-user', 'market' => 'Published on Marketplace', 'marketDesc' => 'Active talent on bench.'],
+              };
+            @endphp
+            <section class="fs talent-stage-banner card shadow-xs mb-4 border border-gray-200" style="background: #ffffff; border-radius: 8px;">
+              <div class="card-body p-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="symbol symbol-45px symbol-circle bg-light-primary text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 50%; background: #EEF2FF; color: #4F46E5;">
+                    <i class="fa-solid {{ $stageDetails['icon'] }} fs-4"></i>
+                  </div>
+                  <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                      <span class="text-gray-800 fw-bold fs-6">Current Talent Lifecycle Stage:</span>
+                      <span class="badge {{ $stageDetails['badge'] }} fs-7 fw-bolder px-3 py-1" style="font-size: 12px; letter-spacing: 0.3px;">{{ $stageDetails['label'] }}</span>
+                    </div>
+                    <div class="text-muted fs-7 d-flex align-items-center gap-2">
+                      <span class="fw-semibold {{ $stageDetails['marketColor'] }}"><i class="fa-solid fa-store me-1"></i> {{ $stageDetails['market'] }}</span>
+                      <span class="bullet bg-gray-300 w-4px h-4px"></span>
+                      <span>{{ $stageDetails['marketDesc'] }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <a href="{{ route('service_company.bench-candidates.index') }}?tab={{ match($currentEditStatus){ 1 => 'pool', 2 => 'bench', 4 => 'hold', 3 => 'placed', 5 => 'exited', default => 'bench' } }}" class="btn btn-sm btn-light fw-bold">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back to {{ $stageDetails['label'] }}
+                  </a>
+                </div>
+              </div>
+            </section>
             @endif
             <!-- Upload + Career Summary -->
             <div class="g2 resume-summary-grid" style="margin-bottom:16px">
@@ -224,8 +290,26 @@ if($snp_mode== 1){
                         </span>
                     </div>
 
+                    @php
+                        $hasExistingResume = !empty($resume_url) || !empty($application->resume);
+                        $displayResumeName = '';
+                        $resumeExt = 'PDF';
+                        if ($hasExistingResume) {
+                            $rawResume = $application->resume ?? '';
+                            preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $rawResume, $_rm);
+                            $displayResumeName = $_rm[1] ?? basename($rawResume);
+                            if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                                $displayResumeName = 'Resume (uploaded)';
+                            }
+                            $extMatch = strtolower(pathinfo($displayResumeName, PATHINFO_EXTENSION));
+                            if (in_array($extMatch, ['pdf', 'doc', 'docx'])) {
+                                $resumeExt = strtoupper($extMatch);
+                            }
+                        }
+                    @endphp
+
                     <div class="fsc resume-card-body">
-                        <div class="ua" id="uploadBox">
+                        <div class="ua {{ $hasExistingResume ? 'd-none has-file' : '' }}" id="uploadBox" style="{{ $hasExistingResume ? 'display: none !important;' : '' }}">
 
                             <div class="ui">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -264,30 +348,10 @@ if($snp_mode== 1){
                                 </div>
                             </div>
 
-                            <!-- Selected File strip -->
-                            @php
-                                $displayResumeName = '';
-                                if (!empty($application->resume)) {
-                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
-                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
-                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
-                                        $displayResumeName = 'Resume (uploaded)';
-                                    }
-                                }
-                            @endphp
-                            <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
-                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
-                                @if(!empty($resume_url))
-                                <a href="{{ $resume_url }}" target="_blank" class="download-file"
-                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
-                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
-                                </a>
-                                @endif
-                                <button type="button" class="remove-file" id="removeFile">Remove</button>
-                            </div>
-
+                            <span class="file-name d-none" id="fileName">{{ $displayResumeName }}</span>
                         </div>
-                        <div class="resume-note marketplace-privacy">
+
+                        <div class="resume-note marketplace-privacy" style="{{ $hasExistingResume ? 'display: none !important;' : '' }}">
                             <span class="resume-note-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span>
                             <div class="marketplace-privacy-content">
                                 <strong>Marketplace Privacy Check</strong>
@@ -302,15 +366,15 @@ if($snp_mode== 1){
                         </div>
 
                         <!-- After-upload Resume Information card -->
-                        <div class="up-info" id="upInfo">
+                        <div class="up-info {{ $hasExistingResume ? 'show' : '' }}" id="upInfo" style="{{ $hasExistingResume ? 'display: flex !important;' : '' }}">
                             <div class="up-info-banner">
                                 <div class="up-info-banner-left">
                                     <span class="up-info-banner-check">
                                         <i class="fa-solid fa-check" aria-hidden="true"></i>
                                     </span>
                                     <div class="up-info-banner-text">
-                                        <strong id="upInfoBannerTitle">Resume Uploaded Successfully using method A</strong>
-                                        <small>We have parsed the resume and extracted the talent details.</small>
+                                        <strong id="upInfoBannerTitle">{{ $hasExistingResume ? 'Resume Attached & Verified' : 'Resume Uploaded Successfully using method A' }}</strong>
+                                        <small>{{ $hasExistingResume ? 'Candidate resume is attached and verified.' : 'We have parsed the resume and extracted the talent details.' }}</small>
                                     </div>
                                 </div>
                                 <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
@@ -321,16 +385,31 @@ if($snp_mode== 1){
                             <div class="up-file-card">
                                 <div class="up-file-card-left">
                                     <div class="up-file-badge">
-                                        <i class="fa-regular fa-file-pdf" id="upFileBadgeIcon" aria-hidden="true"></i>
-                                        <span class="up-file-badge-ext" id="upFileBadgeExt">PDF</span>
+                                        <i class="{{ in_array($resumeExt, ['DOC', 'DOCX']) ? 'fa-regular fa-file-word' : 'fa-regular fa-file-pdf' }}" id="upFileBadgeIcon" aria-hidden="true"></i>
+                                        <span class="up-file-badge-ext" id="upFileBadgeExt">{{ $resumeExt }}</span>
                                     </div>
                                     <div class="up-file-meta">
-                                        <div class="up-file-name" id="upFileName">&nbsp;</div>
-                                        <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                        <div class="up-file-name" id="upFileName">{{ $displayResumeName ?: '&nbsp;' }}</div>
+                                        <div class="up-file-sub" id="upFileSub">{{ $hasExistingResume ? 'Attached · ' . $resumeExt : '&nbsp;' }}</div>
                                     </div>
                                 </div>
                                 <div class="up-file-actions">
-                                    <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn">
+                                    @if(!empty($resume_url))
+                                    <a href="{{ $resume_url }}" target="_blank" class="up-btn up-btn-download" id="upDownloadBtn" title="Download / View Resume">
+                                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                        <span>Download</span>
+                                    </a>
+                                    @else
+                                    <a href="#" target="_blank" class="up-btn up-btn-download d-none" id="upDownloadBtn" title="Download / View Resume">
+                                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                        <span>Download</span>
+                                    </a>
+                                    @endif
+                                    <button type="button" class="up-btn up-btn-replace" id="upReplaceBtn" title="Replace Resume">
+                                        <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+                                        <span>Replace</span>
+                                    </button>
+                                    <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn" title="Remove Resume">
                                         <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                                         <span>Delete</span>
                                     </button>
@@ -345,7 +424,7 @@ if($snp_mode== 1){
                                         </span>
                                         <div>
                                             <div class="up-detail-lbl">Uploaded On</div>
-                                            <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">{{ $hasExistingResume ? (!empty($application->updated_at) ? \Carbon\Carbon::parse($application->updated_at)->format('d M Y, H:i') : (!empty($application->created_at) ? \Carbon\Carbon::parse($application->created_at)->format('d M Y, H:i') : 'Attached')) : '&nbsp;' }}</div>
                                         </div>
                                     </div>
                                     <div class="up-detail-tile">
@@ -354,7 +433,7 @@ if($snp_mode== 1){
                                         </span>
                                         <div>
                                             <div class="up-detail-lbl">Parser Status</div>
-                                            <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                            <div class="up-detail-val" id="upDetailParserStatus">{!! $hasExistingResume ? '<span style="color: #059669; font-weight: 700;">✓ Verified</span>' : '&nbsp;' !!}</div>
                                         </div>
                                     </div>
                                     <div class="up-detail-tile">
@@ -363,7 +442,7 @@ if($snp_mode== 1){
                                         </span>
                                         <div>
                                             <div class="up-detail-lbl">File Type</div>
-                                            <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                            <div class="up-detail-val" id="upDetailFileType">{{ $hasExistingResume ? $resumeExt : '&nbsp;' }}</div>
                                         </div>
                                     </div>
                                     <div class="up-detail-tile">
@@ -372,7 +451,7 @@ if($snp_mode== 1){
                                         </span>
                                         <div>
                                             <div class="up-detail-lbl">File Size</div>
-                                            <div class="up-detail-val" id="upDetailFileSize">&mdash;</div>
+                                            <div class="up-detail-val" id="upDetailFileSize">{{ $hasExistingResume ? 'Attached' : '&mdash;' }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1870,6 +1949,26 @@ if($snp_mode== 1){
               </div>
             </div>
           </div>
+
+          @if(@$page_event == 'EDIT')
+          {{-- Sticky Bottom Action Bar for Quick Update without Scrolling --}}
+          <div class="talent-sticky-footer card shadow-lg position-sticky bottom-0 z-index-3 py-3 px-6 mt-4 border-top bg-white" style="border-radius: 8px; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); z-index: 100;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 container-fluid px-0">
+              <div class="d-flex align-items-center gap-2 text-muted fs-7">
+                <span class="badge badge-light-primary fw-bold px-2 py-1" style="font-size: 11px;">PRO TIP</span>
+                <span>Press <kbd class="bg-light text-dark px-2 py-1 rounded border fs-8">Ctrl + S</kbd> to save changes instantly from anywhere on the page</span>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <a href="{{ route('service_company.bench-candidates.index') }}?tab={{ match((int)(@$application->status ?? 2)){ 1 => 'pool', 2 => 'bench', 4 => 'hold', 3 => 'placed', 5 => 'exited', default => 'bench' } }}" class="btn btn-light btn-sm fw-bold">
+                  Cancel / Back
+                </a>
+                <button type="button" id="sticky-edit-form" class="btn btn-primary btn-sm fw-bold px-5" style="background: #2563EB; border-color: #2563EB;">
+                  <i class="fa-solid fa-check me-1"></i> Update Candidate
+                </button>
+              </div>
+            </div>
+          </div>
+          @endif
           </form>
         </main>
 
@@ -2384,8 +2483,9 @@ $(document).ready(function () {
             window.ResumePresign.cancelUpload(getUpContextKey());
         }
         resetProgress();
-        $('#upInfo').removeClass('show');
+        $('#upInfo').removeClass('show').hide();
         $('#uploadBox').removeClass('has-file d-none').attr('style', '').show();
+        $('.marketplace-privacy').show().attr('style', '');
         $('#fileInfo').hide();
         $('#fileName').text('');
         $('#resume').val('');
@@ -2397,6 +2497,7 @@ $(document).ready(function () {
         $('#upDetailFileSize').html('&mdash;');
         $('#upDetailParserStatus').text('Pending').css('color', '');
         $('.download-file').addClass('d-none');
+        $('#upDownloadBtn').addClass('d-none');
     }
 
     function showUploadedCard(file) {
@@ -2413,6 +2514,7 @@ $(document).ready(function () {
         }
         $('#upInfo .up-file-icon').text(ext);
         $('#upFileName').text(file.name);
+        $('#fileName').text(file.name);
         $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
         var now = new Date();
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2433,12 +2535,15 @@ $(document).ready(function () {
         var pipe = $('#resume_upload_pipeline').val();
         var methodLabel = (pipe === 'METHOD_B_SERVER_UPLOAD' || $('#uploaded_file_path').val()) ? 'method B' : 'method A';
         $('#upInfoBannerTitle').text('Resume Uploaded Successfully using ' + methodLabel);
+        $('#upInfoBannerTitle').next('small').text('We have parsed the resume and extracted the talent details.');
 
         $('#upRetryWrap').hide();
         $('#uploadBox').attr('style', 'display: none !important').addClass('d-none has-file');
+        $('.marketplace-privacy').hide();
         $('#fileInfo').hide();
+        $('#upDownloadBtn').addClass('d-none');
         $('#upInfo').find('.up-info-banner').show();
-        $('#upInfo').addClass('show');
+        $('#upInfo').addClass('show').attr('style', 'display: flex !important;').show();
     }
 
     function _showUploadError(msg) {
@@ -5350,12 +5455,15 @@ function handleTalentSubmissionSuccess(response) {
     }
 
     // 1. Primary: SweetAlert confirmation button
+    var tabLabel = response && response.tab ? (response.tab.charAt(0).toUpperCase() + response.tab.slice(1)) : 'Bench';
+    var confirmBtnText = isEditMode ? ("View in " + tabLabel + " Listing") : "View Bench Listing";
+
     Swal.fire({
         title: successTitle,
         text: isEditMode ? "Talent details have been updated successfully." : "Inhouse talent profile has been added successfully.",
         icon: "success",
         buttonsStyling: false,
-        confirmButtonText: "View Bench Listing",
+        confirmButtonText: confirmBtnText,
         customClass: { confirmButton: "btn btn-primary btn-sm" }
     }).then(function(result) {
         executeRedirect();
@@ -6367,10 +6475,15 @@ var KTEditCandidate = function () {
             }
         );
 
+        window.benchFormValidator = validator;
+
         var executeEditSubmit = function () {
             closeRequiredFieldsModal();
-            $("#edit-form").prop("disabled", true).addClass('disabled');
+            $("#edit-form, #sticky-edit-form").prop("disabled", true).addClass('disabled');
             $("#edit-form").html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`
+            );
+            $("#sticky-edit-form").html(
                 `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...`
             );
             if (submitButton) {
@@ -6381,7 +6494,8 @@ var KTEditCandidate = function () {
             if (!navigator.onLine) {
                 window.__talentIsSubmitting = false;
                 Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
+                $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
@@ -6411,7 +6525,8 @@ var KTEditCandidate = function () {
                 success: function (response) {
                     if (response.status === 'mailcheck') {
                         window.__talentIsSubmitting = false;
-                        $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
+                        $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                         if (submitButton) {
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
@@ -6439,7 +6554,8 @@ var KTEditCandidate = function () {
                     }
 
                     window.__talentIsSubmitting = false;
-                    $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                    $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
+                    $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                     if (submitButton) {
                         submitButton.removeAttribute('data-kt-indicator');
                         submitButton.disabled = false;
@@ -6493,7 +6609,8 @@ var KTEditCandidate = function () {
             var missing = detectMissingFields(form, validator);
             if (missing && missing.length > 0) {
                 window.__talentIsSubmitting = false;
-                $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
+                $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                 if (submitButton) {
                     submitButton.removeAttribute('data-kt-indicator');
                     submitButton.disabled = false;
@@ -6509,7 +6626,8 @@ var KTEditCandidate = function () {
                         executeEditSubmit();
                     } else {
                         window.__talentIsSubmitting = false;
-                        $("#edit-form").prop("disabled", false).removeClass('disabled').html("Update");
+                        $("#edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate <i class="fa-solid fa-arrow-right ms-1"></i>');
+                        $("#sticky-edit-form").prop("disabled", false).removeClass('disabled').html('<i class="fa-solid fa-check me-1"></i> Update Candidate');
                         if (submitButton) {
                             submitButton.removeAttribute('data-kt-indicator');
                             submitButton.disabled = false;
@@ -6526,8 +6644,8 @@ var KTEditCandidate = function () {
             }
         };
 
-        // Bind Single Delegated Click Listener
-        $(document).off('click', '#edit-form').on('click', '#edit-form', function (e) {
+        // Bind Single Delegated Click Listener to topbar button and sticky footer button
+        $(document).off('click', '#edit-form, #sticky-edit-form').on('click', '#edit-form, #sticky-edit-form', function (e) {
             handleEditSubmit(e);
         });
 
@@ -6540,6 +6658,14 @@ var KTEditCandidate = function () {
             }
             handleEditSubmit(e);
             return false;
+        });
+
+        // Keyboard Shortcut: Ctrl + S / Cmd + S to save instantly
+        $(document).off('keydown.talentEditShortcut').on('keydown.talentEditShortcut', function (e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                handleEditSubmit(e);
+            }
         });
     };
 
