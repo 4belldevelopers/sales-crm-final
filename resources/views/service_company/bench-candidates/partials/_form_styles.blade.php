@@ -2990,31 +2990,86 @@ textarea.has-validation-error:focus,
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
-    gap: 12px 20px !important;
-    min-height: 0 !important;
-    padding: 10px 0 !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    min-height: 52px !important;
+    padding: 8px 0 !important;
 }
 .talent-topbar .talent-topbar-copy {
-    flex: 1 1 auto !important;
-    min-width: 260px !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
 }
-.talent-topbar .talent-topbar-marketplace {
-    flex: 0 0 auto !important;
+.talent-topbar .talent-topbar-title-row {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px 12px !important;
 }
-.talent-topbar .talent-topbar-actions {
+.talent-topbar .talent-topbar-copy h1 {
+    font-size: 16px !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+.talent-topbar .talent-topbar-copy p {
+    font-size: 12px !important;
+    color: #58658f !important;
+    margin: 2px 0 0 0 !important;
+    white-space: nowrap !important;
+}
+.talent-topbar-right {
     display: inline-flex !important;
-    flex-direction: row !important;
     align-items: center !important;
     gap: 10px !important;
     flex: 0 0 auto !important;
     margin-left: auto !important;
 }
+.talent-topbar .talent-topbar-marketplace {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 4px 10px !important;
+    border: 1px solid #e1e5ff !important;
+    border-radius: 6px !important;
+    background: #f7f8ff !important;
+    white-space: nowrap !important;
+    flex: 0 0 auto !important;
+}
+.talent-topbar-marketplace-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 26px !important;
+    height: 26px !important;
+    flex: 0 0 26px !important;
+    border-radius: 50% !important;
+    font-size: 13px !important;
+}
+.talent-topbar-marketplace-icon i {
+    font-size: 13px !important;
+}
+.talent-topbar-marketplace-copy strong {
+    font-size: 12px !important;
+}
+.talent-topbar-marketplace-copy small {
+    font-size: 11px !important;
+}
+.talent-topbar .talent-topbar-actions {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    flex: 0 0 auto !important;
+}
 .talent-topbar .talent-topbar-actions .talent-topbar-close-btn {
     display: inline-flex !important;
     align-items: center !important;
+    justify-content: center !important;
     height: 38px !important;
-    padding: 0 16px !important;
+    min-height: 38px !important;
+    padding: 0 14px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     color: #4b5675 !important;
@@ -3030,26 +3085,72 @@ textarea.has-validation-error:focus,
     color: #1b2559 !important;
     border-color: #c4c8d0 !important;
 }
+.talent-topbar-btn-group {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 2px !important;
+    flex: 0 0 auto !important;
+}
 .talent-topbar .talent-topbar-actions .talent-topbar-primary {
     width: auto !important;
     min-height: 38px !important;
     height: 38px !important;
     display: inline-flex !important;
     align-items: center !important;
-    padding: 0 20px !important;
+    justify-content: center !important;
+    padding: 0 16px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
     border-radius: 6px !important;
+    border: 1px solid transparent !important;
+    color: #ffffff !important;
+}
+.talent-topbar-primary.talent-stage-action--pool {
+    background-color: #7239ea !important;
+    border-color: #7239ea !important;
+}
+.talent-topbar-primary.talent-stage-action--bench {
+    background-color: #155eef !important;
+    border-color: #155eef !important;
+}
+.talent-topbar-primary.talent-stage-action--hold {
+    background-color: #e9a900 !important;
+    border-color: #e9a900 !important;
+}
+.talent-topbar-primary.talent-stage-action--exited {
+    background-color: #e43e57 !important;
+    border-color: #e43e57 !important;
 }
 .talent-topbar--edit .talent-topbar-actions .talent-topbar-primary {
     background-color: #2563EB !important;
     border-color: #2563EB !important;
-    color: #ffffff !important;
 }
 .talent-topbar--edit .talent-topbar-actions .talent-topbar-primary:hover {
     background-color: #1D4ED8 !important;
     border-color: #1D4ED8 !important;
+}
+.talent-topbar-action-hint {
+    display: block !important;
+    color: #65718e !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
+}
+@media (max-width: 991px) {
+    .talent-topbar {
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+    .talent-topbar-right {
+        width: 100% !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
 }
 </style>
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
