@@ -1117,6 +1117,18 @@
                         </div>
                         <!--end::recruiter-note-templates-->
 
+                        <!--begin::rm-note-templates-->
+                        <div class="menu-item">
+                            <a href="{{ route('superadmin.rm-note.index') }}"
+                                class="menu-link {{ request()->is('super-admin/rm-note*') ? 'active' : '' }}">
+                                <span class="menu-bullet">
+                                    <span class="bullet bullet-dot"></span>
+                                </span>
+                                <span class="menu-title">RM Note Templates</span>
+                            </a>
+                        </div>
+                        <!--end::rm-note-templates-->
+
                         <!--begin::settings-->
                         <div class="menu-item">
                             <a href="{{ route('superadmin.company.zoom_setting') }}"
