@@ -1671,7 +1671,7 @@ if($snp_mode== 1){
                 <div class="addl-hero-title">
                   <span class="addl-hero-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF;"><i class="fa-solid fa-passport"></i></span>
                   <span>
-                    <strong>Work Authorization & Compliance</strong>
+                    <strong>Work Authorization & Compliance (Optional)</strong>
                     <small>Specify legal right-to-work status and visa category for client submissions.</small>
                   </span>
                 </div>
@@ -5570,19 +5570,43 @@ function getCandidateFormVariables() {
         skillsStr = 'the required technical competencies';
     }
 
-    // 3. Availability / Joining Status
+    // 3. Availability / Joining Status & Exact Notice Period
     var snp = $('#serving_notice_period').val();
     var availStr = 'Immediate';
+    var noticePeriodStr = 'Immediate / 0 days (Bench Resource)';
     if (snp === '2') {
         availStr = 'Immediate';
+        noticePeriodStr = 'Immediate / 0 days (Bench Resource)';
     } else if (snp === '1') {
         var availDate = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
         availStr = availDate ? ('Available from ' + availDate) : 'Available on scheduled start date';
+        noticePeriodStr = availDate ? ('Available from ' + availDate) : 'Available on scheduled start date';
+    } else if (snp === '0') {
+        var days = ($('#ddl_np_id option:selected').text() || $('#ddl_np_id').val() || '').trim();
+        availStr = days ? ('Serving notice period (' + days + ')') : 'Serving notice period';
+        noticePeriodStr = days ? ('Serving notice period (' + days + ')') : 'Serving notice period';
     } else {
-        availStr = 'Immediate';
+        var days = ($('#ddl_np_id option:selected').text() || '').trim();
+        if (days && days !== 'Select Notice Period') {
+            availStr = 'Serving notice period (' + days + ')';
+            noticePeriodStr = 'Serving notice period (' + days + ')';
+        } else {
+            availStr = 'Immediate';
+            noticePeriodStr = 'Immediate / 0 days (Bench Resource)';
+        }
     }
 
-    // 4. Most Relevant Requirement
+    // 4. Work Authorization & Visa Selection
+    var visaVal = ($('#visastatu').val() || '').trim();
+    var visaSelectedText = ($('#visastatu option:selected').text() || '').trim();
+    var workAuthStr = 'Right-to-work verified and compliant';
+    if (visaVal && visaSelectedText && !visaSelectedText.toLowerCase().includes('select work authorization')) {
+        workAuthStr = visaSelectedText + ' - Verified & Compliant';
+    } else if (visaVal) {
+        workAuthStr = visaVal + ' - Verified & Compliant';
+    }
+
+    // 5. Most Relevant Requirement
     var relReq = '';
     if (skillsList.length > 0) {
         relReq = skillsList[0] + (skillsList.length > 1 ? (' and ' + skillsList[1]) : '') + ' hands-on delivery';
@@ -5592,7 +5616,7 @@ function getCandidateFormVariables() {
         relReq = 'the core position requirements';
     }
 
-    // 5. Total Experience
+    // 6. Total Experience
     var expYears = ($('#total_exp_year').val() || '').trim();
     var expMonths = ($('#total_exp_month').val() || '').trim();
     var expStr = '';
@@ -5600,20 +5624,22 @@ function getCandidateFormVariables() {
         expStr = expYears + ' years' + (expMonths && expMonths !== '0' ? (' ' + expMonths + ' months') : '');
     }
 
-    // 6. Candidate Name
+    // 7. Candidate Name
     var candidateName = ($('#full_name').val() || '').trim();
 
     return {
         designation: designation,
         skills: skillsStr,
         availability: availStr,
+        noticePeriod: noticePeriodStr,
+        workAuth: workAuthStr,
         requirement: relReq,
         experience: expStr,
         name: candidateName
     };
 }
 
-// Replaces placeholders like [current designation], [3 skills], [most relevant requirement], [Immediate / X days / Serving notice / Available from date]
+// Replaces placeholders like [current designation], [3 skills], [most relevant requirement], [Immediate / X days / Serving notice / Available from date], [Availability / Notice Period], [Work Authorization / Visa Status]
 function interpolateTemplateVariables(text, customVars) {
     if (!text) return '';
     var vars = customVars || getCandidateFormVariables();
@@ -5632,6 +5658,17 @@ function interpolateTemplateVariables(text, customVars) {
     text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\s*\/\s*Available from date\]/gi, vars.availability);
     text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\]/gi, vars.availability);
     text = text.replace(/\[Availability\]/gi, vars.availability);
+
+    // Replace [Availability / Notice Period] / [Notice Period / Availability] / [Notice Period]
+    text = text.replace(/\[Availability\s*\/\s*Notice Period\]/gi, vars.noticePeriod);
+    text = text.replace(/\[Notice Period\s*\/\s*Availability\]/gi, vars.noticePeriod);
+    text = text.replace(/\[Notice Period\]/gi, vars.noticePeriod);
+
+    // Replace [Work Authorization / Visa Status] / [Work Authorization / Visa] / [Work Authorization] / [Visa Status]
+    text = text.replace(/\[Work Authorization\s*\/\s*Visa Status\]/gi, vars.workAuth);
+    text = text.replace(/\[Work Authorization\s*\/\s*Visa\]/gi, vars.workAuth);
+    text = text.replace(/\[Work Authorization\]/gi, vars.workAuth);
+    text = text.replace(/\[Visa Status\]/gi, vars.workAuth);
 
     // Replace [candidate name] / [candidate_name]
     if (vars.name) {
@@ -5696,18 +5733,18 @@ function triggerLiveRmCommentsSync() {
 
         var $rn = $('#recruiter_note');
         var rawTpl = formatTemplateToPlainText(recruiterNoteTemplates[selectedId].content);
-        if (rawTpl.includes('[current designation]') || rawTpl.includes('[3 skills]') || rawTpl.includes('[most relevant requirement]') || rawTpl.includes('[Immediate / X days / Serving notice / Available from date]')) {
+        if (rawTpl.includes('[current designation]') || rawTpl.includes('[3 skills]') || rawTpl.includes('[most relevant requirement]') || rawTpl.includes('[Immediate / X days / Serving notice / Available from date]') || rawTpl.includes('[Availability / Notice Period]') || rawTpl.includes('[Work Authorization / Visa Status]') || rawTpl.includes('[Work Authorization]') || rawTpl.includes('[Notice Period]')) {
             var updated = interpolateTemplateVariables(rawTpl);
             $rn.val(updated);
         }
     }, 450);
 }
 
-// Attach live sync to form fields (Role, Skills, Notice Period, Availability Date)
+// Attach live sync to form fields (Role, Skills, Notice Period, Availability Date, Work Authorization)
 $(document).on('input blur', '#current_designation', triggerLiveRmCommentsSync);
 $(document).on('input blur', '#skillExperienceWrapper tr input[name="skills[]"]', triggerLiveRmCommentsSync);
-$(document).on('change', '#serving_notice_period, #np_id, #np_id_display', triggerLiveRmCommentsSync);
-$(document).on('click', '.aw-option', function () {
+$(document).on('change', '#serving_notice_period, #np_id, #np_id_display, #ddl_np_id, #visastatu', triggerLiveRmCommentsSync);
+$(document).on('click', '.aw-option, .wa-chip-btn', function () {
     setTimeout(triggerLiveRmCommentsSync, 120);
 });
 
@@ -5738,7 +5775,7 @@ $(document).on('click', '#btn_sync_rm_template', function (e) {
     clearFieldValidationErrors('recruiter_note');
 
     if (typeof toastr !== 'undefined') {
-        toastr.success('Comments synchronized with Current Designation, Skills, and Availability!');
+        toastr.success('Comments synchronized with Current Designation, Skills, Availability, and Work Authorization!');
     }
 });
 
