@@ -2830,6 +2830,13 @@ $( document ).ready(function() {
       $('#kt_bench_fwd_resume_drawer').addClass('drawer-on');
     }
 
+    setTimeout(function() {
+      var overlays = $('.drawer-overlay');
+      if (overlays.length > 0) {
+        overlays.last().css('z-index', '10045');
+      }
+    }, 50);
+
     $('#bench_fwd_resume_body_content').html(
       '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
       '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
