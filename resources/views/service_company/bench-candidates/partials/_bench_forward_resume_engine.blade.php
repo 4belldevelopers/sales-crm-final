@@ -110,25 +110,49 @@
     if (rsResumeBytesCache[candId]) return rsResumeBytesCache[candId];
 
     var sources = [];
+    // 1. Authoritative same-origin proxy download endpoint (zero CORS, server fetches from S3/file.jero.works/disk)
+    sources.push('/service_company/bench-candidates/download/' + candId);
+
     if (typeof cand === 'object' && cand !== null) {
-      if (cand.resume_url) sources.push(cand.resume_url);
+      if (cand.download_url && !sources.includes(cand.download_url)) {
+        sources.push(cand.download_url);
+      }
+      if (cand.resume_url && !sources.includes(cand.resume_url)) {
+        sources.push(cand.resume_url);
+      }
+      if (cand.resume && (cand.resume.startsWith('http://') || cand.resume.startsWith('https://')) && !sources.includes(cand.resume)) {
+        sources.push(cand.resume);
+      }
       if (cand.resume_filename) {
         sources.push('/user-uploads/resumes/' + cand.resume_filename);
         sources.push('/user-uploads/documents/' + candId + '/' + cand.resume_filename);
       }
     }
-    sources.push('/service_company/bench-candidates/download/' + candId);
 
     var lastErr = null;
     for (var i = 0; i < sources.length; i++) {
       try {
-        var resp = await fetch(sources[i], { cache: 'no-store', credentials: 'include' });
+        var fetchOpts = { cache: 'no-store' };
+        try {
+          var uOrigin = (new URL(sources[i], window.location.href)).origin;
+          if (uOrigin === window.location.origin) {
+            fetchOpts.credentials = 'include';
+          } else {
+            fetchOpts.mode = 'cors';
+          }
+        } catch (e) {
+          fetchOpts.credentials = 'include';
+        }
+
+        var resp = await fetch(sources[i], fetchOpts);
         if (resp.ok) {
           var buf = await resp.arrayBuffer();
-          if (buf && buf.byteLength > 200) {
+          if (buf && buf.byteLength > 100) {
             rsResumeBytesCache[candId] = new Uint8Array(buf);
             return rsResumeBytesCache[candId];
           }
+        } else {
+          lastErr = new Error('HTTP ' + resp.status + ' from ' + sources[i]);
         }
       } catch (e) {
         lastErr = e;
@@ -491,19 +515,21 @@
     if (isPdfBytes(rawBytes)) {
       return new Blob([rawBytes], { type: 'application/pdf' });
     }
+    var compName = (cand && (cand.report_company_name || cand.company_name)) || 'Hiring Partner';
+    var candName = (cand && cand.full_name) || 'Candidate';
     // If Word DOCX/DOC, convert via OpenDoc WASM Engine 2 in User RAM
     if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
       return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
-        candidateName: cand.full_name,
-        companyName: cand.report_company_name
+        candidateName: candName,
+        companyName: compName
       });
     }
     // Dynamic load fallback
     await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
     if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
       return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
-        candidateName: cand.full_name,
-        companyName: cand.report_company_name
+        candidateName: candName,
+        companyName: compName
       });
     }
     throw new Error('DOCX document could not be converted to PDF. Please select Option 1 (Original Resume) or Option 5 (Pre-Screened Report PDF).');
