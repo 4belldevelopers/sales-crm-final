@@ -34,8 +34,8 @@
   var rsResumeBytesCache = {};
 
   // SVGs for Bench Pre-Screen Dossier
-  var rsStarGold = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
-  var rsStarMuted = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+  var rsStarGold = '<svg viewBox="0 0 24 24" width="9" height="9" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
+  var rsStarMuted = '<svg viewBox="0 0 24 24" width="9" height="9" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
   var rsIconExperience = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M12 2l2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5L4.8 7.2l5-.7L12 2zm-6 17h12v2H6v-2z"/></svg>';
   var rsIconCompany = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#64748b" d="M4 21V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v17h3v-9h-2v-2h3a1 1 0 0 1 1 1v10H4zm4-14h2V5H8v2zm4 0h2V5h-2v2zm-4 4h2V9H8v2zm4 0h2V9h-2v2zm-4 4h2v-2H8v2zm4 0h2v-2h-2v2z"/></svg>';
   var rsIconCalendar = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2zm12 8H5v9h14v-9z"/></svg>';
@@ -99,6 +99,31 @@
     return rsPdfMakeReady;
   }
 
+  async function rsGetLogoDataUri(url) {
+    if (!url) return null;
+    if (url.startsWith('data:image/')) return url;
+    if (rsLogoCache[url]) return rsLogoCache[url];
+    try {
+      var resp = await fetch(url, { mode: 'cors', credentials: 'omit' });
+      if (!resp.ok) return null;
+      var blob = await resp.blob();
+      return new Promise(function (resolve) {
+        var reader = new FileReader();
+        reader.onloadend = function () {
+          rsLogoCache[url] = reader.result;
+          resolve(reader.result);
+        };
+        reader.onerror = function () {
+          resolve(null);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('[BenchForwardResume] Could not load company logo as data URI:', e);
+      return null;
+    }
+  }
+
   function clean(val, fallback) {
     if (val === undefined || val === null) return fallback || '';
     var s = String(val).trim();
@@ -110,15 +135,18 @@
     if (rsResumeBytesCache[candId]) return rsResumeBytesCache[candId];
 
     var sources = [];
-    // 1. Authoritative same-origin proxy download endpoint (zero CORS, server fetches from S3/file.jero.works/disk)
-    sources.push('/service_company/bench-candidates/download/' + candId);
-
     if (typeof cand === 'object' && cand !== null) {
-      if (cand.download_url && !sources.includes(cand.download_url)) {
-        sources.push(cand.download_url);
+      if (cand.resume_r2_url && !sources.includes(cand.resume_r2_url)) {
+        sources.push(cand.resume_r2_url);
       }
       if (cand.resume_url && !sources.includes(cand.resume_url)) {
         sources.push(cand.resume_url);
+      }
+      if (cand.direct_download_url && !sources.includes(cand.direct_download_url)) {
+        sources.push(cand.direct_download_url);
+      }
+      if (cand.download_url && !sources.includes(cand.download_url)) {
+        sources.push(cand.download_url);
       }
       if (cand.resume && (cand.resume.startsWith('http://') || cand.resume.startsWith('https://')) && !sources.includes(cand.resume)) {
         sources.push(cand.resume);
@@ -127,6 +155,11 @@
         sources.push('/user-uploads/resumes/' + cand.resume_filename);
         sources.push('/user-uploads/documents/' + candId + '/' + cand.resume_filename);
       }
+    }
+    // Also include same-origin proxy download endpoint
+    var proxyRoute = '/service_company/bench-candidates/download/' + candId;
+    if (!sources.includes(proxyRoute)) {
+      sources.push(proxyRoute);
     }
 
     var lastErr = null;
@@ -146,10 +179,23 @@
 
         var resp = await fetch(sources[i], fetchOpts);
         if (resp.ok) {
+          var contentType = resp.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            var json = await resp.json();
+            if (json.url && !sources.includes(json.url)) {
+              sources.push(json.url);
+              continue;
+            }
+          }
           var buf = await resp.arrayBuffer();
           if (buf && buf.byteLength > 100) {
-            rsResumeBytesCache[candId] = new Uint8Array(buf);
-            return rsResumeBytesCache[candId];
+            var head = new Uint8Array(buf.slice(0, 10));
+            var headStr = String.fromCharCode.apply(null, head).toLowerCase();
+            // Validate that we didn't receive an HTML 404/login page
+            if (headStr.indexOf('<!doc') === -1 && headStr.indexOf('<html') === -1) {
+              rsResumeBytesCache[candId] = new Uint8Array(buf);
+              return rsResumeBytesCache[candId];
+            }
           }
         } else {
           lastErr = new Error('HTTP ' + resp.status + ' from ' + sources[i]);
@@ -197,21 +243,26 @@
       });
     }
 
-    // Talent Skills & Expertise (display up to 10 key skills)
+    // Talent Skills & Expertise (display up to 10 key skills with vector SVG stars)
     skillsList.slice(0, 10).forEach(function (sk) {
-      var stars = '';
       var r = parseInt(sk.rating || 3, 10);
+      var starCols = [];
       for (var i = 1; i <= 5; i++) {
-        stars += (i <= r) ? '★ ' : '☆ ';
+        starCols.push({
+          svg: (i <= r) ? rsStarGold : rsStarMuted,
+          width: 9,
+          height: 9,
+          margin: [0, 0, 1, 0]
+        });
       }
       skillRows.push([
         { text: sk.name || 'Skill', style: 'tableCellBold' },
         { text: sk.expText || '--', style: 'tableCell' },
-        { text: stars, style: 'tableCell', color: '#f59e0b', fontSize: 10 }
+        { columns: starCols, width: 60, margin: [0, 2, 0, 0] }
       ]);
     });
 
-    var logoCell = logoUri
+    var logoCell = (logoUri && logoUri.startsWith('data:image/'))
       ? { image: logoUri, fit: [42, 28], alignment: 'center', margin: [0, 0, 10, 0] }
       : { text: companyName.charAt(0).toUpperCase(), fontSize: 13, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 4, 10, 0] };
 
@@ -384,7 +435,11 @@
 
   async function generateBenchPrescreenPdfBlob(cand, companyName, logoUri, noBranding) {
     await ensurePdfMake();
-    var def = buildBenchDefinition(cand, companyName, logoUri, noBranding);
+    var resolvedLogoUri = null;
+    if (logoUri && !noBranding) {
+      resolvedLogoUri = await rsGetLogoDataUri(logoUri);
+    }
+    var def = buildBenchDefinition(cand, companyName, resolvedLogoUri, noBranding);
     return new Promise(function (resolve, reject) {
       try {
         window.pdfMake.createPdf(def).getBlob(function (blob) {
@@ -525,14 +580,29 @@
       });
     }
     // Dynamic load fallback
-    await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
-    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
-      return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
-        candidateName: candName,
-        companyName: compName
-      });
+    try {
+      await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
+      if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
+        return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
+          candidateName: candName,
+          companyName: compName
+        });
+      }
+    } catch (e) {
+      console.warn('[AgyBenchForwardResumeEngine] Could not load DOCX WASM converter:', e);
     }
     throw new Error('DOCX document could not be converted to PDF. Please select Option 1 (Original Resume) or Option 5 (Pre-Screened Report PDF).');
+  }
+
+  async function ensureForwardResumeEngine() {
+    if (window.AgyForwardResumeEngine) return window.AgyForwardResumeEngine;
+    try {
+      await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
+      return window.AgyForwardResumeEngine;
+    } catch (e) {
+      console.warn('[AgyBenchForwardResumeEngine] Could not load AgyForwardResumeEngine:', e);
+      return null;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -624,8 +694,183 @@
       return merged;
     }
 
-    // Options 44-53 Fallback / Custom:
-    // Generate branded dossier + original resume package
+    // Options 44-47: Highlighted Keywords
+    if (optId === 44 || optId === 45 || optId === 46 || optId === 47) {
+      notify(20, 'Preparing highlighted resume...', 'Reading original resume...');
+      var rawBytes = await fetchCandidateResumeBytes(cand);
+      var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      var fwdEngine = await ensureForwardResumeEngine();
+      var highlightedBlob = basePdfBlob;
+
+      var allKeywords = Array.isArray(jobSkills) ? jobSkills.slice() : [];
+      if (Array.isArray(cand.skills_evaluated)) {
+        cand.skills_evaluated.forEach(function (s) {
+          var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
+          if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
+        });
+      }
+      if (cand.skills && typeof cand.skills === 'string') {
+        cand.skills.split(',').forEach(function (s) {
+          var sTrim = s.trim();
+          if (sTrim && allKeywords.indexOf(sTrim) === -1) allKeywords.push(sTrim);
+        });
+      }
+
+      if (fwdEngine && typeof fwdEngine.buildTurboVectorHighlightedResume === 'function') {
+        try {
+          notify(55, 'Highlighting key skills...', 'Analyzing resume text and applying vector skill highlights...');
+          highlightedBlob = await fwdEngine.buildTurboVectorHighlightedResume({
+            resumeBlob: basePdfBlob,
+            keywords: allKeywords
+          });
+        } catch (hErr) {
+          console.warn('[AgyBenchForwardResumeEngine] Skill highlighting fallback:', hErr);
+        }
+      }
+
+      if (optId === 44) {
+        highlightedBlob.filename = 'Jeroworks_' + safeName + '_Highlighted.pdf';
+        notify(100, 'Highlighted resume ready!', 'Document ready to send');
+        return highlightedBlob;
+      }
+
+      if (optId === 45) {
+        notify(75, 'Applying company branding...', 'Injecting organization banner...');
+        var pdfBytes = new Uint8Array(await highlightedBlob.arrayBuffer());
+        var branded = await addCompanyBrandingHeader(pdfBytes, companyName);
+        branded.filename = 'Jeroworks_' + safeName + '_Highlighted_Branded.pdf';
+        notify(100, 'Branded highlighted resume ready!', 'Document ready to send');
+        return branded;
+      }
+
+      if (optId === 46) {
+        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
+        notify(75, 'Applying company branding...', 'Injecting organization banner...');
+        var pdfBytes = new Uint8Array(await highlightedBlob.arrayBuffer());
+        var branded = await addCompanyBrandingHeader(pdfBytes, companyName);
+        notify(90, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, branded);
+        merged.filename = 'Jeroworks_' + safeName + '_Full_Package.pdf';
+        notify(100, 'Recruiter package ready!', 'Document ready to send');
+        return merged;
+      }
+
+      if (optId === 47) {
+        notify(30, 'Generating unbranded dossier...', 'Compiling RM comments without company branding...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
+        notify(85, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, highlightedBlob);
+        merged.filename = 'Prescreen_' + safeName + '_Highlighted_Package.pdf';
+        notify(100, 'Recruiter package ready!', 'Document ready to send');
+        return merged;
+      }
+    }
+
+    // Options 48-53: Privacy & Anonymization (Anti-Poaching Shield)
+    if (optId >= 48 && optId <= 53) {
+      notify(20, 'Preparing privacy-shield resume...', 'Reading original resume...');
+      var rawBytes = await fetchCandidateResumeBytes(cand);
+      var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      var fwdEngine = await ensureForwardResumeEngine();
+      var anonymizedBlob = basePdfBlob;
+
+      var anonymizeCand = {
+        name: cand.full_name || 'Candidate',
+        email: cand.email || '',
+        phone: cand.phone || cand.mobile || '',
+        mobile: cand.mobile || '',
+        companyName: companyName
+      };
+
+      var keepName = (optId !== 49); // Hide candidate name ONLY for Option 49
+      if (fwdEngine && typeof fwdEngine.rdcAnonymizeRules === 'function' && typeof fwdEngine.renderAnonymizedPdfBlob === 'function') {
+        try {
+          notify(55, 'Applying privacy redactions...', 'Redacting contact numbers, email, and private links...');
+          var rules = fwdEngine.rdcAnonymizeRules(anonymizeCand, { keepName: keepName });
+          anonymizedBlob = await fwdEngine.renderAnonymizedPdfBlob(basePdfBlob, rules);
+        } catch (aErr) {
+          console.warn('[AgyBenchForwardResumeEngine] Privacy redaction fallback:', aErr);
+        }
+      }
+
+      if (optId === 48) {
+        anonymizedBlob.filename = 'Jeroworks_' + safeName + '_Confidential.pdf';
+        notify(100, 'Confidential resume ready!', 'Document ready to send');
+        return anonymizedBlob;
+      }
+
+      if (optId === 49) {
+        anonymizedBlob.filename = 'Jeroworks_Resume_Confidential.pdf';
+        notify(100, 'Confidential resume ready!', 'Document ready to send');
+        return anonymizedBlob;
+      }
+
+      if (optId === 50) {
+        notify(75, 'Applying company branding...', 'Injecting organization banner...');
+        var pdfBytes = new Uint8Array(await anonymizedBlob.arrayBuffer());
+        var branded = await addCompanyBrandingHeader(pdfBytes, companyName);
+        branded.filename = 'Jeroworks_' + safeName + '_Branded_Confidential.pdf';
+        notify(100, 'Branded confidential resume ready!', 'Document ready to send');
+        return branded;
+      }
+
+      if (optId === 51) {
+        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
+        notify(85, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, anonymizedBlob);
+        merged.filename = 'Jeroworks_' + safeName + '_Confidential_Package.pdf';
+        notify(100, 'Confidential package ready!', 'Document ready to send');
+        return merged;
+      }
+
+      if (optId === 52) {
+        notify(30, 'Generating unbranded dossier...', 'Compiling RM comments without company branding...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
+        notify(85, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, anonymizedBlob);
+        merged.filename = 'Prescreen_' + safeName + '_Confidential_Package.pdf';
+        notify(100, 'Confidential package ready!', 'Document ready to send');
+        return merged;
+      }
+
+      if (optId === 53) {
+        // Highlighting + Anonymization + Dossier
+        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
+        var allKeywords = Array.isArray(jobSkills) ? jobSkills.slice() : [];
+        if (Array.isArray(cand.skills_evaluated)) {
+          cand.skills_evaluated.forEach(function (s) {
+            var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
+            if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
+          });
+        }
+        if (cand.skills && typeof cand.skills === 'string') {
+          cand.skills.split(',').forEach(function (s) {
+            var sTrim = s.trim();
+            if (sTrim && allKeywords.indexOf(sTrim) === -1) allKeywords.push(sTrim);
+          });
+        }
+        var processedResume = anonymizedBlob;
+        if (fwdEngine && typeof fwdEngine.buildTurboVectorHighlightedResume === 'function') {
+          try {
+            notify(65, 'Highlighting key skills on confidential resume...', 'Applying keyword highlights...');
+            processedResume = await fwdEngine.buildTurboVectorHighlightedResume({
+              resumeBlob: anonymizedBlob,
+              keywords: allKeywords
+            });
+          } catch (hErr) {}
+        }
+        notify(88, 'Merging dossier and resume...', 'Concatenating full privacy recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, processedResume);
+        merged.filename = 'Jeroworks_' + safeName + '_Full_Privacy_Package.pdf';
+        notify(100, 'Full privacy package ready!', 'Document ready to send');
+        return merged;
+      }
+    }
+
+    // Options Fallback: Generate branded dossier + original resume package
     notify(20, 'Generating pre-screen dossier...', 'Preparing candidate dossier...');
     var dossier = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
     notify(50, 'Fetching candidate resume...', 'Reading original resume...');

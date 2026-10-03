@@ -6,7 +6,6 @@
 @endphp 
 
 @include('service_company.bench-candidates.partials._bench_forward_resume_engine') 
-<script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
@@ -620,6 +619,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
               $candSafeName = $cand->safe_name ?? ('Candidate_' . $cand->id);
               $candDisplayName = $cand->full_name ?? 'Candidate';
               $candDesignation = $cand->current_designation ?? 'Inhouse Talent';
+              $candResumeUrl = $cand->resume_r2_url ?? ($cand->resume_url ?? ($cand->download_url ?? ''));
             @endphp
             <div id="bench_fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="margin-top:10px;padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -637,12 +637,24 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                       </span>
                     </div>
                     <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      {{ $hasResume ? ('Jeroworks_' . $candSafeName . '.pdf') : 'No resume uploaded' }}
+                      @if($hasResume)
+                        <a href="javascript:void(0)" onclick="openBenchOriginalResume({{ $cand->id }})" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view original resume">
+                          📄 Jeroworks_{{ $candSafeName }}.pdf <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
+                      @else
+                        <span>No resume uploaded</span>
+                      @endif
                     </div>
                   </div>
                 </div>
 
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                  @if($hasResume)
+                    <button type="button" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View original resume document">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      View CV
+                    </button>
+                  @endif
                   <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
                     {{ $hasResume ? '1 Resume Available' : '⚠ No Resume' }}
                   </div>
@@ -814,6 +826,18 @@ var _benchCompiledAttachment = null;
 var _benchCompilationSeq = 0;
 var _benchIsCompiling = false;
 
+// Open candidate's authoritative original resume in a new tab
+window.openBenchOriginalResume = function(candId) {
+    var candObj = @json($cand ?? []);
+    var directUrl = candObj.resume_r2_url || candObj.resume_url || candObj.download_url || candObj.direct_download_url;
+    if (directUrl && (directUrl.startsWith('http://') || directUrl.startsWith('https://'))) {
+        window.open(directUrl, '_blank');
+        return;
+    }
+    var fallbackUrl = '/service_company/bench-candidates/download/' + (candId || candObj.id || 0) + '?redirect=1';
+    window.open(fallbackUrl, '_blank');
+};
+
 // Initialize chips if values exist
 function renderBenchTags(target) {
     var list = (target === 'to') ? benchToEmails : benchCcEmails;
@@ -980,13 +1004,25 @@ function onBenchFwdFormatChange(sel) {
     $('#bench_fwd_format_details_section').show();
 
     var safeName = $('#bench_fwd_cand_filename').attr('data-safename') || 'Candidate';
+    var candId = @json($cand->id ?? 0);
+    var candHasResume = @json(!empty($cand->has_resume));
+    var dispName = '';
     if (optId === 1) {
         var ext = @json(pathinfo($cand->resume_filename ?? '', PATHINFO_EXTENSION) ?: 'pdf');
-        $('#bench_fwd_cand_filename').text('Jeroworks_' + safeName + '.' + ext);
+        dispName = 'Jeroworks_' + safeName + '.' + ext;
     } else if (optId === 5) {
-        $('#bench_fwd_cand_filename').text('Prescreen_Report_' + safeName + '.pdf');
+        dispName = 'Prescreen_Report_' + safeName + '.pdf';
     } else {
-        $('#bench_fwd_cand_filename').text('Jeroworks_' + safeName + '_Formatted.pdf');
+        dispName = 'Jeroworks_' + safeName + '_Formatted.pdf';
+    }
+
+    if (candHasResume || optId === 5) {
+        $('#bench_fwd_cand_filename').html(
+            '<a href="javascript:void(0)" onclick="openBenchOriginalResume(' + candId + ')" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view original resume">' +
+            '📄 ' + $('<div>').text(dispName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+        );
+    } else {
+        $('#bench_fwd_cand_filename').html('<span>No resume uploaded</span>');
     }
 
     var candHasResume = @json(!empty($cand->has_resume));
@@ -1101,7 +1137,26 @@ async function triggerBenchResumeCompilation(optId) {
         $('#bench_fwd_compile_pct_badge').text('100%');
         $('#bench_fwd_compile_status_text').text('✓ Document compiled successfully!').css('color', '#059669');
         $('#bench_fwd_compile_step_detail').text('Attached & ready to send via email');
-        $('#bench_fwd_cand_filename').text(outName);
+        
+        var previewUrl = null;
+        try {
+            var rawBlob = blob.blob || blob;
+            if (rawBlob instanceof Blob) {
+                previewUrl = URL.createObjectURL(rawBlob);
+            }
+        } catch (e) {}
+
+        if (previewUrl) {
+            $('#bench_fwd_cand_filename').html(
+                '<a href="' + previewUrl + '" target="_blank" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to preview compiled resume">' +
+                '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+            );
+        } else {
+            $('#bench_fwd_cand_filename').html(
+                '<a href="javascript:void(0)" onclick="openBenchOriginalResume(' + (candObj.id || 0) + ')" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view resume">' +
+                '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+            );
+        }
 
         $('#bench_fwd_cand_status_badge')
             .html('✓ Attached (100%)')
@@ -1122,17 +1177,28 @@ async function triggerBenchResumeCompilation(optId) {
         console.error('[BenchForwardResume] Compilation failed:', compileErr);
 
         if (btn) {
-            btn.disabled = true;
-            btn.style.cursor = 'not-allowed';
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
             $(btn).find('.indicator-progress').hide();
             $(btn).find('.indicator-label').css('display', 'inline-flex').show();
         }
 
-        $('#bench_fwd_compile_status_text').text('Compilation error: ' + (compileErr.message || 'WASM Engine Error')).css('color', '#DC2626');
-        $('#bench_fwd_compile_step_detail').text('Please choose another format or try again.');
-        $('#bench_fwd_cand_status_badge').html('⚠ Error').css({ background: '#FEE2E2', color: '#DC2626' });
+        $('#bench_fwd_compile_status_text').text('Compilation notice: ' + (compileErr.message || 'Processing Error')).css('color', '#DC2626');
+        $('#bench_fwd_compile_step_detail').text('Please choose another format or continue with Option 1.');
+        $('#bench_fwd_cand_status_badge').html('⚠ Conversion Issue').css({ background: '#FEE2E2', color: '#DC2626' });
 
-        Swal.fire('Compilation Error', 'Could not compile custom resume: ' + (compileErr.message || 'WASM Engine Error') + '. Please try again.', 'error');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Format Notice',
+            text: 'We encountered an issue preparing format #' + optId + ' (' + (compileErr.message || 'Processing Error') + '). Would you like to use Option 1 (Original Resume) or Option 5 (Pre-Screened Report) instead?',
+            showCancelButton: true,
+            confirmButtonText: 'Use Option 1 (Original)',
+            cancelButtonText: 'Select Format'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $('#bench_fwd_resume_format').val('1').trigger('change');
+            }
+        });
     }
 }
 
