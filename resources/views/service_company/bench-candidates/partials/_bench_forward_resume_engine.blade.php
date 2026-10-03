@@ -342,7 +342,7 @@
               },
               {
                 stack: [
-                  { text: 'IN-HOUSE BENCH PROFILE', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [10, 14, 14, 10],
@@ -367,7 +367,7 @@
             body: [[
               {
                 stack: [
-                  { text: 'IN-HOUSE BENCH PROFILE', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [14, 14, 14, 10],
