@@ -286,6 +286,170 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 .bench-mm-select { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; padding: 9px 36px 9px 14px; font-size: 13px; color: #374151; font-family: 'Poppins', sans-serif; background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; -webkit-appearance: none; outline: none; cursor: pointer; transition: border-color 0.15s; }
 .bench-mm-select:focus { border-color: #93C5FD; background-color: #fff; }
 
+/* Custom Resume Format Dropdown - Exact Replica of Attached Image */
+.bench-fwd-format-dropdown-wrap {
+  position: relative;
+  width: 100%;
+}
+.bench-fwd-format-trigger {
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.bench-fwd-format-trigger:hover {
+  border-color: #2563EB;
+}
+.bench-fwd-format-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 8px;
+}
+.bench-fwd-format-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.bench-fwd-format-dropdown-menu::-webkit-scrollbar-track {
+  background: #F8FAFC;
+  border-radius: 4px;
+}
+.bench-fwd-format-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+.bench-fwd-format-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+.bench-fwd-sec-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  background: #FFFFFF;
+}
+.bench-fwd-sec-card:last-child {
+  margin-bottom: 0;
+}
+.bench-fwd-sec-header {
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid transparent;
+}
+.bench-fwd-sec-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+.bench-fwd-sec-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1.5px 9px;
+  border-radius: 12px;
+}
+
+.bench-fwd-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F5F9;
+  background: #FFFFFF;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.bench-fwd-opt-row:last-child {
+  border-bottom: none;
+}
+.bench-fwd-opt-row:hover {
+  background: #F8FAFC;
+}
+.bench-fwd-opt-row.is-selected {
+  background: #F0F7FF !important;
+}
+
+.bf-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.8px solid #CBD5E1;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.bf-radio.is-checked {
+  border-color: #2563EB;
+  background: #FFFFFF;
+}
+.bf-radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563EB;
+  display: none;
+}
+.bf-radio.is-checked .bf-radio-inner {
+  display: block;
+}
+
+.bf-opt-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.bf-opt-meta {
+  min-width: 0;
+  flex: 1;
+}
+.bf-opt-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1E293B;
+  line-height: 1.3;
+}
+.bf-opt-desc {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+.bf-default-badge {
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
 .bench-mm-editor-wrap { width: 100%; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; background: #FFFFFF; }
 .bench-mm-editor-wrap .cke { width: 100% !important; border: none !important; }
 #bench_editor1 { width: 100% !important; min-height: 240px; padding: 12px 14px; border: 1px solid #E5E7EB; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; color: #374151; box-sizing: border-box; }
@@ -757,7 +921,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     </div>
 
     {{-- Resume Format Selector --}}
-    <div class="bench-mm-row">
+    <div class="bench-mm-row" style="position:relative;z-index:30;">
       <div class="bench-mm-label-col">
         <span class="bench-mm-label-icon bench-mm-ic-teal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
@@ -766,35 +930,337 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
       <div class="bench-mm-field-col">
         <input type="hidden" id="bench_fwd_attach_cv_toggle" name="attached_cv" value="1">
-        <select name="attached_cv_format" id="bench_fwd_resume_format" class="bench-mm-select" style="font-weight:500;" onchange="onBenchFwdFormatChange(this)">
-          <option value="" selected disabled>Select Resume Format...</option>
-          <optgroup label="1. Standard Resume Options">
-            <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1.a Original Resume (Default)</option>
-            <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">1.b Resume + Company Branding</option>
-          </optgroup>
-          <optgroup label="2. In-House Evaluation Report">
-            <option value="5" data-label="In-House Evaluation Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">2.a In-House Evaluation Report PDF</option>
-          </optgroup>
-          <optgroup label="3. Recruiter Packages (Report + Resume)">
-            <option value="42" data-label="In-House Evaluation Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the in-house evaluation report first, followed by the candidate resume with company branding.">3.a In-House Evaluation Report + Resume + Company Branding</option>
-            <option value="43" data-label="In-House Evaluation Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">3.b In-House Evaluation Report + Resume without Company Branding</option>
-          </optgroup>
-          <optgroup label="4. Highlighted Skills">
-            <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">4.a Resume + Highlighted Keywords</option>
-            <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">4.b Resume + Highlighted Keywords + Company Branding</option>
-            <option value="46" data-label="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills.">4.c In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</option>
-            <option value="47" data-label="In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">4.d In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding</option>
-          </optgroup>
-          <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
-            <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">5.a Hide Contact Details</option>
-            <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">5.b Hide Candidate Name & Contacts Details</option>
-            <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">5.c Hide Contact Details + Company Branding</option>
-            <option value="51" data-label="Hide Contact Details + In-House Evaluation Report + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the in-house evaluation report with company branding.">5.d Hide Contact Details + In-House Evaluation Report + Company Branding</option>
-            <option value="52" data-label="Hide Contact Details + In-House Evaluation Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">5.e Hide Contact Details + In-House Evaluation Report without Company Branding</option>
-            <option value="53" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding" data-desc="Full privacy package: masked contacts, highlighted skills, in-house evaluation report dossier, and company branding banner.">5.f Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding</option>
-            <option value="54" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and in-house evaluation report dossier — no branding applied.">5.g Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding</option>
-          </optgroup>
-        </select>
+        <input type="hidden" name="attached_cv_format" id="bench_fwd_resume_format" value="1">
+
+        <!-- Custom Resume Format Dropdown (Exact Replica of Reference UI) -->
+        <div class="bench-fwd-format-dropdown-wrap" id="bench_fwd_format_dropdown_wrap">
+          
+          <!-- Dropdown Trigger -->
+          <div class="bench-fwd-format-trigger" id="bench_fwd_format_trigger" onclick="toggleBenchFormatDropdown(event)">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+              <span class="bf-opt-icon" id="bench_fwd_trigger_icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <line x1="10" y1="9" x2="8" y2="9"/>
+                </svg>
+              </span>
+              <div style="min-width:0;flex:1;">
+                <div id="bench_fwd_trigger_title" style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  Original Resume (Default)
+                </div>
+                <div id="bench_fwd_trigger_desc" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  Original candidate resume without any modifications.
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px;">
+              <span id="bench_fwd_trigger_badge" class="bf-default-badge" style="display:inline-block;">Default!</span>
+              <svg id="bench_fwd_trigger_caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s ease;">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Dropdown Menu Panel -->
+          <div class="bench-fwd-format-dropdown-menu" id="bench_fwd_format_dropdown_menu" style="display:none;">
+
+            <!-- Section 1: Standard Resume Options -->
+            <div class="bench-fwd-sec-card" style="border-color:#DBEAFE;">
+              <div class="bench-fwd-sec-header" style="background:#EEF2FF; border-bottom:1px solid #E0E7FF;">
+                <span class="bench-fwd-sec-title" style="color:#1E3A8A;">1. Standard Resume Options</span>
+                <span class="bench-fwd-sec-badge" style="background:#DBEAFE; color:#1E40AF;">2 formats</span>
+              </div>
+              <div class="bench-fwd-opt-row is-selected" data-opt-id="1" data-title="Original Resume (Default)" data-sub="Original candidate resume without any modifications." data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectBenchResumeFormat(1, this)">
+                <div class="bf-radio is-checked">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <line x1="10" y1="9" x2="8" y2="9"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Original Resume (Default)</div>
+                  <div class="bf-opt-desc">Original candidate resume without any modifications.</div>
+                </div>
+                <span class="bf-default-badge">Default!</span>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="41" data-title="Resume + Company Branding" data-sub="Original resume with your company branding." data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="selectBenchResumeFormat(41, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <rect x="8" y="11" width="8" height="6" rx="1"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Resume + Company Branding</div>
+                  <div class="bf-opt-desc">Original resume with your company branding.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: In-House Evaluation Report -->
+            <div class="bench-fwd-sec-card" style="border-color:#D1FAE5;">
+              <div class="bench-fwd-sec-header" style="background:#ECFDF5; border-bottom:1px solid #A7F3D0;">
+                <span class="bench-fwd-sec-title" style="color:#065F46;">2. In-House Evaluation Report</span>
+                <span class="bench-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">1 format</span>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="5" data-title="In-House Evaluation Report PDF" data-sub="AI/Team evaluation report in PDF format." data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review." onclick="selectBenchResumeFormat(5, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="13" x2="15" y2="13"/>
+                    <line x1="9" y1="17" x2="13" y2="17"/>
+                    <circle cx="15" cy="17" r="1" fill="#1E3A8A"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">In-House Evaluation Report PDF</div>
+                  <div class="bf-opt-desc">AI/Team evaluation report in PDF format.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 3: Recruiter Packages (Report + Resume) -->
+            <div class="bench-fwd-sec-card" style="border-color:#FED7AA;">
+              <div class="bench-fwd-sec-header" style="background:#FFF7ED; border-bottom:1px solid #FFEDD5;">
+                <span class="bench-fwd-sec-title" style="color:#C2410C;">3. Recruiter Packages (Report + Resume)</span>
+                <span class="bench-fwd-sec-badge" style="background:#FFEDD5; color:#C2410C;">2 formats</span>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="42" data-title="In-House Evaluation Report + Resume + Company Branding" data-sub="Evaluation report and resume with company branding." data-desc="Deliver one polished PDF with the in-house evaluation report first, followed by the candidate resume with company branding." onclick="selectBenchResumeFormat(42, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="17" x2="9" y2="14"/>
+                    <line x1="12" y1="17" x2="12" y2="11"/>
+                    <line x1="15" y1="17" x2="15" y2="8"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">In-House Evaluation Report + Resume + Company Branding</div>
+                  <div class="bf-opt-desc">Evaluation report and resume with company branding.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="43" data-title="In-House Evaluation Report + Resume (No Branding)" data-sub="Evaluation report and resume without company branding." data-desc="Download the same report-and-resume package without company logo or company name on the report page." onclick="selectBenchResumeFormat(43, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <line x1="9" y1="16" x2="15" y2="16"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">In-House Evaluation Report + Resume (No Branding)</div>
+                  <div class="bf-opt-desc">Evaluation report and resume without company branding.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 4: Highlighted Skills -->
+            <div class="bench-fwd-sec-card" style="border-color:#FEF08A;">
+              <div class="bench-fwd-sec-header" style="background:#FEF9C3; border-bottom:1px solid #FEF08A;">
+                <span class="bench-fwd-sec-title" style="color:#854D0E;">4. Highlighted Skills</span>
+                <span class="bench-fwd-sec-badge" style="background:#FEF08A; color:#854D0E;">4 formats</span>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="44" data-title="Resume + Highlighted Keywords" data-sub="Resume with relevant skills highlighted." data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review." onclick="selectBenchResumeFormat(44, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Resume + Highlighted Keywords</div>
+                  <div class="bf-opt-desc">Resume with relevant skills highlighted.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="45" data-title="Resume + Highlighted Keywords + Company Branding" data-sub="Resume with highlighted skills and your company branding." data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening." onclick="selectBenchResumeFormat(45, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <polygon points="12.5 9.5 9 14 12 14 11.5 18.5 15 13 12 13 12.5 9.5"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Resume + Highlighted Keywords + Company Branding</div>
+                  <div class="bf-opt-desc">Resume with highlighted skills and your company branding.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="46" data-title="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-sub="Evaluation report and resume with highlighted skills and company branding." data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills." onclick="selectBenchResumeFormat(46, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</div>
+                  <div class="bf-opt-desc">Evaluation report and resume with highlighted skills and company branding.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="47" data-title="In-House Evaluation Report + Resume + Highlighted Keywords (No Branding)" data-sub="Evaluation report and resume with highlighted skills without company branding." data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="selectBenchResumeFormat(47, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="9" y1="12" x2="15" y2="12"/>
+                    <line x1="9" y1="16" x2="13" y2="16"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">In-House Evaluation Report + Resume + Highlighted Keywords (No Branding)</div>
+                  <div class="bf-opt-desc">Evaluation report and resume with highlighted skills without company branding.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 5: Privacy & Anonymization (Anti-Poaching Shield) -->
+            <div class="bench-fwd-sec-card" style="border-color:#D1FAE5;">
+              <div class="bench-fwd-sec-header" style="background:#ECFDF5; border-bottom:1px solid #A7F3D0;">
+                <span class="bench-fwd-sec-title" style="color:#065F46;">5. Privacy & Anonymization (Anti-Poaching Shield)</span>
+                <span class="bench-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">7 formats</span>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="48" data-title="Hide Contact Details" data-sub="Remove phone, email and other contact details from resume." data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser." onclick="selectBenchResumeFormat(48, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details</div>
+                  <div class="bf-opt-desc">Remove phone, email and other contact details from resume.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="49" data-title="Hide Candidate Name & Contacts Details" data-sub="Remove candidate name and all contact details." data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy." onclick="selectBenchResumeFormat(49, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Candidate Name & Contacts Details</div>
+                  <div class="bf-opt-desc">Remove candidate name and all contact details.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="50" data-title="Hide Contact Details + Company Branding" data-sub="Remove contact details and add your company branding." data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header." onclick="selectBenchResumeFormat(50, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details + Company Branding</div>
+                  <div class="bf-opt-desc">Remove contact details and add your company branding.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="51" data-title="Hide Contact Details + In-House Evaluation Report + Company Branding" data-sub="Evaluation report and branded resume with contacts hidden." data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the in-house evaluation report with company branding." onclick="selectBenchResumeFormat(51, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details + In-House Evaluation Report + Company Branding</div>
+                  <div class="bf-opt-desc">Evaluation report and branded resume with contacts hidden.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="52" data-title="Hide Contact Details + In-House Evaluation Report without Company Branding" data-sub="Evaluation report and resume with contacts hidden (no branding)." data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report." onclick="selectBenchResumeFormat(52, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details + In-House Evaluation Report without Company Branding</div>
+                  <div class="bf-opt-desc">Evaluation report and resume with contacts hidden (no branding).</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="53" data-title="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding" data-sub="Full privacy package: masked contacts, highlighted skills, report and branding." data-desc="Full privacy package: masked contacts, highlighted skills, in-house evaluation report dossier, and company branding banner." onclick="selectBenchResumeFormat(53, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding</div>
+                  <div class="bf-opt-desc">Full privacy package: masked contacts, highlighted skills, report and branding.</div>
+                </div>
+              </div>
+              <div class="bench-fwd-opt-row" data-opt-id="54" data-title="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding" data-sub="Full privacy package without company branding." data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and in-house evaluation report dossier — no branding applied." onclick="selectBenchResumeFormat(54, this)">
+                <div class="bf-radio">
+                  <div class="bf-radio-inner"></div>
+                </div>
+                <div class="bf-opt-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div class="bf-opt-meta">
+                  <div class="bf-opt-title">Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding</div>
+                  <div class="bf-opt-desc">Full privacy package without company branding.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
 
         <!-- Format Details Section: Unified Single Enterprise Attachment & Progress Card -->
         <div id="bench_fwd_format_details_section" style="display:none;margin-top:8px;">
@@ -1354,10 +1820,106 @@ function onBenchFwdTemplateChange(sel) {
     }
 }
 
-// Format selection handler
+// Dropdown toggle and menu handling
+function toggleBenchFormatDropdown(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    var menu = $('#bench_fwd_format_dropdown_menu');
+    if (menu.is(':visible')) {
+        closeBenchFormatDropdown();
+    } else {
+        openBenchFormatDropdown();
+    }
+}
+
+function openBenchFormatDropdown() {
+    $('#bench_fwd_format_dropdown_menu').show();
+    $('#bench_fwd_trigger_caret').css('transform', 'rotate(180deg)');
+    $('#bench_fwd_format_trigger').css('border-color', '#2563EB');
+}
+
+function closeBenchFormatDropdown() {
+    $('#bench_fwd_format_dropdown_menu').hide();
+    $('#bench_fwd_trigger_caret').css('transform', 'rotate(0deg)');
+    $('#bench_fwd_format_trigger').css('border-color', '#CBD5E1');
+}
+
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('#bench_fwd_format_dropdown_wrap').length) {
+        closeBenchFormatDropdown();
+    }
+});
+
+// Format selection handler for custom replica dropdown
+function selectBenchResumeFormat(optId, el, skipCompilation) {
+    optId = parseInt(optId, 10);
+    if (!optId || isNaN(optId)) return;
+
+    if (!el) {
+        el = $('.bench-fwd-opt-row[data-opt-id="' + optId + '"]')[0];
+    }
+    if (!el) return;
+
+    // Update hidden form input
+    $('#bench_fwd_resume_format').val(optId);
+
+    // Update active highlight and radio indicator in dropdown list
+    $('.bench-fwd-opt-row').removeClass('is-selected');
+    $(el).addClass('is-selected');
+
+    $('.bf-radio').removeClass('is-checked');
+    $(el).find('.bf-radio').addClass('is-checked');
+
+    // Update trigger UI (icon, title, subtitle, default badge)
+    var iconHtml = $(el).find('.bf-opt-icon').html();
+    var title = $(el).attr('data-title') || $(el).find('.bf-opt-title').text().trim();
+    var sub = $(el).attr('data-sub') || $(el).find('.bf-opt-desc').text().trim();
+    var desc = $(el).attr('data-desc') || sub;
+
+    $('#bench_fwd_trigger_icon').html(iconHtml);
+    $('#bench_fwd_trigger_title').text(title);
+    $('#bench_fwd_trigger_desc').text(sub);
+
+    if (optId === 1) {
+        $('#bench_fwd_trigger_badge').show();
+    } else {
+        $('#bench_fwd_trigger_badge').hide();
+    }
+
+    closeBenchFormatDropdown();
+
+    if (!skipCompilation) {
+        onBenchFwdFormatSelect(optId, title, desc);
+    }
+}
+
+// Backward compatibility helper
 function onBenchFwdFormatChange(sel) {
-    var opt = sel.options[sel.selectedIndex];
-    if (!opt || !opt.value) {
+    if (typeof sel === 'object' && sel && sel.options) {
+        var opt = sel.options[sel.selectedIndex];
+        if (opt && opt.value) {
+            selectBenchResumeFormat(parseInt(opt.value, 10), null, false);
+        }
+        return;
+    }
+    if (typeof sel === 'number' || typeof sel === 'string') {
+        selectBenchResumeFormat(parseInt(sel, 10), null, false);
+    }
+}
+
+// Listen for programmatic changes on hidden input
+$('#bench_fwd_resume_format').on('change', function() {
+    var v = parseInt($(this).val(), 10);
+    if (v) {
+        selectBenchResumeFormat(v, null, false);
+    }
+});
+
+// Primary format processing and compilation orchestrator
+function onBenchFwdFormatSelect(optId, label, desc) {
+    if (!optId) {
         $('#bench_fwd_format_details_section').hide();
         _benchCompiledAttachment = null;
         disableBenchViewCvBtn('Select a format to compile resume');
@@ -1370,9 +1932,6 @@ function onBenchFwdFormatChange(sel) {
         }
         return;
     }
-    var optId = parseInt(opt.value, 10);
-    var label = opt.getAttribute('data-label') || opt.text;
-    var desc = opt.getAttribute('data-desc') || '';
 
     $('#bench_fwd_preview_format_title').text(label);
     $('#bench_fwd_preview_desc').text(desc);
@@ -1408,7 +1967,6 @@ function onBenchFwdFormatChange(sel) {
         $('#bench_fwd_cand_filename').html('<span>No resume uploaded</span>');
     }
 
-    var candHasResume = @json(!empty($cand->has_resume));
     if (!candHasResume && optId !== 5) {
         $('#bench_fwd_cand_status_badge')
             .html('⚠ No Resume')
@@ -1430,7 +1988,7 @@ function onBenchFwdFormatChange(sel) {
             cancelButtonText: 'Cancel'
         }).then(function(result) {
             if (result.isConfirmed) {
-                $('#bench_fwd_resume_format').val('5').trigger('change');
+                selectBenchResumeFormat(5, null, false);
             }
         });
         return;
@@ -1734,4 +2292,14 @@ function closeBenchFwdResumeDrawer() {
         overlays.remove();
     }
 }
+
+// Auto-initialize format selection matching default state in design
+setTimeout(function() {
+    var hasResume = @json(!empty($cand->has_resume));
+    if (hasResume) {
+        selectBenchResumeFormat(1, null, false);
+    } else {
+        selectBenchResumeFormat(5, null, false);
+    }
+}, 250);
 </script>
