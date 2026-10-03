@@ -7,11 +7,11 @@
     $candDesig = $cand->current_designation ?? 'Technical Specialist';
     $candExp = $cand->experience ?? '--';
     $candSkills = $cand->skills ?? '--';
-    $candLoc = $cand->location ?? 'Open to Relocation';
+    $candLoc = $cand->location ?? ($cand->city_display ?? 'Open to Relocation');
     $candWorkMode = $cand->work_mode ?? 'Hybrid';
     $candNotice = $cand->notice ?? 'Immediate';
-    $candEngagement = 'Full-Time / Contract (C2H)';
-    $candCommercials = 'Competitive / Negotiable';
+    $candEngagement = $cand->engagement_model ?? ($cand->employmentType ?? 'Contract');
+    $candCommercials = $cand->commercials_formatted ?? 'Competitive / Negotiable';
     $senderName = $userdata->name ?? 'Recruitment Team';
     $senderDesig = $userdata->designation ?? (\Illuminate\Support\Facades\DB::table('users_profile')->where('user_id', $userdata->id ?? 0)->value('designation') ?: 'Technical Recruitment Lead');
     $senderEmail = $userdata->email ?? '';
@@ -19,7 +19,7 @@
     $compName = $companyName ?? 'Hiring Partner';
     $currentDate = now()->format('d M Y');
 
-    // 1. Updated Bench Talent Pool (Matrix Table Roster) - User Shared Template
+    // 1. Updated Inhouse Talent list + Tracker
     $tplBody1 = '<p>Hi [HR Name],</p>'
         . '<p>Sharing our current in-house bench talent pool for your review. The below professionals are available for consideration against your current or upcoming hiring requirements.</p>'
         . '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">'
@@ -51,32 +51,6 @@
         . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</td>'
         . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
         . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>'
-        . '</tr>'
-        . '<tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;color:#64748B;">'
-        . '<td style="padding:8px 6px;text-align:center;font-weight:700;border:1px solid #CBD5E1;">02</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Candidate Name]</td>'
-        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">[X Yrs]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Designation]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Skills]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Location]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[WFO / Hybrid / Remote]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Immediate / X Days]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[FT / Contract]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Commercials]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[View Profile]</td>'
-        . '</tr>'
-        . '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;color:#64748B;">'
-        . '<td style="padding:8px 6px;text-align:center;font-weight:700;border:1px solid #CBD5E1;">03</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Candidate Name]</td>'
-        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">[X Yrs]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Designation]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Skills]</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Location]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[WFO / Hybrid / Remote]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Immediate / X Days]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[FT / Contract]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Commercials]</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[View Profile]</td>'
         . '</tr>'
         . '</tbody>'
         . '</table>'
@@ -888,20 +862,13 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <select name="template" id="bench_fwd_template" class="bench-mm-select" style="font-weight:500;" onchange="onBenchFwdTemplateChange(this)">
           <option value="" selected disabled>Select Email Template...</option>
           <optgroup label="🌟 Enterprise Bench Talent Templates">
-            <option value="bench_table_matrix">1. Updated Bench Talent Pool (Matrix Table Roster)</option>
+            <option value="bench_table_matrix">1. Updated Inhouse Talent list + Tracker</option>
             <option value="bench_immediate_deploy">2. Immediate Deployment Hotlist (Executive Spotlight)</option>
             <option value="bench_prescreen_dossier">3. Pre-Screened &amp; Evaluated Talent Dossier</option>
             <option value="bench_contract_c2h">4. Contract / C2H Bench Profile Presentation</option>
             <option value="bench_feedback_followup">5. Shortlisting &amp; Interview Availability Follow-up</option>
             <option value="default_pitch">6. Standard Candidate Profile Pitch (Default)</option>
           </optgroup>
-          @if(!empty($templateData) && count($templateData) > 0)
-            <optgroup label="📁 Custom Company Templates">
-              @foreach($templateData as $tdata)
-                <option value="db_{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
-              @endforeach
-            </optgroup>
-          @endif
         </select>
         <div class="bench-mm-hint">Choosing a template replaces the Subject and Body below</div>
       </div>
@@ -1664,11 +1631,10 @@ function syncBenchRecipientDrawerButtons() {
 }
 
 // Template registry & synchronization handler
-var _dbTemplates = @json($templateData ?? []);
 window.benchFwdTemplatesMap = {
     "bench_table_matrix": {
         id: "bench_table_matrix",
-        name: "1. Updated Bench Talent Pool (Matrix Table Roster)",
+        name: "1. Updated Inhouse Talent list + Tracker",
         subject: "Sharing Updated Bench List | " + @json($compName) + " | " + @json($currentDate),
         body: @json($tplBody1)
     },
@@ -1703,18 +1669,6 @@ window.benchFwdTemplatesMap = {
         body: @json($tplBodyDefault)
     }
 };
-
-if (Array.isArray(_dbTemplates)) {
-    _dbTemplates.forEach(function(dt) {
-        var dbId = 'db_' + (dt.e_temp_id || dt.id);
-        window.benchFwdTemplatesMap[dbId] = {
-            id: dbId,
-            name: dt.display_name || dt.template_name || ('Template #' + (dt.e_temp_id || dt.id)),
-            subject: dt.template_subject || ("Candidate Profile: " + @json($candName)),
-            body: dt.template_description || dt.template_body || ''
-        };
-    });
-}
 
 function replaceBenchTemplatePlaceholders(text) {
     if (!text) return '';
