@@ -485,6 +485,31 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // DOCX TO PDF CONVERSION PIPELINE (OpenDoc Engine 2)
+  // ═══════════════════════════════════════════════════════════════════════════
+  async function ensurePdfBlobFromBytes(cand, rawBytes) {
+    if (isPdfBytes(rawBytes)) {
+      return new Blob([rawBytes], { type: 'application/pdf' });
+    }
+    // If Word DOCX/DOC, convert via OpenDoc WASM Engine 2 in User RAM
+    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
+      return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
+        candidateName: cand.full_name,
+        companyName: cand.report_company_name
+      });
+    }
+    // Dynamic load fallback
+    await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
+    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
+      return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
+        candidateName: cand.full_name,
+        companyName: cand.report_company_name
+      });
+    }
+    throw new Error('DOCX document could not be converted to PDF. Please select Option 1 (Original Resume) or Option 5 (Pre-Screened Report PDF).');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // MAIN DISPATCH METHOD (Exclusive to Bench Talent Drawer)
   // ═══════════════════════════════════════════════════════════════════════════
   async function generateAttachmentForCandidate(cand, optId, companyData, jobSkills) {
@@ -513,7 +538,9 @@
     // Option 41: Resume + Company Branding
     if (optId === 41) {
       var rawBytes = await fetchCandidateResumeBytes(cand);
-      var brandedBlob = await addCompanyBrandingHeader(rawBytes, companyName);
+      var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      var pdfBytes = new Uint8Array(await basePdfBlob.arrayBuffer());
+      var brandedBlob = await addCompanyBrandingHeader(pdfBytes, companyName);
       brandedBlob.filename = 'Jeroworks_' + safeName + '_Branded.pdf';
       return brandedBlob;
     }
@@ -521,8 +548,10 @@
     // Option 42: Pre-Screened Report + Branded Resume
     if (optId === 42) {
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
-      var rBytes = await fetchCandidateResumeBytes(cand);
-      var resBranded = await addCompanyBrandingHeader(rBytes, companyName);
+      var rawBytes = await fetchCandidateResumeBytes(cand);
+      var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      var pdfBytes = new Uint8Array(await basePdfBlob.arrayBuffer());
+      var resBranded = await addCompanyBrandingHeader(pdfBytes, companyName);
       var merged = await mergeDossierAndResume(repBlob, resBranded);
       merged.filename = 'Jeroworks_' + safeName + '_Full_Package.pdf';
       return merged;
@@ -531,8 +560,8 @@
     // Option 43: Pre-Screened Report + Unbranded Resume
     if (optId === 43) {
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
-      var rBytes = await fetchCandidateResumeBytes(cand);
-      var resBlob = new Blob([rBytes], { type: 'application/pdf' });
+      var rawBytes = await fetchCandidateResumeBytes(cand);
+      var resBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
       var merged = await mergeDossierAndResume(repBlob, resBlob);
       merged.filename = 'Prescreen_' + safeName + '_Unbranded.pdf';
       return merged;
@@ -542,7 +571,7 @@
     // Generate branded dossier + original resume package
     var dossier = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
     var raw = await fetchCandidateResumeBytes(cand);
-    var rBlob = new Blob([raw], { type: 'application/pdf' });
+    var rBlob = await ensurePdfBlobFromBytes(cand, raw);
     var mergedFallback = await mergeDossierAndResume(dossier, rBlob);
     mergedFallback.filename = 'Jeroworks_' + safeName + '_Formatted.pdf';
     return mergedFallback;

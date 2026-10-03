@@ -6,7 +6,7 @@
 @endphp 
 
 @include('service_company.bench-candidates.partials._bench_forward_resume_engine') 
-
+<script src="{{ asset('js/opendoc/AgyForwardResumeEngine.js') }}"></script>
 <script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script>
 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.env && CKEDITOR.env.ie && CKEDITOR.env.version < 9) {
