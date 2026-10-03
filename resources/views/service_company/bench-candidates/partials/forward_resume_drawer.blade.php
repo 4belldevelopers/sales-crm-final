@@ -650,7 +650,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                   @if($hasResume)
-                    <button type="button" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View original resume document">
+                    <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View original resume document">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       View CV
                     </button>
@@ -826,16 +826,20 @@ var _benchCompiledAttachment = null;
 var _benchCompilationSeq = 0;
 var _benchIsCompiling = false;
 
-// Open candidate's authoritative original resume in a new tab
+// Open candidate's authoritative original resume in a new tab via same-origin streaming proxy
 window.openBenchOriginalResume = function(candId) {
     var candObj = @json($cand ?? []);
-    var directUrl = candObj.resume_r2_url || candObj.resume_url || candObj.download_url || candObj.direct_download_url;
-    if (directUrl && (directUrl.startsWith('http://') || directUrl.startsWith('https://'))) {
-        window.open(directUrl, '_blank');
+    var cId = candId || (candObj && candObj.id) || 0;
+    var ext = (candObj.resume_extension || (candObj.resume_filename ? candObj.resume_filename.split('.').pop() : '')).toLowerCase();
+
+    // For Word documents, open the pre-converted vector PDF in new tab for immediate visual inspection
+    if (ext === 'doc' || ext === 'docx') {
+        window.open('/service_company/bench-candidates/download/' + cId + '?as_pdf=1', '_blank');
         return;
     }
-    var fallbackUrl = '/service_company/bench-candidates/download/' + (candId || candObj.id || 0) + '?redirect=1';
-    window.open(fallbackUrl, '_blank');
+
+    // Stream original document directly from same-origin proxy (Content-Disposition: inline)
+    window.open('/service_company/bench-candidates/download/' + cId, '_blank');
 };
 
 // Initialize chips if values exist
@@ -1151,11 +1155,13 @@ async function triggerBenchResumeCompilation(optId) {
                 '<a href="' + previewUrl + '" target="_blank" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to preview compiled resume">' +
                 '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
             );
+            $('#bench_fwd_view_cv_btn').attr('onclick', "window.open('" + previewUrl + "', '_blank')");
         } else {
             $('#bench_fwd_cand_filename').html(
                 '<a href="javascript:void(0)" onclick="openBenchOriginalResume(' + (candObj.id || 0) + ')" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view resume">' +
                 '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
             );
+            $('#bench_fwd_view_cv_btn').attr('onclick', "openBenchOriginalResume(" + (candObj.id || 0) + ")");
         }
 
         $('#bench_fwd_cand_status_badge')

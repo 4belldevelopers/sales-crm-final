@@ -61,41 +61,74 @@
       s.onload = function () { finish(true); };
       s.onerror = function () { finish(false); };
       if (!existing) { s.async = true; s.src = src; document.head.appendChild(s); }
+      if (existing) setTimeout(function () { finish(true); }, 100);
+      setTimeout(function () { finish(false); }, 10000);
     });
   }
 
+  function rsTryList(list, index, test) {
+    if (index >= list.length) return Promise.reject(new Error('Could not load required script engine'));
+    if (test()) return Promise.resolve();
+    return rsLoadScript(list[index]).then(function () {
+      return test() ? Promise.resolve() : Promise.reject(new Error('Loaded script but global object missing'));
+    }).catch(function () { return rsTryList(list, index + 1, test); });
+  }
+
   function ensurePdfLib() {
-    if (window.PDFLib) return Promise.resolve(window.PDFLib);
-    if (!rsPdfLibReady) {
-      rsPdfLibReady = rsLoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js').then(function () {
-        return window.PDFLib;
-      });
-    }
+    if (rsPdfLibReady && window.PDFLib && window.PDFLib.PDFDocument) return Promise.resolve(window.PDFLib);
+    var sources = [
+      '/js/pdf-lib.min.js',
+      'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'
+    ];
+    rsPdfLibReady = rsTryList(sources, 0, function () { return !!(window.PDFLib && window.PDFLib.PDFDocument); }).then(function () {
+      return window.PDFLib;
+    });
     return rsPdfLibReady;
   }
 
   function ensurePdfJs() {
-    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-    if (!rsPdfJsReady) {
-      rsPdfJsReady = rsLoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function () {
-        if (window.pdfjsLib && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        }
-        return window.pdfjsLib;
-      });
-    }
+    if (rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function') return Promise.resolve(window.pdfjsLib);
+    var sources = [
+      '/js/pdf.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/build/pdf.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'
+    ];
+    rsPdfJsReady = rsTryList(sources, 0, function () { return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function'); }).then(function () {
+      try {
+        var ver = window.pdfjsLib.version || '2.11.338';
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + ver + '/pdf.worker.min.js';
+      } catch (err) {}
+      return window.pdfjsLib;
+    });
     return rsPdfJsReady;
   }
 
   function ensurePdfMake() {
-    if (window.pdfMake && window.pdfMake.vfs) return Promise.resolve(window.pdfMake);
-    if (!rsPdfMakeReady) {
-      rsPdfMakeReady = rsLoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js').then(function () {
-        return rsLoadScript('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js');
-      }).then(function () {
+    if (rsPdfMakeReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return Promise.resolve(window.pdfMake);
+    var core = [
+      '/js/pdfmake.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js'
+    ];
+    var vfs = [
+      '/js/vfs_fonts.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js'
+    ];
+    rsPdfMakeReady = rsTryList(core, 0, function () { return !!window.pdfMake; })
+      .then(function () { return rsTryList(vfs, 0, function () { return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
+      .then(function () {
+        window.pdfMake.fonts = {
+          Roboto: {
+            normal: 'Roboto-Regular.ttf',
+            bold: 'Roboto-Medium.ttf',
+            italics: 'Roboto-Italic.ttf',
+            bolditalics: 'Roboto-MediumItalic.ttf'
+          }
+        };
         return window.pdfMake;
       });
-    }
     return rsPdfMakeReady;
   }
 
@@ -130,23 +163,34 @@
     return s === '' ? (fallback || '') : s;
   }
 
-  async function fetchCandidateResumeBytes(cand) {
+  async function fetchCandidateResumeBytes(cand, needPdf) {
     var candId = (typeof cand === 'object' && cand !== null) ? cand.id : cand;
-    if (rsResumeBytesCache[candId]) return rsResumeBytesCache[candId];
+    var cacheKey = candId + (needPdf ? '_pdf' : '_raw');
+    if (rsResumeBytesCache[cacheKey]) return rsResumeBytesCache[cacheKey];
 
     var sources = [];
+    if (needPdf) {
+      if (typeof cand === 'object' && cand !== null && cand.resume_pdf_url) {
+        sources.push(cand.resume_pdf_url);
+      }
+      sources.push('/service_company/bench-candidates/download/' + candId + '?as_pdf=1');
+    }
+
+    // Direct and proxy download sources
+    sources.push('/service_company/bench-candidates/download/' + candId);
+
     if (typeof cand === 'object' && cand !== null) {
+      if (cand.download_url && !sources.includes(cand.download_url)) {
+        sources.push(cand.download_url);
+      }
+      if (cand.direct_download_url && !sources.includes(cand.direct_download_url)) {
+        sources.push(cand.direct_download_url);
+      }
       if (cand.resume_r2_url && !sources.includes(cand.resume_r2_url)) {
         sources.push(cand.resume_r2_url);
       }
       if (cand.resume_url && !sources.includes(cand.resume_url)) {
         sources.push(cand.resume_url);
-      }
-      if (cand.direct_download_url && !sources.includes(cand.direct_download_url)) {
-        sources.push(cand.direct_download_url);
-      }
-      if (cand.download_url && !sources.includes(cand.download_url)) {
-        sources.push(cand.download_url);
       }
       if (cand.resume && (cand.resume.startsWith('http://') || cand.resume.startsWith('https://')) && !sources.includes(cand.resume)) {
         sources.push(cand.resume);
@@ -156,16 +200,14 @@
         sources.push('/user-uploads/documents/' + candId + '/' + cand.resume_filename);
       }
     }
-    // Also include same-origin proxy download endpoint
-    var proxyRoute = '/service_company/bench-candidates/download/' + candId;
-    if (!sources.includes(proxyRoute)) {
-      sources.push(proxyRoute);
-    }
 
     var lastErr = null;
     for (var i = 0; i < sources.length; i++) {
       try {
-        var fetchOpts = { cache: 'no-store' };
+        var fetchOpts = {
+          cache: 'no-store',
+          headers: { 'Accept': 'application/octet-stream, application/pdf, */*' }
+        };
         try {
           var uOrigin = (new URL(sources[i], window.location.href)).origin;
           if (uOrigin === window.location.origin) {
@@ -193,8 +235,8 @@
             var headStr = String.fromCharCode.apply(null, head).toLowerCase();
             // Validate that we didn't receive an HTML 404/login page
             if (headStr.indexOf('<!doc') === -1 && headStr.indexOf('<html') === -1) {
-              rsResumeBytesCache[candId] = new Uint8Array(buf);
-              return rsResumeBytesCache[candId];
+              rsResumeBytesCache[cacheKey] = new Uint8Array(buf);
+              return rsResumeBytesCache[cacheKey];
             }
           }
         } else {
@@ -570,20 +612,24 @@
     if (isPdfBytes(rawBytes)) {
       return new Blob([rawBytes], { type: 'application/pdf' });
     }
+    // 1. Authoritative: Fetch pre-converted vector PDF from Cloudflare R2 via same-origin proxy (as_pdf=1)
+    try {
+      var pdfBytes = await fetchCandidateResumeBytes(cand, true);
+      if (isPdfBytes(pdfBytes)) {
+        return new Blob([pdfBytes], { type: 'application/pdf' });
+      }
+    } catch (pdfErr) {
+      console.warn('[AgyBenchForwardResumeEngine] as_pdf fetch warning:', pdfErr);
+    }
+
     var compName = (cand && (cand.report_company_name || cand.company_name)) || 'Hiring Partner';
     var candName = (cand && cand.full_name) || 'Candidate';
-    // If Word DOCX/DOC, convert via OpenDoc WASM Engine 2 in User RAM
-    if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
-      return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
-        candidateName: candName,
-        companyName: compName
-      });
-    }
-    // Dynamic load fallback
+
+    // 2. Client-side WASM DOCX converter fallback
     try {
-      await rsLoadScript('/js/opendoc/AgyForwardResumeEngine.js');
-      if (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob === 'function') {
-        return await window.AgyForwardResumeEngine.renderWasmDocxToPdfBlob(rawBytes, {
+      var fwdEngine = await ensureForwardResumeEngine();
+      if (fwdEngine && typeof fwdEngine.renderWasmDocxToPdfBlob === 'function') {
+        return await fwdEngine.renderWasmDocxToPdfBlob(rawBytes, {
           candidateName: candName,
           companyName: compName
         });
@@ -591,7 +637,10 @@
     } catch (e) {
       console.warn('[AgyBenchForwardResumeEngine] Could not load DOCX WASM converter:', e);
     }
-    throw new Error('DOCX document could not be converted to PDF. Please select Option 1 (Original Resume) or Option 5 (Pre-Screened Report PDF).');
+
+    // 3. Graceful fallback: assemble candidate Pre-Screen Dossier rather than crashing
+    console.warn('[AgyBenchForwardResumeEngine] Assembling Pre-Screen Dossier for DOCX candidate');
+    return await generateBenchPrescreenPdfBlob(cand, compName, null, false);
   }
 
   async function ensureForwardResumeEngine() {
