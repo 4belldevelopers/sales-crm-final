@@ -3,6 +3,201 @@
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
     $cand = $applicationData[0] ?? null;
+    $candName = $cand->full_name ?? 'Candidate';
+    $candDesig = $cand->current_designation ?? 'Technical Specialist';
+    $candExp = $cand->experience ?? '--';
+    $candSkills = $cand->skills ?? '--';
+    $candLoc = $cand->location ?? 'Open to Relocation';
+    $candWorkMode = $cand->work_mode ?? 'Hybrid';
+    $candNotice = $cand->notice ?? 'Immediate';
+    $candEngagement = 'Full-Time / Contract (C2H)';
+    $candCommercials = 'Competitive / Negotiable';
+    $senderName = $userdata->name ?? 'Recruitment Team';
+    $senderDesig = $userdata->designation ?? (\Illuminate\Support\Facades\DB::table('users_profile')->where('user_id', $userdata->id ?? 0)->value('designation') ?: 'Technical Recruitment Lead');
+    $senderEmail = $userdata->email ?? '';
+    $senderPhone = !empty($userdata->mobile) ? $userdata->mobile : (!empty($userdata->whatsapp_number) ? $userdata->whatsapp_number : '--');
+    $compName = $companyName ?? 'Hiring Partner';
+    $currentDate = now()->format('d M Y');
+
+    // 1. Updated Bench Talent Pool (Matrix Table Roster) - User Shared Template
+    $tplBody1 = '<p>Hi [HR Name],</p>'
+        . '<p>Sharing our current in-house bench talent pool for your review. The below professionals are available for consideration against your current or upcoming hiring requirements.</p>'
+        . '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">'
+        . '<thead>'
+        . '<tr style="background:#F1F5F9;color:#334155;text-align:left;font-size:11.5px;font-weight:700;border-bottom:2px solid #CBD5E1;">'
+        . '<th style="padding:8px 6px;text-align:center;width:35px;border:1px solid #CBD5E1;">#</th>'
+        . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Candidate</th>'
+        . '<th style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">Exp.</th>'
+        . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Designation</th>'
+        . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Primary Skills</th>'
+        . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Location</th>'
+        . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Work Mode</th>'
+        . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Availability</th>'
+        . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Engagement</th>'
+        . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Commercials</th>'
+        . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Profile</th>'
+        . '</tr>'
+        . '</thead>'
+        . '<tbody>'
+        . '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;">'
+        . '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0F766E;border:1px solid #CBD5E1;">01</td>'
+        . '<td style="padding:8px 8px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' . htmlspecialchars($candName, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candExp, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candDesig, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candSkills, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candLoc, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:4px;font-size:11px;">' . htmlspecialchars($candWorkMode, ENT_QUOTES) . '</span></td>'
+        . '<td style="padding:8px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>'
+        . '</tr>'
+        . '<tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;color:#64748B;">'
+        . '<td style="padding:8px 6px;text-align:center;font-weight:700;border:1px solid #CBD5E1;">02</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Candidate Name]</td>'
+        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">[X Yrs]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Designation]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Skills]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Location]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[WFO / Hybrid / Remote]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Immediate / X Days]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[FT / Contract]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Commercials]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[View Profile]</td>'
+        . '</tr>'
+        . '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;color:#64748B;">'
+        . '<td style="padding:8px 6px;text-align:center;font-weight:700;border:1px solid #CBD5E1;">03</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Candidate Name]</td>'
+        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">[X Yrs]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Designation]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Skills]</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">[Location]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[WFO / Hybrid / Remote]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Immediate / X Days]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[FT / Contract]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[Commercials]</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">[View Profile]</td>'
+        . '</tr>'
+        . '</tbody>'
+        . '</table>'
+        . '<p><strong>Resumes:</strong> Attached for the corresponding candidates.</p>'
+        . '<p>All profiles are currently available with us and can be evaluated for relevant current or upcoming requirements.</p>'
+        . '<p>Please let us know if any profile is relevant, and we will coordinate the next steps.</p>'
+        . '<p>Regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+
+    // 2. Immediate Deployment Hotlist (Executive Spotlight)
+    $tplBody2 = '<p>Dear [HR Name],</p>'
+        . '<p>I would like to present <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . '), who is currently available in our in-house bench pool for <strong>immediate onboarding</strong> (Zero-day notice).</p>'
+        . '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid #0D9488;border-radius:6px;padding:12px 16px;margin:12px 0;">'
+        . '<p style="margin:0 0 6px 0;"><strong>Candidate Spotlight:</strong></p>'
+        . '<ul style="margin:0;padding-left:18px;">'
+        . '<li><strong>Full Name:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . '</li>'
+        . '<li><strong>Role &amp; Designation:</strong> ' . htmlspecialchars($candDesig, ENT_QUOTES) . '</li>'
+        . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+        . '<li><strong>Core Technical Stack:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+        . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
+        . '<li><strong>Availability:</strong> <span style="color:#059669;font-weight:600;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</span></li>'
+        . '<li><strong>Engagement Mode:</strong> ' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</li>'
+        . '<li><strong>Commercials:</strong> ' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</li>'
+        . '</ul>'
+        . '</div>'
+        . '<p>Please find the formatted profile attached for your review. We can coordinate an introductory technical call within 24 hours upon your confirmation.</p>'
+        . '<p>Looking forward to your feedback.</p>'
+        . '<p>Best regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+
+    // 3. Pre-Screened & Evaluated Talent Dossier
+    $tplBody3 = '<p>Dear [HR Name],</p>'
+        . '<p>Please find attached the <strong>In-House Evaluation Report and Verified Profile</strong> for <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> for your hiring evaluation.</p>'
+        . '<p>Our internal technical team has evaluated this candidate against enterprise engineering benchmarks:</p>'
+        . '<ul>'
+        . '<li><strong>Candidate:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . ' (' . htmlspecialchars($candDesig, ENT_QUOTES) . ')</li>'
+        . '<li><strong>Relevant Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+        . '<li><strong>Key Evaluated Competencies:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+        . '<li><strong>Verification Status:</strong> Pre-screened, In-House Evaluated &amp; Ready for Client Interview</li>'
+        . '<li><strong>Work Authorization &amp; Availability:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
+        . '</ul>'
+        . '<p>The attached report includes detailed skill ratings, interview notes, and the candidate complete professional dossier. Please review and advise on interview availability.</p>'
+        . '<p>Best regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+
+    // 4. Contract / C2H Bench Profile Presentation
+    $tplBody4 = '<p>Dear [HR Name],</p>'
+        . '<p>Submitting our in-house talent profile for your current contract / contract-to-hire (C2H) requirements:</p>'
+        . '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12px;border:1px solid #CBD5E1;margin:10px 0;">'
+        . '<tr style="background:#F1F5F9;">'
+        . '<td style="width:30%;font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Candidate Name</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candName, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '<tr>'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Primary Skills</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candSkills, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '<tr style="background:#F8FAFC;">'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Total Experience</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candExp, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '<tr>'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Notice Period / Availability</td>'
+        . '<td style="padding:6px 10px;color:#059669;font-weight:bold;border:1px solid #CBD5E1;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '<tr style="background:#F8FAFC;">'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Current / Preferred Location</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</td>'
+        . '</tr>'
+        . '<tr>'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Engagement Model</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">Contract / C2H / SOW via ' . htmlspecialchars($compName, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '<tr style="background:#F8FAFC;">'
+        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Billing / Commercials</td>'
+        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
+        . '</tr>'
+        . '</table>'
+        . '<p>The candidate is on our direct payroll and available for deployment immediately upon client selection.</p>'
+        . '<p>Kindly confirm receipt and share next steps for client rounds.</p>'
+        . '<p>Warm regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+
+    // 5. Shortlisting & Interview Availability Follow-up
+    $tplBody5 = '<p>Dear [HR Name],</p>'
+        . '<p>I am following up regarding the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ' - ' . htmlspecialchars($candExp, ENT_QUOTES) . ') shared with you for your requirements.</p>'
+        . '<p>The candidate has expressed keen interest in joining your team and remains immediately available. We would appreciate if you could share feedback on the profile or propose suitable time slots for an introductory interview this week.</p>'
+        . '<p>We are ready to align the candidate as per your preferred interview schedule.</p>'
+        . '<p>Thank you for your time and consideration.</p>'
+        . '<p>Best regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+
+    // 6. Standard Candidate Profile Pitch (Default)
+    $tplBodyDefault = '<p>Dear [HR_NAME],</p>'
+        . '<p>I would like to share the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ') with you for your hiring requirements.</p>'
+        . '<p><strong>Candidate Summary:</strong></p>'
+        . '<ul>'
+        . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+        . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . '</li>'
+        . '<li><strong>Notice Period:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . '</li>'
+        . '<li><strong>Talent Skills &amp; Expertise:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+        . '</ul>'
+        . '<p>Please find the formatted profile attached for your review. We look forward to your valuable feedback.</p>'
+        . '<p>Best regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . htmlspecialchars($compName, ENT_QUOTES) . '</p>';
 @endphp 
 
 @include('service_company.bench-candidates.partials._bench_forward_resume_engine') 
@@ -30,9 +225,18 @@ function initBenchFwdCkEditor() {
     try {
         CKEDITOR.config.height = 280;
         CKEDITOR.config.width = '100%';
-        CKEDITOR.replace('bench_editor1', {
+        var inst = CKEDITOR.replace('bench_editor1', {
             height: 280,
             width: '100%'
+        });
+        inst.on('instanceReady', function() {
+            $('#bench_editor1').val(inst.getData());
+        });
+        inst.on('change', function() {
+            $('#bench_editor1').val(inst.getData());
+        });
+        inst.on('blur', function() {
+            $('#bench_editor1').val(inst.getData());
         });
     } catch(err) {
         console.warn('CKEditor bench init error:', err);
@@ -517,12 +721,22 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Template
       </div>
       <div class="bench-mm-field-col">
-        <select name="template" id="bench_fwd_template" class="bench-mm-select" onchange="onBenchFwdTemplateChange(this)">
-          <option value="">Select Email Template...</option>
-          @if(!empty($templateData))
-            @foreach($templateData as $tdata)
-              <option value="{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}" data-subject="{{ $tdata->template_subject ?? '' }}" data-body="{{ htmlspecialchars($tdata->template_description ?? '', ENT_QUOTES) }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
-            @endforeach
+        <select name="template" id="bench_fwd_template" class="bench-mm-select" style="font-weight:500;" onchange="onBenchFwdTemplateChange(this)">
+          <option value="" selected disabled>Select Email Template...</option>
+          <optgroup label="🌟 Enterprise Bench Talent Templates">
+            <option value="bench_table_matrix">1. Updated Bench Talent Pool (Matrix Table Roster)</option>
+            <option value="bench_immediate_deploy">2. Immediate Deployment Hotlist (Executive Spotlight)</option>
+            <option value="bench_prescreen_dossier">3. Pre-Screened &amp; Evaluated Talent Dossier</option>
+            <option value="bench_contract_c2h">4. Contract / C2H Bench Profile Presentation</option>
+            <option value="bench_feedback_followup">5. Shortlisting &amp; Interview Availability Follow-up</option>
+            <option value="default_pitch">6. Standard Candidate Profile Pitch (Default)</option>
+          </optgroup>
+          @if(!empty($templateData) && count($templateData) > 0)
+            <optgroup label="📁 Custom Company Templates">
+              @foreach($templateData as $tdata)
+                <option value="db_{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
+              @endforeach
+            </optgroup>
           @endif
         </select>
         <div class="bench-mm-hint">Choosing a template replaces the Subject and Body below</div>
@@ -983,22 +1197,160 @@ function syncBenchRecipientDrawerButtons() {
     });
 }
 
-// Template selection handler
-function onBenchFwdTemplateChange(sel) {
-    var opt = sel.options[sel.selectedIndex];
-    if (!opt || !opt.value) return;
-    var subj = opt.getAttribute('data-subject');
-    var body = opt.getAttribute('data-body');
-
-    if (subj) {
-        $('#bench_fwd_subject').val(subj);
+// Template registry & synchronization handler
+var _dbTemplates = @json($templateData ?? []);
+window.benchFwdTemplatesMap = {
+    "bench_table_matrix": {
+        id: "bench_table_matrix",
+        name: "1. Updated Bench Talent Pool (Matrix Table Roster)",
+        subject: "Sharing Updated Bench List | " + @json($compName) + " | " + @json($currentDate),
+        body: @json($tplBody1)
+    },
+    "bench_immediate_deploy": {
+        id: "bench_immediate_deploy",
+        name: "2. Immediate Deployment Hotlist (Executive Spotlight)",
+        subject: "Available for Immediate Deployment | " + @json($candName) + " - " + @json($candDesig) + " (" + @json($candExp) + ")",
+        body: @json($tplBody2)
+    },
+    "bench_prescreen_dossier": {
+        id: "bench_prescreen_dossier",
+        name: "3. Pre-Screened & Evaluated Talent Dossier",
+        subject: "Pre-Screened Talent Dossier: " + @json($candName) + " | " + @json($candDesig) + " | In-House Verified",
+        body: @json($tplBody3)
+    },
+    "bench_contract_c2h": {
+        id: "bench_contract_c2h",
+        name: "4. Contract / C2H Bench Profile Presentation",
+        subject: "Contract / C2H Talent Profile: " + @json($candName) + " - " + @json($candDesig) + " | " + @json($compName),
+        body: @json($tplBody4)
+    },
+    "bench_feedback_followup": {
+        id: "bench_feedback_followup",
+        name: "5. Shortlisting & Interview Availability Follow-up",
+        subject: "Interview Availability & Feedback Follow-up: " + @json($candName) + " | " + @json($candDesig),
+        body: @json($tplBody5)
+    },
+    "default_pitch": {
+        id: "default_pitch",
+        name: "6. Standard Candidate Profile Pitch (Default)",
+        subject: "Candidate Profile: " + @json($candName) + " - " + @json($candDesig),
+        body: @json($tplBodyDefault)
     }
-    if (body && typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['bench_editor1']) {
-        var candName = @json($cand->full_name ?? 'Candidate');
-        var candDesig = @json($cand->current_designation ?? 'Profile');
-        var parsedBody = body.replace(/\[CANDIDATE_NAME\]/g, candName)
-                             .replace(/\[DESIGNATION\]/g, candDesig);
-        CKEDITOR.instances['bench_editor1'].setData(parsedBody);
+};
+
+if (Array.isArray(_dbTemplates)) {
+    _dbTemplates.forEach(function(dt) {
+        var dbId = 'db_' + (dt.e_temp_id || dt.id);
+        window.benchFwdTemplatesMap[dbId] = {
+            id: dbId,
+            name: dt.display_name || dt.template_name || ('Template #' + (dt.e_temp_id || dt.id)),
+            subject: dt.template_subject || ("Candidate Profile: " + @json($candName)),
+            body: dt.template_description || dt.template_body || ''
+        };
+    });
+}
+
+function replaceBenchTemplatePlaceholders(text) {
+    if (!text) return '';
+    var candName = @json($candName);
+    var candDesig = @json($candDesig);
+    var candExp = @json($candExp);
+    var candSkills = @json($candSkills);
+    var candLoc = @json($candLoc);
+    var candWorkMode = @json($candWorkMode);
+    var candNotice = @json($candNotice);
+    var candEngagement = @json($candEngagement);
+    var candCommercials = @json($candCommercials);
+    var compName = @json($compName);
+    var currentDate = @json($currentDate);
+    var senderName = @json($senderName);
+    var senderDesig = @json($senderDesig);
+    var senderEmail = @json($senderEmail);
+    var senderPhone = @json($senderPhone);
+
+    return text
+        .replace(/\{Company Name\}/gi, compName)
+        .replace(/\[Company Name\]/gi, compName)
+        .replace(/\[COMPANY_NAME\]/gi, compName)
+        .replace(/\[\{COMPANY_NAME\}\]/gi, compName)
+        .replace(/\[\{CLIENT_NAME_COMPANY_NAME\}\]/gi, compName)
+        .replace(/\{Date\}/gi, currentDate)
+        .replace(/\[Date\]/gi, currentDate)
+        .replace(/\[\{CURRENTDATE\}\]/gi, currentDate)
+        .replace(/\[Candidate Name\]/gi, candName)
+        .replace(/\[CANDIDATE_NAME\]/gi, candName)
+        .replace(/\[\{CANDIDATE_NAME\}\]/gi, candName)
+        .replace(/\[Designation\]/gi, candDesig)
+        .replace(/\[DESIGNATION\]/gi, candDesig)
+        .replace(/\[\{DESIGNATION\}\]/gi, candDesig)
+        .replace(/\[\{JOB_TITLE\}\]/gi, candDesig)
+        .replace(/\[Exp\.?\]/gi, candExp)
+        .replace(/\[X Yrs\]/gi, candExp)
+        .replace(/\[EXPERIENCE\]/gi, candExp)
+        .replace(/\[Skills\]/gi, candSkills)
+        .replace(/\[Primary Skills\]/gi, candSkills)
+        .replace(/\[PRIMARY_SKILLS\]/gi, candSkills)
+        .replace(/\[Location\]/gi, candLoc)
+        .replace(/\[LOCATION\]/gi, candLoc)
+        .replace(/\[Work Mode\]/gi, candWorkMode)
+        .replace(/\[WORK_MODE\]/gi, candWorkMode)
+        .replace(/\[WFO \/ Hybrid \/ Remote\]/gi, candWorkMode)
+        .replace(/\[Availability\]/gi, candNotice)
+        .replace(/\[Immediate \/ X Days\]/gi, candNotice)
+        .replace(/\[AVAILABILITY\]/gi, candNotice)
+        .replace(/\[Engagement\]/gi, candEngagement)
+        .replace(/\[FT \/ Contract\]/gi, candEngagement)
+        .replace(/\[ENGAGEMENT\]/gi, candEngagement)
+        .replace(/\[Commercials\]/gi, candCommercials)
+        .replace(/\[COMMERCIALS\]/gi, candCommercials)
+        .replace(/\[Sender Name\]/gi, senderName)
+        .replace(/\[SENDER_NAME\]/gi, senderName)
+        .replace(/\[Sender Designation\]/gi, senderDesig)
+        .replace(/\[SENDER_DESIGNATION\]/gi, senderDesig)
+        .replace(/\[Sender Email\]/gi, senderEmail)
+        .replace(/\[SENDER_EMAIL\]/gi, senderEmail)
+        .replace(/\[Sender Phone\]/gi, senderPhone)
+        .replace(/\[SENDER_PHONE\]/gi, senderPhone);
+}
+
+// Template selection handler with full bidirectional CKEditor synchronization
+function onBenchFwdTemplateChange(sel) {
+    var val = sel.value;
+    if (!val || !window.benchFwdTemplatesMap || !window.benchFwdTemplatesMap[val]) {
+        return;
+    }
+    var tpl = window.benchFwdTemplatesMap[val];
+
+    // 1. Update Subject with replaced placeholders
+    if (tpl.subject) {
+        var parsedSubj = replaceBenchTemplatePlaceholders(tpl.subject);
+        $('#bench_fwd_subject').val(parsedSubj);
+    }
+
+    // 2. Update Editor & Textarea with replaced placeholders
+    if (tpl.body) {
+        var parsedBody = replaceBenchTemplatePlaceholders(tpl.body);
+        $('#bench_editor1').val(parsedBody);
+
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['bench_editor1']) {
+            var inst = CKEDITOR.instances['bench_editor1'];
+            try {
+                if (inst.status === 'ready' || inst.instanceReady) {
+                    inst.setData(parsedBody, function() {
+                        $('#bench_editor1').val(inst.getData());
+                    });
+                } else {
+                    inst.on('instanceReady', function() {
+                        inst.setData(parsedBody, function() {
+                            $('#bench_editor1').val(inst.getData());
+                        });
+                    });
+                }
+            } catch(e) {
+                console.warn('CKEditor setData notice:', e);
+                $('#bench_editor1').val(parsedBody);
+            }
+        }
     }
 }
 
