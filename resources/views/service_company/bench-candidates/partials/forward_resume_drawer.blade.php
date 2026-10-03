@@ -623,11 +623,11 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                       </span>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-                      <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#64748B' : '#B45309' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         @if($hasResume)
-                          <a href="javascript:void(0)" onclick="openBenchOriginalResume({{ $cand->id }})" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:3px;" title="Click to view resume">
-                            📄 Jeroworks_{{ $candSafeName }}.pdf <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                          </a>
+                          <span style="color:#64748B;display:inline-flex;align-items:center;gap:3px;" title="Select a format to compile resume">
+                            📄 Jeroworks_{{ $candSafeName }}.pdf
+                          </span>
                         @else
                           <span>No resume uploaded</span>
                         @endif
@@ -639,12 +639,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
                 <!-- Right: Action Buttons & Live Status -->
                 <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
-                  @if($hasResume)
-                    <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:3px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View candidate resume">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                      View CV
-                    </button>
-                  @endif
+                  <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold disabled" disabled style="display:{{ $hasResume ? 'inline-flex' : 'none' }};font-size:11px;padding:3px 9px;border-radius:6px;align-items:center;gap:4px;opacity:0.45;cursor:not-allowed;pointer-events:none;" title="Select a format and wait for 100% conversion to complete">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    View CV
+                  </button>
                   <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
                     {{ $hasResume ? '1 Resume Available' : '⚠ No Resume' }}
                   </div>
@@ -804,6 +802,47 @@ var activeBenchRecipientTarget = 'to'; // 'to' or 'cc'
 var _benchCompiledAttachment = null;
 var _benchCompilationSeq = 0;
 var _benchIsCompiling = false;
+var _benchCompiledPreviewUrl = null;
+
+// Ensure View CV is only clickable once compilation reaches 100%
+function disableBenchViewCvBtn(reason) {
+    var titleMsg = reason || 'Preparing resume... available once 100% complete';
+    $('#bench_fwd_view_cv_btn')
+        .prop('disabled', true)
+        .addClass('disabled')
+        .css({
+            opacity: '0.45',
+            cursor: 'not-allowed',
+            pointerEvents: 'none'
+        })
+        .attr('title', titleMsg)
+        .removeAttr('onclick')
+        .off('click');
+}
+
+function enableBenchViewCvBtn(url) {
+    if (!url) return;
+    _benchCompiledPreviewUrl = url;
+    $('#bench_fwd_view_cv_btn')
+        .prop('disabled', false)
+        .removeClass('disabled')
+        .css({
+            display: 'inline-flex',
+            opacity: '1',
+            cursor: 'pointer',
+            pointerEvents: 'auto'
+        })
+        .attr('title', 'Click to view resume')
+        .removeAttr('onclick')
+        .off('click')
+        .on('click', function(e) {
+            e.preventDefault();
+            window.open(url, '_blank');
+        });
+}
+
+// Initial state: View CV is disabled until 100% compilation
+disableBenchViewCvBtn('Select a format to compile resume');
 
 // Open candidate's authoritative original resume in a new tab via same-origin streaming proxy
 window.openBenchOriginalResume = function(candId) {
@@ -969,6 +1008,7 @@ function onBenchFwdFormatChange(sel) {
     if (!opt || !opt.value) {
         $('#bench_fwd_format_details_section').hide();
         _benchCompiledAttachment = null;
+        disableBenchViewCvBtn('Select a format to compile resume');
         var btn = document.getElementById('btnBenchFwdSubmit');
         if (btn) {
             btn.disabled = true;
@@ -986,6 +1026,13 @@ function onBenchFwdFormatChange(sel) {
     $('#bench_fwd_preview_desc').text(desc);
     $('#bench_fwd_format_details_section').show();
 
+    // Reset compiled preview state and strictly disable View CV until 100% complete
+    if (_benchCompiledPreviewUrl && _benchCompiledPreviewUrl.startsWith('blob:')) {
+        try { URL.revokeObjectURL(_benchCompiledPreviewUrl); } catch(e) {}
+    }
+    _benchCompiledPreviewUrl = null;
+    disableBenchViewCvBtn('Preparing resume... available once 100% complete');
+
     var safeName = $('#bench_fwd_cand_filename').attr('data-safename') || 'Candidate';
     var candId = @json($cand->id ?? 0);
     var candHasResume = @json(!empty($cand->has_resume));
@@ -1000,9 +1047,10 @@ function onBenchFwdFormatChange(sel) {
     }
 
     if (candHasResume || optId === 5) {
+        // Plain text while compiling (not clickable until 100% complete)
         $('#bench_fwd_cand_filename').html(
-            '<a href="javascript:void(0)" onclick="openBenchOriginalResume(' + candId + ')" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view original resume">' +
-            '📄 ' + $('<div>').text(dispName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+            '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
+            '📄 ' + $('<div>').text(dispName).html() + '</span>'
         );
     } else {
         $('#bench_fwd_cand_filename').html('<span>No resume uploaded</span>');
@@ -1045,6 +1093,7 @@ async function triggerBenchResumeCompilation(optId) {
     var seq = ++_benchCompilationSeq;
     _benchIsCompiling = true;
     _benchCompiledAttachment = null;
+    disableBenchViewCvBtn('Compiling resume... available once 100% complete');
 
     var btn = document.getElementById('btnBenchFwdSubmit');
     if (btn) {
@@ -1136,13 +1185,13 @@ async function triggerBenchResumeCompilation(optId) {
                 '<a href="' + previewUrl + '" target="_blank" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to preview compiled resume">' +
                 '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
             );
-            $('#bench_fwd_view_cv_btn').attr('onclick', "window.open('" + previewUrl + "', '_blank')");
+            enableBenchViewCvBtn(previewUrl);
         } else {
             $('#bench_fwd_cand_filename').html(
-                '<a href="javascript:void(0)" onclick="openBenchOriginalResume(' + (candObj.id || 0) + ')" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view resume">' +
-                '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+                '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
+                '📄 ' + $('<div>').text(outName).html() + '</span>'
             );
-            $('#bench_fwd_view_cv_btn').attr('onclick', "openBenchOriginalResume(" + (candObj.id || 0) + ")");
+            disableBenchViewCvBtn('Preview unavailable');
         }
 
         $('#bench_fwd_cand_status_badge')
@@ -1162,6 +1211,8 @@ async function triggerBenchResumeCompilation(optId) {
         _benchIsCompiling = false;
         _benchCompiledAttachment = null;
         console.error('[BenchForwardResume] Compilation failed:', compileErr);
+
+        disableBenchViewCvBtn('Conversion incomplete or failed');
 
         if (btn) {
             btn.disabled = false;
