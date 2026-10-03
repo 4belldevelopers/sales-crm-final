@@ -1017,7 +1017,7 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MERGE DOSSIER + RESUME
+  // MERGE DOSSIER + RESUME (Auto-Align Width to Resume)
   // ═══════════════════════════════════════════════════════════════════════════
   async function mergeDossierAndResume(dossierBlob, resumeBlob) {
     await ensurePdfLib();
@@ -1026,17 +1026,68 @@
 
     var dBytes = await dossierBlob.arrayBuffer();
     var dDoc = await PDFLib.PDFDocument.load(dBytes);
-    var dPages = await targetDoc.copyPages(dDoc, dDoc.getPageIndices());
-    dPages.forEach(function (p) { targetDoc.addPage(p); });
 
-    if (resumeBlob) {
-      var rBytes = await resumeBlob.arrayBuffer();
-      if (!isPdfBytes(rBytes)) {
-        throw new Error('Candidate resume is not in PDF format. Merged packages require a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+    if (!resumeBlob) {
+      var dPages = await targetDoc.copyPages(dDoc, dDoc.getPageIndices());
+      dPages.forEach(function (p) { targetDoc.addPage(p); });
+      var finalBytes = await targetDoc.save();
+      return new Blob([finalBytes], { type: 'application/pdf' });
+    }
+
+    var rBytes = await resumeBlob.arrayBuffer();
+    if (!isPdfBytes(rBytes)) {
+      throw new Error('Candidate resume is not in PDF format. Merged packages require a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+    }
+    var rDoc = await PDFLib.PDFDocument.load(rBytes);
+    var resumePages = rDoc.getPages();
+    if (!resumePages.length) throw new Error('Resume PDF has no pages');
+
+    // Get the resume's authoritative page width and height
+    var rFirstSize = resumePages[0].getSize();
+    var targetW = rFirstSize.width;
+    var targetH = rFirstSize.height;
+
+    // 1. Align 1st page (and any dossier pages) to the EXACT width of the resume
+    var dPages = dDoc.getPages();
+    for (var i = 0; i < dPages.length; i++) {
+      var dSize = dPages[i].getSize();
+      var scale = targetW / dSize.width;
+      var scaledH = dSize.height * scale;
+      var pageH = Math.max(targetH, scaledH);
+      var fitScale = Math.min(targetW / dSize.width, pageH / dSize.height);
+      var drawW = dSize.width * fitScale;
+      var drawH = dSize.height * fitScale;
+      var posX = (targetW - drawW) / 2;
+      var posY = (pageH - drawH) / 2;
+
+      var newDPage = targetDoc.addPage([targetW, pageH]);
+      var embedded = await targetDoc.embedPage(dPages[i]);
+      newDPage.drawPage(embedded, {
+        x: posX,
+        y: posY,
+        width: drawW,
+        height: drawH
+      });
+    }
+
+    // 2. Append all resume pages (ensuring all pages match targetW width)
+    for (var j = 0; j < resumePages.length; j++) {
+      var rPageSize = resumePages[j].getSize();
+      if (Math.abs(rPageSize.width - targetW) < 1) {
+        var copied = await targetDoc.copyPages(rDoc, [j]);
+        targetDoc.addPage(copied[0]);
+      } else {
+        var rScale = targetW / rPageSize.width;
+        var rPageH = rPageSize.height * rScale;
+        var newRPage = targetDoc.addPage([targetW, rPageH]);
+        var rEmbedded = await targetDoc.embedPage(resumePages[j]);
+        newRPage.drawPage(rEmbedded, {
+          x: 0,
+          y: 0,
+          width: targetW,
+          height: rPageH
+        });
       }
-      var rDoc = await PDFLib.PDFDocument.load(rBytes);
-      var rPages = await targetDoc.copyPages(rDoc, rDoc.getPageIndices());
-      rPages.forEach(function (p) { targetDoc.addPage(p); });
     }
 
     var finalBytes = await targetDoc.save();
@@ -1391,12 +1442,28 @@
     return rules.textRegexes.some(function (regex) { return rdcRegexMatches(regex, text); });
   }
 
+  /**
+   * Compute canvas-space bounding rect for a PDF.js text item.
+   * Uses manual 6-element affine multiply to avoid dependency on
+   * window.pdfjsLib.Util.transform which is undefined in CDN PDF.js 2.x builds.
+   *
+   * Affine multiply: result[4] = vt[0]*it[4] + vt[2]*it[5] + vt[4]
+   *                  result[5] = vt[1]*it[4] + vt[3]*it[5] + vt[5]
+   */
   function rsTextItemRect(item, viewport) {
-    if (!item || !viewport || !(window.pdfjsLib && window.pdfjsLib.Util)) return null;
-    var tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
-    var h = Math.max(Math.abs((item.height || 0) * viewport.scale), Math.abs(tx[3] || 0), 6);
-    var w = Math.max(Math.abs((item.width || 0) * viewport.scale), 2);
-    return { x: tx[4], y: tx[5] - h, w: w, h: h };
+    if (!item || !item.transform || !viewport || !viewport.transform) return null;
+    var vt = viewport.transform; // [a, b, c, d, e, f]
+    var it = item.transform;     // [a2, b2, c2, d2, e2, f2]
+    // Manual 2D affine composition (no Util.transform dependency)
+    var canvasX = vt[0] * it[4] + vt[2] * it[5] + vt[4];
+    var canvasY = vt[1] * it[4] + vt[3] * it[5] + vt[5];
+    var h = Math.max(
+      Math.abs((item.height || 0) * (viewport.scale || 1)),
+      Math.abs(vt[3] * (it[3] || 0)),
+      6
+    );
+    var w = Math.max(Math.abs((item.width || 0) * (viewport.scale || 1)), 2);
+    return { x: canvasX, y: canvasY - h, w: w, h: h };
   }
 
   function rdcDrawAnonymizedBlocks(ctx, textContent, viewport, rules) {
