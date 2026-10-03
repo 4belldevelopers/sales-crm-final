@@ -7630,7 +7630,44 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         abort_if(empty($hashname), 404, 'No resume document uploaded for this candidate.');
 
-        // 1. If stored as remote HTTP/HTTPS URL (e.g. file.jero.works, AWS S3, Cloudflare)
+        // Intent: Direct browser viewing / redirection support for new tab preview
+        if ((request('redirect') || (request()->header('Accept') && str_contains(request()->header('Accept'), 'text/html'))) && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
+            return redirect()->away($hashname);
+        }
+
+        // 1. Authoritative Cloudflare R2 disk streaming
+        $r2Key = '';
+        if (str_starts_with($hashname, 'https://file.jero.works/')) {
+            $r2Key = ltrim((string) parse_url($hashname, PHP_URL_PATH), '/');
+        } elseif (! filter_var($hashname, FILTER_VALIDATE_URL)) {
+            $r2Key = ltrim($hashname, '/');
+        }
+
+        if (! empty($r2Key)) {
+            try {
+                if (\Storage::disk('r2')->exists($r2Key)) {
+                    $cleanName = basename($r2Key);
+                    $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+                    $mime = match ($ext) {
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'doc' => 'application/msword',
+                        default => 'application/pdf',
+                    };
+                    $content = \Storage::disk('r2')->get($r2Key);
+                    return response($content, 200, [
+                        'Content-Type' => $mime,
+                        'Content-Disposition' => 'inline; filename="'.$cleanName.'"',
+                        'Access-Control-Allow-Origin' => '*',
+                        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                        'Access-Control-Allow-Headers' => '*',
+                    ]);
+                }
+            } catch (\Throwable $r2Err) {
+                \Log::warning('[Bench Candidate Download] R2 fetch error for cand '.$id.': '.$r2Err->getMessage());
+            }
+        }
+
+        // 2. Remote HTTP/HTTPS URL fetch (e.g. file.jero.works CDN or presigned R2)
         if (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://')) {
             try {
                 $response = Http::timeout(25)->get($hashname);
@@ -7648,6 +7685,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'Content-Type' => $mime,
                         'Content-Disposition' => 'inline; filename="'.$cleanName.'"',
                         'Access-Control-Allow-Origin' => '*',
+                        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                        'Access-Control-Allow-Headers' => '*',
                     ]);
                 }
             } catch (\Throwable $remoteErr) {
@@ -7655,7 +7694,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
-        // 2. If stored on local disk or public path
+        // 3. Local disk or public path check
         $cleanHash = basename(parse_url($hashname, PHP_URL_PATH) ?: $hashname);
         $paths = [
             public_path('user-uploads/documents/'.$cand->id.'/'.$cleanHash),
@@ -7673,12 +7712,22 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     'Content-Type' => $mime,
                     'Content-Disposition' => 'inline; filename="'.basename($p).'"',
                     'Access-Control-Allow-Origin' => '*',
+                    'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                    'Access-Control-Allow-Headers' => '*',
                 ]);
             }
         }
 
-        // 3. Fallback: Storage disk check (s3 / local)
+        // 4. Secondary storage disk checks (R2 Resumes/ or S3)
         try {
+            if (\Storage::disk('r2')->exists('Resumes/'.$cleanHash)) {
+                $content = \Storage::disk('r2')->get('Resumes/'.$cleanHash);
+                return response($content, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="'.$cleanHash.'"',
+                    'Access-Control-Allow-Origin' => '*',
+                ]);
+            }
             if (\Storage::disk('s3')->exists('Resumes/'.$cleanHash)) {
                 $content = \Storage::disk('s3')->get('Resumes/'.$cleanHash);
                 return response($content, 200, [
@@ -7688,6 +7737,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 ]);
             }
         } catch (\Throwable $s3Err) {}
+
+        // 5. Ultimate fallback for browser redirects
+        if (request('redirect')) {
+            return redirect()->route('download.resume', [
+                'id' => $cand->id,
+                'path' => rtrim(strtr(base64_encode($hashname), '+/', '-_'), '='),
+            ]);
+        }
 
         abort(404, 'Resume file not found on disk or storage.');
     }
@@ -8138,8 +8195,10 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $resumeFilename = basename($pathPart ?: $resumeRaw);
             if (str_starts_with($resumeRaw, 'http://') || str_starts_with($resumeRaw, 'https://')) {
                 $resumeUrl = $resumeRaw;
+                $resumeR2Url = $resumeRaw;
             } else {
-                $resumeUrl = asset('user-uploads/resumes/'.$resumeFilename);
+                $resumeUrl = route('service_company.bench-candidates.download', $cand->id);
+                $resumeR2Url = 'https://file.jero.works/'.ltrim($resumeRaw, '/');
             }
         } else {
             $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
@@ -8151,16 +8210,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $resumeFilename = basename($pathPart ?: $docHash);
                     if (str_starts_with($docHash, 'http://') || str_starts_with($docHash, 'https://')) {
                         $resumeUrl = $docHash;
+                        $resumeR2Url = $docHash;
                     } else {
-                        $resumeUrl = asset('user-uploads/documents/'.$cand->id.'/'.$resumeFilename);
+                        $resumeUrl = route('service_company.bench-candidates.download', $cand->id);
+                        $resumeR2Url = 'https://file.jero.works/'.ltrim($docHash, '/');
                     }
                 }
             }
         }
         $cand->has_resume = $hasResume;
         $cand->resume_filename = $resumeFilename;
-        $cand->resume_url = $resumeUrl;
+        $cand->resume_url = $resumeUrl ?: route('service_company.bench-candidates.download', $cand->id);
+        $cand->resume_r2_url = ! empty($resumeR2Url) ? $resumeR2Url : $cand->resume_url;
         $cand->download_url = route('service_company.bench-candidates.download', $cand->id);
+        $cand->direct_download_url = $hasResume ? route('download.resume', ['id' => $cand->id, 'path' => rtrim(strtr(base64_encode((string) ($resumeRaw ?: @$docHash)), '+/', '-_'), '=')]) : '';
         $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
         $cand->safe_name = $candSafeName;
 
