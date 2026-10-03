@@ -900,7 +900,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
       <div class="bench-mm-field-col">
         <input type="hidden" id="bench_fwd_attach_cv_toggle" name="attached_cv" value="1">
-        <input type="hidden" name="attached_cv_format" id="bench_fwd_resume_format" value="1">
+        <input type="hidden" name="attached_cv_format" id="bench_fwd_resume_format" value="46">
 
         <!-- Custom Resume Format Dropdown (Exact Replica of Reference UI) -->
         <div class="bench-fwd-format-dropdown-wrap" id="bench_fwd_format_dropdown_wrap">
@@ -909,20 +909,18 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <div class="bench-fwd-format-trigger" id="bench_fwd_format_trigger" onclick="toggleBenchFormatDropdown(event)">
             <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
               <span class="bf-opt-icon" id="bench_fwd_trigger_icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                   <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <line x1="10" y1="9" x2="8" y2="9"/>
+                  <polygon points="12 10 13.2 12.5 15.8 12.8 13.9 14.5 14.5 17 12 15.6 9.5 17 10.1 14.5 8.2 12.8 10.8 12.5 12 10"/>
                 </svg>
               </span>
               <div style="min-width:0;flex:1;">
                 <div id="bench_fwd_trigger_title" style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Original Resume (Default)
+                  In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding
                 </div>
                 <div id="bench_fwd_trigger_desc" style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Original candidate resume without any modifications.
+                  Evaluation report and resume with highlighted skills and company branding.
                 </div>
               </div>
             </div>
@@ -943,8 +941,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                 <span class="bench-fwd-sec-title" style="color:#1E3A8A;">1. Standard Resume Options</span>
                 <span class="bench-fwd-sec-badge" style="background:#DBEAFE; color:#1E40AF;">2 formats</span>
               </div>
-              <div class="bench-fwd-opt-row is-selected" data-opt-id="1" data-title="Original Resume (Default)" data-sub="Original candidate resume without any modifications." data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectBenchResumeFormat(1, this)">
-                <div class="bf-radio is-checked">
+              <div class="bench-fwd-opt-row" data-opt-id="1" data-title="Original Resume" data-sub="Original candidate resume without any modifications." data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectBenchResumeFormat(1, this)">
+                <div class="bf-radio">
                   <div class="bf-radio-inner"></div>
                 </div>
                 <div class="bf-opt-icon">
@@ -957,10 +955,9 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   </svg>
                 </div>
                 <div class="bf-opt-meta">
-                  <div class="bf-opt-title">Original Resume (Default)</div>
+                  <div class="bf-opt-title">Original Resume</div>
                   <div class="bf-opt-desc">Original candidate resume without any modifications.</div>
                 </div>
-                <span class="bf-default-badge">Default!</span>
               </div>
               <div class="bench-fwd-opt-row" data-opt-id="41" data-title="Resume + Company Branding" data-sub="Original resume with your company branding." data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="selectBenchResumeFormat(41, this)">
                 <div class="bf-radio">
@@ -1088,8 +1085,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <div class="bf-opt-desc">Resume with highlighted skills and your company branding.</div>
                 </div>
               </div>
-              <div class="bench-fwd-opt-row" data-opt-id="46" data-title="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-sub="Evaluation report and resume with highlighted skills and company branding." data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills." onclick="selectBenchResumeFormat(46, this)">
-                <div class="bf-radio">
+              <div class="bench-fwd-opt-row is-selected" data-opt-id="46" data-title="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-sub="Evaluation report and resume with highlighted skills and company branding." data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills." onclick="selectBenchResumeFormat(46, this)">
+                <div class="bf-radio is-checked">
                   <div class="bf-radio-inner"></div>
                 </div>
                 <div class="bf-opt-icon">
@@ -1103,6 +1100,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <div class="bf-opt-title">In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</div>
                   <div class="bf-opt-desc">Evaluation report and resume with highlighted skills and company branding.</div>
                 </div>
+                <span class="bf-default-badge">Default!</span>
               </div>
               <div class="bench-fwd-opt-row" data-opt-id="47" data-title="In-House Evaluation Report + Resume + Highlighted Keywords (No Branding)" data-sub="Evaluation report and resume with highlighted skills without company branding." data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="selectBenchResumeFormat(47, this)">
                 <div class="bf-radio">
@@ -1859,7 +1857,7 @@ function selectBenchResumeFormat(optId, el, skipCompilation) {
     $('#bench_fwd_trigger_title').text(title);
     $('#bench_fwd_trigger_desc').text(sub);
 
-    if (optId === 1) {
+    if (optId === 46) {
         $('#bench_fwd_trigger_badge').show();
     } else {
         $('#bench_fwd_trigger_badge').hide();
@@ -2270,11 +2268,11 @@ function closeBenchFwdResumeDrawer() {
     }
 }
 
-// Auto-initialize format selection matching default state in design
+// Auto-initialize format selection matching default state in design (Option 4.c / ID 46)
 setTimeout(function() {
     var hasResume = @json(!empty($cand->has_resume));
     if (hasResume) {
-        selectBenchResumeFormat(1, null, false);
+        selectBenchResumeFormat(46, null, false);
     } else {
         selectBenchResumeFormat(5, null, false);
     }
