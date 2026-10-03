@@ -89,8 +89,14 @@
       'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'
     ];
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
     rsPdfLibReady = rsTryList(sources, 0, function () { return !!(window.PDFLib && window.PDFLib.PDFDocument); }).then(function () {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
       return window.PDFLib;
+    }).catch(function (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      throw err;
     });
     return rsPdfLibReady;
   }
@@ -98,16 +104,21 @@
   function ensurePdfJs() {
     if (rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function') return Promise.resolve(window.pdfjsLib);
     var sources = [
-      '/js/pdf.min.js',
-      'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/build/pdf.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/build/pdf.min.js'
     ];
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
     rsPdfJsReady = rsTryList(sources, 0, function () { return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function'); }).then(function () {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
       try {
         var ver = window.pdfjsLib.version || '2.11.338';
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + ver + '/pdf.worker.min.js';
       } catch (err) {}
       return window.pdfjsLib;
+    }).catch(function (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      throw err;
     });
     return rsPdfJsReady;
   }
@@ -138,6 +149,25 @@
         return window.pdfMake;
       });
     return rsPdfMakeReady;
+  }
+
+  function ensureJsPdf() {
+    if (rsJsPdfReady && window.jspdf && typeof window.jspdf.jsPDF === 'function') return Promise.resolve(window.jspdf);
+    var sources = [
+      '/js/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+    ];
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
+    rsJsPdfReady = rsTryList(sources, 0, function () { return !!(window.jspdf && typeof window.jspdf.jsPDF === 'function'); }).then(function () {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      return window.jspdf;
+    }).catch(function (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      throw err;
+    });
+    return rsJsPdfReady;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1014,6 +1044,472 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // VECTOR KEYWORD HIGHLIGHTING (Pure Client-Side Browser Execution)
+  // ═══════════════════════════════════════════════════════════════════════════
+  function rsKeywordPatternEscape(value) {
+    return String(value == null ? '' : value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function rsKeywordAliasValues(value) {
+    var raw = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+    var normalized = raw.toLowerCase().replace(/[^a-z0-9+#.]+/g, ' ').replace(/\s+/g, ' ').trim();
+    var aliases = [raw];
+    function add(alias) {
+      if (alias && aliases.map(function (v) { return v.toLowerCase(); }).indexOf(alias.toLowerCase()) === -1) aliases.push(alias);
+    }
+    if (/\baws\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
+      add('AWS');
+      add('Amazon Web Services');
+    }
+    if (normalized === 'amazon web services') {
+      add('AWS');
+      add('AWS Cloud');
+    }
+    if ((/\bgcp\b/.test(normalized) || normalized === 'google cloud platform') && normalized.indexOf('cloud') !== -1) {
+      add('GCP');
+      add('Google Cloud');
+    }
+    if (/\bazure\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
+      add('Azure');
+      add('Microsoft Azure');
+    }
+    return aliases;
+  }
+
+  function rsKeywordPatternFromValue(value) {
+    var raw = String(value == null ? '' : value).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    var compact = raw.replace(/\s+/g, '');
+    if (/^[A-Za-z][+#]{1,2}$/i.test(compact)) {
+      return '\\b' + rsKeywordPatternEscape(compact);
+    }
+    var expanded = raw
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Za-z])(\d)/g, '$1 $2')
+      .replace(/(\d)([A-Za-z])/g, '$1 $2');
+    var tokens = expanded.split(/[\s\u00a0\/\\_\-.+,;:()[\]{}|&]+/).filter(Boolean);
+    if (!tokens.length) return '';
+    var left = /^[A-Za-z0-9]/.test(tokens[0]) ? '\\b' : '';
+    var right = /[A-Za-z0-9]$/.test(tokens[tokens.length - 1]) ? '\\b' : '';
+    if (tokens.length === 1) {
+      return left + rsKeywordPatternEscape(tokens[0]) + right;
+    }
+    var flexibleJoin = '(?:[\\s\\u00a0\\/\\\\_\\-.+,;:()\\[\\]{}|&]+|\\b(?:and|or)\\b)*';
+    return left + tokens.map(rsKeywordPatternEscape).join(flexibleJoin) + right;
+  }
+
+  function rsKeywordPatternsForValue(value) {
+    var seen = {};
+    var patterns = [];
+    rsKeywordAliasValues(value).forEach(function (alias) {
+      var pattern = rsKeywordPatternFromValue(alias);
+      var key = pattern.toLowerCase();
+      if (pattern && !seen[key]) {
+        seen[key] = true;
+        patterns.push(pattern);
+      }
+    });
+    return patterns;
+  }
+
+  function rsKeywordRegex(list) {
+    var seen = {};
+    var cleaned = (Array.isArray(list) ? list : []).map(function (item) {
+      if (typeof item === 'string') return item.trim();
+      return clean(item && (item.skill_name || item.skill_key || item.name || item.skill), '').trim();
+    }).filter(function (value) {
+      value = value.replace(/\s+/g, ' ').trim();
+      var key = value.toLowerCase();
+      if (value.length < 2 || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    if (!cleaned.length) return null;
+    cleaned.sort(function (a, b) { return b.length - a.length; });
+    var parts = [];
+    cleaned.forEach(function (value) {
+      parts = parts.concat(rsKeywordPatternsForValue(value));
+    });
+    return parts.length ? new RegExp(parts.join('|'), 'gi') : null;
+  }
+
+  function rsPageTextRuns(textContent) {
+    var text = '';
+    var runs = [];
+    (textContent && Array.isArray(textContent.items) ? textContent.items : []).forEach(function (item) {
+      var value = (item && item.str ? String(item.str) : '');
+      if (!value.trim()) return;
+      if (text.length) text += ' ';
+      var start = text.length;
+      text += value;
+      runs.push({ item: item, start: start, end: text.length });
+    });
+    return { text: text, runs: runs };
+  }
+
+  /**
+   * Pure vector sub-pixel keyword highlighter for PDF resumes using PDF.js & PDFLib.
+   */
+  async function buildTurboVectorHighlightedResume(options) {
+    options = options || {};
+    await Promise.all([ensurePdfJs(), ensurePdfLib()]);
+
+    var pdfBlob = options.resumeBlob;
+    if (!(pdfBlob instanceof Blob)) {
+      throw new Error('Valid resume PDF Blob required for Turbo Vector highlighting');
+    }
+
+    var sourceBytes = await pdfBlob.arrayBuffer();
+    var bytes = new Uint8Array(sourceBytes);
+    var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
+    if (sig.indexOf('%PDF') === -1) throw new Error('Resume source is not a valid PDF');
+
+    var pdfjsDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+    var pagesTextData = [];
+    var fullResumeText = '';
+
+    for (var p = 1; p <= pdfjsDoc.numPages; p++) {
+      var page = await pdfjsDoc.getPage(p);
+      var tc = await page.getTextContent();
+      var pageStr = tc.items.map(function (item) { return item.str || ''; }).join(' ');
+      fullResumeText += pageStr + '\n';
+      pagesTextData.push({ pageNum: p, tc: tc });
+    }
+
+    var allKeywords = [];
+    var seenKw = {};
+    function addKw(val) {
+      if (!val) return;
+      if (typeof val === 'object') val = val.skill_name || val.skill || val.name || val.skill_key || '';
+      val = String(val).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+      if (val.length < 2 || (val.length < 3 && !/^(ai|ui|ux|go|c#|r|c)$/i.test(val))) return;
+      var k = val.toLowerCase();
+      if (seenKw[k]) return;
+      seenKw[k] = true;
+      allKeywords.push(val);
+    }
+    (Array.isArray(options.keywords) ? options.keywords : []).forEach(addKw);
+
+    var keywordRe = rsKeywordRegex(allKeywords);
+
+    var measureCanvas = document.createElement('canvas');
+    var measureCtx = measureCanvas.getContext('2d');
+    function measureSlice(fullStr, startIdx, endIdx, itemWidth, fontH) {
+      measureCtx.font = Math.round(fontH) + 'px sans-serif';
+      var fullM = measureCtx.measureText(fullStr).width;
+      if (!fullM || fullM <= 0) {
+        var len = Math.max(1, fullStr.length);
+        return {
+          offset: (startIdx / len) * itemWidth,
+          width: Math.max(3, ((endIdx - startIdx) / len) * itemWidth)
+        };
+      }
+      var scale = itemWidth / fullM;
+      var prefixW = measureCtx.measureText(fullStr.substring(0, startIdx)).width * scale;
+      var matchW = measureCtx.measureText(fullStr.substring(startIdx, endIdx)).width * scale;
+      return {
+        offset: prefixW,
+        width: Math.max(3, matchW)
+      };
+    }
+
+    var PDFLib = window.PDFLib;
+    var pdfDoc = await PDFLib.PDFDocument.load(sourceBytes);
+
+    if (keywordRe) {
+      pagesTextData.forEach(function (pData) {
+        var pdfLibPage = pdfDoc.getPage(pData.pageNum - 1);
+        var runsData = rsPageTextRuns(pData.tc);
+        if (!runsData.text || !runsData.runs.length) return;
+
+        keywordRe.lastIndex = 0;
+        var match;
+        while ((match = keywordRe.exec(runsData.text)) !== null) {
+          var mStart = match.index;
+          var mEnd = mStart + match[0].length;
+
+          runsData.runs.forEach(function (run) {
+            if (run.end <= mStart || run.start >= mEnd) return;
+            var item = run.item;
+            if (!item || !item.transform) return;
+
+            var tx = item.transform[4] || 0;
+            var ty = item.transform[5] || 0;
+            var itemH = Math.max(Math.abs(item.transform[3] || item.height || 0), 9);
+            var itemW = Math.max(Math.abs(item.width || 0), 2);
+            var itemStr = item.str || '';
+            if (!itemStr.trim()) return;
+
+            var subStart = Math.max(0, mStart - run.start);
+            var subEnd = Math.min(itemStr.length, mEnd - run.start);
+            if (subEnd <= subStart) return;
+
+            var slice = measureSlice(itemStr, subStart, subEnd, itemW, itemH);
+            var padX = Math.min(2.5, itemH * 0.14);
+            var boxX = tx + slice.offset - padX;
+            var boxW = slice.width + (padX * 2);
+            var boxY = ty - (itemH * 0.22);
+            var boxH = itemH * 1.16;
+
+            pdfLibPage.drawRectangle({
+              x: boxX,
+              y: boxY,
+              width: boxW,
+              height: boxH,
+              color: PDFLib.rgb(1, 0.85, 0.15),
+              opacity: 0.42
+            });
+          });
+
+          if (match.index === keywordRe.lastIndex) keywordRe.lastIndex++;
+        }
+      });
+    }
+
+    var outputBytes = await pdfDoc.save();
+    return new Blob([outputBytes], { type: 'application/pdf' });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PII ANONYMIZATION & REDACTION (Anti-Poaching Shield - Browser Execution)
+  // ═══════════════════════════════════════════════════════════════════════════
+  function rdcPlain(value) {
+    return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+  }
+  function rdcEscapeRegExp(value) {
+    return rdcPlain(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  function rdcDigitsOnly(value) {
+    return String(value == null ? '' : value).replace(/\D+/g, '');
+  }
+  function rdcPushUnique(list, value) {
+    value = rdcPlain(value);
+    if (!value || value === '--') return;
+    var key = value.toLowerCase();
+    if (list.some(function (item) { return item.toLowerCase() === key; })) return;
+    list.push(value);
+  }
+  function rdcFlexibleTextRegex(value) {
+    var parts = rdcPlain(value).split(/\s+/).filter(Boolean);
+    if (!parts.length) return null;
+    return new RegExp(parts.map(rdcEscapeRegExp).join('[\\s\\u00a0._-]+'), 'gi');
+  }
+  function rdcPhoneTextRegex(value) {
+    var digits = rdcDigitsOnly(value);
+    if (digits.length < 5) return null;
+    return new RegExp('(?:\\+?\\d{1,3}[\\s().\\-+]*)?' + digits.split('').join('[\\s().\\-+]*'), 'g');
+  }
+  function rdcContactLabelRegexes() {
+    return [
+      /\b(?:e[\s._-]*mail|email|mail)[\s._-]*(?:id|address)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+      /\b(?:phone|mobile|mob|cell|contact|tel|telephone)[\s._-]*(?:number|no|num|id|details)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+      /\b(?:contact|personal)[\s._-]*(?:details|info|information)\b/gi,
+      /\b(?:whats[\s._-]*app|whatsapp|linked[\s._-]*in|linkedin)[\s._-]*(?:id|profile|url|link|number|no)?\b/gi
+    ];
+  }
+  function rdcLinkedInTargets(value) {
+    value = rdcPlain(value);
+    if (!value || value === '--') return [];
+    var targets = [];
+    rdcPushUnique(targets, value);
+    var withoutProtocol = value.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+    rdcPushUnique(targets, withoutProtocol);
+    if (!/^https?:\/\//i.test(value) && !/^www\./i.test(value) && /linkedin\.com/i.test(value)) {
+      rdcPushUnique(targets, 'https://' + value);
+      rdcPushUnique(targets, 'www.' + withoutProtocol);
+    }
+    var match = withoutProtocol.match(/linkedin\.com\/(?:in|pub|company)\/([^/?#\s]+)/i);
+    if (match && match[1]) {
+      rdcPushUnique(targets, match[1].replace(/[-_]+/g, ' '));
+      rdcPushUnique(targets, match[1]);
+    }
+    return targets;
+  }
+
+  function rdcAnonymizeRules(data, options) {
+    data = data || {};
+    options = options || {};
+    var textRegexes = [];
+    var phoneDigits = [];
+    var exactTerms = [];
+    var emails = [];
+    var phones = [];
+    if (options.keepName !== true) {
+      rdcPushUnique(exactTerms, data.name);
+      rdcPlain(data.name).split(/\s+/).forEach(function (token) {
+        if (token.length >= 3) rdcPushUnique(exactTerms, token);
+      });
+    }
+    [data.email, data.secondaryEmail].forEach(function (email) {
+      rdcPushUnique(emails, email);
+      rdcPushUnique(exactTerms, email);
+    });
+    [data.phone, data.secondaryPhone, data.mobile].forEach(function (phone) {
+      rdcPushUnique(phones, phone);
+      rdcPushUnique(exactTerms, phone);
+    });
+    rdcLinkedInTargets(data.linkedin).forEach(function (target) {
+      rdcPushUnique(exactTerms, target);
+    });
+    phones.forEach(function (phone) {
+      var digits = rdcDigitsOnly(phone);
+      if (digits.length >= 5 && phoneDigits.indexOf(digits) === -1) phoneDigits.push(digits);
+      var phoneRe = rdcPhoneTextRegex(phone);
+      if (phoneRe) textRegexes.push(phoneRe);
+    });
+    exactTerms.forEach(function (term) {
+      if (rdcDigitsOnly(term).length >= 5) return;
+      var re = rdcFlexibleTextRegex(term);
+      if (re) textRegexes.push(re);
+    });
+    textRegexes.push(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/gi);
+    textRegexes.push(/\+?\d[\d\s().\-]{7,}\d/g);
+    textRegexes.push(/(?:https?:\/\/|www\.)?linkedin\.com\/(?:in|pub|company)\/[^\s<>"')]+/gi);
+    rdcContactLabelRegexes().forEach(function (regex) { textRegexes.push(regex); });
+    return { textRegexes: textRegexes, phoneDigits: phoneDigits, emails: emails, phones: phones, exactTerms: exactTerms };
+  }
+
+  function rdcRegexMatches(regex, text) {
+    regex.lastIndex = 0;
+    var ok = regex.test(text);
+    regex.lastIndex = 0;
+    return ok;
+  }
+
+  function rdcShouldRedactText(text, rules) {
+    text = rdcPlain(text);
+    if (!text) return false;
+    var lower = text.toLowerCase();
+    var digits = rdcDigitsOnly(text);
+    if (digits.length >= 5 && rules.phoneDigits.some(function (phoneDigits) {
+      return phoneDigits.indexOf(digits) !== -1 || digits.indexOf(phoneDigits) !== -1;
+    })) return true;
+    if (rules.exactTerms.some(function (term) {
+      term = rdcPlain(term).toLowerCase();
+      return term.length >= 3 && lower.indexOf(term) !== -1;
+    })) return true;
+    return rules.textRegexes.some(function (regex) { return rdcRegexMatches(regex, text); });
+  }
+
+  function rsTextItemRect(item, viewport) {
+    if (!item || !viewport || !(window.pdfjsLib && window.pdfjsLib.Util)) return null;
+    var tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+    var h = Math.max(Math.abs((item.height || 0) * viewport.scale), Math.abs(tx[3] || 0), 6);
+    var w = Math.max(Math.abs((item.width || 0) * viewport.scale), 2);
+    return { x: tx[4], y: tx[5] - h, w: w, h: h };
+  }
+
+  function rdcDrawAnonymizedBlocks(ctx, textContent, viewport, rules) {
+    if (!ctx || !textContent || !viewport || !rules) return 0;
+    var count = 0;
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    (textContent.items || []).forEach(function (item) {
+      if (!rdcShouldRedactText(item && item.str, rules)) return;
+      var rect = rsTextItemRect(item, viewport);
+      if (!rect) return;
+      var pad = Math.max(2, Math.min(8, rect.h * 0.22));
+      ctx.fillRect(Math.max(0, rect.x - pad), Math.max(0, rect.y - pad), rect.w + (pad * 2), rect.h + (pad * 2));
+      count++;
+    });
+    ctx.restore();
+    return count;
+  }
+
+  async function renderAnonymizedPdfBlob(pdfBlob, rules) {
+    await Promise.all([ensurePdfJs(), ensureJsPdf()]);
+    var sourceBytes = await pdfBlob.arrayBuffer();
+    var bytes = new Uint8Array(sourceBytes);
+    var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
+    if (sig.indexOf('%PDF') === -1) throw new Error('Resume source is not a valid PDF');
+    var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+    var JsPDF = window.jspdf.jsPDF;
+    var outPdf = null;
+    var textItems = 0;
+    var redactions = 0;
+    for (var p = 1; p <= doc.numPages; p++) {
+      var pdfJsPage = await doc.getPage(p);
+      var base = pdfJsPage.getViewport({ scale: 1 });
+      var cssScale = Math.min(1.35, 820 / base.width);
+      var cssViewport = pdfJsPage.getViewport({ scale: cssScale });
+      var renderScale = Math.min(2.0, 1600 / base.width);
+      var renderViewport = pdfJsPage.getViewport({ scale: renderScale });
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.floor(renderViewport.width);
+      canvas.height = Math.floor(renderViewport.height);
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await pdfJsPage.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+      var tc = await pdfJsPage.getTextContent();
+      textItems += (tc.items || []).length;
+      redactions += rdcDrawAnonymizedBlocks(ctx, tc, renderViewport, rules);
+      var pageW = Math.round(cssViewport.width);
+      var pageH = Math.round(cssViewport.height);
+      var orient = pageW > pageH ? 'l' : 'p';
+      if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
+      else outPdf.addPage([pageW, pageH], orient);
+      outPdf.addImage(canvas.toDataURL('image/jpeg', 0.78), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+    }
+    if (!outPdf) throw new Error('No resume pages were rendered');
+    if (!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
+    return outPdf.output('blob');
+  }
+
+  /**
+   * Extract skills that have experience and ratings defined for highlighting.
+   * "highlighted skills will be skills mentioned with expereince and ratings those skills needs to be highlighted only"
+   */
+  function getBenchCandidateEvaluatedSkills(cand) {
+    if (!cand) return [];
+    var evaluatedSkills = [];
+    var seen = {};
+
+    function addSkill(sName) {
+      if (!sName) return;
+      sName = String(sName).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+      var key = sName.toLowerCase();
+      if (sName.length < 2 || seen[key]) return;
+      seen[key] = true;
+      evaluatedSkills.push(sName);
+    }
+
+    // 1. Primary: cand.skills_evaluated (skills with experience and ratings from bench skill matrix)
+    if (Array.isArray(cand.skills_evaluated) && cand.skills_evaluated.length > 0) {
+      cand.skills_evaluated.forEach(function (s) {
+        if (!s) return;
+        var sName = typeof s === 'string' ? s : (s.name || s.skill_key || s.skill || '');
+        addSkill(sName);
+      });
+    }
+
+    // 2. Secondary: cand.parsed_skills if skills_evaluated was empty
+    if (!evaluatedSkills.length && Array.isArray(cand.parsed_skills) && cand.parsed_skills.length > 0) {
+      cand.parsed_skills.forEach(function (s) {
+        if (!s) return;
+        var sName = typeof s === 'string' ? s : (s.name || s.skill_key || s.skill || '');
+        addSkill(sName);
+      });
+    }
+
+    // 3. Fallback: cand.skills array or comma-separated string if both above are empty
+    if (!evaluatedSkills.length) {
+      if (Array.isArray(cand.skills) && cand.skills.length > 0) {
+        cand.skills.forEach(function (s) {
+          var sName = typeof s === 'string' ? s : (s && (s.name || s.skill || ''));
+          addSkill(sName);
+        });
+      } else if (typeof cand.skills === 'string' && cand.skills.trim()) {
+        cand.skills.split(',').forEach(function (s) {
+          addSkill(s.trim());
+        });
+      }
+    }
+
+    return evaluatedSkills;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // DOCX TO PDF CONVERSION PIPELINE (OpenDoc Engine 2)
   // ═══════════════════════════════════════════════════════════════════════════
   async function ensurePdfBlobFromBytes(cand, rawBytes) {
@@ -1151,34 +1647,22 @@
       return merged;
     }
 
-    // Options 44-47: Highlighted Keywords
+    // Options 44-47: Highlighted Keywords (Evaluated Skills with Experience and Ratings)
     if (optId === 44 || optId === 45 || optId === 46 || optId === 47) {
       notify(20, 'Preparing highlighted resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
       var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
-      var fwdEngine = await ensureForwardResumeEngine();
       var highlightedBlob = basePdfBlob;
 
-      var allKeywords = Array.isArray(jobSkills) ? jobSkills.slice() : [];
-      if (Array.isArray(cand.skills_evaluated)) {
-        cand.skills_evaluated.forEach(function (s) {
-          var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
-          if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
-        });
-      }
-      if (cand.skills && typeof cand.skills === 'string') {
-        cand.skills.split(',').forEach(function (s) {
-          var sTrim = s.trim();
-          if (sTrim && allKeywords.indexOf(sTrim) === -1) allKeywords.push(sTrim);
-        });
-      }
+      // "highlighted skills will be skills mentioned with expereince and ratings those skills needs to be highlighted only"
+      var highlightedSkills = getBenchCandidateEvaluatedSkills(cand);
 
-      if (fwdEngine && typeof fwdEngine.buildTurboVectorHighlightedResume === 'function') {
+      if (highlightedSkills.length > 0) {
         try {
-          notify(55, 'Highlighting key skills...', 'Analyzing resume text and applying vector skill highlights...');
-          highlightedBlob = await fwdEngine.buildTurboVectorHighlightedResume({
+          notify(55, 'Highlighting evaluated skills...', 'Analyzing resume text and applying vector highlights to rated skills...');
+          highlightedBlob = await buildTurboVectorHighlightedResume({
             resumeBlob: basePdfBlob,
-            keywords: allKeywords
+            keywords: highlightedSkills
           });
         } catch (hErr) {
           console.warn('[AgyBenchForwardResumeEngine] Skill highlighting fallback:', hErr);
@@ -1229,7 +1713,6 @@
       notify(20, 'Preparing privacy-shield resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
       var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
-      var fwdEngine = await ensureForwardResumeEngine();
       var anonymizedBlob = basePdfBlob;
 
       var anonymizeCand = {
@@ -1237,18 +1720,17 @@
         email: cand.email || '',
         phone: cand.phone || cand.mobile || '',
         mobile: cand.mobile || '',
+        linkedin: cand.linkedin || cand.linkedin_url || '',
         companyName: companyName
       };
 
       var keepName = (optId !== 49); // Hide candidate name ONLY for Option 49
-      if (fwdEngine && typeof fwdEngine.rdcAnonymizeRules === 'function' && typeof fwdEngine.renderAnonymizedPdfBlob === 'function') {
-        try {
-          notify(55, 'Applying privacy redactions...', 'Redacting contact numbers, email, and private links...');
-          var rules = fwdEngine.rdcAnonymizeRules(anonymizeCand, { keepName: keepName });
-          anonymizedBlob = await fwdEngine.renderAnonymizedPdfBlob(basePdfBlob, rules);
-        } catch (aErr) {
-          console.warn('[AgyBenchForwardResumeEngine] Privacy redaction fallback:', aErr);
-        }
+      try {
+        notify(55, 'Applying privacy redactions...', 'Redacting contact numbers, email, and private links...');
+        var rules = rdcAnonymizeRules(anonymizeCand, { keepName: keepName });
+        anonymizedBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
+      } catch (aErr) {
+        console.warn('[AgyBenchForwardResumeEngine] Privacy redaction fallback:', aErr);
       }
 
       if (optId === 48) {
@@ -1296,31 +1778,24 @@
         // Highlighting + Anonymization + Dossier
         notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
         var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
-        var allKeywords = Array.isArray(jobSkills) ? jobSkills.slice() : [];
-        if (Array.isArray(cand.skills_evaluated)) {
-          cand.skills_evaluated.forEach(function (s) {
-            var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
-            if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
-          });
-        }
-        if (cand.skills && typeof cand.skills === 'string') {
-          cand.skills.split(',').forEach(function (s) {
-            var sTrim = s.trim();
-            if (sTrim && allKeywords.indexOf(sTrim) === -1) allKeywords.push(sTrim);
-          });
-        }
+        var highlightedSkills = getBenchCandidateEvaluatedSkills(cand);
         var processedResume = anonymizedBlob;
-        if (fwdEngine && typeof fwdEngine.buildTurboVectorHighlightedResume === 'function') {
+        if (highlightedSkills.length > 0) {
           try {
-            notify(65, 'Highlighting key skills on confidential resume...', 'Applying keyword highlights...');
-            processedResume = await fwdEngine.buildTurboVectorHighlightedResume({
+            notify(65, 'Highlighting evaluated skills on confidential resume...', 'Applying vector highlights to rated skills...');
+            processedResume = await buildTurboVectorHighlightedResume({
               resumeBlob: anonymizedBlob,
-              keywords: allKeywords
+              keywords: highlightedSkills
             });
-          } catch (hErr) {}
+          } catch (hErr) {
+            console.warn('[AgyBenchForwardResumeEngine] Option 53 highlighting fallback:', hErr);
+          }
         }
-        notify(88, 'Merging dossier and resume...', 'Concatenating full privacy recruiter package...');
-        var merged = await mergeDossierAndResume(repBlob, processedResume);
+        notify(80, 'Applying company branding...', 'Injecting organization banner...');
+        var pdfBytes = new Uint8Array(await processedResume.arrayBuffer());
+        var branded = await addCompanyBrandingHeader(pdfBytes, companyName, companyLogo);
+        notify(90, 'Merging dossier and confidential resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, branded);
         merged.filename = 'Jeroworks_' + safeName + '_Full_Privacy_Package.pdf';
         notify(100, 'Full privacy package ready!', 'Document ready to send');
         return merged;
@@ -1344,6 +1819,10 @@
   return {
     generateAttachmentForCandidate: generateAttachmentForCandidate,
     generateBenchPrescreenPdfBlob: generateBenchPrescreenPdfBlob,
+    buildTurboVectorHighlightedResume: buildTurboVectorHighlightedResume,
+    renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
+    rdcAnonymizeRules: rdcAnonymizeRules,
+    getBenchCandidateEvaluatedSkills: getBenchCandidateEvaluatedSkills,
     addCompanyBrandingHeader: addCompanyBrandingHeader,
     mergeDossierAndResume: mergeDossierAndResume
   };
