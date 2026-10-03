@@ -8230,8 +8230,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'client_contact_info.id',
                 'client_contact_info.contact_person_name as name',
                 'client_contact_info.contact_person_email as email',
-                'client_contact_info.contact_person_phone as phone',
-                'client_contact_info.department as display_name',
+                'client_contact_info.contact_person_number as phone',
+                'client_contact_info.contact_person_designation as display_name',
                 'clients.name as company_name'
             )
             ->whereNotNull('client_contact_info.contact_person_email')
