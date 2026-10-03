@@ -695,7 +695,10 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   <li><strong>Current Location:</strong> {{ $cand->location ?? '--' }}</li>
   <li><strong>Notice Period:</strong> {{ $cand->notice ?? '--' }}</li>
   @if(!empty($cand->skills))
-  <li><strong>Key Skills:</strong> {{ $cand->skills }}</li>
+  <li><strong>Talent Skills & Expertise:</strong> {{ $cand->skills }}</li>
+  @endif
+  @if(!empty($cand->rm_comments))
+  <li><strong>Relationship Manager Comments:</strong> {{ strip_tags($cand->rm_comments) }}</li>
   @endif
 </ul>
 <p>Please find the formatted profile attached for your review. We look forward to your valuable feedback.</p>

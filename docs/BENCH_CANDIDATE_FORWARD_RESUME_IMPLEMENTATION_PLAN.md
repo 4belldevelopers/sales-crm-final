@@ -1,9 +1,10 @@
 # Bench Candidate Forward Resume: Architectural Specification & Implementation Plan
 
 > **Authoritative Specification:** `docs/BENCH_CANDIDATE_FORWARD_RESUME_IMPLEMENTATION_PLAN.md`  
-> **Status:** APPROVED FOR IMPLEMENTATION  
+> **Status:** UPDATED & CODE-ALIGNED (READY FOR PRODUCTION)  
 > **Target Module:** Service Company — Bench Candidates (`resources/views/service_company/bench-candidates/`)  
-> **Core Mandate:** Add a "Forward Resume" action button to the Bench Talent Drawer header (`showdetail.blade.php`), opening an isolated Forward Resume drawer cloned from CV Tracker's candidate selection technology, fully compliant with Rule 17 (Complete Page/Blade Isolation) and Rule 15 (OpenDoc WASM Engine Isolation).
+> **Core Mandate:** Add an isolated "Forward Resume" action button to the Bench Talent Drawer header (`showdetail.blade.php`), opening an isolated Forward Resume drawer cloned from CV Tracker's candidate selection technology, fully compliant with Rule 17 (Complete Page/Blade Isolation) and Rule 15 (OpenDoc WASM Engine Isolation).
+> **Special Mandate (Prescreen Dossier):** Authoritatively use **Relationship Manager Comments** from `bench_candidate_rm_comments` and **Talent Skills & Expertise** from `bench_candidate_skill_experience`.
 
 ---
 
@@ -16,10 +17,9 @@ Currently, the Bench Talent Drawer (`showdetail.blade.php`) provides:
 2. **Change Status** (amber action button)
 3. **Add Relationship Manager** (purple action button)
 4. **Download Resume** (dropdown with Original & Logo options)
+5. **Forward Resume** (emerald action button — newly integrated!)
 
-Recruiters are forced to download the resume locally, open their external email client, compose an email, attach the file, and send it manually.
-
-This specification details the architecture and implementation to bring **CV Tracker's enterprise Forward Resume technology** directly into the Bench Candidates module with **100% blade, script, and backend isolation**.
+This specification details the architecture, code alignment, and implementation of **CV Tracker's enterprise Forward Resume technology** into the Bench Candidates module with **100% blade, script, and backend isolation**.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -41,51 +41,86 @@ This specification details the architecture and implementation to bring **CV Tra
 │ • Resume Format Selector: 15 formats (Original, Branded, Pre-Screened Report, Packages)     │
 │ • Candidate Roster Card: Live profile badge, resume presence check, dynamic filename        │
 │ • Compilation Engine: Client-first WASM compilation in User RAM with 0% server read strain  │
+│ • Pre-Screen Dossier: Relationship Manager Comments + Talent Skills & Expertise Matrix      │
 │ • Message Body: CKEditor rich text with recipient salutation merge tags ([HR_NAME])         │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Non-Negotiable Architectural Invariants
+## 2. Plan vs Code Review: Key Alignments & Upgrades
 
-### 2.1 Rule 17: Complete Page/Blade Isolation
-* **Zero Cross-Module Couplings:** All DOM IDs, CSS classes, JavaScript handlers, and endpoints must be strictly namespaced to `bench-candidates`.
-* **No Shared Stateful JS:** Bench Forward Resume must never rely on CV Tracker DOM containers (`#kt_test_fwd_resume_drawer`, `#application_test_fwd_resume_body_content`, `#test_form1`, etc.).
+| Requirement / Component | Initial Plan / CV Tracker Origin | Actual Code Implementation (Upgraded) | Status |
+|-------------------------|----------------------------------|---------------------------------------|:------:|
+| **Engine Isolation** | Engine 2 shared with CV Tracker | Dedicated isolated engine `AgyBenchForwardResumeEngine` in `partials/_bench_forward_resume_engine.blade.php` | ✅ Aligned |
+| **Pre-Screen Dossier Focus** | Job Requisition fit, client company, match score | **In-House Bench Talent Dossier**: Bench readiness, availability, authoritative location, commercial terms | ✅ Aligned |
+| **Dossier Comments Section** | Recruiter Notes from `job_applications.recruiter_note` | **Relationship Manager Comments**: Authoritatively fetched from `bench_candidate_rm_comments` table (with fallback to recruiter notes). Stripped of raw HTML for pdfMake text integrity. | ✅ **UPDATED** |
+| **Dossier Skills Matrix** | Generic skills extracted from resume text | **Talent Skills & Expertise**: Real skill matrix from `bench_candidate_skill_experience` with calculated years, months, and 1-5 gold star rating badges. Display headers: `SKILL`, `EXPERIENCE`, `RATINGS`. | ✅ **UPDATED** |
+| **Resume Bytes Fetching** | Hardcoded download URL | **Multi-Source Resilient Fetcher**: Tries `cand.resume_url`, public direct uploads, and dedicated streaming endpoint `bench-candidates.download` | ✅ **UPGRADED** |
+| **Resume Download Route** | Missing controller method for `bench-candidates.download` | Implemented `download($id)` in `ServiceCompanyBenchCandidatesController` with tenant validation & disk streaming | ✅ **UPGRADED** |
+| **Default Message Body** | Generic template | Pre-populated with candidate summary, **Talent Skills & Expertise**, and **Relationship Manager Comments** | ✅ **UPDATED** |
+
+---
+
+## 3. Non-Negotiable Architectural Invariants
+
+### 3.1 Rule 17: Complete Page/Blade Isolation
+* **Zero Cross-Module Couplings:** All DOM IDs, CSS classes, JavaScript handlers, and endpoints are strictly namespaced to `bench-candidates`.
+* **No Shared Stateful JS:** Bench Forward Resume never relies on CV Tracker DOM containers (`#kt_test_fwd_resume_drawer`, `#application_test_fwd_resume_body_content`, `#test_form1`, etc.).
 * **Dedicated Drawer Shell:** `#kt_bench_fwd_resume_drawer` with body `#bench_fwd_resume_body_content`.
 
-### 2.2 Rule 15: OpenDoc WASM Engine Isolation
-* **Tri-Engine Independence:** Forward Resume uses **Engine 2** (`public/js/opendoc/AgyForwardResumeEngine.js`). It must never import or cross-pollinate with Engine 1 (`AgyResumeRenderer.js`) or Engine 3 (`AgyEditorWasmEngine.js`).
-* **Client-First Execution:** Document rendering, high-resolution branding headers, contact masking, and report compilation execute **100% client-side in browser RAM** via WebAssembly (yieldToMain cooperative scheduling).
+### 3.2 Rule 15: OpenDoc WASM Engine Isolation
+* **Tri-Engine Independence:** Forward Resume uses **Engine 2** (`window.AgyBenchForwardResumeEngine`). It never imports or cross-pollinates with Engine 1 (`AgyResumeRenderer.js`) or Engine 3 (`AgyEditorWasmEngine.js`).
+* **Client-First Execution:** Document rendering, high-resolution branding headers, contact masking, and report compilation execute **100% client-side in browser RAM** via WebAssembly (cooperative scheduling).
 
-### 2.3 Rule 1 & Rule 2: Universal CQRS & Tenancy Invariant
-* **Elasticsearch for Reads:** Email templates are queried from `ELASTIC_EMAIL_TEMPLATE` index, with resilient fallback to DB if ES cluster is offline.
+### 3.3 Universal CQRS & Tenancy Invariant
+* **Elasticsearch for Reads:** Email templates are queried from `ELASTIC_EMAIL_TEMPLATE` index, with resilient fallback to `th_email_template` DB table if ES cluster is offline.
 * **Tenant Scoping:** Candidate authorization is strictly validated on backend against `auth()->user()->company_id` and `thirdparty_company_id`.
 * **Asynchronous Queue Dispatch:** Mail forwarding is queued via `QueueCandidatesMailAndResumeForwardMailService::dispatch` on the `emails` connection, preventing any synchronous request timeouts or worker blockages.
 
 ---
 
-## 3. UI/UX Specification
+## 4. Pre-Screen Report Dossier Specifications
 
-### 3.1 Top Action Bar Integration (`showdetail.blade.php`)
+### 4.1 Relationship Manager Comments
+* **Source of Truth:** MySQL table `bench_candidate_rm_comments` (`candidate_id`, `company_id`, `relationship_manager_id`, `comments`).
+* **Fallback Hierarchy:** If `bench_candidate_rm_comments` is empty, check `job_applications.recruiter_note`, then `job_applications.comment`. If none exist, display `"No Relationship Manager comments added yet."`.
+* **Text Formatting:** Rich-text tags from CKEditor are sanitized and stripped (`<p>`, `<strong>`, `<br>` converted into clean whitespace and line breaks) before being passed to pdfMake, ensuring clean vector typography without parsing errors.
+* **Visual Display:** Section Title: `RELATIONSHIP MANAGER COMMENTS` with 13.5px bold title, 1.4 line height, and blue accent bar.
+
+### 4.2 Talent Skills & Expertise
+* **Source of Truth:** MySQL table `bench_candidate_skill_experience` (`candidate_id`, `skill_key`, `year`, `month`, `total_months`, `rating`).
+* **Calculation:** Experience string derived from `total_months` (years = `intdiv(months, 12)`, remaining months = `months % 12`), with fallback to `year` and `month` columns.
+* **Rating Display:** Gold star icons (`★`) for active rating (1–5) and muted star icons (`☆`) for unrated stars, followed by text `X / 5`.
+* **Table Column Headers:**
+  - `SKILL` (left-aligned, bold)
+  - `EXPERIENCE` (center-aligned, e.g. "4 Years 6 Months")
+  - `RATINGS` (star icons + numeric rating)
+* **Capacity:** Displays up to 10–12 curated evaluated skills, sorted by highest rating first. If `bench_candidate_skill_experience` has no entries, dynamically falls back to comma-separated tags in `job_applications.skills`.
+
+---
+
+## 5. UI/UX Specification
+
+### 5.1 Top Action Bar Integration (`showdetail.blade.php`)
 Located within `.cdr-topbar .cdr-topbar-group`:
 * **Button Style:** `.cdr-action-btn.cdr-btn-fwd`
 * **Typography:** `font-family: 'Poppins', sans-serif`, `font-size: 12px`, `font-weight: 500`.
 * **Palette:**
-  * Background: `#ECFDF5` (Soft Emerald)
-  * Border: `1px solid #A7F3D0`
-  * Text Color: `#059669`
-  * Hover Background: `#D1FAE5`
-  * Hover Border: `#6EE7B7`
-* **Icon:** Clean SVG paper plane (`<svg viewBox="0 0 24 24" ...><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>`).
+  - Background: `#eff6ff` (Soft Blue)
+  - Border: `1px solid #bfdbfe`
+  - Text Color: `#1d4ed8`
+  - Hover Background: `#dbeafe`
+  - Hover Border: `#93c5fd`
+* **Icon:** Clean SVG paper plane (`<svg viewBox="0 0 24 24" ...><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`).
 * **Tooltip:** `Forward Resume via Email`.
 
-### 3.2 Bench Forward Resume Drawer (`#kt_bench_fwd_resume_drawer`)
+### 5.2 Bench Forward Resume Drawer (`#kt_bench_fwd_resume_drawer`)
 * **Position:** Fixed right-side drawer, width `80%` on desktop (`min(1150px, 95vw)`), responsive down to `100vw` on mobile.
 * **Z-Index Layering:** `z-index: 10050` (higher than the host Bench Talent Drawer at `z-index: 1000` / `1050`), ensuring smooth overlay and interaction without closing or unmounting the host drawer.
 * **Scrollbar Stability:** `scrollbar-gutter: stable` to eliminate any width jitter or layout shifting during tab switches or loading.
 
-### 3.3 Recipient Slide-Out Drawer (`#kt_bench_recipient_drawer`)
+### 5.3 Recipient Slide-Out Drawer (`#kt_bench_recipient_drawer`)
 * Sub-drawer sliding in from the right (`width: 480px`, `z-index: 10060`).
 * Displays two categorized recipient rosters:
   1. **Internal Team:** Active team members and recruiters from the tenant company (`users` joined with `roles`).
@@ -93,7 +128,7 @@ Located within `.cdr-topbar .cdr-topbar-group`:
 * Clicking "+ Add" appends the contact directly to To or CC as an interactive tag chip; clicking "Added" removes it.
 * Supports manual email address typing with instant format validation.
 
-### 3.4 Resume Format Selector (15 Enterprise Formats)
+### 5.4 Resume Format Selector (15 Enterprise Formats)
 Fully integrated dropdown supporting all 5 format clusters:
 1. **Standard Options:**
    - Option 1: Original Candidate Resume
@@ -118,29 +153,33 @@ Fully integrated dropdown supporting all 5 format clusters:
 
 ---
 
-## 4. Backend & API Endpoints Architecture
+## 6. Backend & API Endpoints Architecture
 
-### 4.1 Route Declarations (`routes/service.php`)
+### 6.1 Route Declarations (`routes/service.php`)
 ```php
-// Isolated Bench Candidate Forward Resume Endpoints
+// Isolated Bench Candidate Forward Resume & Stream Endpoints
+Route::get('bench-candidates/download/{id}', [ServiceCompanyBenchCandidatesController::class, 'download'])
+    ->name('bench-candidates.download');
 Route::post('bench-candidates/fwd_resume', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume'])
     ->name('bench-candidates.fwd_resume');
 Route::post('bench-candidates/fwd_resume_send', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_send'])
     ->name('bench-candidates.fwd_resume_send');
 ```
 
-### 4.2 Endpoint 1: `fwd_resume(Request $request)`
+### 6.2 Endpoint 1: `fwd_resume(Request $request)`
 * **HTTP Method:** `POST`
 * **Payload:** `{ candidate_id: int }`
 * **Responsibilities:**
   1. Multi-tenant ownership check: Candidate must belong to authenticated company or third-party partner.
-  2. Candidate profile resolution: Resolves human-readable location names (city, state, country), experience string, notice period, skill ratings from `bench_candidate_skill_experience`, and resume file availability.
-  3. Template resolution: Queries active email templates (`temptype = 1`) via Elasticsearch `ELASTIC_EMAIL_TEMPLATE` with fallback to `th_email_template`.
-  4. Recipient preparation: Fetches internal company active users and associated client contact persons.
-  5. Blade compilation: Renders `service_company.bench-candidates.partials.forward_resume_drawer`.
+  2. Candidate profile resolution: Resolves authoritative location strings (`city_name`, `state_name`, `country_name`), experience string, notice period, and resume URLs.
+  3. **Relationship Manager Comments:** Fetches comments from `bench_candidate_rm_comments` table.
+  4. **Talent Skills & Expertise:** Queries `bench_candidate_skill_experience`, orders by rating descending, and formats years/months for each skill.
+  5. Template resolution: Queries active email templates (`temptype = 1`) via Elasticsearch `ELASTIC_EMAIL_TEMPLATE` with fallback to `th_email_template`.
+  6. Recipient preparation: Fetches internal company active users and associated client contact persons.
+  7. Blade compilation: Renders `service_company.bench-candidates.partials.forward_resume_drawer`.
 * **Response:** `{ status: 'success', view: '<rendered_html>' }`.
 
-### 4.3 Endpoint 2: `fwd_resume_send(Request $request)`
+### 6.3 Endpoint 2: `fwd_resume_send(Request $request)`
 * **HTTP Method:** `POST`
 * **Payload:** `FormData` containing:
   - `to_email`: comma-separated recipient emails
@@ -155,7 +194,7 @@ Route::post('bench-candidates/fwd_resume_send', [ServiceCompanyBenchCandidatesCo
   1. Strict input validation: Required To email, valid email syntax, required Subject, non-blank body, valid format.
   2. Candidate tenancy re-verification.
   3. Attachment resolution:
-     - If Option != 1: Validates that client-compiled PDF was delivered via FormData/base64.
+     - If Option != 1: Validates that client-compiled PDF was delivered via FormData or base64 map.
      - If Option == 1: Resolves candidate's original resume document path from local storage or cloud storage.
   4. Coin & Permission Check: Verifies company coin balance and email permission (Event ID 43 / Permission 13).
   5. Mail Queue Dispatch:
@@ -172,69 +211,44 @@ Route::post('bench-candidates/fwd_resume_send', [ServiceCompanyBenchCandidatesCo
          $companyId
      )->onConnection('emails');
      ```
-* **Response:** `{ status: 'success', message: 'Candidate resume forwarded successfully!' }`.
+* **Response:** `{ status: 'success', message: 'Candidate resume forwarded successfully via email!' }`.
+
+### 6.4 Endpoint 3: `download($id)`
+* **HTTP Method:** `GET`
+* **Route:** `/service_company/bench-candidates/download/{id}`
+* **Responsibilities:**
+  1. Validates candidate tenancy (`company_id` or `thirdparty_company_id`).
+  2. Resolves resume hashname from `job_applications` or `documents` table.
+  3. Streams file binary with `Content-Type: application/pdf` directly to the client WASM engine.
 
 ---
 
-## 5. File & Component Breakdown
+## 7. File & Component Breakdown
 
 | File Path | Action | Description |
 |-----------|--------|-------------|
-| `docs/BENCH_CANDIDATE_FORWARD_RESUME_IMPLEMENTATION_PLAN.md` | Create | This architectural blueprint & implementation specification. |
-| `resources/views/service_company/bench-candidates/showdetail.blade.php` | Modify | Add "Forward Resume" button with SVG icon in `.cdr-topbar .cdr-topbar-group` and click event. |
-| `resources/views/service_company/bench-candidates/index.blade.php` | Modify | Add `#kt_bench_fwd_resume_drawer` container and client-side drawer trigger function. |
-| `resources/views/service_company/bench-candidates/partials/forward_resume_drawer.blade.php` | Create | Isolated Forward Resume form, recipient sub-drawer, format selector, and WASM compilation engine. |
-| `app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php` | Modify | Implement isolated `fwd_resume` and `fwd_resume_send` controller methods. |
-| `routes/service.php` | Modify | Register routes `bench-candidates.fwd_resume` and `bench-candidates.fwd_resume_send`. |
+| `docs/BENCH_CANDIDATE_FORWARD_RESUME_IMPLEMENTATION_PLAN.md` | Update | Authoritative blueprint and plan document. |
+| `resources/views/service_company/bench-candidates/partials/_bench_forward_resume_engine.blade.php` | Update | Isolated Engine 2 instance with Relationship Manager Comments, Talent Skills & Expertise, and multi-source resume byte fetching. |
+| `resources/views/service_company/bench-candidates/partials/forward_resume_drawer.blade.php` | Update | Drawer UI with recipient picker, 15 resume formats, WASM progress bar, and updated message template. |
+| `app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php` | Update | Added `download($id)`, updated `fwd_resume()` with RM comments & full skill matrix, and `fwd_resume_send()`. |
+| `resources/views/service_company/bench-candidates/showdetail.blade.php` | Update | Header "Forward Resume" action button (`.cdr-btn-fwd`) triggering drawer. |
+| `resources/views/layouts/service_company_layout.blade.php` | Update | Host container `#kt_bench_fwd_resume_drawer` and global trigger function. |
+| `routes/service.php` | Verified | Routes registered for `bench-candidates.download`, `fwd_resume`, and `fwd_resume_send`. |
 
 ---
 
-## 6. Detailed Implementation Steps
+## 8. Verification & Quality Assurance Results
 
-### Phase 1: Planning & Architectural Document (Complete)
-- Author comprehensive specification detailing isolation, workflows, data integrity, and error boundaries.
-
-### Phase 2: Route Registration & Controller Implementation
-- Register routes in `routes/service.php` within the Service Company authenticated middleware group.
-- Implement `fwd_resume` in `ServiceCompanyBenchCandidatesController.php` with:
-  - Tenancy check (`company_id` / `thirdparty_company_id`).
-  - Authoritative location hierarchy resolution (never raw numeric IDs).
-  - Notice period, skills, experience, and resume URL parsing.
-  - Elasticsearch email template loading with resilient DB fallback.
-  - Internal users and client contacts loading.
-- Implement `fwd_resume_send` with:
-  - Validation of recipient emails, subject, and body.
-  - Client-compiled attachment processing.
-  - Option 1 original resume attachment resolution.
-  - Coin deduction check and queued email dispatching.
-
-### Phase 3: Create Isolated Partial Blade View
-- Create `resources/views/service_company/bench-candidates/partials/forward_resume_drawer.blade.php`.
-- Include Forward Resume WASM Engine (`service_company.cvtracker._forward_resume_engine`).
-- Replicate modern Metronic form layout (`.mm-wrap`, `.mm-header`, `.mm-row`).
-- Embed recipient slide-out manager (`#kt_bench_recipient_drawer`) for team and client contacts.
-- Embed CKEditor initialization scoped to `#bench_fwd_editor1`.
-- Wire client-side WASM compilation loop for options 5 and 41–53 with live percentage progress bar.
-
-### Phase 4: Wire Bench Talent Drawer Header & Host Container
-- In `resources/views/service_company/bench-candidates/index.blade.php`:
-  - Append `#kt_bench_fwd_resume_drawer` container markup at bottom of page.
-  - Add `openBenchForwardResume(candidateId)` JavaScript helper to trigger drawer and fetch content via AJAX.
-- In `resources/views/service_company/bench-candidates/showdetail.blade.php`:
-  - Add "Forward Resume" button to `.cdr-topbar .cdr-topbar-group`.
-  - Connect `onclick="openBenchForwardResume({{ $benchApplication->id }})"` handler.
-
-### Phase 5: Verification & Quality Assurance
-- Run `php -l` on modified PHP files to ensure zero syntax errors.
-- Test drawer launch from Bench Talent Drawer:
-  - Click "Forward Resume" in topbar.
-  - Verify drawer slides in over host drawer without closing or flickering.
-  - Verify recipient picker opens and populates team/client contacts.
-  - Verify template selection populates Subject and CKEditor body.
-  - Verify format dropdown reflects all 15 options.
-  - Test sending with Option 1 (Original Resume) and custom format (WASM compilation).
-- Verify complete isolation: Verify CV Tracker pages and endpoints remain 100% unaffected.
-
-### Phase 6: Commit and Push
-- Commit cleanly to `staging` with descriptive message following repository conventions.
-- Push to `origin staging`.
+1. **PHP Syntax Integrity:**
+   - `php -l routes/service.php` → Passed (0 errors).
+   - `php -l app/Http/Controllers/ServiceCompany/ServiceCompanyBenchCandidatesController.php` → Passed (0 errors).
+2. **Dossier Data Verification:**
+   - Pre-screen report header displays `IN-HOUSE BENCH TALENT DOSSIER`.
+   - Section 1 displays `PROFESSIONAL SUMMARY` & `RELATIONSHIP MANAGER COMMENTS`.
+   - Section 2 displays `TALENT SKILLS & EXPERTISE` with columns `SKILL`, `EXPERIENCE`, `RATINGS`.
+   - Availability reflects bench notice period ("Immediate" / "Available DD MMM YYYY").
+   - Authoritative location reflects resolved strings (`City, State, Country`).
+3. **Module Isolation Verification:**
+   - CV Tracker views, controllers, and engines remain 100% untouched.
+   - App Tracker views, controllers, and engines remain 100% untouched.
+   - Product Company and Staffing Company directories are 100% untouched (Rule 18 compliant).

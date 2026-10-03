@@ -105,14 +105,36 @@
     return s === '' ? (fallback || '') : s;
   }
 
-  async function fetchCandidateResumeBytes(candId) {
+  async function fetchCandidateResumeBytes(cand) {
+    var candId = (typeof cand === 'object' && cand !== null) ? cand.id : cand;
     if (rsResumeBytesCache[candId]) return rsResumeBytesCache[candId];
-    var url = '/service_company/bench-candidates/download/' + candId;
-    var resp = await fetch(url);
-    if (!resp.ok) throw new Error('Could not fetch candidate resume (HTTP ' + resp.status + ')');
-    var buf = await resp.arrayBuffer();
-    rsResumeBytesCache[candId] = new Uint8Array(buf);
-    return rsResumeBytesCache[candId];
+
+    var sources = [];
+    if (typeof cand === 'object' && cand !== null) {
+      if (cand.resume_url) sources.push(cand.resume_url);
+      if (cand.resume_filename) {
+        sources.push('/user-uploads/resumes/' + cand.resume_filename);
+        sources.push('/user-uploads/documents/' + candId + '/' + cand.resume_filename);
+      }
+    }
+    sources.push('/service_company/bench-candidates/download/' + candId);
+
+    var lastErr = null;
+    for (var i = 0; i < sources.length; i++) {
+      try {
+        var resp = await fetch(sources[i], { cache: 'no-store', credentials: 'include' });
+        if (resp.ok) {
+          var buf = await resp.arrayBuffer();
+          if (buf && buf.byteLength > 200) {
+            rsResumeBytesCache[candId] = new Uint8Array(buf);
+            return rsResumeBytesCache[candId];
+          }
+        }
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw (lastErr || new Error('Could not fetch candidate resume document'));
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -127,14 +149,18 @@
     var wm = clean(cand.work_mode, 'Hybrid');
     var rating = parseInt(cand.match || (cand.rating ? cand.rating * 20 : 85), 10);
     var summary = clean(cand.careersummary || cand.cover_letter, 'Experienced professional with demonstrated track record of technical delivery and engineering excellence.');
-    var recruiterNote = clean(cand.recruiter_note, 'Verified candidate on bench available for deployment.');
+    
+    // Relationship Manager Comments from bench_candidate_rm_comments
+    var rawRm = cand.rm_comments || cand.recruiter_note || cand.comment || '';
+    var rmComments = clean(rawRm.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), 'No Relationship Manager comments added yet.');
+
     var skillsList = Array.isArray(cand.skills_evaluated) ? cand.skills_evaluated : [];
 
     var skillRows = [
       [
-        { text: 'EVALUATED SKILL', style: 'tableHead' },
+        { text: 'SKILL', style: 'tableHead' },
         { text: 'EXPERIENCE', style: 'tableHead' },
-        { text: 'RATING', style: 'tableHead' }
+        { text: 'RATINGS', style: 'tableHead' }
       ]
     ];
 
@@ -147,7 +173,8 @@
       });
     }
 
-    skillsList.slice(0, 7).forEach(function (sk) {
+    // Talent Skills & Expertise (display up to 10 key skills)
+    skillsList.slice(0, 10).forEach(function (sk) {
       var stars = '';
       var r = parseInt(sk.rating || 3, 10);
       for (var i = 1; i <= 5; i++) {
@@ -272,19 +299,19 @@
             },
             {
               stack: [
-                { text: 'RECRUITER / RM COMMENTS', style: 'sectionTitle' },
-                { text: recruiterNote, style: 'body' }
+                { text: 'RELATIONSHIP MANAGER COMMENTS', style: 'sectionTitle' },
+                { text: rmComments, style: 'body' }
               ],
               width: 265
             }
           ],
           columnGap: 10
         },
-        // Bench Skill Intelligence Table
+        // Talent Skills & Expertise Table
         {
           margin: [0, 0, 0, 8],
           stack: [
-            { text: 'BENCH SKILL INTELLIGENCE', style: 'sectionTitle' },
+            { text: 'TALENT SKILLS & EXPERTISE', style: 'sectionTitle' },
             {
               table: {
                 widths: ['*', 100, 110],
@@ -456,7 +483,7 @@
 
     // Option 1: Original candidate resume
     if (optId === 1) {
-      var rawBytes = await fetchCandidateResumeBytes(cand.id);
+      var rawBytes = await fetchCandidateResumeBytes(cand);
       var origBlob = new Blob([rawBytes], { type: 'application/pdf' });
       origBlob.filename = 'Jeroworks_' + safeName + '.pdf';
       return origBlob;
@@ -471,7 +498,7 @@
 
     // Option 41: Resume + Company Branding
     if (optId === 41) {
-      var rawBytes = await fetchCandidateResumeBytes(cand.id);
+      var rawBytes = await fetchCandidateResumeBytes(cand);
       var brandedBlob = await addCompanyBrandingHeader(rawBytes, companyName);
       brandedBlob.filename = 'Jeroworks_' + safeName + '_Branded.pdf';
       return brandedBlob;
@@ -480,7 +507,7 @@
     // Option 42: Pre-Screened Report + Branded Resume
     if (optId === 42) {
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
-      var rBytes = await fetchCandidateResumeBytes(cand.id);
+      var rBytes = await fetchCandidateResumeBytes(cand);
       var resBranded = await addCompanyBrandingHeader(rBytes, companyName);
       var merged = await mergeDossierAndResume(repBlob, resBranded);
       merged.filename = 'Jeroworks_' + safeName + '_Full_Package.pdf';
@@ -490,7 +517,7 @@
     // Option 43: Pre-Screened Report + Unbranded Resume
     if (optId === 43) {
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
-      var rBytes = await fetchCandidateResumeBytes(cand.id);
+      var rBytes = await fetchCandidateResumeBytes(cand);
       var resBlob = new Blob([rBytes], { type: 'application/pdf' });
       var merged = await mergeDossierAndResume(repBlob, resBlob);
       merged.filename = 'Prescreen_' + safeName + '_Unbranded.pdf';
@@ -500,7 +527,7 @@
     // Options 44-53 Fallback / Custom:
     // Generate branded dossier + original resume package
     var dossier = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
-    var raw = await fetchCandidateResumeBytes(cand.id);
+    var raw = await fetchCandidateResumeBytes(cand);
     var rBlob = new Blob([raw], { type: 'application/pdf' });
     var mergedFallback = await mergeDossierAndResume(dossier, rBlob);
     mergedFallback.filename = 'Jeroworks_' + safeName + '_Formatted.pdf';

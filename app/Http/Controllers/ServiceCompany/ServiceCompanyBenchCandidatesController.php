@@ -7602,6 +7602,53 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
     }
 
+    /**
+     * Intent: Stream raw candidate resume document bytes for WASM compilation / client engine.
+     * Tenancy: Validates candidate ownership against authenticated company or third-party company.
+     */
+    public function download($id)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $cand = DB::table('job_applications')
+            ->where('id', $id)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->select('id', 'resume', 'full_name')
+            ->first();
+
+        abort_if(! $cand, 404, 'Candidate resume not found or access denied.');
+
+        $hashname = $cand->resume;
+        if (empty($hashname)) {
+            $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
+            if ($docRow && ! empty($docRow->hashname)) {
+                $hashname = $docRow->hashname;
+            }
+        }
+
+        abort_if(empty($hashname), 404, 'No resume document uploaded for this candidate.');
+
+        $paths = [
+            public_path('user-uploads/documents/'.$cand->id.'/'.$hashname),
+            public_path('user-uploads/resumes/'.$hashname),
+            public_path('user-uploads/'.$hashname),
+        ];
+
+        foreach ($paths as $p) {
+            if (file_exists($p)) {
+                $mime = mime_content_type($p) ?: 'application/pdf';
+                return response()->file($p, [
+                    'Content-Type' => $mime,
+                    'Content-Disposition' => 'inline; filename="'.basename($p).'"',
+                ]);
+            }
+        }
+
+        abort(404, 'Resume file not found on disk.');
+    }
+
     public function boostkeywordadd(Request $request)
     {
         $company_id = auth()->user()->company_id;
@@ -8054,10 +8101,32 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
         $cand->safe_name = $candSafeName;
 
-        // 5. Real Skills & Ratings for Intelligence Dossier
+        // Direct Asset / Download URL for resume
+        $resumeUrl = '';
+        if (! empty($cand->resume)) {
+            $resumeUrl = asset('user-uploads/resumes/'.$cand->resume);
+        } elseif (! empty($resumeFilename)) {
+            $resumeUrl = asset('user-uploads/documents/'.$cand->id.'/'.$resumeFilename);
+        }
+        $cand->resume_url = $resumeUrl;
+
+        // Intent: Fetch Relationship Manager Comments from isolated bench_candidate_rm_comments table
+        $rmCommentRow = DB::table('bench_candidate_rm_comments')
+            ->where('candidate_id', $cand->id)
+            ->where('company_id', $companyId)
+            ->first();
+        if (! $rmCommentRow) {
+            $rmCommentRow = DB::table('bench_candidate_rm_comments')
+                ->where('candidate_id', $cand->id)
+                ->first();
+        }
+        $cand->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
+
+        // 5. Talent Skills & Expertise for Pre-Screen Dossier
         $benchSkills = DB::table('bench_candidate_skill_experience')
             ->where('candidate_id', $cand->id)
             ->select('skill_key', 'year', 'month', 'total_months', 'rating')
+            ->orderByDesc('rating')
             ->orderBy('skill_key')
             ->get();
         $skillsArr = [];
@@ -8075,11 +8144,11 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             if ($mo > 0) $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
             $skillsArr[] = [
                 'name' => ucwords($sn),
-                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : '--',
+                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
                 'exp' => $yr + ($mo / 12),
                 'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
             ];
-            if (count($skillsArr) >= 7) break;
+            if (count($skillsArr) >= 12) break;
         }
         if (empty($skillsArr) && ! empty($cand->skills)) {
             $rawSkills = array_filter(array_map('trim', explode(',', (string) $cand->skills)));
@@ -8090,7 +8159,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     'exp' => (float) $totExp ?: 0,
                     'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
                 ];
-                if (count($skillsArr) >= 7) break;
+                if (count($skillsArr) >= 12) break;
             }
         }
         $cand->skills_evaluated = $skillsArr;
