@@ -291,38 +291,41 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
   border-radius: 8px;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
-  max-height: 420px;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08);
+  max-height: min(850px, calc(100vh - 180px));
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #94A3B8 #F1F5F9;
 }
 .bench-fwd-format-dropdown-menu::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 .bench-fwd-format-dropdown-menu::-webkit-scrollbar-track {
-  background: #F8FAFC;
+  background: #F1F5F9;
   border-radius: 4px;
 }
 .bench-fwd-format-dropdown-menu::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #94A3B8;
   border-radius: 4px;
 }
 .bench-fwd-format-dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #64748B;
 }
 
 .bench-fwd-sec-card {
   border: 1px solid #E2E8F0;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   background: #FFFFFF;
 }
 .bench-fwd-sec-card:last-child {
   margin-bottom: 0;
 }
 .bench-fwd-sec-header {
-  padding: 6px 12px;
+  padding: 5px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -343,8 +346,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 .bench-fwd-opt-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 6.5px 12px;
   cursor: pointer;
   border-bottom: 1px solid #F1F5F9;
   background: #FFFFFF;
@@ -1789,9 +1792,29 @@ function toggleBenchFormatDropdown(e) {
 }
 
 function openBenchFormatDropdown() {
-    $('#bench_fwd_format_dropdown_menu').show();
+    var menu = $('#bench_fwd_format_dropdown_menu');
+    menu.show();
     $('#bench_fwd_trigger_caret').css('transform', 'rotate(180deg)');
     $('#bench_fwd_format_trigger').css('border-color', '#2563EB');
+
+    // Smooth wheel scroll isolation to keep scrolling strictly within dropdown
+    menu.off('wheel.benchMenu').on('wheel.benchMenu', function(e) {
+        var oe = e.originalEvent || e;
+        var d = oe.deltaY;
+        var st = this.scrollTop;
+        var sh = this.scrollHeight;
+        var ch = this.clientHeight;
+        if ((d > 0 && st + ch >= sh) || (d < 0 && st <= 0)) {
+            e.preventDefault();
+        }
+        e.stopPropagation();
+    });
+
+    // Auto-scroll to selected option if needed
+    var selectedRow = menu.find('.bench-fwd-opt-row.is-selected');
+    if (selectedRow.length) {
+        selectedRow[0].scrollIntoView({ block: 'nearest' });
+    }
 }
 
 function closeBenchFormatDropdown() {
