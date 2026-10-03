@@ -8208,6 +8208,21 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'job_applications.cover_letter',
                 'job_applications.recruiter_note',
                 'job_applications.comment',
+                'job_applications.employmentType',
+                'job_applications.comission_type',
+                'job_applications.bill_rate_amount',
+                'job_applications.bill_rate_currency',
+                'job_applications.bill_rate_mode',
+                'job_applications.pay_rate_amount',
+                'job_applications.pay_rate_currency',
+                'job_applications.pay_rate_mode',
+                'job_applications.outsourcing_type',
+                'job_applications.ctc_hourly',
+                'job_applications.ctc_monthly',
+                'job_applications.ctc_yearly',
+                'job_applications.ectc_hourly',
+                'job_applications.ectc_monthly',
+                'job_applications.ectc_yearly',
                 'qualification_master.name as qualification_name'
             )
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
@@ -8233,21 +8248,62 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate record not found or access denied.']);
         }
 
-        // 1. Authoritative human-readable location
+        // 1. Authoritative City location (State and country strictly removed per requirements)
         $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
         if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
             $cityName = trim((string) $cand->city);
         }
-        $stateName = (! empty($cand->state_name) && ! preg_match('/^\d+$/', trim((string) $cand->state_name))) ? trim((string) $cand->state_name) : null;
-        if (! $stateName && ! empty($cand->state) && ! preg_match('/^\d+$/', trim((string) $cand->state))) {
-            $stateName = trim((string) $cand->state);
+        if (! $cityName && ! empty($cand->current_location)) {
+            $cParts = explode(',', (string) $cand->current_location);
+            $cityName = trim($cParts[0]);
         }
-        $countryName = (! empty($cand->country_name) && ! preg_match('/^\d+$/', trim((string) $cand->country_name))) ? trim((string) $cand->country_name) : null;
-        if (! $countryName && ! empty($cand->country) && ! preg_match('/^\d+$/', trim((string) $cand->country))) {
-            $countryName = trim((string) $cand->country);
+        $cand->city_display = $cityName ?: '--';
+        $cand->location = $cityName ?: '--';
+
+        // Client Engagement Model (Exact model selected during add talent)
+        $engModel = trim((string) @$cand->employmentType);
+        if ($engModel === '') {
+            $outsourcingMap = [1 => 'Full Time', 2 => 'Contract', 3 => 'Part Time', 4 => 'Freelance'];
+            $engModel = $outsourcingMap[(int) (@$cand->outsourcing_type ?? 0)] ?? 'Contract';
         }
-        $locParts = array_filter([$cityName, $stateName, $countryName]);
-        $cand->location = ! empty($locParts) ? implode(', ', $locParts) : '--';
+        $cand->engagement_model = $engModel;
+
+        // Commercials (Exact rate and commercial model entered during add talent)
+        $comissionType = (int) (@$cand->comission_type ?? 0);
+        $currencyList = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+        $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
+        $currCode = $currencyList[$currId] ?? 'INR';
+        $currSymbolMap = [
+            'INR' => '₹',
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'AED' => 'AED ',
+            'CAD' => 'CA$',
+            'AUD' => 'A$',
+            'SGD' => 'S$',
+        ];
+        $sym = $currSymbolMap[$currCode] ?? ($currCode . ' ');
+
+        if ($comissionType === 1) {
+            $candCommercialsFormatted = 'Free Service';
+        } elseif (! empty($cand->bill_rate_amount) && is_numeric($cand->bill_rate_amount)) {
+            $bMode = (int) (@$cand->bill_rate_mode ?? 0);
+            $bModeText = $salaryMode[$bMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->bill_rate_amount) . ' / ' . $bModeText;
+        } elseif (! empty($cand->ectc) && is_numeric($cand->ectc)) {
+            $eMode = (int) (@$cand->current_ectc_mode ?? 0);
+            $eModeText = $salaryMode[$eMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->ectc) . ' / ' . $eModeText;
+        } elseif (! empty($cand->pay_rate_amount) && is_numeric($cand->pay_rate_amount)) {
+            $pMode = (int) (@$cand->pay_rate_mode ?? 0);
+            $pModeText = $salaryMode[$pMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->pay_rate_amount) . ' / ' . $pModeText;
+        } else {
+            $candCommercialsFormatted = 'Competitive / Negotiable';
+        }
+        $cand->commercials_formatted = $candCommercialsFormatted;
 
         // 2. Notice period formatting
         $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
@@ -8403,37 +8459,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $cand->report_company_name = $companyName;
         $cand->report_company_logo = $companyLogo;
 
-        // 7. Email templates (Elasticsearch with fallback)
-        try {
-            $params = [
-                'index' => ELASTIC_EMAIL_TEMPLATE,
-                'body' => [
-                    'size' => 1000,
-                    'query' => [
-                        'bool' => [
-                            'must' => [
-                                ['term' => ['status' => 1]],
-                                ['match' => ['temptype' => 1]],
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-            $response = $this->elasticService->getClient()->search($params);
-            $templateData = collect($response['hits']['hits'] ?? [])->map(function ($hit) {
-                $src = (object) $hit['_source'];
-                if (! isset($src->id) && isset($src->e_temp_id)) { $src->id = $src->e_temp_id; }
-                return $src;
-            });
-        } catch (\Throwable $e) {
-            $templateData = collect();
-        }
-        if ($templateData->isEmpty()) {
-            $templateData = DB::table('th_email_template')->where('status', 1)->where('temptype', 1)->get()->map(function ($row) {
-                $row->id = $row->e_temp_id;
-                return $row;
-            });
-        }
+        // 7. Email templates - Custom company templates removed per requirements
+        $templateData = collect();
 
         // 8. Internal team & client contacts
         $assignDataone = DB::table('users')
