@@ -1,6 +1,17 @@
 @php
-$data   = is_object($data) ? get_object_vars($data) : $data;
-$skills = $data['candidate_skills'] ?? [];
+$data      = is_object($data) ? get_object_vars($data) : (array) $data;
+$rawSkills = $data['candidate_skills'] ?? [];
+if (is_string($rawSkills)) {
+    $skills = array_values(array_filter(array_map('trim', explode(',', $rawSkills))));
+} elseif (is_object($rawSkills)) {
+    $skills = array_values((array) $rawSkills);
+} elseif (is_array($rawSkills)) {
+    $skills = array_values(array_filter(array_map(function ($s) {
+        return is_string($s) ? trim($s) : (string) $s;
+    }, $rawSkills)));
+} else {
+    $skills = [];
+}
 @endphp
 
 {!! @$data['message'] !!}
