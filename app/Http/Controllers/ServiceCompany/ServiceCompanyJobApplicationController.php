@@ -2518,8 +2518,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
         try {
             $payload = Cache::remember('company_logo_proxy:'.$cid.':'.md5($logo), 3600, function () use ($logo) {
-                // Intent: Cache logo bytes by company/logo value so 10K logo exports
-                // do not become 10K repeated remote image fetches.
+                // 1. Authoritative Cloudflare R2 disk read
+                $r2Key = '';
+                if (str_starts_with($logo, 'https://file.jero.works/')) {
+                    $r2Key = ltrim((string) parse_url($logo, PHP_URL_PATH), '/');
+                } elseif (! filter_var($logo, FILTER_VALIDATE_URL)) {
+                    $r2Key = ltrim($logo, '/');
+                }
+
+                if (! empty($r2Key)) {
+                    try {
+                        if (\Storage::disk('r2')->exists($r2Key)) {
+                            $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION));
+                            $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                            $ct = $map[$ext] ?? 'image/png';
+                            return ['body' => \Storage::disk('r2')->get($r2Key), 'content_type' => $ct];
+                        }
+                    } catch (\Throwable $r2Err) {
+                        \Log::warning('R2 logo fetch warning: '.$r2Err->getMessage());
+                    }
+                }
+
+                // 2. Remote HTTP fetch fallback
                 $resp = \Illuminate\Support\Facades\Http::timeout(8)->withOptions(['verify' => false])->get($logo);
                 if (! $resp->successful() || strlen($resp->body()) > 1024 * 1024) {
                     return null;
