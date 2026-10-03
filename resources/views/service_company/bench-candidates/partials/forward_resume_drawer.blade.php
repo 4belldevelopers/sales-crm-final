@@ -793,7 +793,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         </svg>
       </div>
       <div class="bench-mm-header-text">
-        <h3 class="bench-mm-header-title">Forward Candidate Resume</h3>
+        <h3 class="bench-mm-header-title">Forward In-House Talent Resume</h3>
         <p class="bench-mm-header-subtitle">Send candidate profile and formatted dossier to client or hiring stakeholder.</p>
       </div>
     </div>
