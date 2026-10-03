@@ -34,7 +34,7 @@
   var rsResumeBytesCache = {};
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SVG ICONS FOR PRE-SCREENED REPORT DOSSIER (pdfMake - Exact CV Tracker Replica)
+  // SVG ICONS FOR IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - Exact CV Tracker Replica)
   // ═══════════════════════════════════════════════════════════════════════════
   var rsStarGold = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
   var rsStarMuted = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
@@ -314,7 +314,7 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PRE-SCREENED REPORT DOSSIER (pdfMake - Exact CV Tracker 100% Replica)
+  // IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - Exact CV Tracker 100% Replica)
   // ═══════════════════════════════════════════════════════════════════════════
   function headerCard(companyName, logoCell, reportDate, captainName) {
     return {
@@ -871,11 +871,11 @@
     } else if (pdfBlobOrBytes instanceof Uint8Array) {
       arrayBuffer = pdfBlobOrBytes.buffer;
     } else {
-      throw new Error('Candidate resume is not in PDF format. Merged branding requires a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+      throw new Error('Candidate resume is not in PDF format. Merged branding requires a PDF resume. Please select Option 5 (In-House Evaluation Report PDF) or Option 1 (Original Resume).');
     }
 
     if (!isPdfBytes(new Uint8Array(arrayBuffer))) {
-      throw new Error('Candidate resume is not in PDF format. Merged branding requires a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+      throw new Error('Candidate resume is not in PDF format. Merged branding requires a PDF resume. Please select Option 5 (In-House Evaluation Report PDF) or Option 1 (Original Resume).');
     }
 
     var resumeDoc = await PDFLib.PDFDocument.load(arrayBuffer);
@@ -1036,7 +1036,7 @@
 
     var rBytes = await resumeBlob.arrayBuffer();
     if (!isPdfBytes(rBytes)) {
-      throw new Error('Candidate resume is not in PDF format. Merged packages require a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+      throw new Error('Candidate resume is not in PDF format. Merged packages require a PDF resume. Please select Option 5 (In-House Evaluation Report PDF) or Option 1 (Original Resume).');
     }
     var rDoc = await PDFLib.PDFDocument.load(rBytes);
     var resumePages = rDoc.getPages();
@@ -1657,13 +1657,13 @@
       return origBlob;
     }
 
-    // Option 5: Pre-Screened Report PDF Dossier (Bench Specific!)
+    // Option 5: In-House Evaluation Report PDF Dossier (Bench Specific!)
     if (optId === 5) {
-      notify(25, 'Assembling pre-screen dossier...', 'Compiling RM comments and talent skills...');
+      notify(25, 'Assembling in-house evaluation report...', 'Compiling RM comments and talent skills...');
       notify(65, 'Assembling high-resolution document...', 'Client-side document engine compiling high-resolution vector PDF...');
       var reportBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       reportBlob.filename = 'Prescreen_Report_' + safeName + '.pdf';
-      notify(100, 'Pre-screen dossier ready!', 'Document ready to send');
+      notify(100, 'In-house evaluation report ready!', 'Document ready to send');
       return reportBlob;
     }
 
@@ -1681,9 +1681,9 @@
       return brandedBlob;
     }
 
-    // Option 42: Pre-Screened Report + Branded Resume
+    // Option 42: In-House Evaluation Report + Branded Resume
     if (optId === 42) {
-      notify(20, 'Generating pre-screen dossier...', 'Rendering RM comments and talent skills...');
+      notify(20, 'Generating in-house evaluation report...', 'Rendering RM comments and talent skills...');
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       notify(45, 'Fetching candidate resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
@@ -1699,9 +1699,9 @@
       return merged;
     }
 
-    // Option 43: Pre-Screened Report + Unbranded Resume
+    // Option 43: In-House Evaluation Report + Unbranded Resume
     if (optId === 43) {
-      notify(20, 'Generating pre-screen dossier...', 'Rendering RM comments without company branding...');
+      notify(20, 'Generating in-house evaluation report...', 'Rendering RM comments without company branding...');
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
       notify(50, 'Fetching candidate resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
@@ -1752,7 +1752,7 @@
       }
 
       if (optId === 46) {
-        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        notify(30, 'Generating in-house evaluation report...', 'Compiling RM comments and talent skills...');
         var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
         notify(75, 'Applying company branding...', 'Injecting organization banner...');
         var pdfBytes = new Uint8Array(await highlightedBlob.arrayBuffer());
@@ -1822,7 +1822,7 @@
       }
 
       if (optId === 51) {
-        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        notify(30, 'Generating in-house evaluation report...', 'Compiling RM comments and talent skills...');
         var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
         notify(85, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
         var merged = await mergeDossierAndResume(repBlob, anonymizedBlob);
@@ -1847,7 +1847,7 @@
         // selectable text layer). Anonymization rasterizes pages via canvas→jsPDF, destroying
         // the text layer. If we anonymize first, buildTurboVectorHighlightedResume finds no
         // text to highlight. Correct order: highlight → anonymize → brand → merge.
-        notify(30, 'Generating pre-screen dossier...', 'Compiling RM comments and talent skills...');
+        notify(30, 'Generating in-house evaluation report...', 'Compiling RM comments and talent skills...');
         var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
 
         // Step 1: Highlight evaluated skills on the ORIGINAL (pre-anonymization) PDF
@@ -1892,7 +1892,7 @@
       if (optId === 54) {
         // Pipeline: Highlight → Anonymize → Merge with UNBRANDED dossier (no company logo)
         // Same as option 53 but without applying company branding header or logo anywhere.
-        notify(30, 'Generating unbranded pre-screen dossier...', 'Compiling RM comments without company logo...');
+        notify(30, 'Generating unbranded in-house evaluation report...', 'Compiling RM comments without company logo...');
         var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
 
         // Step 1: Highlight evaluated skills on the ORIGINAL (pre-anonymization) PDF
@@ -1931,7 +1931,7 @@
     }
 
     // Options Fallback: Generate branded dossier + original resume package
-    notify(20, 'Generating pre-screen dossier...', 'Preparing candidate dossier...');
+    notify(20, 'Generating in-house evaluation report...', 'Preparing candidate dossier...');
     var dossier = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
     notify(50, 'Fetching candidate resume...', 'Reading original resume...');
     var raw = await fetchCandidateResumeBytes(cand);
