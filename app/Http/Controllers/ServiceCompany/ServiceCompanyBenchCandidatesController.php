@@ -8547,6 +8547,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $companyRow = DB::table('companies')->select('company_name')->where('id', $companyId)->first();
         $companyNameStr = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
 
+        // Register multi-recipient ref-counter in Cache so files are not prematurely unlinked across queue workers
+        $recipientCount = max(1, count($to));
+        if (! empty($attachments) && is_array($attachments)) {
+            foreach ($attachments as $attItem) {
+                if (! empty($attItem['is_local']) && ! empty($attItem['path'])) {
+                    \Cache::put('temp_att_ref:'.md5($attItem['path']), $recipientCount, now()->addHours(2));
+                }
+            }
+        }
+
+        $candidateSkillsArray = [];
+        if (! empty($candidate->skills)) {
+            if (is_array($candidate->skills)) {
+                $candidateSkillsArray = $candidate->skills;
+            } else {
+                $candidateSkillsArray = array_values(array_filter(array_map('trim', explode(',', (string) $candidate->skills))));
+            }
+        }
+
         // Dispatch queued mail job per recipient
         foreach ($to as $key => $mailto) {
             $hrName = 'Hiring Team';
@@ -8572,7 +8591,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'company_name' => $companyNameStr,
                 'consultant_name' => auth()->user()->name ?? 'Recruiter',
                 'position' => $candidate->current_designation ?? 'Candidate',
-                'candidate_skills' => $candidate->skills ?? '',
+                'candidate_skills' => $candidateSkillsArray,
             ];
 
             if ($checkMailPermision) {
