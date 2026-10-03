@@ -555,30 +555,30 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <select name="attached_cv_format" id="bench_fwd_resume_format" class="bench-mm-select" style="font-weight:500;" onchange="onBenchFwdFormatChange(this)">
           <option value="" selected disabled>Select Resume Format...</option>
           <optgroup label="1. Standard Resume Options">
-            <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1. Original Resume (Default)</option>
-            <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">41. Resume + Company Branding</option>
+            <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1.a Original Resume (Default)</option>
+            <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">1.b Resume + Company Branding</option>
           </optgroup>
           <optgroup label="2. In-House Evaluation Report">
-            <option value="5" data-label="In-House Evaluation Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">5. In-House Evaluation Report PDF</option>
+            <option value="5" data-label="In-House Evaluation Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">2.a In-House Evaluation Report PDF</option>
           </optgroup>
           <optgroup label="3. Recruiter Packages (Report + Resume)">
-            <option value="42" data-label="In-House Evaluation Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the in-house evaluation report first, followed by the candidate resume with company branding.">42. In-House Evaluation Report + Resume + Company Branding</option>
-            <option value="43" data-label="In-House Evaluation Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">43. In-House Evaluation Report + Resume without Company Branding</option>
+            <option value="42" data-label="In-House Evaluation Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the in-house evaluation report first, followed by the candidate resume with company branding.">3.a In-House Evaluation Report + Resume + Company Branding</option>
+            <option value="43" data-label="In-House Evaluation Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">3.b In-House Evaluation Report + Resume without Company Branding</option>
           </optgroup>
           <optgroup label="4. Highlighted Skills">
-            <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">44. Resume + Highlighted Keywords</option>
-            <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">45. Resume + Highlighted Keywords + Company Branding</option>
-            <option value="46" data-label="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills.">46. In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</option>
-            <option value="47" data-label="In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">47. In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding</option>
+            <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">4.a Resume + Highlighted Keywords</option>
+            <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">4.b Resume + Highlighted Keywords + Company Branding</option>
+            <option value="46" data-label="In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: in-house evaluation report, branded resume pages, and highlighted job-matching skills.">4.c In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</option>
+            <option value="47" data-label="In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">4.d In-House Evaluation Report + Resume + Highlighted Keywords without Company Branding</option>
           </optgroup>
           <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
-            <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">48. Hide Contact Details</option>
-            <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">49. Hide Candidate Name & Contacts Details</option>
-            <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">50. Hide Contact Details + Company Branding</option>
-            <option value="51" data-label="Hide Contact Details + In-House Evaluation Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the in-house evaluation report.">51. Hide Contact Details + In-House Evaluation Report (Branded)</option>
-            <option value="52" data-label="Hide Contact Details + In-House Evaluation Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">52. Hide Contact Details + In-House Evaluation Report without Company Branding</option>
-            <option value="53" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and in-house evaluation report dossier.">53. Hide Contact Details + In-House Evaluation Report + Highlighted Keywords</option>
-            <option value="54" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and in-house evaluation report dossier — no branding applied.">54. Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding</option>
+            <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">5.a Hide Contact Details</option>
+            <option value="49" data-label="Hide Candidate Name & Contacts Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">5.b Hide Candidate Name & Contacts Details</option>
+            <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">5.c Hide Contact Details + Company Branding</option>
+            <option value="51" data-label="Hide Contact Details + In-House Evaluation Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the in-house evaluation report.">5.d Hide Contact Details + In-House Evaluation Report (Branded)</option>
+            <option value="52" data-label="Hide Contact Details + In-House Evaluation Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">5.e Hide Contact Details + In-House Evaluation Report without Company Branding</option>
+            <option value="53" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding" data-desc="Full privacy package: masked contacts, highlighted skills, in-house evaluation report dossier, and company branding banner.">5.f Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding</option>
+            <option value="54" data-label="Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and in-house evaluation report dossier — no branding applied.">5.g Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding</option>
           </optgroup>
         </select>
 
@@ -589,7 +589,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
             <div id="bench_fwd_missing_resume_banner" style="margin-bottom:8px;padding:8px 12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;display:flex;align-items:center;gap:8px;">
               <span style="color:#D97706;font-size:14px;flex-shrink:0;">⚠</span>
               <div style="font-size:11.5px;color:#92400E;line-height:1.35;">
-                <strong>Resume Notice:</strong> Candidate has no resume document uploaded. You can attach using Option 5 (In-House Evaluation Report) or upload a CV.
+                <strong>Resume Notice:</strong> Candidate has no resume document uploaded. You can attach using Option 2.a (In-House Evaluation Report) or upload a CV.
               </div>
             </div>
           @endif
@@ -1024,8 +1024,8 @@ function onBenchFwdFormatChange(sel) {
         Swal.fire({
             icon: 'warning',
             title: 'Resume Missing',
-            text: 'This candidate has no uploaded resume document. Please select Option 5 (In-House Evaluation Report PDF) to forward their candidate profile dossier.',
-            confirmButtonText: 'Select Option 5',
+            text: 'This candidate has no uploaded resume document. Please select Option 2.a (In-House Evaluation Report PDF) to forward their candidate profile dossier.',
+            confirmButtonText: 'Select Option 2.a',
             showCancelButton: true,
             cancelButtonText: 'Cancel'
         }).then(function(result) {
@@ -1171,15 +1171,15 @@ async function triggerBenchResumeCompilation(optId) {
         }
 
         $('#bench_fwd_compile_status_text').text('Compilation notice: ' + (compileErr.message || 'Processing Error')).css('color', '#DC2626');
-        $('#bench_fwd_compile_step_detail').text('Please choose another format or continue with Option 1.');
+        $('#bench_fwd_compile_step_detail').text('Please choose another format or continue with Option 1.a.');
         $('#bench_fwd_cand_status_badge').html('⚠ Conversion Issue').css({ background: '#FEE2E2', color: '#DC2626' });
 
         Swal.fire({
             icon: 'warning',
             title: 'Format Notice',
-            text: 'We encountered an issue preparing format #' + optId + ' (' + (compileErr.message || 'Processing Error') + '). Would you like to use Option 1 (Original Resume) or Option 5 (In-House Evaluation Report) instead?',
+            text: 'We encountered an issue preparing format #' + optId + ' (' + (compileErr.message || 'Processing Error') + '). Would you like to use Option 1.a (Original Resume) or Option 2.a (In-House Evaluation Report) instead?',
             showCancelButton: true,
-            confirmButtonText: 'Use Option 1 (Original)',
+            confirmButtonText: 'Use Option 1.a (Original)',
             cancelButtonText: 'Select Format'
         }).then(function(result) {
             if (result.isConfirmed) {
@@ -1221,7 +1221,7 @@ async function onBenchFwdSubmitClick(e) {
 
     var candHasResume = @json(!empty($cand->has_resume));
     if (!candHasResume && formatId !== 5) {
-        Swal.fire('Resume Missing', 'This candidate does not have an uploaded resume file to merge. Please select "Option 5: In-House Evaluation Report PDF" to generate their standalone dossier.', 'warning');
+        Swal.fire('Resume Missing', 'This candidate does not have an uploaded resume file to merge. Please select "Option 2.a: In-House Evaluation Report PDF" to generate their standalone dossier.', 'warning');
         return;
     }
 
