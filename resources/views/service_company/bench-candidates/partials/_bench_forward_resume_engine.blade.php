@@ -312,7 +312,7 @@
               },
               {
                 stack: [
-                  { text: 'PRE-SCREENED CANDIDATE REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE BENCH PROFILE', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [10, 14, 14, 10],
@@ -337,7 +337,7 @@
             body: [[
               {
                 stack: [
-                  { text: 'PRE-SCREENED CANDIDATE REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE BENCH PROFILE', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [14, 14, 14, 10],
@@ -441,7 +441,7 @@
     ];
     skills = (skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).slice(0, 7);
     if (!skills.length) {
-      rows.push([{ text: 'No skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
+      rows.push([{ text: 'No talent skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
       return rows;
     }
     skills.forEach(function (skill) {
@@ -470,10 +470,10 @@
       { label: 'EMAIL ID', key: 'email id', fallbackKey: 'email verified', icon: rsIconEmail },
       { label: 'PHONE NUMBER', key: 'phone number', fallbackKey: 'phone verified', icon: rsIconPhone },
       { label: 'LINKEDIN ID', key: 'linkedin id', fallbackKey: 'linkedin verified', icon: rsIconLinkedin },
-      { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
+      { label: 'EXPERIENCE', key: 'experience', fallbackKey: 'experience verified', icon: rsIconExperience }
     ];
     var cells = slots.map(function (row) {
-      var status = map[row.key] || map[row.fallbackKey] || '-';
+      var status = (row.key === 'experience') ? 'Verified' : (map[row.key] || map[row.fallbackKey] || '-');
       if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
       var verified = /verified|confirmed|completed|shared/i.test(status);
       var isBlank = (status === '-' || status === '--' || !status);
@@ -502,10 +502,10 @@
   function buildDefinition(data, logoUri, options) {
     options = options || {};
     var noBranding = options.noBranding === true;
-    var score = safeNumber(data.match, 0, 100);
+    var score = 100; // Bench talent profile hiring confidence is always 100% (no JD matching parameters)
     var summary = limitText(data.careerSummary, 560, 'Experienced professional with demonstrated track record of technical delivery and engineering excellence.');
     var noteMissing = isGap(data.recruiterNote);
-    var note = noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote, 420, '');
+    var note = noteMissing ? 'No relationship manager comments available.' : limitText(data.recruiterNote, 420, '');
     var rawNotice = data.notice || data.noticePeriod;
     var joining = data.isImmediate ? 'Immediate' : (clean(rawNotice, 'Immediate') === '--' ? 'Immediate' : clean(rawNotice, 'Immediate'));
     var companyName = clean(data.reportCompanyName, 'Hiring Partner');
@@ -574,12 +574,12 @@
         {
           columns: [
             fixedPanel([sectionTitle('EXECUTIVE SUMMARY', false, rsIconSummary), { text: summary, style: 'body' }], [0, 0, 6, 8], '#ffffff', '#dbe3ef', 148),
-            fixedPanel([sectionTitle('RECRUITER COMMENTS', false, rsIconNote), { text: note, style: 'body', color: noteMissing ? '#64748b' : '#1f2937', italics: noteMissing }], [6, 0, 0, 8], '#ffffff', '#dbe3ef', 148)
+            fixedPanel([sectionTitle('RELATIONSHIP MANAGER COMMENTS', false, rsIconNote), { text: note, style: 'body', color: noteMissing ? '#64748b' : '#1f2937', italics: noteMissing }], [6, 0, 0, 8], '#ffffff', '#dbe3ef', 148)
           ],
           columnGap: 0
         },
         roundedFullCard([
-          sectionTitle('SKILL INTELLIGENCE', false, rsIconSkill),
+          sectionTitle('TALENT SKILL INTELLIGENCE', false, rsIconSkill),
           {
             table: {
               widths: ['*', 100, 78],
@@ -708,22 +708,13 @@
       if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
       else validation.push({ label: 'LINKEDIN ID', status: '-' });
 
-      validation.push({ label: 'JOB DESCRIPTION', status: 'Shared with candidate' });
+      validation.push({ label: 'EXPERIENCE', status: 'Verified' });
     }
 
     var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
 
-    var matchScore = 0;
-    if (candidate.match !== undefined && candidate.match !== null && candidate.match !== '') {
-      matchScore = safeNumber(candidate.match, 0, 100);
-    } else if (candidate.skill_match !== undefined && candidate.skill_match !== null && candidate.skill_match !== '') {
-      matchScore = safeNumber(candidate.skill_match, 0, 100);
-    } else if (candidate.rating) {
-      matchScore = Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20));
-    } else {
-      matchScore = 85;
-    }
+    var matchScore = 100; // Bench talent hiring confidence score is always 100% as there is no matching parameter and JD
 
     var rawNotice = candidate.notice || candidate.notice_period || candidate.availability;
     if (!rawNotice && candidate.np_id) {
