@@ -8371,7 +8371,35 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // 6. Company branding
         $companyRow = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', $companyId)->first();
         $companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
-        $companyLogo = ($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '';
+        $companyLogoDataUri = '';
+        if ($companyRow && ! empty($companyRow->logo)) {
+            $rawLogo = (string) $companyRow->logo;
+            $r2Key = '';
+            if (str_starts_with($rawLogo, 'https://file.jero.works/')) {
+                $r2Key = ltrim((string) parse_url($rawLogo, PHP_URL_PATH), '/');
+            } elseif (! filter_var($rawLogo, FILTER_VALIDATE_URL)) {
+                $r2Key = ltrim($rawLogo, '/');
+            }
+
+            if (! empty($r2Key)) {
+                try {
+                    if (\Storage::disk('r2')->exists($r2Key)) {
+                        $bytes = \Storage::disk('r2')->get($r2Key);
+                        $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION)) ?: 'png';
+                        $mime = match ($ext) {
+                            'jpg', 'jpeg' => 'image/jpeg',
+                            'gif' => 'image/gif',
+                            'svg' => 'image/svg+xml',
+                            default => 'image/png',
+                        };
+                        $companyLogoDataUri = 'data:'.$mime.';base64,'.base64_encode($bytes);
+                    }
+                } catch (\Throwable $r2LogoErr) {
+                    \Log::warning('[Bench Candidates Logo] R2 fetch error: '.$r2LogoErr->getMessage());
+                }
+            }
+        }
+        $companyLogo = $companyLogoDataUri ?: (($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '');
         $cand->report_company_name = $companyName;
         $cand->report_company_logo = $companyLogo;
 
