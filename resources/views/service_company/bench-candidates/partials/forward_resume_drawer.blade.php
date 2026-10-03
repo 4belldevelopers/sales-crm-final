@@ -1004,6 +1004,16 @@ async function onBenchFwdSubmitClick(e) {
         return;
     }
 
+    var candHasResume = @json(!empty($cand->has_resume));
+    if (!candHasResume && formatId === 1) {
+        Swal.fire('Resume Missing', 'This candidate does not have an original resume uploaded. Please select "Option 5: Pre-Screened Report PDF" to generate and forward their dossier.', 'warning');
+        return;
+    }
+    if (!candHasResume && formatId !== 5) {
+        Swal.fire('Resume Missing', 'This candidate does not have an uploaded resume file to merge. Please select "Option 5: Pre-Screened Report PDF" to generate their standalone dossier.', 'warning');
+        return;
+    }
+
     var bodyHtml = '';
     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['bench_editor1']) {
         bodyHtml = CKEDITOR.instances['bench_editor1'].getData();
@@ -1134,9 +1144,17 @@ function closeBenchFwdResumeDrawer() {
     var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
     if (drawerEl && typeof KTDrawer !== 'undefined') {
         var drawer = KTDrawer.getInstance(drawerEl);
-        if (drawer) { drawer.hide(); return; }
+        if (drawer) { 
+            drawer.hide(); 
+            return; 
+        }
     }
     $('#kt_bench_fwd_resume_drawer').removeClass('drawer-on');
-    $('.drawer-overlay').remove();
+    var overlays = $('.drawer-overlay');
+    if (overlays.length > 1) {
+        overlays.last().remove();
+    } else if (!$('#kt_activitiesBenchApplication').hasClass('drawer-on')) {
+        overlays.remove();
+    }
 }
 </script>

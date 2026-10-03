@@ -373,10 +373,19 @@
     });
   }
 
+  function isPdfBytes(bytes) {
+    if (!bytes || bytes.length < 4) return false;
+    var u = (bytes instanceof Uint8Array) ? bytes : new Uint8Array(bytes);
+    return u[0] === 0x25 && u[1] === 0x50 && u[2] === 0x44 && u[3] === 0x46; // %PDF
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPANY BRANDING HEADER MERGER (PDFLib)
   // ═══════════════════════════════════════════════════════════════════════════
   async function addCompanyBrandingHeader(pdfBytes, companyName) {
+    if (!isPdfBytes(pdfBytes)) {
+      throw new Error('Candidate resume is not in PDF format. Merged branding requires a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+    }
     await ensurePdfLib();
     var PDFLib = window.PDFLib;
     var doc = await PDFLib.PDFDocument.load(pdfBytes);
@@ -463,6 +472,9 @@
 
     if (resumeBlob) {
       var rBytes = await resumeBlob.arrayBuffer();
+      if (!isPdfBytes(rBytes)) {
+        throw new Error('Candidate resume is not in PDF format. Merged packages require a PDF resume. Please select Option 5 (Pre-Screened Report PDF) or Option 1 (Original Resume).');
+      }
       var rDoc = await PDFLib.PDFDocument.load(rBytes);
       var rPages = await targetDoc.copyPages(rDoc, rDoc.getPageIndices());
       rPages.forEach(function (p) { targetDoc.addPage(p); });
@@ -484,8 +496,10 @@
     // Option 1: Original candidate resume
     if (optId === 1) {
       var rawBytes = await fetchCandidateResumeBytes(cand);
-      var origBlob = new Blob([rawBytes], { type: 'application/pdf' });
-      origBlob.filename = 'Jeroworks_' + safeName + '.pdf';
+      var ext = (cand.resume_filename && cand.resume_filename.split('.').pop().toLowerCase()) || 'pdf';
+      var mimeType = (ext === 'docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : ((ext === 'doc') ? 'application/msword' : 'application/pdf');
+      var origBlob = new Blob([rawBytes], { type: mimeType });
+      origBlob.filename = 'Jeroworks_' + safeName + '.' + ext;
       return origBlob;
     }
 
