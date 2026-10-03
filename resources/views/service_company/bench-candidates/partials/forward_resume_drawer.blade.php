@@ -582,38 +582,19 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           </optgroup>
         </select>
 
-        <!-- Format Details Section -->
-        <div id="bench_fwd_format_details_section" style="display:none;">
-          <!-- Format Preview Card -->
-          <div id="bench_fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-              <span style="width:26px;height:26px;border-radius:6px;background:#E2E8F0;color:#475569;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
-              <div style="min-width:0;">
-                <div id="bench_fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Select Resume Format
-                </div>
-                <div id="bench_fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
-                  Choose a resume format above to attach candidate resume.
-                </div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <span style="font-size:11px;font-weight:600;color:#15803D;background:#DCFCE7;padding:3px 9px;border-radius:12px;white-space:nowrap;">
-                📎 1 Resume Attached
-              </span>
-            </div>
-          </div>
+        <!-- Format Details Section: Unified Single Enterprise Attachment & Progress Card -->
+        <div id="bench_fwd_format_details_section" style="display:none;margin-top:8px;">
 
           @if(!empty($cand) && empty($cand->has_resume))
-            <div id="bench_fwd_missing_resume_banner" style="margin-top:10px;padding:9px 13px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;display:flex;align-items:center;gap:10px;">
-              <span style="color:#D97706;font-size:16px;flex-shrink:0;">⚠</span>
-              <div style="font-size:12px;color:#92400E;line-height:1.4;">
+            <div id="bench_fwd_missing_resume_banner" style="margin-bottom:8px;padding:8px 12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;display:flex;align-items:center;gap:8px;">
+              <span style="color:#D97706;font-size:14px;flex-shrink:0;">⚠</span>
+              <div style="font-size:11.5px;color:#92400E;line-height:1.35;">
                 <strong>Resume Notice:</strong> Candidate has no resume document uploaded. You can attach using Option 5 (In-House Evaluation Report) or upload a CV.
               </div>
             </div>
           @endif
 
-          <!-- Candidate Card Roster -->
+          <!-- Unified Single Master Attachment & Progress Card -->
           @if($cand)
             @php
               $hasResume = !empty($cand->has_resume);
@@ -622,69 +603,66 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
               $candDesignation = $cand->current_designation ?? 'Inhouse Talent';
               $candResumeUrl = $cand->resume_r2_url ?? ($cand->resume_url ?? ($cand->download_url ?? ''));
             @endphp
-            <div id="bench_fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="margin-top:10px;padding:10px 14px;background:{{ $hasResume ? '#F0FDF4' : '#FFFBEB' }};border:1px solid {{ $hasResume ? '#BBF7D0' : '#FDE68A' }};border-radius:8px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-                  <span style="width:30px;height:30px;border-radius:7px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">
-                    1
+            <div id="bench_fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="position:relative;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s ease;">
+              
+              <!-- Card Body -->
+              <div style="padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                
+                <!-- Left: Badge + Candidate Meta + Filename -->
+                <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1;">
+                  <span style="width:30px;height:30px;border-radius:6px;background:#F1F5F9;border:1px solid #E2E8F0;color:#0F766E;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">
+                    PDF
                   </span>
                   <div style="min-width:0;flex:1;">
-                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-                      <span style="font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+                      <span style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         {{ $candDisplayName }}
                       </span>
-                      <span style="font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      <span style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                         • {{ $candDesignation }}
                       </span>
                     </div>
-                    <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                      @if($hasResume)
-                        <a href="javascript:void(0)" onclick="openBenchOriginalResume({{ $cand->id }})" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to view original resume">
-                          📄 Jeroworks_{{ $candSafeName }}.pdf <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </a>
-                      @else
-                        <span>No resume uploaded</span>
-                      @endif
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+                      <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#059669' : '#B45309' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        @if($hasResume)
+                          <a href="javascript:void(0)" onclick="openBenchOriginalResume({{ $cand->id }})" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:3px;" title="Click to view resume">
+                            📄 Jeroworks_{{ $candSafeName }}.pdf <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          </a>
+                        @else
+                          <span>No resume uploaded</span>
+                        @endif
+                      </div>
+                      <span id="bench_fwd_compile_step_detail" style="display:none;font-size:10.5px;color:#0D9488;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
                     </div>
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <!-- Right: Action Buttons & Live Status -->
+                <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
                   @if($hasResume)
-                    <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:4px 10px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View original resume document">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold" onclick="openBenchOriginalResume({{ $cand->id }})" style="font-size:11px;padding:3px 9px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;" title="View candidate resume">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                       View CV
                     </button>
                   @endif
-                  <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                  <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
                     {{ $hasResume ? '1 Resume Available' : '⚠ No Resume' }}
                   </div>
                 </div>
               </div>
+
+              <!-- Sleek Integrated 3px Baseline Progress Bar -->
+              <div id="bench_fwd_compile_progress_container" style="display:none;height:3px;width:100%;background:#F1F5F9;overflow:hidden;">
+                <div id="bench_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #10B981);transition:width 0.25s ease;"></div>
+              </div>
+              
+              <!-- Compatibility hidden anchors -->
+              <span id="bench_fwd_compile_status_text" style="display:none;"></span>
+              <span id="bench_fwd_compile_pct_badge" style="display:none;"></span>
+              <span id="bench_fwd_preview_format_title" style="display:none;"></span>
+              <span id="bench_fwd_preview_desc" style="display:none;"></span>
             </div>
           @endif
-
-          <!-- Master Resume Compilation Progress Bar -->
-          <div id="bench_fwd_compile_progress_container" style="display:none;margin-top:10px;padding:11px 14px;background:#F0FDFA;border:1px solid #99F6E4;border-radius:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                <span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;color:#0D9488!important;display:inline-block;"></span>
-                <span id="bench_fwd_compile_status_text" style="font-size:12px;font-weight:600;color:#0F766E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                  Preparing custom resume attachment...
-                </span>
-              </div>
-              <span id="bench_fwd_compile_pct_badge" style="font-size:12px;font-weight:700;color:#0D9488;background:#CCFBF1;padding:2px 8px;border-radius:10px;border:1px solid #99F6E4;flex-shrink:0;">
-                0%
-              </span>
-            </div>
-            <div style="height:7px;width:100%;background:#CCFBF1;border-radius:4px;overflow:hidden;">
-              <div id="bench_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #059669);border-radius:4px;transition:width 0.25s ease;"></div>
-            </div>
-            <div style="font-size:11px;color:#115E59;margin-top:5px;display:flex;align-items:center;justify-content:space-between;">
-              <span id="bench_fwd_compile_step_detail">Client-side document engine compiling high-resolution vector PDF...</span>
-              <span>1 / 1</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1078,14 +1056,14 @@ async function triggerBenchResumeCompilation(optId) {
     }
 
     $('#bench_fwd_compile_progress_container').show();
-    $('#bench_fwd_compile_progress_bar').css('width', '20%');
+    $('#bench_fwd_compile_progress_bar').css({ width: '20%', background: 'linear-gradient(90deg, #0D9488, #10B981)' });
     $('#bench_fwd_compile_pct_badge').text('20%');
-    $('#bench_fwd_compile_status_text').text('Assembling high-resolution document...').css('color', '#0F766E');
-    $('#bench_fwd_compile_step_detail').text('Client-side document engine compiling high-resolution vector PDF...');
+    $('#bench_fwd_compile_status_text').text('Compiling document...').css('color', '#0F766E');
+    $('#bench_fwd_compile_step_detail').text('Compiling document...').show();
 
     $('#bench_fwd_cand_status_badge')
-        .html('<span class="spinner-border spinner-border-sm" style="width:11px;height:11px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:4px;"></span> Compiling...')
-        .css({ background: '#F0FDFA', color: '#0F766E' });
+        .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> 20%')
+        .css({ background: '#F0FDFA', color: '#0F766E', borderColor: '#99F6E4' });
 
     try {
         var candObj = @json($cand ?? []);
@@ -1110,12 +1088,14 @@ async function triggerBenchResumeCompilation(optId) {
                 if (pct !== undefined) {
                     $('#bench_fwd_compile_progress_bar').css('width', pct + '%');
                     $('#bench_fwd_compile_pct_badge').text(pct + '%');
+                    $('#bench_fwd_cand_status_badge')
+                        .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> ' + pct + '%')
+                        .css({ background: '#F0FDFA', color: '#0F766E', borderColor: '#99F6E4' });
                 }
-                if (statusText) {
-                    $('#bench_fwd_compile_status_text').text(statusText);
-                }
-                if (stepDetail) {
-                    $('#bench_fwd_compile_step_detail').text(stepDetail);
+                if (statusText || stepDetail) {
+                    var msg = statusText || stepDetail;
+                    $('#bench_fwd_compile_status_text').text(msg);
+                    $('#bench_fwd_compile_step_detail').text(msg).show();
                 }
             }
         );
@@ -1138,10 +1118,10 @@ async function triggerBenchResumeCompilation(optId) {
         _benchIsCompiling = false;
 
         // Progress bar 100%
-        $('#bench_fwd_compile_progress_bar').css('width', '100%');
+        $('#bench_fwd_compile_progress_bar').css({ width: '100%', background: '#10B981' });
         $('#bench_fwd_compile_pct_badge').text('100%');
         $('#bench_fwd_compile_status_text').text('✓ Document compiled successfully!').css('color', '#059669');
-        $('#bench_fwd_compile_step_detail').text('Attached & ready to send via email');
+        $('#bench_fwd_compile_step_detail').hide();
         
         var previewUrl = null;
         try {
@@ -1167,7 +1147,7 @@ async function triggerBenchResumeCompilation(optId) {
 
         $('#bench_fwd_cand_status_badge')
             .html('✓ Attached (100%)')
-            .css({ background: '#DCFCE7', color: '#15803D' });
+            .css({ background: '#DCFCE7', color: '#15803D', borderColor: '#BBF7D0' });
 
         // Enable Send Email button now that conversion is complete!
         if (btn) {
