@@ -7603,6 +7603,28 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
     }
 
     /**
+     * Intent: Detect available LibreOffice / soffice binary for headless DOCX to PDF conversion.
+     */
+    private function benchSofficeBinary(): ?string
+    {
+        $candidates = [
+            config('services.soffice.path'),
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+            '/usr/bin/soffice',
+            '/usr/bin/libreoffice',
+            '/opt/libreoffice/program/soffice',
+        ];
+        foreach ($candidates as $c) {
+            if ($c && @file_exists($c)) {
+                return $c;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Intent: Stream raw candidate resume document bytes for WASM compilation / client engine.
      * Tenancy: Validates candidate ownership against authenticated company or third-party company.
      */
@@ -7630,12 +7652,82 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         abort_if(empty($hashname), 404, 'No resume document uploaded for this candidate.');
 
-        // Intent: Direct browser viewing / redirection support for new tab preview
-        if ((request('redirect') || (request()->header('Accept') && str_contains(request()->header('Accept'), 'text/html'))) && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
-            return redirect()->away($hashname);
+        // Intent: Stream pre-converted vector PDF from Cloudflare R2 when requested
+        if (request()->boolean('as_pdf') || request('as_pdf') == 1) {
+            $hash = md5($hashname);
+            $r2CacheKey = 'Resumes/converted_'.$hash.'.pdf';
+            try {
+                if (\Storage::disk('r2')->exists($r2CacheKey)) {
+                    $content = \Storage::disk('r2')->get($r2CacheKey);
+                    return response($content, 200, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="converted_'.$hash.'.pdf"',
+                        'Access-Control-Allow-Origin' => '*',
+                        'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                        'Access-Control-Allow-Headers' => '*',
+                    ]);
+                }
+            } catch (\Throwable $r2Err) {
+                \Log::warning('[Bench Candidate Download] R2 converted PDF fetch error: '.$r2Err->getMessage());
+            }
+
+            // Fallback: If LibreOffice / soffice is available on server, convert synchronously
+            $soffice = $this->benchSofficeBinary();
+            if ($soffice) {
+                try {
+                    $r2Key = str_starts_with($hashname, 'https://file.jero.works/')
+                        ? ltrim((string) parse_url($hashname, PHP_URL_PATH), '/')
+                        : (! filter_var($hashname, FILTER_VALIDATE_URL) ? ltrim($hashname, '/') : '');
+                    $rawBytes = (! empty($r2Key) && \Storage::disk('r2')->exists($r2Key))
+                        ? \Storage::disk('r2')->get($r2Key)
+                        : null;
+                    if ($rawBytes) {
+                        $cacheDir = storage_path('app/resume-pdf-cache');
+                        if (! is_dir($cacheDir)) {
+                            @mkdir($cacheDir, 0775, true);
+                        }
+                        $cleanName = basename($r2Key);
+                        $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION)) ?: 'docx';
+                        $srcFile = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.'.$ext;
+                        $pdfCache = $cacheDir.DIRECTORY_SEPARATOR.$hash.'.pdf';
+                        file_put_contents($srcFile, $rawBytes);
+                        $profile = 'file:///'.str_replace('\\', '/', $cacheDir.DIRECTORY_SEPARATOR.'lo_'.$hash);
+                        $process = new \Symfony\Component\Process\Process([
+                            $soffice,
+                            '--headless',
+                            '--norestore',
+                            '--nofirststartwizard',
+                            '-env:UserInstallation='.$profile,
+                            '--convert-to',
+                            'pdf',
+                            '--outdir',
+                            $cacheDir,
+                            $srcFile,
+                        ]);
+                        $process->setTimeout(30);
+                        $process->run();
+                        @unlink($srcFile);
+                        if (file_exists($pdfCache) && filesize($pdfCache) > 100) {
+                            $pdfContent = file_get_contents($pdfCache);
+                            try {
+                                \Storage::disk('r2')->put($r2CacheKey, $pdfContent);
+                            } catch (\Throwable $e) {}
+                            return response($pdfContent, 200, [
+                                'Content-Type' => 'application/pdf',
+                                'Content-Disposition' => 'inline; filename="converted_'.$hash.'.pdf"',
+                                'Access-Control-Allow-Origin' => '*',
+                                'Access-Control-Allow-Methods' => 'GET, OPTIONS',
+                                'Access-Control-Allow-Headers' => '*',
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $convErr) {
+                    \Log::warning('[Bench Candidate Download] Server-side conversion failed: '.$convErr->getMessage());
+                }
+            }
         }
 
-        // 1. Authoritative Cloudflare R2 disk streaming
+        // 1. Authoritative Cloudflare R2 disk streaming (never redirecting to file.jero.works CDN)
         $r2Key = '';
         if (str_starts_with($hashname, 'https://file.jero.works/')) {
             $r2Key = ltrim((string) parse_url($hashname, PHP_URL_PATH), '/');
@@ -8193,13 +8285,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             $hasResume = true;
             $pathPart = parse_url($resumeRaw, PHP_URL_PATH);
             $resumeFilename = basename($pathPart ?: $resumeRaw);
-            if (str_starts_with($resumeRaw, 'http://') || str_starts_with($resumeRaw, 'https://')) {
-                $resumeUrl = $resumeRaw;
-                $resumeR2Url = $resumeRaw;
-            } else {
-                $resumeUrl = route('service_company.bench-candidates.download', $cand->id);
-                $resumeR2Url = 'https://file.jero.works/'.ltrim($resumeRaw, '/');
-            }
         } else {
             $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
             if ($docRow && ! empty($docRow->hashname)) {
@@ -8208,24 +8293,26 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $hasResume = true;
                     $pathPart = parse_url($docHash, PHP_URL_PATH);
                     $resumeFilename = basename($pathPart ?: $docHash);
-                    if (str_starts_with($docHash, 'http://') || str_starts_with($docHash, 'https://')) {
-                        $resumeUrl = $docHash;
-                        $resumeR2Url = $docHash;
-                    } else {
-                        $resumeUrl = route('service_company.bench-candidates.download', $cand->id);
-                        $resumeR2Url = 'https://file.jero.works/'.ltrim($docHash, '/');
-                    }
                 }
             }
         }
+
+        $downloadProxyUrl = route('service_company.bench-candidates.download', $cand->id);
+        $downloadPdfUrl = route('service_company.bench-candidates.download', ['id' => $cand->id, 'as_pdf' => 1]);
+
         $cand->has_resume = $hasResume;
         $cand->resume_filename = $resumeFilename;
-        $cand->resume_url = $resumeUrl ?: route('service_company.bench-candidates.download', $cand->id);
-        $cand->resume_r2_url = ! empty($resumeR2Url) ? $resumeR2Url : $cand->resume_url;
-        $cand->download_url = route('service_company.bench-candidates.download', $cand->id);
-        $cand->direct_download_url = $hasResume ? route('download.resume', ['id' => $cand->id, 'path' => rtrim(strtr(base64_encode((string) ($resumeRaw ?: @$docHash)), '+/', '-_'), '=')]) : '';
+        $cand->resume_url = $downloadProxyUrl;
+        $cand->resume_r2_url = $downloadProxyUrl;
+        $cand->download_url = $downloadProxyUrl;
+        $cand->direct_download_url = $downloadProxyUrl;
         $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
         $cand->safe_name = $candSafeName;
+
+        $candResumeVal = $resumeRaw ?: (@$docHash ?: '');
+        $resumeExt = strtolower(pathinfo(parse_url($candResumeVal, PHP_URL_PATH) ?: $candResumeVal, PATHINFO_EXTENSION));
+        $cand->resume_extension = $resumeExt ?: 'pdf';
+        $cand->resume_pdf_url = $downloadPdfUrl;
 
         // Intent: Fetch Relationship Manager Comments from isolated bench_candidate_rm_comments table
         $rmCommentRow = DB::table('bench_candidate_rm_comments')
@@ -8556,7 +8643,34 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) $candidate->full_name));
                 $customName = 'Jeroworks_'.$candName.'.'.$extension;
 
-                if (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://')) {
+                // 3a. Authoritative Cloudflare R2 disk fetch
+                $r2Key = '';
+                if (str_starts_with($hashname, 'https://file.jero.works/')) {
+                    $r2Key = ltrim((string) parse_url($hashname, PHP_URL_PATH), '/');
+                } elseif (! filter_var($hashname, FILTER_VALIDATE_URL)) {
+                    $r2Key = ltrim($hashname, '/');
+                }
+
+                if (! empty($r2Key)) {
+                    try {
+                        if (\Storage::disk('r2')->exists($r2Key)) {
+                            $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
+                            file_put_contents($tempDir.'/'.$storedName, \Storage::disk('r2')->get($r2Key));
+                            $attachments[] = [
+                                'path' => $tempDir.'/'.$storedName,
+                                'filename' => $customName,
+                                'is_local' => true,
+                                'options' => [],
+                            ];
+                            $handled = true;
+                        }
+                    } catch (\Throwable $r2Err) {
+                        \Log::warning('[Bench Forward Resume Send] R2 attachment read error: '.$r2Err->getMessage());
+                    }
+                }
+
+                // 3b. Remote HTTP fetch fallback
+                if (! $handled && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
                     try {
                         $resp = Http::timeout(25)->get($hashname);
                         if ($resp->successful()) {
