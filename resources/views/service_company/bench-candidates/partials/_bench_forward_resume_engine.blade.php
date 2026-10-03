@@ -512,68 +512,104 @@
   // ═══════════════════════════════════════════════════════════════════════════
   // MAIN DISPATCH METHOD (Exclusive to Bench Talent Drawer)
   // ═══════════════════════════════════════════════════════════════════════════
-  async function generateAttachmentForCandidate(cand, optId, companyData, jobSkills) {
+  async function generateAttachmentForCandidate(cand, optId, companyData, jobSkills, onProgress) {
     optId = parseInt(optId, 10);
     var companyName = (companyData && companyData.companyName) || 'Hiring Partner';
     var companyLogo = (companyData && companyData.companyLogo) || '';
     var safeName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
 
+    function notify(pct, statusText, stepDetail) {
+      if (typeof onProgress === 'function') {
+        try {
+          onProgress(pct, statusText, stepDetail);
+        } catch (e) {
+          console.warn('[AgyBenchForwardResumeEngine] onProgress warning:', e);
+        }
+      }
+    }
+
     // Option 1: Original candidate resume
     if (optId === 1) {
+      notify(30, 'Fetching candidate resume...', 'Reading original resume file...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
+      notify(85, 'Verifying document integrity...', 'Preparing original document binary...');
       var ext = (cand.resume_filename && cand.resume_filename.split('.').pop().toLowerCase()) || 'pdf';
       var mimeType = (ext === 'docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : ((ext === 'doc') ? 'application/msword' : 'application/pdf');
       var origBlob = new Blob([rawBytes], { type: mimeType });
       origBlob.filename = 'Jeroworks_' + safeName + '.' + ext;
+      notify(100, 'Original resume ready!', 'Document ready to send');
       return origBlob;
     }
 
     // Option 5: Pre-Screened Report PDF Dossier (Bench Specific!)
     if (optId === 5) {
+      notify(25, 'Assembling pre-screen dossier...', 'Compiling RM comments and talent skills...');
+      notify(65, 'Assembling high-resolution document...', 'Client-side document engine compiling high-resolution vector PDF...');
       var reportBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       reportBlob.filename = 'Prescreen_Report_' + safeName + '.pdf';
+      notify(100, 'Pre-screen dossier ready!', 'Document ready to send');
       return reportBlob;
     }
 
     // Option 41: Resume + Company Branding
     if (optId === 41) {
+      notify(20, 'Fetching candidate resume...', 'Reading original document in browser memory...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
+      notify(50, 'Standardizing vector PDF...', 'Ensuring high-resolution vector PDF pages...');
       var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      notify(75, 'Applying company branding header...', 'Injecting organization banner...');
       var pdfBytes = new Uint8Array(await basePdfBlob.arrayBuffer());
       var brandedBlob = await addCompanyBrandingHeader(pdfBytes, companyName);
       brandedBlob.filename = 'Jeroworks_' + safeName + '_Branded.pdf';
+      notify(100, 'Branded resume ready!', 'Document ready to send');
       return brandedBlob;
     }
 
     // Option 42: Pre-Screened Report + Branded Resume
     if (optId === 42) {
+      notify(20, 'Generating pre-screen dossier...', 'Rendering RM comments and talent skills...');
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
+      notify(45, 'Fetching candidate resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
+      notify(65, 'Assembling high-resolution document...', 'Client-side document engine compiling high-resolution vector PDF...');
       var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
       var pdfBytes = new Uint8Array(await basePdfBlob.arrayBuffer());
+      notify(80, 'Applying company branding...', 'Injecting organization header...');
       var resBranded = await addCompanyBrandingHeader(pdfBytes, companyName);
+      notify(92, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
       var merged = await mergeDossierAndResume(repBlob, resBranded);
       merged.filename = 'Jeroworks_' + safeName + '_Full_Package.pdf';
+      notify(100, 'Recruiter package ready!', 'Document ready to send');
       return merged;
     }
 
     // Option 43: Pre-Screened Report + Unbranded Resume
     if (optId === 43) {
+      notify(20, 'Generating pre-screen dossier...', 'Rendering RM comments without company branding...');
       var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
+      notify(50, 'Fetching candidate resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
+      notify(70, 'Standardizing vector PDF...', 'Ensuring vector PDF pages...');
       var resBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
+      notify(90, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
       var merged = await mergeDossierAndResume(repBlob, resBlob);
       merged.filename = 'Prescreen_' + safeName + '_Unbranded.pdf';
+      notify(100, 'Recruiter package ready!', 'Document ready to send');
       return merged;
     }
 
     // Options 44-53 Fallback / Custom:
     // Generate branded dossier + original resume package
+    notify(20, 'Generating pre-screen dossier...', 'Preparing candidate dossier...');
     var dossier = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
+    notify(50, 'Fetching candidate resume...', 'Reading original resume...');
     var raw = await fetchCandidateResumeBytes(cand);
+    notify(65, 'Assembling high-resolution document...', 'Client-side document engine compiling high-resolution vector PDF...');
     var rBlob = await ensurePdfBlobFromBytes(cand, raw);
+    notify(88, 'Merging dossier and resume...', 'Concatenating multi-page recruiter package...');
     var mergedFallback = await mergeDossierAndResume(dossier, rBlob);
     mergedFallback.filename = 'Jeroworks_' + safeName + '_Formatted.pdf';
+    notify(100, 'Document ready!', 'Document ready to send');
     return mergedFallback;
   }
 

@@ -432,14 +432,14 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
     </div>
     <div class="bench-mm-header-actions">
       <button type="button" class="bench-mm-header-btn-cancel" onclick="closeBenchFwdResumeDrawer()">Cancel</button>
-      <button type="button" class="bench-mm-header-btn-send" id="btnBenchFwdSubmit" onclick="onBenchFwdSubmitClick(event)">
+      <button type="button" class="bench-mm-header-btn-send" id="btnBenchFwdSubmit" onclick="onBenchFwdSubmitClick(event)" disabled>
         <span class="indicator-label" style="display:inline-flex;align-items:center;gap:7px;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           Send Email
         </span>
         <span class="indicator-progress" style="display:none;align-items:center;gap:7px;">
           <span class="spinner-border spinner-border-sm" style="width:13px;height:13px;border-width:2px;display:inline-block;"></span>
-          <span id="bench_fwd_btn_progress_text">Sending...</span>
+          <span id="bench_fwd_btn_progress_text">Compiling resume PDF...</span>
         </span>
       </button>
     </div>
@@ -643,8 +643,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                 </div>
 
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                  <div style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#DCFCE7' : '#FEF3C7' }};color:{{ $hasResume ? '#15803D' : '#B45309' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
-                    {{ $hasResume ? '✓ Attached (100%)' : '⚠ No Resume' }}
+                  <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">
+                    {{ $hasResume ? '1 Resume Available' : '⚠ No Resume' }}
                   </div>
                 </div>
               </div>
@@ -811,6 +811,8 @@ var benchToEmails = [];
 var benchCcEmails = [];
 var activeBenchRecipientTarget = 'to'; // 'to' or 'cc'
 var _benchCompiledAttachment = null;
+var _benchCompilationSeq = 0;
+var _benchIsCompiling = false;
 
 // Initialize chips if values exist
 function renderBenchTags(target) {
@@ -959,6 +961,14 @@ function onBenchFwdFormatChange(sel) {
     var opt = sel.options[sel.selectedIndex];
     if (!opt || !opt.value) {
         $('#bench_fwd_format_details_section').hide();
+        _benchCompiledAttachment = null;
+        var btn = document.getElementById('btnBenchFwdSubmit');
+        if (btn) {
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+            $(btn).find('.indicator-progress').hide();
+            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        }
         return;
     }
     var optId = parseInt(opt.value, 10);
@@ -971,17 +981,169 @@ function onBenchFwdFormatChange(sel) {
 
     var safeName = $('#bench_fwd_cand_filename').attr('data-safename') || 'Candidate';
     if (optId === 1) {
-        $('#bench_fwd_cand_filename').text('Jeroworks_' + safeName + '.pdf');
+        var ext = @json(pathinfo($cand->resume_filename ?? '', PATHINFO_EXTENSION) ?: 'pdf');
+        $('#bench_fwd_cand_filename').text('Jeroworks_' + safeName + '.' + ext);
     } else if (optId === 5) {
         $('#bench_fwd_cand_filename').text('Prescreen_Report_' + safeName + '.pdf');
     } else {
         $('#bench_fwd_cand_filename').text('Jeroworks_' + safeName + '_Formatted.pdf');
+    }
+
+    var candHasResume = @json(!empty($cand->has_resume));
+    if (!candHasResume && optId !== 5) {
+        $('#bench_fwd_cand_status_badge')
+            .html('⚠ No Resume')
+            .css({ background: '#FEF3C7', color: '#B45309' });
+        $('#bench_fwd_compile_progress_container').hide();
+        var btn = document.getElementById('btnBenchFwdSubmit');
+        if (btn) {
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+            $(btn).find('.indicator-progress').hide();
+            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        }
+        Swal.fire({
+            icon: 'warning',
+            title: 'Resume Missing',
+            text: 'This candidate has no uploaded resume document. Please select Option 5 (Pre-Screened Report PDF) to forward their candidate profile dossier.',
+            confirmButtonText: 'Select Option 5',
+            showCancelButton: true,
+            cancelButtonText: 'Cancel'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $('#bench_fwd_resume_format').val('5').trigger('change');
+            }
+        });
+        return;
+    }
+
+    // Immediately start the engine for conversion!
+    triggerBenchResumeCompilation(optId);
+}
+
+// Trigger conversion engine immediately upon format selection
+async function triggerBenchResumeCompilation(optId) {
+    var seq = ++_benchCompilationSeq;
+    _benchIsCompiling = true;
+    _benchCompiledAttachment = null;
+
+    var btn = document.getElementById('btnBenchFwdSubmit');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        $(btn).find('.indicator-label').hide();
+        $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
+        $('#bench_fwd_btn_progress_text').text('Compiling resume PDF...');
+    }
+
+    $('#bench_fwd_compile_progress_container').show();
+    $('#bench_fwd_compile_progress_bar').css('width', '20%');
+    $('#bench_fwd_compile_pct_badge').text('20%');
+    $('#bench_fwd_compile_status_text').text('Assembling high-resolution document...').css('color', '#0F766E');
+    $('#bench_fwd_compile_step_detail').text('Client-side document engine compiling high-resolution vector PDF...');
+
+    $('#bench_fwd_cand_status_badge')
+        .html('<span class="spinner-border spinner-border-sm" style="width:11px;height:11px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:4px;"></span> Compiling...')
+        .css({ background: '#F0FDFA', color: '#0F766E' });
+
+    try {
+        var candObj = @json($cand ?? []);
+        var companyData = {
+            companyName: @json($companyName ?? 'Hiring Partner'),
+            companyLogo: @json($companyLogo ?? '')
+        };
+        var jobSkills = [];
+
+        var engine = window.AgyBenchForwardResumeEngine;
+        if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
+            throw new Error('Client WASM document engine is initializing. Please wait a moment.');
+        }
+
+        var blob = await engine.generateAttachmentForCandidate(
+            candObj,
+            optId,
+            companyData,
+            jobSkills,
+            function(pct, statusText, stepDetail) {
+                if (seq !== _benchCompilationSeq) return;
+                if (pct !== undefined) {
+                    $('#bench_fwd_compile_progress_bar').css('width', pct + '%');
+                    $('#bench_fwd_compile_pct_badge').text(pct + '%');
+                }
+                if (statusText) {
+                    $('#bench_fwd_compile_status_text').text(statusText);
+                }
+                if (stepDetail) {
+                    $('#bench_fwd_compile_step_detail').text(stepDetail);
+                }
+            }
+        );
+
+        if (seq !== _benchCompilationSeq) return; // Superseded by another format selection
+
+        if (!blob) {
+            throw new Error('Document compiler returned empty output.');
+        }
+
+        var safeName = (candObj.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
+        var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
+        var outName = (blob && blob.filename) ? blob.filename : defaultName;
+
+        _benchCompiledAttachment = {
+            blob: blob.blob || blob,
+            filename: outName,
+            formatId: optId
+        };
+        _benchIsCompiling = false;
+
+        // Progress bar 100%
+        $('#bench_fwd_compile_progress_bar').css('width', '100%');
+        $('#bench_fwd_compile_pct_badge').text('100%');
+        $('#bench_fwd_compile_status_text').text('✓ Document compiled successfully!').css('color', '#059669');
+        $('#bench_fwd_compile_step_detail').text('Attached & ready to send via email');
+        $('#bench_fwd_cand_filename').text(outName);
+
+        $('#bench_fwd_cand_status_badge')
+            .html('✓ Attached (100%)')
+            .css({ background: '#DCFCE7', color: '#15803D' });
+
+        // Enable Send Email button now that conversion is complete!
+        if (btn) {
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            $(btn).find('.indicator-progress').hide();
+            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        }
+
+    } catch (compileErr) {
+        if (seq !== _benchCompilationSeq) return;
+        _benchIsCompiling = false;
+        _benchCompiledAttachment = null;
+        console.error('[BenchForwardResume] Compilation failed:', compileErr);
+
+        if (btn) {
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+            $(btn).find('.indicator-progress').hide();
+            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        }
+
+        $('#bench_fwd_compile_status_text').text('Compilation error: ' + (compileErr.message || 'WASM Engine Error')).css('color', '#DC2626');
+        $('#bench_fwd_compile_step_detail').text('Please choose another format or try again.');
+        $('#bench_fwd_cand_status_badge').html('⚠ Error').css({ background: '#FEE2E2', color: '#DC2626' });
+
+        Swal.fire('Compilation Error', 'Could not compile custom resume: ' + (compileErr.message || 'WASM Engine Error') + '. Please try again.', 'error');
     }
 }
 
 // Send forward email handler
 async function onBenchFwdSubmitClick(e) {
     if (e) e.preventDefault();
+
+    if (_benchIsCompiling) {
+        Swal.fire('Please Wait', 'Resume conversion is still in progress. The email will be sent once conversion completes.', 'info');
+        return;
+    }
 
     var toEmail = $('#bench_to_email').val();
     if (!toEmail) {
@@ -1005,13 +1167,18 @@ async function onBenchFwdSubmitClick(e) {
     }
 
     var candHasResume = @json(!empty($cand->has_resume));
-    if (!candHasResume && formatId === 1) {
-        Swal.fire('Resume Missing', 'This candidate does not have an original resume uploaded. Please select "Option 5: Pre-Screened Report PDF" to generate and forward their dossier.', 'warning');
-        return;
-    }
     if (!candHasResume && formatId !== 5) {
         Swal.fire('Resume Missing', 'This candidate does not have an uploaded resume file to merge. Please select "Option 5: Pre-Screened Report PDF" to generate their standalone dossier.', 'warning');
         return;
+    }
+
+    // Ensure attachment is compiled and ready in RAM
+    if (!_benchCompiledAttachment || _benchCompiledAttachment.formatId !== formatId) {
+        await triggerBenchResumeCompilation(formatId);
+        if (!_benchCompiledAttachment) {
+            Swal.fire('Attachment Error', 'Resume attachment could not be compiled. Please select another format.', 'error');
+            return;
+        }
     }
 
     var bodyHtml = '';
@@ -1028,26 +1195,13 @@ async function onBenchFwdSubmitClick(e) {
     }
 
     var btn = document.getElementById('btnBenchFwdSubmit');
-    function setBtnLoading(txt) {
-        if (btn) {
-            btn.disabled = true;
-            btn.style.opacity = '0.75';
-            $(btn).find('.indicator-label').hide();
-            $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
-            $('#bench_fwd_btn_progress_text').text(txt || 'Sending...');
-        }
+    if (btn) {
+        btn.disabled = true;
+        btn.style.cursor = 'not-allowed';
+        $(btn).find('.indicator-label').hide();
+        $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
+        $('#bench_fwd_btn_progress_text').text('Sending email...');
     }
-    function restoreBtn() {
-        if (btn) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            $(btn).find('.indicator-progress').hide();
-            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
-        }
-        $('#bench_fwd_compile_progress_container').hide();
-    }
-
-    setBtnLoading('Preparing email...');
 
     var formData = new FormData(document.getElementById('bench_fwd_form'));
     formData.set('editor1', bodyHtml);
@@ -1056,53 +1210,10 @@ async function onBenchFwdSubmitClick(e) {
     formData.set('cc_email', $('#bench_cc_email').val());
     formData.set('attached_cv_format', formatId);
 
-    // If custom WASM format (Option != 1), compile attachment in User RAM
-    if (formatId !== 1) {
-        try {
-            setBtnLoading('Compiling resume PDF...');
-            $('#bench_fwd_compile_progress_container').show();
-            $('#bench_fwd_compile_progress_bar').css('width', '25%');
-            $('#bench_fwd_compile_pct_badge').text('25%');
-            $('#bench_fwd_compile_status_text').text('Assembling high-resolution document...');
-
-            var candObj = @json($cand ?? []);
-            var companyData = {
-                companyName: @json($companyName ?? 'Hiring Partner'),
-                companyLogo: @json($companyLogo ?? '')
-            };
-            var jobSkills = [];
-
-            var engine = window.AgyBenchForwardResumeEngine;
-            if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {
-                throw new Error('Client WASM document engine is loading or not initialized.');
-            }
-
-            $('#bench_fwd_compile_progress_bar').css('width', '65%');
-            $('#bench_fwd_compile_pct_badge').text('65%');
-
-            var blob = await engine.generateAttachmentForCandidate(candObj, formatId, companyData, jobSkills);
-            if (!blob) {
-                throw new Error('Document compiler returned empty output.');
-            }
-
-            $('#bench_fwd_compile_progress_bar').css('width', '100%');
-            $('#bench_fwd_compile_pct_badge').text('100%');
-            $('#bench_fwd_compile_status_text').text('Compilation complete! Dispatching email...');
-
-            var safeName = (candObj.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-            var defaultName = (formatId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
-            var outName = (blob && blob.filename) ? blob.filename : defaultName;
-
-            formData.append('custom_attachments[' + candObj.id + ']', blob.blob || blob, outName);
-        } catch (compileErr) {
-            console.error('WASM compilation failed:', compileErr);
-            restoreBtn();
-            Swal.fire('Compilation Error', 'Could not compile custom resume: ' + (compileErr.message || 'WASM Engine Error') + '. Please try again.', 'error');
-            return;
-        }
+    var candObj = @json($cand ?? []);
+    if (_benchCompiledAttachment && _benchCompiledAttachment.blob) {
+        formData.append('custom_attachments[' + candObj.id + ']', _benchCompiledAttachment.blob, _benchCompiledAttachment.filename);
     }
-
-    setBtnLoading('Sending email...');
 
     $.ajax({
         url: "{{ route('service_company.bench-candidates.fwd_resume_send') }}",
@@ -1112,7 +1223,12 @@ async function onBenchFwdSubmitClick(e) {
         processData: false,
         cache: false,
         success: function(res) {
-            restoreBtn();
+            if (btn) {
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+                $(btn).find('.indicator-progress').hide();
+                $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+            }
             if (res.status === 'success') {
                 Swal.fire({
                     icon: 'success',
@@ -1130,7 +1246,12 @@ async function onBenchFwdSubmitClick(e) {
             }
         },
         error: function(err) {
-            restoreBtn();
+            if (btn) {
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+                $(btn).find('.indicator-progress').hide();
+                $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+            }
             var errMsg = 'Server error occurred while sending email.';
             if (err.responseJSON && err.responseJSON.message) {
                 errMsg = err.responseJSON.message;
