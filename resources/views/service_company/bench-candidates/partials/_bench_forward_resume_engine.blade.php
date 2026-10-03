@@ -1775,8 +1775,8 @@
       }
     }
 
-    // Options 48-53: Privacy & Anonymization (Anti-Poaching Shield)
-    if (optId >= 48 && optId <= 53) {
+    // Options 48-54: Privacy & Anonymization (Anti-Poaching Shield)
+    if (optId >= 48 && optId <= 54) {
       notify(20, 'Preparing privacy-shield resume...', 'Reading original resume...');
       var rawBytes = await fetchCandidateResumeBytes(cand);
       var basePdfBlob = await ensurePdfBlobFromBytes(cand, rawBytes);
@@ -1886,6 +1886,46 @@
         var merged = await mergeDossierAndResume(repBlob, branded);
         merged.filename = 'Jeroworks_' + safeName + '_Full_Privacy_Package.pdf';
         notify(100, 'Full privacy package ready!', 'Document ready to send');
+        return merged;
+      }
+
+      if (optId === 54) {
+        // Pipeline: Highlight → Anonymize → Merge with UNBRANDED dossier (no company logo)
+        // Same as option 53 but without applying company branding header or logo anywhere.
+        notify(30, 'Generating unbranded pre-screen dossier...', 'Compiling RM comments without company logo...');
+        var repBlob = await generateBenchPrescreenPdfBlob(cand, companyName, null, true);
+
+        // Step 1: Highlight evaluated skills on the ORIGINAL (pre-anonymization) PDF
+        var highlightedSkills = getBenchCandidateEvaluatedSkills(cand);
+        var highlightedBase = basePdfBlob;
+        if (highlightedSkills.length > 0) {
+          try {
+            notify(50, 'Highlighting evaluated skills...', 'Applying vector highlights to rated skills on original resume...');
+            highlightedBase = await buildTurboVectorHighlightedResume({
+              resumeBlob: basePdfBlob,
+              keywords: highlightedSkills
+            });
+          } catch (hErr) {
+            console.warn('[AgyBenchForwardResumeEngine] Option 54 highlighting fallback:', hErr);
+            highlightedBase = basePdfBlob;
+          }
+        }
+
+        // Step 2: Anonymize the highlighted PDF (redact PII on top of highlights)
+        var processedResume = highlightedBase;
+        try {
+          notify(70, 'Applying privacy redactions to highlighted resume...', 'Redacting contact numbers, email, and private links...');
+          processedResume = await renderAnonymizedPdfBlob(highlightedBase, rules);
+        } catch (aErr2) {
+          console.warn('[AgyBenchForwardResumeEngine] Option 54 anonymization fallback:', aErr2);
+          processedResume = highlightedBase;
+        }
+
+        // Step 3: Merge unbranded dossier + processed resume (no branding applied)
+        notify(90, 'Merging unbranded dossier and confidential resume...', 'Concatenating multi-page recruiter package...');
+        var merged = await mergeDossierAndResume(repBlob, processedResume);
+        merged.filename = 'Prescreen_' + safeName + '_Full_Privacy_Package.pdf';
+        notify(100, 'Full privacy package (unbranded) ready!', 'Document ready to send');
         return merged;
       }
     }
