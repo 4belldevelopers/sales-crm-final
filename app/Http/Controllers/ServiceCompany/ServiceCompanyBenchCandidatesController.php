@@ -7620,20 +7620,50 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         abort_if(! $cand, 404, 'Candidate resume not found or access denied.');
 
-        $hashname = $cand->resume;
-        if (empty($hashname)) {
+        $hashname = trim((string) $cand->resume);
+        if (empty($hashname) || $hashname === '0' || strtolower($hashname) === 'null') {
             $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
             if ($docRow && ! empty($docRow->hashname)) {
-                $hashname = $docRow->hashname;
+                $hashname = trim((string) $docRow->hashname);
             }
         }
 
         abort_if(empty($hashname), 404, 'No resume document uploaded for this candidate.');
 
+        // 1. If stored as remote HTTP/HTTPS URL (e.g. file.jero.works, AWS S3, Cloudflare)
+        if (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://')) {
+            try {
+                $response = Http::timeout(25)->get($hashname);
+                if ($response->successful()) {
+                    $body = $response->body();
+                    $pathPart = parse_url($hashname, PHP_URL_PATH);
+                    $cleanName = basename($pathPart) ?: ('resume_'.$id.'.pdf');
+                    $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+                    $mime = match ($ext) {
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'doc' => 'application/msword',
+                        default => 'application/pdf',
+                    };
+                    return response($body, 200, [
+                        'Content-Type' => $mime,
+                        'Content-Disposition' => 'inline; filename="'.$cleanName.'"',
+                        'Access-Control-Allow-Origin' => '*',
+                    ]);
+                }
+            } catch (\Throwable $remoteErr) {
+                \Log::warning('[Bench Candidate Download] Remote fetch failed for candidate '.$id.': '.$remoteErr->getMessage());
+            }
+        }
+
+        // 2. If stored on local disk or public path
+        $cleanHash = basename(parse_url($hashname, PHP_URL_PATH) ?: $hashname);
         $paths = [
-            public_path('user-uploads/documents/'.$cand->id.'/'.$hashname),
-            public_path('user-uploads/resumes/'.$hashname),
-            public_path('user-uploads/'.$hashname),
+            public_path('user-uploads/documents/'.$cand->id.'/'.$cleanHash),
+            public_path('user-uploads/resumes/'.$cand->id.'/'.$cleanHash),
+            public_path('user-uploads/resumes/'.$cleanHash),
+            public_path('user-uploads/'.$cleanHash),
+            storage_path('app/public/user-uploads/'.$cleanHash),
+            storage_path('app/user-uploads/'.$cleanHash),
         ];
 
         foreach ($paths as $p) {
@@ -7642,11 +7672,24 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 return response()->file($p, [
                     'Content-Type' => $mime,
                     'Content-Disposition' => 'inline; filename="'.basename($p).'"',
+                    'Access-Control-Allow-Origin' => '*',
                 ]);
             }
         }
 
-        abort(404, 'Resume file not found on disk.');
+        // 3. Fallback: Storage disk check (s3 / local)
+        try {
+            if (\Storage::disk('s3')->exists('Resumes/'.$cleanHash)) {
+                $content = \Storage::disk('s3')->get('Resumes/'.$cleanHash);
+                return response($content, 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="'.$cleanHash.'"',
+                    'Access-Control-Allow-Origin' => '*',
+                ]);
+            }
+        } catch (\Throwable $s3Err) {}
+
+        abort(404, 'Resume file not found on disk or storage.');
     }
 
     public function boostkeywordadd(Request $request)
@@ -8085,30 +8128,41 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
         // 4. Check resume document presence
         $hasResume = false;
+        $resumeRaw = trim((string) @$cand->resume);
         $resumeFilename = '';
-        if (! empty($cand->resume) && in_array(strtolower(pathinfo($cand->resume, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
+        $resumeUrl = '';
+
+        if ($resumeRaw !== '' && $resumeRaw !== '0' && strtolower($resumeRaw) !== 'null') {
             $hasResume = true;
-            $resumeFilename = $cand->resume;
+            $pathPart = parse_url($resumeRaw, PHP_URL_PATH);
+            $resumeFilename = basename($pathPart ?: $resumeRaw);
+            if (str_starts_with($resumeRaw, 'http://') || str_starts_with($resumeRaw, 'https://')) {
+                $resumeUrl = $resumeRaw;
+            } else {
+                $resumeUrl = asset('user-uploads/resumes/'.$resumeFilename);
+            }
         } else {
             $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
-            if ($docRow && ! empty($docRow->hashname) && in_array(strtolower(pathinfo($docRow->hashname, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
-                $hasResume = true;
-                $resumeFilename = $docRow->hashname;
+            if ($docRow && ! empty($docRow->hashname)) {
+                $docHash = trim((string) $docRow->hashname);
+                if ($docHash !== '' && $docHash !== '0' && strtolower($docHash) !== 'null') {
+                    $hasResume = true;
+                    $pathPart = parse_url($docHash, PHP_URL_PATH);
+                    $resumeFilename = basename($pathPart ?: $docHash);
+                    if (str_starts_with($docHash, 'http://') || str_starts_with($docHash, 'https://')) {
+                        $resumeUrl = $docHash;
+                    } else {
+                        $resumeUrl = asset('user-uploads/documents/'.$cand->id.'/'.$resumeFilename);
+                    }
+                }
             }
         }
         $cand->has_resume = $hasResume;
         $cand->resume_filename = $resumeFilename;
+        $cand->resume_url = $resumeUrl;
+        $cand->download_url = route('service_company.bench-candidates.download', $cand->id);
         $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
         $cand->safe_name = $candSafeName;
-
-        // Direct Asset / Download URL for resume
-        $resumeUrl = '';
-        if (! empty($cand->resume)) {
-            $resumeUrl = asset('user-uploads/resumes/'.$cand->resume);
-        } elseif (! empty($resumeFilename)) {
-            $resumeUrl = asset('user-uploads/documents/'.$cand->id.'/'.$resumeFilename);
-        }
-        $cand->resume_url = $resumeUrl;
 
         // Intent: Fetch Relationship Manager Comments from isolated bench_candidate_rm_comments table
         $rmCommentRow = DB::table('bench_candidate_rm_comments')
@@ -8432,24 +8486,45 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 }
             }
 
-            if (! empty($hashname) && in_array(strtolower(pathinfo($hashname, PATHINFO_EXTENSION)), ['pdf', 'doc', 'docx'])) {
+            $cleanName = basename(parse_url($hashname, PHP_URL_PATH) ?: $hashname);
+            $extension = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+
+            if (! empty($hashname) && in_array($extension, ['pdf', 'doc', 'docx'])) {
                 $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) $candidate->full_name));
-                $extension = pathinfo($hashname, PATHINFO_EXTENSION);
                 $customName = 'Jeroworks_'.$candName.'.'.$extension;
 
-                $localDoc = public_path('user-uploads/documents/'.$candId.'/'.$hashname);
-                $localResume = public_path('user-uploads/resumes/'.$hashname);
-                $localDirect = public_path('user-uploads/'.$hashname);
+                if (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://')) {
+                    try {
+                        $resp = Http::timeout(25)->get($hashname);
+                        if ($resp->successful()) {
+                            $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
+                            file_put_contents($tempDir.'/'.$storedName, $resp->body());
+                            $attachments[] = [
+                                'path' => $tempDir.'/'.$storedName,
+                                'filename' => $customName,
+                                'is_local' => true,
+                                'options' => [],
+                            ];
+                            $handled = true;
+                        }
+                    } catch (\Throwable $remoteErr) {}
+                }
 
-                if (file_exists($localDoc)) {
-                    $attachments[] = ['path' => $localDoc, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                    $handled = true;
-                } elseif (file_exists($localResume)) {
-                    $attachments[] = ['path' => $localResume, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                    $handled = true;
-                } elseif (file_exists($localDirect)) {
-                    $attachments[] = ['path' => $localDirect, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                    $handled = true;
+                if (! $handled) {
+                    $localDoc = public_path('user-uploads/documents/'.$candId.'/'.$cleanName);
+                    $localResume = public_path('user-uploads/resumes/'.$cleanName);
+                    $localDirect = public_path('user-uploads/'.$cleanName);
+
+                    if (file_exists($localDoc)) {
+                        $attachments[] = ['path' => $localDoc, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        $handled = true;
+                    } elseif (file_exists($localResume)) {
+                        $attachments[] = ['path' => $localResume, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        $handled = true;
+                    } elseif (file_exists($localDirect)) {
+                        $attachments[] = ['path' => $localDirect, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        $handled = true;
+                    }
                 }
             }
         }
