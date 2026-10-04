@@ -2732,6 +2732,9 @@ async function onBenchFwdSubmitClick(e) {
                 $(btn).find('.indicator-label').css('display', 'inline-flex').show();
             }
             if (res.status === 'success') {
+                if (typeof window.BenchForwardResumeRamStore !== 'undefined') {
+                    window.BenchForwardResumeRamStore.clear();
+                }
                 Swal.fire({
                     icon: 'success',
                     title: 'Forwarded!',

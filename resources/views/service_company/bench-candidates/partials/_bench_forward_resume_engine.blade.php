@@ -687,10 +687,10 @@
     exp = exp || 'Not Specified';
 
     var rawSkills = [];
-    if (Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length) {
-      rawSkills = candidate.parsed_skills;
-    } else if (Array.isArray(candidate.skills_evaluated) && candidate.skills_evaluated.length) {
+    if (Array.isArray(candidate.skills_evaluated) && candidate.skills_evaluated.length) {
       rawSkills = candidate.skills_evaluated;
+    } else if (Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length) {
+      rawSkills = candidate.parsed_skills;
     } else if (Array.isArray(candidate.skills) && candidate.skills.length) {
       rawSkills = candidate.skills;
     } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
