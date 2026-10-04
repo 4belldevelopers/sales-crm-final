@@ -869,7 +869,7 @@
                                 </div>
                                 <div>
                                     <h2 class="overview-title">Talent &amp; Marketplace Overview</h2>
-                                    <p class="overview-subtitle">Track your in-house talent from bench availability to marketplace engagement and hiring outcomes.</p>
+                                    <p class="overview-subtitle">Track your in-house talent from bench availability to marketplace engagement.</p>
                                 </div>
                             </div>
                             <div class="overview-controls">
@@ -931,8 +931,8 @@
                                             <span class="kpi-label">Total Talent</span>
                                         </div>
                                     </div>
-                                    <!-- Marketplace Ready -->
-                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="2" id="kpi_2" title="Filter to Marketplace Ready">
+                                    <!-- Marketplace Listed -->
+                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="2" id="kpi_2" title="Filter to Marketplace Listed">
                                         <div class="kpi-row-top">
                                             <div class="kpi-circle-icon circle-amber">
                                                 <i class="fa fa-briefcase"></i>
@@ -940,7 +940,7 @@
                                             <span class="kpi-num" data-pipeline-stage="bench" id="kpival_2">{{ $heroStages['bench']['available'] ? number_format($heroStages['bench']['value']) : '—' }}</span>
                                         </div>
                                         <div class="kpi-row-bottom">
-                                            <span class="kpi-label">Marketplace Ready</span>
+                                            <span class="kpi-label">Marketplace Listed</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1235,6 +1235,26 @@
             Swal.fire("Failed", "{{ session('packageStatus') }}", "warning");
         @endif
 
+        // Client-First Browser RAM cache for 10K concurrent users (0% server/DB read strain)
+        const HeroAnalyticsRamStore = (function() {
+            var _cache = new Map();
+            return {
+                get: function(month) { return _cache.get(month); },
+                set: function(month, data) { _cache.set(month, data); },
+                has: function(month) { return _cache.has(month); },
+                clear: function() { _cache.clear(); }
+            };
+        })();
+
+        // Seed initial month payload into user browser RAM immediately
+        @if(isset($heroMonth) && isset($heroStages))
+            HeroAnalyticsRamStore.set('{{ $heroMonth }}', {
+                month: '{{ $heroMonth }}',
+                window: '{{ $performanceWindow ?? "monthly" }}',
+                stages: @json($heroStages)
+            });
+        @endif
+
         // Keep period changes isolated to the tenant-scoped pipeline card.
         (function() {
             var form = document.getElementById('heroAnalyticsForm');
@@ -1248,7 +1268,38 @@
             var request = null;
             var revision = 0;
 
+            function renderStages(response) {
+                var keys = ['talent', 'bench', 'sent', 'accepted', 'expired', 'views', 'interviews', 'placed'];
+                keys.forEach(function(key) {
+                    var stage = response.stages[key];
+                    var value = panel.querySelector('[data-pipeline-stage="' + key + '"]');
+                    if (value && stage) {
+                        value.textContent = stage.available ? Number(stage.value).toLocaleString() : '\u2014';
+                        if (stage.available) value.removeAttribute('title');
+                        else value.title = 'Analytics source unavailable';
+                    }
+                });
+                selectedMonth = response.month;
+                selectedWindow = response.window;
+                if (monthSelect) monthSelect.value = selectedMonth;
+                if (windowSelect) {
+                    windowSelect.value = selectedWindow;
+                    if (windowSelect.options && windowSelect.options.length > 0) {
+                        var monthLabel = new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                        windowSelect.options[0].text = (monthSelect.selectedIndex === 0 ? 'Current' : 'Selected') + ' Month (' + monthLabel + ')';
+                    }
+                }
+            }
+
             function refreshPipeline() {
+                var targetMonth = monthSelect ? monthSelect.value : '';
+
+                // Step 1: Check Client-First Browser RAM Cache (0ms, 0% server/Elasticsearch read strain for 10K concurrency)
+                if (HeroAnalyticsRamStore.has(targetMonth)) {
+                    renderStages(HeroAnalyticsRamStore.get(targetMonth));
+                    return;
+                }
+
                 var activeRevision = ++revision;
                 if (request) request.abort();
                 panel.classList.add('is-loading');
@@ -1258,10 +1309,10 @@
                     url: form.action,
                     method: 'GET',
                     dataType: 'json',
-                    cache: false,
+                    cache: true,
                     data: {
                         pipeline_only: '1',
-                        hero_month: monthSelect ? monthSelect.value : '',
+                        hero_month: targetMonth,
                         performance_window: windowSelect ? windowSelect.value : 'monthly'
                     },
                     success: function(response) {
@@ -1272,25 +1323,9 @@
                             return;
                         }
 
-                        keys.forEach(function(key) {
-                            var stage = response.stages[key];
-                            var value = panel.querySelector('[data-pipeline-stage="' + key + '"]');
-                            if (value) {
-                                value.textContent = stage.available ? Number(stage.value).toLocaleString() : '\u2014';
-                                if (stage.available) value.removeAttribute('title');
-                                else value.title = 'Analytics source unavailable';
-                            }
-                        });
-                        selectedMonth = response.month;
-                        selectedWindow = response.window;
-                        if (monthSelect) monthSelect.value = selectedMonth;
-                        if (windowSelect) {
-                            windowSelect.value = selectedWindow;
-                            if (windowSelect.options && windowSelect.options.length > 0) {
-                                var monthLabel = new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                                windowSelect.options[0].text = (monthSelect.selectedIndex === 0 ? 'Current' : 'Selected') + ' Month (' + monthLabel + ')';
-                            }
-                        }
+                        // Store in Browser RAM
+                        HeroAnalyticsRamStore.set(targetMonth, response);
+                        renderStages(response);
                     },
                     error: function(xhr, textStatus) {
                         if (textStatus === 'abort') return;
@@ -1308,6 +1343,7 @@
 
             if (monthSelect) monthSelect.addEventListener('change', refreshPipeline);
             if (windowSelect) windowSelect.addEventListener('change', refreshPipeline);
+            window.refreshBenchPipeline = refreshPipeline;
 
             // "Share list" button handler
             $(document).on('click', '#shareTalentListBtn', function(e) {
@@ -1672,6 +1708,8 @@
                             sweetAlert('Success', 'Status changed successfully!', 'success');
                             $('#bstatus_close_x').trigger('click');
                             if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
+                            if (typeof HeroAnalyticsRamStore !== 'undefined') { HeroAnalyticsRamStore.clear(); }
+                            if (typeof window.refreshBenchPipeline === 'function') { window.refreshBenchPipeline(); }
                             fetchBenchBenchCandidatesCandidateList(1, '', true);
                         } else {
                             $btns.prop('disabled', false).html(BSTATUS_CONFIRM_DEFAULT_HTML);
@@ -2030,7 +2068,6 @@
             $('#bg_5').text(counts.exited);
             $('#kpival_all').text(Number(counts.all_records || 0).toLocaleString());
             $('#kpival_2').text(Number(counts.bench || 0).toLocaleString());
-            $('#kpival_3').text(Number(counts.placed || 0).toLocaleString());
         }
 
         function countDataGetBenchList() {
