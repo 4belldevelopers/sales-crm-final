@@ -98,7 +98,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
 
             return [
                 'value' => $date->format('Y-m'),
-                'label' => $offset === 0 ? 'This Month' : ($offset === 1 ? 'Last Month' : $date->format('M Y')),
+                'label' => $date->format('F Y'),
             ];
         }, range(0, 11));
 
