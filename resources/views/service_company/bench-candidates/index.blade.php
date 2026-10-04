@@ -274,6 +274,71 @@
         }
         #kt_activitiesHMB { z-index: 999999; }
 
+        /* Selected-rows bulk action bar for Bench Talent */
+        .bench-selection-bar {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            background: #ffffff;
+            border: 1px solid #e5e9f2;
+            border-radius: 10px;
+            padding: 9px 16px;
+            margin-bottom: 12px;
+            font-family: 'Poppins', sans-serif;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .bench-selection-count {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .bench-selection-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        .bench-selection-actions .btn {
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 7px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bench-btn-fwd-resumes {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+        .bench-btn-fwd-resumes:hover {
+            background: #d1fae5 !important;
+            border-color: #6ee7b7 !important;
+            color: #047857 !important;
+        }
+        .bench-selection-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s, color .15s;
+        }
+        .bench-selection-close:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
         /* ============================================================
            Change Talent Status drawer — enterprise redesign
            Positioning/overlay/width owned by the drawer plugin (same
@@ -541,6 +606,24 @@
                         </div>
                     </div>
 
+                    <!-- Selected-rows action bar for In-House Bench Talent -->
+                    <div class="bench-selection-bar" id="bench_selection_bar">
+                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                            <input class="form-check-input" type="checkbox" id="bench_selection_master_chk" checked title="Clear selection" />
+                        </div>
+                        <span class="bench-selection-count"><span id="bench_selected_count">0</span> candidates selected</span>
+                        <div class="bench-selection-actions">
+                            <button type="button" class="btn btn-sm btn-light-success bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes">
+                                <span class="svg-icon svg-icon-success svg-icon-1x me-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
+                                </span> Forward In-House Resumes
+                            </button>
+                        </div>
+                        <button type="button" class="bench-selection-close" id="bench_selection_close" title="Clear selection">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
                     <!-- Talent table -->
                     <div class="jw-card p-2">
                         <div class="loadingMessage loadingMessagebenchCandidateBenchCandidatesAjax"
@@ -551,7 +634,7 @@
                                     <tr role="row">
                                         <th class="col-select pe-0">
                                             <div class="form-check form-check-sm form-check-custom form-check-solid me-2">
-                                                <input class="form-check-input" type="checkbox" value="1">
+                                                <input class="form-check-input chk_all_bench_list" type="checkbox" id="chk_all_bench_list" value="1" title="Select all on this page">
                                             </div>
                                         </th>
                                         <th class="col-talent-name">Talent Name</th>
@@ -1339,6 +1422,9 @@
             if ($.fn.tooltip) {
                 $('#benchCandidateBenchCandidatesAjax [title]').tooltip({ trigger: 'hover', placement: 'top' });
             }
+            if (typeof updateBenchSelectionBar === 'function') {
+                updateBenchSelectionBar();
+            }
             if (response.counts) {
                 applyBenchCounts(response.counts);
             } else {
@@ -1446,5 +1532,105 @@
             link.download = 'inhouse-talents-' + new Date().toISOString().slice(0, 10) + '.csv';
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         });
+    </script>
+
+    <!-- ===== Bulk Selection & Multi-Candidate Forward Resume Handler ===== -->
+    <script>
+        (function() {
+            function updateBenchSelectionBar() {
+                var $checked = $('#benchListingTable tbody .chk_list_item:checked');
+                var n = $checked.length;
+                $('#bench_selected_count').text(n);
+                if (n > 0) {
+                    $('#bench_selection_bar').slideDown(150);
+                    $('#bench_selection_master_chk').prop('checked', true);
+                } else {
+                    $('#bench_selection_bar').slideUp(150);
+                    $('#bench_selection_master_chk').prop('checked', false);
+                    $('#chk_all_bench_list').prop('checked', false);
+                }
+
+                var totalVisible = $('#benchListingTable tbody .chk_list_item').length;
+                if (totalVisible > 0 && n === totalVisible) {
+                    $('#chk_all_bench_list').prop('checked', true).prop('indeterminate', false);
+                } else if (n > 0 && n < totalVisible) {
+                    $('#chk_all_bench_list').prop('checked', false).prop('indeterminate', true);
+                } else {
+                    $('#chk_all_bench_list').prop('checked', false).prop('indeterminate', false);
+                }
+            }
+            window.updateBenchSelectionBar = updateBenchSelectionBar;
+
+            function clearBenchSelection() {
+                $('#benchListingTable .chk_list_item, #chk_all_bench_list, #bench_selection_master_chk').prop('checked', false).prop('indeterminate', false);
+                $('#bench_selected_count').text('0');
+                $('#bench_selection_bar').slideUp(150);
+            }
+            window.clearBenchSelection = clearBenchSelection;
+
+            // Select all checkbox in table header
+            $(document).on('change', '#chk_all_bench_list', function() {
+                var isChecked = $(this).is(':checked');
+                $('#benchListingTable tbody .chk_list_item').prop('checked', isChecked);
+                updateBenchSelectionBar();
+            });
+
+            // Row-level checkbox toggle
+            $(document).on('change', '#benchListingTable tbody .chk_list_item', function() {
+                updateBenchSelectionBar();
+            });
+
+            // Clear selection buttons
+            $(document).on('click', '#bench_selection_close', function() {
+                clearBenchSelection();
+            });
+            $(document).on('change', '#bench_selection_master_chk', function() {
+                if (!$(this).is(':checked')) {
+                    clearBenchSelection();
+                }
+            });
+
+            // "Forward In-House Resumes" bulk action trigger
+            $(document).on('click', '#bench_fwd_resumes_bulk_btn', function(e) {
+                e.preventDefault();
+                var arr = [];
+                $('#benchListingTable tbody .chk_list_item:checked').each(function() {
+                    var val = $(this).val();
+                    if (val) arr.push(val);
+                });
+
+                if (arr.length === 0) {
+                    Swal.fire({
+                        title: 'No Candidate Selected',
+                        text: 'Please select at least one candidate before forwarding resumes.',
+                        icon: 'warning',
+                        confirmButtonColor: '#0D9488'
+                    });
+                    return;
+                }
+
+                // Strict 5-candidate hard cap enforcement BEFORE opening drawer
+                if (arr.length > 5) {
+                    Swal.fire({
+                        title: 'Maximum 5 Candidates Allowed',
+                        html: '<div style="font-size:13.5px;line-height:1.6;color:#374151;">' +
+                              '<p style="margin-bottom:8px;">You’ve selected <strong>' + arr.length + ' candidates</strong>. The forward resume engine supports up to <strong>5 candidates</strong> per email.</p>' +
+                              '<p style="color:#6B7280;margin:0;">Please select 5 candidates or fewer to continue.</p>' +
+                              '</div>',
+                        icon: 'warning',
+                        confirmButtonText: 'OK, I Understand',
+                        confirmButtonColor: '#0D9488'
+                    });
+                    return;
+                }
+
+                // Open Forward Resume drawer with selected candidates
+                if (typeof window.openBenchForwardResume === 'function') {
+                    window.openBenchForwardResume(arr);
+                } else {
+                    console.error('[BenchCandidates] openBenchForwardResume function not found on window.');
+                }
+            });
+        })();
     </script>
 @endpush

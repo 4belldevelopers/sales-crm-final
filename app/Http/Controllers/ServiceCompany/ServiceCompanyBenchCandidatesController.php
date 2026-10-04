@@ -969,7 +969,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->where('job_applications.company_id', $company_id)
             ->first();
 
-        if (! $this->benchApplication || (int)$this->benchApplication->company_id !== (int)$company_id) {
+        if (! $this->benchApplication || (int) $this->benchApplication->company_id !== (int) $company_id) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found.']);
         }
 
@@ -1961,27 +1961,27 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     $redisPrefix = config('database.redis.options.prefix', '');
 
                     // 1. Purge all cached listing queries for this company
-                    $listingCacheKeys = $redisCache->keys('*ats:allbenchcandidates:' . $companyId . ':*');
-                    if (!empty($listingCacheKeys)) {
+                    $listingCacheKeys = $redisCache->keys('*ats:allbenchcandidates:'.$companyId.':*');
+                    if (! empty($listingCacheKeys)) {
                         $cleanListing = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $listingCacheKeys);
                         $redisCache->del($cleanListing);
                     }
 
                     // 2. Purge candidate drawer and sub-tab cached views across all versions
-                    $candidateCacheKeys = $redisCache->keys('*ats:bench_*:' . $companyId . ':' . $benchApplication->id . '*');
-                    if (!empty($candidateCacheKeys)) {
+                    $candidateCacheKeys = $redisCache->keys('*ats:bench_*:'.$companyId.':'.$benchApplication->id.'*');
+                    if (! empty($candidateCacheKeys)) {
                         $cleanCandidate = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $candidateCacheKeys);
                         $redisCache->del($cleanCandidate);
                     }
 
                     // 3. Purge hero KPIs and status counts
-                    $countCacheKeys = $redisCache->keys('*tenant:' . $companyId . ':bench_counts:*');
-                    if (!empty($countCacheKeys)) {
+                    $countCacheKeys = $redisCache->keys('*tenant:'.$companyId.':bench_counts:*');
+                    if (! empty($countCacheKeys)) {
                         $cleanCounts = array_map(fn ($k) => str_starts_with($k, $redisPrefix) ? substr($k, strlen($redisPrefix)) : $k, $countCacheKeys);
                         $redisCache->del($cleanCounts);
                     }
                 } catch (\Throwable $rEx) {
-                    Log::warning('Redis cache key pattern purge notice: ' . $rEx->getMessage());
+                    Log::warning('Redis cache key pattern purge notice: '.$rEx->getMessage());
                 }
 
                 cache()->forget("ats:bench_candidate_hero_kpis:{$benchApplication->id}");
@@ -2188,7 +2188,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         // 5. Isolated Relationship Manager Comments (bench_candidate_rm_comments)
         $rmComments = trim((string) $request->input('recruiter_note', ''));
         if ($rmComments !== '') {
-            $firstRecruiterId = !empty($assignRows) ? $assignRows[0]['user_id'] : (int) ($request->input('recruiter') ?: auth()->user()->id);
+            $firstRecruiterId = ! empty($assignRows) ? $assignRows[0]['user_id'] : (int) ($request->input('recruiter') ?: auth()->user()->id);
             DB::table('bench_candidate_rm_comments')->updateOrInsert(
                 [
                     'company_id' => $companyId,
@@ -7659,6 +7659,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             try {
                 if (\Storage::disk('r2')->exists($r2CacheKey)) {
                     $content = \Storage::disk('r2')->get($r2CacheKey);
+
                     return response($content, 200, [
                         'Content-Type' => 'application/pdf',
                         'Content-Disposition' => 'inline; filename="converted_'.$hash.'.pdf"',
@@ -7711,7 +7712,9 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                             $pdfContent = file_get_contents($pdfCache);
                             try {
                                 \Storage::disk('r2')->put($r2CacheKey, $pdfContent);
-                            } catch (\Throwable $e) {}
+                            } catch (\Throwable $e) {
+                            }
+
                             return response($pdfContent, 200, [
                                 'Content-Type' => 'application/pdf',
                                 'Content-Disposition' => 'inline; filename="converted_'.$hash.'.pdf"',
@@ -7746,6 +7749,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         default => 'application/pdf',
                     };
                     $content = \Storage::disk('r2')->get($r2Key);
+
                     return response($content, 200, [
                         'Content-Type' => $mime,
                         'Content-Disposition' => 'inline; filename="'.$cleanName.'"',
@@ -7773,6 +7777,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'doc' => 'application/msword',
                         default => 'application/pdf',
                     };
+
                     return response($body, 200, [
                         'Content-Type' => $mime,
                         'Content-Disposition' => 'inline; filename="'.$cleanName.'"',
@@ -7800,6 +7805,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         foreach ($paths as $p) {
             if (file_exists($p)) {
                 $mime = mime_content_type($p) ?: 'application/pdf';
+
                 return response()->file($p, [
                     'Content-Type' => $mime,
                     'Content-Disposition' => 'inline; filename="'.basename($p).'"',
@@ -7814,6 +7820,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         try {
             if (\Storage::disk('r2')->exists('Resumes/'.$cleanHash)) {
                 $content = \Storage::disk('r2')->get('Resumes/'.$cleanHash);
+
                 return response($content, 200, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="'.$cleanHash.'"',
@@ -7822,13 +7829,15 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
             if (\Storage::disk('s3')->exists('Resumes/'.$cleanHash)) {
                 $content = \Storage::disk('s3')->get('Resumes/'.$cleanHash);
+
                 return response($content, 200, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="'.$cleanHash.'"',
                     'Access-Control-Allow-Origin' => '*',
                 ]);
             }
-        } catch (\Throwable $s3Err) {}
+        } catch (\Throwable $s3Err) {
+        }
 
         // 5. Ultimate fallback for browser redirects
         if (request('redirect')) {
@@ -8159,15 +8168,25 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
      */
     public function fwd_resume(Request $request)
     {
-        $candidateId = (int) ($request->candidate_id ?? $request->id ?? (is_array($request->arr) ? ($request->arr[0] ?? 0) : $request->arr));
+        $rawArr = $request->input('arr', []);
+        if (is_string($rawArr)) {
+            $rawArr = json_decode($rawArr, true) ?: [$rawArr];
+        }
+        if (empty($rawArr)) {
+            $singleId = (int) ($request->candidate_id ?? $request->id ?? 0);
+            if ($singleId > 0) {
+                $rawArr = [$singleId];
+            }
+        }
+        $arr = array_slice(array_unique(array_filter(array_map('intval', (array) $rawArr))), 0, 5);
 
-        if ($candidateId <= 0) {
+        if (empty($arr)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'No candidate selected.']);
         }
 
         $companyId = (int) auth()->user()->company_id;
 
-        $cand = DB::table('job_applications')
+        $rawCandidates = DB::table('job_applications')
             ->select(
                 'job_applications.id',
                 'job_applications.condidate_type',
@@ -8237,194 +8256,18 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             })
             ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
             ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
-            ->where('job_applications.id', $candidateId)
+            ->whereIn('job_applications.id', $arr)
             ->where(function ($q) use ($companyId) {
                 $q->where('job_applications.company_id', $companyId)
                     ->orWhere('job_applications.thirdparty_company_id', $companyId);
             })
-            ->first();
+            ->get();
 
-        if (! $cand) {
+        if ($rawCandidates->isEmpty()) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate record not found or access denied.']);
         }
 
-        // 1. Authoritative City location (State and country strictly removed per requirements)
-        $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
-        if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
-            $cityName = trim((string) $cand->city);
-        }
-        if (! $cityName && ! empty($cand->current_location)) {
-            $cParts = explode(',', (string) $cand->current_location);
-            $cityName = trim($cParts[0]);
-        }
-        $cand->city_display = $cityName ?: '--';
-        $cand->location = $cityName ?: '--';
-
-        // Client Engagement Model (Exact model selected during add talent)
-        $engModel = trim((string) @$cand->employmentType);
-        if ($engModel === '') {
-            $outsourcingMap = [1 => 'Full Time', 2 => 'Contract', 3 => 'Part Time', 4 => 'Freelance'];
-            $engModel = $outsourcingMap[(int) (@$cand->outsourcing_type ?? 0)] ?? 'Contract';
-        }
-        $cand->engagement_model = $engModel;
-
-        // Commercials (Exact rate and commercial model entered during add talent)
-        $comissionType = (int) (@$cand->comission_type ?? 0);
-        $currencyList = GeneralMethod::currency();
-        $salaryMode = GeneralMethod::salaryMode();
-        $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
-        $currCode = $currencyList[$currId] ?? 'INR';
-        $currSymbolMap = [
-            'INR' => '₹',
-            'USD' => '$',
-            'EUR' => '€',
-            'GBP' => '£',
-            'AED' => 'AED ',
-            'CAD' => 'CA$',
-            'AUD' => 'A$',
-            'SGD' => 'S$',
-        ];
-        $sym = $currSymbolMap[$currCode] ?? ($currCode . ' ');
-
-        if ($comissionType === 1) {
-            $candCommercialsFormatted = 'Free Service';
-        } elseif (! empty($cand->bill_rate_amount) && is_numeric($cand->bill_rate_amount)) {
-            $bMode = (int) (@$cand->bill_rate_mode ?? 0);
-            $bModeText = $salaryMode[$bMode] ?? 'Annual';
-            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->bill_rate_amount) . ' / ' . $bModeText;
-        } elseif (! empty($cand->ectc) && is_numeric($cand->ectc)) {
-            $eMode = (int) (@$cand->current_ectc_mode ?? 0);
-            $eModeText = $salaryMode[$eMode] ?? 'Annual';
-            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->ectc) . ' / ' . $eModeText;
-        } elseif (! empty($cand->pay_rate_amount) && is_numeric($cand->pay_rate_amount)) {
-            $pMode = (int) (@$cand->pay_rate_mode ?? 0);
-            $pModeText = $salaryMode[$pMode] ?? 'Annual';
-            $candCommercialsFormatted = $sym . ' ' . number_format((float) $cand->pay_rate_amount) . ' / ' . $pModeText;
-        } else {
-            $candCommercialsFormatted = 'Competitive / Negotiable';
-        }
-        $cand->commercials_formatted = $candCommercialsFormatted;
-
-        // 2. Notice period formatting
-        $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
-        $npRaw = trim((string) @$cand->np_id);
-        $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
-        if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
-            $cand->notice = 'Immediate';
-        } elseif ($npMode === 0 && (int) $npRaw > 0) {
-            $cand->notice = (int) $npRaw.' Days';
-        } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
-            $cand->notice = (date('Y-m-d', $npTs) < date('Y-m-d')) ? 'Immediate' : ('Available '.date('d M Y', $npTs));
-        } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
-            $cand->notice = 'Available '.date('d M Y', $npTs);
-        } else {
-            $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
-        }
-
-        // 3. Work mode, experience & match
-        $wmRaw = trim((string) @$cand->wm);
-        $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
-        $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
-        $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
-        $cand->match = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
-        $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
-        $cand->report_date = now()->format('d M Y');
-        $cand->recruiter_name = auth()->user()->name ?? 'Recruiter';
-
-        // 4. Check resume document presence
-        $hasResume = false;
-        $resumeRaw = trim((string) @$cand->resume);
-        $resumeFilename = '';
-        $resumeUrl = '';
-
-        if ($resumeRaw !== '' && $resumeRaw !== '0' && strtolower($resumeRaw) !== 'null') {
-            $hasResume = true;
-            $pathPart = parse_url($resumeRaw, PHP_URL_PATH);
-            $resumeFilename = basename($pathPart ?: $resumeRaw);
-        } else {
-            $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
-            if ($docRow && ! empty($docRow->hashname)) {
-                $docHash = trim((string) $docRow->hashname);
-                if ($docHash !== '' && $docHash !== '0' && strtolower($docHash) !== 'null') {
-                    $hasResume = true;
-                    $pathPart = parse_url($docHash, PHP_URL_PATH);
-                    $resumeFilename = basename($pathPart ?: $docHash);
-                }
-            }
-        }
-
-        $downloadProxyUrl = route('service_company.bench-candidates.download', $cand->id);
-        $downloadPdfUrl = route('service_company.bench-candidates.download', ['id' => $cand->id, 'as_pdf' => 1]);
-
-        $cand->has_resume = $hasResume;
-        $cand->resume_filename = $resumeFilename;
-        $cand->resume_url = $downloadProxyUrl;
-        $cand->resume_r2_url = $downloadProxyUrl;
-        $cand->download_url = $downloadProxyUrl;
-        $cand->direct_download_url = $downloadProxyUrl;
-        $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
-        $cand->safe_name = $candSafeName;
-
-        $candResumeVal = $resumeRaw ?: (@$docHash ?: '');
-        $resumeExt = strtolower(pathinfo(parse_url($candResumeVal, PHP_URL_PATH) ?: $candResumeVal, PATHINFO_EXTENSION));
-        $cand->resume_extension = $resumeExt ?: 'pdf';
-        $cand->resume_pdf_url = $downloadPdfUrl;
-
-        // Intent: Fetch Relationship Manager Comments from isolated bench_candidate_rm_comments table
-        $rmCommentRow = DB::table('bench_candidate_rm_comments')
-            ->where('candidate_id', $cand->id)
-            ->where('company_id', $companyId)
-            ->first();
-        if (! $rmCommentRow) {
-            $rmCommentRow = DB::table('bench_candidate_rm_comments')
-                ->where('candidate_id', $cand->id)
-                ->first();
-        }
-        $cand->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
-
-        // 5. Talent Skills & Expertise for Pre-Screen Dossier
-        $benchSkills = DB::table('bench_candidate_skill_experience')
-            ->where('candidate_id', $cand->id)
-            ->select('skill_key', 'year', 'month', 'total_months', 'rating')
-            ->orderByDesc('rating')
-            ->orderBy('skill_key')
-            ->get();
-        $skillsArr = [];
-        foreach ($benchSkills as $bRow) {
-            $sn = trim((string) $bRow->skill_key);
-            if ($sn === '') continue;
-            $yr = (int) ($bRow->year ?? 0);
-            $mo = (int) ($bRow->month ?? 0);
-            if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
-                $yr = intdiv((int) $bRow->total_months, 12);
-                $mo = (int) $bRow->total_months % 12;
-            }
-            $sExpParts = [];
-            if ($yr > 0) $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
-            if ($mo > 0) $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
-            $skillsArr[] = [
-                'name' => ucwords($sn),
-                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
-                'exp' => $yr + ($mo / 12),
-                'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
-            ];
-            if (count($skillsArr) >= 12) break;
-        }
-        if (empty($skillsArr) && ! empty($cand->skills)) {
-            $rawSkills = array_filter(array_map('trim', explode(',', (string) $cand->skills)));
-            foreach ($rawSkills as $sName) {
-                $skillsArr[] = [
-                    'name' => ucwords($sName),
-                    'expText' => $cand->experience,
-                    'exp' => (float) $totExp ?: 0,
-                    'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
-                ];
-                if (count($skillsArr) >= 12) break;
-            }
-        }
-        $cand->skills_evaluated = $skillsArr;
-
-        // 6. Company branding
+        // Company branding (retrieved once)
         $companyRow = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', $companyId)->first();
         $companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
         $companyLogoDataUri = '';
@@ -8456,13 +8299,206 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
         $companyLogo = $companyLogoDataUri ?: (($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '');
-        $cand->report_company_name = $companyName;
-        $cand->report_company_logo = $companyLogo;
 
-        // 7. Email templates - Custom company templates removed per requirements
+        $currencyList = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+        $currSymbolMap = [
+            'INR' => '₹',
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'AED' => 'AED ',
+            'CAD' => 'CA$',
+            'AUD' => 'A$',
+            'SGD' => 'S$',
+        ];
+
+        // Format each selected candidate
+        $formattedCandidates = [];
+        foreach ($rawCandidates as $cand) {
+            // 1. Authoritative City location (State and country strictly removed per requirements)
+            $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+            if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
+                $cityName = trim((string) $cand->city);
+            }
+            if (! $cityName && ! empty($cand->current_location)) {
+                $cParts = explode(',', (string) $cand->current_location);
+                $cityName = trim($cParts[0]);
+            }
+            $cand->city_display = $cityName ?: '--';
+            $cand->location = $cityName ?: '--';
+
+            // Client Engagement Model (Exact model selected during add talent)
+            $engModel = trim((string) @$cand->employmentType);
+            if ($engModel === '') {
+                $outsourcingMap = [1 => 'Full Time', 2 => 'Contract', 3 => 'Part Time', 4 => 'Freelance'];
+                $engModel = $outsourcingMap[(int) (@$cand->outsourcing_type ?? 0)] ?? 'Contract';
+            }
+            $cand->engagement_model = $engModel;
+
+            // Commercials (Exact rate and commercial model entered during add talent)
+            $comissionType = (int) (@$cand->comission_type ?? 0);
+            $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
+            $currCode = $currencyList[$currId] ?? 'INR';
+            $sym = $currSymbolMap[$currCode] ?? ($currCode.' ');
+
+            if ($comissionType === 1) {
+                $candCommercialsFormatted = 'Free Service';
+            } elseif (! empty($cand->bill_rate_amount) && is_numeric($cand->bill_rate_amount)) {
+                $bMode = (int) (@$cand->bill_rate_mode ?? 0);
+                $bModeText = $salaryMode[$bMode] ?? 'Annual';
+                $candCommercialsFormatted = $sym.' '.number_format((float) $cand->bill_rate_amount).' / '.$bModeText;
+            } elseif (! empty($cand->ectc) && is_numeric($cand->ectc)) {
+                $eMode = (int) (@$cand->current_ectc_mode ?? 0);
+                $eModeText = $salaryMode[$eMode] ?? 'Annual';
+                $candCommercialsFormatted = $sym.' '.number_format((float) $cand->ectc).' / '.$eModeText;
+            } elseif (! empty($cand->pay_rate_amount) && is_numeric($cand->pay_rate_amount)) {
+                $pMode = (int) (@$cand->pay_rate_mode ?? 0);
+                $pModeText = $salaryMode[$pMode] ?? 'Annual';
+                $candCommercialsFormatted = $sym.' '.number_format((float) $cand->pay_rate_amount).' / '.$pModeText;
+            } else {
+                $candCommercialsFormatted = 'Competitive / Negotiable';
+            }
+            $cand->commercials_formatted = $candCommercialsFormatted;
+
+            // 2. Notice period formatting
+            $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
+            $npRaw = trim((string) @$cand->np_id);
+            $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
+            if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
+                $cand->notice = 'Immediate';
+            } elseif ($npMode === 0 && (int) $npRaw > 0) {
+                $cand->notice = (int) $npRaw.' Days';
+            } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = (date('Y-m-d', $npTs) < date('Y-m-d')) ? 'Immediate' : ('Available '.date('d M Y', $npTs));
+            } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
+                $cand->notice = 'Available '.date('d M Y', $npTs);
+            } else {
+                $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
+            }
+
+            // 3. Work mode, experience & match
+            $wmRaw = trim((string) @$cand->wm);
+            $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
+            $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
+            $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
+            $cand->match = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
+            $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
+            $cand->report_date = now()->format('d M Y');
+            $cand->recruiter_name = auth()->user()->name ?? 'Recruiter';
+
+            // 4. Check resume document presence
+            $hasResume = false;
+            $resumeRaw = trim((string) @$cand->resume);
+            $resumeFilename = '';
+            $docHash = '';
+
+            if ($resumeRaw !== '' && $resumeRaw !== '0' && strtolower($resumeRaw) !== 'null') {
+                $hasResume = true;
+                $pathPart = parse_url($resumeRaw, PHP_URL_PATH);
+                $resumeFilename = basename($pathPart ?: $resumeRaw);
+            } else {
+                $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
+                if ($docRow && ! empty($docRow->hashname)) {
+                    $docHash = trim((string) $docRow->hashname);
+                    if ($docHash !== '' && $docHash !== '0' && strtolower($docHash) !== 'null') {
+                        $hasResume = true;
+                        $pathPart = parse_url($docHash, PHP_URL_PATH);
+                        $resumeFilename = basename($pathPart ?: $docHash);
+                    }
+                }
+            }
+
+            $downloadProxyUrl = route('service_company.bench-candidates.download', $cand->id);
+            $downloadPdfUrl = route('service_company.bench-candidates.download', ['id' => $cand->id, 'as_pdf' => 1]);
+
+            $cand->has_resume = $hasResume;
+            $cand->resume_filename = $resumeFilename;
+            $cand->resume_url = $downloadProxyUrl;
+            $cand->resume_r2_url = $downloadProxyUrl;
+            $cand->download_url = $downloadProxyUrl;
+            $cand->direct_download_url = $downloadProxyUrl;
+            $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
+            $cand->safe_name = $candSafeName;
+
+            $candResumeVal = $resumeRaw ?: (@$docHash ?: '');
+            $resumeExt = strtolower(pathinfo(parse_url($candResumeVal, PHP_URL_PATH) ?: $candResumeVal, PATHINFO_EXTENSION));
+            $cand->resume_extension = $resumeExt ?: 'pdf';
+            $cand->resume_pdf_url = $downloadPdfUrl;
+
+            // Intent: Fetch Relationship Manager Comments
+            $rmCommentRow = DB::table('bench_candidate_rm_comments')
+                ->where('candidate_id', $cand->id)
+                ->where('company_id', $companyId)
+                ->first();
+            if (! $rmCommentRow) {
+                $rmCommentRow = DB::table('bench_candidate_rm_comments')
+                    ->where('candidate_id', $cand->id)
+                    ->first();
+            }
+            $cand->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
+
+            // 5. Talent Skills & Expertise for Pre-Screen Dossier
+            $benchSkills = DB::table('bench_candidate_skill_experience')
+                ->where('candidate_id', $cand->id)
+                ->select('skill_key', 'year', 'month', 'total_months', 'rating')
+                ->orderByDesc('rating')
+                ->orderBy('skill_key')
+                ->get();
+            $skillsArr = [];
+            foreach ($benchSkills as $bRow) {
+                $sn = trim((string) $bRow->skill_key);
+                if ($sn === '') {
+                    continue;
+                }
+                $yr = (int) ($bRow->year ?? 0);
+                $mo = (int) ($bRow->month ?? 0);
+                if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
+                    $yr = intdiv((int) $bRow->total_months, 12);
+                    $mo = (int) $bRow->total_months % 12;
+                }
+                $sExpParts = [];
+                if ($yr > 0) {
+                    $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
+                }
+                if ($mo > 0) {
+                    $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
+                }
+                $skillsArr[] = [
+                    'name' => ucwords($sn),
+                    'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
+                    'exp' => $yr + ($mo / 12),
+                    'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
+                ];
+                if (count($skillsArr) >= 12) {
+                    break;
+                }
+            }
+            if (empty($skillsArr) && ! empty($cand->skills)) {
+                $rawSkills = array_filter(array_map('trim', explode(',', (string) $cand->skills)));
+                foreach ($rawSkills as $sName) {
+                    $skillsArr[] = [
+                        'name' => ucwords($sName),
+                        'expText' => $cand->experience,
+                        'exp' => (float) $totExp ?: 0,
+                        'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
+                    ];
+                    if (count($skillsArr) >= 12) {
+                        break;
+                    }
+                }
+            }
+            $cand->skills_evaluated = $skillsArr;
+            $cand->report_company_name = $companyName;
+            $cand->report_company_logo = $companyLogo;
+
+            $formattedCandidates[] = $cand;
+        }
+
+        // Email templates - Custom company templates removed per requirements
         $templateData = collect();
 
-        // 8. Internal team & client contacts
+        // Internal team & client contacts
         $assignDataone = DB::table('users')
             ->leftJoin('role_user', 'role_user.user_id', 'users.id')
             ->leftJoin('users_profile', 'users_profile.user_id', 'users.id')
@@ -8497,10 +8533,14 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             ->where('client_contact_info.contact_person_email', '!=', '')
             ->get()->toArray();
 
-        // 9. Attach to controller data for Blade rendering
-        $this->applicationData = [$cand];
-        $this->applicationDataCount = 1;
-        $this->arr = [$cand->id];
+        $candidatesWithResumeCount = count(array_filter($formattedCandidates, fn ($c) => ! empty($c->has_resume)));
+        $candidatesWithoutResumeCount = count($formattedCandidates) - $candidatesWithResumeCount;
+
+        // Attach to controller data for Blade rendering
+        $this->applicationData = $formattedCandidates;
+        $this->applicationDataCount = count($formattedCandidates);
+        $this->arr = array_values(array_map(fn ($c) => (int) $c->id, $formattedCandidates));
+        $this->cand = $formattedCandidates[0] ?? null;
         $this->templateData = $templateData;
         $this->userdata = auth()->user();
         $this->companyName = $companyName;
@@ -8508,8 +8548,8 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->jobSkills = [];
         $this->internal_team_data = $assignDataone;
         $this->client_contacts_data = $assignDataclient;
-        $this->candidatesWithResumeCount = $hasResume ? 1 : 0;
-        $this->candidatesWithoutResumeCount = $hasResume ? 0 : 1;
+        $this->candidatesWithResumeCount = $candidatesWithResumeCount;
+        $this->candidatesWithoutResumeCount = $candidatesWithoutResumeCount;
         $this->cc_email_count = 0;
         $this->cc_email_data = [];
 
@@ -8530,25 +8570,33 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         if (is_string($rawArr)) {
             $rawArr = json_decode($rawArr, true) ?: [$rawArr];
         }
-        $candId = ! empty($rawArr[0]) ? (int) $rawArr[0] : (int) $request->input('candidate_id', 0);
+        if (empty($rawArr)) {
+            $singleId = (int) $request->input('candidate_id', 0);
+            if ($singleId > 0) {
+                $rawArr = [$singleId];
+            }
+        }
+        $arr = array_slice(array_unique(array_filter(array_map('intval', (array) $rawArr))), 0, 5);
 
-        if ($candId <= 0) {
+        if (empty($arr)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate ID is required.']);
         }
 
-        // Verify candidate ownership
-        $candidate = DB::table('job_applications')
-            ->where('id', $candId)
+        // Verify candidate ownership across all selected candidates
+        $candidates = DB::table('job_applications')
+            ->whereIn('id', $arr)
             ->where(function ($q) use ($companyId) {
                 $q->where('company_id', $companyId)
                     ->orWhere('thirdparty_company_id', $companyId);
             })
-            ->first();
+            ->get()
+            ->keyBy('id');
 
-        if (! $candidate) {
+        if ($candidates->isEmpty()) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found or access denied.']);
         }
 
+        $candidate = $candidates->first();
         $subject = trim((string) $request->subject);
         $formatId = (int) $request->input('attached_cv_format', 0);
         $message = (string) $request->editor1;
@@ -8625,19 +8673,20 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         }
 
         $attachments = [];
-        $handled = false;
+        $handledMap = [];
 
-        // 1. Process client-uploaded custom attachments via FormData (WASM compiled PDF)
+        // 1. Process client-uploaded custom attachments via FormData (WASM compiled PDF) for each candidate
         $uploadedCustomFiles = $request->file('custom_attachments');
         if (! empty($uploadedCustomFiles) && is_array($uploadedCustomFiles)) {
             foreach ($uploadedCustomFiles as $cId => $uploadedFile) {
                 if ($uploadedFile && $uploadedFile->isValid()) {
-                    $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) $candidate->full_name));
+                    $cObj = $candidates->get((int) $cId) ?: $candidate;
+                    $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) ($cObj->full_name ?? 'Candidate')));
                     $origName = $uploadedFile->getClientOriginalName();
                     $customFilename = (! empty($origName) && str_ends_with(strtolower($origName), '.pdf'))
                         ? $origName
-                        : 'JERO_'.$candName.'_'.$candId.'.pdf';
-                    $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.pdf';
+                        : 'JERO_'.$candName.'_'.$cId.'.pdf';
+                    $storedName = 'bench_fwd_'.$cId.'_'.uniqid().'.pdf';
                     $uploadedFile->move($tempDir, $storedName);
 
                     $attachments[] = [
@@ -8646,125 +8695,151 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                         'is_local' => true,
                         'options' => [],
                     ];
-                    $handled = true;
-                    break;
+                    $handledMap[$cId] = true;
                 }
             }
         }
 
         // 2. Base64 fallback if file upload was sent as base64 string
-        if (! $handled && $request->filled('custom_attachments_base64')) {
+        if ($request->filled('custom_attachments_base64')) {
             $customBase64Map = json_decode($request->input('custom_attachments_base64'), true) ?: [];
-            if (! empty($customBase64Map[$candId])) {
-                $b64 = $customBase64Map[$candId];
-                if (strpos($b64, 'base64,') !== false) {
-                    $b64 = explode('base64,', $b64)[1];
-                }
-                $binData = base64_decode($b64);
-                if ($binData && strlen($binData) > 50) {
-                    $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) $candidate->full_name));
-                    $customFilename = 'JERO_'.$candName.'_'.$candId.'.pdf';
-                    $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.pdf';
-                    file_put_contents($tempDir.'/'.$storedName, $binData);
-
-                    $attachments[] = [
-                        'path' => $tempDir.'/'.$storedName,
-                        'filename' => $customFilename,
-                        'is_local' => true,
-                        'options' => [],
-                    ];
-                    $handled = true;
-                }
-            }
-        }
-
-        // 3. Option 1: Original candidate resume attachment
-        if (! $handled && $formatId === 1) {
-            $hashname = $candidate->resume;
-            if (empty($hashname)) {
-                $docRow = DB::table('documents')
-                    ->where('documentable_id', $candId)
-                    ->where('name', 'Resume')
-                    ->first();
-                if ($docRow && ! empty($docRow->hashname)) {
-                    $hashname = $docRow->hashname;
-                }
-            }
-
-            $cleanName = basename(parse_url($hashname, PHP_URL_PATH) ?: $hashname);
-            $extension = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
-
-            if (! empty($hashname) && in_array($extension, ['pdf', 'doc', 'docx'])) {
-                $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) $candidate->full_name));
-                $customName = 'Jeroworks_'.$candName.'.'.$extension;
-
-                // 3a. Authoritative Cloudflare R2 disk fetch
-                $r2Key = '';
-                if (str_starts_with($hashname, 'https://file.jero.works/')) {
-                    $r2Key = ltrim((string) parse_url($hashname, PHP_URL_PATH), '/');
-                } elseif (! filter_var($hashname, FILTER_VALIDATE_URL)) {
-                    $r2Key = ltrim($hashname, '/');
-                }
-
-                if (! empty($r2Key)) {
-                    try {
-                        if (\Storage::disk('r2')->exists($r2Key)) {
-                            $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
-                            file_put_contents($tempDir.'/'.$storedName, \Storage::disk('r2')->get($r2Key));
-                            $attachments[] = [
-                                'path' => $tempDir.'/'.$storedName,
-                                'filename' => $customName,
-                                'is_local' => true,
-                                'options' => [],
-                            ];
-                            $handled = true;
-                        }
-                    } catch (\Throwable $r2Err) {
-                        \Log::warning('[Bench Forward Resume Send] R2 attachment read error: '.$r2Err->getMessage());
+            foreach ($arr as $cId) {
+                if (empty($handledMap[$cId]) && ! empty($customBase64Map[$cId])) {
+                    $b64 = $customBase64Map[$cId];
+                    if (strpos($b64, 'base64,') !== false) {
+                        $b64 = explode('base64,', $b64)[1];
                     }
-                }
+                    $binData = base64_decode($b64);
+                    if ($binData && strlen($binData) > 50) {
+                        $cObj = $candidates->get((int) $cId) ?: $candidate;
+                        $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) ($cObj->full_name ?? 'Candidate')));
+                        $customFilename = 'JERO_'.$candName.'_'.$cId.'.pdf';
+                        $storedName = 'bench_fwd_'.$cId.'_'.uniqid().'.pdf';
+                        file_put_contents($tempDir.'/'.$storedName, $binData);
 
-                // 3b. Remote HTTP fetch fallback
-                if (! $handled && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
-                    try {
-                        $resp = Http::timeout(25)->get($hashname);
-                        if ($resp->successful()) {
-                            $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
-                            file_put_contents($tempDir.'/'.$storedName, $resp->body());
-                            $attachments[] = [
-                                'path' => $tempDir.'/'.$storedName,
-                                'filename' => $customName,
-                                'is_local' => true,
-                                'options' => [],
-                            ];
-                            $handled = true;
-                        }
-                    } catch (\Throwable $remoteErr) {}
-                }
-
-                if (! $handled) {
-                    $localDoc = public_path('user-uploads/documents/'.$candId.'/'.$cleanName);
-                    $localResume = public_path('user-uploads/resumes/'.$cleanName);
-                    $localDirect = public_path('user-uploads/'.$cleanName);
-
-                    if (file_exists($localDoc)) {
-                        $attachments[] = ['path' => $localDoc, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                        $handled = true;
-                    } elseif (file_exists($localResume)) {
-                        $attachments[] = ['path' => $localResume, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                        $handled = true;
-                    } elseif (file_exists($localDirect)) {
-                        $attachments[] = ['path' => $localDirect, 'filename' => $customName, 'is_local' => true, 'options' => []];
-                        $handled = true;
+                        $attachments[] = [
+                            'path' => $tempDir.'/'.$storedName,
+                            'filename' => $customFilename,
+                            'is_local' => true,
+                            'options' => [],
+                        ];
+                        $handledMap[$cId] = true;
                     }
                 }
             }
         }
 
-        if ($formatId !== 1 && ! $handled) {
+        // 3. Option 1: Original candidate resume attachments for all selected candidates
+        if ($formatId === 1) {
+            foreach ($candidates as $candItem) {
+                $candId = $candItem->id;
+                $hashname = $candItem->resume;
+                if (empty($hashname)) {
+                    $docRow = DB::table('documents')
+                        ->where('documentable_id', $candId)
+                        ->where('name', 'Resume')
+                        ->first();
+                    if ($docRow && ! empty($docRow->hashname)) {
+                        $hashname = $docRow->hashname;
+                    }
+                }
+
+                $cleanName = basename(parse_url($hashname, PHP_URL_PATH) ?: $hashname);
+                $extension = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+
+                if (! empty($hashname) && in_array($extension, ['pdf', 'doc', 'docx'])) {
+                    $candName = str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', (string) ($candItem->full_name ?? 'Candidate')));
+                    $customName = 'Jeroworks_'.$candName.'.'.$extension;
+                    $attachedThisCand = false;
+
+                    // 3a. Authoritative Cloudflare R2 disk fetch
+                    $r2Key = '';
+                    if (str_starts_with($hashname, 'https://file.jero.works/')) {
+                        $r2Key = ltrim((string) parse_url($hashname, PHP_URL_PATH), '/');
+                    } elseif (! filter_var($hashname, FILTER_VALIDATE_URL)) {
+                        $r2Key = ltrim($hashname, '/');
+                    }
+
+                    if (! empty($r2Key)) {
+                        try {
+                            if (\Storage::disk('r2')->exists($r2Key)) {
+                                $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
+                                file_put_contents($tempDir.'/'.$storedName, \Storage::disk('r2')->get($r2Key));
+                                $attachments[] = [
+                                    'path' => $tempDir.'/'.$storedName,
+                                    'filename' => $customName,
+                                    'is_local' => true,
+                                    'options' => [],
+                                ];
+                                $attachedThisCand = true;
+                            }
+                        } catch (\Throwable $r2Err) {
+                            \Log::warning('[Bench Forward Resume Send] R2 attachment read error: '.$r2Err->getMessage());
+                        }
+                    }
+
+                    // 3b. Remote HTTP fetch fallback
+                    if (! $attachedThisCand && (str_starts_with($hashname, 'http://') || str_starts_with($hashname, 'https://'))) {
+                        try {
+                            $resp = Http::timeout(25)->get($hashname);
+                            if ($resp->successful()) {
+                                $storedName = 'bench_fwd_'.$candId.'_'.uniqid().'.'.$extension;
+                                file_put_contents($tempDir.'/'.$storedName, $resp->body());
+                                $attachments[] = [
+                                    'path' => $tempDir.'/'.$storedName,
+                                    'filename' => $customName,
+                                    'is_local' => true,
+                                    'options' => [],
+                                ];
+                                $attachedThisCand = true;
+                            }
+                        } catch (\Throwable $remoteErr) {
+                        }
+                    }
+
+                    if (! $attachedThisCand) {
+                        $localDoc = public_path('user-uploads/documents/'.$candId.'/'.$cleanName);
+                        $localResume = public_path('user-uploads/resumes/'.$cleanName);
+                        $localDirect = public_path('user-uploads/'.$cleanName);
+
+                        if (file_exists($localDoc)) {
+                            $attachments[] = ['path' => $localDoc, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        } elseif (file_exists($localResume)) {
+                            $attachments[] = ['path' => $localResume, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        } elseif (file_exists($localDirect)) {
+                            $attachments[] = ['path' => $localDirect, 'filename' => $customName, 'is_local' => true, 'options' => []];
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($formatId !== 1 && empty($attachments)) {
             return Reply::dataOnly([
                 'status' => 'error',
                 'message' => 'Custom resume compilation was not completed by the client WASM engine. Please re-open the drawer and try sending again.',
+            ]);
+        }
+
+        // 4. Strict 6 MB email deliverability ceiling guard
+        $totalBytes = 0;
+        foreach ($attachments as $att) {
+            if (! empty($att['path']) && file_exists($att['path'])) {
+                $totalBytes += filesize($att['path']);
+            }
+        }
+
+        if ($totalBytes > 6 * 1024 * 1024) {
+            // Clean up temporary files created for this request
+            foreach ($attachments as $att) {
+                if (! empty($att['is_local']) && ! empty($att['path']) && file_exists($att['path'])) {
+                    @unlink($att['path']);
+                }
+            }
+
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Total email attachments ('.round($totalBytes / (1024 * 1024), 2).' MB) exceed the 6 MB deliverability limit. Please reduce the number of profiles or use an optimized resume format.',
             ]);
         }
 
@@ -8789,14 +8864,23 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
+        // Aggregate unique skills across all selected candidates
         $candidateSkillsArray = [];
-        if (! empty($candidate->skills)) {
-            if (is_array($candidate->skills)) {
-                $candidateSkillsArray = $candidate->skills;
-            } else {
-                $candidateSkillsArray = array_values(array_filter(array_map('trim', explode(',', (string) $candidate->skills))));
+        foreach ($candidates as $candItem) {
+            if (! empty($candItem->skills)) {
+                $skillsList = is_array($candItem->skills) ? $candItem->skills : explode(',', (string) $candItem->skills);
+                foreach ($skillsList as $s) {
+                    $sClean = trim($s);
+                    if ($sClean !== '' && ! in_array($sClean, $candidateSkillsArray)) {
+                        $candidateSkillsArray[] = $sClean;
+                    }
+                }
             }
         }
+
+        $positionLabel = count($candidates) > 1
+            ? (count($candidates).' In-House Candidates')
+            : ($candidate->current_designation ?? 'Candidate');
 
         // Dispatch queued mail job per recipient
         foreach ($to as $key => $mailto) {
@@ -8822,7 +8906,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'subject' => $subject,
                 'company_name' => $companyNameStr,
                 'consultant_name' => auth()->user()->name ?? 'Recruiter',
-                'position' => $candidate->current_designation ?? 'Candidate',
+                'position' => $positionLabel,
                 'candidate_skills' => $candidateSkillsArray,
             ];
 
@@ -8841,10 +8925,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             }
         }
 
+        $successMsg = count($candidates) > 1
+            ? (count($candidates).' candidate resumes forwarded successfully via email!')
+            : 'Candidate resume forwarded successfully via email!';
+
         return Reply::dataOnly([
             'status' => 'success',
-            'message' => 'Candidate resume forwarded successfully via email!',
+            'message' => $successMsg,
         ]);
     }
 }
-
