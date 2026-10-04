@@ -7,10 +7,14 @@
  * (/service_company/bench-candidates)
  * 
  * 100% COMPLETE ISOLATION MANDATE (Rule 15 & Rule 17 Compliance):
- * - This engine is physically decoupled and isolated from CV Tracker, App Tracker, and Forward Resume engines.
+ * - Decoupled and isolated from CV Tracker, App Tracker, and Forward Resume engines.
  * - Operates exclusively on In-House Talent attributes (bench availability, bench skill matrix ratings,
  *   relationship manager comments, commercials, and authoritative location strings).
  * - 100% Client-Side Execution (User RAM + WASM): 0% server/DB read strain, 0% server PDF CPU/RAM strain.
+ * - Point-by-point exact replica of the platform's standard Pre-Screen Evaluation Dossier layout.
+ * - Pure sub-pixel keyword highlighter (never highlights the whole row, only exact keyword bounds).
+ * - A4-normalized page merging (every page scaled and centered to standard A4 595.28 pt width).
+ * - Height-expanded branding header (never obscures or overlaps original resume text).
  * - Scoped to window.AgyBenchDownloadResumeEngine with zero global scope pollution.
  */
 
@@ -34,7 +38,7 @@
   var rsDownloadBytesCache = {};
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SVG ICONS FOR IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake)
+  // SVG ICONS FOR IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - Exact Replica)
   // ═══════════════════════════════════════════════════════════════════════════
   var rsStarGold = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
   var rsStarMuted = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#cbd5e1" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
@@ -52,7 +56,11 @@
   var rsIconEmail = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm8 7.2L4.7 7H4v.7l8 5.7 8-5.7V7h-.7L12 12.2z"/></svg>';
   var rsIconPhone = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7.2 2.8l3 3a2 2 0 0 1 .4 2.2l-.9 2.1a13.5 13.5 0 0 0 4.2 4.2l2.1-.9a2 2 0 0 1 2.2.4l3 3a2 2 0 0 1 0 2.8l-1.4 1.4c-.8.8-2 .9-3 .5A25.2 25.2 0 0 1 2.5 7.2c-.4-1-.3-2.2.5-3l1.4-1.4a2 2 0 0 1 2.8 0z"/></svg>';
   var rsIconLinkedin = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3.4 15V9.6H6V18h2.4zM7.2 8.5a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8zM18 18v-4.8c0-2.5-1.3-3.8-3.2-3.8-1.4 0-2.1.8-2.5 1.4V9.6H10V18h2.4v-4.2c0-1.1.2-2.2 1.6-2.2s1.5 1.3 1.5 2.3V18H18z"/></svg>';
+  var rsIconJobDescription = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M8 2h8a2 2 0 0 1 2 2v2h2v16H4V6h2V4a2 2 0 0 1 2-2zm0 4h8V4H8v2zm-1 6h10v-1.8H7V12zm0 4h10v-1.8H7V16zm0 4h7v-1.8H7V20z"/></svg>';
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SCRIPT LOADER HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
   function rsLoadScript(src) {
     return new Promise(function (resolve, reject) {
       var existing = document.querySelector('script[src="' + src + '"]');
@@ -174,6 +182,72 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // STRING & VALUE UTILITIES
+  // ═══════════════════════════════════════════════════════════════════════════
+  function clean(value, fallback) {
+    value = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+    return value || fallback || '--';
+  }
+
+  function limitText(value, max, fallback) {
+    value = clean(value, fallback || '--');
+    return value.length > max ? value.slice(0, max - 1).trim() + '...' : value;
+  }
+
+  function safeNumber(value, min, max) {
+    value = parseInt(value, 10);
+    if (isNaN(value)) value = 0;
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function isGap(value) {
+    value = clean(value, '');
+    return !value || value === '--' || value === '-' || /^available 01 jan 1970$/i.test(value);
+  }
+
+  function cityOnly(value) {
+    value = clean(value, '--');
+    if (isGap(value) || /^\d+$/.test(String(value).trim())) return '--';
+    var commaParts = value.split(',').map(function (part) { return clean(part, ''); }).filter(Boolean);
+    var candidateCity = commaParts.length > 0 ? commaParts[0] : value;
+    if (/^\d+$/.test(String(candidateCity).trim())) return '--';
+    if (commaParts.length > 1) return candidateCity;
+    var states = 'andhra pradesh|arunachal pradesh|assam|bihar|chhattisgarh|goa|gujarat|haryana|himachal pradesh|jharkhand|karnataka|kerala|madhya pradesh|maharashtra|manipur|meghalaya|mizoram|nagaland|odisha|punjab|rajasthan|sikkim|tamil nadu|telangana|tripura|uttar pradesh|uttarakhand|west bengal|delhi|jammu and kashmir|ladakh|puducherry|chandigarh|dadra and nagar haveli|daman and diu|andaman and nicobar islands|lakshadweep';
+    var pattern = new RegExp('\\s+(' + states + ')$', 'i');
+    var res = clean(value.replace(pattern, ''), '--');
+    return /^\d+$/.test(String(res).trim()) ? '--' : res;
+  }
+
+  function dataUriBytes(dataUri) {
+    var match = String(dataUri || '').match(/^data:([^;]+);base64,(.+)$/i);
+    if (!match) return null;
+    var raw = atob(match[2]);
+    var bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return { mime: match[1].toLowerCase(), bytes: bytes };
+  }
+
+  function rsLogoDataUri(rawUrl) {
+    rawUrl = clean(rawUrl, '');
+    if (!rawUrl || rawUrl === '--') return Promise.resolve(null);
+    if (/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
+    if (rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
+    rsLogoCache[rawUrl] = fetch(rawUrl, { credentials: 'include', cache: 'force-cache' })
+      .then(function (response) { return response.ok ? response.blob() : null; })
+      .then(function (blob) {
+        if (!blob) return null;
+        return new Promise(function (resolve) {
+          var reader = new FileReader();
+          reader.onload = function () { resolve(reader.result); };
+          reader.onerror = function () { resolve(null); };
+          reader.readAsDataURL(blob);
+        });
+      })
+      .catch(function () { return null; });
+    return rsLogoCache[rawUrl];
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // CANDIDATE RESUME STREAMING & CACHING
   // ═══════════════════════════════════════════════════════════════════════════
   async function fetchCandidateResumeBytes(cand) {
@@ -256,7 +330,7 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // IN-HOUSE EVALUATION REPORT DOSSIER BUILDER (pdfMake)
+  // SKILLS NORMALIZATION
   // ═══════════════════════════════════════════════════════════════════════════
   function getBenchCandidateEvaluatedSkills(cand) {
     if (cand && Array.isArray(cand.skills_evaluated) && cand.skills_evaluated.length > 0) {
@@ -287,304 +361,428 @@
     return [];
   }
 
-  function normalizeBenchCandidateData(c) {
-    var rawSkills = getBenchCandidateEvaluatedSkills(c);
-    var candidateRating = typeof c.rating === 'number' ? c.rating : parseFloat(c.rating) || 4;
-    var candidateMatch = typeof c.match === 'number' ? c.match : (candidateRating ? Math.min(100, Math.max(40, Math.round(candidateRating * 20))) : 85);
+  function normalizeBenchCandidateData(candidate, companyData) {
+    companyData = companyData || {};
+    var rawSkills = getBenchCandidateEvaluatedSkills(candidate);
 
-    var cleanExp = (c.experience || '').trim();
-    if (!cleanExp || cleanExp === '--') {
-      var numExp = parseFloat(c.total_exp);
-      cleanExp = (numExp && numExp > 0) ? numExp + ' Year' + (numExp === 1 ? '' : 's') : '--';
+    var exp = candidate.experience || '--';
+    if (!exp || exp === '--') {
+      var numExp = parseFloat(candidate.total_exp);
+      exp = (numExp && numExp > 0) ? numExp + ' Year' + (numExp === 1 ? '' : 's') : '--';
     }
 
-    var cleanLoc = (c.location || c.city_display || c.city_name || c.city || '').trim();
-    if (!cleanLoc || /^\d+$/.test(cleanLoc)) {
-      cleanLoc = '--';
+    var formattedLocation = cityOnly(candidate.location || candidate.city_display || candidate.city_name || candidate.city);
+    var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || 0).padStart(6, '0'));
+    var todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    var matchScore = typeof candidate.match === 'number' ? candidate.match : (candidate.rating ? Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20)) : 85);
+
+    var rawNotice = candidate.notice || candidate.notice_period || candidate.np_id || 'Immediate';
+    if (/01\s*jan\s*1970/i.test(rawNotice)) {
+      rawNotice = 'Immediate';
     }
 
-    var rmComment = (c.rm_comments || c.recruiter_note || '').trim();
+    var recruiterNote = candidate.rm_comments || candidate.recruiter_note || candidate.recruiter_note_text || candidate.comment || '';
+    if (typeof recruiterNote === 'string') {
+      recruiterNote = recruiterNote.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    if (recruiterNote.length > 500) {
+      recruiterNote = recruiterNote.slice(0, 497) + '...';
+    }
+
+    var rawEdu = candidate.qualification_name || candidate.qualification || candidate.education || '';
+    if (/^\d+$/.test(String(rawEdu).trim())) rawEdu = '';
+    var eduStr = rawEdu ? String(rawEdu).trim().toUpperCase() : 'Not Specified';
+
+    var rawWm = candidate.work_mode || candidate.workMode || candidate.wm || '';
+    var wmStr = rawWm ? String(rawWm).trim().replace(/[\s_-]+/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Not Specified';
+
+    var validation = [
+      { label: 'RESUME', status: candidate.has_resume ? 'Verified' : 'Discussed' },
+      { label: 'EMAIL ID', status: clean(candidate.email, '') !== '' ? 'Verified' : '-' },
+      { label: 'PHONE NUMBER', status: clean(candidate.phone, '') !== '' ? 'Verified' : '-' },
+      { label: 'LINKEDIN ID', status: clean(candidate.linkedin, '') !== '' ? 'Verified' : '-' },
+      { label: 'JOB DESCRIPTION', status: 'Discussed' }
+    ];
 
     return {
-      id: c.id,
-      name: (c.full_name || 'In-House Candidate').trim(),
-      role: (c.current_designation || 'Consultant').trim(),
-      experience: cleanExp,
-      location: cleanLoc,
-      notice: (c.notice || 'Immediate').trim(),
-      commercials: (c.commercials_formatted || 'Competitive / Negotiable').trim(),
-      engagementModel: (c.engagement_model || 'Contract').trim(),
-      match: candidateMatch,
-      reportId: c.report_id || ('JR' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + String(c.id).padStart(6, '0')),
-      reportDate: c.report_date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      recruiter: (c.recruiter_name || 'Recruiter').trim(),
-      recruiterNote: rmComment,
-      skills: rawSkills
+      id: candidate.id,
+      name: candidate.full_name || candidate.name || 'Candidate',
+      email: candidate.email || '',
+      phone: candidate.phone || '',
+      linkedin: candidate.linkedin || '',
+      designation: candidate.current_designation || candidate.designation || 'Technical Consultant',
+      company: candidate.current_company || candidate.cur_company_name || candidate.company || (companyData.companyName || 'In-House Talent'),
+      location: formattedLocation,
+      experience: exp,
+      notice: rawNotice,
+      education: eduStr,
+      workMode: wmStr,
+      reportId: reportId,
+      reportDate: candidate.report_date || candidate.reportDate || todayDate,
+      recruiterName: candidate.recruiter_name || candidate.recruiterName || companyData.recruiterName || 'Recruiter',
+      reportCompanyName: companyData.companyName || candidate.report_company_name || 'Hiring Partner',
+      reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
+      match: matchScore,
+      isImmediate: !!(candidate.is_immediate || rawNotice.toLowerCase() === 'immediate'),
+      recruiterNote: recruiterNote,
+      careerSummary: candidate.career_summary || candidate.careerSummary || candidate.careersummary || candidate.cover_letter || 'Verified in-house technical consultant with proven enterprise delivery experience.',
+      jobTitle: candidate.job_title || candidate.jobTitle || candidate.current_designation || 'Technical Consultant',
+      skills: rawSkills,
+      validation: validation,
+      resume: candidate.resume || '',
+      resumeExt: candidate.resume_extension || candidate.resumeExt || 'pdf'
     };
   }
 
-  function getBenchRatingStars(rating) {
-    var stars = [];
-    var r = Math.min(5, Math.max(0, Math.round(rating)));
-    for (var i = 0; i < 5; i++) {
-      stars.push({
-        svg: i < r ? rsStarGold : rsStarMuted,
-        width: 11,
-        height: 11,
-        margin: [0, 0, 2, 0]
-      });
-    }
-    return { columns: stars, width: 'auto' };
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - 100% Platform Replica)
+  // ═══════════════════════════════════════════════════════════════════════════
+  function headerCard(companyName, logoCell, reportDate, captainName) {
+    return {
+      margin: [0, 0, 0, 10],
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 535, h: 64, r: 6, lineWidth: 0.55, lineColor: '#dbe3ef', color: '#ffffff' }], margin: [0, 0, 0, -64] },
+        {
+          table: {
+            widths: [220, '*'],
+            body: [[
+              {
+                table: {
+                  widths: ['auto', '*'],
+                  body: [[logoCell, {
+                    stack: [
+                      { text: 'SHARED BY', fontSize: 6, bold: true, color: '#64748b', margin: [0, 1, 0, 3] },
+                      { text: companyName, fontSize: 11.2, bold: true, color: '#0f172a', margin: [0, 0, 0, 0] }
+                    ],
+                    border: [false, false, false, false]
+                  }]]
+                },
+                layout: 'noBorders',
+                margin: [14, 12, 10, 10],
+                border: [false, false, false, false]
+              },
+              {
+                stack: [
+                  { text: 'IN-HOUSE TALENT EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
+                ],
+                margin: [10, 14, 14, 10],
+                border: [false, false, false, false]
+              }
+            ]]
+          },
+          layout: 'noBorders'
+        }
+      ]
+    };
   }
 
-  function buildBenchDefinition(cand, companyName, companyLogo) {
-    var c = normalizeBenchCandidateData(cand);
+  function unbrandedHeaderCard(reportDate) {
+    return {
+      margin: [0, 0, 0, 10],
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 535, h: 64, r: 6, lineWidth: 0.55, lineColor: '#dbe3ef', color: '#ffffff' }], margin: [0, 0, 0, -64] },
+        {
+          table: {
+            widths: ['*'],
+            body: [[
+              {
+                stack: [
+                  { text: 'IN-HOUSE TALENT EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
+                ],
+                margin: [14, 14, 14, 10],
+                border: [false, false, false, false]
+              }
+            ]]
+          },
+          layout: 'noBorders'
+        }
+      ]
+    };
+  }
 
-    // Skills table rows (up to 12 skills)
-    var skillRows = [];
-    skillRows.push([
-      { text: 'EVALUATED SKILL / EXPERTISE', style: 'th', fillColor: '#f8fafc' },
-      { text: 'VERIFIED EXPERIENCE', style: 'th', fillColor: '#f8fafc' },
-      { text: 'PROFICIENCY / RATING', style: 'th', fillColor: '#f8fafc' }
-    ]);
-
-    var skillsList = c.skills.slice(0, 12);
-    if (skillsList.length === 0) {
-      skillsList = [{ name: c.role, expText: c.experience, rating: 4 }];
-    }
-
-    skillsList.forEach(function (s, idx) {
-      var bg = idx % 2 === 0 ? '#ffffff' : '#fbfcfd';
-      skillRows.push([
-        { text: s.name, style: 'tdBold', fillColor: bg },
-        { text: s.expText || '--', style: 'td', fillColor: bg },
+  function pairedCardRow(leftStack, rightStack, leftFill, rightFill, rightBorder) {
+    return {
+      margin: [0, 0, 0, 8],
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 264, h: 88, r: 6, lineWidth: 0.55, lineColor: '#cbd5e1', color: leftFill || '#ffffff' }, { type: 'rect', x: 271, y: 0, w: 264, h: 88, r: 6, lineWidth: 0.55, lineColor: rightBorder || '#cbd5e1', color: rightFill || '#ffffff' }], margin: [0, 0, 0, -88] },
         {
           columns: [
-            getBenchRatingStars(s.rating),
-            { text: ' (' + s.rating + '/5)', style: 'tdMuted', margin: [4, 1, 0, 0] }
+            { stack: Array.isArray(leftStack) ? leftStack : [leftStack], width: 264, margin: [12, 10, 12, 10] },
+            { stack: Array.isArray(rightStack) ? rightStack : [rightStack], width: 264, margin: [12, 10, 12, 10] }
           ],
-          fillColor: bg
+          columnGap: 7
         }
+      ]
+    };
+  }
+
+  function roundedFullCard(stack, margin, height, fill, border) {
+    return {
+      margin: margin || [0, 0, 0, 8],
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 535, h: height, r: 6, lineWidth: 0.55, lineColor: border || '#dbe3ef', color: fill || '#ffffff' }], margin: [0, 0, 0, -height] },
+        { table: { widths: ['*'], heights: function () { return height; }, body: [[{ stack: Array.isArray(stack) ? stack : [stack], margin: [12, 10, 12, 10] }]] }, layout: 'noBorders' }
+      ]
+    };
+  }
+
+  function fixedPanel(stack, margin, fill, border, minHeight) {
+    return {
+      margin: margin || [0, 0, 0, 7],
+      stack: [
+        { canvas: [{ type: 'rect', x: 0, y: 0, w: 260, h: minHeight || 72, r: 6, lineWidth: 0.55, lineColor: border || '#dbe3ef', color: fill || '#ffffff' }], margin: [0, 0, 0, -(minHeight || 72)] },
+        { table: { widths: ['*'], heights: function () { return minHeight || 72; }, body: [[{ stack: Array.isArray(stack) ? stack : [stack], margin: [12, 10, 12, 10] }]] }, layout: 'noBorders' }
+      ]
+    };
+  }
+
+  function sectionTitle(title, subtle, icon) {
+    if (!icon) return { text: title, style: subtle ? 'sectionTitleMuted' : 'sectionTitle', margin: [0, 0, 0, 8] };
+    return {
+      columns: [
+        { svg: icon, width: 10, margin: [0, 0, 0, 0] },
+        { text: '', width: 5 },
+        { text: title, style: subtle ? 'sectionTitleMuted' : 'sectionTitle', margin: [0, 0.5, 0, 0] }
+      ],
+      columnGap: 0,
+      margin: [0, 0, 0, 8]
+    };
+  }
+
+  function metricCell(label, value, icon) {
+    return {
+      stack: [
+        {
+          columns: [
+            { text: '', width: '*' },
+            { svg: icon, width: 10.5, margin: [0, 0.2, 0, 0] },
+            { text: '', width: 6 },
+            { text: clean(label).toUpperCase(), style: 'metricLabel', color: '#64748b', width: 'auto', margin: [0, 1.9, 0, 0] },
+            { text: '', width: '*' }
+          ],
+          columnGap: 0,
+          margin: [0, 0, 0, 8]
+        },
+        { text: clean(value), style: 'metricValue', alignment: 'center' }
+      ],
+      margin: [4, 9, 4, 8]
+    };
+  }
+
+  function labeledIconLine(icon, label, value, style, color, iconWidth) {
+    var width = iconWidth || 7;
+    return {
+      columns: [
+        { svg: icon, width: width, margin: [0, 1, 0, 0], alignment: 'left' },
+        { text: [{ text: label, bold: true }, ' ' + value], style: style || 'small', color: color || undefined, margin: [3, 0, 0, 0] }
+      ],
+      columnGap: 0
+    };
+  }
+
+  function buildSkillRows(skills) {
+    var rows = [
+      [
+        { text: 'SKILLS', style: 'tableHead' },
+        { text: 'EXPERIENCE', style: 'tableHead' },
+        { text: 'RATING', style: 'tableHead', alignment: 'center' }
+      ]
+    ];
+    skills = (skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).slice(0, 7);
+    if (!skills.length) {
+      rows.push([{ text: 'No skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
+      return rows;
+    }
+    skills.forEach(function (skill) {
+      var rating = safeNumber(skill.rating, 0, 5);
+      var exp = Number(skill.exp || 0);
+      var expText = clean(skill.expText, '');
+      var stars = [];
+      for (var i = 1; i <= 5; i++) stars.push({ svg: i <= rating ? rsStarGold : rsStarMuted, width: 7.7, margin: [0, 0.5, 1.2, 0] });
+      rows.push([
+        { text: clean(skill.name).toUpperCase(), style: 'tableCellBold', alignment: 'left' },
+        { text: expText !== '' && expText !== '--' ? expText : (exp > 0 ? exp + ' Year' + (exp > 1 ? 's' : '') : '--'), style: 'tableCell', color: '#334155' },
+        { columns: stars, columnGap: 0, alignment: 'center', margin: [17, 5, 0, 5] }
       ]);
     });
+    return rows;
+  }
 
-    var headerColumns = [];
-    if (companyLogo && companyLogo.startsWith('data:image')) {
-      headerColumns.push({
-        image: companyLogo,
-        fit: [140, 42],
-        alignment: 'left'
-      });
-    } else {
-      headerColumns.push({
-        text: (companyName || 'HIRING PARTNER').toUpperCase(),
-        style: 'logoFallback'
-      });
-    }
-
-    headerColumns.push({
-      stack: [
-        { text: 'IN-HOUSE TALENT EVALUATION REPORT', style: 'docHeaderTitle', alignment: 'right' },
-        { text: 'VERIFIED BENCH CONSULTANT DOSSIER', style: 'docHeaderSub', alignment: 'right' }
-      ]
+  function buildValidationRows(validation) {
+    var map = {};
+    (validation || []).forEach(function (row) {
+      var key = clean(row.label, '').toLowerCase();
+      if (key) map[key] = clean(row.status, '');
     });
-
-    var content = [
-      {
-        columns: headerColumns,
-        margin: [0, 0, 0, 14]
-      },
-      {
-        canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#2563eb' }],
-        margin: [0, 0, 0, 14]
-      },
-      {
-        style: 'candidateCard',
-        table: {
-          widths: ['*'],
-          body: [[
-            {
-              stack: [
-                {
-                  columns: [
-                    {
-                      stack: [
-                        { text: c.name.toUpperCase(), style: 'candidateName' },
-                        { text: c.role, style: 'candidateRole' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: c.match + '% MATCH', style: 'matchScore', alignment: 'right' },
-                        { text: 'TECHNICAL FIT', style: 'matchLabel', alignment: 'right' }
-                      ],
-                      width: 100
-                    }
-                  ],
-                  margin: [0, 0, 0, 12]
-                },
-                {
-                  canvas: [{ type: 'line', x1: 0, y1: 0, x2: 485, y2: 0, lineWidth: 0.5, lineColor: '#e2e8f0' }],
-                  margin: [0, 0, 0, 10]
-                },
-                {
-                  columns: [
-                    {
-                      stack: [
-                        { text: 'TOTAL EXPERIENCE', style: 'metaLabel' },
-                        { text: c.experience, style: 'metaValue' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'LOCATION', style: 'metaLabel' },
-                        { text: c.location, style: 'metaValue' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'BENCH AVAILABILITY', style: 'metaLabel' },
-                        { text: c.notice, style: 'metaValueHighlight' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'ENGAGEMENT MODEL', style: 'metaLabel' },
-                        { text: c.engagementModel, style: 'metaValue' }
-                      ]
-                    }
-                  ],
-                  margin: [0, 0, 0, 8]
-                },
-                {
-                  columns: [
-                    {
-                      stack: [
-                        { text: 'COMMERCIAL RATE', style: 'metaLabel' },
-                        { text: c.commercials, style: 'metaValueCommercials' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'DOSSIER ID', style: 'metaLabel' },
-                        { text: c.reportId, style: 'metaValue' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'DATE OF REPORT', style: 'metaLabel' },
-                        { text: c.reportDate, style: 'metaValue' }
-                      ]
-                    },
-                    {
-                      stack: [
-                        { text: 'ASSESSED BY', style: 'metaLabel' },
-                        { text: c.recruiter, style: 'metaValue' }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              fillColor: '#f8fafc',
-              margin: [12, 12, 12, 12]
-            }
-          ]]
-        },
-        layout: 'noBorders',
-        margin: [0, 0, 0, 14]
-      },
-      {
-        columns: [
-          { svg: rsIconSkill, width: 14, height: 14, margin: [0, 1, 6, 0] },
-          { text: 'TECHNICAL SKILLS & EXPERTISE MATRIX', style: 'sectionHeader' }
-        ],
-        margin: [0, 0, 0, 8]
-      },
-      {
-        table: {
-          headerRows: 1,
-          widths: ['*', 130, 150],
-          body: skillRows
-        },
-        layout: {
-          hLineWidth: function (i, node) { return (i === 0 || i === 1 || i === node.table.body.length) ? 0.75 : 0.5; },
-          vLineWidth: function () { return 0; },
-          hLineColor: function (i) { return (i === 1) ? '#cbd5e1' : '#e2e8f0'; },
-          paddingLeft: function () { return 10; },
-          paddingRight: function () { return 10; },
-          paddingTop: function () { return 7; },
-          paddingBottom: function () { return 7; }
-        },
-        margin: [0, 0, 0, 14]
-      }
+    var slots = [
+      { label: 'RESUME', key: 'resume', fallbackKey: 'resume verified', icon: rsIconResume },
+      { label: 'EMAIL ID', key: 'email id', fallbackKey: 'email verified', icon: rsIconEmail },
+      { label: 'PHONE NUMBER', key: 'phone number', fallbackKey: 'phone verified', icon: rsIconPhone },
+      { label: 'LINKEDIN ID', key: 'linkedin id', fallbackKey: 'linkedin verified', icon: rsIconLinkedin },
+      { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
     ];
-
-    if (c.recruiterNote && c.recruiterNote.length > 0) {
-      content.push({
-        columns: [
-          { svg: rsIconNote, width: 14, height: 14, margin: [0, 1, 6, 0] },
-          { text: 'RELATIONSHIP MANAGER ASSESSMENT & HIGHLIGHTS', style: 'sectionHeader' }
+    var cells = slots.map(function (row) {
+      var status = map[row.key] || map[row.fallbackKey] || '-';
+      if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
+      var verified = /verified|confirmed|completed|shared/i.test(status);
+      var isBlank = (status === '-' || status === '--' || !status);
+      var textColor = verified ? '#16a34a' : (isBlank ? '#94a3b8' : '#b45309');
+      return {
+        stack: [
+          {
+            columns: [
+              { text: '', width: '*' },
+              { svg: row.icon, width: 9.8, margin: [0, 0.2, 0, 0] },
+              { text: '', width: 5 },
+              { text: row.label.toUpperCase(), fontSize: 6.6, bold: true, color: '#0f172a', width: 'auto', margin: [0, 1.7, 0, 0] },
+              { text: '', width: '*' }
+            ],
+            columnGap: 0,
+            margin: [0, 0, 0, 7]
+          },
+          { text: status, fontSize: 6.5, bold: true, color: textColor, alignment: 'center', margin: [0, 0, 0, 0] }
         ],
-        margin: [0, 0, 0, 8]
-      });
-      content.push({
-        table: {
-          widths: ['*'],
-          body: [[
-            {
-              text: c.recruiterNote,
-              style: 'noteText',
-              fillColor: '#f1f5f9',
-              margin: [12, 10, 12, 10]
-            }
-          ]]
-        },
-        layout: 'noBorders',
-        margin: [0, 0, 0, 14]
-      });
-    }
-
-    content.push({
-      columns: [
-        { text: 'STRICTLY CONFIDENTIAL — PRE-SCREEN EVALUATION DOSSIER', style: 'footerText' },
-        { text: (companyName || 'HIRING PARTNER') + ' • IN-HOUSE BENCH TALENT', style: 'footerText', alignment: 'right' }
-      ],
-      margin: [0, 10, 0, 0]
+        margin: [2, 7, 2, 7]
+      };
     });
+    return [cells];
+  }
+
+  function buildDefinition(data, logoUri, options) {
+    options = options || {};
+    var noBranding = options.noBranding === true;
+    var score = safeNumber(data.match, 0, 100);
+    var summary = limitText(data.careerSummary, 560, 'No professional summary available.');
+    var noteMissing = isGap(data.recruiterNote);
+    var note = noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote, 420, '');
+    var rawNotice = data.notice || data.noticePeriod;
+    var joining = data.isImmediate ? 'Immediate' : (clean(rawNotice, 'Not Specified') === '--' ? 'Not Specified' : clean(rawNotice, 'Not Specified'));
+    var companyName = clean(data.reportCompanyName, 'Hiring Partner');
+    var skillCount = Math.max(1, Math.min(7, (data.skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).length));
+    var skillCardHeight = 90 + (skillCount * 31);
+    var logoCell = logoUri
+      ? { image: logoUri, fit: [42, 28], alignment: 'center', margin: [0, 0, 12, 0], border: [false, false, false, false] }
+      : { text: companyName.charAt(0).toUpperCase(), fontSize: 13, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 5, 12, 4], fillColor: '#eef2ff', border: [false, false, false, false] };
 
     return {
       pageSize: 'A4',
-      pageMargins: [40, 36, 40, 36],
-      content: content,
+      pageMargins: [30, 26, 30, 24],
+      defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1f2937', lineHeight: 1.22 },
       styles: {
-        logoFallback: { fontSize: 13, bold: true, color: '#1e293b' },
-        docHeaderTitle: { fontSize: 11, bold: true, color: '#0f172a' },
-        docHeaderSub: { fontSize: 8, color: '#64748b', bold: true },
-        candidateName: { fontSize: 16, bold: true, color: '#0f172a' },
-        candidateRole: { fontSize: 10, color: '#2563eb', bold: true, margin: [0, 2, 0, 0] },
-        matchScore: { fontSize: 14, bold: true, color: '#15803d' },
-        matchLabel: { fontSize: 7, color: '#15803d', bold: true },
-        metaLabel: { fontSize: 7, color: '#64748b', bold: true, margin: [0, 0, 0, 2] },
-        metaValue: { fontSize: 8.5, bold: true, color: '#1e293b' },
-        metaValueHighlight: { fontSize: 8.5, bold: true, color: '#16a34a' },
-        metaValueCommercials: { fontSize: 8.5, bold: true, color: '#2563eb' },
-        sectionHeader: { fontSize: 9.5, bold: true, color: '#0f172a' },
-        th: { fontSize: 7.5, bold: true, color: '#475569' },
-        td: { fontSize: 8, color: '#334155' },
-        tdBold: { fontSize: 8, bold: true, color: '#0f172a' },
-        tdMuted: { fontSize: 7.5, color: '#64748b' },
-        noteText: { fontSize: 8.5, color: '#1e293b', lineHeight: 1.35 },
-        footerText: { fontSize: 7, color: '#94a3b8' }
+        title: { fontSize: 14, bold: true, color: '#0f172a', alignment: 'right' },
+        eyebrow: { fontSize: 6.2, color: '#64748b', alignment: 'right' },
+        metaLabel: { fontSize: 5.7, color: '#64748b' },
+        metaValue: { fontSize: 7.4, bold: true, color: '#111827' },
+        candidateName: { fontSize: 18, bold: true, color: '#0f172a' },
+        designation: { fontSize: 9.2, bold: true, color: '#1d4ed8' },
+        small: { fontSize: 7.4, color: '#64748b' },
+        sectionTitle: { fontSize: 8.2, bold: true, color: '#1d4ed8' },
+        sectionTitleMuted: { fontSize: 8, bold: true, color: '#334155' },
+        tableHead: { fontSize: 8.4, bold: true, color: '#334155', fillColor: '#f8fafc', margin: [0, 6, 0, 6] },
+        tableCell: { fontSize: 8.6, color: '#334155', margin: [0, 6, 0, 6] },
+        tableCellBold: { fontSize: 8.6, bold: true, color: '#0f172a', margin: [0, 6, 0, 6] },
+        metricLabel: { fontSize: 6, color: '#64748b' },
+        metricValue: { fontSize: 7.2, bold: true, color: '#0f172a' },
+        muted: { fontSize: 7, color: '#64748b' },
+        body: { fontSize: 7.6, color: '#1f2937', lineHeight: 1.35 },
+        footer: { fontSize: 6, color: '#64748b' }
       },
-      defaultStyle: { font: 'Roboto' }
+      content: [
+        noBranding ? unbrandedHeaderCard(data.reportDate) : headerCard(companyName, logoCell, data.reportDate, data.recruiterName),
+        pairedCardRow([
+          { text: clean(data.name, 'Candidate'), style: 'candidateName' },
+          { text: clean(data.designation || data.jobTitle, '--'), style: 'designation', margin: [0, 3, 0, 8] },
+          labeledIconLine(rsIconExperience, 'EXPERIENCE:', (clean(data.experience, 'Not Specified') === '--' ? 'Not Specified' : clean(data.experience, 'Not Specified')).toUpperCase(), 'small', '#64748b', 6.5),
+          { stack: [labeledIconLine(rsIconCompany, 'CURRENT COMPANY:', (clean(data.company, 'Not Specified') === '--' ? 'Not Specified' : clean(data.company, 'Not Specified')).toUpperCase(), 'small', '#64748b', 6.5)], margin: [0, 3, 0, 0] }
+        ], [
+          { text: 'HIRING CONFIDENCE', fontSize: 12.4, bold: true, color: '#64748b', alignment: 'center', margin: [0, 8, 0, 0] },
+          { text: score + '%', fontSize: 30, bold: true, color: '#1d4ed8', alignment: 'center', margin: [0, 7, 0, 0] }
+        ], '#ffffff', '#f8fbff', '#cfe0ff'),
+        roundedFullCard([
+          {
+            table: {
+              widths: [116, 116, 164, 116],
+              body: [[
+                metricCell('Education', clean(data.education, 'Not Specified') === '--' ? 'Not Specified' : clean(data.education, 'Not Specified'), rsIconEducation),
+                metricCell('Notice Period', joining, rsIconCalendar),
+                metricCell('Location', clean(data.location, 'Not Specified') === '--' ? 'Not Specified' : clean(data.location, 'Not Specified'), rsIconLocation),
+                metricCell('Work Mode', clean(data.workMode, 'Not Specified') === '--' ? 'Not Specified' : clean(data.workMode, 'Not Specified'), rsIconLaptop)
+              ]]
+            },
+            layout: {
+              hLineWidth: function () { return 0; },
+              vLineWidth: function (i) { return i > 0 && i < 4 ? 0.45 : 0; },
+              vLineColor: function () { return '#dbe3ef'; },
+              paddingLeft: function () { return 0; },
+              paddingRight: function () { return 0; },
+              paddingTop: function () { return 0; },
+              paddingBottom: function () { return 0; }
+            }
+          }
+        ], [0, 0, 0, 8], 62, '#ffffff', '#dbe3ef'),
+        {
+          columns: [
+            fixedPanel([sectionTitle('EXECUTIVE SUMMARY', false, rsIconSummary), { text: summary, style: 'body' }], [0, 0, 6, 8], '#ffffff', '#dbe3ef', 148),
+            fixedPanel([sectionTitle('RECRUITER COMMENTS', false, rsIconNote), { text: note, style: 'body', color: noteMissing ? '#64748b' : '#1f2937', italics: noteMissing }], [6, 0, 0, 8], '#ffffff', '#dbe3ef', 148)
+          ],
+          columnGap: 0
+        },
+        roundedFullCard([
+          sectionTitle('SKILL INTELLIGENCE', false, rsIconSkill),
+          {
+            table: {
+              widths: ['*', 100, 78],
+              body: buildSkillRows(data.skills)
+            },
+            layout: {
+              hLineWidth: function (i) { return i === 1 ? 0.75 : 0.45; },
+              vLineWidth: function () { return 0; },
+              hLineColor: function (i) { return i === 1 ? '#94a3b8' : '#e2e8f0'; }
+            }
+          }
+        ], [0, 0, 0, 8], skillCardHeight, '#ffffff', '#dbe3ef'),
+        roundedFullCard([
+          sectionTitle('VERIFICATION STATUS', false, rsIconShield),
+          {
+            table: {
+              widths: ['*', '*', '*', '*', '*'],
+              body: buildValidationRows(data.validation)
+            },
+            layout: {
+              hLineWidth: function () { return 0; },
+              vLineWidth: function (i) { return i > 0 && i < 5 ? 0.55 : 0; },
+              vLineColor: function () { return '#cbd5e1'; },
+              paddingLeft: function () { return 0; },
+              paddingRight: function () { return 0; },
+              paddingTop: function () { return 0; },
+              paddingBottom: function () { return 0; }
+            }
+          }
+        ], [0, 0, 0, 8], 74, '#ffffff', '#dbe3ef'),
+        {
+          table: {
+            widths: ['*', 'auto'],
+            body: [[
+              { text: 'This report is generated by AI hiring platform jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 5, 0, 0] },
+              { text: 'www.jero.works', style: 'footer', border: [false, true, false, false], margin: [0, 5, 0, 0] }
+            ]]
+          },
+          layout: { hLineColor: function () { return '#e5e7eb'; }, hLineWidth: function () { return 0.6; }, vLineWidth: function () { return 0; } }
+        }
+      ]
     };
   }
 
   async function generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, isUnbranded) {
     var pdfMake = await ensurePdfMake();
-    var cLogo = isUnbranded ? null : companyLogo;
-    var cName = isUnbranded ? '' : companyName;
-    var docDef = buildBenchDefinition(cand, cName, cLogo);
+    var cLogo = isUnbranded ? null : await rsLogoDataUri(companyLogo);
+    var cName = isUnbranded ? '' : (companyName || 'Hiring Partner');
+    var normData = normalizeBenchCandidateData(cand, { companyName: cName, companyLogo: cLogo });
+    var docDef = buildDefinition(normData, cLogo, { noBranding: isUnbranded });
+
     return new Promise(function (resolve, reject) {
       try {
         var pdfDocGenerator = pdfMake.createPdf(docDef);
@@ -598,169 +796,411 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VECTOR COMPANY BRANDING INJECTION (PDF-Lib)
+  // VECTOR COMPANY BRANDING INJECTION (Height-Expanded Header)
   // ═══════════════════════════════════════════════════════════════════════════
-  async function addCompanyBrandingHeader(resumeBlob, companyName, companyLogo) {
+  async function addCompanyBrandingHeader(resumeBlob, companyName, companyLogo, reportDate) {
     var PDFLib = await ensurePdfLib();
-    var existingPdfBytes = await resumeBlob.arrayBuffer();
-    var pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes, { ignoreEncryption: true });
-    var pages = pdfDoc.getPages();
-    if (!pages || pages.length === 0) return resumeBlob;
+    var resumeBytes = await resumeBlob.arrayBuffer();
+    var resumeDoc = await PDFLib.PDFDocument.load(resumeBytes, { ignoreEncryption: true });
+    var sourcePages = resumeDoc.getPages();
+    if (!sourcePages.length) return resumeBlob;
 
-    var firstPage = pages[0];
-    var pageW = firstPage.getWidth();
-    var pageH = firstPage.getHeight();
+    var firstPage = sourcePages[0];
+    var pageSize = firstPage.getSize();
 
-    var bannerH = 46;
-    var rgb = PDFLib.rgb;
-
-    firstPage.drawRectangle({
-      x: 0,
-      y: pageH - bannerH,
-      width: pageW,
-      height: bannerH,
-      color: rgb(0.97, 0.98, 0.99),
-      borderColor: rgb(0.85, 0.88, 0.92),
-      borderWidth: 0.75
-    });
+    var targetDoc = await PDFLib.PDFDocument.create();
+    var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
     var logoImage = null;
-    if (companyLogo && companyLogo.startsWith('data:image')) {
+    var logoUri = await rsLogoDataUri(companyLogo);
+    var logoData = dataUriBytes(logoUri);
+    if (logoData) {
       try {
-        if (rsLogoCache[companyLogo]) {
-          logoImage = rsLogoCache[companyLogo];
-        } else {
-          var isJpg = companyLogo.indexOf('data:image/jpeg') === 0 || companyLogo.indexOf('data:image/jpg') === 0;
-          var b64Data = companyLogo.split(',')[1];
-          var binStr = atob(b64Data);
-          var len = binStr.length;
-          var bytes = new Uint8Array(len);
-          for (var i = 0; i < len; i++) {
-            bytes[i] = binStr.charCodeAt(i);
-          }
-          logoImage = isJpg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
-          rsLogoCache[companyLogo] = logoImage;
-        }
-      } catch (e) {
-        console.warn('[AgyBenchDownloadResumeEngine] Failed to embed branding logo:', e);
+        if (logoData.mime.indexOf('png') !== -1) logoImage = await targetDoc.embedPng(logoData.bytes);
+        else if (logoData.mime.indexOf('jpeg') !== -1 || logoData.mime.indexOf('jpg') !== -1) logoImage = await targetDoc.embedJpg(logoData.bytes);
+      } catch (err) {
+        logoImage = null;
       }
     }
 
-    if (logoImage) {
-      try {
-        var dims = logoImage.scale(1);
-        var targetH = 26;
-        var scale = targetH / dims.height;
-        var drawW = Math.min(dims.width * scale, 120);
-        var drawH = dims.height * (drawW / dims.width);
-        firstPage.drawImage(logoImage, {
-          x: 24,
-          y: pageH - bannerH + (bannerH - drawH) / 2,
-          width: drawW,
-          height: drawH
-        });
-      } catch (imgErr) {
-        console.warn('[AgyBenchDownloadResumeEngine] Error drawing logo image:', imgErr);
-      }
-    } else {
-      var font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
-      var brandText = (companyName || 'HIRING PARTNER').toUpperCase();
-      firstPage.drawText(brandText, {
-        x: 24,
-        y: pageH - bannerH + 18,
-        size: 11,
-        font: font,
-        color: rgb(0.1, 0.15, 0.25)
-      });
-    }
+    var headerScale = Math.max(1, Math.min(1.45, pageSize.width / 612));
+    var headerH = Math.max(66, Math.min(82, pageSize.width * 0.105)) * headerScale;
 
-    var fontSub = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
-    var subText = 'VERIFIED IN-HOUSE TALENT • PRESENTED BY ' + (companyName || 'HIRING PARTNER').toUpperCase();
-    firstPage.drawText(subText, {
-      x: pageW - 24 - (subText.length * 5.2),
-      y: pageH - bannerH + 18,
-      size: 7.5,
-      font: fontSub,
-      color: rgb(0.4, 0.45, 0.55)
+    // Create a new first page with expanded height so the header banner is placed ABOVE the resume content
+    var newFirst = targetDoc.addPage([pageSize.width, pageSize.height + headerH]);
+    var embeddedFirst = await targetDoc.embedPage(firstPage);
+    newFirst.drawPage(embeddedFirst, { x: 0, y: 0, width: pageSize.width, height: pageSize.height });
+
+    var topY = pageSize.height;
+    newFirst.drawRectangle({
+      x: 0,
+      y: topY,
+      width: pageSize.width,
+      height: headerH,
+      color: PDFLib.rgb(1, 1, 1),
+      borderColor: PDFLib.rgb(0.86, 0.89, 0.94),
+      borderWidth: 0.8
     });
 
-    var modifiedPdfBytes = await pdfDoc.save();
-    return new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+    newFirst.drawRectangle({
+      x: 0,
+      y: topY + headerH - (4 * headerScale),
+      width: pageSize.width,
+      height: 4 * headerScale,
+      color: PDFLib.rgb(0.12, 0.23, 0.54)
+    });
+
+    newFirst.drawRectangle({
+      x: 0,
+      y: topY,
+      width: pageSize.width,
+      height: 1.1 * headerScale,
+      color: PDFLib.rgb(0.88, 0.91, 0.95)
+    });
+
+    var compName = clean(companyName, 'Hiring Partner');
+    var logoBox = headerH - (26 * headerScale);
+    var logoX = 22 * headerScale;
+    var logoY = topY + (13 * headerScale);
+    var logoAreaW = 70 * headerScale;
+
+    if (logoImage) {
+      var dims = logoImage.scaleToFit(logoBox * 1.8, logoBox);
+      newFirst.drawImage(logoImage, {
+        x: logoX,
+        y: logoY + (logoBox - dims.height) / 2,
+        width: dims.width,
+        height: dims.height
+      });
+      logoAreaW = Math.max(56 * headerScale, Math.min(74 * headerScale, dims.width));
+    } else {
+      newFirst.drawRectangle({
+        x: logoX,
+        y: logoY,
+        width: logoBox,
+        height: logoBox,
+        color: PDFLib.rgb(0.93, 0.95, 1),
+        borderColor: PDFLib.rgb(0.75, 0.82, 0.98),
+        borderWidth: 0.8 * headerScale
+      });
+      newFirst.drawText(compName.charAt(0).toUpperCase(), {
+        x: logoX + (logoBox / 2) - (5 * headerScale),
+        y: logoY + (logoBox / 2) - (5 * headerScale),
+        size: 16 * headerScale,
+        font: boldFont,
+        color: PDFLib.rgb(0.12, 0.23, 0.54)
+      });
+      logoAreaW = logoBox;
+    }
+
+    var textX = logoX + logoAreaW + (12 * headerScale);
+    var confText = 'CONFIDENTIAL RESUME';
+    var dateText = clean(reportDate, '') || (new Date()).toLocaleDateString();
+    var confSize = 13 * headerScale;
+    var dateSize = 8.5 * headerScale;
+    var confW = boldFont.widthOfTextAtSize(confText, confSize);
+    var dateW = regularFont.widthOfTextAtSize(dateText, dateSize);
+    var rightMargin = 24 * headerScale;
+
+    newFirst.drawText('SHARED BY', {
+      x: textX,
+      y: topY + headerH - (27 * headerScale),
+      size: 7 * headerScale,
+      font: boldFont,
+      color: PDFLib.rgb(0.39, 0.45, 0.55)
+    });
+    newFirst.drawText(limitText(compName, 42, compName), {
+      x: textX,
+      y: topY + headerH - (45 * headerScale),
+      size: 12 * headerScale,
+      font: boldFont,
+      color: PDFLib.rgb(0.06, 0.09, 0.16)
+    });
+    newFirst.drawText(confText, {
+      x: pageSize.width - rightMargin - confW,
+      y: topY + headerH - (29 * headerScale),
+      size: confSize,
+      font: boldFont,
+      color: PDFLib.rgb(0.06, 0.09, 0.16)
+    });
+    newFirst.drawText(dateText, {
+      x: pageSize.width - rightMargin - dateW,
+      y: topY + headerH - (45 * headerScale),
+      size: dateSize,
+      font: regularFont,
+      color: PDFLib.rgb(0.39, 0.45, 0.55)
+    });
+
+    if (sourcePages.length > 1) {
+      var restPages = await targetDoc.copyPages(resumeDoc, resumeDoc.getPageIndices().slice(1));
+      restPages.forEach(function (page) { targetDoc.addPage(page); });
+    }
+
+    var finalBytes = await targetDoc.save();
+    return new Blob([finalBytes], { type: 'application/pdf' });
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TURBO VECTOR KEYWORD HIGHLIGHTING (PDF.js + PDF-Lib)
+  // VECTOR KEYWORD HIGHLIGHTING (Sub-pixel Canvas Measurement - Exact Replica)
   // ═══════════════════════════════════════════════════════════════════════════
-  async function buildTurboVectorHighlightedResume(params) {
-    var resumeBlob = params.resumeBlob;
-    var keywords = params.keywords || [];
-    if (!keywords || keywords.length === 0) return resumeBlob;
+  function rsKeywordPatternEscape(value) {
+    return String(value == null ? '' : value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
 
-    var pdfjs = await ensurePdfJs();
-    var PDFLib = await ensurePdfLib();
+  function rsKeywordAliasValues(value) {
+    var raw = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+    var normalized = raw.toLowerCase().replace(/[^a-z0-9+#.]+/g, ' ').replace(/\s+/g, ' ').trim();
+    var aliases = [raw];
+    function add(alias) {
+      if (alias && aliases.map(function (v) { return v.toLowerCase(); }).indexOf(alias.toLowerCase()) === -1) aliases.push(alias);
+    }
+    if (/\baws\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
+      add('AWS');
+      add('Amazon Web Services');
+    }
+    if (normalized === 'amazon web services') {
+      add('AWS');
+      add('AWS Cloud');
+    }
+    if ((/\bgcp\b/.test(normalized) || normalized === 'google cloud platform') && normalized.indexOf('cloud') !== -1) {
+      add('GCP');
+      add('Google Cloud');
+    }
+    if (/\bazure\b/.test(normalized) && /\bcloud\b/.test(normalized)) {
+      add('Azure');
+      add('Microsoft Azure');
+    }
+    return aliases;
+  }
 
-    var pdfBytes = await resumeBlob.arrayBuffer();
-    var loadingTask = pdfjs.getDocument({ data: pdfBytes.slice(0) });
-    var pdfJsDoc = await loadingTask.promise;
-    var numPages = pdfJsDoc.numPages;
+  function rsKeywordPatternFromValue(value) {
+    var raw = String(value == null ? '' : value).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    var compact = raw.replace(/\s+/g, '');
+    if (/^[A-Za-z][+#]{1,2}$/i.test(compact)) {
+      return '\\b' + rsKeywordPatternEscape(compact);
+    }
+    var expanded = raw
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Za-z])(\d)/g, '$1 $2')
+      .replace(/(\d)([A-Za-z])/g, '$1 $2');
+    var tokens = expanded.split(/[\s\u00a0\/\\_\-.+,;:()[\]{}|&]+/).filter(Boolean);
+    if (!tokens.length) return '';
+    var left = /^[A-Za-z0-9]/.test(tokens[0]) ? '\\b' : '';
+    var right = /[A-Za-z0-9]$/.test(tokens[tokens.length - 1]) ? '\\b' : '';
+    if (tokens.length === 1) {
+      return left + rsKeywordPatternEscape(tokens[0]) + right;
+    }
+    var flexibleJoin = '(?:[\\s\\u00a0\\/\\\\_\\-.+,;:()\\[\\]{}|&]+|\\b(?:and|or)\\b)*';
+    return left + tokens.map(rsKeywordPatternEscape).join(flexibleJoin) + right;
+  }
 
-    var kwMap = {};
-    keywords.forEach(function (k) {
-      var clean = (k || '').trim().toLowerCase();
-      if (clean.length > 1) kwMap[clean] = true;
-    });
+  function rsDeconstructCompoundSkill(value) {
+    var raw = String(value == null ? '' : value).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+    if (!raw) return [];
 
-    var pageHighlights = [];
-
-    for (var p = 1; p <= numPages; p++) {
-      var page = await pdfJsDoc.getPage(p);
-      var textContent = await page.getTextContent();
-      var viewport = page.getViewport({ scale: 1.0 });
-      var items = textContent.items || [];
-      var pageHlBoxes = [];
-
-      for (var i = 0; i < items.length; i++) {
-        var it = items[i];
-        var str = (it.str || '').toLowerCase();
-        if (!str.trim()) continue;
-
-        for (var kw in kwMap) {
-          if (str.indexOf(kw) !== -1) {
-            var tx = it.transform;
-            if (tx && tx.length >= 6) {
-              var x = tx[4];
-              var y = tx[5];
-              var w = it.width || 40;
-              var h = it.height || 10;
-              pageHlBoxes.push({ x: x - 1, y: y - 2, width: w + 2, height: h + 3 });
-            }
-          }
-        }
+    var parts = [];
+    var seen = {};
+    function addPart(str) {
+      var s = String(str || '').replace(/\s+/g, ' ').trim();
+      if (!s || s.length < 2) return;
+      var k = s.toLowerCase();
+      if (!seen[k]) {
+        seen[k] = true;
+        parts.push(s);
       }
-      pageHighlights.push({ pageNum: p, boxes: pageHlBoxes });
     }
 
-    var pdfDoc = await PDFLib.PDFDocument.load(pdfBytes, { ignoreEncryption: true });
-    var libPages = pdfDoc.getPages();
-
-    pageHighlights.forEach(function (ph) {
-      if (ph.pageNum <= libPages.length) {
-        var lp = libPages[ph.pageNum - 1];
-        ph.boxes.forEach(function (box) {
-          lp.drawRectangle({
-            x: box.x,
-            y: box.y,
-            width: box.width,
-            height: box.height,
-            color: PDFLib.rgb(1.0, 0.94, 0.4),
-            opacity: 0.35
-          });
-        });
+    addPart(raw);
+    var pieces = raw.split(/[\/,+&|]+|\band\b|\(([^)]+)\)/i);
+    for (var i = 0; i < pieces.length; i++) {
+      var piece = pieces[i];
+      if (piece) {
+        addPart(piece);
       }
-    });
+    }
+    return parts;
+  }
 
-    var resultBytes = await pdfDoc.save();
-    return new Blob([resultBytes], { type: 'application/pdf' });
+  function rsKeywordPatternsForValue(value) {
+    var seen = {};
+    var patterns = [];
+    var deconstructed = rsDeconstructCompoundSkill(value);
+    deconstructed.forEach(function (part) {
+      rsKeywordAliasValues(part).forEach(function (alias) {
+        var pattern = rsKeywordPatternFromValue(alias);
+        var key = pattern.toLowerCase();
+        if (pattern && !seen[key]) {
+          seen[key] = true;
+          patterns.push(pattern);
+        }
+      });
+    });
+    return patterns;
+  }
+
+  function rsKeywordRegex(list) {
+    var seen = {};
+    var cleaned = (Array.isArray(list) ? list : []).map(function (item) {
+      if (typeof item === 'string') return item.trim();
+      return clean(item && (item.skill_name || item.skill_key || item.name || item.skill), '').trim();
+    }).filter(function (value) {
+      value = value.replace(/\s+/g, ' ').trim();
+      var key = value.toLowerCase();
+      if (value.length < 2 || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    if (!cleaned.length) return null;
+    cleaned.sort(function (a, b) { return b.length - a.length; });
+    var parts = [];
+    cleaned.forEach(function (value) {
+      parts = parts.concat(rsKeywordPatternsForValue(value));
+    });
+    return parts.length ? new RegExp(parts.join('|'), 'gi') : null;
+  }
+
+  function rsPageTextRuns(textContent) {
+    var text = '';
+    var runs = [];
+    (textContent && Array.isArray(textContent.items) ? textContent.items : []).forEach(function (item) {
+      var value = (item && item.str ? String(item.str) : '');
+      if (!value.trim()) return;
+      if (text.length) text += ' ';
+      var start = text.length;
+      text += value;
+      runs.push({ item: item, start: start, end: text.length });
+    });
+    return { text: text, runs: runs };
+  }
+
+  async function buildTurboVectorHighlightedResume(options) {
+    options = options || {};
+    await Promise.all([ensurePdfJs(), ensurePdfLib()]);
+
+    var pdfBlob = options.resumeBlob;
+    if (!(pdfBlob instanceof Blob)) {
+      throw new Error('Valid resume PDF Blob required for Turbo Vector highlighting');
+    }
+
+    var sourceBytes = await pdfBlob.arrayBuffer();
+    var bytes = new Uint8Array(sourceBytes);
+    var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
+    if (sig.indexOf('%PDF') === -1) return pdfBlob;
+
+    var pdfjsDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+    var pagesTextData = [];
+
+    for (var p = 1; p <= pdfjsDoc.numPages; p++) {
+      var page = await pdfjsDoc.getPage(p);
+      var tc = await page.getTextContent();
+      pagesTextData.push({ pageNum: p, tc: tc });
+    }
+
+    var allKeywords = [];
+    var seenKw = {};
+    function addKw(val) {
+      if (!val) return;
+      if (typeof val === 'object') val = val.skill_name || val.skill || val.name || val.skill_key || '';
+      val = String(val).replace(/\+\d+\s*More/gi, '').replace(/\s+/g, ' ').trim();
+      if (val.length < 2 || (val.length < 3 && !/^(ai|ui|ux|go|c#|r|c)$/i.test(val))) return;
+      var k = val.toLowerCase();
+      if (seenKw[k]) return;
+      seenKw[k] = true;
+      allKeywords.push(val);
+    }
+    (Array.isArray(options.keywords) ? options.keywords : []).forEach(addKw);
+
+    var keywordRe = rsKeywordRegex(allKeywords);
+    if (!keywordRe) return pdfBlob;
+
+    var measureCanvas = document.createElement('canvas');
+    var measureCtx = measureCanvas && measureCanvas.getContext ? measureCanvas.getContext('2d') : null;
+    function measureSlice(fullStr, startIdx, endIdx, itemWidth, fontH) {
+      if (!measureCtx) {
+        var len = Math.max(1, fullStr.length);
+        return {
+          offset: (startIdx / len) * itemWidth,
+          width: Math.max(3, ((endIdx - startIdx) / len) * itemWidth)
+        };
+      }
+      measureCtx.font = Math.round(fontH) + 'px sans-serif';
+      var fullM = measureCtx.measureText(fullStr).width;
+      if (!fullM || fullM <= 0) {
+        var len2 = Math.max(1, fullStr.length);
+        return {
+          offset: (startIdx / len2) * itemWidth,
+          width: Math.max(3, ((endIdx - startIdx) / len2) * itemWidth)
+        };
+      }
+      var scale = itemWidth / fullM;
+      var prefixW = measureCtx.measureText(fullStr.substring(0, startIdx)).width * scale;
+      var matchW = measureCtx.measureText(fullStr.substring(startIdx, endIdx)).width * scale;
+      return {
+        offset: prefixW,
+        width: Math.max(3, matchW)
+      };
+    }
+
+    try {
+      var PDFLib = window.PDFLib;
+      var pdfDoc = await PDFLib.PDFDocument.load(sourceBytes, { ignoreEncryption: true });
+
+      pagesTextData.forEach(function (pData) {
+        var pdfLibPage = pdfDoc.getPage(pData.pageNum - 1);
+        var runsData = rsPageTextRuns(pData.tc);
+        if (!runsData.text || !runsData.runs.length) return;
+
+        keywordRe.lastIndex = 0;
+        var match;
+        while ((match = keywordRe.exec(runsData.text)) !== null) {
+          var mStart = match.index;
+          var mEnd = mStart + match[0].length;
+
+          runsData.runs.forEach(function (run) {
+            if (run.end <= mStart || run.start >= mEnd) return;
+            var item = run.item;
+            if (!item || !item.transform) return;
+
+            var tx = item.transform[4] || 0;
+            var ty = item.transform[5] || 0;
+            var itemH = Math.max(Math.abs(item.transform[3] || item.height || 0), Math.abs(item.transform[0] || 0), 9);
+            var itemW = Math.max(Math.abs(item.width || 0), 2);
+            var itemStr = item.str || '';
+            if (!itemStr.trim()) return;
+
+            var subStart = Math.max(0, mStart - run.start);
+            var subEnd = Math.min(itemStr.length, mEnd - run.start);
+            if (subEnd <= subStart) return;
+
+            var slice = measureSlice(itemStr, subStart, subEnd, itemW, itemH);
+            var padX = Math.min(2.5, itemH * 0.14);
+            var boxX = tx + slice.offset - padX;
+            var boxW = slice.width + (padX * 2);
+            var boxY = ty - (itemH * 0.22);
+            var boxH = itemH * 1.16;
+
+            pdfLibPage.drawRectangle({
+              x: boxX,
+              y: boxY,
+              width: boxW,
+              height: boxH,
+              color: PDFLib.rgb(1, 0.85, 0.15),
+              opacity: 0.42
+            });
+          });
+
+          if (match.index === keywordRe.lastIndex) keywordRe.lastIndex++;
+        }
+      });
+
+      var outputBytes = await pdfDoc.save();
+      return new Blob([outputBytes], { type: 'application/pdf' });
+    } catch (hlErr) {
+      console.warn('[AgyBenchDownloadResumeEngine] Turbo Vector Highlight fallback to raw PDF:', hlErr);
+      return pdfBlob;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -785,7 +1225,6 @@
   async function renderAnonymizedPdfBlob(resumeBlob, customRules) {
     var pdfjs = await ensurePdfJs();
     var jsPDFClass = await ensureJsPdf();
-    var PDFLib = await ensurePdfLib();
 
     var pdfBytes = await resumeBlob.arrayBuffer();
     var loadingTask = pdfjs.getDocument({ data: pdfBytes.slice(0) });
@@ -794,7 +1233,6 @@
 
     var targetRules = customRules || rdcAnonymizeRules;
     var outPdf = null;
-
     var scale = 2.0;
 
     for (var pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -873,23 +1311,42 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MULTI-PAGE MERGING (PDF-Lib)
+  // A4 NORMALIZED MERGING (Every Page Guaranteed Exact Same Width: 595.28 pt)
   // ═══════════════════════════════════════════════════════════════════════════
+  async function copyPdfPagesToA4(targetDoc, sourceDoc) {
+    var A4_W = 595.28;
+    var A4_H = 841.89;
+    var pages = sourceDoc.getPages();
+    if (!pages.length) return;
+    for (var i = 0; i < pages.length; i++) {
+      var size = pages[i].getSize();
+      var scale = Math.min(A4_W / size.width, A4_H / size.height);
+      var drawW = size.width * scale;
+      var drawH = size.height * scale;
+      var a4Page = targetDoc.addPage([A4_W, A4_H]);
+      var embedded = await targetDoc.embedPage(pages[i]);
+      a4Page.drawPage(embedded, {
+        x: (A4_W - drawW) / 2,
+        y: (A4_H - drawH) / 2,
+        width: drawW,
+        height: drawH
+      });
+    }
+  }
+
   async function mergeDossierAndResume(dossierBlob, resumeBlob) {
     var PDFLib = await ensurePdfLib();
-    var mergedPdf = await PDFLib.PDFDocument.create();
+    var merged = await PDFLib.PDFDocument.create();
 
     var dBytes = await dossierBlob.arrayBuffer();
     var dDoc = await PDFLib.PDFDocument.load(dBytes, { ignoreEncryption: true });
-    var dPages = await mergedPdf.copyPages(dDoc, dDoc.getPageIndices());
-    dPages.forEach(function (page) { mergedPdf.addPage(page); });
+    await copyPdfPagesToA4(merged, dDoc);
 
     var rBytes = await resumeBlob.arrayBuffer();
     var rDoc = await PDFLib.PDFDocument.load(rBytes, { ignoreEncryption: true });
-    var rPages = await mergedPdf.copyPages(rDoc, rDoc.getPageIndices());
-    rPages.forEach(function (page) { mergedPdf.addPage(page); });
+    await copyPdfPagesToA4(merged, rDoc);
 
-    var mergedBytes = await mergedPdf.save();
+    var mergedBytes = await merged.save();
     return new Blob([mergedBytes], { type: 'application/pdf' });
   }
 
@@ -900,7 +1357,13 @@
     var formatId = parseInt(optId, 10);
     var companyName = (companyData && companyData.companyName) || 'Hiring Partner';
     var companyLogo = (companyData && companyData.companyLogo) || '';
-    var safeName = cand.safe_name || (cand.full_name ? cand.full_name.replace(/\s+/g, '_').replace(/[^\w.-]/g, '') : ('Candidate_' + cand.id));
+    var reportDate = (cand && cand.report_date) || (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // Clean Candidate Name for Output Filename
+    var cleanCandName = (cand.full_name || cand.name || ('Candidate_' + cand.id))
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^\w.-]/g, '');
 
     function notify(pct, step, detail) {
       if (typeof onProgress === 'function') {
@@ -919,7 +1382,7 @@
       var origMime = origExt === 'docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
                      (origExt === 'doc' ? 'application/msword' : 'application/pdf');
       var origBlob = new Blob([rawBytes], { type: origMime });
-      origBlob.filename = 'Jeroworks_' + safeName + '_Original.' + origExt;
+      origBlob.filename = 'Jeroworks_' + cleanCandName + '.' + origExt;
       notify(100, 'Original resume ready!', 'Document ready for download');
       return origBlob;
     }
@@ -931,7 +1394,7 @@
       notify(35, 'Generating in-house evaluation report...', 'Building verified bench consultant dossier...');
       var dossierBlob = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       notify(85, 'Finalizing evaluation report...', 'Applying executive styling...');
-      dossierBlob.filename = 'Jeroworks_' + safeName + '_Evaluation_Report.pdf';
+      dossierBlob.filename = 'Jeroworks_' + cleanCandName + '_evaluationreport.pdf';
       notify(100, 'Evaluation report ready!', 'Document ready for download');
       return dossierBlob;
     }
@@ -949,8 +1412,8 @@
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 41) {
       notify(60, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
-      var branded = await addCompanyBrandingHeader(basePdfBlob, companyName, companyLogo);
-      branded.filename = 'Jeroworks_' + safeName + '_Branded.pdf';
+      var branded = await addCompanyBrandingHeader(basePdfBlob, companyName, companyLogo, reportDate);
+      branded.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Branded resume ready!', 'Document ready for download');
       return branded;
     }
@@ -962,10 +1425,10 @@
       notify(45, 'Generating in-house evaluation report...', 'Compiling technical evaluation dossier...');
       var repBlob42 = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       notify(65, 'Stamping company branding on resume...', 'Injecting header banner...');
-      var bResume42 = await addCompanyBrandingHeader(basePdfBlob, companyName, companyLogo);
-      notify(85, 'Merging dossier and branded resume...', 'Concatenating recruiter package...');
+      var bResume42 = await addCompanyBrandingHeader(basePdfBlob, companyName, companyLogo, reportDate);
+      notify(85, 'Merging dossier and branded resume...', 'Concatenating recruiter package with uniform A4 width...');
       var pkg42 = await mergeDossierAndResume(repBlob42, bResume42);
-      pkg42.filename = 'Jeroworks_' + safeName + '_Recruiter_Package.pdf';
+      pkg42.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Recruiter package ready!', 'Document ready for download');
       return pkg42;
     }
@@ -976,9 +1439,9 @@
     if (formatId === 43) {
       notify(50, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
       var repBlob43 = await generateBenchPrescreenPdfBlob(cand, '', null, true);
-      notify(80, 'Merging unbranded dossier and resume...', 'Concatenating neutral recruiter package...');
+      notify(80, 'Merging unbranded dossier and resume...', 'Concatenating neutral recruiter package with uniform A4 width...');
       var pkg43 = await mergeDossierAndResume(repBlob43, basePdfBlob);
-      pkg43.filename = 'Jeroworks_' + safeName + '_Recruiter_Package_Unbranded.pdf';
+      pkg43.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Unbranded package ready!', 'Document ready for download');
       return pkg43;
     }
@@ -988,9 +1451,9 @@
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 44) {
       notify(55, 'Locating evaluated skills in resume text...', 'Extracting vector coordinates for skill keywords...');
-      var skills44 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      var skills44 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume44 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills44 });
-      hlResume44.filename = 'Jeroworks_' + safeName + '_Highlighted.pdf';
+      hlResume44.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Highlighted resume ready!', 'Document ready for download');
       return hlResume44;
     }
@@ -999,30 +1462,30 @@
     // OPTION 45: Resume + Highlighted Keywords + Company Branding
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 45) {
-      notify(50, 'Highlighting evaluated skills in resume...', 'Applying vector highlights to keywords...');
-      var skills45 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      notify(50, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
+      var skills45 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume45 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills45 });
       notify(75, 'Stamping company branding...', 'Injecting header banner...');
-      var bHlResume45 = await addCompanyBrandingHeader(hlResume45, companyName, companyLogo);
-      bHlResume45.filename = 'Jeroworks_' + safeName + '_Highlighted_Branded.pdf';
+      var bHlResume45 = await addCompanyBrandingHeader(hlResume45, companyName, companyLogo, reportDate);
+      bHlResume45.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Branded highlighted resume ready!', 'Document ready for download');
       return bHlResume45;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // OPTION 46 (DEFAULT ★): In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding
+    // OPTION 46 (DEFAULT ★): Evaluation Report + Resume + Highlighted Keywords + Company Branding
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 46) {
       notify(40, 'Generating in-house evaluation report...', 'Compiling technical evaluation dossier with verified skills...');
       var repBlob46 = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
       notify(60, 'Highlighting evaluated skills on resume...', 'Extracting vector bounding boxes for rated skills...');
-      var skills46 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      var skills46 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume46 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills46 });
       notify(80, 'Stamping company branding banner...', 'Injecting corporate branding...');
-      var bHlResume46 = await addCompanyBrandingHeader(hlResume46, companyName, companyLogo);
-      notify(92, 'Merging dossier and highlighted resume...', 'Assembling recruiter presentation package...');
+      var bHlResume46 = await addCompanyBrandingHeader(hlResume46, companyName, companyLogo, reportDate);
+      notify(92, 'Merging dossier and highlighted resume...', 'Assembling recruiter presentation package with uniform A4 width...');
       var pkg46 = await mergeDossierAndResume(repBlob46, bHlResume46);
-      pkg46.filename = 'Jeroworks_' + safeName + '_Recruiter_Package.pdf';
+      pkg46.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Executive presentation package ready!', 'Document ready for download');
       return pkg46;
     }
@@ -1033,12 +1496,12 @@
     if (formatId === 47) {
       notify(45, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
       var repBlob47 = await generateBenchPrescreenPdfBlob(cand, '', null, true);
-      notify(65, 'Highlighting evaluated skills on resume...', 'Applying vector highlights to rated skills...');
-      var skills47 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      notify(65, 'Highlighting evaluated skills on resume...', 'Applying sub-pixel vector highlights to rated skills...');
+      var skills47 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume47 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills47 });
-      notify(85, 'Merging unbranded dossier and highlighted resume...', 'Concatenating recruiter package...');
+      notify(85, 'Merging unbranded dossier and highlighted resume...', 'Concatenating recruiter package with uniform A4 width...');
       var pkg47 = await mergeDossierAndResume(repBlob47, hlResume47);
-      pkg47.filename = 'Jeroworks_' + safeName + '_Package_Highlighted_Unbranded.pdf';
+      pkg47.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Unbranded highlighted package ready!', 'Document ready for download');
       return pkg47;
     }
@@ -1049,7 +1512,7 @@
     if (formatId === 48) {
       notify(60, 'Redacting contact information...', 'Flattening canvas and masking telephone, email, and social profiles...');
       var red48 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
-      red48.filename = 'Jeroworks_' + safeName + '_Redacted.pdf';
+      red48.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Redacted resume ready!', 'Document ready for download');
       return red48;
     }
@@ -1065,7 +1528,7 @@
         rules49.name = [new RegExp('\\b' + nameParts.join('\\s+') + '\\b', 'gi')];
       }
       var red49 = await renderAnonymizedPdfBlob(basePdfBlob, rules49);
-      red49.filename = 'Jeroworks_Confidential_Blind_Profile.pdf';
+      red49.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Confidential blind profile ready!', 'Document ready for download');
       return red49;
     }
@@ -1077,8 +1540,8 @@
       notify(50, 'Redacting contact channels on canvas...', 'Masking private communication channels...');
       var red50 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
       notify(78, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
-      var bRed50 = await addCompanyBrandingHeader(red50, companyName, companyLogo);
-      bRed50.filename = 'Jeroworks_' + safeName + '_Redacted_Branded.pdf';
+      var bRed50 = await addCompanyBrandingHeader(red50, companyName, companyLogo, reportDate);
+      bRed50.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Branded redacted resume ready!', 'Document ready for download');
       return bRed50;
     }
@@ -1092,10 +1555,10 @@
       notify(60, 'Redacting contact details on resume...', 'Masking phone, email, and URLs on high-resolution canvas...');
       var red51 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
       notify(80, 'Stamping company branding banner...', 'Injecting corporate header banner...');
-      var bRed51 = await addCompanyBrandingHeader(red51, companyName, companyLogo);
-      notify(92, 'Merging evaluation report and confidential resume...', 'Assembling recruiter package...');
+      var bRed51 = await addCompanyBrandingHeader(red51, companyName, companyLogo, reportDate);
+      notify(92, 'Merging evaluation report and confidential resume...', 'Assembling recruiter package with uniform A4 width...');
       var pkg51 = await mergeDossierAndResume(repBlob51, bRed51);
-      pkg51.filename = 'Jeroworks_' + safeName + '_Package_Redacted_Branded.pdf';
+      pkg51.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Branded confidential package ready!', 'Document ready for download');
       return pkg51;
     }
@@ -1108,9 +1571,9 @@
       var repBlob52 = await generateBenchPrescreenPdfBlob(cand, '', null, true);
       notify(70, 'Redacting contact details on resume...', 'Masking phone, email, and URLs on canvas...');
       var red52 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
-      notify(88, 'Merging unbranded dossier and confidential resume...', 'Concatenating neutral package...');
+      notify(88, 'Merging unbranded dossier and confidential resume...', 'Concatenating neutral package with uniform A4 width...');
       var pkg52 = await mergeDossierAndResume(repBlob52, red52);
-      pkg52.filename = 'Jeroworks_' + safeName + '_Package_Redacted_Unbranded.pdf';
+      pkg52.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Unbranded confidential package ready!', 'Document ready for download');
       return pkg52;
     }
@@ -1123,10 +1586,10 @@
       notify(30, 'Generating in-house evaluation report...', 'Building technical dossier with verified skills...');
       var repBlob53 = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
 
-      var skills53 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      var skills53 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume53 = basePdfBlob;
       if (skills53.length > 0) {
-        notify(50, 'Highlighting evaluated skills...', 'Applying vector highlights to rated skills...');
+        notify(50, 'Highlighting evaluated skills...', 'Applying sub-pixel vector highlights to rated skills...');
         try {
           hlResume53 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills53 });
         } catch (eHl53) {
@@ -1139,11 +1602,11 @@
       var red53 = await renderAnonymizedPdfBlob(hlResume53, rdcAnonymizeRules);
 
       notify(85, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
-      var bRed53 = await addCompanyBrandingHeader(red53, companyName, companyLogo);
+      var bRed53 = await addCompanyBrandingHeader(red53, companyName, companyLogo, reportDate);
 
-      notify(94, 'Merging evaluation dossier and full privacy resume...', 'Assembling recruiter package...');
+      notify(94, 'Merging evaluation dossier and full privacy resume...', 'Assembling recruiter package with uniform A4 width...');
       var pkg53 = await mergeDossierAndResume(repBlob53, bRed53);
-      pkg53.filename = 'Jeroworks_' + safeName + '_Full_Privacy_Package.pdf';
+      pkg53.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Full privacy package ready!', 'Document ready for download');
       return pkg53;
     }
@@ -1156,10 +1619,10 @@
       notify(30, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
       var repBlob54 = await generateBenchPrescreenPdfBlob(cand, '', null, true);
 
-      var skills54 = getBenchCandidateEvaluatedSkills(cand).map(function(s) { return s.name; });
+      var skills54 = getBenchCandidateEvaluatedSkills(cand);
       var hlResume54 = basePdfBlob;
       if (skills54.length > 0) {
-        notify(50, 'Highlighting evaluated skills...', 'Applying vector highlights to rated skills...');
+        notify(50, 'Highlighting evaluated skills...', 'Applying sub-pixel vector highlights to rated skills...');
         try {
           hlResume54 = await buildTurboVectorHighlightedResume({ resumeBlob: basePdfBlob, keywords: skills54 });
         } catch (eHl54) {
@@ -1171,9 +1634,9 @@
       notify(75, 'Applying privacy redactions to highlighted resume...', 'Redacting contact numbers, email, and private links...');
       var red54 = await renderAnonymizedPdfBlob(hlResume54, rdcAnonymizeRules);
 
-      notify(90, 'Merging unbranded dossier and confidential resume...', 'Concatenating multi-page recruiter package...');
+      notify(90, 'Merging unbranded dossier and confidential resume...', 'Concatenating multi-page recruiter package with uniform A4 width...');
       var pkg54 = await mergeDossierAndResume(repBlob54, red54);
-      pkg54.filename = 'Jeroworks_' + safeName + '_Full_Privacy_Unbranded.pdf';
+      pkg54.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Full privacy package (unbranded) ready!', 'Document ready for download');
       return pkg54;
     }
@@ -1184,7 +1647,7 @@
       await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false),
       basePdfBlob
     );
-    defaultPkg.filename = 'Jeroworks_' + safeName + '_Package.pdf';
+    defaultPkg.filename = 'Jeroworks_' + cleanCandName + '.pdf';
     notify(100, 'Document ready!', 'Document ready for download');
     return defaultPkg;
   }
