@@ -1299,109 +1299,193 @@
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PII REDACTION & PRIVACY MASKING (Canvas + jsPDF)
+  // PII ANONYMIZATION & REDACTION (Anti-Poaching Shield - Pure White Strip)
   // ═══════════════════════════════════════════════════════════════════════════
-  var rdcAnonymizeRules = {
-    phone: [
-      /(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,5}/g,
-      /\b\d{10,12}\b/g
-    ],
-    email: [
-      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
-    ],
-    url: [
-      /https?:\/\/[^\s$.?#].[^\s]*/gi,
-      /www\.[^\s$.?#].[^\s]*/gi,
-      /linkedin\.com\/[^\s]*/gi,
-      /github\.com\/[^\s]*/gi
-    ]
-  };
-
-  async function renderAnonymizedPdfBlob(resumeBlob, customRules) {
-    var pdfjs = await ensurePdfJs();
-    var jsPDFClass = await ensureJsPdf();
-
-    var pdfBytes = await resumeBlob.arrayBuffer();
-    var loadingTask = pdfjs.getDocument({ data: pdfBytes.slice(0) });
-    var pdfDoc = await loadingTask.promise;
-    var numPages = pdfDoc.numPages;
-
-    var targetRules = customRules || rdcAnonymizeRules;
-    var outPdf = null;
-    var scale = 2.0;
-
-    for (var pageNum = 1; pageNum <= numPages; pageNum++) {
-      var page = await pdfDoc.getPage(pageNum);
-      var viewport = page.getViewport({ scale: scale });
-      var textContent = await page.getTextContent();
-
-      var canvas = document.createElement('canvas');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      var ctx = canvas.getContext('2d');
-
-      var renderContext = {
-        canvasContext: ctx,
-        viewport: viewport
-      };
-      await page.render(renderContext).promise;
-
-      var items = textContent.items || [];
-      var redactBoxes = [];
-
-      items.forEach(function (item) {
-        var str = item.str;
-        if (!str) return;
-
-        var isMatch = false;
-        for (var cat in targetRules) {
-          var regexList = targetRules[cat];
-          for (var r = 0; r < regexList.length; r++) {
-            if (regexList[r].test(str)) {
-              isMatch = true;
-              break;
-            }
-          }
-          if (isMatch) break;
-        }
-
-        if (isMatch && item.transform) {
-          var tx = pdfjs.Util.transform(viewport.transform, item.transform);
-          var x = tx[4];
-          var y = tx[5];
-          var w = item.width * scale;
-          var h = (item.height || 12) * scale;
-          redactBoxes.push({ x: x - 2, y: y - h - 1, w: w + 4, h: h + 4 });
-        }
-      });
-
-      redactBoxes.forEach(function (b) {
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold ' + Math.max(9, Math.round(b.h * 0.55)) + 'px sans-serif';
-        ctx.fillText('[CONFIDENTIAL]', b.x + 4, b.y + b.h - 4);
-      });
-
-      var imgData = canvas.toDataURL('image/jpeg', 0.92);
-      var pdfW = (viewport.width / scale) * 0.75;
-      var pdfH = (viewport.height / scale) * 0.75;
-
-      if (pageNum === 1) {
-        var JsPdfCtor = jsPDFClass.jsPDF || jsPDFClass;
-        outPdf = new JsPdfCtor({
-          orientation: pdfW > pdfH ? 'landscape' : 'portrait',
-          unit: 'pt',
-          format: [pdfW, pdfH]
-        });
-        outPdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-      } else {
-        outPdf.addPage([pdfW, pdfH], pdfW > pdfH ? 'landscape' : 'portrait');
-        outPdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
-      }
+  function rdcPlain(value) {
+    return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+  }
+  function rdcEscapeRegExp(value) {
+    return rdcPlain(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  function rdcDigitsOnly(value) {
+    return String(value == null ? '' : value).replace(/\D+/g, '');
+  }
+  function rdcPushUnique(list, value) {
+    value = rdcPlain(value);
+    if (!value || value === '--') return;
+    var key = value.toLowerCase();
+    if (list.some(function (item) { return item.toLowerCase() === key; })) return;
+    list.push(value);
+  }
+  function rdcFlexibleTextRegex(value) {
+    var parts = rdcPlain(value).split(/\s+/).filter(Boolean);
+    if (!parts.length) return null;
+    return new RegExp(parts.map(rdcEscapeRegExp).join('[\\s\\u00a0._-]+'), 'gi');
+  }
+  function rdcPhoneTextRegex(value) {
+    var digits = rdcDigitsOnly(value);
+    if (digits.length < 5) return null;
+    return new RegExp('(?:\\+?\\d{1,3}[\\s().\\-+]*)?' + digits.split('').join('[\\s().\\-+]*'), 'g');
+  }
+  function rdcContactLabelRegexes() {
+    return [
+      /\b(?:e[\s._-]*mail|email|mail)[\s._-]*(?:id|address)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+      /\b(?:phone|mobile|mob|cell|contact|tel|telephone)[\s._-]*(?:number|no|num|id|details)?[\s.:#-]*(?:primary|secondary|alternate|alt|1|2)?\b/gi,
+      /\b(?:contact|personal)[\s._-]*(?:details|info|information)\b/gi,
+      /\b(?:whats[\s._-]*app|whatsapp|linked[\s._-]*in|linkedin)[\s._-]*(?:id|profile|url|link|number|no)?\b/gi
+    ];
+  }
+  function rdcLinkedInTargets(value) {
+    value = rdcPlain(value);
+    if (!value || value === '--') return [];
+    var targets = [];
+    rdcPushUnique(targets, value);
+    var withoutProtocol = value.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+    rdcPushUnique(targets, withoutProtocol);
+    if (!/^https?:\/\//i.test(value) && !/^www\./i.test(value) && /linkedin\.com/i.test(value)) {
+      rdcPushUnique(targets, 'https://' + value);
+      rdcPushUnique(targets, 'www.' + withoutProtocol);
     }
+    var match = withoutProtocol.match(/linkedin\.com\/(?:in|pub|company)\/([^/?#\s]+)/i);
+    if (match && match[1]) {
+      rdcPushUnique(targets, match[1].replace(/[-_]+/g, ' '));
+      rdcPushUnique(targets, match[1]);
+    }
+    return targets;
+  }
 
-    if (!outPdf) return resumeBlob;
+  function rdcAnonymizeRules(data, options) {
+    data = data || {};
+    options = options || {};
+    var textRegexes = [];
+    var phoneDigits = [];
+    var exactTerms = [];
+    var emails = [];
+    var phones = [];
+    if (options.keepName !== true) {
+      rdcPushUnique(exactTerms, data.full_name || data.name);
+      rdcPlain(data.full_name || data.name).split(/\s+/).forEach(function (token) {
+        if (token.length >= 3) rdcPushUnique(exactTerms, token);
+      });
+    }
+    [data.email, data.secondaryEmail, data.secondrary_email].forEach(function (email) {
+      rdcPushUnique(emails, email);
+      rdcPushUnique(exactTerms, email);
+    });
+    [data.phone, data.secondaryPhone, data.secondary_mobile, data.mobile].forEach(function (phone) {
+      rdcPushUnique(phones, phone);
+      rdcPushUnique(exactTerms, phone);
+    });
+    rdcLinkedInTargets(data.linkedin || data.linkedin_url).forEach(function (target) {
+      rdcPushUnique(exactTerms, target);
+    });
+    phones.forEach(function (phone) {
+      var digits = rdcDigitsOnly(phone);
+      if (digits.length >= 5 && phoneDigits.indexOf(digits) === -1) phoneDigits.push(digits);
+      var phoneRe = rdcPhoneTextRegex(phone);
+      if (phoneRe) textRegexes.push(phoneRe);
+    });
+    exactTerms.forEach(function (term) {
+      if (rdcDigitsOnly(term).length >= 5) return;
+      var re = rdcFlexibleTextRegex(term);
+      if (re) textRegexes.push(re);
+    });
+    textRegexes.push(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/gi);
+    textRegexes.push(/\+?\d[\d\s().\-]{7,}\d/g);
+    textRegexes.push(/(?:https?:\/\/|www\.)?linkedin\.com\/(?:in|pub|company)\/[^\s<>"')]+/gi);
+    textRegexes.push(/(?:https?:\/\/|www\.)?github\.com\/[^\s<>"')]+/gi);
+    rdcContactLabelRegexes().forEach(function (regex) { textRegexes.push(regex); });
+    return { textRegexes: textRegexes, phoneDigits: phoneDigits, emails: emails, phones: phones, exactTerms: exactTerms };
+  }
+
+  function rdcRegexMatches(regex, text) {
+    regex.lastIndex = 0;
+    var ok = regex.test(text);
+    regex.lastIndex = 0;
+    return ok;
+  }
+
+  function rdcShouldRedactText(text, rules) {
+    text = rdcPlain(text);
+    if (!text) return false;
+    var lower = text.toLowerCase();
+    var digits = rdcDigitsOnly(text);
+    if (digits.length >= 5 && rules.phoneDigits.some(function (phoneDigits) {
+      return phoneDigits.indexOf(digits) !== -1 || digits.indexOf(phoneDigits) !== -1;
+    })) return true;
+    if (rules.exactTerms.some(function (term) {
+      term = rdcPlain(term).toLowerCase();
+      return term.length >= 3 && lower.indexOf(term) !== -1;
+    })) return true;
+    return rules.textRegexes.some(function (regex) { return rdcRegexMatches(regex, text); });
+  }
+
+  function rsTextItemRect(item, viewport) {
+    if (!item || !item.transform || !viewport || !viewport.transform) return null;
+    var vt = viewport.transform;
+    var it = item.transform;
+    var canvasX = vt[0] * it[4] + vt[2] * it[5] + vt[4];
+    var canvasY = vt[1] * it[4] + vt[3] * it[5] + vt[5];
+    var h = Math.max(
+      Math.abs((item.height || 0) * (viewport.scale || 1)),
+      Math.abs(vt[3] * (it[3] || 0)),
+      6
+    );
+    var w = Math.max(Math.abs((item.width || 0) * (viewport.scale || 1)), 2);
+    return { x: canvasX, y: canvasY - h, w: w, h: h };
+  }
+
+  // Pure White Strip Masking (No black boxes, no [CONFIDENTIAL] text, only clean white strips)
+  function rdcDrawAnonymizedBlocks(ctx, textContent, viewport, rules) {
+    if (!ctx || !textContent || !viewport || !rules) return 0;
+    var count = 0;
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    (textContent.items || []).forEach(function (item) {
+      if (!rdcShouldRedactText(item && item.str, rules)) return;
+      var rect = rsTextItemRect(item, viewport);
+      if (!rect) return;
+      var pad = Math.max(2, Math.min(8, rect.h * 0.22));
+      ctx.fillRect(Math.max(0, rect.x - pad), Math.max(0, rect.y - pad), rect.w + (pad * 2), rect.h + (pad * 2));
+      count++;
+    });
+    ctx.restore();
+    return count;
+  }
+
+  async function renderAnonymizedPdfBlob(pdfBlob, rules) {
+    await Promise.all([ensurePdfJs(), ensureJsPdf()]);
+    var sourceBytes = await pdfBlob.arrayBuffer();
+    var bytes = new Uint8Array(sourceBytes);
+    var sig = String.fromCharCode.apply(null, bytes.subarray(0, 5));
+    if (sig.indexOf('%PDF') === -1) throw new Error('Resume source is not a valid PDF');
+    var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+    var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || window.jspdf;
+    var outPdf = null;
+    for (var p = 1; p <= doc.numPages; p++) {
+      var pdfJsPage = await doc.getPage(p);
+      var base = pdfJsPage.getViewport({ scale: 1 });
+      var cssScale = Math.min(1.35, 820 / base.width);
+      var cssViewport = pdfJsPage.getViewport({ scale: cssScale });
+      var renderScale = Math.min(2.0, 1600 / base.width);
+      var renderViewport = pdfJsPage.getViewport({ scale: renderScale });
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.floor(renderViewport.width);
+      canvas.height = Math.floor(renderViewport.height);
+      var ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await pdfJsPage.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+      var tc = await pdfJsPage.getTextContent();
+      rdcDrawAnonymizedBlocks(ctx, tc, renderViewport, rules);
+      var pageW = Math.round(cssViewport.width);
+      var pageH = Math.round(cssViewport.height);
+      var orient = pageW > pageH ? 'l' : 'p';
+      if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
+      else outPdf.addPage([pageW, pageH], orient);
+      outPdf.addImage(canvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+    }
+    if (!outPdf) throw new Error('No resume pages were rendered');
     return outPdf.output('blob');
   }
 
@@ -1602,11 +1686,12 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // OPTION 48: Hide Contact Details (Redacts phone, email, secondary mobile, links)
+    // OPTION 48: Hide Contact Details (Masks phone, email, links with white strip)
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 48) {
-      notify(60, 'Redacting contact information...', 'Flattening canvas and masking telephone, email, and social profiles...');
-      var red48 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
+      notify(60, 'Masking contact information with white strip...', 'Applying white strips on telephone, email, and social profiles...');
+      var rules48 = rdcAnonymizeRules(cand, { keepName: true });
+      var red48 = await renderAnonymizedPdfBlob(basePdfBlob, rules48);
       red48.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Redacted resume ready!', 'Document ready for download');
       return red48;
@@ -1616,12 +1701,8 @@
     // OPTION 49: Hide Candidate Name & Contact Details (Anti-poaching blind profile)
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 49) {
-      notify(60, 'Generating confidential blind profile...', 'Masking candidate name and personal contact channels...');
-      var rules49 = Object.assign({}, rdcAnonymizeRules);
-      if (cand.full_name && cand.full_name.trim().length > 2) {
-        var nameParts = cand.full_name.trim().split(/\s+/);
-        rules49.name = [new RegExp('\\b' + nameParts.join('\\s+') + '\\b', 'gi')];
-      }
+      notify(60, 'Generating confidential blind profile...', 'Masking candidate name and personal contact channels with white strips...');
+      var rules49 = rdcAnonymizeRules(cand, { keepName: false });
       var red49 = await renderAnonymizedPdfBlob(basePdfBlob, rules49);
       red49.filename = 'Jeroworks_' + cleanCandName + '.pdf';
       notify(100, 'Confidential blind profile ready!', 'Document ready for download');
@@ -1632,8 +1713,9 @@
     // OPTION 50: Hide Contact Details + Company Branding
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 50) {
-      notify(50, 'Redacting contact channels on canvas...', 'Masking private communication channels...');
-      var red50 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
+      notify(50, 'Masking contact channels with white strip...', 'Applying white strips on private communication channels...');
+      var rules50 = rdcAnonymizeRules(cand, { keepName: true });
+      var red50 = await renderAnonymizedPdfBlob(basePdfBlob, rules50);
       notify(78, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
       var bRed50 = await addCompanyBrandingHeader(red50, companyName, companyLogo, reportDate);
       bRed50.filename = 'Jeroworks_' + cleanCandName + '.pdf';
@@ -1647,8 +1729,9 @@
     if (formatId === 51) {
       notify(40, 'Generating in-house evaluation report...', 'Compiling technical evaluation dossier...');
       var repBlob51 = await generateBenchPrescreenPdfBlob(cand, companyName, companyLogo, false);
-      notify(60, 'Redacting contact details on resume...', 'Masking phone, email, and URLs on high-resolution canvas...');
-      var red51 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
+      notify(60, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+      var rules51 = rdcAnonymizeRules(cand, { keepName: true });
+      var red51 = await renderAnonymizedPdfBlob(basePdfBlob, rules51);
       notify(80, 'Stamping company branding banner...', 'Injecting corporate header banner...');
       var bRed51 = await addCompanyBrandingHeader(red51, companyName, companyLogo, reportDate);
       notify(92, 'Merging evaluation report and confidential resume...', 'Assembling recruiter package with uniform A4 width...');
@@ -1664,8 +1747,9 @@
     if (formatId === 52) {
       notify(45, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
       var repBlob52 = await generateBenchPrescreenPdfBlob(cand, '', null, true);
-      notify(70, 'Redacting contact details on resume...', 'Masking phone, email, and URLs on canvas...');
-      var red52 = await renderAnonymizedPdfBlob(basePdfBlob, rdcAnonymizeRules);
+      notify(70, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+      var rules52 = rdcAnonymizeRules(cand, { keepName: true });
+      var red52 = await renderAnonymizedPdfBlob(basePdfBlob, rules52);
       notify(88, 'Merging unbranded dossier and confidential resume...', 'Concatenating neutral package with uniform A4 width...');
       var pkg52 = await mergeDossierAndResume(repBlob52, red52);
       pkg52.filename = 'Jeroworks_' + cleanCandName + '.pdf';
@@ -1675,7 +1759,7 @@
 
     // ─────────────────────────────────────────────────────────────────────────
     // OPTION 53: Full Privacy: Hide Contact + Dossier + Keywords + Company Branding
-    // (Strict Sequence: Highlight Vector Keywords -> Redact Canvas PII -> Brand -> Merge Dossier)
+    // (Strict Sequence: Highlight Vector Keywords -> Redact Canvas PII with White Strip -> Brand -> Merge Dossier)
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 53) {
       notify(30, 'Generating in-house evaluation report...', 'Building technical dossier with verified skills...');
@@ -1693,8 +1777,9 @@
         }
       }
 
-      notify(70, 'Applying privacy redactions to highlighted resume...', 'Redacting contact numbers, email, and private links...');
-      var red53 = await renderAnonymizedPdfBlob(hlResume53, rdcAnonymizeRules);
+      notify(70, 'Applying privacy white strips to highlighted resume...', 'Masking contact numbers, email, and private links with white strips...');
+      var rules53 = rdcAnonymizeRules(cand, { keepName: true });
+      var red53 = await renderAnonymizedPdfBlob(hlResume53, rules53);
 
       notify(85, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
       var bRed53 = await addCompanyBrandingHeader(red53, companyName, companyLogo, reportDate);
@@ -1708,7 +1793,7 @@
 
     // ─────────────────────────────────────────────────────────────────────────
     // OPTION 54: Full Privacy (Unbranded): Hide Contact + Dossier + Keywords (No Logo)
-    // (Strict Sequence: Highlight Vector Keywords -> Redact Canvas PII -> Merge Dossier)
+    // (Strict Sequence: Highlight Vector Keywords -> Redact Canvas PII with White Strip -> Merge Dossier)
     // ─────────────────────────────────────────────────────────────────────────
     if (formatId === 54) {
       notify(30, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
@@ -1726,8 +1811,9 @@
         }
       }
 
-      notify(75, 'Applying privacy redactions to highlighted resume...', 'Redacting contact numbers, email, and private links...');
-      var red54 = await renderAnonymizedPdfBlob(hlResume54, rdcAnonymizeRules);
+      notify(75, 'Applying privacy white strips to highlighted resume...', 'Masking contact numbers, email, and private links with white strips...');
+      var rules54 = rdcAnonymizeRules(cand, { keepName: true });
+      var red54 = await renderAnonymizedPdfBlob(hlResume54, rules54);
 
       notify(90, 'Merging unbranded dossier and confidential resume...', 'Concatenating multi-page recruiter package with uniform A4 width...');
       var pkg54 = await mergeDossierAndResume(repBlob54, red54);
