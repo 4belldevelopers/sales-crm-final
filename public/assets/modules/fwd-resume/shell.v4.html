@@ -370,26 +370,30 @@
       <div class="mm-field-col">
         <select name="attached_cv_format" id="test_fwd_resume_format" class="mm-select" style="font-weight:500;" onchange="if(window.ForwardResumeManager) window.ForwardResumeManager.onFormatChange(this.value);">
           <option value="0">-- Select Resume Format (Required) --</option>
-          <optgroup label="Original Document">
-            <option value="1">Option 1: Original Candidate Resume (As Uploaded)</option>
+          <optgroup label="1. Standard Resume Options">
+            <option value="1" data-label="Original Candidate Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes.">1.a Original Resume (Default)</option>
+            <option value="41" data-label="Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible.">1.b Resume + Company Branding</option>
           </optgroup>
-          <optgroup label="Executive Reports">
-            <option value="5">Option 5: Executive Pre-Screened Candidate Dossier (A4)</option>
+          <optgroup label="2. Pre-Screened Report">
+            <option value="5" data-label="Pre-Screened Candidate Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review.">2.a Pre-Screened Candidate Report</option>
           </optgroup>
-          <optgroup label="Branded ATS Formats">
-            <option value="41">Option 41: Candidate Resume with Company Header (PDF)</option>
-            <option value="42">Option 42: Company Header + Highlighted Skill Keywords (PDF)</option>
-            <option value="43">Option 43: Highlight Skill Keywords Only (PDF)</option>
-            <option value="44">Option 44: Hide Contact Details + Company Header (PDF)</option>
-            <option value="45">Option 45: Hide Contact Details Only (PDF)</option>
-            <option value="46">Option 46: Hide Contacts + Highlight Keywords + Company Header (PDF)</option>
-            <option value="47">Option 47: Hide Contacts + Highlight Keywords (PDF)</option>
-            <option value="48">Option 48: Hide Current Company Name + Company Header (PDF)</option>
-            <option value="49">Option 49: Redacted Profile (Hide Contacts, Company & Details) (PDF)</option>
-            <option value="50">Option 50: Pre-Screened Dossier + Candidate Resume (Merged)</option>
-            <option value="51">Option 51: Pre-Screened Dossier + Highlighted Keywords Resume</option>
-            <option value="52">Option 52: Unbranded Pre-Screened Dossier + Redacted Resume</option>
-            <option value="53">Option 53: Redacted Dossier + Anonymized Highlighted Resume</option>
+          <optgroup label="3. Recruiter Packages (Report + Resume)">
+            <option value="42" data-label="Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding.">3.a Pre-Screened Report + Resume + Company Branding</option>
+            <option value="43" data-label="Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page.">3.b Pre-Screened Report + Resume without Company Branding</option>
+          </optgroup>
+          <optgroup label="4. Highlighted Skills">
+            <option value="44" data-label="Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review.">4.a Resume + Highlighted Keywords</option>
+            <option value="45" data-label="Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening.">4.b Resume + Highlighted Keywords + Company Branding</option>
+            <option value="46" data-label="Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills.">4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding</option>
+            <option value="47" data-label="Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding.">4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding</option>
+          </optgroup>
+          <optgroup label="5. Privacy & Anonymization (Anti-Poaching Shield)">
+            <option value="48" data-label="Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser.">5.a Hide Contact Details</option>
+            <option value="49" data-label="Hide Candidate Name & Contact Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy.">5.b Hide Candidate Name &amp; Contact Details</option>
+            <option value="50" data-label="Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header.">5.c Hide Contact Details + Company Branding</option>
+            <option value="51" data-label="Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report.">5.d Hide Contact Details + Pre-Screened Report (Branded)</option>
+            <option value="52" data-label="Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report.">5.e Hide Contact Details + Pre-Screened Report without Company Branding</option>
+            <option value="53" data-label="Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier.">5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords</option>
           </optgroup>
         </select>
         <input type="hidden" name="attached_cv" id="test_attached_cv" value="1" />

@@ -3540,6 +3540,75 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
     }
 
     /**
+     * Resilient Candidate Resume Endpoint: Serves presigned R2 download or same-origin inline stream.
+     * Tenancy-guarded to prevent cross-tenant access. Used by Forward Resume and Resume Center engines.
+     */
+    public function resume(Request $request, $id)
+    {
+        abort_unless(auth()->check(), 403);
+
+        // TENANCY NOTE: Guard candidate application fetch with company_id to prevent cross-tenant IDOR
+        $query = DB::table('job_applications')->where('id', $id);
+        if (! auth()->user()->is_superadmin && auth()->user()->company_id) {
+            $companyId = (int) auth()->user()->company_id;
+            $query->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            });
+        }
+        $cand = $query->first();
+        if (! $cand || empty($cand->resume)) {
+            abort(404, 'Candidate resume not found.');
+        }
+
+        $resume = (string) $cand->resume;
+        $r2Key = '';
+        if (strpos($resume, 'https://file.jero.works/') === 0) {
+            $r2Key = ltrim((string) parse_url($resume, PHP_URL_PATH), '/');
+        } elseif (! filter_var($resume, FILTER_VALIDATE_URL)) {
+            $r2Key = ltrim($resume, '/');
+        }
+
+        $candidateName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$id);
+        $ext = strtolower(pathinfo($r2Key ?: $resume, PATHINFO_EXTENSION)) ?: 'pdf';
+        $customName = 'Jeroworks_'.$candidateName.'.'.$ext;
+
+        if ($r2Key !== '' && Storage::disk('r2')->exists($r2Key)) {
+            if ($request->boolean('preview')) {
+                return Storage::disk('r2')->response(
+                    $r2Key,
+                    $customName,
+                    ['Cache-Control' => 'private, max-age=300', 'Access-Control-Allow-Origin' => '*'],
+                    'inline'
+                );
+            }
+
+            try {
+                $temporaryUrl = Storage::disk('r2')->temporaryUrl(
+                    $r2Key,
+                    now()->addMinutes(30),
+                    ['ResponseContentDisposition' => 'attachment; filename="'.$customName.'"']
+                );
+                return redirect()->away($temporaryUrl);
+            } catch (\Throwable $e) {
+                return redirect()->away('https://file.jero.works/'.$r2Key);
+            }
+        }
+
+        if (file_exists(public_path($resume))) {
+            return response()->file(public_path($resume), [
+                'Content-Disposition' => ($request->boolean('preview') ? 'inline' : 'attachment').'; filename="'.$customName.'"'
+            ]);
+        }
+
+        if (filter_var($resume, FILTER_VALIDATE_URL)) {
+            return redirect()->away($resume);
+        }
+
+        abort(404, 'Resume file not found.');
+    }
+
+    /**
      * Isolated Test Forward Resume: Drawer Loader (0% Server Load / WASM + Direct R2 Beta)
      */
     public function test_fwd_resume(Request $request)
@@ -4462,6 +4531,25 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
             $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cId);
 
+            // R2 key and direct download resolution for client-side WASM engine
+            $r2Key = '';
+            $resumeR2Url = '';
+            if ($hasResume) {
+                if (strpos($candResume, 'https://file.jero.works/') === 0) {
+                    $r2Key = ltrim((string) parse_url($candResume, PHP_URL_PATH), '/');
+                } elseif (! filter_var($candResume, FILTER_VALIDATE_URL)) {
+                    $r2Key = ltrim($candResume, '/');
+                }
+                if ($r2Key !== '') {
+                    $resumeR2Url = 'https://file.jero.works/'.$r2Key;
+                } elseif (filter_var($candResume, FILTER_VALIDATE_URL)) {
+                    $resumeR2Url = $candResume;
+                }
+            }
+            $resumeFilename = $hasResume ? basename($candResume) : '';
+            $resumeExt = $hasResume ? strtolower(pathinfo($r2Key ?: $candResume, PATHINFO_EXTENSION)) : '';
+            $streamProxyUrl = $hasResume ? route('service_company.cvtracker.resume', ['id' => $cId, 'preview' => 1]) : '';
+
             $formattedCandidates[] = [
                 'id' => $cId,
                 'full_name' => $cand->full_name ?: ('Candidate #'.$cId),
@@ -4469,7 +4557,13 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'designation' => $cand->current_designation ?: (@$cand->job_title ?: 'Profile'),
                 'company' => $cand->current_company ?: '--',
                 'has_resume' => $hasResume,
+                'resume' => $candResume,
                 'resume_url' => $resumeUrl,
+                'resume_r2_url' => $resumeR2Url,
+                'resume_filename' => $resumeFilename,
+                'resume_extension' => $resumeExt,
+                'download_url' => $resumeUrl,
+                'preview_url' => $streamProxyUrl,
                 'experience' => $expStr,
                 'notice' => $noticeText,
                 'is_immediate' => $isImmediate,

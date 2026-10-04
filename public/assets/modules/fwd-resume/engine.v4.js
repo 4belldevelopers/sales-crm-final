@@ -394,6 +394,18 @@
     }
     var response = await fetch(resumeUrl, fetchOptions);
     if (!response.ok) throw new Error('Resume request failed with HTTP ' + response.status);
+
+    // If response is JSON (e.g. from r2-download-url endpoint), unwrap URL and recursively fetch
+    var contentType = (response.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('application/json')) {
+      var json = await response.json();
+      var targetUrl = json.r2_direct_url || json.download_url || json.url || json.original_r2_direct_url;
+      if (targetUrl) {
+        return await fetchResumeBytes(targetUrl, maxBytes);
+      }
+      throw new Error('Resume metadata response contained no download URL');
+    }
+
     var size = parseInt(response.headers.get('content-length') || '0', 10);
     if (size && size > byteLimit) throw new Error('Resume is larger than the browser conversion limit');
     var bytes = await response.arrayBuffer();
@@ -2008,12 +2020,35 @@
         { text: 'RATING', style: 'tableHead', alignment: 'center' }
       ]
     ];
-    skills = (skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).slice(0, 7);
-    if (!skills.length) {
+    // Strict deduplication by normalized lowercase name - prevents repeating skills
+    var skillMap = new Map();
+    (skills || []).forEach(function (skill) {
+      var rawName = clean(skill && (skill.name || skill.skill_name || skill.skill_key), '');
+      var normKey = rawName.toLowerCase().trim();
+      if (!normKey) return;
+
+      var rating = safeNumber(skill.rating, 0, 5);
+      var exp = Number(skill.exp || 0);
+      var expText = clean(skill.expText || skill.skill_value, '');
+
+      if (!skillMap.has(normKey)) {
+        skillMap.set(normKey, { name: rawName, rating: rating, exp: exp, expText: expText });
+      } else {
+        var existing = skillMap.get(normKey);
+        if (rating > existing.rating) existing.rating = rating;
+        if (exp > existing.exp) {
+          existing.exp = exp;
+          existing.expText = expText;
+        }
+      }
+    });
+
+    var uniqueSkills = Array.from(skillMap.values()).slice(0, 7);
+    if (!uniqueSkills.length) {
       rows.push([{ text: 'No skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
       return rows;
     }
-    skills.forEach(function (skill) {
+    uniqueSkills.forEach(function (skill) {
       var rating = safeNumber(skill.rating, 0, 5);
       var exp = Number(skill.exp || 0);
       var expText = clean(skill.expText, '');
@@ -2966,15 +3001,34 @@
     var data = normalizeCandidateData(candidate, companyData);
 
     var sources = [];
-    if (candidate.resume_r2_url) sources.push(candidate.resume_r2_url);
+    // 1. Same-origin stream preview proxy (Zero CORS issues, direct streaming)
+    if (candidate.preview_url) sources.push(candidate.preview_url);
     if (candidate.id) {
-      sources.push('/service-company/job-applications/r2-download-url/' + candidate.id);
-      sources.push('/service-company/cvtracker/fwd_resume_download/' + candidate.id);
+      sources.push('/service_company/cvtracker/resume/' + candidate.id + '?preview=1');
     }
-    if (candidate.resume) sources.push(candidate.resume);
+    // 2. Direct Cloudflare R2 presigned / public URL
+    if (candidate.resume_r2_url) sources.push(candidate.resume_r2_url);
+    if (candidate.download_url) sources.push(candidate.download_url);
+    if (candidate.resume_url) sources.push(candidate.resume_url);
+    // 3. Dynamic R2 download URL API (unwrapped by fetchResumeBytes)
+    if (candidate.id) {
+      sources.push('/service_company/job-applications/r2-download-url/' + candidate.id);
+      sources.push('/service_company/cvtracker/resume/' + candidate.id);
+    }
+    // 4. Stored candidate resume path or external URL
+    if (candidate.resume && (candidate.resume.startsWith('http://') || candidate.resume.startsWith('https://'))) {
+      sources.push(candidate.resume);
+    }
+    // 5. Local upload storage fallbacks
+    if (candidate.resume_filename) {
+      sources.push('/user-uploads/resumes/' + candidate.resume_filename);
+    }
+    if (candidate.id && candidate.resume_filename) {
+      sources.push('/user-uploads/documents/' + candidate.id + '/' + candidate.resume_filename);
+    }
 
-    var resumeExt = '';
-    if (candidate.resume) {
+    var resumeExt = clean(candidate.resume_extension || '', '').toUpperCase();
+    if (!resumeExt && candidate.resume) {
       var rParts = String(candidate.resume).split('?')[0].split('.');
       if (rParts.length > 1) resumeExt = rParts.pop().toUpperCase();
     }

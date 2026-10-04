@@ -568,6 +568,13 @@
             self._jobSkills = data.jobSkills || data.job_skills || [];
             self._templateData = data.templateData || data.templates || [];
 
+            // Authoritative Freshness: Clear any pre-compiled attachments so fresh notes/skills/ratings are used
+            self._compiledAttachments = {};
+            var currentFormat = parseInt($('#test_fwd_resume_format').val(), 10) || 0;
+            if (currentFormat > 1 && !self._isCompiling) {
+                self.startCompilationForOption(currentFormat);
+            }
+
             // From & Reply-To
             if (data.from_email) {
                 $('#test_from_email').html('<option value="' + escapeHtml(data.from_email) + '">' + escapeHtml(data.from_email) + '</option>');
