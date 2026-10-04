@@ -2818,6 +2818,10 @@ $( document ).ready(function() {
   window.openBenchForwardResume = function(candidateId) {
     if (!candidateId) return;
 
+    var candArr = Array.isArray(candidateId) ? candidateId : [candidateId];
+    if (candArr.length === 0) return;
+    var primaryCandId = candArr[0];
+
     var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
     if (drawerEl && typeof KTDrawer !== 'undefined') {
       var drawer = KTDrawer.getInstance(drawerEl);
@@ -2837,12 +2841,16 @@ $( document ).ready(function() {
       }
     }, 50);
 
+    var loadingMsg = candArr.length > 1
+      ? 'Loading Forward Resume Engine (' + candArr.length + ' Candidates)...'
+      : 'Loading Forward Resume Engine...';
+
     $('#bench_fwd_resume_body_content').html(
       '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
       '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
       '    <span class="visually-hidden">Loading...</span>' +
       '  </div>' +
-      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Forward Resume Engine...</span>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">' + loadingMsg + '</span>' +
       '</div>'
     );
 
@@ -2852,7 +2860,8 @@ $( document ).ready(function() {
       cache: false,
       data: {
         _token: "{{ csrf_token() }}",
-        candidate_id: candidateId
+        candidate_id: primaryCandId,
+        arr: candArr
       },
       success: function (response) {
         if (response && response.status === 'success' && response.view) {

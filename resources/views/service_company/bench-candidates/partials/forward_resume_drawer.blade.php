@@ -2,6 +2,9 @@
     use App\Helper\GeneralMethod;
     $salaryMode = GeneralMethod::salaryMode();
     $currencySymbole = GeneralMethod::currencySymbole();
+    $applicationData = is_array($applicationData) ? $applicationData : [$applicationData];
+    $candCount = count($applicationData);
+    $isMulti = $candCount > 1;
     $cand = $applicationData[0] ?? null;
     $candName = $cand->full_name ?? 'Candidate';
     $candDesig = $cand->current_designation ?? 'Technical Specialist';
@@ -19,9 +22,37 @@
     $compName = $companyName ?? 'Hiring Partner';
     $currentDate = now()->format('d M Y');
 
-    // 1. Updated Inhouse Talent list + Tracker
+    // 1. Updated Inhouse Talent list + Tracker (Dynamic Multi-Candidate Matrix Table)
+    $tableRowsHtml = '';
+    foreach ($applicationData as $idx => $c) {
+        $rowNum = str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT);
+        $cName = $c->full_name ?? 'Candidate';
+        $cExp = $c->experience ?? '--';
+        $cDesig = $c->current_designation ?? 'Technical Specialist';
+        $cSkills = $c->skills ?? '--';
+        $cLoc = $c->location ?? ($c->city_display ?? 'Open to Relocation');
+        $cWorkMode = $c->work_mode ?? 'Hybrid';
+        $cNotice = $c->notice ?? 'Immediate';
+        $cEngagement = $c->engagement_model ?? ($c->employmentType ?? 'Contract');
+        $cCommercials = $c->commercials_formatted ?? 'Competitive / Negotiable';
+
+        $tableRowsHtml .= '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;">'
+            . '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0F766E;border:1px solid #CBD5E1;">' . $rowNum . '</td>'
+            . '<td style="padding:8px 8px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' . htmlspecialchars($cName, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($cExp, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($cDesig, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($cSkills, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($cLoc, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:4px;font-size:11px;">' . htmlspecialchars($cWorkMode, ENT_QUOTES) . '</span></td>'
+            . '<td style="padding:8px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($cNotice, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($cEngagement, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($cCommercials, ENT_QUOTES) . '</td>'
+            . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>'
+            . '</tr>';
+    }
+
     $tplBody1 = '<p>Hi [HR Name],</p>'
-        . '<p>Sharing our current in-house bench talent pool for your review. The below professionals are available for consideration against your current or upcoming hiring requirements.</p>'
+        . '<p>Sharing our current in-house bench talent pool for your review. The below ' . ($isMulti ? ($candCount . ' professionals are') : 'professional is') . ' available for consideration against your current or upcoming hiring requirements.</p>'
         . '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">'
         . '<thead>'
         . '<tr style="background:#F1F5F9;color:#334155;text-align:left;font-size:11.5px;font-weight:700;border-bottom:2px solid #CBD5E1;">'
@@ -39,22 +70,10 @@
         . '</tr>'
         . '</thead>'
         . '<tbody>'
-        . '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;">'
-        . '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0F766E;border:1px solid #CBD5E1;">01</td>'
-        . '<td style="padding:8px 8px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' . htmlspecialchars($candName, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candExp, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candDesig, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candSkills, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($candLoc, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:4px;font-size:11px;">' . htmlspecialchars($candWorkMode, ENT_QUOTES) . '</span></td>'
-        . '<td style="padding:8px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
-        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>'
-        . '</tr>'
+        . $tableRowsHtml
         . '</tbody>'
         . '</table>'
-        . '<p><strong>Resumes:</strong> Attached for the corresponding candidates.</p>'
+        . '<p><strong>Resumes:</strong> Attached for the corresponding candidates (' . $candCount . ' profile' . ($candCount > 1 ? 's' : '') . ').</p>'
         . '<p>All profiles are currently available with us and can be evaluated for relevant current or upcoming requirements.</p>'
         . '<p>Please let us know if any profile is relevant, and we will coordinate the next steps.</p>'
         . '<p>Regards,<br>'
@@ -64,114 +83,242 @@
         . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
 
     // 2. Immediate Deployment Hotlist (Executive Spotlight)
-    $tplBody2 = '<p>Dear [HR Name],</p>'
-        . '<p>I would like to present <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . '), who is currently available in our in-house bench pool for <strong>immediate onboarding</strong> (Zero-day notice).</p>'
-        . '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid #0D9488;border-radius:6px;padding:12px 16px;margin:12px 0;">'
-        . '<p style="margin:0 0 6px 0;"><strong>Candidate Spotlight:</strong></p>'
-        . '<ul style="margin:0;padding-left:18px;">'
-        . '<li><strong>Full Name:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . '</li>'
-        . '<li><strong>Role &amp; Designation:</strong> ' . htmlspecialchars($candDesig, ENT_QUOTES) . '</li>'
-        . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
-        . '<li><strong>Core Technical Stack:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
-        . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
-        . '<li><strong>Availability:</strong> <span style="color:#059669;font-weight:600;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</span></li>'
-        . '<li><strong>Engagement Mode:</strong> ' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</li>'
-        . '<li><strong>Commercials:</strong> ' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</li>'
-        . '</ul>'
-        . '</div>'
-        . '<p>Please find the formatted profile attached for your review. We can coordinate an introductory technical call within 24 hours upon your confirmation.</p>'
-        . '<p>Looking forward to your feedback.</p>'
-        . '<p>Best regards,<br>'
-        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
-        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
-        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
-        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    if ($isMulti) {
+        $hotlistSpotlights = '';
+        foreach ($applicationData as $idx => $c) {
+            $hotlistSpotlights .= '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid #0D9488;border-radius:6px;padding:10px 14px;margin:8px 0;">'
+                . '<p style="margin:0 0 5px 0;font-size:12.5px;"><strong>' . ($idx + 1) . '. ' . htmlspecialchars($c->full_name ?? 'Candidate', ENT_QUOTES) . ' — ' . htmlspecialchars($c->current_designation ?? 'Profile', ENT_QUOTES) . '</strong></p>'
+                . '<ul style="margin:0;padding-left:18px;font-size:12px;color:#334155;">'
+                . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($c->experience ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Core Stack:</strong> ' . htmlspecialchars($c->skills ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Current Location:</strong> ' . htmlspecialchars($c->location ?? ($c->city_display ?? '--'), ENT_QUOTES) . ' (' . htmlspecialchars($c->work_mode ?? 'Hybrid', ENT_QUOTES) . ')</li>'
+                . '<li><strong>Availability:</strong> <span style="color:#059669;font-weight:600;">' . htmlspecialchars($c->notice ?? 'Immediate', ENT_QUOTES) . '</span></li>'
+                . '<li><strong>Engagement &amp; Commercials:</strong> ' . htmlspecialchars($c->engagement_model ?? 'Contract', ENT_QUOTES) . ' | ' . htmlspecialchars($c->commercials_formatted ?? 'Negotiable', ENT_QUOTES) . '</li>'
+                . '</ul>'
+                . '</div>';
+        }
+        $tplBody2 = '<p>Dear [HR Name],</p>'
+            . '<p>Sharing our Immediate Deployment Hotlist featuring <strong>' . $candCount . ' in-house bench talents</strong> who are currently available for <strong>immediate onboarding</strong> (Zero-day notice).</p>'
+            . $hotlistSpotlights
+            . '<p>Please find the formatted profiles attached for your review. We can coordinate introductory technical calls within 24 hours upon your confirmation.</p>'
+            . '<p>Looking forward to your feedback.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    } else {
+        $tplBody2 = '<p>Dear [HR Name],</p>'
+            . '<p>I would like to present <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . '), who is currently available in our in-house bench pool for <strong>immediate onboarding</strong> (Zero-day notice).</p>'
+            . '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid #0D9488;border-radius:6px;padding:12px 16px;margin:12px 0;">'
+            . '<p style="margin:0 0 6px 0;"><strong>Candidate Spotlight:</strong></p>'
+            . '<ul style="margin:0;padding-left:18px;">'
+            . '<li><strong>Full Name:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . '</li>'
+            . '<li><strong>Role &amp; Designation:</strong> ' . htmlspecialchars($candDesig, ENT_QUOTES) . '</li>'
+            . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+            . '<li><strong>Core Technical Stack:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+            . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
+            . '<li><strong>Availability:</strong> <span style="color:#059669;font-weight:600;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</span></li>'
+            . '<li><strong>Engagement Mode:</strong> ' . htmlspecialchars($candEngagement, ENT_QUOTES) . '</li>'
+            . '<li><strong>Commercials:</strong> ' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</li>'
+            . '</ul>'
+            . '</div>'
+            . '<p>Please find the formatted profile attached for your review. We can coordinate an introductory technical call within 24 hours upon your confirmation.</p>'
+            . '<p>Looking forward to your feedback.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    }
 
     // 3. Pre-Screened & Evaluated Talent Dossier
-    $tplBody3 = '<p>Dear [HR Name],</p>'
-        . '<p>Please find attached the <strong>In-House Evaluation Report and Verified Profile</strong> for <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> for your hiring evaluation.</p>'
-        . '<p>Our internal technical team has evaluated this candidate against enterprise engineering benchmarks:</p>'
-        . '<ul>'
-        . '<li><strong>Candidate:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . ' (' . htmlspecialchars($candDesig, ENT_QUOTES) . ')</li>'
-        . '<li><strong>Relevant Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
-        . '<li><strong>Key Evaluated Competencies:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
-        . '<li><strong>Verification Status:</strong> Pre-screened, In-House Evaluated &amp; Ready for Client Interview</li>'
-        . '<li><strong>Work Authorization &amp; Availability:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
-        . '</ul>'
-        . '<p>The attached report includes detailed skill ratings, interview notes, and the candidate complete professional dossier. Please review and advise on interview availability.</p>'
-        . '<p>Best regards,<br>'
-        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
-        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
-        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
-        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    if ($isMulti) {
+        $dossierItems = '';
+        foreach ($applicationData as $idx => $c) {
+            $dossierItems .= '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:10px 14px;margin:8px 0;">'
+                . '<p style="margin:0 0 5px 0;font-size:12.5px;"><strong>' . ($idx + 1) . '. ' . htmlspecialchars($c->full_name ?? 'Candidate', ENT_QUOTES) . ' (' . htmlspecialchars($c->current_designation ?? 'Profile', ENT_QUOTES) . ')</strong></p>'
+                . '<ul style="margin:0;padding-left:18px;font-size:12px;color:#334155;">'
+                . '<li><strong>Relevant Experience:</strong> ' . htmlspecialchars($c->experience ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Key Competencies:</strong> ' . htmlspecialchars($c->skills ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Verification:</strong> Pre-screened &amp; In-House Evaluated (' . htmlspecialchars($c->notice ?? 'Immediate', ENT_QUOTES) . ' • ' . htmlspecialchars($c->work_mode ?? 'Hybrid', ENT_QUOTES) . ')</li>'
+                . '</ul>'
+                . '</div>';
+        }
+        $tplBody3 = '<p>Dear [HR Name],</p>'
+            . '<p>Please find attached the <strong>In-House Evaluation Reports and Verified Profiles</strong> for <strong>' . $candCount . ' in-house bench talents</strong> for your hiring evaluation.</p>'
+            . '<p>Our internal technical team has evaluated these candidates against enterprise engineering benchmarks:</p>'
+            . $dossierItems
+            . '<p>The attached reports include detailed skill ratings, interview notes, and candidate complete professional dossiers. Please review and advise on interview availability.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    } else {
+        $tplBody3 = '<p>Dear [HR Name],</p>'
+            . '<p>Please find attached the <strong>In-House Evaluation Report and Verified Profile</strong> for <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> for your hiring evaluation.</p>'
+            . '<p>Our internal technical team has evaluated this candidate against enterprise engineering benchmarks:</p>'
+            . '<ul>'
+            . '<li><strong>Candidate:</strong> ' . htmlspecialchars($candName, ENT_QUOTES) . ' (' . htmlspecialchars($candDesig, ENT_QUOTES) . ')</li>'
+            . '<li><strong>Relevant Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+            . '<li><strong>Key Evaluated Competencies:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+            . '<li><strong>Verification Status:</strong> Pre-screened, In-House Evaluated &amp; Ready for Client Interview</li>'
+            . '<li><strong>Work Authorization &amp; Availability:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</li>'
+            . '</ul>'
+            . '<p>The attached report includes detailed skill ratings, interview notes, and the candidate complete professional dossier. Please review and advise on interview availability.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    }
 
     // 4. Contract / C2H Bench Profile Presentation
-    $tplBody4 = '<p>Dear [HR Name],</p>'
-        . '<p>Submitting our in-house talent profile for your current contract / contract-to-hire (C2H) requirements:</p>'
-        . '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12px;border:1px solid #CBD5E1;margin:10px 0;">'
-        . '<tr style="background:#F1F5F9;">'
-        . '<td style="width:30%;font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Candidate Name</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candName, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '<tr>'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Primary Skills</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candSkills, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '<tr style="background:#F8FAFC;">'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Total Experience</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candExp, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '<tr>'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Notice Period / Availability</td>'
-        . '<td style="padding:6px 10px;color:#059669;font-weight:bold;border:1px solid #CBD5E1;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '<tr style="background:#F8FAFC;">'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Current / Preferred Location</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</td>'
-        . '</tr>'
-        . '<tr>'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Engagement Model</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">Contract / C2H / SOW via ' . htmlspecialchars($compName, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '<tr style="background:#F8FAFC;">'
-        . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Billing / Commercials</td>'
-        . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
-        . '</tr>'
-        . '</table>'
-        . '<p>The candidate is on our direct payroll and available for deployment immediately upon client selection.</p>'
-        . '<p>Kindly confirm receipt and share next steps for client rounds.</p>'
-        . '<p>Warm regards,<br>'
-        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
-        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
-        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
-        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    if ($isMulti) {
+        $c2hRows = '';
+        foreach ($applicationData as $idx => $c) {
+            $c2hRows .= '<tr style="background:' . ($idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC') . ';border-bottom:1px solid #E2E8F0;">'
+                . '<td style="padding:6px 8px;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($c->full_name ?? 'Candidate', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($c->current_designation ?? 'Profile', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($c->skills ?? '--', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($c->experience ?? '--', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($c->notice ?? 'Immediate', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($c->engagement_model ?? 'Contract', ENT_QUOTES) . '</td>'
+                . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($c->commercials_formatted ?? 'Negotiable', ENT_QUOTES) . '</td>'
+                . '</tr>';
+        }
+        $tplBody4 = '<p>Dear [HR Name],</p>'
+            . '<p>Submitting our in-house talent profiles for your current contract / contract-to-hire (C2H) requirements:</p>'
+            . '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12px;border:1px solid #CBD5E1;margin:10px 0;">'
+            . '<tr style="background:#F1F5F9;color:#334155;font-weight:bold;">'
+            . '<td style="padding:6px 8px;border:1px solid #CBD5E1;">Candidate</td>'
+            . '<td style="padding:6px 8px;border:1px solid #CBD5E1;">Designation</td>'
+            . '<td style="padding:6px 8px;border:1px solid #CBD5E1;">Primary Skills</td>'
+            . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">Exp.</td>'
+            . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">Availability</td>'
+            . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">Model</td>'
+            . '<td style="padding:6px 8px;text-align:center;border:1px solid #CBD5E1;">Commercials</td>'
+            . '</tr>'
+            . $c2hRows
+            . '</table>'
+            . '<p>All candidates are on our direct payroll and available for deployment immediately upon client selection.</p>'
+            . '<p>Kindly confirm receipt and share next steps for client rounds.</p>'
+            . '<p>Warm regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    } else {
+        $tplBody4 = '<p>Dear [HR Name],</p>'
+            . '<p>Submitting our in-house talent profile for your current contract / contract-to-hire (C2H) requirements:</p>'
+            . '<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12px;border:1px solid #CBD5E1;margin:10px 0;">'
+            . '<tr style="background:#F1F5F9;">'
+            . '<td style="width:30%;font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Candidate Name</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candName, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '<tr>'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Primary Skills</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candSkills, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '<tr style="background:#F8FAFC;">'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Total Experience</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candExp, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '<tr>'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Notice Period / Availability</td>'
+            . '<td style="padding:6px 10px;color:#059669;font-weight:bold;border:1px solid #CBD5E1;">' . htmlspecialchars($candNotice, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '<tr style="background:#F8FAFC;">'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Current / Preferred Location</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candLoc, ENT_QUOTES) . ' (' . htmlspecialchars($candWorkMode, ENT_QUOTES) . ')</td>'
+            . '</tr>'
+            . '<tr>'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Engagement Model</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">Contract / C2H / SOW via ' . htmlspecialchars($compName, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '<tr style="background:#F8FAFC;">'
+            . '<td style="font-weight:bold;padding:6px 10px;border:1px solid #CBD5E1;">Billing / Commercials</td>'
+            . '<td style="padding:6px 10px;border:1px solid #CBD5E1;">' . htmlspecialchars($candCommercials, ENT_QUOTES) . '</td>'
+            . '</tr>'
+            . '</table>'
+            . '<p>The candidate is on our direct payroll and available for deployment immediately upon client selection.</p>'
+            . '<p>Kindly confirm receipt and share next steps for client rounds.</p>'
+            . '<p>Warm regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    }
 
     // 5. Shortlisting & Interview Availability Follow-up
-    $tplBody5 = '<p>Dear [HR Name],</p>'
-        . '<p>I am following up regarding the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ' - ' . htmlspecialchars($candExp, ENT_QUOTES) . ') shared with you for your requirements.</p>'
-        . '<p>The candidate has expressed keen interest in joining your team and remains immediately available. We would appreciate if you could share feedback on the profile or propose suitable time slots for an introductory interview this week.</p>'
-        . '<p>We are ready to align the candidate as per your preferred interview schedule.</p>'
-        . '<p>Thank you for your time and consideration.</p>'
-        . '<p>Best regards,<br>'
-        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
-        . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
-        . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
-        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    if ($isMulti) {
+        $followUpBullets = '';
+        foreach ($applicationData as $c) {
+            $followUpBullets .= '<li><strong>' . htmlspecialchars($c->full_name ?? 'Candidate', ENT_QUOTES) . '</strong> (' . htmlspecialchars($c->current_designation ?? 'Profile', ENT_QUOTES) . ' - ' . htmlspecialchars($c->experience ?? '--', ENT_QUOTES) . ')</li>';
+        }
+        $tplBody5 = '<p>Dear [HR Name],</p>'
+            . '<p>I am following up regarding the in-house bench profiles shared with you for your requirements:</p>'
+            . '<ul style="margin:6px 0;padding-left:18px;">'
+            . $followUpBullets
+            . '</ul>'
+            . '<p>The candidates have expressed keen interest in joining your team and remain immediately available. We would appreciate if you could share feedback on the profiles or propose suitable time slots for introductory interviews this week.</p>'
+            . '<p>We are ready to align the candidates as per your preferred interview schedule.</p>'
+            . '<p>Thank you for your time and consideration.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    } else {
+        $tplBody5 = '<p>Dear [HR Name],</p>'
+            . '<p>I am following up regarding the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ' - ' . htmlspecialchars($candExp, ENT_QUOTES) . ') shared with you for your requirements.</p>'
+            . '<p>The candidate has expressed keen interest in joining your team and remains immediately available. We would appreciate if you could share feedback on the profile or propose suitable time slots for an introductory interview this week.</p>'
+            . '<p>We are ready to align the candidate as per your preferred interview schedule.</p>'
+            . '<p>Thank you for your time and consideration.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($senderDesig, ENT_QUOTES) . '<br>'
+            . htmlspecialchars($senderEmail, ENT_QUOTES) . ' | ' . htmlspecialchars($senderPhone, ENT_QUOTES) . '<br>'
+            . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+    }
 
     // 6. Standard Candidate Profile Pitch (Default)
-    $tplBodyDefault = '<p>Dear [HR_NAME],</p>'
-        . '<p>I would like to share the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ') with you for your hiring requirements.</p>'
-        . '<p><strong>Candidate Summary:</strong></p>'
-        . '<ul>'
-        . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
-        . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . '</li>'
-        . '<li><strong>Notice Period:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . '</li>'
-        . '<li><strong>Talent Skills &amp; Expertise:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
-        . '</ul>'
-        . '<p>Please find the formatted profile attached for your review. We look forward to your valuable feedback.</p>'
-        . '<p>Best regards,<br>'
-        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
-        . htmlspecialchars($compName, ENT_QUOTES) . '</p>';
+    if ($isMulti) {
+        $defaultPitchBullets = '';
+        foreach ($applicationData as $idx => $c) {
+            $defaultPitchBullets .= '<div style="margin:8px 0;padding:8px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;">'
+                . '<p style="margin:0 0 4px 0;font-size:12.5px;"><strong>' . ($idx + 1) . '. ' . htmlspecialchars($c->full_name ?? 'Candidate', ENT_QUOTES) . ' (' . htmlspecialchars($c->current_designation ?? 'Profile', ENT_QUOTES) . ')</strong></p>'
+                . '<ul style="margin:0;padding-left:18px;font-size:12px;color:#334155;">'
+                . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($c->experience ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Current Location:</strong> ' . htmlspecialchars($c->location ?? ($c->city_display ?? '--'), ENT_QUOTES) . '</li>'
+                . '<li><strong>Notice Period:</strong> ' . htmlspecialchars($c->notice ?? '--', ENT_QUOTES) . '</li>'
+                . '<li><strong>Talent Skills:</strong> ' . htmlspecialchars($c->skills ?? '--', ENT_QUOTES) . '</li>'
+                . '</ul>'
+                . '</div>';
+        }
+        $tplBodyDefault = '<p>Dear [HR_NAME],</p>'
+            . '<p>I would like to share our in-house talent profiles (' . $candCount . ' candidates) with you for your hiring requirements.</p>'
+            . $defaultPitchBullets
+            . '<p>Please find the formatted profiles attached for your review. We look forward to your valuable feedback.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($compName, ENT_QUOTES) . '</p>';
+    } else {
+        $tplBodyDefault = '<p>Dear [HR_NAME],</p>'
+            . '<p>I would like to share the profile of <strong>' . htmlspecialchars($candName, ENT_QUOTES) . '</strong> (' . htmlspecialchars($candDesig, ENT_QUOTES) . ') with you for your hiring requirements.</p>'
+            . '<p><strong>Candidate Summary:</strong></p>'
+            . '<ul>'
+            . '<li><strong>Total Experience:</strong> ' . htmlspecialchars($candExp, ENT_QUOTES) . '</li>'
+            . '<li><strong>Current Location:</strong> ' . htmlspecialchars($candLoc, ENT_QUOTES) . '</li>'
+            . '<li><strong>Notice Period:</strong> ' . htmlspecialchars($candNotice, ENT_QUOTES) . '</li>'
+            . '<li><strong>Talent Skills &amp; Expertise:</strong> ' . htmlspecialchars($candSkills, ENT_QUOTES) . '</li>'
+            . '</ul>'
+            . '<p>Please find the formatted profile attached for your review. We look forward to your valuable feedback.</p>'
+            . '<p>Best regards,<br>'
+            . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+            . htmlspecialchars($compName, ENT_QUOTES) . '</p>';
+    }
 @endphp 
 
 @include('service_company.bench-candidates.partials._bench_forward_resume_engine') 
@@ -863,9 +1010,9 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
       <div class="bench-mm-field-col">
         <select name="template" id="bench_fwd_template" class="bench-mm-select" style="font-weight:500;" onchange="onBenchFwdTemplateChange(this)">
-          <option value="" selected disabled>Select Email Template...</option>
+          <option value="" {{ !$isMulti ? 'selected' : '' }} disabled>Select Email Template...</option>
           <optgroup label="🌟 Enterprise Bench Talent Templates">
-            <option value="bench_table_matrix">1. Updated Inhouse Talent list + Tracker</option>
+            <option value="bench_table_matrix" {{ $isMulti ? 'selected' : '' }}>1. Updated Inhouse Talent list + Tracker</option>
             <option value="bench_immediate_deploy">2. Immediate Deployment Hotlist (Executive Spotlight)</option>
             <option value="bench_prescreen_dossier">3. Pre-Screened &amp; Evaluated Talent Dossier</option>
             <option value="bench_contract_c2h">4. Contract / C2H Bench Profile Presentation</option>
@@ -886,7 +1033,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Subject <span class="bench-mm-req">*</span>
       </div>
       <div class="bench-mm-field-col">
-        <input class="bench-mm-input" name="subject" id="bench_fwd_subject" placeholder="Enter email subject" value="{{ $cand ? ('Candidate Profile: ' . $cand->full_name . ' - ' . ($cand->current_designation ?? 'Profile')) : '' }}">
+        <input class="bench-mm-input" name="subject" id="bench_fwd_subject" placeholder="Enter email subject" value="{{ $isMulti ? ('Sharing Updated In-House Talent Roster (' . $candCount . ' Profiles) | ' . $compName . ' | ' . $currentDate) : ($cand ? ('Candidate Profile: ' . $cand->full_name . ' - ' . ($cand->current_designation ?? 'Profile')) : '') }}">
       </div>
     </div>
 
@@ -1230,85 +1377,122 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           </div>
         </div>
 
-        <!-- Format Details Section: Unified Single Enterprise Attachment & Progress Card -->
+        <!-- Format Details Section: Multi-Candidate Attachment Cards & Cumulative Size Meter -->
         <div id="bench_fwd_format_details_section" style="display:none;margin-top:8px;">
 
-          @if(!empty($cand) && empty($cand->has_resume))
+          <!-- Multi-Candidate Attachment Header & Cumulative Size Meter -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;padding:0 2px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;font-weight:700;color:#1E293B;">
+                Attached Documents ({{ $candCount }} {{ $candCount === 1 ? 'Profile' : 'Profiles' }})
+              </span>
+              <span style="font-size:11px;color:#64748B;">• Selected format applied universally</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span id="bench_fwd_total_size_badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;display:inline-flex;align-items:center;gap:4px;">
+                Total: 0.0 MB / 6.0 MB
+              </span>
+            </div>
+          </div>
+
+          <!-- Deliverability Warning Banner (Hidden by default, triggered when cumulative size > 6MB) -->
+          <div id="bench_fwd_size_warning" style="display:none;margin-bottom:8px;padding:8px 12px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;font-size:11.5px;color:#991B1B;line-height:1.4;">
+            <strong>Attachment Limit Exceeded:</strong> Combined attachment size exceeds the 6.0 MB email delivery limit. Please select fewer candidates or choose <em>Option 2.a (Evaluation Report PDF)</em> to ensure successful delivery.
+          </div>
+
+          @php
+            $missingResumeCandidates = [];
+            foreach($applicationData as $c) {
+                if(empty($c->has_resume)) {
+                    $missingResumeCandidates[] = $c->full_name ?? 'Candidate';
+                }
+            }
+          @endphp
+          @if(!empty($missingResumeCandidates))
             <div id="bench_fwd_missing_resume_banner" style="margin-bottom:8px;padding:8px 12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;display:flex;align-items:center;gap:8px;">
               <span style="color:#D97706;font-size:14px;flex-shrink:0;">⚠</span>
               <div style="font-size:11.5px;color:#92400E;line-height:1.35;">
-                <strong>Resume Notice:</strong> Candidate has no resume document uploaded. You can attach using Option 2.a (In-House Evaluation Report) or upload a CV.
+                <strong>Resume Notice:</strong> {{ implode(', ', $missingResumeCandidates) }} {{ count($missingResumeCandidates) > 1 ? 'have' : 'has' }} no resume file uploaded. They will be formatted as Option 2.a (In-House Evaluation Report) if a resume format is selected.
               </div>
             </div>
           @endif
 
-          <!-- Unified Single Master Attachment & Progress Card -->
-          @if($cand)
-            @php
-              $hasResume = !empty($cand->has_resume);
-              $candSafeName = $cand->safe_name ?? ('Candidate_' . $cand->id);
-              $candDisplayName = $cand->full_name ?? 'Candidate';
-              $candDesignation = $cand->current_designation ?? 'Inhouse Talent';
-              $candResumeUrl = $cand->resume_r2_url ?? ($cand->resume_url ?? ($cand->download_url ?? ''));
-            @endphp
-            <div id="bench_fwd_cand_card_{{ $cand->id }}" data-cand-id="{{ $cand->id }}" data-has-resume="{{ $hasResume ? '1' : '0' }}" style="position:relative;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s ease;">
-              
-              <!-- Card Body -->
-              <div style="padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <!-- Candidate Attachment Cards Loop -->
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            @foreach($applicationData as $candItem)
+              @php
+                $cHasResume = !empty($candItem->has_resume);
+                $cSafeName = $candItem->safe_name ?? ('Candidate_' . $candItem->id);
+                $cDisplayName = $candItem->full_name ?? 'Candidate';
+                $cDesignation = $candItem->current_designation ?? 'Inhouse Talent';
+              @endphp
+              <div id="bench_fwd_cand_card_{{ $candItem->id }}" class="bench-fwd-cand-card" data-cand-id="{{ $candItem->id }}" data-has-resume="{{ $cHasResume ? '1' : '0' }}" style="position:relative;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:all 0.2s ease;">
                 
-                <!-- Left: Badge + Candidate Meta + Filename -->
-                <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1;">
-                  <span style="width:30px;height:30px;border-radius:6px;background:#F1F5F9;border:1px solid #E2E8F0;color:#0F766E;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">
-                    PDF
-                  </span>
-                  <div style="min-width:0;flex:1;">
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
-                      <span style="font-size:12.5px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        {{ $candDisplayName }}
-                      </span>
-                      <span style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        • {{ $candDesignation }}
-                      </span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
-                      <div id="bench_fwd_cand_filename" data-safename="{{ $candSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $hasResume ? '#64748B' : '#B45309' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        @if($hasResume)
-                          <span style="color:#64748B;display:inline-flex;align-items:center;gap:3px;" title="Select a format to compile resume">
-                            📄 Jeroworks_{{ $candSafeName }}.pdf
-                          </span>
-                        @else
-                          <span>No resume uploaded</span>
-                        @endif
+                <!-- Card Body -->
+                <div style="padding:7px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                  
+                  <!-- Left: Badge + Candidate Meta + Filename -->
+                  <div style="display:flex;align-items:center;gap:9px;min-width:0;flex:1;">
+                    <span style="width:28px;height:28px;border-radius:6px;background:#F1F5F9;border:1px solid #E2E8F0;color:#0F766E;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">
+                      PDF
+                    </span>
+                    <div style="min-width:0;flex:1;">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+                        <span style="font-size:12px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          {{ $cDisplayName }}
+                        </span>
+                        <span style="font-size:11px;color:#64748B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          • {{ $cDesignation }}
+                        </span>
                       </div>
-                      <span id="bench_fwd_compile_step_detail" style="display:none;font-size:10.5px;color:#0D9488;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:1px;">
+                        <div id="bench_fwd_cand_filename_{{ $candItem->id }}" class="bench-fwd-cand-filename" data-safename="{{ $cSafeName }}" style="font-size:11px;font-family:monospace;color:{{ $cHasResume ? '#64748B' : '#B45309' }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          @if($cHasResume)
+                            <span style="color:#64748B;display:inline-flex;align-items:center;gap:3px;" title="Select a format to compile resume">
+                              📄 Jeroworks_{{ $cSafeName }}.pdf
+                            </span>
+                          @else
+                            <span>No resume uploaded</span>
+                          @endif
+                        </div>
+                        <span id="bench_fwd_compile_step_detail_{{ $candItem->id }}" class="bench-fwd-compile-step-detail" style="display:none;font-size:10.5px;color:#0D9488;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Right: Action Buttons & Live Status -->
+                  <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
+                    <button type="button" id="bench_fwd_view_cv_btn_{{ $candItem->id }}" class="btn btn-xs btn-light-info fw-bold bench-view-cv-btn disabled" disabled style="display:none;font-size:10.5px;padding:3px 8px;border-radius:6px;align-items:center;gap:4px;opacity:0.45;cursor:not-allowed;pointer-events:none;" title="Select a format and wait for 100% conversion to complete">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                      View CV
+                    </button>
+                    <div id="bench_fwd_cand_status_badge_{{ $candItem->id }}" class="bench-cand-status-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:{{ $cHasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $cHasResume ? '#475569' : '#B45309' }};border:1px solid {{ $cHasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
+                      {{ $cHasResume ? 'Ready' : '⚠ No Resume' }}
                     </div>
                   </div>
                 </div>
 
-                <!-- Right: Action Buttons & Live Status -->
-                <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;">
-                  <button type="button" id="bench_fwd_view_cv_btn" class="btn btn-xs btn-light-info fw-bold disabled" disabled style="display:{{ $hasResume ? 'inline-flex' : 'none' }};font-size:11px;padding:3px 9px;border-radius:6px;align-items:center;gap:4px;opacity:0.45;cursor:not-allowed;pointer-events:none;" title="Select a format and wait for 100% conversion to complete">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    View CV
-                  </button>
-                  <div id="bench_fwd_cand_status_badge" style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:{{ $hasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $hasResume ? '#475569' : '#B45309' }};border:1px solid {{ $hasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
-                    {{ $hasResume ? '1 Resume Available' : '⚠ No Resume' }}
-                  </div>
+                <!-- Sleek Integrated 3px Baseline Progress Bar -->
+                <div id="bench_fwd_compile_progress_container_{{ $candItem->id }}" style="display:none;height:3px;width:100%;background:#F1F5F9;overflow:hidden;">
+                  <div id="bench_fwd_compile_progress_bar_{{ $candItem->id }}" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #10B981);transition:width 0.25s ease;"></div>
                 </div>
               </div>
+            @endforeach
+          </div>
 
-              <!-- Sleek Integrated 3px Baseline Progress Bar -->
-              <div id="bench_fwd_compile_progress_container" style="display:none;height:3px;width:100%;background:#F1F5F9;overflow:hidden;">
-                <div id="bench_fwd_compile_progress_bar" style="height:100%;width:0%;background:linear-gradient(90deg, #0D9488, #10B981);transition:width 0.25s ease;"></div>
-              </div>
-              
-              <!-- Compatibility hidden anchors -->
-              <span id="bench_fwd_compile_status_text" style="display:none;"></span>
-              <span id="bench_fwd_compile_pct_badge" style="display:none;"></span>
-              <span id="bench_fwd_preview_format_title" style="display:none;"></span>
-              <span id="bench_fwd_preview_desc" style="display:none;"></span>
-            </div>
-          @endif
+          <!-- Compatibility hidden anchors for legacy JS queries -->
+          <div style="display:none;">
+            <div id="bench_fwd_cand_filename" data-safename="{{ $cand->safe_name ?? 'Candidate' }}"></div>
+            <span id="bench_fwd_compile_status_text"></span>
+            <span id="bench_fwd_compile_pct_badge"></span>
+            <span id="bench_fwd_preview_format_title"></span>
+            <span id="bench_fwd_preview_desc"></span>
+            <button type="button" id="bench_fwd_view_cv_btn"></button>
+            <span id="bench_fwd_cand_status_badge"></span>
+            <div id="bench_fwd_compile_progress_container"><div id="bench_fwd_compile_progress_bar"></div></div>
+            <span id="bench_fwd_compile_step_detail"></span>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1324,6 +1508,9 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       <div class="bench-mm-field-col">
         <div class="bench-mm-editor-wrap">
           <textarea name="editor1" id="bench_editor1">
+@if($isMulti)
+{!! $tplBody1 !!}
+@else
 <p>Dear [HR_NAME],</p>
 <p>I would like to share the profile of <strong>{{ $cand->full_name ?? 'Candidate' }}</strong> ({{ $cand->current_designation ?? 'Profile' }}) with you for your hiring requirements.</p>
 <p><strong>Candidate Summary:</strong></p>
@@ -1332,7 +1519,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   <li><strong>Current Location:</strong> {{ $cand->location ?? '--' }}</li>
   <li><strong>Notice Period:</strong> {{ $cand->notice ?? '--' }}</li>
   @if(!empty($cand->skills))
-  <li><strong>Talent Skills & Expertise:</strong> {{ $cand->skills }}</li>
+  <li><strong>Talent Skills &amp; Expertise:</strong> {{ $cand->skills }}</li>
   @endif
   @if(!empty($cand->rm_comments))
   <li><strong>Relationship Manager Comments:</strong> {{ strip_tags($cand->rm_comments) }}</li>
@@ -1342,6 +1529,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 <p>Best regards,<br>
 <strong>{{ $userdata->name ?? 'Recruitment Team' }}</strong><br>
 {{ $companyName ?? 'Hiring Partner' }}</p>
+@endif
           </textarea>
         </div>
         <div class="bench-mm-hint">Use <code>[HR_NAME]</code> to automatically insert recipient's name in personalized emails.</div>
@@ -1351,7 +1539,9 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   </div>
 
   <input type="hidden" name="candidate_id" id="bench_fwd_candidate_id" value="{{ $cand->id ?? 0 }}">
-  <input type="hidden" name="arr[]" value="{{ $cand->id ?? 0 }}">
+  @foreach($applicationData as $c)
+    <input type="hidden" name="arr[]" value="{{ $c->id }}">
+  @endforeach
 </form>
 </div>
 
@@ -1447,15 +1637,32 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 var benchToEmails = [];
 var benchCcEmails = [];
 var activeBenchRecipientTarget = 'to'; // 'to' or 'cc'
-var _benchCompiledAttachment = null;
+var _benchCandidatesList = @json($applicationData);
+var _benchCompiledAttachments = {}; // candId -> { blob, filename, formatId, candId }
+var _benchCompiledPreviewUrls = {}; // candId -> blobUrl
 var _benchCompilationSeq = 0;
 var _benchIsCompiling = false;
-var _benchCompiledPreviewUrl = null;
+var MAX_BENCH_ATTACHMENT_BYTES = 6 * 1024 * 1024; // 6.0 MB strict deliverability ceiling
 
 // Ensure View CV is only clickable once compilation reaches 100%
-function disableBenchViewCvBtn(reason) {
+function disableBenchViewCvBtn(cId, reason) {
     var titleMsg = reason || 'Preparing resume... available once 100% complete';
-    $('#bench_fwd_view_cv_btn')
+    if (!cId) {
+        $('.bench-view-cv-btn')
+            .prop('disabled', true)
+            .addClass('disabled')
+            .css({ opacity: '0.45', cursor: 'not-allowed', pointerEvents: 'none' })
+            .attr('title', titleMsg)
+            .off('click');
+        $('#bench_fwd_view_cv_btn')
+            .prop('disabled', true)
+            .addClass('disabled')
+            .css({ opacity: '0.45', cursor: 'not-allowed', pointerEvents: 'none' })
+            .attr('title', titleMsg)
+            .off('click');
+        return;
+    }
+    $('#bench_fwd_view_cv_btn_' + cId)
         .prop('disabled', true)
         .addClass('disabled')
         .css({
@@ -1464,14 +1671,13 @@ function disableBenchViewCvBtn(reason) {
             pointerEvents: 'none'
         })
         .attr('title', titleMsg)
-        .removeAttr('onclick')
         .off('click');
 }
 
-function enableBenchViewCvBtn(url) {
-    if (!url) return;
-    _benchCompiledPreviewUrl = url;
-    $('#bench_fwd_view_cv_btn')
+function enableBenchViewCvBtn(cId, url) {
+    if (!cId || !url) return;
+    _benchCompiledPreviewUrls[cId] = url;
+    $('#bench_fwd_view_cv_btn_' + cId)
         .prop('disabled', false)
         .removeClass('disabled')
         .css({
@@ -1481,7 +1687,6 @@ function enableBenchViewCvBtn(url) {
             pointerEvents: 'auto'
         })
         .attr('title', 'Click to view resume')
-        .removeAttr('onclick')
         .off('click')
         .on('click', function(e) {
             e.preventDefault();
@@ -1489,8 +1694,44 @@ function enableBenchViewCvBtn(url) {
         });
 }
 
+// Live cumulative size calculator & 6 MB hard gate
+function updateBenchCumulativeSize() {
+    var totalBytes = 0;
+    for (var id in _benchCompiledAttachments) {
+        if (_benchCompiledAttachments[id] && _benchCompiledAttachments[id].blob) {
+            totalBytes += (_benchCompiledAttachments[id].blob.size || 0);
+        }
+    }
+    var mb = (totalBytes / (1024 * 1024)).toFixed(2);
+    var badge = $('#bench_fwd_total_size_badge');
+    var warning = $('#bench_fwd_size_warning');
+    var btn = document.getElementById('btnBenchFwdSubmit');
+
+    badge.text('Total: ' + mb + ' MB / 6.0 MB');
+
+    if (totalBytes > MAX_BENCH_ATTACHMENT_BYTES) {
+        badge.css({ background: '#FEE2E2', color: '#DC2626', borderColor: '#FCA5A5' });
+        warning.show();
+        if (btn) {
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+            btn.title = 'Total attachment size exceeds 6.0 MB';
+        }
+        return false;
+    } else {
+        badge.css({ background: '#F1F5F9', color: '#475569', borderColor: '#E2E8F0' });
+        warning.hide();
+        if (btn && !_benchIsCompiling) {
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            btn.title = '';
+        }
+        return true;
+    }
+}
+
 // Initial state: View CV is disabled until 100% compilation
-disableBenchViewCvBtn('Select a format to compile resume');
+disableBenchViewCvBtn(null, 'Select a format to compile resume');
 
 // Open candidate's authoritative original resume in a new tab via same-origin streaming proxy
 window.openBenchOriginalResume = function(candId) {
@@ -1636,37 +1877,37 @@ window.benchFwdTemplatesMap = {
     "bench_table_matrix": {
         id: "bench_table_matrix",
         name: "1. Updated Inhouse Talent list + Tracker",
-        subject: "Sharing Updated Bench List | " + @json($compName) + " | " + @json($currentDate),
+        subject: @json($isMulti ? ("Sharing Updated In-House Talent Roster (" . $candCount . " Profiles) | " . $compName . " | " . $currentDate) : ("Sharing Updated Bench List | " . $compName . " | " . $currentDate)),
         body: @json($tplBody1)
     },
     "bench_immediate_deploy": {
         id: "bench_immediate_deploy",
         name: "2. Immediate Deployment Hotlist (Executive Spotlight)",
-        subject: "Available for Immediate Deployment | " + @json($candName) + " - " + @json($candDesig) + " (" + @json($candExp) + ")",
+        subject: @json($isMulti ? ("Immediate Deployment Hotlist (" . $candCount . " In-House Profiles) | " . $compName) : ("Available for Immediate Deployment | " . $candName . " - " . $candDesig . " (" . $candExp . ")")),
         body: @json($tplBody2)
     },
     "bench_prescreen_dossier": {
         id: "bench_prescreen_dossier",
         name: "3. Pre-Screened & Evaluated Talent Dossier",
-        subject: "Pre-Screened Talent Dossier: " + @json($candName) + " | " + @json($candDesig) + " | In-House Verified",
+        subject: @json($isMulti ? ("Pre-Screened Talent Dossiers (" . $candCount . " Candidates) | " . $compName . " | In-House Verified") : ("Pre-Screened Talent Dossier: " . $candName . " | " . $candDesig . " | In-House Verified")),
         body: @json($tplBody3)
     },
     "bench_contract_c2h": {
         id: "bench_contract_c2h",
         name: "4. Contract / C2H Bench Profile Presentation",
-        subject: "Contract / C2H Talent Profile: " + @json($candName) + " - " + @json($candDesig) + " | " + @json($compName),
+        subject: @json($isMulti ? ("Contract / C2H Bench Profiles (" . $candCount . " Candidates) | " . $compName) : ("Contract / C2H Talent Profile: " . $candName . " - " . $candDesig . " | " . $compName)),
         body: @json($tplBody4)
     },
     "bench_feedback_followup": {
         id: "bench_feedback_followup",
         name: "5. Shortlisting & Interview Availability Follow-up",
-        subject: "Interview Availability & Feedback Follow-up: " + @json($candName) + " | " + @json($candDesig),
+        subject: @json($isMulti ? ("Interview Availability & Feedback Follow-up (" . $candCount . " Profiles) | " . $compName) : ("Interview Availability & Feedback Follow-up: " . $candName . " | " . $candDesig)),
         body: @json($tplBody5)
     },
     "default_pitch": {
         id: "default_pitch",
         name: "6. Standard Candidate Profile Pitch (Default)",
-        subject: "Candidate Profile: " + @json($candName) + " - " + @json($candDesig),
+        subject: @json($isMulti ? ("Candidate Profiles (" . $candCount . " In-House Talents) | " . $compName) : ("Candidate Profile: " . $candName . " - " . $candDesig)),
         body: @json($tplBodyDefault)
     }
 };
@@ -1896,8 +2137,8 @@ $('#bench_fwd_resume_format').on('change', function() {
 function onBenchFwdFormatSelect(optId, label, desc) {
     if (!optId) {
         $('#bench_fwd_format_details_section').hide();
-        _benchCompiledAttachment = null;
-        disableBenchViewCvBtn('Select a format to compile resume');
+        _benchCompiledAttachments = {};
+        disableBenchViewCvBtn(null, 'Select a format to compile resume');
         var btn = document.getElementById('btnBenchFwdSubmit');
         if (btn) {
             btn.disabled = true;
@@ -1913,40 +2154,47 @@ function onBenchFwdFormatSelect(optId, label, desc) {
     $('#bench_fwd_format_details_section').show();
 
     // Reset compiled preview state and strictly disable View CV until 100% complete
-    if (_benchCompiledPreviewUrl && _benchCompiledPreviewUrl.startsWith('blob:')) {
-        try { URL.revokeObjectURL(_benchCompiledPreviewUrl); } catch(e) {}
+    for (var k in _benchCompiledPreviewUrls) {
+        if (_benchCompiledPreviewUrls[k] && _benchCompiledPreviewUrls[k].startsWith('blob:')) {
+            try { URL.revokeObjectURL(_benchCompiledPreviewUrls[k]); } catch(e) {}
+        }
     }
-    _benchCompiledPreviewUrl = null;
-    disableBenchViewCvBtn('Preparing resume... available once 100% complete');
+    _benchCompiledPreviewUrls = {};
+    _benchCompiledAttachments = {};
+    disableBenchViewCvBtn(null, 'Preparing resumes... available once 100% complete');
 
-    var safeName = $('#bench_fwd_cand_filename').attr('data-safename') || 'Candidate';
-    var candId = @json($cand->id ?? 0);
-    var candHasResume = @json(!empty($cand->has_resume));
-    var dispName = '';
-    if (optId === 1) {
-        var ext = @json(pathinfo($cand->resume_filename ?? '', PATHINFO_EXTENSION) ?: 'pdf');
-        dispName = 'Jeroworks_' + safeName + '.' + ext;
-    } else if (optId === 5) {
-        dispName = 'Prescreen_Report_' + safeName + '.pdf';
-    } else {
-        dispName = 'Jeroworks_' + safeName + '_Formatted.pdf';
-    }
+    var anyHasResume = false;
+    _benchCandidatesList.forEach(function(cand) {
+        var safeName = cand.safe_name || ('Candidate_' + cand.id);
+        var candHasResume = !!cand.has_resume;
+        if (candHasResume) anyHasResume = true;
+        var dispName = '';
+        if (optId === 1) {
+            var ext = (cand.resume_filename ? cand.resume_filename.split('.').pop() : 'pdf');
+            dispName = 'Jeroworks_' + safeName + '.' + ext;
+        } else if (optId === 5) {
+            dispName = 'Prescreen_Report_' + safeName + '.pdf';
+        } else {
+            dispName = 'Jeroworks_' + safeName + '_Formatted.pdf';
+        }
 
-    if (candHasResume || optId === 5) {
-        // Plain text while compiling (not clickable until 100% complete)
-        $('#bench_fwd_cand_filename').html(
-            '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
-            '📄 ' + $('<div>').text(dispName).html() + '</span>'
-        );
-    } else {
-        $('#bench_fwd_cand_filename').html('<span>No resume uploaded</span>');
-    }
+        if (candHasResume || optId === 5) {
+            $('#bench_fwd_cand_filename_' + cand.id).html(
+                '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
+                '📄 ' + $('<div>').text(dispName).html() + '</span>'
+            );
+            $('#bench_fwd_cand_status_badge_' + cand.id)
+                .html('Queued')
+                .css({ background: '#F8FAFC', color: '#475569', borderColor: '#E2E8F0' });
+        } else {
+            $('#bench_fwd_cand_filename_' + cand.id).html('<span>No resume uploaded (Will use Report PDF)</span>');
+            $('#bench_fwd_cand_status_badge_' + cand.id)
+                .html('Report Fallback')
+                .css({ background: '#FEF3C7', color: '#B45309', borderColor: '#FDE68A' });
+        }
+    });
 
-    if (!candHasResume && optId !== 5) {
-        $('#bench_fwd_cand_status_badge')
-            .html('⚠ No Resume')
-            .css({ background: '#FEF3C7', color: '#B45309' });
-        $('#bench_fwd_compile_progress_container').hide();
+    if (!anyHasResume && optId !== 5) {
         var btn = document.getElementById('btnBenchFwdSubmit');
         if (btn) {
             btn.disabled = true;
@@ -1956,8 +2204,8 @@ function onBenchFwdFormatSelect(optId, label, desc) {
         }
         Swal.fire({
             icon: 'warning',
-            title: 'Resume Missing',
-            text: 'This candidate has no uploaded resume document. Please select Option 2.a (In-House Evaluation Report PDF) to forward their candidate profile dossier.',
+            title: 'Resumes Missing',
+            text: 'None of the selected candidates have uploaded resume documents. Please select Option 2.a (In-House Evaluation Report PDF) to forward their candidate profile dossiers.',
             confirmButtonText: 'Select Option 2.a',
             showCancelButton: true,
             cancelButtonText: 'Cancel'
@@ -1977,8 +2225,8 @@ function onBenchFwdFormatSelect(optId, label, desc) {
 async function triggerBenchResumeCompilation(optId) {
     var seq = ++_benchCompilationSeq;
     _benchIsCompiling = true;
-    _benchCompiledAttachment = null;
-    disableBenchViewCvBtn('Compiling resume... available once 100% complete');
+    _benchCompiledAttachments = {};
+    disableBenchViewCvBtn(null, 'Compiling resume... available once 100% complete');
 
     var btn = document.getElementById('btnBenchFwdSubmit');
     if (btn) {
@@ -1986,21 +2234,20 @@ async function triggerBenchResumeCompilation(optId) {
         btn.style.cursor = 'not-allowed';
         $(btn).find('.indicator-label').hide();
         $(btn).find('.indicator-progress').css('display', 'inline-flex').show();
-        $('#bench_fwd_btn_progress_text').text('Compiling resume PDF...');
+        $('#bench_fwd_btn_progress_text').text('Compiling talent resumes...');
     }
 
-    $('#bench_fwd_compile_progress_container').show();
-    $('#bench_fwd_compile_progress_bar').css({ width: '20%', background: 'linear-gradient(90deg, #0D9488, #10B981)' });
-    $('#bench_fwd_compile_pct_badge').text('20%');
-    $('#bench_fwd_compile_status_text').text('Compiling document...').css('color', '#0F766E');
-    $('#bench_fwd_compile_step_detail').text('Compiling document...').show();
-
-    $('#bench_fwd_cand_status_badge')
-        .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> 20%')
-        .css({ background: '#F0FDFA', color: '#0F766E', borderColor: '#99F6E4' });
+    // Initialize progress on candidate cards
+    _benchCandidatesList.forEach(function(c) {
+        $('#bench_fwd_compile_progress_container_' + c.id).show();
+        $('#bench_fwd_compile_progress_bar_' + c.id).css({ width: '10%', background: 'linear-gradient(90deg, #0D9488, #10B981)' });
+        $('#bench_fwd_cand_status_badge_' + c.id)
+            .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> Queued')
+            .css({ background: '#F0FDFA', color: '#0F766E', borderColor: '#99F6E4' });
+        $('#bench_fwd_compile_step_detail_' + c.id).text('Waiting in queue...').show();
+    });
 
     try {
-        var candObj = @json($cand ?? []);
         var companyData = {
             companyName: @json($companyName ?? 'Hiring Partner'),
             companyLogo: @json($companyLogo ?? '')
@@ -2012,92 +2259,118 @@ async function triggerBenchResumeCompilation(optId) {
             throw new Error('Client WASM document engine is initializing. Please wait a moment.');
         }
 
-        var blob = await engine.generateAttachmentForCandidate(
-            candObj,
-            optId,
-            companyData,
-            jobSkills,
-            function(pct, statusText, stepDetail) {
-                if (seq !== _benchCompilationSeq) return;
-                if (pct !== undefined) {
-                    $('#bench_fwd_compile_progress_bar').css('width', pct + '%');
-                    $('#bench_fwd_compile_pct_badge').text(pct + '%');
-                    $('#bench_fwd_cand_status_badge')
-                        .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> ' + pct + '%')
-                        .css({ background: '#F0FDFA', color: '#0F766E', borderColor: '#99F6E4' });
-                }
-                if (statusText || stepDetail) {
-                    var msg = statusText || stepDetail;
-                    $('#bench_fwd_compile_status_text').text(msg);
-                    $('#bench_fwd_compile_step_detail').text(msg).show();
-                }
+        for (var i = 0; i < _benchCandidatesList.length; i++) {
+            if (seq !== _benchCompilationSeq) return; // Superseded by a newer format click
+
+            var candObj = _benchCandidatesList[i];
+            var cId = candObj.id;
+            var cHasResume = !!candObj.has_resume;
+            var effectiveOptId = optId;
+
+            // If candidate has no uploaded resume and a merge format is selected, fallback to Option 5 (Report PDF)
+            if (!cHasResume && optId !== 5) {
+                effectiveOptId = 5;
             }
-        );
 
-        if (seq !== _benchCompilationSeq) return; // Superseded by another format selection
+            if (btn) {
+                $('#bench_fwd_btn_progress_text').text('Compiling resume ' + (i + 1) + '/' + _benchCandidatesList.length + '...');
+            }
 
-        if (!blob) {
-            throw new Error('Document compiler returned empty output.');
+            $('#bench_fwd_compile_progress_bar_' + cId).css({ width: '25%' });
+            $('#bench_fwd_cand_status_badge_' + cId)
+                .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> 25%');
+            $('#bench_fwd_compile_step_detail_' + cId).text('Compiling document...').show();
+
+            var blob = await engine.generateAttachmentForCandidate(
+                candObj,
+                effectiveOptId,
+                companyData,
+                jobSkills,
+                function(pct, statusText, stepDetail) {
+                    if (seq !== _benchCompilationSeq) return;
+                    if (pct !== undefined) {
+                        $('#bench_fwd_compile_progress_bar_' + cId).css('width', pct + '%');
+                        $('#bench_fwd_cand_status_badge_' + cId)
+                            .html('<span class="spinner-border spinner-border-sm" style="width:10px;height:10px;border-width:1.5px;color:#0D9488!important;display:inline-block;margin-right:3px;"></span> ' + pct + '%');
+                    }
+                    if (statusText || stepDetail) {
+                        $('#bench_fwd_compile_step_detail_' + cId).text(statusText || stepDetail).show();
+                    }
+                }
+            );
+
+            if (seq !== _benchCompilationSeq) return;
+
+            if (!blob) {
+                throw new Error('Document compiler returned empty output for ' + (candObj.full_name || 'candidate') + '.');
+            }
+
+            var safeName = (candObj.full_name || ('Candidate_' + cId)).replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
+            var defaultName = (effectiveOptId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
+            var outName = (blob && blob.filename) ? blob.filename : defaultName;
+            var actualBlob = blob.blob || blob;
+
+            _benchCompiledAttachments[cId] = {
+                blob: actualBlob,
+                filename: outName,
+                formatId: effectiveOptId,
+                candId: cId
+            };
+
+            // Individual candidate progress 100%
+            $('#bench_fwd_compile_progress_bar_' + cId).css({ width: '100%', background: '#10B981' });
+            $('#bench_fwd_compile_step_detail_' + cId).hide();
+
+            var previewUrl = null;
+            try {
+                if (actualBlob instanceof Blob) {
+                    previewUrl = URL.createObjectURL(actualBlob);
+                }
+            } catch (e) {}
+
+            if (previewUrl) {
+                $('#bench_fwd_cand_filename_' + cId).html(
+                    '<a href="' + previewUrl + '" target="_blank" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to preview compiled resume">' +
+                    '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
+                );
+                enableBenchViewCvBtn(cId, previewUrl);
+            } else {
+                $('#bench_fwd_cand_filename_' + cId).html(
+                    '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
+                    '📄 ' + $('<div>').text(outName).html() + '</span>'
+                );
+                disableBenchViewCvBtn(cId, 'Preview unavailable');
+            }
+
+            var sizeMb = ((actualBlob.size || 0) / (1024 * 1024)).toFixed(2);
+            $('#bench_fwd_cand_status_badge_' + cId)
+                .html('✓ Attached (' + sizeMb + ' MB)')
+                .css({ background: '#DCFCE7', color: '#15803D', borderColor: '#BBF7D0' });
+
+            updateBenchCumulativeSize();
         }
 
-        var safeName = (candObj.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-        var defaultName = (optId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
-        var outName = (blob && blob.filename) ? blob.filename : defaultName;
+        if (seq !== _benchCompilationSeq) return;
 
-        _benchCompiledAttachment = {
-            blob: blob.blob || blob,
-            filename: outName,
-            formatId: optId
-        };
         _benchIsCompiling = false;
+        var isWithinSizeLimit = updateBenchCumulativeSize();
 
-        // Progress bar 100%
-        $('#bench_fwd_compile_progress_bar').css({ width: '100%', background: '#10B981' });
-        $('#bench_fwd_compile_pct_badge').text('100%');
-        $('#bench_fwd_compile_status_text').text('✓ Document compiled successfully!').css('color', '#059669');
-        $('#bench_fwd_compile_step_detail').hide();
-        
-        var previewUrl = null;
-        try {
-            var rawBlob = blob.blob || blob;
-            if (rawBlob instanceof Blob) {
-                previewUrl = URL.createObjectURL(rawBlob);
-            }
-        } catch (e) {}
-
-        if (previewUrl) {
-            $('#bench_fwd_cand_filename').html(
-                '<a href="' + previewUrl + '" target="_blank" style="color:#059669;text-decoration:underline;cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Click to preview compiled resume">' +
-                '📄 ' + $('<div>').text(outName).html() + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>'
-            );
-            enableBenchViewCvBtn(previewUrl);
-        } else {
-            $('#bench_fwd_cand_filename').html(
-                '<span style="color:#64748B;display:inline-flex;align-items:center;gap:4px;">' +
-                '📄 ' + $('<div>').text(outName).html() + '</span>'
-            );
-            disableBenchViewCvBtn('Preview unavailable');
-        }
-
-        $('#bench_fwd_cand_status_badge')
-            .html('✓ Attached (100%)')
-            .css({ background: '#DCFCE7', color: '#15803D', borderColor: '#BBF7D0' });
-
-        // Enable Send Email button now that conversion is complete!
         if (btn) {
-            btn.disabled = false;
-            btn.style.cursor = 'pointer';
             $(btn).find('.indicator-progress').hide();
             $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+            if (isWithinSizeLimit) {
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            }
         }
 
     } catch (compileErr) {
         if (seq !== _benchCompilationSeq) return;
         _benchIsCompiling = false;
-        _benchCompiledAttachment = null;
-        console.error('[BenchForwardResume] Compilation failed:', compileErr);
-
-        disableBenchViewCvBtn('Conversion incomplete or failed');
+        console.error('[BenchForwardResume] Multi-compilation failed:', compileErr);
 
         if (btn) {
             btn.disabled = false;
@@ -2106,20 +2379,16 @@ async function triggerBenchResumeCompilation(optId) {
             $(btn).find('.indicator-label').css('display', 'inline-flex').show();
         }
 
-        $('#bench_fwd_compile_status_text').text('Compilation notice: ' + (compileErr.message || 'Processing Error')).css('color', '#DC2626');
-        $('#bench_fwd_compile_step_detail').text('Please choose another format or continue with Option 1.a.');
-        $('#bench_fwd_cand_status_badge').html('⚠ Conversion Issue').css({ background: '#FEE2E2', color: '#DC2626' });
-
         Swal.fire({
             icon: 'warning',
-            title: 'Format Notice',
-            text: 'We encountered an issue preparing format #' + optId + ' (' + (compileErr.message || 'Processing Error') + '). Would you like to use Option 1.a (Original Resume) or Option 2.a (In-House Evaluation Report) instead?',
+            title: 'Format Compilation Notice',
+            text: 'We encountered an issue preparing format #' + optId + ' (' + (compileErr.message || 'Processing Error') + '). Would you like to use Option 1.a (Original Resumes) or Option 2.a (In-House Evaluation Reports) instead?',
             showCancelButton: true,
             confirmButtonText: 'Use Option 1.a (Original)',
             cancelButtonText: 'Select Format'
         }).then(function(result) {
             if (result.isConfirmed) {
-                $('#bench_fwd_resume_format').val('1').trigger('change');
+                selectBenchResumeFormat(1, null, false);
             }
         });
     }
@@ -2155,17 +2424,30 @@ async function onBenchFwdSubmitClick(e) {
         return;
     }
 
-    var candHasResume = @json(!empty($cand->has_resume));
-    if (!candHasResume && formatId !== 5) {
-        Swal.fire('Resume Missing', 'This candidate does not have an uploaded resume file to merge. Please select "Option 2.a: In-House Evaluation Report PDF" to generate their standalone dossier.', 'warning');
+    // Deliverability hard cap guard: Check cumulative size <= 6 MB
+    var totalBytes = 0;
+    for (var k in _benchCompiledAttachments) {
+        if (_benchCompiledAttachments[k] && _benchCompiledAttachments[k].blob) {
+            totalBytes += (_benchCompiledAttachments[k].blob.size || 0);
+        }
+    }
+    if (totalBytes > MAX_BENCH_ATTACHMENT_BYTES) {
+        var sizeMb = (totalBytes / (1024 * 1024)).toFixed(2);
+        Swal.fire({
+            icon: 'error',
+            title: 'Deliverability Limit Exceeded',
+            text: 'Combined attachment size is ' + sizeMb + ' MB, which exceeds the 6.0 MB email deliverability limit. Please select fewer candidates or choose Option 2.a (Evaluation Report PDF) to ensure successful delivery.'
+        });
         return;
     }
 
-    // Ensure attachment is compiled and ready in RAM
-    if (!_benchCompiledAttachment || _benchCompiledAttachment.formatId !== formatId) {
+    // Ensure attachments are compiled and ready in RAM
+    var compiledCount = Object.keys(_benchCompiledAttachments).length;
+    if (compiledCount === 0) {
         await triggerBenchResumeCompilation(formatId);
-        if (!_benchCompiledAttachment) {
-            Swal.fire('Attachment Error', 'Resume attachment could not be compiled. Please select another format.', 'error');
+        compiledCount = Object.keys(_benchCompiledAttachments).length;
+        if (compiledCount === 0) {
+            Swal.fire('Attachment Error', 'Resume attachments could not be compiled. Please select another format.', 'error');
             return;
         }
     }
@@ -2178,7 +2460,7 @@ async function onBenchFwdSubmitClick(e) {
     }
 
     var cleanBody = $('<div>').html(bodyHtml).text().trim();
-    if (!cleanBody && bodyHtml.indexOf('<img') === -1) {
+    if (!cleanBody && bodyHtml.indexOf('<img') === -1 && bodyHtml.indexOf('<table') === -1) {
         Swal.fire('Message Required', 'Please provide a message body before sending.', 'warning');
         return;
     }
@@ -2199,9 +2481,12 @@ async function onBenchFwdSubmitClick(e) {
     formData.set('cc_email', $('#bench_cc_email').val());
     formData.set('attached_cv_format', formatId);
 
-    var candObj = @json($cand ?? []);
-    if (_benchCompiledAttachment && _benchCompiledAttachment.blob) {
-        formData.append('custom_attachments[' + candObj.id + ']', _benchCompiledAttachment.blob, _benchCompiledAttachment.filename);
+    // Append all compiled candidate attachments into FormData
+    for (var cId in _benchCompiledAttachments) {
+        var att = _benchCompiledAttachments[cId];
+        if (att && att.blob) {
+            formData.append('custom_attachments[' + cId + ']', att.blob, att.filename);
+        }
     }
 
     $.ajax({
@@ -2222,7 +2507,7 @@ async function onBenchFwdSubmitClick(e) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Forwarded!',
-                    text: res.message || 'Candidate resume forwarded successfully via email.',
+                    text: res.message || 'Candidate resumes forwarded successfully via email.',
                     confirmButtonText: 'Done',
                     customClass: { confirmButton: 'btn btn-primary' }
                 }).then(function() {
@@ -2270,8 +2555,8 @@ function closeBenchFwdResumeDrawer() {
 
 // Auto-initialize format selection matching default state in design (Option 4.c / ID 46)
 setTimeout(function() {
-    var hasResume = @json(!empty($cand->has_resume));
-    if (hasResume) {
+    var anyHasResume = _benchCandidatesList.some(function(c) { return !!c.has_resume; });
+    if (anyHasResume) {
         selectBenchResumeFormat(46, null, false);
     } else {
         selectBenchResumeFormat(5, null, false);
