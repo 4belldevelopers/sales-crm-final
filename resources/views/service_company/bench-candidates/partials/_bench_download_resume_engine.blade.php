@@ -361,82 +361,11 @@
     return [];
   }
 
-  function normalizeBenchCandidateData(candidate, companyData) {
-    companyData = companyData || {};
-    var rawSkills = getBenchCandidateEvaluatedSkills(candidate);
-
-    var exp = candidate.experience || '--';
-    if (!exp || exp === '--') {
-      var numExp = parseFloat(candidate.total_exp);
-      exp = (numExp && numExp > 0) ? numExp + ' Year' + (numExp === 1 ? '' : 's') : '--';
-    }
-
-    var formattedLocation = cityOnly(candidate.location || candidate.city_display || candidate.city_name || candidate.city);
-    var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || 0).padStart(6, '0'));
-    var todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    var matchScore = typeof candidate.match === 'number' ? candidate.match : (candidate.rating ? Math.min(100, Math.max(40, parseInt(candidate.rating, 10) * 20)) : 85);
-
-    var rawNotice = candidate.notice || candidate.notice_period || candidate.np_id || 'Immediate';
-    if (/01\s*jan\s*1970/i.test(rawNotice)) {
-      rawNotice = 'Immediate';
-    }
-
-    var recruiterNote = candidate.rm_comments || candidate.recruiter_note || candidate.recruiter_note_text || candidate.comment || '';
-    if (typeof recruiterNote === 'string') {
-      recruiterNote = recruiterNote.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-    if (recruiterNote.length > 500) {
-      recruiterNote = recruiterNote.slice(0, 497) + '...';
-    }
-
-    var rawEdu = candidate.qualification_name || candidate.qualification || candidate.education || '';
-    if (/^\d+$/.test(String(rawEdu).trim())) rawEdu = '';
-    var eduStr = rawEdu ? String(rawEdu).trim().toUpperCase() : 'Not Specified';
-
-    var rawWm = candidate.work_mode || candidate.workMode || candidate.wm || '';
-    var wmStr = rawWm ? String(rawWm).trim().replace(/[\s_-]+/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Not Specified';
-
-    var validation = [
-      { label: 'RESUME', status: candidate.has_resume ? 'Verified' : 'Discussed' },
-      { label: 'EMAIL ID', status: clean(candidate.email, '') !== '' ? 'Verified' : '-' },
-      { label: 'PHONE NUMBER', status: clean(candidate.phone, '') !== '' ? 'Verified' : '-' },
-      { label: 'LINKEDIN ID', status: clean(candidate.linkedin, '') !== '' ? 'Verified' : '-' },
-      { label: 'JOB DESCRIPTION', status: 'Discussed' }
-    ];
-
-    return {
-      id: candidate.id,
-      name: candidate.full_name || candidate.name || 'Candidate',
-      email: candidate.email || '',
-      phone: candidate.phone || '',
-      linkedin: candidate.linkedin || '',
-      designation: candidate.current_designation || candidate.designation || 'Technical Consultant',
-      company: candidate.current_company || candidate.cur_company_name || candidate.company || (companyData.companyName || 'In-House Talent'),
-      location: formattedLocation,
-      experience: exp,
-      notice: rawNotice,
-      education: eduStr,
-      workMode: wmStr,
-      reportId: reportId,
-      reportDate: candidate.report_date || candidate.reportDate || todayDate,
-      recruiterName: candidate.recruiter_name || candidate.recruiterName || companyData.recruiterName || 'Recruiter',
-      reportCompanyName: companyData.companyName || candidate.report_company_name || 'Hiring Partner',
-      reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
-      match: matchScore,
-      isImmediate: !!(candidate.is_immediate || rawNotice.toLowerCase() === 'immediate'),
-      recruiterNote: recruiterNote,
-      careerSummary: candidate.career_summary || candidate.careerSummary || candidate.careersummary || candidate.cover_letter || 'Verified in-house technical consultant with proven enterprise delivery experience.',
-      jobTitle: candidate.job_title || candidate.jobTitle || candidate.current_designation || 'Technical Consultant',
-      skills: rawSkills,
-      validation: validation,
-      resume: candidate.resume || '',
-      resumeExt: candidate.resume_extension || candidate.resumeExt || 'pdf'
-    };
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - 100% Platform Replica)
+  // IN-HOUSE EVALUATION REPORT DOSSIER — exact copy of the Forward Resume (In-House Talent)
+  // dossier so both centers render an identical report. Hiring Confidence is fixed at 100%
+  // (no JD matching for bench talent); RM comments + EXPERIENCE verification slot.
+  // Kept as an isolated copy (Rule 15/17) — do not share code with the forward engine.
   // ═══════════════════════════════════════════════════════════════════════════
   function headerCard(companyName, logoCell, reportDate, captainName) {
     return {
@@ -464,7 +393,7 @@
               },
               {
                 stack: [
-                  { text: 'IN-HOUSE TALENT EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [10, 14, 14, 10],
@@ -489,7 +418,7 @@
             body: [[
               {
                 stack: [
-                  { text: 'IN-HOUSE TALENT EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
+                  { text: 'IN-HOUSE EVALUATION REPORT', style: 'title', margin: [0, 2, 0, 0] },
                   { text: (clean(reportDate, '--') + ' · Confidential').toUpperCase(), style: 'eyebrow', margin: [0, 4, 0, 0] }
                 ],
                 margin: [14, 14, 14, 10],
@@ -593,7 +522,7 @@
     ];
     skills = (skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).slice(0, 7);
     if (!skills.length) {
-      rows.push([{ text: 'No skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
+      rows.push([{ text: 'No talent skill intelligence available in current candidate data.', colSpan: 3, style: 'muted', margin: [0, 6, 0, 6] }, {}, {}]);
       return rows;
     }
     skills.forEach(function (skill) {
@@ -622,10 +551,10 @@
       { label: 'EMAIL ID', key: 'email id', fallbackKey: 'email verified', icon: rsIconEmail },
       { label: 'PHONE NUMBER', key: 'phone number', fallbackKey: 'phone verified', icon: rsIconPhone },
       { label: 'LINKEDIN ID', key: 'linkedin id', fallbackKey: 'linkedin verified', icon: rsIconLinkedin },
-      { label: 'JOB DESCRIPTION', key: 'job description', fallbackKey: 'job description acknowledged', icon: rsIconJobDescription }
+      { label: 'EXPERIENCE', key: 'experience', fallbackKey: 'experience verified', icon: rsIconExperience }
     ];
     var cells = slots.map(function (row) {
-      var status = map[row.key] || map[row.fallbackKey] || '-';
+      var status = (row.key === 'experience') ? 'Verified' : (map[row.key] || map[row.fallbackKey] || '-');
       if (!status || status === '--' || (row.key === 'linkedin id' && status === 'Discussed')) status = '-';
       var verified = /verified|confirmed|completed|shared/i.test(status);
       var isBlank = (status === '-' || status === '--' || !status);
@@ -654,12 +583,12 @@
   function buildDefinition(data, logoUri, options) {
     options = options || {};
     var noBranding = options.noBranding === true;
-    var score = safeNumber(data.match, 0, 100);
-    var summary = limitText(data.careerSummary, 560, 'No professional summary available.');
+    var score = 100; // Bench talent profile hiring confidence is always 100% (no JD matching parameters)
+    var summary = limitText(data.careerSummary, 560, 'Experienced professional with demonstrated track record of technical delivery and engineering excellence.');
     var noteMissing = isGap(data.recruiterNote);
-    var note = noteMissing ? 'No recruiter comments available.' : limitText(data.recruiterNote, 420, '');
+    var note = noteMissing ? 'No relationship manager comments available.' : limitText(data.recruiterNote, 420, '');
     var rawNotice = data.notice || data.noticePeriod;
-    var joining = data.isImmediate ? 'Immediate' : (clean(rawNotice, 'Not Specified') === '--' ? 'Not Specified' : clean(rawNotice, 'Not Specified'));
+    var joining = data.isImmediate ? 'Immediate' : (clean(rawNotice, 'Immediate') === '--' ? 'Immediate' : clean(rawNotice, 'Immediate'));
     var companyName = clean(data.reportCompanyName, 'Hiring Partner');
     var skillCount = Math.max(1, Math.min(7, (data.skills || []).filter(function (skill) { return clean(skill.name, '') !== ''; }).length));
     var skillCardHeight = 90 + (skillCount * 31);
@@ -672,7 +601,7 @@
       pageMargins: [30, 26, 30, 24],
       defaultStyle: { font: 'Roboto', fontSize: 8, color: '#1f2937', lineHeight: 1.22 },
       styles: {
-        title: { fontSize: 14, bold: true, color: '#0f172a', alignment: 'right' },
+        title: { fontSize: 15, bold: true, color: '#0f172a', alignment: 'right' },
         eyebrow: { fontSize: 6.2, color: '#64748b', alignment: 'right' },
         metaLabel: { fontSize: 5.7, color: '#64748b' },
         metaValue: { fontSize: 7.4, bold: true, color: '#111827' },
@@ -726,12 +655,12 @@
         {
           columns: [
             fixedPanel([sectionTitle('EXECUTIVE SUMMARY', false, rsIconSummary), { text: summary, style: 'body' }], [0, 0, 6, 8], '#ffffff', '#dbe3ef', 148),
-            fixedPanel([sectionTitle('RECRUITER COMMENTS', false, rsIconNote), { text: note, style: 'body', color: noteMissing ? '#64748b' : '#1f2937', italics: noteMissing }], [6, 0, 0, 8], '#ffffff', '#dbe3ef', 148)
+            fixedPanel([sectionTitle('RELATIONSHIP MANAGER COMMENTS', false, rsIconNote), { text: note, style: 'body', color: noteMissing ? '#64748b' : '#1f2937', italics: noteMissing }], [6, 0, 0, 8], '#ffffff', '#dbe3ef', 148)
           ],
           columnGap: 0
         },
         roundedFullCard([
-          sectionTitle('SKILL INTELLIGENCE', false, rsIconSkill),
+          sectionTitle('TALENT SKILL INTELLIGENCE', false, rsIconSkill),
           {
             table: {
               widths: ['*', 100, 78],
@@ -773,6 +702,172 @@
           layout: { hLineColor: function () { return '#e5e7eb'; }, hLineWidth: function () { return 0.6; }, vLineWidth: function () { return 0; } }
         }
       ]
+    };
+  }
+
+  function normalizeBenchCandidateData(candidate, companyData) {
+    candidate = candidate || {};
+    companyData = companyData || {};
+
+    var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
+      || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
+      || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
+
+    var stateName = (!/^\d+$/.test(String(candidate.state_name || '').trim()) && candidate.state_name)
+      || (!/^\d+$/.test(String(candidate.state || '').trim()) && candidate.state) || '';
+
+    var countryName = (!/^\d+$/.test(String(candidate.country_name || '').trim()) && candidate.country_name)
+      || (!/^\d+$/.test(String(candidate.country || '').trim()) && candidate.country) || '';
+
+    var locParts = [cityName, stateName, countryName].filter(function (p) {
+      return p && String(p).trim() !== '' && String(p).trim() !== '--' && !/^\d+$/.test(String(p).trim());
+    });
+    var rawLoc = candidate.location || candidate.current_location ? String(candidate.location || candidate.current_location).trim() : '';
+    if (/^\d+$/.test(rawLoc)) rawLoc = '';
+    var formattedLocation = rawLoc || (locParts.length ? locParts.join(', ') : 'Not Specified');
+
+    var exp = candidate.experience;
+    if (!exp && candidate.total_exp) {
+      var tot = String(candidate.total_exp).trim();
+      if (parseFloat(tot) === 0) {
+        exp = 'Fresher';
+      } else {
+        exp = tot + ' Year' + (parseFloat(tot) === 1.0 ? '' : 's');
+      }
+    }
+    exp = exp || 'Not Specified';
+
+    var rawSkills = [];
+    if (Array.isArray(candidate.skills_evaluated) && candidate.skills_evaluated.length) {
+      rawSkills = candidate.skills_evaluated;
+    } else if (Array.isArray(candidate.parsed_skills) && candidate.parsed_skills.length) {
+      rawSkills = candidate.parsed_skills;
+    } else if (Array.isArray(candidate.skills) && candidate.skills.length) {
+      rawSkills = candidate.skills;
+    } else if (typeof candidate.skills === 'string' && candidate.skills.trim()) {
+      var sList = candidate.skills.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+      var defaultRating = candidate.rating ? Math.min(5, Math.max(0, parseInt(candidate.rating, 10))) : 4;
+      var defaultExp = clean(candidate.experience, 'Not Specified');
+      rawSkills = sList.slice(0, 7).map(function (sName) {
+        return {
+          name: sName,
+          expText: defaultExp,
+          exp: parseFloat(defaultExp) || 0,
+          rating: defaultRating
+        };
+      });
+    }
+
+    var skills = rawSkills.slice(0, 7).map(function (s) {
+      if (typeof s === 'string') {
+        return { name: s, expText: clean(candidate.experience, '--'), exp: parseFloat(candidate.experience) || 0, rating: 4 };
+      }
+      return {
+        name: s.name || s.skill || '',
+        expText: s.expText || (s.exp ? s.exp + ' Year' + (parseFloat(s.exp) === 1 ? '' : 's') : clean(candidate.experience, '--')),
+        exp: s.exp || parseFloat(candidate.experience) || 0,
+        rating: safeNumber(s.rating || 4, 1, 5)
+      };
+    });
+
+    var validation = [];
+    if (Array.isArray(candidate.parsed_validation) && candidate.parsed_validation.length) {
+      validation = candidate.parsed_validation;
+    } else if (Array.isArray(candidate.validation) && candidate.validation.length) {
+      validation = candidate.validation;
+    } else {
+      if (candidate.resume || candidate.resume_filename) validation.push({ label: 'RESUME', status: 'Verified' });
+      else validation.push({ label: 'RESUME', status: '-' });
+
+      if (candidate.email || candidate.secondrary_email) validation.push({ label: 'EMAIL ID', status: 'Verified' });
+      else validation.push({ label: 'EMAIL ID', status: '-' });
+
+      if (candidate.phone || candidate.secondary_mobile || candidate.mobile) validation.push({ label: 'PHONE NUMBER', status: 'Verified' });
+      else validation.push({ label: 'PHONE NUMBER', status: '-' });
+
+      var hasLinkedin = !!(candidate.linkedin && !/^(--|-|na|n\/a|null|none)$/i.test(String(candidate.linkedin).trim()));
+      if (hasLinkedin) validation.push({ label: 'LINKEDIN ID', status: 'Verified' });
+      else validation.push({ label: 'LINKEDIN ID', status: '-' });
+
+      validation.push({ label: 'EXPERIENCE', status: 'Verified' });
+    }
+
+    var todayDate = (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    var reportId = candidate.report_id || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(candidate.id || '000000').padStart(6, '0'));
+
+    var matchScore = 100; // Bench talent hiring confidence score is always 100% as there is no matching parameter and JD
+
+    var rawNotice = candidate.notice || candidate.notice_period || candidate.availability;
+    if (!rawNotice && candidate.np_id) {
+      var npRaw = String(candidate.np_id).trim();
+      var npMode = parseInt(candidate.serving_notice_period_mode, 10);
+      var npTs = Date.parse(npRaw);
+      if (npMode === 2 || npRaw.toLowerCase() === 'immediate') {
+        rawNotice = 'Immediate';
+      } else if (npMode === 0 && parseInt(npRaw, 10) > 0) {
+        rawNotice = parseInt(npRaw, 10) + ' Days';
+      } else if (npMode === 1 && !isNaN(npTs) && (new Date(npTs)).getFullYear() > 1970) {
+        var dObj = new Date(npTs);
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (dObj < today) {
+          rawNotice = 'Immediate';
+        } else {
+          var dStr = dObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          rawNotice = 'Available ' + dStr;
+        }
+      } else {
+        rawNotice = npRaw;
+      }
+    } else if (!rawNotice) {
+      rawNotice = 'Immediate';
+    }
+    if (/01\s*jan\s*1970/i.test(rawNotice)) {
+      rawNotice = candidate.is_immediate ? 'Immediate' : 'Immediate';
+    }
+
+    var rawEdu = candidate.qualification_name || candidate.qualification || candidate.education || '';
+    if (/^\d+$/.test(String(rawEdu).trim())) rawEdu = '';
+    var eduStr = rawEdu ? String(rawEdu).trim().toUpperCase() : 'Not Specified';
+
+    var rawWm = candidate.work_mode || candidate.workMode || candidate.wm || '';
+    var wmStr = rawWm ? String(rawWm).trim().replace(/[\s_-]+/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Not Specified';
+
+    var rawRm = candidate.rm_comments || candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || '';
+    var rmText = clean(rawRm.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), '');
+
+    var compName = companyData.companyName || candidate.report_company_name || 'Hiring Partner';
+    var candCompany = candidate.company || candidate.current_company || compName;
+
+    return {
+      id: candidate.id,
+      name: candidate.full_name || candidate.name || 'Candidate',
+      email: candidate.email || '',
+      secondaryEmail: candidate.secondrary_email || '',
+      phone: candidate.phone || candidate.mobile || '',
+      secondaryPhone: candidate.secondary_mobile || '',
+      linkedin: candidate.linkedin || '',
+      designation: candidate.current_designation || candidate.designation || '',
+      company: candCompany,
+      location: formattedLocation,
+      experience: exp,
+      notice: rawNotice,
+      education: eduStr,
+      workMode: wmStr,
+      reportId: reportId,
+      reportDate: candidate.report_date || todayDate,
+      recruiterName: candidate.recruiter_name || companyData.recruiterName || 'Hiring Team',
+      reportCompanyName: compName,
+      reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
+      aiVersion: 'Live Intelligence',
+      match: matchScore,
+      isImmediate: (rawNotice === 'Immediate' || !!candidate.is_immediate),
+      recruiterNote: rmText,
+      careerSummary: candidate.careersummary || candidate.career_summary || candidate.cover_letter || '',
+      jobTitle: candidate.job_title || candidate.current_designation || 'Verified Professional',
+      skills: skills,
+      validation: validation,
+      resume: candidate.resume || ''
     };
   }
 
