@@ -2,13 +2,13 @@
 @php
     $heroItems = [
         ['key' => 'talent', 'label' => 'Total Talent', 'icon' => 'fa-users', 'tone' => 'blue', 'rel' => 'all'],
-        ['key' => 'bench', 'label' => 'Bench & Marketplace', 'icon' => 'fa-couch', 'tone' => 'amber', 'rel' => '2'],
-        ['key' => 'sent', 'label' => 'Requests Sent', 'icon' => 'fa-paper-plane', 'tone' => 'blue', 'rel' => null],
+        ['key' => 'bench', 'label' => 'Marketplace Ready', 'icon' => 'fa-briefcase', 'tone' => 'amber', 'rel' => '2'],
+        ['key' => 'sent', 'label' => 'Requests Sent', 'icon' => 'fa-paper-plane', 'tone' => 'sky', 'rel' => null],
         ['key' => 'accepted', 'label' => 'Requests Accepted', 'icon' => 'fa-circle-check', 'tone' => 'green', 'rel' => null],
         ['key' => 'expired', 'label' => 'Requests Expired', 'icon' => 'fa-clock', 'tone' => 'red', 'rel' => null],
         ['key' => 'views', 'label' => 'Profile Views', 'icon' => 'fa-eye', 'tone' => 'violet', 'rel' => null],
-        ['key' => 'interviews', 'label' => 'Interviews', 'icon' => 'fa-user-tie', 'tone' => 'violet', 'rel' => null],
-        ['key' => 'placed', 'label' => 'Placed', 'icon' => 'fa-trophy', 'tone' => 'amber', 'rel' => '3'],
+        ['key' => 'interviews', 'label' => 'Interviews', 'icon' => 'fa-user-tie', 'tone' => 'indigo', 'rel' => null],
+        ['key' => 'placed', 'label' => 'Placed', 'icon' => 'fa-trophy', 'tone' => 'gold', 'rel' => '3'],
     ];
 @endphp
 
@@ -62,74 +62,340 @@
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
         /* In-House Talent hero: one compact connected journey, scoped to this page. */
-        .bench-dash .talent-hero-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 2px 12px; }
+        /* In-House Talent hero: page header & actions (Exact Design Replica) */
+        .bench-dash .talent-hero-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 2px 16px; }
         .bench-dash .talent-hero-heading { min-width: 0; }
         .bench-dash .talent-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .bench-dash .talent-title { margin: 0; color: #142044; font-size: 22px !important; font-weight: 700; line-height: 1.2; }
-        .bench-dash .talent-info { color: #64769b; font-size: 12px !important; }
-        .bench-dash .talent-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 4px; color: #008d68; background: #e7faf4; font-size: 10px !important; font-weight: 600; }
-        .bench-dash .talent-subtitle { margin: 2px 0 0; color: #52658b; font-size: 12px !important; }
+        .bench-dash .talent-title { margin: 0; color: #181c32; font-size: 24px !important; font-weight: 700; line-height: 1.2; }
+        .bench-dash .talent-info { color: #8e9bb2; font-size: 15px !important; }
+        .bench-dash .talent-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; color: #059669; background: #d1fae5; font-size: 11.5px !important; font-weight: 600; }
+        .bench-dash .talent-subtitle { margin: 4px 0 0; color: #7e8299; font-size: 13px !important; }
         .bench-dash .talent-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .bench-dash .talent-hero-actions .btn-add,
-        .bench-dash .talent-hero-actions .btn-ghost,
-        .bench-dash .hero-period { min-height: 36px; border-radius: 6px; }
-        .bench-dash .talent-hero-actions .btn-add { background: #1267e9; padding-inline: 15px; }
-        .bench-dash .hero-period { border: 1px solid #dce6f5; background: #fff; color: #16254b; padding: 5px 10px; font-weight: 600; cursor: pointer; }
+        .bench-dash .talent-hero-actions .btn-add { background: #006ae6; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 13px !important; font-weight: 600; height: 38px; display: inline-flex; align-items: center; gap: 7px; border: none; transition: background 0.15s ease; }
+        .bench-dash .talent-hero-actions .btn-add:hover { background: #0056b3; color: #fff; }
+        .bench-dash .talent-hero-actions .btn-ghost { border: 1px solid #dce6f5; background: #fff; color: #5e6278; border-radius: 8px; padding: 0 14px; font-size: 13px !important; font-weight: 500; height: 38px; display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s ease; }
+        .bench-dash .talent-hero-actions .btn-ghost:hover { border-color: #b9d5fb; color: #006ae6; }
         .bench-dash .hero-more { position: relative; }
-        .bench-dash .hero-more summary { list-style: none; cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #dce6f5; border-radius: 6px; background: #fff; color: #142044; }
+        .bench-dash .hero-more summary { list-style: none; cursor: pointer; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #dce6f5; border-radius: 8px; background: #fff; color: #5e6278; transition: border-color 0.15s ease; }
         .bench-dash .hero-more summary::-webkit-details-marker { display: none; }
-        .bench-dash .hero-more-menu { position: absolute; z-index: 15; right: 0; top: 40px; min-width: 155px; border: 1px solid #dce6f5; border-radius: 6px; background: #fff; box-shadow: 0 10px 25px rgba(24, 39, 75, .12); padding: 5px; }
-        .bench-dash .hero-more-menu a { display: block; padding: 8px; color: #263b67; font-size: 11px !important; text-decoration: none; }
-        .bench-dash .hero-more-menu a:hover { background: #f4f8ff; }
-        .bench-dash .pipeline-panel { border: 1px solid #dceaff; border-radius: 6px; background: #fbfdff; padding: 10px 13px 12px; margin-bottom: 10px; }
-        .bench-dash .pipeline-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .bench-dash .pipeline-heading-copy { display: flex; align-items: center; min-width: 0; gap: 9px; }
-        .bench-dash .pipeline-heading-icon { display: grid; place-items: center; flex: 0 0 30px; width: 30px; height: 30px; border: 1px solid #d8e9ff; border-radius: 5px; background: #edf6ff; color: #1267e9; }
-        .bench-dash .pipeline-heading-icon i { font-size: 15px !important; }
-        .bench-dash .pipeline-heading-title { margin: 0; color: #15254a; font-size: 13px !important; font-weight: 700; }
-        .bench-dash .pipeline-heading-note { margin: 0; color: #54698f; font-size: 10.5px !important; }
-        .bench-dash .pipeline-performance { position: relative; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 34px; border: 1px solid #d6e2f5; border-radius: 5px; color: #1f3765; background: #fff; box-shadow: 0 1px 2px rgba(24, 39, 75, .05); padding: 0 10px; }
-        .bench-dash .pipeline-performance:hover { border-color: #9ebef0; }
-        .bench-dash .pipeline-performance:focus-within { border-color: #1267e9; box-shadow: 0 0 0 3px rgba(18, 103, 233, .12); }
-        .bench-dash .pipeline-performance select { appearance: none; min-width: 174px; height: 32px; border: 0; outline: 0; background: transparent; color: inherit; font-size: 11px !important; font-weight: 600; cursor: pointer; }
-        .bench-dash .pipeline-performance > i { color: #4775b3; font-size: 12px !important; pointer-events: none; }
-        .bench-dash .pipeline-performance > i:last-child { color: #637897; font-size: 10px !important; }
-        .bench-dash .pipeline-status:not(:empty) { margin: 4px 0 0; color: #b42336; font-size: 10px !important; text-align: right; }
-        .bench-dash .pipeline-panel.is-loading .pipeline-stages { opacity: .55; }
-        .bench-dash .pipeline-scroller { overflow-x: auto; scrollbar-width: thin; }
-        .bench-dash .pipeline-stages { display: grid; grid-template-columns: repeat(8, minmax(122px, 1fr)); min-width: 976px; padding-top: 11px; transition: opacity .15s; }
-        .bench-dash .pipeline-stage { position: relative; min-width: 0; text-align: center; color: #142044; padding: 0 3px; border: 0; background: transparent; }
-        .bench-dash button.pipeline-stage { cursor: pointer; }
-        .bench-dash button.pipeline-stage:hover .pipeline-stage-label { color: #1267e9; }
-        .bench-dash button.pipeline-stage.active .pipeline-stage-icon { outline: 2px solid #1267e9; outline-offset: 2px; }
-        .bench-dash button.pipeline-stage:focus-visible { outline: 2px solid #1267e9; outline-offset: 2px; }
-        .bench-dash .pipeline-stage-label { display: block; min-height: 16px; color: #16254b; font-size: 10px !important; font-weight: 600; white-space: nowrap; }
-        .bench-dash .pipeline-stage-icon { position: relative; z-index: 2; display: grid; place-items: center; width: 42px; height: 42px; margin: 2px auto 3px; border-radius: 50%; }
-        .bench-dash .pipeline-stage-icon i { font-size: 19px !important; }
-        .bench-dash .pipeline-stage.blue .pipeline-stage-icon { background: #e8f3ff; color: #1676e9; }
-        .bench-dash .pipeline-stage.amber .pipeline-stage-icon { background: #fff5df; color: #ee9b00; }
-        .bench-dash .pipeline-stage.green .pipeline-stage-icon { background: #e5f8f1; color: #11a781; }
-        .bench-dash .pipeline-stage.red .pipeline-stage-icon { background: #ffecef; color: #f42642; }
-        .bench-dash .pipeline-stage.violet .pipeline-stage-icon { background: #f2ebff; color: #7634e9; }
-        .bench-dash .pipeline-connector { position: absolute; z-index: 3; top: 32px; left: calc(50% + 22px); right: calc(-50% + 22px); height: 16px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-        .bench-dash .pipeline-connector::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #d7e7ff; }
-        .bench-dash .pipeline-motion { position: relative; display: grid; place-items: center; width: 20px; height: 16px; background: #fbfdff; color: #1267e9; animation: pipeline-flow 2.6s ease-in-out infinite; animation-delay: var(--flow-delay, 0s); }
-        .bench-dash .pipeline-motion i { font-size: 11px !important; }
-        @keyframes pipeline-flow { 0%, 58%, 100% { transform: translateX(0); opacity: .78; } 72% { transform: translateX(3px); opacity: 1; } }
-        @media (prefers-reduced-motion: reduce) { .bench-dash .pipeline-motion { animation: none; } }
-        .bench-dash .pipeline-stage-value { display: block; font-size: 18px !important; line-height: 1.12; font-weight: 700; font-variant-numeric: tabular-nums; }
-        @media (max-width: 800px) {
-            .bench-dash .talent-hero-header { align-items: flex-start; flex-direction: column; }
-            .bench-dash .talent-hero-actions { width: 100%; }
-            .bench-dash .pipeline-heading { align-items: flex-start; flex-direction: column; }
-            .bench-dash .pipeline-heading-note { line-height: 1.4; }
-            .bench-dash .pipeline-performance { white-space: nowrap; }
+        .bench-dash .hero-more summary:hover { border-color: #b9d5fb; color: #006ae6; }
+        .bench-dash .hero-more-menu { position: absolute; z-index: 15; right: 0; top: 44px; min-width: 160px; border: 1px solid #dce6f5; border-radius: 8px; background: #fff; box-shadow: 0 10px 25px rgba(24, 39, 75, .12); padding: 5px; }
+        .bench-dash .hero-more-menu a { display: block; padding: 8px 12px; color: #263b67; font-size: 12px !important; text-decoration: none; border-radius: 6px; }
+        .bench-dash .hero-more-menu a:hover { background: #f4f8ff; color: #006ae6; }
+
+        /* ===== Talent & Marketplace Overview — New Hero Card Design ===== */
+        .talent-overview-card {
+            background: #ffffff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            padding: 16px 20px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+        }
+        .talent-overview-card.is-loading .overview-sections-grid {
+            opacity: 0.55;
+            pointer-events: none;
         }
 
-        /* Ghost buttons (Export) */
-        .bench-dash .btn-ghost { border: 1px solid #eef0f4; background: #fff; color: #3f4254; border-radius: 8px; padding: 7px 12px; font-size: 12px !important; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; }
-        .bench-dash .btn-ghost:hover { border-color: #d5dbe6; color: #3e97ff; }
-        .bench-dash .btn-ghost i { font-size: 12px !important; }
+        /* Top header row inside overview card */
+        .overview-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .overview-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .overview-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: #eef6ff;
+            color: #1b84ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .overview-icon-box svg {
+            width: 18px;
+            height: 18px;
+            color: #1b84ff;
+        }
+        .overview-title {
+            margin: 0;
+            color: #181c32;
+            font-size: 16px !important;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .overview-subtitle {
+            margin: 2px 0 0;
+            color: #7e8299;
+            font-size: 12px !important;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+        .overview-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .overview-month-picker {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 12px;
+            border: 1px solid #dce6f5;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #181c32;
+            font-size: 12px !important;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+        .overview-month-picker:hover {
+            border-color: #9ebef0;
+        }
+        .overview-month-picker i.fa-calendar {
+            color: #181c32;
+            font-size: 13px !important;
+        }
+        .overview-month-select {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            font-size: 12px !important;
+            font-weight: 600;
+            color: #181c32;
+            cursor: pointer;
+            padding-right: 4px;
+        }
+        .btn-overview-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            height: 36px;
+            padding: 0 14px;
+            border: 1px solid #dce6f5;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #006ae6;
+            font-size: 12px !important;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .btn-overview-action svg {
+            color: #006ae6;
+            stroke: currentColor;
+            flex-shrink: 0;
+        }
+        .btn-overview-action:hover {
+            background: #f4f8ff;
+            border-color: #b9d5fb;
+            color: #0056b3;
+        }
+
+        /* 3 Sections Grid */
+        .overview-sections-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 12px;
+            align-items: stretch;
+            transition: opacity 0.15s ease;
+        }
+        .overview-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+        .overview-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            min-height: 32px;
+        }
+        .overview-section-header.banner-blue {
+            background: #eff6ff;
+        }
+        .overview-section-header.banner-purple {
+            background: #faf5ff;
+        }
+        .overview-section-header.banner-emerald {
+            background: #f0fdf4;
+        }
+        .banner-title {
+            font-size: 11px !important;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .banner-title.text-blue {
+            color: #1e40af;
+        }
+        .banner-title.text-purple {
+            color: #7c3aed;
+        }
+        .banner-title.text-green {
+            color: #059669;
+        }
+        .banner-subtext {
+            font-size: 10.5px !important;
+            font-weight: 400;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Metric cards grid */
+        .overview-cards-grid {
+            display: grid;
+            gap: 8px;
+            height: 100%;
+        }
+        .overview-cards-grid.grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .overview-cards-grid.grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* Metric KPI card */
+        .overview-kpi-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            min-height: 66px;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+        .overview-kpi-card.kpi-filter {
+            cursor: pointer;
+        }
+        .overview-kpi-card.kpi-filter:hover {
+            box-shadow: 0 3px 8px rgba(24, 28, 50, 0.08);
+            transform: translateY(-1px);
+        }
+        .overview-kpi-card.kpi-filter.active {
+            border-color: #3e97ff;
+            box-shadow: 0 0 0 1px #3e97ff inset;
+        }
+        .overview-kpi-card .kpi-circle-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .overview-kpi-card .kpi-circle-icon i {
+            font-size: 15px !important;
+        }
+        .overview-kpi-card .kpi-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0;
+        }
+        .overview-kpi-card .kpi-num {
+            font-size: 22px !important;
+            font-weight: 700;
+            color: #181c32;
+            line-height: 1.1;
+            display: block;
+        }
+        .overview-kpi-card .kpi-label {
+            font-size: 11px !important;
+            font-weight: 500;
+            color: #5e6278;
+            margin-top: 3px;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Background and icon color tokens matching design replica */
+        .kpi-bg-blue    { background: #f0f7ff; }
+        .circle-blue    { background: #e0efff; color: #1b84ff; }
+        .circle-blue i  { color: #1b84ff !important; }
+
+        .kpi-bg-amber   { background: #fffbeb; }
+        .circle-amber   { background: #fef3c7; color: #d97706; }
+        .circle-amber i { color: #d97706 !important; }
+
+        .kpi-bg-sky     { background: #f0f9ff; }
+        .circle-sky     { background: #e0f2fe; color: #0284c7; }
+        .circle-sky i   { color: #0284c7 !important; }
+
+        .kpi-bg-green   { background: #f0fdf4; }
+        .circle-green   { background: #dcfce7; color: #16a34a; }
+        .circle-green i { color: #16a34a !important; }
+
+        .kpi-bg-red     { background: #fff1f2; }
+        .circle-red     { background: #ffe4e6; color: #e11d48; }
+        .circle-red i   { color: #e11d48 !important; }
+
+        .kpi-bg-violet  { background: #faf5ff; }
+        .circle-violet  { background: #f3e8ff; color: #9333ea; }
+        .circle-violet i{ color: #9333ea !important; }
+
+        .kpi-bg-indigo  { background: #faf5ff; }
+        .circle-indigo  { background: #f3e8ff; color: #7c3aed; }
+        .circle-indigo i{ color: #7c3aed !important; }
+
+        .circle-gold    { background: #fef3c7; color: #d97706; }
+        .circle-gold i  { color: #d97706 !important; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1200px) {
+            .overview-sections-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .overview-cards-grid.grid-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .bench-dash .talent-hero-header { align-items: flex-start; flex-direction: column; }
+            .bench-dash .talent-hero-actions { width: 100%; }
+            .overview-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .overview-controls {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .overview-cards-grid.grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
         /* Sub-cards (avg/longest age, margin, roi) */
         .bench-dash .stat-sub { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
@@ -535,23 +801,14 @@
                     <div class="talent-hero-heading">
                         <div class="talent-title-row">
                             <h1 class="talent-title">In-House Talent</h1>
-                            <i class="fa fa-circle-info talent-info" title="Your in-house talent pool and marketplace activity."></i>
+                            <i class="fa fa-circle-info talent-info" title="Manage your talent pool, bench availability, marketplace activity and placements."></i>
                             <span class="talent-badge"><i class="fa fa-house"></i> In-House Talent</span>
                         </div>
-                        <p class="talent-subtitle">Manage your talent pool, bench availability, placements and marketplace readiness.</p>
+                        <p class="talent-subtitle">Manage your talent pool, bench availability, marketplace activity and placements.</p>
                     </div>
                     <div class="talent-hero-actions">
                         <input type="hidden" id="inputSearch" name="inputSearch" />
                         @if (in_array('view_bench', $userPermissions))
-                            <form method="get" action="{{ route('service_company.bench-candidates.index') }}" id="heroAnalyticsForm" class="d-inline-flex align-items-center gap-1 hero-period">
-                                <i class="fa fa-calendar ms-2" aria-hidden="true"></i>
-                                <select name="hero_month" class="border-0 bg-transparent pe-2" aria-label="Performance ending month">
-                                    @foreach ($heroMonths as $monthOption)
-                                        <option value="{{ $monthOption['value'] }}" @selected($heroMonth === $monthOption['value'])>{{ $monthOption['label'] }}</option>
-                                    @endforeach
-                                </select>
-                                <noscript><button type="submit">Apply</button></noscript>
-                            </form>
                             <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
                                 <i class="fa fa-plus"></i> Add Talent
                             </a>
@@ -570,55 +827,180 @@
                 </div>
 
                 @if (in_array('view_bench', $userPermissions))
-                    <section class="pipeline-panel" aria-labelledby="talentPipelineTitle">
-                        <div class="pipeline-heading">
-                            <div class="pipeline-heading-copy">
-                                <span class="pipeline-heading-icon" aria-hidden="true"><i class="fa fa-route"></i></span>
+                    <div class="jw-card talent-overview-card" id="talentOverviewCard">
+                        <!-- Top Header Row of Hero Card -->
+                        <div class="overview-header-row">
+                            <div class="overview-title-group">
+                                <div class="overview-icon-box" aria-hidden="true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                                    </svg>
+                                </div>
                                 <div>
-                                    <h2 class="pipeline-heading-title" id="talentPipelineTitle">Talent Pipeline &amp; Marketplace Engagement
-                                        <i class="fa fa-circle-info ms-1 text-muted" title="Inventory and indexed profile views are current totals; requests, interviews and placements follow the selected period."></i>
-                                    </h2>
-                                    <p class="pipeline-heading-note">Track your in-house talent journey from bench to placement and measure marketplace engagement.</p>
+                                    <h2 class="overview-title">Talent &amp; Marketplace Overview</h2>
+                                    <p class="overview-subtitle">Track your in-house talent from bench availability to marketplace engagement and hiring outcomes.</p>
                                 </div>
                             </div>
-                            <div>
-                                <label class="pipeline-performance" for="performanceWindow">
-                                    <i class="fa fa-calendar-days" aria-hidden="true"></i>
-                                    <select id="performanceWindow" name="performance_window" form="heroAnalyticsForm" aria-label="Pipeline performance period">
-                                        <option value="monthly" @selected($performanceWindow === 'monthly')>Current Month ({{ \Carbon\Carbon::createFromFormat('!Y-m', $heroMonth)->format('M y') }})</option>
-                                        <option value="quarterly" @selected($performanceWindow === 'quarterly')>Last 3 Months</option>
-                                        <option value="half_yearly" @selected($performanceWindow === 'half_yearly')>Last 6 Months</option>
-                                        <option value="yearly" @selected($performanceWindow === 'yearly')>Yearly</option>
+                            <div class="overview-controls">
+                                <form method="get" action="{{ route('service_company.bench-candidates.index') }}" id="heroAnalyticsForm" class="d-inline-flex align-items-center overview-month-picker">
+                                    <i class="fa fa-calendar me-2" aria-hidden="true"></i>
+                                    <select name="hero_month" id="hero_month_select" class="overview-month-select" aria-label="Performance ending month">
+                                        @foreach ($heroMonths as $monthOption)
+                                            <option value="{{ $monthOption['value'] }}" @selected($heroMonth === $monthOption['value'])>{{ $monthOption['label'] }}</option>
+                                        @endforeach
                                     </select>
-                                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
-                                </label>
-                                <p class="pipeline-status" id="pipelineStatus" role="status" aria-live="polite"></p>
+                                    <i class="fa fa-chevron-down ms-1 text-muted" style="font-size: 10px !important;" aria-hidden="true"></i>
+                                    <input type="hidden" name="performance_window" id="performanceWindow" value="{{ $performanceWindow ?? 'monthly' }}">
+                                    <noscript><button type="submit">Apply</button></noscript>
+                                </form>
+                                <button type="button" class="btn-overview-action" id="shareTalentListBtn" title="Share list">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="18" cy="5" r="3"></circle>
+                                        <circle cx="6" cy="12" r="3"></circle>
+                                        <circle cx="18" cy="19" r="3"></circle>
+                                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                    </svg>
+                                    <span>Share list</span>
+                                </button>
+                                <button type="button" class="btn-overview-action" id="viewTalentListBtn" title="View list">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                    </svg>
+                                    <span>View list</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="pipeline-scroller">
-                            <div class="pipeline-stages">
-                                @foreach ($heroItems as $item)
-                                    @php $metric = $heroStages[$item['key']]; @endphp
-                                    @if ($item['rel'] !== null)
-                                        <button type="button" class="pipeline-stage {{ $item['tone'] }} kpi-filter" data-rel="{{ $item['rel'] }}" id="kpi_{{ $item['rel'] }}" title="Filter the talent list">
-                                    @else
-                                        <div class="pipeline-stage {{ $item['tone'] }}">
-                                    @endif
-                                        <span class="pipeline-stage-label" @if ($item['key'] === 'views') title="All-time indexed profile views" @endif>{{ $item['label'] }}</span>
-                                        <span class="pipeline-stage-icon"><i class="fa {{ $item['icon'] }}" aria-hidden="true"></i></span>
-                                        @unless ($loop->last)
-                                            <span class="pipeline-connector" aria-hidden="true"><span class="pipeline-motion" style="--flow-delay: {{ $loop->index * 0.12 }}s"><i class="fa fa-chevron-right"></i></span></span>
-                                        @endunless
-                                        <span class="pipeline-stage-value" data-pipeline-stage="{{ $item['key'] }}" @if ($item['key'] === 'talent') id="kpival_all" @elseif ($item['key'] === 'bench') id="kpival_2" @endif @unless ($metric['available']) title="Analytics source unavailable" @endunless>{{ $metric['available'] ? number_format($metric['value']) : '—' }}</span>
-                                    @if ($item['rel'] !== null)
-                                        </button>
-                                    @else
+
+                        <!-- 3 Sections Grid -->
+                        <div class="overview-sections-grid">
+                            <!-- Section 1: TALENT POOL -->
+                            <div class="overview-section">
+                                <div class="overview-section-header banner-blue">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa fa-users text-blue"></i>
+                                        <span class="banner-title text-blue">TALENT POOL</span>
+                                    </div>
+                                    <span class="banner-subtext">Your total talent and bench availability</span>
+                                </div>
+                                <div class="overview-cards-grid grid-2">
+                                    <!-- Total Talent -->
+                                    <div class="overview-kpi-card kpi-bg-blue kpi-filter active" data-rel="all" id="kpi_all" title="Filter to All Talents">
+                                        <div class="kpi-circle-icon circle-blue">
+                                            <i class="fa fa-users"></i>
                                         </div>
-                                    @endif
-                                @endforeach
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="talent" id="kpival_all">{{ $heroStages['talent']['available'] ? number_format($heroStages['talent']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Total Talent</span>
+                                        </div>
+                                    </div>
+                                    <!-- Marketplace Ready -->
+                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="2" id="kpi_2" title="Filter to Marketplace Ready">
+                                        <div class="kpi-circle-icon circle-amber">
+                                            <i class="fa fa-briefcase"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="bench" id="kpival_2">{{ $heroStages['bench']['available'] ? number_format($heroStages['bench']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Marketplace Ready</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: MARKETPLACE ACTIVITY -->
+                            <div class="overview-section">
+                                <div class="overview-section-header banner-purple">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa fa-paper-plane text-purple"></i>
+                                        <span class="banner-title text-purple">MARKETPLACE ACTIVITY</span>
+                                    </div>
+                                    <span class="banner-subtext">Your engagement on the marketplace</span>
+                                </div>
+                                <div class="overview-cards-grid grid-4">
+                                    <!-- Requests Sent -->
+                                    <div class="overview-kpi-card kpi-bg-sky" title="Requests Sent">
+                                        <div class="kpi-circle-icon circle-sky">
+                                            <i class="fa fa-paper-plane"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="sent">{{ $heroStages['sent']['available'] ? number_format($heroStages['sent']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Requests Sent</span>
+                                        </div>
+                                    </div>
+                                    <!-- Requests Accepted -->
+                                    <div class="overview-kpi-card kpi-bg-green" title="Requests Accepted">
+                                        <div class="kpi-circle-icon circle-green">
+                                            <i class="fa fa-circle-check"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="accepted">{{ $heroStages['accepted']['available'] ? number_format($heroStages['accepted']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Requests Accepted</span>
+                                        </div>
+                                    </div>
+                                    <!-- Requests Expired -->
+                                    <div class="overview-kpi-card kpi-bg-red" title="Requests Expired">
+                                        <div class="kpi-circle-icon circle-red">
+                                            <i class="fa fa-clock"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="expired">{{ $heroStages['expired']['available'] ? number_format($heroStages['expired']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Requests Expired</span>
+                                        </div>
+                                    </div>
+                                    <!-- Profile Views -->
+                                    <div class="overview-kpi-card kpi-bg-violet" title="All-time Profile Views">
+                                        <div class="kpi-circle-icon circle-violet">
+                                            <i class="fa fa-eye"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="views">{{ $heroStages['views']['available'] ? number_format($heroStages['views']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Profile Views</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 3: HIRING OUTCOMES -->
+                            <div class="overview-section">
+                                <div class="overview-section-header banner-emerald">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa fa-trophy text-green"></i>
+                                        <span class="banner-title text-green">HIRING OUTCOMES</span>
+                                    </div>
+                                    <span class="banner-subtext">Your hiring progress from engagement to placement</span>
+                                </div>
+                                <div class="overview-cards-grid grid-2">
+                                    <!-- Interviews -->
+                                    <div class="overview-kpi-card kpi-bg-indigo" title="Interviews">
+                                        <div class="kpi-circle-icon circle-indigo">
+                                            <i class="fa fa-user-tie"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="interviews">{{ $heroStages['interviews']['available'] ? number_format($heroStages['interviews']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Interviews</span>
+                                        </div>
+                                    </div>
+                                    <!-- Placed -->
+                                    <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="3" id="kpi_3" title="Filter to Placed">
+                                        <div class="kpi-circle-icon circle-gold">
+                                            <i class="fa fa-trophy"></i>
+                                        </div>
+                                        <div class="kpi-content">
+                                            <span class="kpi-num" data-pipeline-stage="placed" id="kpival_3">{{ $heroStages['placed']['available'] ? number_format($heroStages['placed']['value']) : '—' }}</span>
+                                            <span class="kpi-label">Placed</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     <!-- Search + Sort row -->
                     <div class="jw-card p-2 mb-2 d-flex align-items-center gap-2">
@@ -813,14 +1195,13 @@
         // Keep period changes isolated to the tenant-scoped pipeline card.
         (function() {
             var form = document.getElementById('heroAnalyticsForm');
-            var panel = document.querySelector('.pipeline-panel');
+            var panel = document.getElementById('talentOverviewCard') || document.querySelector('.pipeline-panel');
             var windowSelect = document.getElementById('performanceWindow');
-            if (!form || !panel || !windowSelect) return;
+            if (!form || !panel) return;
 
             var monthSelect = form.querySelector('[name="hero_month"]');
-            var status = document.getElementById('pipelineStatus');
-            var selectedMonth = monthSelect.value;
-            var selectedWindow = windowSelect.value;
+            var selectedMonth = monthSelect ? monthSelect.value : '';
+            var selectedWindow = windowSelect ? windowSelect.value : 'monthly';
             var request = null;
             var revision = 0;
 
@@ -829,7 +1210,6 @@
                 if (request) request.abort();
                 panel.classList.add('is-loading');
                 panel.setAttribute('aria-busy', 'true');
-                status.textContent = '';
 
                 request = $.ajax({
                     url: form.action,
@@ -838,37 +1218,41 @@
                     cache: false,
                     data: {
                         pipeline_only: '1',
-                        hero_month: monthSelect.value,
-                        performance_window: windowSelect.value
+                        hero_month: monthSelect ? monthSelect.value : '',
+                        performance_window: windowSelect ? windowSelect.value : 'monthly'
                     },
                     success: function(response) {
                         var keys = ['talent', 'bench', 'sent', 'accepted', 'expired', 'views', 'interviews', 'placed'];
                         if (!response || !response.stages || !keys.every(function(key) { return response.stages[key]; })) {
-                            status.textContent = 'Performance data is unavailable. Please try again.';
-                            monthSelect.value = selectedMonth;
-                            windowSelect.value = selectedWindow;
+                            if (monthSelect) monthSelect.value = selectedMonth;
+                            if (windowSelect) windowSelect.value = selectedWindow;
                             return;
                         }
 
                         keys.forEach(function(key) {
                             var stage = response.stages[key];
                             var value = panel.querySelector('[data-pipeline-stage="' + key + '"]');
-                            value.textContent = stage.available ? Number(stage.value).toLocaleString() : '\u2014';
-                            if (stage.available) value.removeAttribute('title');
-                            else value.title = 'Analytics source unavailable';
+                            if (value) {
+                                value.textContent = stage.available ? Number(stage.value).toLocaleString() : '\u2014';
+                                if (stage.available) value.removeAttribute('title');
+                                else value.title = 'Analytics source unavailable';
+                            }
                         });
                         selectedMonth = response.month;
                         selectedWindow = response.window;
-                        monthSelect.value = selectedMonth;
-                        windowSelect.value = selectedWindow;
-                        var monthLabel = new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                        windowSelect.options[0].text = (monthSelect.selectedIndex === 0 ? 'Current' : 'Selected') + ' Month (' + monthLabel + ')';
+                        if (monthSelect) monthSelect.value = selectedMonth;
+                        if (windowSelect) {
+                            windowSelect.value = selectedWindow;
+                            if (windowSelect.options && windowSelect.options.length > 0) {
+                                var monthLabel = new Date(selectedMonth + '-01T00:00:00').toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                                windowSelect.options[0].text = (monthSelect.selectedIndex === 0 ? 'Current' : 'Selected') + ' Month (' + monthLabel + ')';
+                            }
+                        }
                     },
                     error: function(xhr, textStatus) {
                         if (textStatus === 'abort') return;
-                        status.textContent = 'Performance data could not be refreshed. Please try again.';
-                        monthSelect.value = selectedMonth;
-                        windowSelect.value = selectedWindow;
+                        if (monthSelect) monthSelect.value = selectedMonth;
+                        if (windowSelect) windowSelect.value = selectedWindow;
                     },
                     complete: function() {
                         if (activeRevision !== revision) return;
@@ -879,8 +1263,47 @@
                 });
             }
 
-            monthSelect.addEventListener('change', refreshPipeline);
-            windowSelect.addEventListener('change', refreshPipeline);
+            if (monthSelect) monthSelect.addEventListener('change', refreshPipeline);
+            if (windowSelect) windowSelect.addEventListener('change', refreshPipeline);
+
+            // "Share list" button handler
+            $(document).on('click', '#shareTalentListBtn', function(e) {
+                e.preventDefault();
+                var shareUrl = window.location.origin + window.location.pathname;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(shareUrl).then(function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Link Copied!',
+                            text: 'In-house talent list link copied to clipboard.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }).catch(function() {
+                        promptShareFallback(shareUrl);
+                    });
+                } else {
+                    promptShareFallback(shareUrl);
+                }
+                function promptShareFallback(url) {
+                    Swal.fire({
+                        title: 'Share In-House Talent List',
+                        input: 'text',
+                        inputValue: url,
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#0D9488'
+                    });
+                }
+            });
+
+            // "View list" button handler - smooth scroll to table
+            $(document).on('click', '#viewTalentListBtn', function(e) {
+                e.preventDefault();
+                var tableElem = document.getElementById('benchListingTable');
+                if (tableElem) {
+                    tableElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
         })();
 
         // ---- Status tab / KPI filter (drives existing fetch pipeline) ----
@@ -1564,6 +1987,7 @@
             $('#bg_5').text(counts.exited);
             $('#kpival_all').text(Number(counts.all_records || 0).toLocaleString());
             $('#kpival_2').text(Number(counts.bench || 0).toLocaleString());
+            $('#kpival_3').text(Number(counts.placed || 0).toLocaleString());
         }
 
         function countDataGetBenchList() {
