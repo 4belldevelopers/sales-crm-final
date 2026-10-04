@@ -282,7 +282,8 @@
             background: #F0FDF4;
             border: 1px solid #A7F3D0;
             border-radius: 6px;
-            padding: 5px 12px;
+            padding: 6px 14px;
+            min-height: 48px;
             margin-bottom: 8px;
             font-family: 'Poppins', sans-serif;
             transition: all 0.2s ease;
@@ -293,36 +294,36 @@
         .bench-th-left {
             display: flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
             min-width: 0;
         }
         .bench-th-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 19px;
-            height: 19px;
-            padding: 0 5px;
-            border-radius: 10px;
+            min-width: 21px;
+            height: 21px;
+            padding: 0 6px;
+            border-radius: 11px;
             background: #0D9488;
             color: #ffffff;
-            font-size: 10.5px;
+            font-size: 11px;
             font-weight: 700;
         }
         .bench-th-text {
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 600;
             color: #065F46;
             white-space: nowrap;
         }
         .bench-th-clear-btn {
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 500;
             color: #047857;
             text-decoration: underline;
             background: none;
             border: none;
-            padding: 0 3px;
+            padding: 0 4px;
             cursor: pointer;
             white-space: nowrap;
         }
@@ -338,36 +339,44 @@
         .bench-btn-fwd-resumes {
             display: inline-flex !important;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 8px;
             background: #ffffff !important;
             color: #0D9488 !important;
             border: 1px solid #0D9488 !important;
             border-radius: 6px !important;
-            padding: 4px 12px !important;
-            font-size: 12px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 0 14px !important;
+            font-size: 12.5px !important;
             font-weight: 600 !important;
             box-shadow: 0 1px 2px rgba(13, 148, 136, 0.08) !important;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
             cursor: pointer;
             white-space: nowrap;
-            line-height: 1.4;
+            line-height: 1 !important;
         }
         .bench-btn-fwd-resumes svg {
+            width: 15px;
+            height: 15px;
             color: #0D9488;
             stroke: currentColor;
+            flex-shrink: 0;
             transition: color 0.2s ease, transform 0.2s ease;
         }
         .bench-btn-count {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 1px 6px;
+            height: 20px;
+            padding: 0 7px;
             border-radius: 10px;
             background: #E6F4EA;
             color: #065F46;
-            font-size: 10.5px;
+            font-size: 11px;
             font-weight: 700;
             border: 1px solid #A7F3D0;
+            line-height: 1;
             transition: all 0.2s ease;
         }
         .bench-btn-fwd-resumes:hover {
@@ -686,7 +695,7 @@
                             </div>
                             <div class="bench-th-right">
                                 <button type="button" class="btn bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                         <line x1="22" y1="2" x2="11" y2="13"></line>
                                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                     </svg>
