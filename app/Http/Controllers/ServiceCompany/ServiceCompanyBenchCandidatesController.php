@@ -8606,7 +8606,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         if (! empty($request->to_email)) {
             $emails = explode(',', $request->to_email);
             foreach ($emails as $email) {
-                $clean = trim(str_replace(' ', '', $email));
+                $clean = strtolower(trim(str_replace(' ', '', $email)));
                 if (! empty($clean) && filter_var($clean, FILTER_VALIDATE_EMAIL)) {
                     $to[] = $clean;
                 }
@@ -8618,6 +8618,30 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             return Reply::dataOnly([
                 'status' => 'error',
                 'message' => 'At least one valid recipient email address (To) is required.',
+            ]);
+        }
+
+        // Parse CC emails
+        $cc = [];
+        if (! empty($request->cc_email)) {
+            $ccEmails = explode(',', $request->cc_email);
+            foreach ($ccEmails as $email) {
+                $cleanCc = strtolower(trim(str_replace(' ', '', $email)));
+                if (! empty($cleanCc) && filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
+                    $cc[] = $cleanCc;
+                }
+            }
+        }
+        $cc = array_values(array_unique($cc));
+        // Remove CC emails already present in To list
+        $cc = array_values(array_diff($cc, $to));
+
+        // Strict deliverability cap: Maximum 5 total recipients (To + CC combined)
+        $totalRecipients = count($to) + count($cc);
+        if ($totalRecipients > 5) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient limit exceeded. To maintain high email deliverability and avoid spam filtering, a maximum of 5 recipients (To & CC combined) can be included per dispatch (found '.$totalRecipients.').',
             ]);
         }
 
@@ -8643,19 +8667,6 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'message' => 'Email message body cannot be blank.',
             ]);
         }
-
-        // Parse CC emails
-        $cc = [];
-        if (! empty($request->cc_email)) {
-            $ccEmails = explode(',', $request->cc_email);
-            foreach ($ccEmails as $email) {
-                $cleanCc = trim(str_replace(' ', '', $email));
-                if (! empty($cleanCc) && filter_var($cleanCc, FILTER_VALIDATE_EMAIL)) {
-                    $cc[] = $cleanCc;
-                }
-            }
-        }
-        $cc = array_values(array_unique($cc));
 
         // From and Reply-To
         $from = trim((string) $request->from_email);
