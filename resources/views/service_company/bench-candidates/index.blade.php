@@ -274,69 +274,135 @@
         }
         #kt_activitiesHMB { z-index: 999999; }
 
-        /* Selected-rows bulk action bar for Bench Talent */
+        /* Floating Bulk Selection Action Pill for Bench Talent (UI/UX Standards Compliant) */
         .bench-selection-bar {
-            display: none;
-            align-items: center;
-            gap: 14px;
-            background: #ffffff;
-            border: 1px solid #e5e9f2;
-            border-radius: 10px;
-            padding: 9px 16px;
-            margin-bottom: 12px;
+            position: fixed !important;
+            bottom: 24px;
+            left: 50%;
+            transform: translate(-50%, 25px);
+            z-index: 1050;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, visibility 0.25s;
             font-family: 'Poppins', sans-serif;
-            flex-wrap: wrap;
-            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
-        .bench-selection-count {
-            font-size: 13px;
-            font-weight: 600;
-            color: #334155;
+        .bench-selection-bar.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translate(-50%, 0);
+        }
+        .bench-selection-pill {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 12px;
+            background: #ffffff;
+            border: 1px solid #10B981;
+            border-radius: 50px;
+            padding: 6px 8px 6px 14px;
+            box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(16, 185, 129, 0.15);
             white-space: nowrap;
         }
-        .bench-selection-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-            flex-wrap: wrap;
+        .bench-selection-pill .form-check-input {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            border-radius: 4px;
         }
-        .bench-selection-actions .btn {
-            font-size: 12px;
-            font-weight: 600;
-            border-radius: 7px !important;
-            padding: 6px 14px !important;
-            box-shadow: none !important;
+        .bench-selection-info {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 7px;
+            user-select: none;
         }
-        .bench-btn-fwd-resumes {
-            background: #ecfdf5 !important;
-            color: #059669 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .bench-btn-fwd-resumes:hover {
-            background: #d1fae5 !important;
-            border-color: #6ee7b7 !important;
-            color: #047857 !important;
-        }
-        .bench-selection-close {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: #64748b;
-            cursor: pointer;
-            display: flex;
+        .bench-selection-badge {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: background .15s, color .15s;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            background: #0F766E;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .bench-selection-text {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #1E293B;
+        }
+        .bench-selection-divider {
+            width: 1px;
+            height: 20px;
+            background: #E2E8F0;
+            margin: 0 2px;
+        }
+        .bench-selection-actions {
+            display: inline-flex;
+            align-items: center;
+        }
+        .bench-btn-fwd-resumes {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 7px;
+            background: linear-gradient(135deg, #0D9488 0%, #059669 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 30px !important;
+            padding: 6px 15px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.2px;
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.35) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .bench-btn-fwd-resumes:hover {
+            background: linear-gradient(135deg, #0F766E 0%, #047857 100%) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.45) !important;
+            color: #ffffff !important;
+        }
+        .bench-btn-fwd-resumes:active {
+            transform: translateY(0);
+        }
+        .bench-btn-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1px 7px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+        .bench-selection-close {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: #F1F5F9;
+            color: #64748B;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            padding: 0;
         }
         .bench-selection-close:hover {
-            background: #f1f5f9;
-            color: #334155;
+            background: #FEE2E2;
+            color: #DC2626;
         }
 
         /* ============================================================
@@ -606,22 +672,34 @@
                         </div>
                     </div>
 
-                    <!-- Selected-rows action bar for In-House Bench Talent -->
+                    <!-- Floating Bulk Selection Action Pill for In-House Bench Talent (UI/UX Standard Compliant) -->
                     <div class="bench-selection-bar" id="bench_selection_bar">
-                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" id="bench_selection_master_chk" checked title="Clear selection" />
-                        </div>
-                        <span class="bench-selection-count"><span id="bench_selected_count">0</span> candidates selected</span>
-                        <div class="bench-selection-actions">
-                            <button type="button" class="btn btn-sm btn-light-success bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes">
-                                <span class="svg-icon svg-icon-success svg-icon-1x me-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V1.99"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></svg>
-                                </span> Forward In-House Resumes
+                        <div class="bench-selection-pill">
+                            <div class="form-check form-check-sm form-check-custom form-check-solid mb-0">
+                                <input class="form-check-input" type="checkbox" id="bench_selection_master_chk" checked title="Clear selection" />
+                            </div>
+                            <div class="bench-selection-info">
+                                <span class="bench-selection-badge" id="bench_selected_count_badge">0</span>
+                                <span class="bench-selection-text"><span id="bench_selected_count">0</span> Selected</span>
+                            </div>
+                            <div class="bench-selection-divider"></div>
+                            <div class="bench-selection-actions">
+                                <button type="button" class="btn bench-btn-fwd-resumes" id="bench_fwd_resumes_bulk_btn" title="Forward selected candidate resumes via email">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                    <span>Forward In-House Resumes</span>
+                                    <span class="bench-btn-count" id="bench_btn_count_badge">0/5</span>
+                                </button>
+                            </div>
+                            <button type="button" class="bench-selection-close" id="bench_selection_close" title="Clear selection">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
                         </div>
-                        <button type="button" class="bench-selection-close" id="bench_selection_close" title="Clear selection">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        </button>
                     </div>
 
                     <!-- Talent table -->
@@ -1541,11 +1619,14 @@
                 var $checked = $('#benchListingTable tbody .chk_list_item:checked');
                 var n = $checked.length;
                 $('#bench_selected_count').text(n);
+                $('#bench_selected_count_badge').text(n);
+                $('#bench_btn_count_badge').text(n + '/5');
+
                 if (n > 0) {
-                    $('#bench_selection_bar').slideDown(150);
+                    $('#bench_selection_bar').addClass('show');
                     $('#bench_selection_master_chk').prop('checked', true);
                 } else {
-                    $('#bench_selection_bar').slideUp(150);
+                    $('#bench_selection_bar').removeClass('show');
                     $('#bench_selection_master_chk').prop('checked', false);
                     $('#chk_all_bench_list').prop('checked', false);
                 }
@@ -1564,7 +1645,9 @@
             function clearBenchSelection() {
                 $('#benchListingTable .chk_list_item, #chk_all_bench_list, #bench_selection_master_chk').prop('checked', false).prop('indeterminate', false);
                 $('#bench_selected_count').text('0');
-                $('#bench_selection_bar').slideUp(150);
+                $('#bench_selected_count_badge').text('0');
+                $('#bench_btn_count_badge').text('0/5');
+                $('#bench_selection_bar').removeClass('show');
             }
             window.clearBenchSelection = clearBenchSelection;
 
