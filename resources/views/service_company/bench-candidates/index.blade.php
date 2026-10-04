@@ -339,26 +339,23 @@
             display: inline-flex !important;
             align-items: center;
             gap: 6px;
-            background: #0D9488 !important;
-            color: #ffffff !important;
-            border: none !important;
+            background: #ffffff !important;
+            color: #0D9488 !important;
+            border: 1px solid #0D9488 !important;
             border-radius: 6px !important;
-            padding: 5px 13px !important;
+            padding: 4px 12px !important;
             font-size: 12px !important;
             font-weight: 600 !important;
-            box-shadow: 0 1px 3px rgba(13, 148, 136, 0.25) !important;
-            transition: all 0.15s ease !important;
+            box-shadow: 0 1px 2px rgba(13, 148, 136, 0.08) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
             cursor: pointer;
             white-space: nowrap;
             line-height: 1.4;
         }
-        .bench-btn-fwd-resumes:hover {
-            background: #0F766E !important;
-            color: #ffffff !important;
-            box-shadow: 0 2px 6px rgba(13, 148, 136, 0.35) !important;
-        }
-        .bench-btn-fwd-resumes:active {
-            background: #115E59 !important;
+        .bench-btn-fwd-resumes svg {
+            color: #0D9488;
+            stroke: currentColor;
+            transition: color 0.2s ease, transform 0.2s ease;
         }
         .bench-btn-count {
             display: inline-flex;
@@ -366,10 +363,33 @@
             justify-content: center;
             padding: 1px 6px;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            background: #E6F4EA;
+            color: #065F46;
             font-size: 10.5px;
             font-weight: 700;
+            border: 1px solid #A7F3D0;
+            transition: all 0.2s ease;
+        }
+        .bench-btn-fwd-resumes:hover {
+            background: #0D9488 !important;
+            border-color: #0D9488 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3) !important;
+        }
+        .bench-btn-fwd-resumes:hover svg {
+            color: #ffffff !important;
+            transform: translateX(1px);
+        }
+        .bench-btn-fwd-resumes:hover .bench-btn-count {
+            background: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+        .bench-btn-fwd-resumes:active {
+            background: #0F766E !important;
+            border-color: #0F766E !important;
+            color: #ffffff !important;
+            transform: scale(0.98);
         }
         @media (max-width: 576px) {
             .bench-table-header-toolbar {
@@ -659,7 +679,7 @@
                         <div class="bench-table-header-toolbar" id="bench_selection_bar" style="display: none;">
                             <div class="bench-th-left">
                                 <span class="bench-th-badge" id="bench_selected_count_badge">0</span>
-                                <span class="bench-th-text"><span id="bench_selected_count">0</span> Candidates Selected</span>
+                                <span class="bench-th-text" id="bench_selected_text_wrap"><span id="bench_selected_count">0</span> Candidates Selected</span>
                                 <button type="button" class="bench-th-clear-btn" id="bench_selection_close" title="Clear selection">
                                     (Deselect All)
                                 </button>
@@ -670,7 +690,7 @@
                                         <line x1="22" y1="2" x2="11" y2="13"></line>
                                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                     </svg>
-                                    <span>Forward In-House Resumes</span>
+                                    <span>Forward Resume</span>
                                     <span class="bench-btn-count" id="bench_btn_count_badge">0/5</span>
                                 </button>
                             </div>
@@ -1591,6 +1611,7 @@
                 $('#bench_selected_count').text(n);
                 $('#bench_selected_count_badge').text(n);
                 $('#bench_btn_count_badge').text(n + '/5');
+                $('#bench_selected_text_wrap').html('<span id="bench_selected_count">' + n + '</span> ' + (n === 1 ? 'Candidate Selected' : 'Candidates Selected'));
 
                 if (n > 0) {
                     $('#bench_selection_bar').addClass('show').show();
@@ -1617,6 +1638,7 @@
                 $('#bench_selected_count').text('0');
                 $('#bench_selected_count_badge').text('0');
                 $('#bench_btn_count_badge').text('0/5');
+                $('#bench_selected_text_wrap').html('<span id="bench_selected_count">0</span> Candidates Selected');
                 $('#bench_selection_bar').removeClass('show').hide();
             }
             window.clearBenchSelection = clearBenchSelection;
