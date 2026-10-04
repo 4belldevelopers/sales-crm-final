@@ -8242,6 +8242,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 'job_applications.ectc_hourly',
                 'job_applications.ectc_monthly',
                 'job_applications.ectc_yearly',
+                'job_applications.updated_at',
                 'qualification_master.name as qualification_name'
             )
             ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
@@ -8437,6 +8438,7 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                     ->first();
             }
             $cand->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
+            $cand->rm_updated_at = $rmCommentRow ? $rmCommentRow->updated_at : null;
 
             // 5. Talent Skills & Expertise for Pre-Screen Dossier
             $benchSkills = DB::table('bench_candidate_skill_experience')
@@ -8553,9 +8555,44 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $this->cc_email_count = 0;
         $this->cc_email_data = [];
 
+        // Intent: Authoritative Candidate & Dossier Fingerprint for Zero-Stale-Data Fast SWR Validation
+        $fingerprintComponents = [];
+        foreach ($formattedCandidates as $candItem) {
+            $fingerprintComponents[] = implode(':', [
+                $candItem->id,
+                $candItem->updated_at ?? '',
+                $candItem->rm_updated_at ?? '',
+                md5((string) ($candItem->rm_comments ?? '')),
+                md5(json_encode($candItem->skills_evaluated ?? [])),
+                $candItem->location ?? '',
+                $candItem->notice ?? '',
+                $candItem->commercials_formatted ?? '',
+                $candItem->engagement_model ?? '',
+                $candItem->resume_filename ?? '',
+            ]);
+        }
+        $fingerprintComponents[] = $companyName . ':' . md5((string) $companyLogo);
+        $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
+
+        // Fast Circuit: If client sent the exact matching fingerprint, data is 100% current and authoritative.
+        // Return lightweight unmodified response (0% Blade render time, 0% bandwidth overhead).
+        $clientFingerprint = trim((string) $request->input('fingerprint', ''));
+        if ($clientFingerprint !== '' && $clientFingerprint === $authoritativeFingerprint) {
+            return Reply::dataOnly([
+                'status' => 'unmodified',
+                'fingerprint' => $authoritativeFingerprint,
+                'message' => 'Candidate data is current and authoritative.',
+            ]);
+        }
+
         $view = view('service_company.bench-candidates.partials.forward_resume_drawer', $this->data)->render();
 
-        return Reply::dataOnly(['status' => 'success', 'view' => $view]);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'fingerprint' => $authoritativeFingerprint,
+            'candidate_count' => count($formattedCandidates),
+        ]);
     }
 
     /**
@@ -8945,4 +8982,399 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
             'message' => $successMsg,
         ]);
     }
+
+    /**
+     * Intent: Load and render the dedicated In-House Bench Talent Download Resume Center Drawer.
+     * Tenancy: Scoped strictly to authenticated company_id or thirdparty_company_id.
+     * Performance: Calculates fast authoritative fingerprint for SWR zero-stale-data verification.
+     *               Returns { status: 'unmodified' } if client cached view is already up-to-date.
+     */
+    public function download_center(Request $request)
+    {
+        $candidateId = (int) ($request->candidate_id ?? $request->id ?? 0);
+        if ($candidateId <= 0) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate ID is required.']);
+        }
+
+        $companyId = (int) auth()->user()->company_id;
+
+        $cand = DB::table('job_applications')
+            ->select(
+                'job_applications.id',
+                'job_applications.condidate_type',
+                'job_applications.full_name',
+                'job_applications.current_designation',
+                'job_applications.phone',
+                'job_applications.phone_code',
+                'job_applications.second_phone_code',
+                'job_applications.secondary_mobile',
+                'job_applications.email',
+                'job_applications.secondrary_email',
+                'job_applications.linkedin',
+                'job_applications.city',
+                'job_applications.city_id',
+                'job_applications.state',
+                'job_applications.country',
+                'city_list.city as city_name',
+                'state_list.state as state_name',
+                'countries.country_name as country_name',
+                'job_applications.current_location',
+                'job_applications.last_working_date',
+                'job_applications.qualification',
+                'job_applications.wm',
+                'job_applications.total_exp',
+                'job_applications.rel_exp',
+                'job_applications.ctc',
+                'job_applications.ectc',
+                'job_applications.current_ctc_cur',
+                'job_applications.current_ectc_cur',
+                'job_applications.current_ctc_mode',
+                'job_applications.np_id',
+                'job_applications.serving_notice_period_mode',
+                'job_applications.current_company',
+                'job_applications.skills',
+                'job_applications.resume',
+                'job_applications.rating',
+                'job_applications.careersummary',
+                'job_applications.cover_letter',
+                'job_applications.recruiter_note',
+                'job_applications.comment',
+                'job_applications.employmentType',
+                'job_applications.comission_type',
+                'job_applications.bill_rate_amount',
+                'job_applications.bill_rate_currency',
+                'job_applications.bill_rate_mode',
+                'job_applications.pay_rate_amount',
+                'job_applications.pay_rate_currency',
+                'job_applications.pay_rate_mode',
+                'job_applications.outsourcing_type',
+                'job_applications.updated_at',
+                'qualification_master.name as qualification_name'
+            )
+            ->leftJoin('qualification_master', 'qualification_master.id', 'job_applications.qualification')
+            ->leftJoin('city_list', function ($join) {
+                $join->on('city_list.city_id', '=', 'job_applications.city_id')
+                    ->orWhere(function ($q) {
+                        $q->where(function ($sub) {
+                            $sub->whereNull('job_applications.city_id')
+                                ->orWhere('job_applications.city_id', 0);
+                        })->whereColumn('city_list.city_id', 'job_applications.city');
+                    });
+            })
+            ->leftJoin('state_list', 'state_list.id', '=', 'job_applications.state')
+            ->leftJoin('countries', 'countries.id', '=', 'job_applications.country')
+            ->where('job_applications.id', $candidateId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('job_applications.company_id', $companyId)
+                    ->orWhere('job_applications.thirdparty_company_id', $companyId);
+            })
+            ->first();
+
+        if (! $cand) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate record not found or access denied.']);
+        }
+
+        // Company branding
+        $companyRow = DB::table('companies')->select('id', 'company_name', 'logo')->where('id', $companyId)->first();
+        $companyName = $companyRow ? ucwords((string) $companyRow->company_name) : 'Hiring Partner';
+        $companyLogoDataUri = '';
+        if ($companyRow && ! empty($companyRow->logo)) {
+            $rawLogo = (string) $companyRow->logo;
+            $r2Key = '';
+            if (str_starts_with($rawLogo, 'https://file.jero.works/')) {
+                $r2Key = ltrim((string) parse_url($rawLogo, PHP_URL_PATH), '/');
+            } elseif (! filter_var($rawLogo, FILTER_VALIDATE_URL)) {
+                $r2Key = ltrim($rawLogo, '/');
+            }
+
+            if (! empty($r2Key)) {
+                try {
+                    if (\Storage::disk('r2')->exists($r2Key)) {
+                        $bytes = \Storage::disk('r2')->get($r2Key);
+                        $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION)) ?: 'png';
+                        $mime = match ($ext) {
+                            'jpg', 'jpeg' => 'image/jpeg',
+                            'gif' => 'image/gif',
+                            'svg' => 'image/svg+xml',
+                            default => 'image/png',
+                        };
+                        $companyLogoDataUri = 'data:'.$mime.';base64,'.base64_encode($bytes);
+                    }
+                } catch (\Throwable $r2LogoErr) {
+                    \Log::warning('[Bench Candidates Logo] R2 fetch error: '.$r2LogoErr->getMessage());
+                }
+            }
+        }
+        $companyLogo = $companyLogoDataUri ?: (($companyRow && ! empty($companyRow->logo)) ? route('service_company.job-applications.company-logo-proxy') : '');
+
+        $currencyList = GeneralMethod::currency();
+        $salaryMode = GeneralMethod::salaryMode();
+        $currSymbolMap = [
+            'INR' => '₹',
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'AED' => 'AED ',
+            'CAD' => 'CA$',
+            'AUD' => 'A$',
+            'SGD' => 'S$',
+        ];
+
+        // 1. Authoritative City location (State and country strictly omitted for in-house presentation)
+        $cityName = (! empty($cand->city_name) && ! preg_match('/^\d+$/', trim((string) $cand->city_name))) ? trim((string) $cand->city_name) : null;
+        if (! $cityName && ! empty($cand->city) && ! preg_match('/^\d+$/', trim((string) $cand->city))) {
+            $cityName = trim((string) $cand->city);
+        }
+        if (! $cityName && ! empty($cand->current_location)) {
+            $cParts = explode(',', (string) $cand->current_location);
+            $cityName = trim($cParts[0]);
+        }
+        $cand->city_display = $cityName ?: '--';
+        $cand->location = $cityName ?: '--';
+
+        // Client Engagement Model
+        $engModel = trim((string) @$cand->employmentType);
+        if ($engModel === '') {
+            $outsourcingMap = [1 => 'Full Time', 2 => 'Contract', 3 => 'Part Time', 4 => 'Freelance'];
+            $engModel = $outsourcingMap[(int) (@$cand->outsourcing_type ?? 0)] ?? 'Contract';
+        }
+        $cand->engagement_model = $engModel;
+
+        // Commercials
+        $comissionType = (int) (@$cand->comission_type ?? 0);
+        $currId = (int) (@$cand->bill_rate_currency ?? (@$cand->current_ectc_cur ?? 0));
+        $currCode = $currencyList[$currId] ?? 'INR';
+        $sym = $currSymbolMap[$currCode] ?? ($currCode.' ');
+
+        if ($comissionType === 1) {
+            $candCommercialsFormatted = 'Free Service';
+        } elseif (! empty($cand->bill_rate_amount) && is_numeric($cand->bill_rate_amount)) {
+            $bMode = (int) (@$cand->bill_rate_mode ?? 0);
+            $bModeText = $salaryMode[$bMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym.' '.number_format((float) $cand->bill_rate_amount).' / '.$bModeText;
+        } elseif (! empty($cand->ectc) && is_numeric($cand->ectc)) {
+            $eMode = (int) (@$cand->current_ectc_mode ?? 0);
+            $eModeText = $salaryMode[$eMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym.' '.number_format((float) $cand->ectc).' / '.$eModeText;
+        } elseif (! empty($cand->pay_rate_amount) && is_numeric($cand->pay_rate_amount)) {
+            $pMode = (int) (@$cand->pay_rate_mode ?? 0);
+            $pModeText = $salaryMode[$pMode] ?? 'Annual';
+            $candCommercialsFormatted = $sym.' '.number_format((float) $cand->pay_rate_amount).' / '.$pModeText;
+        } else {
+            $candCommercialsFormatted = 'Competitive / Negotiable';
+        }
+        $cand->commercials_formatted = $candCommercialsFormatted;
+
+        // Notice period formatting
+        $npMode = (int) (@$cand->serving_notice_period_mode ?? -1);
+        $npRaw = trim((string) @$cand->np_id);
+        $npTs = $npRaw !== '' ? strtotime($npRaw) : false;
+        if ($npMode === 2 || strtolower($npRaw) === 'immediate') {
+            $cand->notice = 'Immediate';
+        } elseif ($npMode === 0 && (int) $npRaw > 0) {
+            $cand->notice = (int) $npRaw.' Days';
+        } elseif ($npMode === 1 && $npTs !== false && (int) date('Y', $npTs) > 1970) {
+            $cand->notice = (date('Y-m-d', $npTs) < date('Y-m-d')) ? 'Immediate' : ('Available '.date('d M Y', $npTs));
+        } elseif ($npTs !== false && (int) date('Y', $npTs) > 1970) {
+            $cand->notice = 'Available '.date('d M Y', $npTs);
+        } else {
+            $cand->notice = ($npRaw !== '' && ! str_contains($npRaw, '01 Jan 1970')) ? $npRaw : '--';
+        }
+
+        // Work mode, experience & match
+        $wmRaw = trim((string) @$cand->wm);
+        $cand->work_mode = $wmRaw !== '' ? ucwords(str_replace(['_', '-'], ' ', strtolower($wmRaw))) : 'Hybrid';
+        $totExp = trim((string) @$cand->total_exp, " \t\n\r\0\x0B.");
+        $cand->experience = ($totExp !== '' && (float) $totExp > 0) ? $totExp.' Year'.((float) $totExp == 1.0 ? '' : 's') : '--';
+        $cand->match = ! empty($cand->rating) ? min(100, max(40, (int) ($cand->rating * 20))) : 85;
+        $cand->report_id = 'JR'.now()->format('Ymd').str_pad((string) $cand->id, 6, '0', STR_PAD_LEFT);
+        $cand->report_date = now()->format('d M Y');
+        $cand->recruiter_name = auth()->user()->name ?? 'Recruiter';
+
+        // Check resume document presence
+        $hasResume = false;
+        $resumeRaw = trim((string) @$cand->resume);
+        $resumeFilename = '';
+        $docHash = '';
+
+        if ($resumeRaw !== '' && $resumeRaw !== '0' && strtolower($resumeRaw) !== 'null') {
+            $hasResume = true;
+            $pathPart = parse_url($resumeRaw, PHP_URL_PATH);
+            $resumeFilename = basename($pathPart ?: $resumeRaw);
+        } else {
+            $docRow = DB::table('documents')->where('documentable_id', $cand->id)->where('name', 'Resume')->first();
+            if ($docRow && ! empty($docRow->hashname)) {
+                $docHash = trim((string) $docRow->hashname);
+                if ($docHash !== '' && $docHash !== '0' && strtolower($docHash) !== 'null') {
+                    $hasResume = true;
+                    $pathPart = parse_url($docHash, PHP_URL_PATH);
+                    $resumeFilename = basename($pathPart ?: $docHash);
+                }
+            }
+        }
+
+        $downloadProxyUrl = route('service_company.bench-candidates.download', $cand->id);
+        $downloadPdfUrl = route('service_company.bench-candidates.download', ['id' => $cand->id, 'as_pdf' => 1]);
+
+        $cand->has_resume = $hasResume;
+        $cand->resume_filename = $resumeFilename;
+        $cand->resume_url = $downloadProxyUrl;
+        $cand->resume_r2_url = $downloadProxyUrl;
+        $cand->download_url = $downloadProxyUrl;
+        $cand->direct_download_url = $downloadProxyUrl;
+        $candSafeName = ! empty($cand->full_name) ? str_replace(' ', '_', preg_replace('/[^\w\s.-]/', '', $cand->full_name)) : ('Candidate_'.$cand->id);
+        $cand->safe_name = $candSafeName;
+
+        $candResumeVal = $resumeRaw ?: (@$docHash ?: '');
+        $resumeExt = strtolower(pathinfo(parse_url($candResumeVal, PHP_URL_PATH) ?: $candResumeVal, PATHINFO_EXTENSION));
+        $cand->resume_extension = $resumeExt ?: 'pdf';
+        $cand->resume_pdf_url = $downloadPdfUrl;
+
+        // Intent: Fetch Relationship Manager Comments from bench_candidate_rm_comments
+        $rmCommentRow = DB::table('bench_candidate_rm_comments')
+            ->where('candidate_id', $cand->id)
+            ->where('company_id', $companyId)
+            ->first();
+        if (! $rmCommentRow) {
+            $rmCommentRow = DB::table('bench_candidate_rm_comments')
+                ->where('candidate_id', $cand->id)
+                ->first();
+        }
+        $cand->rm_comments = $rmCommentRow ? $rmCommentRow->comments : null;
+        $cand->rm_updated_at = $rmCommentRow ? $rmCommentRow->updated_at : null;
+
+        // Talent Skills & Expertise for Pre-Screen Dossier
+        $benchSkills = DB::table('bench_candidate_skill_experience')
+            ->where('candidate_id', $cand->id)
+            ->select('skill_key', 'year', 'month', 'total_months', 'rating')
+            ->orderByDesc('rating')
+            ->orderBy('skill_key')
+            ->get();
+        $skillsArr = [];
+        foreach ($benchSkills as $bRow) {
+            $sn = trim((string) $bRow->skill_key);
+            if ($sn === '') {
+                continue;
+            }
+            $yr = (int) ($bRow->year ?? 0);
+            $mo = (int) ($bRow->month ?? 0);
+            if (isset($bRow->total_months) && is_numeric($bRow->total_months) && (int) $bRow->total_months > 0) {
+                $yr = intdiv((int) $bRow->total_months, 12);
+                $mo = (int) $bRow->total_months % 12;
+            }
+            $sExpParts = [];
+            if ($yr > 0) {
+                $sExpParts[] = $yr.' Year'.($yr > 1 ? 's' : '');
+            }
+            if ($mo > 0) {
+                $sExpParts[] = $mo.' Month'.($mo > 1 ? 's' : '');
+            }
+            $skillsArr[] = [
+                'name' => ucwords($sn),
+                'expText' => ! empty($sExpParts) ? implode(' ', $sExpParts) : ($yr == 0 && $mo == 0 ? '0 Years' : '--'),
+                'exp' => $yr + ($mo / 12),
+                'rating' => min(5, max(0, (int) ($bRow->rating ?? 0))),
+            ];
+            if (count($skillsArr) >= 12) {
+                break;
+            }
+        }
+        if (empty($skillsArr) && ! empty($cand->skills)) {
+            $rawSkills = array_filter(array_map('trim', explode(',', (string) $cand->skills)));
+            foreach ($rawSkills as $sName) {
+                $skillsArr[] = [
+                    'name' => ucwords($sName),
+                    'expText' => $cand->experience,
+                    'exp' => (float) $totExp ?: 0,
+                    'rating' => ! empty($cand->rating) ? min(5, max(0, (int) $cand->rating)) : 3,
+                ];
+                if (count($skillsArr) >= 12) {
+                    break;
+                }
+            }
+        }
+        $cand->skills_evaluated = $skillsArr;
+        $cand->report_company_name = $companyName;
+        $cand->report_company_logo = $companyLogo;
+
+        // Authoritative Candidate & Dossier Fingerprint for Fast SWR Validation
+        $fingerprintComponents = [
+            $cand->id,
+            $cand->updated_at ?? '',
+            $cand->rm_updated_at ?? '',
+            md5((string) ($cand->rm_comments ?? '')),
+            md5(json_encode($cand->skills_evaluated ?? [])),
+            $cand->location ?? '',
+            $cand->notice ?? '',
+            $cand->commercials_formatted ?? '',
+            $cand->engagement_model ?? '',
+            $cand->resume_filename ?? '',
+            $companyName.':'.md5((string) $companyLogo),
+        ];
+        $authoritativeFingerprint = md5(implode('|', $fingerprintComponents));
+
+        // Fast Circuit: Return lightweight unmodified response if client matches
+        $clientFingerprint = trim((string) $request->input('fingerprint', ''));
+        if ($clientFingerprint !== '' && $clientFingerprint === $authoritativeFingerprint) {
+            return Reply::dataOnly([
+                'status' => 'unmodified',
+                'fingerprint' => $authoritativeFingerprint,
+                'message' => 'Candidate data is current and authoritative.',
+            ]);
+        }
+
+        $this->cand = $cand;
+        $this->candidate = $cand;
+        $this->companyName = $companyName;
+        $this->companyLogo = $companyLogo;
+
+        $view = view('service_company.bench-candidates.partials.download_resume_drawer', $this->data)->render();
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'view' => $view,
+            'fingerprint' => $authoritativeFingerprint,
+            'candidate' => $cand,
+        ]);
+    }
+
+    /**
+     * Intent: Record Bench Candidate Resume download analytics asynchronously on Horizon queue.
+     * Tenancy: Validates candidate ownership before dispatching to 'counters' queue.
+     */
+    public function record_download(Request $request)
+    {
+        $candidateId = (int) ($request->candidate_id ?? $request->id ?? 0);
+        if ($candidateId <= 0) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate ID is required.']);
+        }
+
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        $exists = DB::table('job_applications')
+            ->where('id', $candidateId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->exists();
+
+        if (! $exists) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Candidate not found or access denied.']);
+        }
+
+        // Asynchronously dispatch download counter job away from HTTP request path
+        try {
+            RecordBenchResumeDownloadJob::dispatch($candidateId, $userId, $companyId);
+        } catch (\Throwable $e) {
+            \Log::warning('[Bench Download Record] Failed to dispatch RecordBenchResumeDownloadJob: '.$e->getMessage());
+        }
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'message' => 'Download event recorded successfully.',
+        ]);
+    }
 }
+

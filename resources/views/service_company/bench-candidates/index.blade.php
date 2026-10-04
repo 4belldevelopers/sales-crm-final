@@ -1481,6 +1481,7 @@
                         sweetAlert("Success", response.message, "success");
                         $('.checkStatusSales_text').text(response.pack_status);
                         if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
+                        if (typeof BenchForwardResumeRamStore !== 'undefined') { BenchForwardResumeRamStore.invalidate(); }
                         var page = $('#paginationbenchCandidateBenchCandidates .active_disabled').data('page');
                         fetchBenchBenchCandidatesCandidateList(page, '', true);
                     }
@@ -1708,6 +1709,7 @@
                             sweetAlert('Success', 'Status changed successfully!', 'success');
                             $('#bstatus_close_x').trigger('click');
                             if (typeof BenchPageRamStore !== 'undefined') { BenchPageRamStore.invalidate(); }
+                            if (typeof BenchForwardResumeRamStore !== 'undefined') { BenchForwardResumeRamStore.invalidate(); }
                             if (typeof HeroAnalyticsRamStore !== 'undefined') { HeroAnalyticsRamStore.clear(); }
                             if (typeof window.refreshBenchPipeline === 'function') { window.refreshBenchPipeline(); }
                             fetchBenchBenchCandidatesCandidateList(1, '', true);

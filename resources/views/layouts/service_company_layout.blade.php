@@ -735,6 +735,17 @@
     <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="bench_fwd_resume_body_content"></div>
   </div>
 </div>
+<!-- Bench Candidate Download Resume Center Drawer (Engine 1-B) -->
+<div id="kt_bench_download_resume_drawer_toggle" style="display:none;"></div>
+<div id="kt_bench_download_resume_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="bench-download-resume"
+    data-kt-drawer-activate="true" data-kt-drawer-overlay="true"
+    data-kt-drawer-width="{default:'95%', 'lg': '700px', 'xl': '750px'}" data-kt-drawer-direction="end"
+    data-kt-drawer-toggle="#kt_bench_download_resume_drawer_toggle" data-kt-drawer-close="#kt_bench_download_resume_drawer_close"
+    style="z-index: 10050 !important; scrollbar-gutter: stable;">
+  <div class="card shadow-none rounded-0 w-100 h-100 d-flex flex-column">
+    <div class="card-body position-relative px-0 py-0 flex-grow-1 overflow-auto" id="bench_download_resume_body_content"></div>
+  </div>
+</div>
 <div id="kt_activitiesPublicBenchApplication_toggle"></div>
 <div id="kt_activitiesPublicBenchApplication" class="bg-body bg-custom-bar" data-kt-drawer="true" data-kt-drawer-name="activitiesPublicBenchApplication" data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-width="" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_activitiesPublicBenchApplication_toggle" data-kt-drawer-close="#kt_activitiesPublicBenchApplication_close">
   <div class="shadow-none bg-custom-bar rounded-0 w-100" id="public_bench_application_show_right_bar" ></div>
@@ -2815,6 +2826,55 @@ $( document ).ready(function() {
     });
   });
 
+  // Client-First In-Memory RAM Store for In-House Talent Forward Resume (Rule 3, Rule 5, Rule 6, Rule 17)
+  // Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
+  var BenchForwardResumeRamStore = (function() {
+    var _store = {};
+    var _ttl = 15 * 60 * 1000; // 15 minute local memory ceiling
+
+    function buildKey(candArr) {
+      var arr = (Array.isArray(candArr) ? candArr : [candArr]).map(Number).filter(Boolean);
+      arr.sort(function(a, b) { return a - b; });
+      return 'bench_fwd_' + arr.join('_');
+    }
+
+    return {
+      buildKey: buildKey,
+      get: function(key) {
+        var item = _store[key];
+        if (!item) return null;
+        if (Date.now() - item.ts > _ttl) {
+          delete _store[key];
+          return null;
+        }
+        return item;
+      },
+      set: function(key, viewHtml, fingerprint) {
+        _store[key] = {
+          view: viewHtml,
+          fingerprint: fingerprint || '',
+          ts: Date.now()
+        };
+      },
+      invalidate: function(candidateId) {
+        if (!candidateId) {
+          _store = {};
+          return;
+        }
+        var needle = String(candidateId);
+        for (var k in _store) {
+          if (k.indexOf(needle) !== -1) {
+            delete _store[k];
+          }
+        }
+      },
+      clear: function() {
+        _store = {};
+      }
+    };
+  })();
+  window.BenchForwardResumeRamStore = BenchForwardResumeRamStore;
+
   window.openBenchForwardResume = function(candidateId) {
     if (!candidateId) return;
 
@@ -2841,6 +2901,40 @@ $( document ).ready(function() {
       }
     }, 50);
 
+    // Fast-path: Check Client-First RAM Store (0ms perceived time)
+    var cacheKey = BenchForwardResumeRamStore.buildKey(candArr);
+    var cached = BenchForwardResumeRamStore.get(cacheKey);
+
+    if (cached && cached.view) {
+      // 0ms Instant Hydration from Browser RAM
+      $('#bench_fwd_resume_body_content').html(cached.view);
+
+      // SWR (Stale-While-Revalidate): Fire background verification with fingerprint to guarantee zero stale data
+      $.ajax({
+        type: 'POST',
+        url: "{{ route('service_company.bench-candidates.fwd_resume') }}",
+        cache: false,
+        data: {
+          _token: "{{ csrf_token() }}",
+          candidate_id: primaryCandId,
+          arr: candArr,
+          fingerprint: cached.fingerprint || ''
+        },
+        success: function (res) {
+          // If server detects data was updated (fingerprint mismatch), hot-patch with fresh authoritative view
+          if (res && res.status === 'success' && res.view && res.fingerprint !== cached.fingerprint) {
+            BenchForwardResumeRamStore.set(cacheKey, res.view, res.fingerprint);
+            $('#bench_fwd_resume_body_content').html(res.view);
+          }
+        },
+        error: function() {
+          // Silent fallback: Offline or network glitch, cached view remains active
+        }
+      });
+      return;
+    }
+
+    // Cache Miss: Show loading spinner and fetch from server
     var loadingMsg = candArr.length > 1
       ? 'Loading Forward Resume Engine (' + candArr.length + ' Candidates)...'
       : 'Loading Forward Resume Engine...';
@@ -2865,6 +2959,7 @@ $( document ).ready(function() {
       },
       success: function (response) {
         if (response && response.status === 'success' && response.view) {
+          BenchForwardResumeRamStore.set(cacheKey, response.view, response.fingerprint || '');
           $('#bench_fwd_resume_body_content').html(response.view);
         } else {
           var errMsg = (response && response.message) ? response.message : 'Failed to load forward resume drawer.';
@@ -2880,7 +2975,143 @@ $( document ).ready(function() {
       }
     });
   };
+
+  // Client-First In-Memory RAM Store for In-House Talent Download Resume Center (Rule 3, Rule 5, Rule 6, Rule 15, Rule 17)
+  // Provides 0ms instant drawer hydration while enforcing Authoritative SWR Zero-Stale-Data Revalidation
+  var BenchDownloadResumeRamStore = (function() {
+    var _store = {};
+    var _ttl = 15 * 60 * 1000; // 15 minute local memory ceiling
+
+    function buildKey(candidateId) {
+      return 'bench_dl_' + parseInt(candidateId, 10);
+    }
+
+    return {
+      buildKey: buildKey,
+      get: function(key) {
+        var item = _store[key];
+        if (!item) return null;
+        if (Date.now() - item.ts > _ttl) {
+          delete _store[key];
+          return null;
+        }
+        return item;
+      },
+      set: function(key, viewHtml, fingerprint) {
+        _store[key] = {
+          view: viewHtml,
+          fingerprint: fingerprint || '',
+          ts: Date.now()
+        };
+      },
+      invalidate: function(candidateId) {
+        if (!candidateId) {
+          _store = {};
+          return;
+        }
+        var k = buildKey(candidateId);
+        delete _store[k];
+      },
+      clear: function() {
+        _store = {};
+      }
+    };
+  })();
+  window.BenchDownloadResumeRamStore = BenchDownloadResumeRamStore;
+
+  window.openBenchDownloadResumeCenter = function(candidateId) {
+    var cId = parseInt(candidateId, 10);
+    if (!cId || cId <= 0) return;
+
+    var drawerEl = document.getElementById('kt_bench_download_resume_drawer');
+    if (drawerEl && typeof KTDrawer !== 'undefined') {
+      var drawer = KTDrawer.getInstance(drawerEl);
+      if (drawer) {
+        drawer.show();
+      } else {
+        $('#kt_bench_download_resume_drawer_toggle').trigger('click');
+      }
+    } else {
+      $('#kt_bench_download_resume_drawer').addClass('drawer-on');
+    }
+
+    setTimeout(function() {
+      var overlays = $('.drawer-overlay');
+      if (overlays.length > 0) {
+        overlays.last().css('z-index', '10045');
+      }
+    }, 50);
+
+    // Fast-path: Check Client-First RAM Store (0ms perceived time)
+    var cacheKey = BenchDownloadResumeRamStore.buildKey(cId);
+    var cached = BenchDownloadResumeRamStore.get(cacheKey);
+
+    if (cached && cached.view) {
+      // 0ms Instant Hydration from Browser RAM
+      $('#bench_download_resume_body_content').html(cached.view);
+
+      // SWR (Stale-While-Revalidate): Fire background verification with fingerprint to guarantee zero stale data
+      $.ajax({
+        type: 'POST',
+        url: "{{ route('service_company.bench-candidates.download_center') }}",
+        cache: false,
+        data: {
+          _token: "{{ csrf_token() }}",
+          candidate_id: cId,
+          fingerprint: cached.fingerprint || ''
+        },
+        success: function (res) {
+          // If server detects data was updated (fingerprint mismatch), hot-patch with fresh authoritative view
+          if (res && res.status === 'success' && res.view && res.fingerprint !== cached.fingerprint) {
+            BenchDownloadResumeRamStore.set(cacheKey, res.view, res.fingerprint);
+            $('#bench_download_resume_body_content').html(res.view);
+          }
+        },
+        error: function() {
+          // Silent fallback: Offline or network glitch, cached view remains active
+        }
+      });
+      return;
+    }
+
+    // Cache Miss: Show loading spinner and fetch from server
+    $('#bench_download_resume_body_content').html(
+      '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:400px; gap:16px;">' +
+      '  <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">' +
+      '    <span class="visually-hidden">Loading...</span>' +
+      '  </div>' +
+      '  <span style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #64748b; font-weight: 500;">Loading Download Resume Center...</span>' +
+      '</div>'
+    );
+
+    $.ajax({
+      type: 'POST',
+      url: "{{ route('service_company.bench-candidates.download_center') }}",
+      cache: false,
+      data: {
+        _token: "{{ csrf_token() }}",
+        candidate_id: cId
+      },
+      success: function (response) {
+        if (response && response.status === 'success' && response.view) {
+          BenchDownloadResumeRamStore.set(cacheKey, response.view, response.fingerprint);
+          $('#bench_download_resume_body_content').html(response.view);
+        } else {
+          var errMsg = (response && response.message) ? response.message : 'Failed to load download resume drawer.';
+          $('#bench_download_resume_body_content').html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+        }
+      },
+      error: function(xhr) {
+        var errMsg = 'Failed to load candidate download resume details. Please try again.';
+        if (xhr.responseJSON && xhr.responseJSON.message) {
+          errMsg = xhr.responseJSON.message;
+        }
+        $('#bench_download_resume_body_content').html('<div class="p-8 text-center text-danger">' + errMsg + '</div>');
+      }
+    });
+  };
 });
+
 </script>
 <script>
          $('form input').keydown(function (e){         

@@ -299,6 +299,7 @@
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-fwd { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 600; }
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-fwd:hover { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
 #kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-secondary { background: #fff; color: #475569; border-color: #e2e8f0; }
+#kt_activitiesBenchApplication .cdr-action-btn.cdr-btn-dl-center:hover { background: #f0fdf4; border-color: #86efac; color: #15803d; }
 #kt_activitiesBenchApplication .cdr-action-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 #kt_activitiesBenchApplication .cdr-topbar-split { width: 1px; height: 20px; background: #e2e8f0; flex-shrink: 0; margin: 0 2px; }
 #kt_activitiesBenchApplication .cdr-topbar-close { width: 34px; height: 34px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: none; border: 1.5px solid #e2e8f0; border-radius: 8px; cursor: pointer; color: #6b7280; padding: 0; margin-left: 4px; }
@@ -637,33 +638,10 @@
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
 
       @if(!empty($benchApplication->resume) && in_array(strtolower(pathinfo($benchApplication->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx']))
-        @php
-            $url = @$benchApplication->resume;
-            $hdrMaskContact = ((int) @$benchApplication->company_id !== (int) (auth()->user()->company_id ?? 0));
-        @endphp
-        <div class="cdr-dl-wrap" id="hdrDlWrapBench">
-          <button type="button" class="cdr-action-btn cdr-btn-secondary" id="hdrDlToggleBench" aria-haspopup="true" aria-expanded="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Resume
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div id="hdrDlMenuBench" class="cdr-dl-menu">
-            @if($hdrMaskContact)
-              <button type="button" disabled title="Original resume is protected for masked profiles" class="cdr-dl-item text-muted" style="cursor:not-allowed;background:#f8fafc;">
-                Download Resume
-              </button>
-            @else
-              <a target="_blank" data-id="{{ $benchApplication->id }}" class="cdr-dl-item downloadCount" href="{{ route('download.resume', ['id' => $benchApplication->id,'path' => rtrim(strtr(base64_encode($url), '+/', '-_'), '=')]) }}">
-                Download Resume
-              </a>
-            @endif
-            <button type="button" onclick="hdrDownloadWithLogoBench()" class="cdr-dl-item cdr-dl-item-logo">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-              Resume with Company Logo
-              <span class="cdr-dl-badge">LOGO</span>
-            </button>
-          </div>
-        </div>
+        <button type="button" onclick="openBenchDownloadResumeCenter({{ $benchApplication->id }})" class="cdr-action-btn cdr-btn-secondary cdr-btn-dl-center" id="btnBenchDownloadResume" title="Download candidate resume in custom formats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Resume
+        </button>
       @else
         <a href="{{ route('service_company.bench-candidates.edit', [GeneralMethod::value_encrypt($benchApplication->id)]) }}" class="cdr-action-btn cdr-btn-secondary" title="Upload resume">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1170,56 +1148,7 @@
 </div>
 
 <script>
-    // Global function for Logo Download
-    window.hdrDownloadWithLogoBench = function() {
-        $('#hdrDlMenuBench').removeClass('open').css({'display': 'none', 'visibility': 'hidden'});
-        var rcvTab = document.querySelector('a[href="#resume_cv"].tab, button[data-target="resume_cv"], button[data-rcv-tab]');
-        if (rcvTab) rcvTab.click();
-
-        var tries = 0;
-        var poll = setInterval(function() {
-            if (document.querySelectorAll('#rcvPages .rcv-page').length) {
-                clearInterval(poll);
-                var b = document.querySelector('[data-dl="logo"]');
-                if (b) b.click();
-            } else if (++tries > 80) {
-                clearInterval(poll);
-                alert('Resume is taking too long to load. Please open the Resume / CV tab and try again.');
-            }
-        }, 100);
-    };
-
     (function() {
-        // Robust Document Delegation for Download Resume Dropdown
-        $(document).off('click', '#hdrDlToggleBench').on('click', '#hdrDlToggleBench', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            var $menu = $('#hdrDlMenuBench');
-            if ($menu.length) {
-                var isVisible = $menu.hasClass('open') || $menu.is(':visible');
-                if (isVisible) {
-                    $menu.removeClass('open').css({'display': 'none', 'visibility': 'hidden'});
-                    $(this).attr('aria-expanded', 'false');
-                } else {
-                    $('.cdr-dl-menu').removeClass('open').css({'display': 'none', 'visibility': 'hidden'});
-                    $menu.addClass('open').css({
-                        'display': 'block',
-                        'visibility': 'visible',
-                        'opacity': '1',
-                        'z-index': '999999'
-                    });
-                    $(this).attr('aria-expanded', 'true');
-                }
-            }
-        });
-
-        $(document).off('click.hdrDlBenchClose').on('click.hdrDlBenchClose', function(e) {
-            if (!$(e.target).closest('#hdrDlWrapBench').length) {
-                $('#hdrDlMenuBench').removeClass('open').css({'display': 'none', 'visibility': 'hidden'});
-                $('#hdrDlToggleBench').attr('aria-expanded', 'false');
-            }
-        });
-
         var activeAbortController = null;
 
         $('.page-tabs .tab').on('click', function (e) {
@@ -1272,42 +1201,87 @@
             }
         });
 
-        window.openBenchForwardResume = window.openBenchForwardResume || function(candidateId) {
-            var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
-            if (drawerEl && typeof KTDrawer !== 'undefined') {
-                var drawer = KTDrawer.getInstance(drawerEl);
-                if (drawer) { drawer.show(); } else { $('#kt_bench_fwd_resume_drawer_toggle').trigger('click'); }
-            } else {
-                $('#kt_bench_fwd_resume_drawer').addClass('drawer-on');
-            }
-            setTimeout(function() {
-                var overlays = $('.drawer-overlay');
-                if (overlays.length > 0) {
-                    overlays.last().css('z-index', '10045');
+        if (typeof window.openBenchForwardResume !== 'function' || !window.BenchForwardResumeRamStore) {
+            window.openBenchForwardResume = function(candidateId) {
+                if (typeof parent !== 'undefined' && typeof parent.openBenchForwardResume === 'function') {
+                    parent.openBenchForwardResume(candidateId);
+                    return;
                 }
-            }, 50);
-            $('#bench_fwd_resume_body_content').html(
-                '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:350px;gap:16px;">' +
-                '  <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
-                '  <span style="font-family:\'Poppins\',sans-serif;font-size:13px;color:#64748b;font-weight:500;">Loading Forward Resume Engine...</span>' +
-                '</div>'
-            );
-            $.ajax({
-                type: 'POST',
-                url: "{{ route('service_company.bench-candidates.fwd_resume') }}",
-                data: { _token: "{{ csrf_token() }}", candidate_id: candidateId },
-                success: function(res) {
-                    if (res && res.status === 'success' && res.view) {
-                        $('#bench_fwd_resume_body_content').html(res.view);
-                    } else {
-                        $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">' + (res.message || 'Error loading drawer') + '</div>');
+                var drawerEl = document.getElementById('kt_bench_fwd_resume_drawer');
+                if (drawerEl && typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) { drawer.show(); } else { $('#kt_bench_fwd_resume_drawer_toggle').trigger('click'); }
+                } else {
+                    $('#kt_bench_fwd_resume_drawer').addClass('drawer-on');
+                }
+                setTimeout(function() {
+                    var overlays = $('.drawer-overlay');
+                    if (overlays.length > 0) { overlays.last().css('z-index', '10045'); }
+                }, 50);
+                $('#bench_fwd_resume_body_content').html(
+                    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:350px;gap:16px;">' +
+                    '  <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
+                    '  <span style="font-family:\'Poppins\',sans-serif;font-size:13px;color:#64748b;font-weight:500;">Loading Forward Resume Engine...</span>' +
+                    '</div>'
+                );
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ route('service_company.bench-candidates.fwd_resume') }}",
+                    data: { _token: "{{ csrf_token() }}", candidate_id: candidateId, arr: [candidateId] },
+                    success: function(res) {
+                        if (res && res.status === 'success' && res.view) {
+                            $('#bench_fwd_resume_body_content').html(res.view);
+                        } else {
+                            $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">' + (res.message || 'Error loading drawer') + '</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">Failed to load forward resume drawer.</div>');
                     }
-                },
-                error: function() {
-                    $('#bench_fwd_resume_body_content').html('<div class="p-8 text-center text-danger">Failed to load forward resume drawer.</div>');
+                });
+            };
+        }
+
+        if (typeof window.openBenchDownloadResumeCenter !== 'function' || !window.BenchDownloadResumeRamStore) {
+            window.openBenchDownloadResumeCenter = function(candidateId) {
+                if (typeof parent !== 'undefined' && typeof parent.openBenchDownloadResumeCenter === 'function') {
+                    parent.openBenchDownloadResumeCenter(candidateId);
+                    return;
                 }
-            });
-        };
+                var drawerEl = document.getElementById('kt_bench_download_resume_drawer');
+                if (drawerEl && typeof KTDrawer !== 'undefined') {
+                    var drawer = KTDrawer.getInstance(drawerEl);
+                    if (drawer) { drawer.show(); } else { $('#kt_bench_download_resume_drawer_toggle').trigger('click'); }
+                } else {
+                    $('#kt_bench_download_resume_drawer').addClass('drawer-on');
+                }
+                setTimeout(function() {
+                    var overlays = $('.drawer-overlay');
+                    if (overlays.length > 0) { overlays.last().css('z-index', '10045'); }
+                }, 50);
+                $('#bench_download_resume_body_content').html(
+                    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:350px;gap:16px;">' +
+                    '  <div class="spinner-border text-primary" role="status" style="width:2.5rem;height:2.5rem;"><span class="visually-hidden">Loading...</span></div>' +
+                    '  <span style="font-family:\'Poppins\',sans-serif;font-size:13px;color:#64748b;font-weight:500;">Loading Download Resume Center...</span>' +
+                    '</div>'
+                );
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ route('service_company.bench-candidates.download_center') }}",
+                    data: { _token: "{{ csrf_token() }}", candidate_id: candidateId },
+                    success: function(res) {
+                        if (res && res.status === 'success' && res.view) {
+                            $('#bench_download_resume_body_content').html(res.view);
+                        } else {
+                            $('#bench_download_resume_body_content').html('<div class="p-8 text-center text-danger">' + (res.message || 'Error loading drawer') + '</div>');
+                        }
+                    },
+                    error: function() {
+                        $('#bench_download_resume_body_content').html('<div class="p-8 text-center text-danger">Failed to load download resume drawer.</div>');
+                    }
+                });
+            };
+        }
 
         var input = document.querySelector('input[name=tags]'); 
         if (input && !input.__tagify) {
