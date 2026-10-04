@@ -628,10 +628,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Original Candidate Resume</h4>
+              <h4 class="bdl-card-title">Original Resume</h4>
               <span class="bdl-coin-tag">1 Coin</span>
             </div>
-            <p class="bdl-card-desc">Downloads the original raw resume document without header branding or modifications.</p>
+            <p class="bdl-card-desc">Original candidate resume without any modifications.</p>
           </div>
         </label>
 
@@ -652,7 +652,7 @@
               <h4 class="bdl-card-title">Resume + Company Branding</h4>
               <span class="bdl-coin-tag">2 Coins</span>
             </div>
-            <p class="bdl-card-desc">Injects your company logo and verified in-house presentation banner at the top of page 1.</p>
+            <p class="bdl-card-desc">Original resume with your company branding.</p>
           </div>
         </label>
 
@@ -680,13 +680,13 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">In-House Evaluation Report</h4>
+              <h4 class="bdl-card-title">In-House Evaluation Report PDF</h4>
               <div class="bdl-badges">
                 <span class="bdl-badge-popular">POPULAR ★</span>
                 <span class="bdl-coin-tag">1 Coin</span>
               </div>
             </div>
-            <p class="bdl-card-desc">Stand-alone executive PDF dossier featuring evaluated skills matrix, gold star ratings, RM comments, and availability.</p>
+            <p class="bdl-card-desc">AI/Team evaluation report in PDF format.</p>
           </div>
         </label>
 
@@ -715,13 +715,13 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Recruiter Package + Company Branding</h4>
+              <h4 class="bdl-card-title">In-House Evaluation Report + Resume + Company Branding</h4>
               <div class="bdl-badges">
                 <span class="bdl-badge-package">BUNDLE</span>
                 <span class="bdl-coin-tag">3 Coins</span>
               </div>
             </div>
-            <p class="bdl-card-desc">Concatenates the In-House Evaluation Report dossier with the company-branded candidate resume.</p>
+            <p class="bdl-card-desc">Evaluation report and resume with company branding.</p>
           </div>
         </label>
 
@@ -738,10 +738,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Recruiter Package (Unbranded)</h4>
+              <h4 class="bdl-card-title">In-House Evaluation Report + Resume (No Branding)</h4>
               <span class="bdl-coin-tag">2 Coins</span>
             </div>
-            <p class="bdl-card-desc">Neutral evaluation dossier combined with original candidate resume without any company logo.</p>
+            <p class="bdl-card-desc">Evaluation report and resume without company branding.</p>
           </div>
         </label>
 
@@ -772,7 +772,7 @@
               <h4 class="bdl-card-title">Resume + Highlighted Keywords</h4>
               <span class="bdl-coin-tag">2 Coins</span>
             </div>
-            <p class="bdl-card-desc">Applies sub-pixel vector highlights across the resume text matching candidate's verified skills.</p>
+            <p class="bdl-card-desc">Resume with relevant skills highlighted.</p>
           </div>
         </label>
 
@@ -791,7 +791,7 @@
               <h4 class="bdl-card-title">Resume + Highlighted Keywords + Company Branding</h4>
               <span class="bdl-coin-tag">3 Coins</span>
             </div>
-            <p class="bdl-card-desc">Vector highlighted skill keywords with your corporate branding banner stamped on page 1.</p>
+            <p class="bdl-card-desc">Resume with highlighted skills and your company branding.</p>
           </div>
         </label>
 
@@ -807,13 +807,13 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">In-House Evaluation Report + Resume + Highlighted Keywords + Branding</h4>
+              <h4 class="bdl-card-title">In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</h4>
               <div class="bdl-badges">
                 <span class="bdl-badge-default">DEFAULT ★</span>
                 <span class="bdl-coin-tag">3 Coins</span>
               </div>
             </div>
-            <p class="bdl-card-desc">The authoritative hiring presentation: Full evaluation dossier + vector highlighted resume + corporate branding.</p>
+            <p class="bdl-card-desc">Evaluation report and resume with highlighted skills and company branding.</p>
           </div>
         </label>
 
@@ -832,10 +832,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Recruiter Package + Highlighted Keywords (Unbranded)</h4>
+              <h4 class="bdl-card-title">In-House Evaluation Report + Resume + Highlighted Keywords (No Branding)</h4>
               <span class="bdl-coin-tag">2 Coins</span>
             </div>
-            <p class="bdl-card-desc">Neutral evaluation dossier with vector highlighted skill keywords and zero branding.</p>
+            <p class="bdl-card-desc">Evaluation report and resume with highlighted skills without company branding.</p>
           </div>
         </label>
 
@@ -868,7 +868,7 @@
                 <span class="bdl-coin-tag">2 Coins</span>
               </div>
             </div>
-            <p class="bdl-card-desc">Redacts candidate phone numbers, primary & secondary email addresses, and external web links.</p>
+            <p class="bdl-card-desc">Remove phone, email and other contact details from resume.</p>
           </div>
         </label>
 
@@ -885,13 +885,13 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Hide Candidate Name & Contact Details (Blind Profile)</h4>
+              <h4 class="bdl-card-title">Hide Candidate Name & Contacts Details</h4>
               <div class="bdl-badges">
                 <span class="bdl-badge-conf">BLIND PROFILE</span>
                 <span class="bdl-coin-tag">2 Coins</span>
               </div>
             </div>
-            <p class="bdl-card-desc">100% confidential anti-poaching format: Redacts full candidate name, contact numbers, email, and social profiles.</p>
+            <p class="bdl-card-desc">Remove candidate name and all contact details.</p>
           </div>
         </label>
 
@@ -912,7 +912,7 @@
               <h4 class="bdl-card-title">Hide Contact Details + Company Branding</h4>
               <span class="bdl-coin-tag">3 Coins</span>
             </div>
-            <p class="bdl-card-desc">Contact channels redacted on high-resolution canvas with company branding stamped on header.</p>
+            <p class="bdl-card-desc">Remove contact details and add your company branding.</p>
           </div>
         </label>
 
@@ -929,10 +929,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Hide Contact Details + Evaluation Report + Company Branding</h4>
+              <h4 class="bdl-card-title">Hide Contact Details + In-House Evaluation Report + Company Branding</h4>
               <span class="bdl-coin-tag">3 Coins</span>
             </div>
-            <p class="bdl-card-desc">Evaluation report dossier merged with contact-redacted, company-branded candidate resume.</p>
+            <p class="bdl-card-desc">Evaluation report and branded resume with contacts hidden.</p>
           </div>
         </label>
 
@@ -949,10 +949,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Hide Contact Details + Evaluation Report (Unbranded)</h4>
+              <h4 class="bdl-card-title">Hide Contact Details + In-House Evaluation Report without Company Branding</h4>
               <span class="bdl-coin-tag">2 Coins</span>
             </div>
-            <p class="bdl-card-desc">Neutral evaluation dossier combined with contact-redacted resume with zero company branding.</p>
+            <p class="bdl-card-desc">Evaluation report and resume with contacts hidden (no branding).</p>
           </div>
         </label>
 
@@ -970,13 +970,13 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Full Privacy: Hide Contact + Dossier + Keywords + Branding</h4>
+              <h4 class="bdl-card-title">Hide Contact Details + In-House Evaluation Report + Highlighted Keywords + Company Branding</h4>
               <div class="bdl-badges">
                 <span class="bdl-badge-conf">ALL-IN-ONE</span>
                 <span class="bdl-coin-tag">4 Coins</span>
               </div>
             </div>
-            <p class="bdl-card-desc">Complete corporate suite: Evaluated skills highlighted first, PII redacted, branded, and merged with dossier.</p>
+            <p class="bdl-card-desc">Full privacy package: masked contacts, highlighted skills, report and branding.</p>
           </div>
         </label>
 
@@ -994,10 +994,10 @@
           </div>
           <div class="bdl-card-body">
             <div class="bdl-card-top">
-              <h4 class="bdl-card-title">Full Privacy (Unbranded): Hide Contact + Dossier + Keywords</h4>
+              <h4 class="bdl-card-title">Hide Contact Details + In-House Evaluation Report + Highlighted Keywords without Company Branding</h4>
               <span class="bdl-coin-tag">3 Coins</span>
             </div>
-            <p class="bdl-card-desc">Neutral confidential package: Skills highlighted, contact channels redacted, merged with neutral dossier.</p>
+            <p class="bdl-card-desc">Full privacy package without company branding.</p>
           </div>
         </label>
 
@@ -1013,7 +1013,7 @@
       {{-- IDLE SELECTION INFO --}}
       <div class="bdl-footer-sel-info" id="bdlFooterSelInfo">
         <span class="bdl-footer-sel-label">Selected Format:</span>
-        <span class="bdl-footer-sel-name" id="bdlFooterSelName">In-House Evaluation Report + Resume + Highlighted Keywords + Branding</span>
+        <span class="bdl-footer-sel-name" id="bdlFooterSelName">In-House Evaluation Report + Resume + Highlighted Keywords + Company Branding</span>
       </div>
 
       {{-- LIVE COMPILATION PROGRESS BAR --}}
