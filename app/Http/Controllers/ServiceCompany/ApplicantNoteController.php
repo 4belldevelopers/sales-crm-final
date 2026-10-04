@@ -106,7 +106,7 @@ class ApplicantNoteController extends ServiceCompanyBaseController
         $this->notes = ApplicantNote::with('user')->where('job_application_id', $request->id)->orderBy('id', 'desc')->take(15)->get();
 
         $companyId = auth()->user()->company_id ?? 0;
-        cache()->forget('tenant:'.$companyId.':candidate_details:'.$request->id);
+        $this->bustCandidateDrawerCache($request->id, $companyId);
 
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.noteAddSuccess'), ['view' => $view]);
@@ -132,7 +132,7 @@ class ApplicantNoteController extends ServiceCompanyBaseController
 
         $this->notes = ApplicantNote::with('user')->where('job_application_id', $note->job_application_id)->orderBy('id', 'desc')->take(15)->get();
 
-        cache()->forget('tenant:'.$companyId.':candidate_details:'.$note->job_application_id);
+        $this->bustCandidateDrawerCache($note->job_application_id, $companyId);
 
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.noteAddSuccess'), ['view' => $view]);
@@ -179,10 +179,24 @@ class ApplicantNoteController extends ServiceCompanyBaseController
             $this->notes = collect();
         }
 
-        cache()->forget('tenant:'.$companyId.':candidate_details:'.$note->job_application_id);
+        $this->bustCandidateDrawerCache($note->job_application_id, $companyId);
 
         $view = view('service_company.applicant_notes.show', $this->data)->render();
         return Reply::successWithData(__('messages.recordDeleted'), ['view' => $view]);
+    }
+
+    /**
+     * Atomically busts all tenant candidate drawer HTML caches across tracking pages
+     * to ensure updated recruiter comments appear instantly without stale data.
+     */
+    private function bustCandidateDrawerCache($applicationId, $companyId)
+    {
+        cache()->forget('tenant:'.$companyId.':candidate_details:'.$applicationId);
+        $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
+        $slugs = ['', 'cvtracker', 'apptracker', 'interview-schedule'];
+        foreach ($slugs as $slug) {
+            cache()->forget('tenant:'.$companyId.':candidate_details:'.$applicationId.':'.md5($slug).':view:'.$drawerViewVersion);
+        }
     }
 
 

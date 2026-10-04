@@ -5213,7 +5213,7 @@ setTimeout(() => {
       $rdcOriginalR2Available = true;
       $rdcOriginalR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
       $rdcR2PublicUrl = $rdcOriginalR2PublicUrl;
-      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
+      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '='), 'preview' => 1]);
       $rdcR2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
     } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
       $rdcResumeAvailable = true;
@@ -5227,7 +5227,7 @@ setTimeout(() => {
       }
     } else {
       $rdcResumeAvailable = true;
-      $rdcDownloadUrl = url($rdcResumeRaw);
+      $rdcDownloadUrl = route('service_company.cvtracker.resume', ['id' => $application->id, 'preview' => 1]);
     }
 
     if($rdcResumeAvailable){
@@ -5314,10 +5314,14 @@ setTimeout(() => {
     }
     return ['text'=>$raw,'value'=>0];
   };
+  $rsSeenSkillKeys = [];
   if(!empty($skillExperiencesCount) && !empty($skillExperiences)){
     foreach($skillExperiences as $exp){
       $exp=(object)$exp;
       $sn=trim((string)($exp->skill_key??'')); if(!$sn) continue;
+      $normKey = $rsSkillNormalize($sn);
+      if(isset($rsSeenSkillKeys[$normKey])) continue;
+      $rsSeenSkillKeys[$normKey] = true;
       $year=(int)($exp->year ?? 0);
       $month=(int)($exp->month ?? 0);
       if(isset($exp->total_months) && is_numeric($exp->total_months) && (int)$exp->total_months > 0){
@@ -5336,6 +5340,9 @@ setTimeout(() => {
   if(empty($rsSkills)&&!empty($jobSkill)){
     foreach($jobSkill as $sv){
       $sv=(object)$sv; $sn=trim((string)($sv->skill_name??'')); if(!$sn) continue;
+      $normKey = $rsSkillNormalize($sn);
+      if(isset($rsSeenSkillKeys[$normKey])) continue;
+      $rsSeenSkillKeys[$normKey] = true;
       $expData=$rsParseSkillExperience($sv->skill_value??'');
       $rsSkills[]=[
         'name'=>$sn,
@@ -5347,7 +5354,11 @@ setTimeout(() => {
   }
   if(empty($rsSkills)&&!empty($application->skills)){
     foreach(array_slice(array_values(array_filter(array_map('trim',explode(',', $application->skills)))),0,12) as $sn){
-      if($sn) $rsSkills[]=['name'=>$sn,'expText'=>'--','exp'=>0,'rating'=>0];
+      $normKey = $rsSkillNormalize($sn);
+      if($sn && !isset($rsSeenSkillKeys[$normKey])) {
+        $rsSeenSkillKeys[$normKey] = true;
+        $rsSkills[]=['name'=>$sn,'expText'=>'--','exp'=>0,'rating'=>0];
+      }
     }
   }
   $rsMatchPct = (!empty($__hdrOverallPct) && (int)$__hdrOverallPct > 0) ? (int)$__hdrOverallPct : (int)round((float)(@$application->skill_match??0));
@@ -6799,12 +6810,35 @@ function buildSkillRows(skills){
       {text:'RATING',style:'tableHead',alignment:'center'}
     ]
   ];
-  skills=(skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).slice(0,7);
-  if(!skills.length){
+  // Strict deduplication by normalized lowercase name - prevents repeating skills
+  var skillMap = new Map();
+  (skills || []).forEach(function (skill) {
+    var rawName = clean(skill && (skill.name || skill.skill_name || skill.skill_key), '');
+    var normKey = rawName.toLowerCase().trim();
+    if (!normKey) return;
+
+    var rating = safeNumber(skill.rating, 0, 5);
+    var exp = Number(skill.exp || 0);
+    var expText = clean(skill.expText || skill.skill_value, '');
+
+    if (!skillMap.has(normKey)) {
+      skillMap.set(normKey, { name: rawName, rating: rating, exp: exp, expText: expText });
+    } else {
+      var existing = skillMap.get(normKey);
+      if (rating > existing.rating) existing.rating = rating;
+      if (exp > existing.exp) {
+        existing.exp = exp;
+        existing.expText = expText;
+      }
+    }
+  });
+
+  var uniqueSkills = Array.from(skillMap.values()).slice(0, 7);
+  if(!uniqueSkills.length){
     rows.push([{text:'No skill intelligence available in current candidate data.',colSpan:3,style:'muted',margin:[0,6,0,6]},{},{}]);
     return rows;
   }
-  skills.forEach(function(skill){
+  uniqueSkills.forEach(function(skill){
     var rating=safeNumber(skill.rating,0,5);
     var exp=Number(skill.exp||0);
     var expText=clean(skill.expText,'');
@@ -9837,7 +9871,7 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
       rdcData.setAttribute('data-original-r2-available', originalR2Available ? 'true' : 'false');
     }
     if(optMeta[1]){
-      optMeta[1].avail = originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl);
+      optMeta[1].avail = (originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl)) || !!dlUrl;
     }
     [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53].forEach(function(id){
       if(optMeta[id]){
