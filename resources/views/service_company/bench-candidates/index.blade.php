@@ -62,18 +62,31 @@
         .bench-dash .kpi-vs { color: #a1a5b7; font-weight: 500; }
 
         /* In-House Talent hero: one compact connected journey, scoped to this page. */
-        /* In-House Talent hero: page header & actions (Exact Design Replica) */
-        .bench-dash .talent-hero-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 2px 16px; }
+        /* In-House Talent hero: page header & actions (Card Design) */
+        .bench-dash .talent-hero-card {
+            background: #ffffff;
+            border: 1px solid #eef0f4;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+        .bench-dash .talent-hero-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 0;
+        }
         .bench-dash .talent-hero-heading { min-width: 0; }
-        .bench-dash .talent-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .bench-dash .talent-title { margin: 0; color: #181c32; font-size: 24px !important; font-weight: 700; line-height: 1.2; }
-        .bench-dash .talent-info { color: #8e9bb2; font-size: 15px !important; }
-        .bench-dash .talent-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; color: #059669; background: #d1fae5; font-size: 11.5px !important; font-weight: 600; }
-        .bench-dash .talent-subtitle { margin: 4px 0 0; color: #7e8299; font-size: 13px !important; }
+        .bench-dash .talent-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .bench-dash .talent-title { margin: 0; color: #181c32; font-size: 22px !important; font-weight: 700; line-height: 1.2; }
+        .bench-dash .talent-info { color: #8e9bb2; font-size: 14px !important; cursor: pointer; }
+        .bench-dash .talent-subtitle { margin: 4px 0 0; color: #7e8299; font-size: 12.5px !important; }
         .bench-dash .talent-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .bench-dash .talent-hero-actions .btn-add { background: #006ae6; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 13px !important; font-weight: 600; height: 38px; display: inline-flex; align-items: center; gap: 7px; border: none; transition: background 0.15s ease; }
+        .bench-dash .talent-hero-actions .btn-add { background: #006ae6; color: #fff; border-radius: 8px; padding: 0 16px; font-size: 12.5px !important; font-weight: 600; height: 38px; display: inline-flex; align-items: center; gap: 7px; border: none; transition: background 0.15s ease; }
         .bench-dash .talent-hero-actions .btn-add:hover { background: #0056b3; color: #fff; }
-        .bench-dash .talent-hero-actions .btn-ghost { border: 1px solid #dce6f5; background: #fff; color: #5e6278; border-radius: 8px; padding: 0 14px; font-size: 13px !important; font-weight: 500; height: 38px; display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s ease; }
+        .bench-dash .talent-hero-actions .btn-ghost { border: 1px solid #dce6f5; background: #fff; color: #5e6278; border-radius: 8px; padding: 0 14px; font-size: 12.5px !important; font-weight: 500; height: 38px; display: inline-flex; align-items: center; gap: 7px; transition: all 0.15s ease; }
         .bench-dash .talent-hero-actions .btn-ghost:hover { border-color: #b9d5fb; color: #006ae6; }
         .bench-dash .hero-more { position: relative; }
         .bench-dash .hero-more summary { list-style: none; cursor: pointer; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #dce6f5; border-radius: 8px; background: #fff; color: #5e6278; transition: border-color 0.15s ease; }
@@ -232,6 +245,7 @@
             padding: 6px 12px;
             border-radius: 6px;
             min-height: 32px;
+            height: 32px;
         }
         .overview-section-header.banner-blue {
             background: #eff6ff;
@@ -279,15 +293,15 @@
             grid-template-columns: repeat(4, 1fr);
         }
 
-        /* Metric KPI card */
+        /* Metric KPI card: Row 1 = icon + number, Row 2 = subtext */
         .overview-kpi-card {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 12px;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px 12px;
             border-radius: 8px;
             border: 1px solid transparent;
-            min-height: 66px;
+            min-height: 72px;
             transition: all 0.15s ease;
             user-select: none;
         }
@@ -302,9 +316,17 @@
             border-color: #3e97ff;
             box-shadow: 0 0 0 1px #3e97ff inset;
         }
+
+        /* Row 1: Icon and Number side-by-side */
+        .overview-kpi-card .kpi-row-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1;
+        }
         .overview-kpi-card .kpi-circle-icon {
-            width: 36px;
-            height: 36px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -312,26 +334,26 @@
             flex-shrink: 0;
         }
         .overview-kpi-card .kpi-circle-icon i {
-            font-size: 15px !important;
-        }
-        .overview-kpi-card .kpi-content {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-width: 0;
+            font-size: 11.5px !important;
         }
         .overview-kpi-card .kpi-num {
-            font-size: 22px !important;
+            font-size: 20px !important;
             font-weight: 700;
             color: #181c32;
-            line-height: 1.1;
-            display: block;
+            line-height: 1;
+            display: inline-block;
+        }
+
+        /* Row 2: Subtext on complete second row */
+        .overview-kpi-card .kpi-row-bottom {
+            margin-top: 6px;
+            width: 100%;
         }
         .overview-kpi-card .kpi-label {
             font-size: 11px !important;
             font-weight: 500;
             color: #5e6278;
-            margin-top: 3px;
+            line-height: 1.25;
             display: block;
             white-space: nowrap;
             overflow: hidden;
@@ -528,6 +550,12 @@
 
         /* Fit smaller / 15.6" laptops */
         @media only screen and (max-width: 1440px) {
+            .bench-dash .talent-title { font-size: 20px !important; }
+            .overview-kpi-card { padding: 8px 10px; min-height: 66px; }
+            .overview-kpi-card .kpi-num { font-size: 18px !important; }
+            .overview-kpi-card .kpi-label { font-size: 10.5px !important; }
+            .overview-kpi-card .kpi-circle-icon { width: 24px; height: 24px; }
+            .overview-kpi-card .kpi-circle-icon i { font-size: 10.5px !important; }
             .bench-dash .num { font-size: 16px !important; }
             .bench-dash .money { font-size: 14px !important; }
             .bench-dash #benchListingTable tbody td, .bench-dash #benchListingTable a { font-size: 11px !important; }
@@ -796,33 +824,34 @@
         <div class="post d-flex flex-column-fluid" id="kt_post">
             <div id="kt_content_container" class="container-fluid px-5">
 
-                <!-- In-House Talent hero -->
-                <div class="talent-hero-header">
-                    <div class="talent-hero-heading">
-                        <div class="talent-title-row">
-                            <h1 class="talent-title">In-House Talent</h1>
-                            <i class="fa fa-circle-info talent-info" title="Manage your talent pool, bench availability, marketplace activity and placements."></i>
-                            <span class="talent-badge"><i class="fa fa-house"></i> In-House Talent</span>
-                        </div>
-                        <p class="talent-subtitle">Manage your talent pool, bench availability, marketplace activity and placements.</p>
-                    </div>
-                    <div class="talent-hero-actions">
-                        <input type="hidden" id="inputSearch" name="inputSearch" />
-                        @if (in_array('view_bench', $userPermissions))
-                            <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
-                                <i class="fa fa-plus"></i> Add Talent
-                            </a>
-                        @endif
-                        <button type="button" class="btn-ghost" id="exportTalents">
-                            <i class="fa fa-file-export"></i> Export
-                        </button>
-                        <details class="hero-more">
-                            <summary aria-label="More actions"><i class="fa fa-ellipsis"></i></summary>
-                            <div class="hero-more-menu">
-                                <a href="{{ route('service_company.bench-candidates.index', ['hero_month' => $heroMonth, 'performance_window' => $performanceWindow]) }}">Refresh performance</a>
-                                <a href="{{ route('service_company.bench-candidates.index') }}">Reset period</a>
+                <!-- In-House Talent hero card -->
+                <div class="jw-card talent-hero-card mb-3">
+                    <div class="talent-hero-header">
+                        <div class="talent-hero-heading">
+                            <div class="talent-title-row">
+                                <h1 class="talent-title">In-House Talent</h1>
+                                <i class="fa fa-circle-info talent-info" title="Manage your talent pool, bench availability, marketplace activity and placements."></i>
                             </div>
-                        </details>
+                            <p class="talent-subtitle">Manage your talent pool, bench availability, marketplace activity and placements.</p>
+                        </div>
+                        <div class="talent-hero-actions">
+                            <input type="hidden" id="inputSearch" name="inputSearch" />
+                            @if (in_array('view_bench', $userPermissions))
+                                <a href="javascript:void(0);" class="btn-add" id="AddInternalPool">
+                                    <i class="fa fa-plus"></i> Add In-house Talent
+                                </a>
+                            @endif
+                            <button type="button" class="btn-ghost" id="exportTalents">
+                                <i class="fa fa-file-export"></i> Export
+                            </button>
+                            <details class="hero-more">
+                                <summary aria-label="More actions"><i class="fa fa-ellipsis"></i></summary>
+                                <div class="hero-more-menu">
+                                    <a href="{{ route('service_company.bench-candidates.index', ['hero_month' => $heroMonth, 'performance_window' => $performanceWindow]) }}">Refresh performance</a>
+                                    <a href="{{ route('service_company.bench-candidates.index') }}">Reset period</a>
+                                </div>
+                            </details>
+                        </div>
                     </div>
                 </div>
 
@@ -888,26 +917,29 @@
                                         <i class="fa fa-users text-blue"></i>
                                         <span class="banner-title text-blue">TALENT POOL</span>
                                     </div>
-                                    <span class="banner-subtext">Your total talent and bench availability</span>
                                 </div>
                                 <div class="overview-cards-grid grid-2">
                                     <!-- Total Talent -->
                                     <div class="overview-kpi-card kpi-bg-blue kpi-filter active" data-rel="all" id="kpi_all" title="Filter to All Talents">
-                                        <div class="kpi-circle-icon circle-blue">
-                                            <i class="fa fa-users"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-blue">
+                                                <i class="fa fa-users"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="talent" id="kpival_all">{{ $heroStages['talent']['available'] ? number_format($heroStages['talent']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Total Talent</span>
                                         </div>
                                     </div>
                                     <!-- Marketplace Ready -->
                                     <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="2" id="kpi_2" title="Filter to Marketplace Ready">
-                                        <div class="kpi-circle-icon circle-amber">
-                                            <i class="fa fa-briefcase"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-amber">
+                                                <i class="fa fa-briefcase"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="bench" id="kpival_2">{{ $heroStages['bench']['available'] ? number_format($heroStages['bench']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Marketplace Ready</span>
                                         </div>
                                     </div>
@@ -926,41 +958,49 @@
                                 <div class="overview-cards-grid grid-4">
                                     <!-- Requests Sent -->
                                     <div class="overview-kpi-card kpi-bg-sky" title="Requests Sent">
-                                        <div class="kpi-circle-icon circle-sky">
-                                            <i class="fa fa-paper-plane"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-sky">
+                                                <i class="fa fa-paper-plane"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="sent">{{ $heroStages['sent']['available'] ? number_format($heroStages['sent']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Requests Sent</span>
                                         </div>
                                     </div>
                                     <!-- Requests Accepted -->
                                     <div class="overview-kpi-card kpi-bg-green" title="Requests Accepted">
-                                        <div class="kpi-circle-icon circle-green">
-                                            <i class="fa fa-circle-check"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-green">
+                                                <i class="fa fa-circle-check"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="accepted">{{ $heroStages['accepted']['available'] ? number_format($heroStages['accepted']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Requests Accepted</span>
                                         </div>
                                     </div>
                                     <!-- Requests Expired -->
                                     <div class="overview-kpi-card kpi-bg-red" title="Requests Expired">
-                                        <div class="kpi-circle-icon circle-red">
-                                            <i class="fa fa-clock"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-red">
+                                                <i class="fa fa-clock"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="expired">{{ $heroStages['expired']['available'] ? number_format($heroStages['expired']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Requests Expired</span>
                                         </div>
                                     </div>
                                     <!-- Profile Views -->
                                     <div class="overview-kpi-card kpi-bg-violet" title="All-time Profile Views">
-                                        <div class="kpi-circle-icon circle-violet">
-                                            <i class="fa fa-eye"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-violet">
+                                                <i class="fa fa-eye"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="views">{{ $heroStages['views']['available'] ? number_format($heroStages['views']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Profile Views</span>
                                         </div>
                                     </div>
@@ -974,26 +1014,29 @@
                                         <i class="fa fa-trophy text-green"></i>
                                         <span class="banner-title text-green">HIRING OUTCOMES</span>
                                     </div>
-                                    <span class="banner-subtext">Your hiring progress from engagement to placement</span>
                                 </div>
                                 <div class="overview-cards-grid grid-2">
                                     <!-- Interviews -->
                                     <div class="overview-kpi-card kpi-bg-indigo" title="Interviews">
-                                        <div class="kpi-circle-icon circle-indigo">
-                                            <i class="fa fa-user-tie"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-indigo">
+                                                <i class="fa fa-user-tie"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="interviews">{{ $heroStages['interviews']['available'] ? number_format($heroStages['interviews']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Interviews</span>
                                         </div>
                                     </div>
                                     <!-- Placed -->
                                     <div class="overview-kpi-card kpi-bg-amber kpi-filter" data-rel="3" id="kpi_3" title="Filter to Placed">
-                                        <div class="kpi-circle-icon circle-gold">
-                                            <i class="fa fa-trophy"></i>
-                                        </div>
-                                        <div class="kpi-content">
+                                        <div class="kpi-row-top">
+                                            <div class="kpi-circle-icon circle-gold">
+                                                <i class="fa fa-trophy"></i>
+                                            </div>
                                             <span class="kpi-num" data-pipeline-stage="placed" id="kpival_3">{{ $heroStages['placed']['available'] ? number_format($heroStages['placed']['value']) : '—' }}</span>
+                                        </div>
+                                        <div class="kpi-row-bottom">
                                             <span class="kpi-label">Placed</span>
                                         </div>
                                     </div>
