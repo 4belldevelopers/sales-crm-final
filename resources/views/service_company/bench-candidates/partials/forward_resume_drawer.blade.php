@@ -890,9 +890,39 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
   font-weight: 600;
   font-family: 'Poppins', sans-serif;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 .bench-rcp-toggle-btn:hover { background: #EFF6FF; border-color: #2563EB; }
 .bench-rcp-toggle-btn.is-added { background: #DCFCE7; border-color: #86EFAC; color: #16A34A; }
+.bench-rcp-toggle-btn.is-in-other { background: #F8FAFC !important; border-color: #E2E8F0 !important; color: #94A3B8 !important; cursor: not-allowed !important; }
+.bench-rcp-toggle-btn.is-limit-reached { background: #FFFBEB !important; border-color: #FDE68A !important; color: #D97706 !important; }
+
+/* Deliverability Recipient Badges */
+.bench-rcp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  white-space: nowrap;
+  letter-spacing: 0.1px;
+  transition: all 0.2s ease;
+}
+.bench-rcp-badge.is-full {
+  background: #FEF3C7;
+  color: #B45309;
+  border-color: #FCD34D;
+}
+.bench-rcp-badge.is-exceeded {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FCA5A5;
+}
 .bench-rcp-footer {
   display: flex;
   align-items: center;
@@ -971,13 +1001,20 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         To Email ID <span class="bench-mm-req">*</span>
       </div>
       <div class="bench-mm-field-col">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11px;color:#64748B;">Primary recipients</span>
+          <span class="bench-rcp-badge" id="bench_fwd_recipients_badge">0 / 5 Recipients (Max)</span>
+        </div>
         <div class="bench-mm-tag-box" id="bench_to_email_tag_box" onclick="$('#bench_to_email_input').focus();">
           <div class="bench-mm-tag-list" id="bench_to_email_tags"></div>
           <input type="text" class="bench-mm-tag-input" id="bench_to_email_input" placeholder="Type recipient email and press Enter...">
           <a href="javascript:;" class="bench-mm-add-email-btn" onclick="openBenchRecipientDrawer('to')">+ Add Email</a>
         </div>
         <input type="hidden" name="to_email" id="bench_to_email" value="">
-        <div class="bench-mm-hint">Type email address and press Enter or comma, or click "+ Add Email"</div>
+        <div class="bench-mm-hint d-flex justify-content-between align-items-center">
+          <span>Type email and press Enter or comma, or click "+ Add Email"</span>
+          <span style="color:#059669;font-weight:500;font-size:10.5px;">Deliverability Safeguard: Max 5 Total (To + CC)</span>
+        </div>
       </div>
     </div>
 
@@ -996,7 +1033,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           <a href="javascript:;" class="bench-mm-add-email-btn" onclick="openBenchRecipientDrawer('cc')">+ Add Email</a>
         </div>
         <input type="hidden" name="cc_email" id="bench_cc_email" value="{{ $cc_email }}">
-        <div class="bench-mm-hint">Type CC address and press Enter or comma, or click "+ Add Email"</div>
+        <div class="bench-mm-hint">Type CC address and press Enter or comma, or click "+ Add Email" (Shares the 5-recipient quota)</div>
       </div>
     </div>
 
@@ -1551,9 +1588,12 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 <div id="kt_bench_recipient_drawer">
   <div class="bench-rcp-container">
     <div class="bench-rcp-header">
-      <div>
-        <h4 class="bench-rcp-header-title">Select Email Recipient</h4>
-        <p class="bench-rcp-header-subtitle">Choose from internal team or client contacts</p>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <h4 class="bench-rcp-header-title">Select Email Recipient</h4>
+          <span class="bench-rcp-badge" id="bench_rcp_drawer_badge">0 / 5 Selected</span>
+        </div>
+        <p class="bench-rcp-header-subtitle">Choose from internal team or client contacts (Max 5 total across To &amp; CC)</p>
       </div>
       <button type="button" class="bench-rcp-close-btn" onclick="closeBenchRecipientDrawer()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1749,6 +1789,60 @@ window.openBenchOriginalResume = function(candId) {
     window.open('/service_company/bench-candidates/download/' + cId, '_blank');
 };
 
+// Deliverability safeguard: Maximum 5 total recipients (To + CC combined)
+var MAX_BENCH_TOTAL_RECIPIENTS = 5;
+
+function getBenchTotalRecipientCount() {
+    return benchToEmails.length + benchCcEmails.length;
+}
+
+function updateBenchRecipientBadges() {
+    var total = getBenchTotalRecipientCount();
+    var badgeText = total + ' / ' + MAX_BENCH_TOTAL_RECIPIENTS + ' Recipients' + (total >= MAX_BENCH_TOTAL_RECIPIENTS ? ' (Limit)' : '');
+    var drawerBadgeText = total + ' / ' + MAX_BENCH_TOTAL_RECIPIENTS + ' Selected';
+
+    var $badge = $('#bench_fwd_recipients_badge');
+    var $drawerBadge = $('#bench_rcp_drawer_badge');
+
+    $badge.text(badgeText);
+    $drawerBadge.text(drawerBadgeText);
+
+    if (total >= MAX_BENCH_TOTAL_RECIPIENTS) {
+        $badge.addClass('is-full');
+        $drawerBadge.addClass('is-full');
+    } else {
+        $badge.removeClass('is-full is-exceeded');
+        $drawerBadge.removeClass('is-full is-exceeded');
+    }
+}
+
+function notifyBenchRecipientLimitReached(customMsg) {
+    var current = getBenchTotalRecipientCount();
+    var msg = customMsg || ('To maintain high email deliverability and avoid spam classification, a maximum of ' + MAX_BENCH_TOTAL_RECIPIENTS + ' recipients (To and CC combined) can be included per dispatch. You currently have ' + current + ' of ' + MAX_BENCH_TOTAL_RECIPIENTS + ' recipients selected.');
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Recipient Limit Reached (Max ' + MAX_BENCH_TOTAL_RECIPIENTS + ')',
+            html: '<div style="font-size:13px;color:#374151;line-height:1.55;text-align:left;margin-top:6px;">' +
+                  '<p style="margin:0 0 10px 0;">' + msg + '</p>' +
+                  '<div style="padding:10px 12px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:6px;color:#92400E;font-size:11.5px;font-weight:500;line-height:1.45;">' +
+                  '🛡️ <strong>Deliverability Protection:</strong> Bulk multi-recipient emails sent from ATS domains trigger ESP spam filters and damage IP sender reputation. Limit to 5 key decision-makers for guaranteed inbox placement.' +
+                  '</div>' +
+                  '</div>',
+            confirmButtonText: 'Understood',
+            customClass: {
+                confirmButton: 'btn btn-primary font-weight-bold'
+            },
+            buttonsStyling: false
+        });
+    } else if (typeof toastr !== 'undefined') {
+        toastr.warning(msg, 'Recipient Limit Reached');
+    } else {
+        alert(msg);
+    }
+}
+
 // Initialize chips if values exist
 function renderBenchTags(target) {
     var list = (target === 'to') ? benchToEmails : benchCcEmails;
@@ -1766,16 +1860,69 @@ function renderBenchTags(target) {
     });
 
     hiddenInput.val(list.join(','));
+    updateBenchRecipientBadges();
     syncBenchRecipientDrawerButtons();
 }
 
-function addBenchEmailTag(target, email) {
-    var clean = (email || '').trim().replace(/,/g, '');
-    if (!clean) return;
-    var list = (target === 'to') ? benchToEmails : benchCcEmails;
-    if (list.indexOf(clean) === -1) {
-        list.push(clean);
+function addBenchEmailTag(target, rawInput) {
+    if (!rawInput) return;
+    var tokens = String(rawInput).split(/[,;\s\n\r]+/).map(function(s) {
+        return s.trim().replace(/[<>]/g, '');
+    }).filter(function(s) {
+        return s.length > 0;
+    });
+
+    if (tokens.length === 0) return;
+
+    var targetList = (target === 'to') ? benchToEmails : benchCcEmails;
+    var otherList = (target === 'to') ? benchCcEmails : benchToEmails;
+    var otherLabel = (target === 'to') ? 'CC' : 'To';
+
+    var addedCount = 0;
+    var skippedLimit = 0;
+    var skippedDuplicate = 0;
+    var skippedInOther = 0;
+
+    tokens.forEach(function(item) {
+        var clean = item.toLowerCase().trim();
+        if (!clean) return;
+
+        // Duplicate check in current list
+        if (targetList.indexOf(clean) !== -1) {
+            skippedDuplicate++;
+            return;
+        }
+
+        // Already present in opposite list
+        if (otherList.indexOf(clean) !== -1) {
+            skippedInOther++;
+            return;
+        }
+
+        // Quota check
+        if (getBenchTotalRecipientCount() >= MAX_BENCH_TOTAL_RECIPIENTS) {
+            skippedLimit++;
+            return;
+        }
+
+        targetList.push(clean);
+        addedCount++;
+    });
+
+    if (addedCount > 0) {
         renderBenchTags(target);
+    }
+
+    if (skippedLimit > 0) {
+        notifyBenchRecipientLimitReached(
+            'Maximum ' + MAX_BENCH_TOTAL_RECIPIENTS + ' recipients allowed across To and CC combined. ' +
+            (addedCount > 0 ? ('Successfully added ' + addedCount + ' recipient(s), but ') : '') +
+            skippedLimit + ' recipient(s) were not added because the limit was reached.'
+        );
+    } else if (skippedInOther > 0 && addedCount === 0) {
+        if (typeof toastr !== 'undefined') {
+            toastr.info('Email address is already included in the ' + otherLabel + ' list.', 'Recipient Notice');
+        }
     }
 }
 
@@ -1785,7 +1932,7 @@ function removeBenchEmailTag(target, idx) {
     renderBenchTags(target);
 }
 
-// Input keyboard handler (Enter, comma, blur)
+// Input keyboard handler (Enter, comma, blur, paste)
 $('#bench_to_email_input').on('keydown', function(e) {
     if (e.key === 'Enter' || e.key === ',') {
         e.preventDefault();
@@ -1797,6 +1944,13 @@ $('#bench_to_email_input').on('keydown', function(e) {
 }).on('blur', function() {
     if ($(this).val()) {
         addBenchEmailTag('to', $(this).val());
+        $(this).val('');
+    }
+}).on('paste', function(e) {
+    var pasteData = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+    if (pasteData) {
+        e.preventDefault();
+        addBenchEmailTag('to', pasteData);
         $(this).val('');
     }
 });
@@ -1814,12 +1968,20 @@ $('#bench_cc_email_input').on('keydown', function(e) {
         addBenchEmailTag('cc', $(this).val());
         $(this).val('');
     }
+}).on('paste', function(e) {
+    var pasteData = (e.originalEvent || e).clipboardData ? (e.originalEvent || e).clipboardData.getData('text') : '';
+    if (pasteData) {
+        e.preventDefault();
+        addBenchEmailTag('cc', pasteData);
+        $(this).val('');
+    }
 });
 
 // Recipient drawer slide-in / out
 function openBenchRecipientDrawer(target) {
     activeBenchRecipientTarget = target || 'to';
     syncBenchRecipientDrawerButtons();
+    updateBenchRecipientBadges();
     $('#kt_bench_recipient_drawer').css('display', 'block');
 }
 
@@ -1850,24 +2012,84 @@ function filterBenchRecipients(query) {
 }
 
 function toggleBenchRecipient(email, btn) {
-    var list = (activeBenchRecipientTarget === 'to') ? benchToEmails : benchCcEmails;
-    var idx = list.indexOf(email);
+    var clean = (email || '').toLowerCase().trim();
+    if (!clean) return;
+
+    var targetList = (activeBenchRecipientTarget === 'to') ? benchToEmails : benchCcEmails;
+    var otherList = (activeBenchRecipientTarget === 'to') ? benchCcEmails : benchToEmails;
+    var otherLabel = (activeBenchRecipientTarget === 'to') ? 'CC' : 'To';
+
+    var idx = targetList.indexOf(clean);
     if (idx !== -1) {
-        list.splice(idx, 1);
-    } else {
-        list.push(email);
+        // Toggle off / remove
+        targetList.splice(idx, 1);
+        renderBenchTags(activeBenchRecipientTarget);
+        return;
     }
+
+    // Already in opposite field
+    if (otherList.indexOf(clean) !== -1) {
+        if (typeof toastr !== 'undefined') {
+            toastr.warning('This contact is already added in ' + otherLabel + '.', 'Recipient Notice');
+        } else {
+            alert('This contact is already added in ' + otherLabel + '.');
+        }
+        return;
+    }
+
+    // Check limit
+    if (getBenchTotalRecipientCount() >= MAX_BENCH_TOTAL_RECIPIENTS) {
+        notifyBenchRecipientLimitReached(
+            'Cannot add ' + clean + '. A maximum of ' + MAX_BENCH_TOTAL_RECIPIENTS + ' recipients (To & CC combined) can be selected per dispatch to maintain email deliverability.'
+        );
+        return;
+    }
+
+    // Add recipient
+    targetList.push(clean);
     renderBenchTags(activeBenchRecipientTarget);
 }
 
 function syncBenchRecipientDrawerButtons() {
-    var list = (activeBenchRecipientTarget === 'to') ? benchToEmails : benchCcEmails;
+    var currentTarget = activeBenchRecipientTarget;
+    var targetList = (currentTarget === 'to') ? benchToEmails : benchCcEmails;
+    var otherList = (currentTarget === 'to') ? benchCcEmails : benchToEmails;
+    var otherLabel = (currentTarget === 'to') ? 'In CC' : 'In To';
+    var total = getBenchTotalRecipientCount();
+    var isMaxReached = (total >= MAX_BENCH_TOTAL_RECIPIENTS);
+
     $('.bench-rcp-toggle-btn').each(function() {
-        var email = $(this).attr('data-email');
-        if (list.indexOf(email) !== -1) {
-            $(this).addClass('is-added').text('Added ✓');
+        var email = ($(this).attr('data-email') || '').toLowerCase().trim();
+        if (targetList.indexOf(email) !== -1) {
+            $(this)
+                .removeClass('is-in-other is-limit-reached')
+                .addClass('is-added')
+                .text('Added ✓')
+                .prop('disabled', false)
+                .attr('title', 'Click to remove recipient');
+        } else if (otherList.indexOf(email) !== -1) {
+            $(this)
+                .removeClass('is-added is-limit-reached')
+                .addClass('is-in-other')
+                .text(otherLabel)
+                .prop('disabled', true)
+                .attr('title', 'Already added in ' + (currentTarget === 'to' ? 'CC' : 'To'));
         } else {
-            $(this).removeClass('is-added').text('+ Add');
+            $(this)
+                .removeClass('is-added is-in-other')
+                .prop('disabled', false);
+
+            if (isMaxReached) {
+                $(this)
+                    .addClass('is-limit-reached')
+                    .text('+ Add')
+                    .attr('title', 'Recipient limit of ' + MAX_BENCH_TOTAL_RECIPIENTS + ' reached');
+            } else {
+                $(this)
+                    .removeClass('is-limit-reached')
+                    .text('+ Add')
+                    .attr('title', 'Add to ' + (currentTarget === 'to' ? 'To' : 'CC'));
+            }
         }
     });
 }
@@ -2404,9 +2626,15 @@ async function onBenchFwdSubmitClick(e) {
     }
 
     var toEmail = $('#bench_to_email').val();
-    if (!toEmail) {
+    if (!toEmail || benchToEmails.length === 0) {
         Swal.fire('Recipient Required', 'Please enter at least one recipient email address (To).', 'warning');
         $('#bench_to_email_input').focus();
+        return;
+    }
+
+    var totalRecipients = getBenchTotalRecipientCount();
+    if (totalRecipients > MAX_BENCH_TOTAL_RECIPIENTS) {
+        notifyBenchRecipientLimitReached('You have selected ' + totalRecipients + ' recipients, which exceeds the deliverability limit of ' + MAX_BENCH_TOTAL_RECIPIENTS + ' recipients (To and CC combined). Please remove ' + (totalRecipients - MAX_BENCH_TOTAL_RECIPIENTS) + ' recipient(s) before sending.');
         return;
     }
 
@@ -2555,6 +2783,20 @@ function closeBenchFwdResumeDrawer() {
 
 // Auto-initialize format selection matching default state in design (Option 4.c / ID 46)
 setTimeout(function() {
+    // Initialize CC email list if provided
+    var initCc = @json($cc_email ?? '');
+    if (initCc && typeof initCc === 'string' && initCc.trim()) {
+        initCc.split(',').forEach(function(em) {
+            var clean = em.trim().toLowerCase();
+            if (clean && benchCcEmails.indexOf(clean) === -1 && (benchToEmails.length + benchCcEmails.length) < MAX_BENCH_TOTAL_RECIPIENTS) {
+                benchCcEmails.push(clean);
+            }
+        });
+    }
+    renderBenchTags('to');
+    renderBenchTags('cc');
+    updateBenchRecipientBadges();
+
     var anyHasResume = _benchCandidatesList.some(function(c) { return !!c.has_resume; });
     if (anyHasResume) {
         selectBenchResumeFormat(46, null, false);
