@@ -2342,9 +2342,9 @@
   // ═══════════════════════════════════════════════════════════════════════════
   /**
    * Universal Resume Processor.
-   * Dispatches any of the 15 ATS resume options with pixel-perfect uniformity.
+   * Dispatches any of the 16 ATS resume options with pixel-perfect uniformity.
    *
-   * @param {number|string} optNum - Option number (1, 5, 41-53)
+   * @param {number|string} optNum - Option number (1, 5, 41-54)
    * @param {object} data - Normalized candidate profile & company branding data
    * @param {object} options - Execution options:
    *   - resumeUrl: URL or array of URLs to fetch the resume file from
@@ -2440,7 +2440,7 @@
     var outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     // ═════════════════════════════════════════════════════════════════════════
-    // DISPATCHER BY OPTION ID (1, 41 - 53)
+    // DISPATCHER BY OPTION ID (1, 41 - 54)
     // ═════════════════════════════════════════════════════════════════════════
     if (optNum === 1) {
       // Option 1: Original Resume
@@ -2716,6 +2716,39 @@
         });
       }
       if (options.statusCallback) options.statusCallback('Merging Report & Anonymized Highlighted Resume (90%)...');
+      var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
+      var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
+      if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {
+        mergedBlob = await enforcePdfSizeLimit(mergedBlob, AGY_MAX_ATTACHMENT_BYTES, options.statusCallback);
+      }
+      mergedBlob.filename = mergedName;
+      if (options.returnBlob) return mergedBlob;
+      downloadBlob(mergedBlob, mergedName);
+      return true;
+
+    } else if (optNum === 54) {
+      // Option 54: Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding
+      if (options.statusCallback) options.statusCallback('Generating Unbranded Pre-Screened Report (20%)...');
+      var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true });
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+      var resumeBlob = null;
+      if (resumeExt === 'PDF') {
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        var highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          keywords: allKeywords,
+          statusCallback: options.statusCallback
+        });
+        resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
+      } else {
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+      if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Anonymized Highlighted Resume (90%)...');
       var mergedName = resumeTrackingFileName(data, 'PRESCREEN', 'pdf');
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
       if (mergedBlob.size > AGY_MAX_ATTACHMENT_BYTES && mergedBlob.type === 'application/pdf') {

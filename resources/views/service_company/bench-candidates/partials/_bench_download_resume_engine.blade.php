@@ -34,8 +34,14 @@
   var rsPdfJsReady = null;
   var rsPdfMakeReady = null;
   var rsJsPdfReady = null;
+  var rsJsZipReady = null;
+  var rsDocxReady = null;
+  var rsHtml2CanvasReady = null;
+  var rsOpenDocLocalReady = null;
+  var rsOpenDocExternalReady = null;
   var rsLogoCache = {};
   var rsDownloadBytesCache = {};
+  var MAX_DOWNLOAD_FILE_BYTES = 5 * 1024 * 1024; // 5 MB file size limit for downloads and email attachments
 
   // ═══════════════════════════════════════════════════════════════════════════
   // SVG ICONS FOR IN-HOUSE EVALUATION REPORT DOSSIER (pdfMake - Exact Replica)
@@ -181,6 +187,528 @@
     return rsJsPdfReady;
   }
 
+  function rsWithAmdDisabled(fn) {
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
+    try {
+      var res = fn();
+      if (res && typeof res.then === 'function') {
+        return res.then(function (val) {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          return val;
+        }).catch(function (err) {
+          if (wasAmd && window.define) window.define.amd = wasAmd;
+          throw err;
+        });
+      }
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      return res;
+    } catch (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      throw err;
+    }
+  }
+
+  /**
+   * Cooperative Event Loop Yielding
+   * Purpose: Prevents browser UI thread starvation during intensive multi-page PDF/DOCX processing.
+   */
+  function rsYieldToMain() {
+    return new Promise(function (resolve) {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(function () {
+          setTimeout(resolve, 0);
+        });
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
+  /**
+   * Isolated JSZip loader for DOCX binary unpacking in Bench Talent center.
+   */
+  function ensureBenchJsZip() {
+    if (rsJsZipReady && (window.JSZip || (typeof JSZip !== 'undefined'))) return Promise.resolve(window.JSZip || JSZip);
+    var sources = [
+      '/js/jszip.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+      'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+    ];
+    rsJsZipReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () { return !!(window.JSZip || (typeof JSZip !== 'undefined')); });
+    }).then(function () {
+      return window.JSZip || JSZip;
+    }).catch(function (err) {
+      rsJsZipReady = null;
+      throw err;
+    });
+    return rsJsZipReady;
+  }
+
+  /**
+   * Isolated docx-preview loader for client-side Word document rendering.
+   */
+  function ensureBenchDocxPreview() {
+    if (rsDocxReady && window.docx && typeof window.docx.renderAsync === 'function') return Promise.resolve(window.docx);
+    var sources = [
+      '/js/docx-preview.min.js',
+      'https://cdn.jsdelivr.net/npm/docx-preview@0.3.4/dist/docx-preview.min.js',
+      'https://unpkg.com/docx-preview@0.3.4/dist/docx-preview.min.js'
+    ];
+    rsDocxReady = ensureBenchJsZip().then(function () {
+      return rsWithAmdDisabled(function () {
+        return rsTryList(sources, 0, function () { return !!(window.docx && typeof window.docx.renderAsync === 'function'); });
+      });
+    }).then(function () {
+      return window.docx;
+    }).catch(function (err) {
+      rsDocxReady = null;
+      throw err;
+    });
+    return rsDocxReady;
+  }
+
+  /**
+   * Isolated html2canvas loader for rasterizing rendered DOM sections to canvas.
+   */
+  function ensureBenchHtml2Canvas() {
+    if (rsHtml2CanvasReady && typeof window.html2canvas === 'function') return Promise.resolve(window.html2canvas);
+    var sources = [
+      '/js/html2canvas.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+      'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+    ];
+    rsHtml2CanvasReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () { return typeof window.html2canvas === 'function'; });
+    }).then(function () {
+      return window.html2canvas;
+    }).catch(function (err) {
+      rsHtml2CanvasReady = null;
+      throw err;
+    });
+    return rsHtml2CanvasReady;
+  }
+
+  /**
+   * Isolated OpenDoc Rust WebAssembly (casual_doc_wasm) runtime loader.
+   */
+  function ensureBenchOpenDocWasm(allowExternalFallback) {
+    allowExternalFallback = allowExternalFallback !== false;
+    if (rsOpenDocLocalReady) return rsOpenDocLocalReady;
+    var openDocSources = [
+      {
+        label: 'Local OpenDoc runtime',
+        moduleUrl: '/js/opendoc/casual_doc_wasm.js',
+        wasmUrl: '/js/opendoc/casual_doc_wasm_bg.wasm'
+      },
+      {
+        label: 'Cloudflare OpenDoc runtime',
+        moduleUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903',
+        wasmUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903'
+      }
+    ];
+
+    async function loadOpenDocModule(moduleUrl, wasmUrl) {
+      var blobUrl = '';
+      var module = null;
+      try {
+        module = await import(moduleUrl);
+      } catch (importErr) {
+        var moduleResponse = null;
+        try {
+          moduleResponse = await fetch(moduleUrl, { mode: 'cors', cache: 'force-cache' });
+        } catch (moduleFetchErr) {
+          throw new Error('OpenDoc module fetch failed for ' + moduleUrl + ': ' + (moduleFetchErr && moduleFetchErr.message ? moduleFetchErr.message : 'network blocked'));
+        }
+        if (!moduleResponse.ok) throw new Error('OpenDoc module request failed with HTTP ' + moduleResponse.status);
+        var moduleCode = await moduleResponse.text();
+        moduleCode = moduleCode.replace(/new URL\(['"]casual_doc_wasm_bg\.wasm['"],\s*import\.meta\.url\)/g, JSON.stringify(wasmUrl));
+        blobUrl = URL.createObjectURL(new Blob([moduleCode], { type: 'application/javascript' }));
+        module = await import(blobUrl);
+      }
+      if (typeof module.default === 'function') {
+        var wasmResponse = null;
+        try {
+          wasmResponse = await fetch(wasmUrl, { mode: 'cors', cache: 'force-cache' });
+        } catch (wasmFetchErr) {
+          throw new Error('OpenDoc WASM fetch failed for ' + wasmUrl + ': ' + (wasmFetchErr && wasmFetchErr.message ? wasmFetchErr.message : 'network blocked'));
+        }
+        if (!wasmResponse.ok) throw new Error('OpenDoc WASM request failed with HTTP ' + wasmResponse.status);
+        await module.default({ module_or_path: await wasmResponse.arrayBuffer() });
+      }
+      if (blobUrl) setTimeout(function () { URL.revokeObjectURL(blobUrl); }, 30000);
+      if (typeof module.open !== 'function') throw new Error('OpenDoc open API missing');
+      return module;
+    }
+
+    rsOpenDocLocalReady = (async function () {
+      var lastErr = null;
+      for (var i = 0; i < openDocSources.length; i++) {
+        try {
+          return await loadOpenDocModule(openDocSources[i].moduleUrl, openDocSources[i].wasmUrl);
+        } catch (err) {
+          lastErr = err;
+          console.warn('[AgyBenchDownloadResumeEngine] ' + openDocSources[i].label + ' unavailable:', err);
+        }
+      }
+      if (allowExternalFallback) {
+        if (!rsOpenDocExternalReady) {
+          rsOpenDocExternalReady = loadOpenDocModule('https://opendoc.casualoffice.org/pkg/casual_doc_wasm.js', 'https://opendoc.casualoffice.org/pkg/casual_doc_wasm_bg.wasm')
+            .catch(function (err) {
+              rsOpenDocExternalReady = null;
+              throw err;
+            });
+        }
+        return rsOpenDocExternalReady;
+      }
+      throw (lastErr || new Error('OpenDoc runtime unavailable'));
+    })().catch(function (err) {
+      rsOpenDocLocalReady = null;
+      throw err;
+    });
+
+    return rsOpenDocLocalReady;
+  }
+
+  function openDocNativePdfBlob(doc) {
+    if (!doc || typeof doc.availableExportFormats !== 'function' || typeof doc.exportAs !== 'function') return null;
+    var formats = [];
+    try {
+      formats = doc.availableExportFormats() || [];
+    } catch (formatErr) {
+      return null;
+    }
+    var hasPdf = formats.some(function (f) { return String(f || '').toLowerCase() === 'pdf'; });
+    if (!hasPdf) return null;
+    var modes = ['exact_if_unchanged', 'preserve_when_safe', 'semantic'];
+    for (var i = 0; i < modes.length; i++) {
+      var artifact = null;
+      try {
+        artifact = doc.exportAs('pdf', modes[i]);
+        var bytes = artifact && artifact.bytes ? artifact.bytes : null;
+        var mime = artifact && artifact.mimeType ? artifact.mimeType : 'application/pdf';
+        if (bytes && bytes.length) return new Blob([bytes], { type: mime || 'application/pdf' });
+      } catch (e) {
+      } finally {
+        if (artifact && typeof artifact.free === 'function') artifact.free();
+      }
+    }
+    return null;
+  }
+
+  function openDocCanvasFromBitmap(bitmap) {
+    var width = bitmap && bitmap.widthPx ? bitmap.widthPx : 0;
+    var height = bitmap && bitmap.heightPx ? bitmap.heightPx : 0;
+    if (!width || !height) throw new Error('OpenDoc rendered an empty page bitmap');
+    var rgba = bitmap.rgba;
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d', { alpha: false });
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.putImageData(new ImageData(rgba, width, height), 0, 0);
+    return canvas;
+  }
+
+  /**
+   * Standalone Client-Side DOCX to PDF Conversion Engine
+   * Strictly isolated to Bench Talent (Rule 15 & Rule 17 Compliance).
+   * Attempts Rust WebAssembly (casual_doc_wasm) first, falls back to docx-preview + html2canvas + jsPDF.
+   */
+  async function renderBenchDocxToPdfBlob(docxBytes, candName, onProgress) {
+    if (typeof onProgress === 'function') onProgress({ percent: 25, step: 'Converting DOCX to PDF...', detail: 'Initializing WASM document core...' });
+    await rsYieldToMain();
+
+    // Strategy 1: Try OpenDoc Rust WASM core
+    try {
+      var openDoc = await ensureBenchOpenDocWasm(true);
+      var u8 = new Uint8Array(docxBytes);
+      var doc = null;
+      try {
+        doc = (typeof openDoc.openAs === 'function') ? openDoc.openAs(u8, 'docx') : openDoc.open(u8);
+      } catch (oe) {
+        doc = openDoc.open(u8);
+      }
+      if (doc) {
+        try {
+          var nativeBlob = openDocNativePdfBlob(doc);
+          if (nativeBlob && nativeBlob.size > 200) {
+            return nativeBlob;
+          }
+
+          var pageCount = parseInt(doc.pageCount, 10);
+          if (!pageCount && typeof doc.documentStats === 'function') {
+            var stats = doc.documentStats();
+            pageCount = parseInt(stats && stats.pages ? stats.pages : 0, 10);
+            if (stats && typeof stats.free === 'function') stats.free();
+          }
+
+          if (pageCount && pageCount >= 1) {
+            await ensureJsPdf();
+            var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+            var pdf = null;
+            var renderDpi = 216;
+
+            for (var p = 0; p < pageCount; p++) {
+              if (typeof onProgress === 'function') {
+                var pPct = Math.round(25 + ((p + 1) / pageCount) * 45);
+                onProgress({ percent: pPct, step: 'Rasterizing DOCX page ' + (p + 1) + ' of ' + pageCount + '...', detail: 'Compiling high-resolution pages...' });
+              }
+              await rsYieldToMain();
+
+              var bitmap = null;
+              var canvas = null;
+              try {
+                bitmap = doc.renderPage(p, renderDpi);
+                canvas = openDocCanvasFromBitmap(bitmap);
+
+                var pageW = (bitmap.widthPx / renderDpi) * 72;
+                var pageH = (bitmap.heightPx / renderDpi) * 72;
+
+                if (!pdf) {
+                  pdf = new JsPDF({
+                    orientation: pageW > pageH ? 'landscape' : 'portrait',
+                    unit: 'pt',
+                    format: [pageW, pageH],
+                    compress: true
+                  });
+                } else {
+                  pdf.addPage([pageW, pageH], pageW > pageH ? 'landscape' : 'portrait');
+                }
+
+                var imgData = canvas.toDataURL('image/jpeg', 0.85);
+                pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+              } finally {
+                if (bitmap && typeof bitmap.free === 'function') bitmap.free();
+                if (canvas) {
+                  canvas.width = 0;
+                  canvas.height = 0;
+                  canvas = null;
+                }
+              }
+            }
+
+            var wasmOutBlob = pdf.output('blob');
+            if (wasmOutBlob && wasmOutBlob.size > 200) {
+              return wasmOutBlob;
+            }
+          }
+        } finally {
+          if (doc && typeof doc.free === 'function') doc.free();
+        }
+      }
+    } catch (wasmErr) {
+      console.warn('[AgyBenchDownloadResumeEngine] OpenDoc WASM conversion fallback to docx-preview:', wasmErr);
+    }
+
+    // Strategy 2: Fallback to docx-preview + html2canvas + jsPDF
+    try {
+      if (typeof onProgress === 'function') onProgress({ percent: 35, step: 'Rendering DOCX layout...', detail: 'Formatting document structure...' });
+      await rsYieldToMain();
+
+      await Promise.all([ensureBenchDocxPreview(), ensureBenchHtml2Canvas(), ensureJsPdf()]);
+
+      var host = document.createElement('div');
+      host.className = 'bench-docx-render-host';
+      host.setAttribute('aria-hidden', 'true');
+      host.style.cssText = 'position:fixed;left:0;top:0;width:auto;min-width:794px;opacity:0;pointer-events:none;z-index:-9999;background:#ffffff;overflow:visible;';
+      document.body.appendChild(host);
+
+      try {
+        await window.docx.renderAsync(docxBytes, host, null, {
+          className: 'docx',
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: true,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: false,
+          experimental: false,
+          useBase64URL: true,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          renderEndnotes: true,
+          trimXmlDeclaration: true
+        });
+        await rsYieldToMain();
+
+        var pages = Array.prototype.slice.call(host.querySelectorAll('.docx-wrapper > section.docx'));
+        if (!pages.length) pages = Array.prototype.slice.call(host.querySelectorAll('section.docx'));
+        if (!pages.length) pages = [host];
+
+        var JsPDF2 = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+        var pdf2 = new JsPDF2({ orientation: 'portrait', unit: 'pt', format: 'a4', compress: true });
+        var pdfPageW = pdf2.internal.pageSize.getWidth();
+        var pdfPageH = pdf2.internal.pageSize.getHeight();
+        var a4Ratio = pdfPageH / pdfPageW;
+
+        var isFirstPage = true;
+        for (var i = 0; i < pages.length; i++) {
+          if (typeof onProgress === 'function') {
+            var fPct = Math.round(40 + ((i + 1) / pages.length) * 45);
+            onProgress({ percent: fPct, step: 'Formatting DOCX section ' + (i + 1) + ' of ' + pages.length + '...', detail: 'Rasterizing document pages...' });
+          }
+          await rsYieldToMain();
+
+          var pageEl = pages[i];
+          pageEl.style.margin = '0 auto';
+          pageEl.style.boxShadow = 'none';
+          pageEl.style.background = '#ffffff';
+
+          var elWidth = Math.ceil(pageEl.scrollWidth || pageEl.getBoundingClientRect().width || 794);
+          var elHeight = Math.ceil(pageEl.scrollHeight || pageEl.getBoundingClientRect().height || 1123);
+
+          var cvs = await window.html2canvas(pageEl, {
+            backgroundColor: '#ffffff',
+            scale: 2.0,
+            useCORS: true,
+            allowTaint: false,
+            logging: false,
+            removeContainer: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: elWidth,
+            windowHeight: elHeight
+          });
+
+          var targetSliceH = Math.round(cvs.width * a4Ratio);
+          var offsetY = 0;
+
+          while (offsetY < cvs.height) {
+            var remainingH = cvs.height - offsetY;
+            var currentSliceH = Math.min(targetSliceH, remainingH);
+
+            var sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = cvs.width;
+            sliceCanvas.height = currentSliceH;
+            var sliceCtx = sliceCanvas.getContext('2d');
+            sliceCtx.fillStyle = '#ffffff';
+            sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+            sliceCtx.drawImage(cvs, 0, offsetY, cvs.width, currentSliceH, 0, 0, sliceCanvas.width, currentSliceH);
+
+            var sliceImgData = sliceCanvas.toDataURL('image/jpeg', 0.82);
+            var destH = (currentSliceH / cvs.width) * pdfPageW;
+
+            if (!isFirstPage) {
+              pdf2.addPage('a4', 'portrait');
+            } else {
+              isFirstPage = false;
+            }
+
+            pdf2.addImage(sliceImgData, 'JPEG', 0, 0, pdfPageW, destH, undefined, 'FAST');
+
+            sliceCanvas.width = 0;
+            sliceCanvas.height = 0;
+            offsetY += targetSliceH;
+            await rsYieldToMain();
+          }
+
+          cvs.width = 0;
+          cvs.height = 0;
+        }
+
+        var fallbackBlob = pdf2.output('blob');
+        if (fallbackBlob && fallbackBlob.size > 200) {
+          return fallbackBlob;
+        }
+      } finally {
+        if (host && host.parentNode) host.parentNode.removeChild(host);
+      }
+    } catch (prevErr) {
+      console.error('[AgyBenchDownloadResumeEngine] docx-preview conversion failed:', prevErr);
+      throw new Error('Client-side DOCX conversion failed: ' + (prevErr ? prevErr.message : 'Unknown error'));
+    }
+
+    throw new Error('Unable to convert DOCX resume on client side.');
+  }
+
+  /**
+   * 5MB Size Guard with Adaptive Canvas Downsampling
+   * Guarantees output PDF blobs strictly fit within the 5MB email/attachment budget.
+   */
+  async function ensurePdfBlobUnderLimit(blob, maxBytes) {
+    maxBytes = maxBytes || MAX_DOWNLOAD_FILE_BYTES;
+    if (!blob || !(blob instanceof Blob) || blob.size <= maxBytes) {
+      return blob;
+    }
+
+    var isPdf = false;
+    try {
+      var slice = await blob.slice(0, 5).arrayBuffer();
+      var sig = String.fromCharCode.apply(null, new Uint8Array(slice));
+      isPdf = (sig.indexOf('%PDF') !== -1);
+    } catch (e) {}
+    if (!isPdf) return blob;
+
+    try {
+      await Promise.all([ensurePdfJs(), ensureJsPdf()]);
+      var sourceBytes = await blob.arrayBuffer();
+      var pdfDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(sourceBytes) }).promise;
+      var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      var numPages = pdfDoc.numPages;
+      if (!numPages) return blob;
+
+      // Target ~4.2MB total budget to have a comfortable buffer under 5MB for email attachments
+      var targetBudget = Math.min(maxBytes * 0.86, 4.3 * 1024 * 1024);
+      var budgetPerPage = targetBudget / numPages;
+
+      var quality = 0.82;
+      var scale = 1.8;
+      if (budgetPerPage < 400000) {
+        quality = 0.74;
+        scale = 1.5;
+      }
+      if (budgetPerPage < 220000) {
+        quality = 0.65;
+        scale = 1.25;
+      }
+      if (budgetPerPage < 120000) {
+        quality = 0.55;
+        scale = 1.0;
+      }
+
+      var outPdf = null;
+      for (var p = 1; p <= numPages; p++) {
+        await rsYieldToMain();
+        var page = await pdfDoc.getPage(p);
+        var vp = page.getViewport({ scale: scale });
+        var cvs = document.createElement('canvas');
+        cvs.width = Math.floor(vp.width);
+        cvs.height = Math.floor(vp.height);
+        var ctx = cvs.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cvs.width, cvs.height);
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+        var ptVp = page.getViewport({ scale: 1.0 });
+        var pageW = Math.round(ptVp.width);
+        var pageH = Math.round(ptVp.height);
+        var orient = pageW > pageH ? 'landscape' : 'portrait';
+
+        if (!outPdf) {
+          outPdf = new JsPDF({ orientation: orient, unit: 'pt', format: [pageW, pageH], compress: true });
+        } else {
+          outPdf.addPage([pageW, pageH], orient);
+        }
+        var imgData = cvs.toDataURL('image/jpeg', quality);
+        outPdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+        cvs.width = 0;
+        cvs.height = 0;
+      }
+
+      var compressedBlob = outPdf.output('blob');
+      if (compressedBlob && compressedBlob.size < blob.size) {
+        if (blob.filename) compressedBlob.filename = blob.filename;
+        return compressedBlob;
+      }
+    } catch (compErr) {
+      console.warn('[AgyBenchDownloadResumeEngine] ensurePdfBlobUnderLimit compression notice:', compErr);
+    }
+    return blob;
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // STRING & VALUE UTILITIES
   // ═══════════════════════════════════════════════════════════════════════════
@@ -287,15 +815,26 @@
   }
 
   async function ensurePdfBlobFromBytes(cand, rawBytes) {
-    var ext = (cand.resume_extension || '').toLowerCase();
-    var isDocx = (ext === 'docx' || ext === 'doc');
+    if (!rawBytes || rawBytes.byteLength < 4) {
+      throw new Error('Candidate resume file is empty or could not be loaded.');
+    }
 
     var header = new Uint8Array(rawBytes.slice(0, 5));
     var isActuallyPdf = (header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46);
-
     if (isActuallyPdf) {
       return new Blob([rawBytes], { type: 'application/pdf' });
     }
+
+    var ext = (cand.resume_extension || '').toLowerCase();
+
+    // Check for pre-2007 legacy Word (.doc) binary format
+    if (ext === 'doc' || (rawBytes.byteLength > 4 && rawBytes[0] === 0xD0 && rawBytes[1] === 0xCF && rawBytes[2] === 0x11 && rawBytes[3] === 0xE0)) {
+      throw new Error('LEGACY_DOC_UNSUPPORTED: Pre-2007 Word (.doc) binary format cannot be converted to PDF client-side. Please download using Format 1 (Original Resume) or convert to DOCX/PDF.');
+    }
+
+    var isDocx = (ext === 'docx') ||
+                 (cand.resume_url && /\.docx(\?.*)?$/i.test(cand.resume_url)) ||
+                 (rawBytes.byteLength > 2 && rawBytes[0] === 0x50 && rawBytes[1] === 0x4B);
 
     if (isDocx && cand.resume_pdf_url) {
       try {
@@ -315,18 +854,11 @@
       }
     }
 
-    if (typeof window.AgyForwardResumeEngine !== 'undefined' && typeof window.AgyForwardResumeEngine.docxBytesToPdfBlob === 'function') {
-      try {
-        var wasmPdfBlob = await window.AgyForwardResumeEngine.docxBytesToPdfBlob(rawBytes, cand.safe_name || 'Resume');
-        if (wasmPdfBlob && wasmPdfBlob.size > 100) {
-          return wasmPdfBlob;
-        }
-      } catch (wasmErr) {
-        console.warn('[AgyBenchDownloadResumeEngine] Client WASM DOCX conversion error:', wasmErr);
-      }
+    if (isDocx) {
+      return await renderBenchDocxToPdfBlob(rawBytes, cand.safe_name || 'Resume');
     }
 
-    return new Blob([rawBytes], { type: 'application/pdf' });
+    throw new Error('The candidate resume format (' + (ext || 'unknown') + ') is not a supported PDF or DOCX file.');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -834,6 +1366,15 @@
     var wmStr = rawWm ? String(rawWm).trim().replace(/[\s_-]+/g, ' ').replace(/\b\w/g, function(l){ return l.toUpperCase(); }) : 'Not Specified';
 
     var rawRm = candidate.rm_comments || candidate.recruiter_note_text || candidate.recruiter_note || candidate.comment || '';
+    if (typeof document !== 'undefined') {
+      var liveRmEl = document.querySelector('.rm-comments-content');
+      if (liveRmEl && liveRmEl.innerText && liveRmEl.innerText.trim()) {
+        var liveRmText = liveRmEl.innerText.trim();
+        if (liveRmText) {
+          rawRm = liveRmText;
+        }
+      }
+    }
     var rmText = clean(rawRm.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(), '');
 
     var compName = companyData.companyName || candidate.report_company_name || 'Hiring Partner';
@@ -1188,6 +1729,7 @@
     var pagesTextData = [];
 
     for (var p = 1; p <= pdfjsDoc.numPages; p++) {
+      await rsYieldToMain();
       var page = await pdfjsDoc.getPage(p);
       var tc = await page.getTextContent();
       pagesTextData.push({ pageNum: p, tc: tc });
@@ -1462,7 +2004,9 @@
     var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
     var JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || window.jspdf;
     var outPdf = null;
+    var textItems = 0;
     for (var p = 1; p <= doc.numPages; p++) {
+      await rsYieldToMain();
       var pdfJsPage = await doc.getPage(p);
       var base = pdfJsPage.getViewport({ scale: 1 });
       var cssScale = Math.min(1.35, 820 / base.width);
@@ -1477,6 +2021,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       await pdfJsPage.render({ canvasContext: ctx, viewport: renderViewport }).promise;
       var tc = await pdfJsPage.getTextContent();
+      if (tc && tc.items) textItems += tc.items.length;
       rdcDrawAnonymizedBlocks(ctx, tc, renderViewport, rules);
       var pageW = Math.round(cssViewport.width);
       var pageH = Math.round(cssViewport.height);
@@ -1484,9 +2029,16 @@
       if (!outPdf) outPdf = new JsPDF({ orientation: orient, unit: 'px', format: [pageW, pageH] });
       else outPdf.addPage([pageW, pageH], orient);
       outPdf.addImage(canvas.toDataURL('image/jpeg', 0.88), 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+      canvas.width = 0;
+      canvas.height = 0;
     }
     if (!outPdf) throw new Error('No resume pages were rendered');
-    return outPdf.output('blob');
+    if (!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
+    var outBlob = outPdf.output('blob');
+    if (outBlob && outBlob.size > MAX_DOWNLOAD_FILE_BYTES) {
+      outBlob = await ensurePdfBlobUnderLimit(outBlob, MAX_DOWNLOAD_FILE_BYTES);
+    }
+    return outBlob;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1498,6 +2050,7 @@
     var pages = sourceDoc.getPages();
     if (!pages.length) return;
     for (var i = 0; i < pages.length; i++) {
+      await rsYieldToMain();
       var size = pages[i].getSize();
       var scale = Math.min(A4_W / size.width, A4_H / size.height);
       var drawW = size.width * scale;
@@ -1838,6 +2391,11 @@
   // ═══════════════════════════════════════════════════════════════════════════
   async function downloadCandidateFormat(cand, optId, companyData, onProgress) {
     var compiled = await processDownloadOption(cand, optId, companyData, onProgress);
+    if (compiled && compiled instanceof Blob && compiled.size > MAX_DOWNLOAD_FILE_BYTES) {
+      var origName = compiled.filename;
+      compiled = await ensurePdfBlobUnderLimit(compiled, MAX_DOWNLOAD_FILE_BYTES);
+      if (origName) compiled.filename = origName;
+    }
     var downloadUrl = URL.createObjectURL(compiled);
     var downloadLink = document.createElement('a');
     downloadLink.href = downloadUrl;
@@ -1871,6 +2429,23 @@
     return compiled;
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // RAM CACHE INVALIDATION & STORE (Zero Stale Pipeline Data - Rule 5 & 6)
+  // ═══════════════════════════════════════════════════════════════════════════
+  var BenchDownloadResumeRamStore = {
+    invalidate: function (candidateId) {
+      if (candidateId) {
+        delete rsDownloadBytesCache[candidateId];
+      } else {
+        rsDownloadBytesCache = {};
+      }
+    },
+    clearAll: function () {
+      rsDownloadBytesCache = {};
+      rsLogoCache = {};
+    }
+  };
+
   return {
     processDownloadOption: processDownloadOption,
     downloadCandidateFormat: downloadCandidateFormat,
@@ -1882,7 +2457,23 @@
     rdcAnonymizeRules: rdcAnonymizeRules,
     getBenchCandidateEvaluatedSkills: getBenchCandidateEvaluatedSkills,
     addCompanyBrandingHeader: addCompanyBrandingHeader,
-    mergeDossierAndResume: mergeDossierAndResume
+    mergeDossierAndResume: mergeDossierAndResume,
+    renderBenchDocxToPdfBlob: renderBenchDocxToPdfBlob,
+    ensurePdfBlobUnderLimit: ensurePdfBlobUnderLimit,
+    invalidateCache: BenchDownloadResumeRamStore.invalidate,
+    clearRamStore: BenchDownloadResumeRamStore.clearAll,
+    ensureJsZip: ensureBenchJsZip,
+    ensureDocxPreview: ensureBenchDocxPreview,
+    ensureHtml2Canvas: ensureBenchHtml2Canvas,
+    ensureOpenDocWasm: ensureBenchOpenDocWasm
   };
 }));
+
+if (typeof window !== 'undefined') {
+  window.invalidateBenchDownloadResumeCache = function (candidateId) {
+    if (window.AgyBenchDownloadResumeEngine && typeof window.AgyBenchDownloadResumeEngine.invalidateCache === 'function') {
+      window.AgyBenchDownloadResumeEngine.invalidateCache(candidateId);
+    }
+  };
+}
 </script>

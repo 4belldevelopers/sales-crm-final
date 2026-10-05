@@ -1283,6 +1283,12 @@
             };
         }
 
+        window.invalidateBenchDownloadResumeCache = function(candidateId) {
+            if (window.AgyBenchDownloadResumeEngine && typeof window.AgyBenchDownloadResumeEngine.invalidateCache === 'function') {
+                window.AgyBenchDownloadResumeEngine.invalidateCache(candidateId);
+            }
+        };
+
         var input = document.querySelector('input[name=tags]'); 
         if (input && !input.__tagify) {
             input.__tagify = new Tagify(input);

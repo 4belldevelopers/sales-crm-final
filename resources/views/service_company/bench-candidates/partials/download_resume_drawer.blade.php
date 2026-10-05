@@ -569,6 +569,142 @@
     @keyframes bdlSpin {
       to { transform: rotate(360deg); }
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       WORD (.doc) UNSUPPORTED MODAL NOTIFICATION (z-index: 10055)
+       ═══════════════════════════════════════════════════════════════════════════ */
+    .bdl-doc-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 10055 !important;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      transition: opacity 0.2s ease;
+    }
+    .bdl-doc-modal {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      animation: bdlDocPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes bdlDocPop {
+      from { opacity: 0; transform: scale(0.94) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .bdl-doc-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px 0;
+    }
+    .bdl-doc-modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #fef3c7;
+      color: #d97706;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .bdl-doc-modal-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+    .bdl-doc-modal-close {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+    .bdl-doc-modal-close:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .bdl-doc-modal-close svg {
+      width: 13px;
+      height: 13px;
+    }
+    .bdl-doc-modal-body {
+      padding: 14px 20px 18px;
+    }
+    .bdl-doc-modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 8px;
+      line-height: 1.35;
+      font-family: 'Poppins', sans-serif;
+    }
+    .bdl-doc-modal-text {
+      font-size: 12.5px;
+      color: #475569;
+      margin: 0;
+      line-height: 1.55;
+      font-family: 'Poppins', sans-serif;
+    }
+    .bdl-doc-modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 20px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #f1f5f9;
+    }
+    .bdl-doc-modal-btn {
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bdl-doc-modal-btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+    }
+    .bdl-doc-modal-btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .bdl-doc-modal-btn-primary svg {
+      width: 13px;
+      height: 13px;
+    }
+    .bdl-doc-modal-btn-secondary {
+      background: #ffffff;
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+    }
+    .bdl-doc-modal-btn-secondary:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
   </style>
 
   {{-- STICKY HEADER --}}
@@ -1044,6 +1180,35 @@
   </div>
 </div>
 
+{{-- Word (.doc) Version Unsupported Popup Notification Modal --}}
+<div id="bdlDocModalBackdrop" class="bdl-doc-modal-backdrop" aria-hidden="true" style="display:none;">
+  <div class="bdl-doc-modal" role="alertdialog" aria-modal="true" aria-labelledby="bdlDocModalTitle" aria-describedby="bdlDocModalDesc">
+    <div class="bdl-doc-modal-header">
+      <div class="bdl-doc-modal-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <button type="button" class="bdl-doc-modal-close" id="bdlDocModalCloseBtn" aria-label="Close" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="bdl-doc-modal-body">
+      <h3 id="bdlDocModalTitle" class="bdl-doc-modal-title">This Word (.doc) file version isn’t supported.</h3>
+      <p id="bdlDocModalDesc" class="bdl-doc-modal-text">Please upload the resume as PDF or download the original resume using Format 1.</p>
+    </div>
+    <div class="bdl-doc-modal-footer">
+      <button type="button" class="bdl-doc-modal-btn bdl-doc-modal-btn-primary" id="bdlDocModalOpt1Btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Format 1 (Original)
+      </button>
+      <button type="button" class="bdl-doc-modal-btn bdl-doc-modal-btn-secondary" id="bdlDocModalDismissBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
   'use strict';
@@ -1053,6 +1218,41 @@
     companyName: @json($companyName),
     companyLogo: @json($companyLogo)
   };
+  var isDocResume = (candidateData && candidateData.resume_extension ? String(candidateData.resume_extension).toLowerCase() : '') === 'doc';
+
+  function showDocModal() {
+    $('#bdlDocModalBackdrop').css('display', 'flex').attr('aria-hidden', 'false');
+  }
+  function hideDocModal() {
+    $('#bdlDocModalBackdrop').css('display', 'none').attr('aria-hidden', 'true');
+  }
+
+  $('#bdlDocModalCloseBtn, #bdlDocModalDismissBtn').off('click').on('click', hideDocModal);
+  $('#bdlDocModalBackdrop').off('click').on('click', function(e) {
+    if (e.target === this) hideDocModal();
+  });
+  $(document).off('keydown.bdlDoc').on('keydown.bdlDoc', function(e) {
+    if (e.key === 'Escape' && $('#bdlDocModalBackdrop').is(':visible')) {
+      hideDocModal();
+    }
+  });
+
+  $('#bdlDocModalOpt1Btn').off('click').on('click', function() {
+    hideDocModal();
+    var $opt1 = $('#bench_download_resume_container input[name="bench_dl_format"][value="1"]');
+    if ($opt1.length) {
+      $opt1.prop('checked', true).trigger('change');
+      $('#btnBdlTriggerDownload').trigger('click');
+    }
+  });
+
+  // If candidate has a legacy Word (.doc) resume, default selection to Format 1 immediately
+  if (isDocResume) {
+    var $opt1 = $('#bench_download_resume_container input[name="bench_dl_format"][value="1"]');
+    if ($opt1.length) {
+      $opt1.prop('checked', true).trigger('change');
+    }
+  }
 
   // Pre-warm candidate resume in browser memory immediately upon opening drawer
   if (window.AgyBenchDownloadResumeEngine && typeof window.AgyBenchDownloadResumeEngine.preWarmCandidateResume === 'function') {
@@ -1072,10 +1272,22 @@
   $('#bench_download_resume_container .bdl-format-card').off('click').on('click', function(e) {
     if ($(e.target).is('input[type="radio"]')) return;
     var $radio = $(this).find('input[type="radio"]');
+    var val = parseInt($radio.val(), 10);
+    if (isDocResume && val !== 1) {
+      showDocModal();
+      return;
+    }
     $radio.prop('checked', true).trigger('change');
   });
 
   $('#bench_download_resume_container input[name="bench_dl_format"]').off('change').on('change', function() {
+    var val = parseInt($(this).val(), 10);
+    if (isDocResume && val !== 1) {
+      showDocModal();
+      var $opt1 = $('#bench_download_resume_container input[name="bench_dl_format"][value="1"]');
+      if ($opt1.length) $opt1.prop('checked', true);
+      return;
+    }
     $('#bench_download_resume_container .bdl-format-card').removeClass('selected');
     var $selectedCard = $(this).closest('.bdl-format-card');
     $selectedCard.addClass('selected');
@@ -1110,6 +1322,10 @@
     var $detail = $('#bdlStatusDetail');
 
     var selectedFormat = parseInt($('input[name="bench_dl_format"]:checked').val() || '46', 10);
+    if (isDocResume && selectedFormat !== 1) {
+      showDocModal();
+      return;
+    }
 
     // Enter compiling state
     $btn.prop('disabled', true);
