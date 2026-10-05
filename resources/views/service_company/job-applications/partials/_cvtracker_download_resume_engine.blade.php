@@ -45,6 +45,7 @@
     window.rdcAnonymizeRules = exp.rdcAnonymizeRules;
     window.renderAnonymizedPdfBlob = exp.renderAnonymizedPdfBlob;
     window.fetchPdfResumeBlob = exp.fetchPdfResumeBlob;
+    window.ensurePdfBlobUnderLimit = exp.ensurePdfBlobUnderLimit;
   }
   if (typeof root !== 'undefined') {
     root.AgyCvTrackerDownloadResumeEngine = exp;
@@ -542,18 +543,114 @@ function notifyRdcDownloadStarted(fileName){
   }catch(ex){}
 }
 window.__rdcNotifyDownloadStarted = notifyRdcDownloadStarted;
-function downloadBlob(blob,fileName){
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download=fileName;
+
+var MAX_DOWNLOAD_FILE_BYTES = 5 * 1024 * 1024; // 5 MB maximum file size limit for email attachment sharing
+
+function triggerBrowserBlobDownload(blob, fileName){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   notifyRdcDownloadStarted(fileName);
   setTimeout(function(){
     URL.revokeObjectURL(url);
     if(a.parentNode) a.parentNode.removeChild(a);
-  },1200);
+  }, 1200);
+}
+
+async function ensurePdfBlobUnderLimit(blob, maxBytes){
+  maxBytes = maxBytes || MAX_DOWNLOAD_FILE_BYTES;
+  if(!blob || !(blob instanceof Blob) || blob.size <= maxBytes) {
+    return blob;
+  }
+
+  // Verify that the blob is indeed a PDF
+  var isPdf = false;
+  try{
+    var slice = await blob.slice(0, 5).arrayBuffer();
+    var sig = String.fromCharCode.apply(null, new Uint8Array(slice));
+    isPdf = (sig.indexOf('%PDF') !== -1);
+  }catch(e){}
+  if(!isPdf) return blob;
+
+  try{
+    await Promise.all([rsEnsurePdfJs(), rsEnsureJsPdf()]);
+    var sourceBytes = await blob.arrayBuffer();
+    var pdfDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(sourceBytes) }).promise;
+    var JsPDF = window.jspdf.jsPDF;
+    var numPages = pdfDoc.numPages;
+    if(!numPages) return blob;
+
+    // Target ~4.2MB total budget to have a comfortable buffer under 5MB for email attachments
+    var targetBudget = Math.min(maxBytes * 0.86, 4.3 * 1024 * 1024);
+    var budgetPerPage = targetBudget / numPages;
+
+    var quality = 0.82;
+    var scale = 1.8;
+    if(budgetPerPage < 400000) {
+      quality = 0.74;
+      scale = 1.5;
+    }
+    if(budgetPerPage < 220000) {
+      quality = 0.65;
+      scale = 1.25;
+    }
+    if(budgetPerPage < 120000) {
+      quality = 0.55;
+      scale = 1.0;
+    }
+
+    var outPdf = null;
+    for(var p = 1; p <= numPages; p++){
+      var page = await pdfDoc.getPage(p);
+      var vp = page.getViewport({ scale: scale });
+      var cvs = document.createElement('canvas');
+      cvs.width = Math.floor(vp.width);
+      cvs.height = Math.floor(vp.height);
+      var ctx = cvs.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+      var ptVp = page.getViewport({ scale: 1.0 });
+      var pageW = Math.round(ptVp.width);
+      var pageH = Math.round(ptVp.height);
+      var orient = pageW > pageH ? 'landscape' : 'portrait';
+
+      if(!outPdf){
+        outPdf = new JsPDF({ orientation: orient, unit: 'pt', format: [pageW, pageH], compress: true });
+      }else{
+        outPdf.addPage([pageW, pageH], orient);
+      }
+      var imgData = cvs.toDataURL('image/jpeg', quality);
+      outPdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
+      cvs.width = 0;
+      cvs.height = 0;
+    }
+
+    var compressedBlob = outPdf.output('blob');
+    if(compressedBlob && compressedBlob.size < blob.size){
+      return compressedBlob;
+    }
+  }catch(compErr){
+    console.warn('ensurePdfBlobUnderLimit compression notice:', compErr);
+  }
+  return blob;
+}
+window.ensurePdfBlobUnderLimit = ensurePdfBlobUnderLimit;
+
+function downloadBlob(blob, fileName){
+  if(blob && blob instanceof Blob && blob.size > MAX_DOWNLOAD_FILE_BYTES){
+    ensurePdfBlobUnderLimit(blob, MAX_DOWNLOAD_FILE_BYTES).then(function(finalBlob){
+      triggerBrowserBlobDownload(finalBlob, fileName);
+    }).catch(function(){
+      triggerBrowserBlobDownload(blob, fileName);
+    });
+    return;
+  }
+  triggerBrowserBlobDownload(blob, fileName);
 }
 function sameOriginUrl(url){
   try{ return (new URL(url, window.location.href)).origin === window.location.origin; }catch(ex){ return false; }
@@ -1231,7 +1328,7 @@ async function renderAnonymizedPdfBlob(pdfBlob,rules){
     var base=pdfJsPage.getViewport({scale:1});
     var cssScale=Math.min(1.35,820/base.width);
     var cssViewport=pdfJsPage.getViewport({scale:cssScale});
-    var renderScale=Math.min(3,2800/base.width);
+    var renderScale=Math.min(2.0,1800/base.width);
     var renderViewport=pdfJsPage.getViewport({scale:renderScale});
     var canvas=document.createElement('canvas');
     canvas.width=Math.floor(renderViewport.width);
@@ -1248,12 +1345,17 @@ async function renderAnonymizedPdfBlob(pdfBlob,rules){
     var orient=pageW>pageH?'l':'p';
     if(!outPdf) outPdf=new JsPDF({orientation:orient,unit:'px',format:[pageW,pageH]});
     else outPdf.addPage([pageW,pageH],orient);
-    outPdf.addImage(canvas.toDataURL('image/jpeg',0.9),'JPEG',0,0,pageW,pageH,undefined,'FAST');
+    var imgQuality = doc.numPages > 3 ? 0.80 : 0.85;
+    outPdf.addImage(canvas.toDataURL('image/jpeg',imgQuality),'JPEG',0,0,pageW,pageH,undefined,'FAST');
   }
   if(!outPdf) throw new Error('No resume pages were rendered');
   if(!textItems) throw new Error('This resume appears to be scanned/image-only. Browser anonymization needs extractable text.');
   if(!redactions) console.warn('Anonymized Resume completed with no PII matches from drawer data or fallback regex.');
-  return outPdf.output('blob');
+  var outBlob = outPdf.output('blob');
+  if(outBlob && outBlob.size > MAX_DOWNLOAD_FILE_BYTES){
+    outBlob = await ensurePdfBlobUnderLimit(outBlob, MAX_DOWNLOAD_FILE_BYTES);
+  }
+  return outBlob;
 }
 function clean(value,fallback){
   value=String(value==null?'':value).replace(/\s+/g,' ').trim();
@@ -1840,7 +1942,11 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,me
     resumePages.forEach(function(page){ merged.addPage(page); });
   }
   var mergedBytes=await merged.save();
-  downloadBlob(new Blob([mergedBytes],{type:'application/pdf'}),fileName);
+  var mergedBlob = new Blob([mergedBytes],{type:'application/pdf'});
+  if(mergedBlob.size > MAX_DOWNLOAD_FILE_BYTES){
+    mergedBlob = await ensurePdfBlobUnderLimit(mergedBlob, MAX_DOWNLOAD_FILE_BYTES);
+  }
+  downloadBlob(mergedBlob,fileName);
 }
 window.mergePreScreenedReportAndResume = mergePreScreenedReportAndResume;
 function dataUriBytes(dataUri){
@@ -3167,7 +3273,9 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 
     var JsPDF = window.jspdf.jsPDF;
     var pdf = null;
-    var renderDpi = 288;
+    // Balanced DPI & JPEG quality to guarantee crisp 300dpi-equivalent readability while staying well under 5MB email attachment limit
+    var renderDpi = pageCount > 3 ? 180 : 200;
+    var jpegQuality = pageCount > 3 ? 0.82 : 0.86;
 
     for(var i = 0; i < pageCount; i++){
       if(options.statusCallback){
@@ -3212,7 +3320,7 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
           }
         }
 
-        var imgData = canvas.toDataURL('image/jpeg', 0.98);
+        var imgData = canvas.toDataURL('image/jpeg', jpegQuality);
         pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH, undefined, 'FAST');
       }finally{
         if(bitmap && typeof bitmap.free === 'function') bitmap.free();
@@ -3227,6 +3335,9 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
     if(options.statusCallback) options.statusCallback('Finalizing PDF (95%)...');
     await agyYieldToMain();
     var outBlob = pdf.output('blob');
+    if(outBlob && outBlob.size > MAX_DOWNLOAD_FILE_BYTES){
+      outBlob = await ensurePdfBlobUnderLimit(outBlob, MAX_DOWNLOAD_FILE_BYTES);
+    }
     outBlob.__wasmHits = wasmHits;
     return outBlob;
   }finally{
@@ -3809,7 +3920,11 @@ async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
   }
 
   var finalBytes = await targetDoc.save();
-  return new Blob([finalBytes], { type: 'application/pdf' });
+  var outBlob = new Blob([finalBytes], { type: 'application/pdf' });
+  if(outBlob && outBlob.size > MAX_DOWNLOAD_FILE_BYTES){
+    outBlob = await ensurePdfBlobUnderLimit(outBlob, MAX_DOWNLOAD_FILE_BYTES);
+  }
+  return outBlob;
 }
 
   async function downloadCvTrackerFormat(formatId, options, progressCallback){
@@ -3848,7 +3963,8 @@ async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
     mergePreScreenedReportAndResume: mergePreScreenedReportAndResume,
     downloadBlob: downloadBlob,
     rdcAnonymizeRules: rdcAnonymizeRules,
-    renderAnonymizedPdfBlob: renderAnonymizedPdfBlob
+    renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
+    ensurePdfBlobUnderLimit: ensurePdfBlobUnderLimit
   };
 }));
 </script>
