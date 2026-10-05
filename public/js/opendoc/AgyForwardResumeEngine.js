@@ -2645,6 +2645,32 @@
       var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
       if (options.returnBlob) return mergedBlob;
+    } else if (optNum === 54) {
+      // Option 54: Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding
+      if (options.statusCallback) options.statusCallback('Generating Unbranded Report (20%)...');
+      var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true });
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+      var resumeBlob = null;
+      if (resumeExt === 'PDF') {
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        var highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          keywords: allKeywords,
+          statusCallback: options.statusCallback
+        });
+        resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
+      } else {
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+      if (options.statusCallback) options.statusCallback('Merging Unbranded Report & Anonymized Highlighted Resume (90%)...');
+      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      var mergedBlob = await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName, { returnBlob: true });
+      if (options.returnBlob) return mergedBlob;
       downloadBlob(mergedBlob, mergedName);
       return true;
 

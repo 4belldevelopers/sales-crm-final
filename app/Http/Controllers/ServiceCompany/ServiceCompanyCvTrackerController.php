@@ -4893,6 +4893,22 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
             }
         }
 
+        $cc = ! empty($request->cc_email) ? array_values(array_filter(array_map('trim', explode(',', $request->cc_email)))) : [];
+        foreach ($cc as $email) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return Reply::dataOnly(['status' => 'error', 'message' => "Invalid CC email format: {$email}"]);
+            }
+        }
+
+        // Strict deliverability cap: Maximum 5 total recipients (To + CC combined)
+        $totalRecipients = count($to) + count($cc);
+        if ($totalRecipients > 5) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient limit exceeded. To maintain high email deliverability and avoid spam filtering, a maximum of 5 recipients (To & CC combined) can be included per dispatch (found '.$totalRecipients.').',
+            ]);
+        }
+
         if (empty($subject)) {
             return Reply::dataOnly(['status' => 'error', 'message' => 'Subject is required.']);
         }
@@ -7453,6 +7469,15 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     array_push($cc, $cleanCc);
                 }
             }
+        }
+
+        // Strict deliverability cap: Maximum 5 total recipients (To + CC combined)
+        $totalRecipients = count($to) + count($cc);
+        if ($totalRecipients > 5) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'message' => 'Recipient limit exceeded. To maintain high email deliverability and avoid spam filtering, a maximum of 5 recipients (To & CC combined) can be included per dispatch (found '.$totalRecipients.').',
+            ]);
         }
 
         $attachments = [];

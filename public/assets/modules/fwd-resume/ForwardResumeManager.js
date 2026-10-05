@@ -30,6 +30,7 @@
     }
 
     var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    var MAX_TOTAL_RECIPIENTS = 5;
 
     function generateUuidV4() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -500,6 +501,16 @@
         _resetDrawerForm: function () {
             var self = this;
             $('#test_fwd_resume_format').val('0');
+            $('#test_fwd_format_trigger_title').text('Select Resume Format...');
+            $('#test_fwd_format_trigger_desc').text('Choose how resumes should be formatted and presented to the client');
+            $('.test-fwd-format-card').removeClass('is-active').css({
+                'border-color': '#E5E7EB',
+                'background': '#FFFFFF'
+            });
+            $('.test-fwd-format-card .test-fwd-format-radio-dot').css({
+                'border-color': '#D1D5DB',
+                'background': '#FFFFFF'
+            }).html('');
             $('#test_fwd_format_preview_card').hide();
             $('#test_fwd_compile_progress_container').hide();
             $('#test_subject').val('');
@@ -513,6 +524,7 @@
             self._isCompiling = false;
             self._compileToken++;
             self._compiledAttachments = {};
+            self.updateCumulativeSize();
             var btn = document.getElementById('btnTestSubmit');
             if (btn) {
                 btn.disabled = false;
@@ -665,6 +677,9 @@
                           '</div>' +
                         '</div>' +
                         '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
+                          '<button type="button" class="btn btn-xs btn-light-info fw-bold test-view-cv-btn" id="test_fwd_view_cv_btn_' + cand.id + '" onclick="window.ForwardResumeManager.previewCandidateCv(' + cand.id + ')" style="font-size:10.5px;padding:3px 8px;border-radius:6px;display:' + (hasResume ? 'inline-flex' : 'none') + ';align-items:center;gap:3px;" title="Preview Resume Document">' +
+                            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View CV' +
+                          '</button>' +
                           '<div id="test_fwd_cand_status_' + cand.id + '" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:' + (hasResume ? '#DCFCE7' : '#FEF3C7') + ';color:' + (hasResume ? '#15803D' : '#B45309') + ';display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">' +
                             (hasResume ? '✓ Attached (100%)' : 'No Resume') +
                           '</div>' +
@@ -706,6 +721,8 @@
             } else {
                 missingBanner.hide();
             }
+
+            self.updateCumulativeSize();
         },
 
         uploadCandidateResumeInline: function (candidateId, inputEl) {
@@ -769,11 +786,14 @@
                             }
                         }
 
+                        $('#test_fwd_view_cv_btn_' + candidateId).css('display', 'inline-flex').show();
+
                         var remainingMissing = $('.test-fwd-cand-card[data-has-resume="0"]').length;
                         if (remainingMissing === 0) {
                             $('#test_fwd_missing_resume_banner').fadeOut(200);
                         }
 
+                        self.updateCumulativeSize();
                         self.updateSendButtonState();
                         Swal.fire({
                             icon: 'success',
@@ -796,6 +816,156 @@
             });
         },
 
+        toggleFormatDropdown: function (e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            var menu = $('#test_fwd_format_dropdown_menu');
+            var trigger = $('#test_fwd_format_dropdown_trigger');
+            if (menu.is(':visible')) {
+                menu.hide();
+                trigger.removeClass('is-active');
+            } else {
+                menu.show();
+                trigger.addClass('is-active');
+            }
+        },
+
+        closeFormatDropdown: function () {
+            $('#test_fwd_format_dropdown_menu').hide();
+            $('#test_fwd_format_dropdown_trigger').removeClass('is-active');
+        },
+
+        selectResumeFormat: function (optId, el) {
+            var self = this;
+            optId = parseInt(optId, 10) || 0;
+            $('#test_fwd_resume_format').val(optId);
+
+            // Update card styling
+            $('.test-fwd-format-card').removeClass('is-active').css({
+                'border-color': '#E5E7EB',
+                'background': '#FFFFFF'
+            });
+            $('.test-fwd-format-card .test-fwd-format-radio-dot').css({
+                'border-color': '#D1D5DB',
+                'background': '#FFFFFF'
+            }).html('');
+
+            var title = 'Option ' + optId;
+            var desc = 'Generate formatted document for candidate delivery.';
+
+            if (el) {
+                var card = $(el);
+                card.addClass('is-active').css({
+                    'border-color': '#0D9488',
+                    'background': '#F0FDFA'
+                });
+                card.find('.test-fwd-format-radio-dot').css({
+                    'border-color': '#0D9488',
+                    'background': '#0D9488'
+                }).html('<span style="width:5px;height:5px;border-radius:50%;background:#ffffff;display:block;"></span>');
+
+                title = card.attr('data-opt-title') || card.find('.test-fwd-format-card-title').text().trim();
+                desc = card.attr('data-opt-desc') || card.find('.test-fwd-format-card-desc').text().trim();
+            } else {
+                var targetCard = $('.test-fwd-format-card[data-opt-id="' + optId + '"]');
+                if (targetCard.length) {
+                    targetCard.addClass('is-active').css({
+                        'border-color': '#0D9488',
+                        'background': '#F0FDFA'
+                    });
+                    targetCard.find('.test-fwd-format-radio-dot').css({
+                        'border-color': '#0D9488',
+                        'background': '#0D9488'
+                    }).html('<span style="width:5px;height:5px;border-radius:50%;background:#ffffff;display:block;"></span>');
+
+                    title = targetCard.attr('data-opt-title') || targetCard.find('.test-fwd-format-card-title').text().trim();
+                    desc = targetCard.attr('data-opt-desc') || targetCard.find('.test-fwd-format-card-desc').text().trim();
+                }
+            }
+
+            $('#test_fwd_format_trigger_title').text(title);
+            $('#test_fwd_format_trigger_desc').text(desc);
+            $('#test_fwd_preview_format_title').text(title);
+            $('#test_fwd_preview_desc').text(desc);
+
+            self.closeFormatDropdown();
+            self.onFormatChange(optId);
+        },
+
+        previewCandidateCv: function (candId) {
+            var self = this;
+            var rawOpt = $('#test_fwd_resume_format').val();
+            var optId = rawOpt ? parseInt(rawOpt, 10) : 0;
+
+            // 1. Check if compiled blob exists for current format
+            if (optId > 1 && self._compiledAttachments[optId] && self._compiledAttachments[optId][candId]) {
+                var blob = self._compiledAttachments[optId][candId];
+                var blobUrl = URL.createObjectURL(blob);
+                window.open(blobUrl, '_blank');
+                return;
+            }
+
+            // 2. Check candidate resume URL
+            var cand = (self._applicationData || []).find(function (c) { return String(c.id) === String(candId); });
+            if (cand && (cand.resume_url || cand.resume_path || cand.file_path)) {
+                var targetUrl = cand.resume_url || cand.resume_path || cand.file_path;
+                window.open(targetUrl, '_blank');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Resume Preview',
+                text: 'Resume document is being prepared. If custom format is selected, preview becomes active upon 100% preparation.',
+                icon: 'info',
+                confirmButtonColor: '#0D9488'
+            });
+        },
+
+        updateCumulativeSize: function () {
+            var self = this;
+            var rawOpt = $('#test_fwd_resume_format').val();
+            var optId = rawOpt ? parseInt(rawOpt, 10) : 0;
+            var totalBytes = 0;
+            var maxAllowedBytes = 6.0 * 1024 * 1024; // 6.0 MB deliverability threshold
+
+            if (optId > 1 && self._compiledAttachments[optId]) {
+                for (var cid in self._compiledAttachments[optId]) {
+                    var b = self._compiledAttachments[optId][cid];
+                    if (b && b.size) {
+                        totalBytes += b.size;
+                    }
+                }
+            } else {
+                (self._applicationData || []).forEach(function (c) {
+                    if (c.has_resume) {
+                        totalBytes += (c.file_size || c.resume_size || 450000);
+                    }
+                });
+            }
+
+            var sizeMb = (totalBytes / (1024 * 1024)).toFixed(2);
+            var sizeBadge = $('#test_fwd_total_size_badge');
+            var sizeWarning = $('#test_fwd_size_warning');
+            var warningText = $('#test_fwd_size_warning_text');
+
+            if (sizeBadge.length) {
+                sizeBadge.text('Total Size: ' + sizeMb + ' MB / 6.0 MB Max');
+                if (totalBytes > maxAllowedBytes) {
+                    sizeBadge.css({ 'color': '#B91C1C', 'background': '#FEE2E2', 'border-color': '#FCA5A5' });
+                    if (sizeWarning.length) {
+                        if (warningText.length) {
+                            warningText.html('<strong>Deliverability Warning:</strong> Cumulative attachment size (' + sizeMb + ' MB) exceeds the 6.0 MB corporate mail server safety threshold. Some recipient mail servers may reject messages exceeding 10 MB total.');
+                        }
+                        sizeWarning.show();
+                    }
+                } else {
+                    sizeBadge.css({ 'color': '#0D9488', 'background': '#F0FDFA', 'border-color': '#CCFBF1' });
+                    if (sizeWarning.length) {
+                        sizeWarning.hide();
+                    }
+                }
+            }
+        },
+
         onFormatChange: function (val) {
             var self = this;
             var optId = parseInt(val, 10) || 0;
@@ -804,16 +974,18 @@
 
             if (!optId) {
                 previewCard.slideUp(150);
+                self.updateCumulativeSize();
                 self.updateSendButtonState();
                 return;
             }
 
             previewCard.slideDown(150);
-            var title = sel.text();
-            var desc = sel.attr('data-desc') || 'Generate formatted document for candidate delivery.';
+            var title = $('#test_fwd_format_trigger_title').text() || sel.text();
+            var desc = $('#test_fwd_format_trigger_desc').text() || sel.attr('data-desc') || 'Generate formatted document for candidate delivery.';
             $('#test_fwd_preview_format_title').text(title);
             $('#test_fwd_preview_desc').text(desc);
 
+            self.updateCumulativeSize();
             self.updateSendButtonState();
         },
 
@@ -977,6 +1149,7 @@
                 $('#test_fwd_compile_spinner').hide();
                 $('#test_fwd_compile_status_text').html('✓ All attachments prepared & verified (100%)');
                 $('#test_fwd_compile_step_detail').text('All candidate attachments are verified and ready to send.');
+                self.updateCumulativeSize();
 
                 if (btn) {
                     btn.disabled = false;
@@ -1087,31 +1260,44 @@
         buildClientSummaryHtml: function () {
             var self = this;
             if (!self._applicationData || self._applicationData.length === 0) return '';
-            var html = '<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px;border:1px solid #E5E7EB;font-family:\'Poppins\',Arial,sans-serif;">';
-            html += '<tr style="background:#0D9488;color:#ffffff;font-size:11.5px;font-weight:600;">';
-            html += '<th style="padding:8px 12px;text-align:left;">#</th>';
-            html += '<th style="padding:8px 12px;text-align:left;">Candidate Name</th>';
-            html += '<th style="padding:8px 12px;text-align:left;">Designation</th>';
-            html += '<th style="padding:8px 12px;text-align:left;">Experience</th>';
-            html += '<th style="padding:8px 12px;text-align:left;">Location</th>';
-            html += '</tr>';
+            var html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:\'Poppins\',Arial,sans-serif;font-size:12px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">';
+            html += '<thead><tr style="background:#0D9488;color:#ffffff;font-size:11.5px;font-weight:700;border-bottom:2px solid #0B7268;">';
+            html += '<th style="padding:8px 6px;text-align:center;width:35px;border:1px solid #CBD5E1;">#</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Candidate Name</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Exp.</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Designation</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Key Skills</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Location</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Document</th>';
+            html += '</tr></thead><tbody>';
 
             self._applicationData.forEach(function (cand, idx) {
+                var rowNum = String(idx + 1).padStart(2, '0');
                 var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
-                var desig = escapeHtml(cand.current_designation || cand.job_title || '--');
+                var desig = escapeHtml(cand.current_designation || cand.job_title || 'Software Professional');
                 var exp = escapeHtml(cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
                 var loc = escapeHtml(cand.current_location || cand.location || '--');
-                var bg = (idx % 2 === 0) ? '#ffffff' : '#F9FAFB';
+                var skillsList = '';
+                if (Array.isArray(cand.skills) && cand.skills.length > 0) {
+                    skillsList = cand.skills.slice(0, 4).map(function(s) { return typeof s === 'string' ? s : (s.name || s.skill_name || ''); }).filter(Boolean).join(', ');
+                } else if (cand.skills && typeof cand.skills === 'string') {
+                    skillsList = cand.skills;
+                } else {
+                    skillsList = '--';
+                }
+                var bg = (idx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
 
-                html += '<tr style="background:' + bg + ';border-bottom:1px solid #E5E7EB;">';
-                html += '<td style="padding:6px 12px;color:#6B7280;">' + (idx + 1) + '</td>';
-                html += '<td style="padding:6px 12px;font-weight:600;color:#111827;">' + cName + '</td>';
-                html += '<td style="padding:6px 12px;color:#374151;">' + desig + '</td>';
-                html += '<td style="padding:6px 12px;color:#374151;">' + exp + '</td>';
-                html += '<td style="padding:6px 12px;color:#374151;">' + loc + '</td>';
+                html += '<tr style="background:' + bg + ';border-bottom:1px solid #E2E8F0;">';
+                html += '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0D9488;border:1px solid #CBD5E1;">' + rowNum + '</td>';
+                html += '<td style="padding:8px 10px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' + cName + '</td>';
+                html += '<td style="padding:8px 6px;text-align:center;color:#334155;border:1px solid #CBD5E1;">' + exp + '</td>';
+                html += '<td style="padding:8px 10px;color:#334155;border:1px solid #CBD5E1;">' + desig + '</td>';
+                html += '<td style="padding:8px 10px;color:#475569;border:1px solid #CBD5E1;">' + escapeHtml(skillsList) + '</td>';
+                html += '<td style="padding:8px 10px;color:#334155;border:1px solid #CBD5E1;">' + loc + '</td>';
+                html += '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>';
                 html += '</tr>';
             });
-            html += '</table>';
+            html += '</tbody></table>';
             return html;
         },
 
@@ -1256,6 +1442,22 @@
             hidden.val(list.join(', ')).trigger('input');
             input.attr('placeholder', list.length > 0 ? 'Add another email...' : 'Type email and press Enter...');
 
+            // Deliverability Quota Gauge: Enforce and display 5 Total Recipients limit (To + CC combined)
+            var toCount = (self._emailTags.to || []).length;
+            var ccCount = (self._emailTags.cc || []).length;
+            var totalRecipients = toCount + ccCount;
+            var rBadge = $('#test_fwd_recipients_badge');
+            if (rBadge.length) {
+                rBadge.text(totalRecipients + ' / ' + MAX_TOTAL_RECIPIENTS + ' Recipients (Max)');
+                if (totalRecipients > MAX_TOTAL_RECIPIENTS) {
+                    rBadge.css({ 'color': '#B91C1C', 'background': '#FEE2E2', 'border-color': '#FCA5A5' });
+                } else if (totalRecipients === MAX_TOTAL_RECIPIENTS) {
+                    rBadge.css({ 'color': '#B45309', 'background': '#FEF3C7', 'border-color': '#FDE68A' });
+                } else {
+                    rBadge.css({ 'color': '#15803D', 'background': '#DCFCE7', 'border-color': '#BBF7D0' });
+                }
+            }
+
             self.syncRecipientDrawerState();
             if (target === 'to') {
                 self.syncFirstRecipientSalutation();
@@ -1271,6 +1473,18 @@
             var lower = email.toLowerCase();
             var exists = this._emailTags[target].some(function (e) { return e.toLowerCase() === lower; });
             if (!exists) {
+                var currentTotal = (this._emailTags.to ? this._emailTags.to.length : 0) + (this._emailTags.cc ? this._emailTags.cc.length : 0);
+                if (currentTotal >= MAX_TOTAL_RECIPIENTS) {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Recipient Limit Reached',
+                            text: 'Maximum ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed for email deliverability and spam prevention.',
+                            icon: 'warning',
+                            confirmButtonColor: '#0D9488'
+                        });
+                    }
+                    return false;
+                }
                 this._emailTags[target].push(email);
                 this._renderTags(target);
                 return true;
@@ -1343,9 +1557,23 @@
             var self = this;
             if (!text) return;
             var items = String(text).split(/[\s,;]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+            var droppedCount = 0;
             items.forEach(function (item) {
-                self.addEmailTag(target, item);
+                var currentTotal = (self._emailTags.to ? self._emailTags.to.length : 0) + (self._emailTags.cc ? self._emailTags.cc.length : 0);
+                if (currentTotal >= MAX_TOTAL_RECIPIENTS) {
+                    droppedCount++;
+                } else {
+                    self.addEmailTag(target, item);
+                }
             });
+            if (droppedCount > 0 && typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Recipient Limit Notice',
+                    text: droppedCount + ' recipient(s) omitted because the maximum limit of ' + MAX_TOTAL_RECIPIENTS + ' recipients (To + CC combined) has been reached.',
+                    icon: 'info',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
         },
 
         syncFirstRecipientSalutation: function () {
@@ -1601,22 +1829,30 @@
             var self = this;
             var list = self._emailTags[self._currentRcpTarget] || [];
             var existing = list.map(function (e) { return e.trim().toLowerCase(); }).filter(Boolean);
+            var totalRecipients = (self._emailTags.to || []).length + (self._emailTags.cc || []).length;
+            var limitReached = totalRecipients >= MAX_TOTAL_RECIPIENTS;
 
             $('.test-rcp-toggle-btn').each(function () {
                 var email = ($(this).attr('data-email') || '').trim().toLowerCase();
                 if (email && existing.indexOf(email) !== -1) {
                     $(this).addClass('is-added');
+                    $(this).css({ 'opacity': '1', 'cursor': 'pointer' });
                     $(this).find('.rcp-btn-label-add').hide();
                     $(this).find('.rcp-btn-label-added').css('display', 'inline-flex').show();
                 } else {
                     $(this).removeClass('is-added');
                     $(this).find('.rcp-btn-label-added').hide();
                     $(this).find('.rcp-btn-label-add').show();
+                    if (limitReached) {
+                        $(this).css({ 'opacity': '0.5', 'cursor': 'not-allowed' });
+                    } else {
+                        $(this).css({ 'opacity': '1', 'cursor': 'pointer' });
+                    }
                 }
             });
 
             var count = existing.length;
-            $('#test_rcp_footer_count_text').text(count + (count === 1 ? ' recipient selected' : ' recipients selected'));
+            $('#test_rcp_footer_count_text').text(count + (count === 1 ? ' recipient selected' : ' recipients selected') + ' (Total: ' + totalRecipients + '/' + MAX_TOTAL_RECIPIENTS + ')');
         },
 
         _initRecipientDrawerEvents: function () {
@@ -1636,6 +1872,16 @@
                 var exists = list.some(function (e) { return e.toLowerCase() === lower; });
 
                 if (!exists) {
+                    var totalRecipients = (self._emailTags.to || []).length + (self._emailTags.cc || []).length;
+                    if (totalRecipients >= MAX_TOTAL_RECIPIENTS) {
+                        Swal.fire({
+                            title: 'Recipient Limit Reached',
+                            text: 'Maximum ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed for email deliverability.',
+                            icon: 'warning',
+                            confirmButtonColor: '#0D9488'
+                        });
+                        return;
+                    }
                     self.addEmailTag(self._currentRcpTarget, email);
                 } else {
                     self.removeEmailByAddress(self._currentRcpTarget, email);
@@ -1678,6 +1924,17 @@
 
             var toList = self._emailTags.to || [];
             var ccList = self._emailTags.cc || [];
+            var totalRecipients = toList.length + ccList.length;
+
+            if (totalRecipients > MAX_TOTAL_RECIPIENTS) {
+                Swal.fire({
+                    title: 'Recipient Limit Exceeded',
+                    text: 'Maximum ' + MAX_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed for deliverability. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TOTAL_RECIPIENTS) + ' recipient(s).',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+                return;
+            }
             var toEmail = toList.join(', ');
             var ccEmail = ccList.join(', ');
             var subject = ($('#test_subject').val() || '').trim();
@@ -2078,5 +2335,14 @@
             ForwardResumeManager.prewarm();
         });
     }
+
+    // Dismiss custom format dropdown when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#test_fwd_format_dropdown_trigger, #test_fwd_format_dropdown_menu').length) {
+            if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+                window.ForwardResumeManager.closeFormatDropdown();
+            }
+        }
+    });
 
 })(window, document, jQuery);
