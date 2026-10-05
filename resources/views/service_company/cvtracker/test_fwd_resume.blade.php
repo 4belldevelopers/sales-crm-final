@@ -1056,7 +1056,8 @@ async function startTestCompilationForOption(optId) {
         var candidatesList = @json($applicationData ?? []);
         var companyData = {
             companyName: @json($companyName ?? 'Hiring Partner'),
-            companyLogo: @json($companyLogo ?? '')
+            companyLogo: @json($companyLogo ?? '') || (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.findDomLogo === 'function' ? window.AgyForwardResumeEngine.findDomLogo() : '') || '',
+            companyLogoRaw: @json($companyLogoRaw ?? '')
         };
         var jobSkills = @json($jobSkills ?? []);
 
@@ -1510,7 +1511,8 @@ window.onTestFwdSubmitClick = async function (e) {
                 if (!blob) {
                     var companyData = {
                         companyName: @json($companyName ?? 'Hiring Partner'),
-                        companyLogo: @json($companyLogo ?? '')
+                        companyLogo: @json($companyLogo ?? '') || (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.findDomLogo === 'function' ? window.AgyForwardResumeEngine.findDomLogo() : '') || '',
+                        companyLogoRaw: @json($companyLogoRaw ?? '')
                     };
                     var jobSkills = @json($jobSkills ?? []);
                     var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
