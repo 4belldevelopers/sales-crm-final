@@ -1893,7 +1893,7 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 @if(config('feature.fwd_resume_v4_enabled', true))
 	{{-- CandidateSnapshotResolver: canonical zero-fabrication candidate data resolver for Pre-Screen PDF (engine.v4.js depends on this) --}}
 	<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
-	<script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}"></script>
+	<script src="{{ asset('assets/modules/fwd-resume/ForwardResumeManager.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/ForwardResumeManager.js')) ?: '4.1' }}"></script>
 @endif
 
 <script> 
@@ -1940,8 +1940,8 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
 		@if(config('feature.fwd_resume_v4_enabled', true))
 		if (window.ForwardResumeManager) {
 			window.ForwardResumeManager.initRoutes({
-				shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}",
-				engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}",
+				shell: "{{ asset('assets/modules/fwd-resume/shell.v4.html') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/shell.v4.html')) ?: '4.1' }}",
+				engine: "{{ asset('assets/modules/fwd-resume/engine.v4.js') }}?v={{ @filemtime(public_path('assets/modules/fwd-resume/engine.v4.js')) ?: '4.1' }}",
 				data: "{{ route('service_company.cvtracker.test_fwd_resume_data') }}",
 				recipients: "{{ route('service_company.cvtracker.fwd_recipients') }}",
 				intent: "{{ route('service_company.cvtracker.test_fwd_resume_intent') }}",

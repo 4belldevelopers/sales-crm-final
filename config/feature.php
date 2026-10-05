@@ -73,6 +73,7 @@ return [
     | decoupled static assets, and direct Cloudflare R2 uploads.
     | Defaults to true.
     |--------------------------------------------------------------------------
+    */
     'fwd_resume_v4_enabled' => (bool) env('FEATURE_FWD_RESUME_V4_ENABLED', true),
 
     /*
