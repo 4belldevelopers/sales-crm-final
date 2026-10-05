@@ -510,6 +510,66 @@
     });
   }
 
+  function rsFindDomLogo() {
+    if (typeof document === 'undefined') return null;
+    try {
+      var dataEl = document.querySelector('[data-report-company-logo], [data-company-logo], [data-logo]');
+      if (dataEl) {
+        var v = dataEl.getAttribute('data-report-company-logo') || dataEl.getAttribute('data-company-logo') || dataEl.getAttribute('data-logo');
+        if (v && v !== '--') return v;
+      }
+      var imgSelectors = [
+        'img[alt*="Company Logo" i]',
+        '.company-logo img',
+        'img.company-logo',
+        '#kt_aside_logo img',
+        '.aside-logo img',
+        'img[src*="/Images/"]',
+        'img[src*="company" i][src*="logo" i]'
+      ];
+      for (var i = 0; i < imgSelectors.length; i++) {
+        var el = document.querySelector(imgSelectors[i]);
+        if (el && el.src && el.src.indexOf('logo-transparent-white') === -1) {
+          return el.src;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function rsImageToPngDataUri(urlStr, withCrossOrigin) {
+    if (!urlStr || typeof Image === 'undefined') return Promise.resolve(null);
+    return new Promise(function (resolve) {
+      var img = new Image();
+      if (withCrossOrigin !== false) {
+        img.crossOrigin = 'anonymous';
+      }
+      var timer = setTimeout(function () {
+        img.src = '';
+        resolve(null);
+      }, 10000);
+      img.onload = function () {
+        clearTimeout(timer);
+        try {
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 300;
+          canvas.height = img.naturalHeight || img.height || 100;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          var png = canvas.toDataURL('image/png');
+          resolve(png);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      img.onerror = function () {
+        clearTimeout(timer);
+        resolve(null);
+      };
+      img.src = urlStr;
+    });
+  }
+
   function rsFetchBlobToDataUri(urlStr) {
     if (!urlStr || urlStr === '--') return Promise.resolve(null);
     if (/^data:image\/(png|jpe?g)/i.test(urlStr)) return Promise.resolve(urlStr);
@@ -523,25 +583,33 @@
     var fetchTarget = urlStr;
     var isSameOrigin = false;
     try {
-      var u = new URL(urlStr, window.location.origin);
+      var currentOrigin = (typeof window !== 'undefined' && window.location ? window.location.origin : '');
+      var u = new URL(urlStr, currentOrigin || 'https://testing.jero.works');
       if (u.pathname.indexOf('company-logo-proxy') !== -1) {
         fetchTarget = u.pathname + (u.search || '');
       }
-      isSameOrigin = (u.origin === window.location.origin);
+      isSameOrigin = !!(currentOrigin && u.origin === currentOrigin);
     } catch (e) {}
 
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var signal = controller ? controller.signal : undefined;
     var timer = setTimeout(function () {
       if (controller) controller.abort();
-    }, 15000);
+    }, 12000);
 
+    // CRITICAL: For same-origin requests (e.g. /company-logo-proxy), do NOT specify mode: 'cors'.
+    // In Fetch specification, credentials: 'include' + mode: 'cors' causes browsers to reject
+    // responses with Access-Control-Allow-Origin: '*'.
+    // Omitting mode on same-origin allows cookies without CORS restriction.
+    // For cross-origin requests, use mode: 'cors' with credentials: 'omit'.
     var fetchOpts = {
-      credentials: isSameOrigin ? 'include' : 'same-origin',
-      mode: 'cors',
+      credentials: isSameOrigin ? 'include' : 'omit',
       cache: 'force-cache',
       signal: signal
     };
+    if (!isSameOrigin) {
+      fetchOpts.mode = 'cors';
+    }
 
     return fetch(fetchTarget, fetchOpts)
       .then(function (resp) {
@@ -563,44 +631,79 @@
       })
       .catch(function () {
         clearTimeout(timer);
-        return null;
+        return rsImageToPngDataUri(urlStr, true).then(function (res) {
+          if (res) return res;
+          return isSameOrigin ? rsImageToPngDataUri(urlStr, false) : null;
+        });
       });
   }
 
   function rsLogoDataUri(rawUrl, fallbackRawUrl) {
-    rawUrl = clean(rawUrl, '');
-    fallbackRawUrl = clean(fallbackRawUrl, '');
-    if (!rawUrl || rawUrl === '--') {
-      if (fallbackRawUrl && fallbackRawUrl !== '--') {
-        rawUrl = fallbackRawUrl;
-        fallbackRawUrl = '';
-      } else {
-        return Promise.resolve(null);
+    var memKey = rawUrl || fallbackRawUrl || '__primary__';
+    if (rsLogoCache[memKey] && typeof rsLogoCache[memKey] === 'string') {
+      return Promise.resolve(rsLogoCache[memKey]);
+    }
+
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        var sessLogo = sessionStorage.getItem('jero_fwd_logo_cache');
+        if (sessLogo && sessLogo.indexOf('data:image/') === 0) {
+          rsLogoCache[memKey] = sessLogo;
+          return Promise.resolve(sessLogo);
+        }
+      }
+    } catch (e) {}
+
+    var candidates = [];
+    function addCandidate(u) {
+      u = clean(u, '');
+      if (u && u !== '--' && candidates.indexOf(u) === -1) {
+        candidates.push(u);
       }
     }
-    if (/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
-    if (rsLogoCache[rawUrl] && typeof rsLogoCache[rawUrl] === 'string') return Promise.resolve(rsLogoCache[rawUrl]);
 
-    return rsFetchBlobToDataUri(rawUrl).then(function (resultUri) {
-      if (resultUri && /^data:image\//i.test(resultUri)) {
-        rsLogoCache[rawUrl] = resultUri;
-        return resultUri;
+    addCandidate(rawUrl);
+    addCandidate(fallbackRawUrl);
+
+    if (rawUrl && rawUrl.indexOf('company-logo-proxy') !== -1) {
+      try {
+        var pUrl = new URL(rawUrl, window.location.origin);
+        addCandidate(pUrl.pathname + (pUrl.search || ''));
+      } catch (e) {}
+    }
+
+    var domLogo = rsFindDomLogo();
+    if (domLogo) addCandidate(domLogo);
+
+    for (var i = 0; i < candidates.length; i++) {
+      if (/^data:image\//i.test(candidates[i])) {
+        rsLogoCache[memKey] = candidates[i];
+        return Promise.resolve(candidates[i]);
       }
-      if (fallbackRawUrl && fallbackRawUrl !== '--' && fallbackRawUrl !== rawUrl) {
-        if (/^data:image\//i.test(fallbackRawUrl)) {
-          rsLogoCache[rawUrl] = fallbackRawUrl;
-          return fallbackRawUrl;
+    }
+
+    if (!candidates.length) {
+      return Promise.resolve(null);
+    }
+
+    function tryCandidate(idx) {
+      if (idx >= candidates.length) return Promise.resolve(null);
+      var cUrl = candidates[idx];
+      return rsFetchBlobToDataUri(cUrl).then(function (result) {
+        if (result && /^data:image\//i.test(result)) {
+          rsLogoCache[memKey] = result;
+          try {
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.setItem('jero_fwd_logo_cache', result);
+            }
+          } catch (e) {}
+          return result;
         }
-        return rsFetchBlobToDataUri(fallbackRawUrl).then(function (fallbackUri) {
-          if (fallbackUri && /^data:image\//i.test(fallbackUri)) {
-            rsLogoCache[rawUrl] = fallbackUri;
-            return fallbackUri;
-          }
-          return null;
-        });
-      }
-      return null;
-    });
+        return tryCandidate(idx + 1);
+      });
+    }
+
+    return tryCandidate(0);
   }
 
   function downloadBlob(blob, fileName) {
@@ -1986,7 +2089,10 @@
     var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
     var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
-    var logoUri = await rsLogoDataUri(brandingData && brandingData.reportCompanyLogo);
+    var logoUri = await rsLogoDataUri(
+      brandingData && (brandingData.reportCompanyLogo || brandingData.companyLogo),
+      brandingData && (brandingData.reportCompanyLogoRaw || brandingData.companyLogoRaw)
+    );
     var logoImage = null;
     var logoData = dataUriBytes(logoUri);
     if (logoData) {
@@ -1996,6 +2102,13 @@
       } catch (err) {
         logoImage = null;
       }
+    }
+    if (!logoImage && logoUri) {
+      try {
+        var rePng = await rsImageToPngDataUri(logoUri, false);
+        var reData = dataUriBytes(rePng);
+        if (reData) logoImage = await targetDoc.embedPng(reData.bytes);
+      } catch (e) {}
     }
 
     var headerScale = Math.max(1, Math.min(1.45, pageSize.width / 612));
@@ -3012,8 +3125,10 @@
             reportDate: candidate.report_date || candidate.reportDate || (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             recruiterName: candidate.recruiter_name || candidate.recruiterName || companyData.recruiterName || 'Hiring Team',
             reportCompanyName: companyData.companyName || candidate.report_company_name || candidate.reportCompanyName || 'Hiring Partner',
-            reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || candidate.reportCompanyLogo || '',
+            reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || candidate.reportCompanyLogo || (typeof rsFindDomLogo === 'function' ? rsFindDomLogo() : '') || '',
             reportCompanyLogoRaw: companyData.companyLogoRaw || candidate.report_company_logo_raw || candidate.reportCompanyLogoRaw || '',
+            companyLogo: companyData.companyLogo || candidate.company_logo || candidate.companyLogo || candidate.report_company_logo || '',
+            companyLogoRaw: companyData.companyLogoRaw || candidate.company_logo_raw || candidate.companyLogoRaw || candidate.report_company_logo_raw || '',
             aiVersion: 'Live Intelligence',
             match: sf.match,
             isImmediate: snapshot.noticeDetails ? snapshot.noticeDetails.mode === 'IMMEDIATE' : false,
@@ -3166,7 +3281,10 @@
       reportDate: candidate.report_date || todayDate,
       recruiterName: candidate.recruiter_name || companyData.recruiterName || 'Hiring Team',
       reportCompanyName: companyData.companyName || candidate.report_company_name || 'Hiring Partner',
-      reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || '',
+      reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || candidate.reportCompanyLogo || (typeof rsFindDomLogo === 'function' ? rsFindDomLogo() : '') || '',
+      reportCompanyLogoRaw: companyData.companyLogoRaw || candidate.report_company_logo_raw || candidate.reportCompanyLogoRaw || '',
+      companyLogo: companyData.companyLogo || candidate.company_logo || candidate.companyLogo || candidate.report_company_logo || '',
+      companyLogoRaw: companyData.companyLogoRaw || candidate.company_logo_raw || candidate.companyLogoRaw || candidate.report_company_logo_raw || '',
       aiVersion: 'Live Intelligence',
       match: matchScore,
       isImmediate: !!candidate.is_immediate,
@@ -3398,6 +3516,8 @@
     downloadBlob: downloadBlob,
     clean: clean,
     fileSafeName: fileSafeName,
+    preloadLogo: rsLogoDataUri,
+    findDomLogo: rsFindDomLogo,
     computeBlobSha256: computeBlobSha256
   };
 }));

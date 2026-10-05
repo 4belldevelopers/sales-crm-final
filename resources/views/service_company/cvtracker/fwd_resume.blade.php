@@ -1763,7 +1763,8 @@ async function startCompilationForOption(optId) {
         var candidatesList = @json($applicationData ?? []);
         var companyData = {
             companyName: @json($companyName ?? 'Hiring Partner'),
-            companyLogo: @json($companyLogo ?? '')
+            companyLogo: @json($companyLogo ?? '') || (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.findDomLogo === 'function' ? window.AgyForwardResumeEngine.findDomLogo() : '') || '',
+            companyLogoRaw: @json($companyLogoRaw ?? '')
         };
         var jobSkills = @json($jobSkills ?? []);
 
@@ -2218,7 +2219,8 @@ window.onFwdSubmitClick = async function (e) {
                     setBtnStatus('Rendering ' + (cand.full_name || 'Resume') + '...');
                     var companyData = {
                         companyName: @json($companyName ?? 'Hiring Partner'),
-                        companyLogo: @json($companyLogo ?? '')
+                        companyLogo: @json($companyLogo ?? '') || (window.AgyForwardResumeEngine && typeof window.AgyForwardResumeEngine.findDomLogo === 'function' ? window.AgyForwardResumeEngine.findDomLogo() : '') || '',
+                        companyLogoRaw: @json($companyLogoRaw ?? '')
                     };
                     var engine = window.AgyForwardResumeEngine || window.AgyForwardResumeHelper;
                     if (!engine || typeof engine.generateAttachmentForCandidate !== 'function') {

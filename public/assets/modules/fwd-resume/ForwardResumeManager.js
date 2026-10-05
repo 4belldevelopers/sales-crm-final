@@ -443,8 +443,8 @@
                 if (cachedCands && cachedCands.length === candidateIds.length) {
                     var cachedData = {
                         applicationData: cachedCands,
-                        companyName: self._companyData.companyName,
-                        companyLogo: self._companyData.companyLogo,
+                        companyName: self._companyData.companyName || (cachedCands[0] && cachedCands[0].report_company_name) || 'Hiring Partner',
+                        companyLogo: self._companyData.companyLogo || (cachedCands[0] && (cachedCands[0].report_company_logo || cachedCands[0].reportCompanyLogo)) || '',
                         jobSkills: self._jobSkills,
                         templateData: self._templateData
                     };
@@ -559,12 +559,20 @@
         _hydrateData: function (data) {
             var self = this;
             self._applicationData = data.applicationData || data.candidates || [];
+            var foundLogo = data.companyLogo || (data.company && data.company.logo) || data.report_company_logo || (self._applicationData[0] && (self._applicationData[0].report_company_logo || self._applicationData[0].reportCompanyLogo)) || '';
+            var domLogo = (typeof window.AgyForwardResumeEngine !== 'undefined' && typeof window.AgyForwardResumeEngine.findDomLogo === 'function')
+                ? window.AgyForwardResumeEngine.findDomLogo()
+                : null;
             self._companyData = {
                 companyName: data.companyName || (data.company && data.company.name) || 'Hiring Partner',
-                companyLogo: data.companyLogo || (data.company && data.company.logo) || '',
+                companyLogo: foundLogo || domLogo || '',
+                companyLogoRaw: data.companyLogoRaw || (data.company && data.company.logo_raw) || '',
                 sender_name: data.sender_name || data.senderName || '',
                 sender_email: data.sender_email || data.senderEmail || ''
             };
+            if (self._companyData.companyLogo && typeof window.AgyForwardResumeEngine !== 'undefined' && typeof window.AgyForwardResumeEngine.preloadLogo === 'function') {
+                window.AgyForwardResumeEngine.preloadLogo(self._companyData.companyLogo).catch(function () {});
+            }
             self._jobSkills = data.jobSkills || data.job_skills || [];
             self._templateData = data.templateData || data.templates || [];
 
