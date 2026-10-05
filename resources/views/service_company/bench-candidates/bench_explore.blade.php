@@ -885,51 +885,59 @@ a.bxr-sum-link{ color:inherit; cursor:pointer; }
 function syncPillCounts(){
     $('#totalcnt_plain').text($('#totalcnt').text());
 }
-function bxrSetActiveStage(page){
+function bxrSetActiveStage(stage){
+    stage = stage || 'all';
     $('.bxr-total').removeClass('bxr-total-active').addClass('bxr-total-gray');
     $('.bxr-circle').removeClass('bxr-c-active');
     $('.bxr-stage-label').removeClass('bxr-l-active');
-    if(page==='all'){
+    if(stage==='all'){
         $('.bxr-total').removeClass('bxr-total-gray').addClass('bxr-total-active');
+        $('#bg_all').removeClass('bg-gray').addClass('bg-total-active');
+        $('.nav_status').html('All Candidate').css({background:'linear-gradient(to left,#01e074,#0581d9)',color:'#fff'});
     } else {
-        $('.bxr-circle[data-bxr="'+page+'"]').addClass('bxr-c-active');
-        $('.bxr-stage-label[data-bxr-label="'+page+'"]').addClass('bxr-l-active');
+        $('.bxr-circle[data-bxr="'+stage+'"]').addClass('bxr-c-active');
+        $('.bxr-stage-label[data-bxr-label="'+stage+'"]').addClass('bxr-l-active');
+        $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
+        var stageLabels = {
+            1: ['Sourcing', {background:'#efefef',color:'#000'}],
+            2: ['Screening', {background:'#fff9ed',color:'#ffab00'}],
+            3: ['Evaluation', {background:'#f0f8ff',color:'#2896ff'}],
+            4: ['Negotiation', {background:'#ffe6f2',color:'#ff4098'}],
+            5: ['Offered', {background:'#d4ffde',color:'#06c732'}],
+            6: ['Joined', {background:'#f7deff',color:'#c000ff'}],
+            7: ['Rejected', {background:'#ffe2e5',color:'#ff0202'}]
+        };
+        if (stageLabels[stage]) {
+            $('.nav_status').html(stageLabels[stage][0]).css(stageLabels[stage][1]);
+        }
     }
 }
 $(document).ready(function(){
     bxrSetActiveStage($('#stage').val()||'all');
 });
-$(document).on('click','.application_sttus_nav',function(){
-    bxrSetActiveStage($(this).attr('rel'));
-});
 </script>
 
-{{-- ── Original stage-click logic — UNCHANGED ── --}}
 <script>
-$(document).ready(function(){
-    var cur=$('#stage').val();
-    if(cur=='all'){$('.nav_status').html('All Candidate').css({background:'linear-gradient(to left,#01e074,#0581d9)',color:'#fff'});}
-    $(document).on('click','.application_sttus_nav',function(){
-        $(".bg").removeClass('bg-Asourcing bg-Ascreening bg-Ainterview bg-Anegotation bg-Aoffer bg-Ajoiner bg-Arejected').addClass('bg-gray');
-        ['1','2','3','4','5','6','7'].forEach(function(n){
-            $('#tx_'+n).removeClass('text-Asourcing text-Ascreening text-Ainterview text-Anegotation text-Aoffer text-Ajoiner text-Arejected').addClass('color-all');
-        });
-        $('#bg_all').removeClass('bg-total-active').addClass('bg-gray');
-        var page=$(this).attr('rel'), bid=$('#bench_id').val();
-        var M={1:['bg-Asourcing','text-Asourcing','Sourcing',{background:'#efefef',color:'#000'}],
-               2:['bg-Ascreening','text-Ascreening','Screening',{background:'#fff9ed',color:'#ffab00'}],
-               3:['bg-Ainterview','text-Ainterview','Interview',{background:'#f0f8ff',color:'#2896ff'}],
-               4:['bg-Anegotation','text-Anegotation','Negotiation',{background:'#ffe6f2',color:'#ff4098'}],
-               5:['bg-Aoffer','text-Aoffer','Offered',{background:'#d4ffde',color:'#06c732'}],
-               6:['bg-Ajoiner','text-Ajoiner','Joined',{background:'#f7deff',color:'#c000ff'}],
-               7:['bg-Arejected','text-Arejected','Rejected',{background:'#ffe2e5',color:'#ff0202'}]};
-        if(M[page]){$('#bg_'+page).removeClass('bg-gray').addClass(M[page][0]);$('#tx_'+page).removeClass('color-all').addClass(M[page][1]);$('.nav_status').html(M[page][2]).css(M[page][3]);}
-        else if(page=='all'){$('.nav_status').html('All Candidate').css({background:'linear-gradient(to left,#01e074,#0581d9)',color:'#fff'});$('#bg_all').removeClass('bg-gray').addClass('bg-total-active');}
-        $('#stage').val(page);
-        var url='<?php echo url('/service_company/bench-candidates/bench_explore/'); ?>';
-        window.history.pushState('page2','Title',url+'/'+bid+'/'+page);
-        fetchBenchExploreJobCandidateList();
-    });
+$(document).on('click', '.application_sttus_nav', function(e){
+    e.preventDefault();
+    var page = $(this).attr('rel') || 'all', bid = $('#bench_id').val();
+    $('#stage').val(page);
+    bxrSetActiveStage(page);
+    var url = '<?php echo url('/service_company/bench-candidates/bench_explore/'); ?>';
+    if (bid) {
+        window.history.pushState({bench_id: bid, stage: page}, '', url + '/' + bid + '/' + page);
+    }
+    BenchExploreTabManager.switchStage(page);
+});
+
+window.addEventListener('popstate', function(e){
+    var pathParts = window.location.pathname.split('/');
+    var stage = pathParts[pathParts.length - 1] || 'all';
+    if (stage === 'bench_explore' || !stage) stage = 'all';
+    $('#stage').val(stage);
+    bxrSetActiveStage(stage);
+    BenchExploreTabManager.switchStage(stage);
+});
 </script>
 
 {{-- ── Global Currency Sandbox Integration (Rule 14 & 17 Sandboxed v4.1) ── --}}
@@ -957,6 +965,13 @@ var BenchExploreTabManager = (function(){
             var self = this;
             self.bindEvents();
             self.loadCurrentTab(1);
+        },
+
+        switchStage: function(stage) {
+            state.activeTab = stage || 'all';
+            $('#stage').val(state.activeTab);
+            state.cache = {};
+            return this.loadCurrentTab(1);
         },
 
         bindEvents: function() {
@@ -994,7 +1009,7 @@ var BenchExploreTabManager = (function(){
                 stage = $('#stage').val(),
                 sort = $('#hiringtype').val(),
                 cs = $('#kt_tagify_2').val(),
-                st = $('[name="bxr_status"]:checked').val() || 'active',
+                st = $('[name="bxr_status"]:checked').val() || '',
                 activity = $('[name="bxr_activity"]:checked').val() || '1',
                 company = (typeof bxrTagifyCompany !== 'undefined') ? JSON.stringify(bxrTagifyCompany.value) : '[]',
                 location = (typeof bxrTagifyLocation !== 'undefined') ? JSON.stringify(bxrTagifyLocation.value) : '[]',
@@ -1009,6 +1024,7 @@ var BenchExploreTabManager = (function(){
             var self = this;
             page = page || 1;
             state.activePage = page;
+            state.activeTab = $('#stage').val() || 'all';
 
             if (state.activeXHR && state.activeXHR.readyState !== 4) {
                 state.activeXHR.abort();
@@ -1031,7 +1047,7 @@ var BenchExploreTabManager = (function(){
                 stage = $('#stage').val(),
                 sort = $('#hiringtype').val(),
                 cs = $('#kt_tagify_2').val(),
-                st = $('[name="bxr_status"]:checked').val() || 'active',
+                st = $('[name="bxr_status"]:checked').val() || '',
                 activity = $('[name="bxr_activity"]:checked').val() || '1',
                 company = (typeof bxrTagifyCompany !== 'undefined') ? JSON.stringify(bxrTagifyCompany.value) : '[]',
                 location = (typeof bxrTagifyLocation !== 'undefined') ? JSON.stringify(bxrTagifyLocation.value) : '[]',

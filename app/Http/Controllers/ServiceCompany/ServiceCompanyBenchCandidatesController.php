@@ -5428,8 +5428,13 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                 $status = explode(',', $status);
             }
 
+            // Stage 1 (Sourcing) encompasses master_status_ids [1, 8] (Sourcing + InReview)
+            if (in_array(1, $status) || in_array('1', $status) || in_array(8, $status) || in_array('8', $status)) {
+                $status = array_unique(array_merge($status, [1, 8]));
+            }
+
             // Stage 7 (Rejected) encompasses master_status_ids [7, 9].
-            if (in_array(7, $status)) {
+            if (in_array(7, $status) || in_array('7', $status)) {
                 $status = array_unique(array_merge($status, [9]));
             }
 
