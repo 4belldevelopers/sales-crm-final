@@ -190,6 +190,11 @@
           try { window.PDFLib = window.require('pdf-lib'); } catch (e) {}
         }
         return !!(window.PDFLib && window.PDFLib.PDFDocument);
+      }).then(function () {
+        if (!window.PDFLib && typeof window.require === 'function') {
+          try { window.PDFLib = window.require('pdf-lib'); } catch (e) {}
+        }
+        return window.PDFLib;
       });
     }).catch(function (err) {
       rsPdfLibReady = null;
@@ -211,6 +216,11 @@
           try { window.JSZip = window.require('jszip'); } catch (e) {}
         }
         return !!window.JSZip;
+      }).then(function () {
+        if (!window.JSZip && typeof window.require === 'function') {
+          try { window.JSZip = window.require('jszip'); } catch (e) {}
+        }
+        return window.JSZip;
       });
     }).catch(function (err) {
       rsJsZipReady = null;
@@ -219,21 +229,70 @@
     return rsJsZipReady;
   }
 
+  function rsGetJsPdfConstructor() {
+    var root = (typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : globalThis));
+    if (!root) return null;
+
+    if (root.jspdf && typeof root.jspdf.jsPDF === 'function') {
+      return root.jspdf.jsPDF;
+    }
+    if (typeof root.jsPDF === 'function') {
+      return root.jsPDF;
+    }
+    if (root.jspdf && typeof root.jspdf === 'function') {
+      return root.jspdf;
+    }
+    if (typeof root.require === 'function') {
+      try {
+        var req = root.require('jspdf');
+        if (req && typeof req.jsPDF === 'function') return req.jsPDF;
+        if (typeof req === 'function') return req;
+        if (req && req.default && typeof req.default.jsPDF === 'function') return req.default.jsPDF;
+      } catch (e) {}
+      try {
+        var req2 = root.require('jsPDF');
+        if (req2 && typeof req2.jsPDF === 'function') return req2.jsPDF;
+        if (typeof req2 === 'function') return req2;
+      } catch (e) {}
+    }
+    return null;
+  }
+
   function ensureJsPdf() {
-    if (rsJsPdfReady && ((window.jspdf && typeof window.jspdf.jsPDF === 'function') || typeof window.jsPDF === 'function')) return rsJsPdfReady;
+    var root = (typeof window !== 'undefined' ? window : (typeof self !== 'undefined' ? self : globalThis));
+    var ctor = rsGetJsPdfConstructor();
+    if (ctor) {
+      if (!root.jspdf) root.jspdf = { jsPDF: ctor };
+      else if (!root.jspdf.jsPDF) root.jspdf.jsPDF = ctor;
+      if (!root.jsPDF) root.jsPDF = ctor;
+      return Promise.resolve(root.jspdf);
+    }
+    if (rsJsPdfReady) return rsJsPdfReady;
+
     var sources = [
       '/js/jspdf.umd.min.js',
       'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+      'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
     ];
+
     rsJsPdfReady = rsWithAmdDisabled(function () {
       return rsTryList(sources, 0, function () {
-        return !!((window.jspdf && typeof window.jspdf.jsPDF === 'function') || typeof window.jsPDF === 'function');
+        var c = rsGetJsPdfConstructor();
+        return !!c;
+      }).then(function () {
+        var c = rsGetJsPdfConstructor();
+        if (!c) throw new Error('jsPDF loaded but constructor could not be resolved');
+        if (!root.jspdf) root.jspdf = { jsPDF: c };
+        else if (!root.jspdf.jsPDF) root.jspdf.jsPDF = c;
+        if (!root.jsPDF) root.jsPDF = c;
+        return root.jspdf;
       });
     }).catch(function (err) {
       rsJsPdfReady = null;
       throw err;
     });
+
     return rsJsPdfReady;
   }
 
@@ -1087,7 +1146,8 @@
       await yieldToMain();
 
       var jspdf = await ensureJsPdf();
-      var JsPDF = jspdf.jsPDF;
+      var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (!JsPDF) throw new Error('jsPDF library could not be initialized for DOCX rendering');
       var pdf = null;
       var renderDpi = 150;
 
@@ -1873,7 +1933,9 @@
     }
     rdcDiscoverAllContactsFromText(allPagesText, rules);
 
-    var JsPDF = window.jspdf.jsPDF;
+    var jspdf = await ensureJsPdf();
+    var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    if (!JsPDF) throw new Error('jsPDF library could not be initialized for anonymization');
     var outPdf = null;
     var textItems = 0;
     var redactions = 0;
@@ -3133,8 +3195,9 @@
       await Promise.all([ensurePdfJs(), ensureJsPdf()]);
       var sourceBytes = await pdfBlob.arrayBuffer();
       var bytes = new Uint8Array(sourceBytes);
-      var doc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
-      var JsPDF = window.jspdf.jsPDF;
+      var jspdf = await ensureJsPdf();
+      var JsPDF = (jspdf && jspdf.jsPDF) || rsGetJsPdfConstructor() || (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+      if (!JsPDF) throw new Error('jsPDF library could not be initialized for size optimization');
 
       // Iterative compression profiles: start with high quality, then progressively adjust
       var profiles = [
