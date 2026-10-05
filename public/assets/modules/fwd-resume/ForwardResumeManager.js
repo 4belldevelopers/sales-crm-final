@@ -827,75 +827,86 @@
         },
 
         toggleFormatDropdown: function (e) {
-            if (e && e.stopPropagation) e.stopPropagation();
+            if (e) {
+                if (e.stopPropagation) e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+            }
             var menu = $('#test_fwd_format_dropdown_menu');
-            var trigger = $('#test_fwd_format_dropdown_trigger');
+            var trigger = $('#test_fwd_format_trigger');
+            var caret = $('#test_fwd_trigger_caret');
             if (menu.is(':visible')) {
                 menu.hide();
-                trigger.removeClass('is-active');
+                trigger.removeClass('is-active').css('border-color', '#CBD5E1');
+                if (caret.length) caret.css('transform', 'rotate(0deg)');
             } else {
                 menu.show();
-                trigger.addClass('is-active');
+                trigger.addClass('is-active').css('border-color', '#2563EB');
+                if (caret.length) caret.css('transform', 'rotate(180deg)');
+                menu.off('wheel.fwdMenu').on('wheel.fwdMenu', function (ev) {
+                    var oe = ev.originalEvent || ev;
+                    var d = oe.deltaY;
+                    var st = this.scrollTop;
+                    var sh = this.scrollHeight;
+                    var ch = this.clientHeight;
+                    if ((d > 0 && st + ch >= sh) || (d < 0 && st <= 0)) {
+                        ev.preventDefault();
+                    }
+                    ev.stopPropagation();
+                });
             }
         },
 
         closeFormatDropdown: function () {
             $('#test_fwd_format_dropdown_menu').hide();
-            $('#test_fwd_format_dropdown_trigger').removeClass('is-active');
+            $('#test_fwd_format_trigger').removeClass('is-active').css('border-color', '#CBD5E1');
+            var caret = $('#test_fwd_trigger_caret');
+            if (caret.length) caret.css('transform', 'rotate(0deg)');
         },
 
         selectResumeFormat: function (optId, el) {
             var self = this;
             optId = parseInt(optId, 10) || 0;
+            if (!optId) return;
+
             $('#test_fwd_resume_format').val(optId);
 
-            // Update card styling
-            $('.test-fwd-format-card').removeClass('is-active').css({
-                'border-color': '#E5E7EB',
-                'background': '#FFFFFF'
-            });
-            $('.test-fwd-format-card .test-fwd-format-radio-dot').css({
-                'border-color': '#D1D5DB',
-                'background': '#FFFFFF'
-            }).html('');
+            if (!el) {
+                el = $('.mm-fwd-opt-row[data-opt-id="' + optId + '"]')[0];
+            }
 
+            // Update active highlight and radio indicator in dropdown list
+            $('.mm-fwd-opt-row').removeClass('is-selected');
+            if (el) $(el).addClass('is-selected');
+
+            $('.mf-radio').removeClass('is-checked');
+            if (el) $(el).find('.mf-radio').addClass('is-checked');
+
+            // Update trigger UI (icon, title, desc, default badge)
             var title = 'Option ' + optId;
             var desc = 'Generate formatted document for candidate delivery.';
+            var iconHtml = null;
 
             if (el) {
                 var card = $(el);
-                card.addClass('is-active').css({
-                    'border-color': '#0D9488',
-                    'background': '#F0FDFA'
-                });
-                card.find('.test-fwd-format-radio-dot').css({
-                    'border-color': '#0D9488',
-                    'background': '#0D9488'
-                }).html('<span style="width:5px;height:5px;border-radius:50%;background:#ffffff;display:block;"></span>');
-
-                title = card.attr('data-opt-title') || card.find('.test-fwd-format-card-title').text().trim();
-                desc = card.attr('data-opt-desc') || card.find('.test-fwd-format-card-desc').text().trim();
-            } else {
-                var targetCard = $('.test-fwd-format-card[data-opt-id="' + optId + '"]');
-                if (targetCard.length) {
-                    targetCard.addClass('is-active').css({
-                        'border-color': '#0D9488',
-                        'background': '#F0FDFA'
-                    });
-                    targetCard.find('.test-fwd-format-radio-dot').css({
-                        'border-color': '#0D9488',
-                        'background': '#0D9488'
-                    }).html('<span style="width:5px;height:5px;border-radius:50%;background:#ffffff;display:block;"></span>');
-
-                    title = targetCard.attr('data-opt-title') || targetCard.find('.test-fwd-format-card-title').text().trim();
-                    desc = targetCard.attr('data-opt-desc') || targetCard.find('.test-fwd-format-card-desc').text().trim();
-                }
+                title = card.attr('data-title') || card.find('.mf-opt-title').text().trim();
+                desc = card.attr('data-desc') || card.find('.mf-opt-desc').text().trim();
+                iconHtml = card.find('.mf-opt-icon').html();
             }
 
-            $('#test_fwd_format_trigger_title').text(title);
-            $('#test_fwd_format_trigger_desc').text(desc);
-            $('#test_fwd_preview_format_title').text(title);
-            $('#test_fwd_preview_desc').text(desc);
+            if (iconHtml) {
+                $('#test_fwd_trigger_icon').html(iconHtml);
+            }
+            $('#test_fwd_trigger_title').text(title);
+            $('#test_fwd_trigger_desc').text(desc);
+
+            if (optId === 1) {
+                $('#test_fwd_trigger_badge').show();
+            } else {
+                $('#test_fwd_trigger_badge').hide();
+            }
+
+            if ($('#test_fwd_preview_format_title').length) $('#test_fwd_preview_format_title').text(title);
+            if ($('#test_fwd_preview_desc').length) $('#test_fwd_preview_desc').text(desc);
 
             self.closeFormatDropdown();
             self.onFormatChange(optId);
@@ -989,11 +1000,10 @@
                 return;
             }
 
-            previewCard.slideDown(150);
-            var title = $('#test_fwd_format_trigger_title').text() || sel.text();
-            var desc = $('#test_fwd_format_trigger_desc').text() || sel.attr('data-desc') || 'Generate formatted document for candidate delivery.';
-            $('#test_fwd_preview_format_title').text(title);
-            $('#test_fwd_preview_desc').text(desc);
+            var title = $('#test_fwd_trigger_title').text() || sel.text();
+            var desc = $('#test_fwd_trigger_desc').text() || sel.attr('data-desc') || 'Generate formatted document for candidate delivery.';
+            if ($('#test_fwd_preview_format_title').length) $('#test_fwd_preview_format_title').text(title);
+            if ($('#test_fwd_preview_desc').length) $('#test_fwd_preview_desc').text(desc);
 
             self.updateCumulativeSize();
             self.updateSendButtonState();
@@ -2308,7 +2318,7 @@
 
     // Dismiss custom format dropdown when clicking outside
     $(document).on('click', function (e) {
-        if (!$(e.target).closest('#test_fwd_format_dropdown_trigger, #test_fwd_format_dropdown_menu').length) {
+        if (!$(e.target).closest('#test_fwd_format_dropdown_wrap').length) {
             if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
                 window.ForwardResumeManager.closeFormatDropdown();
             }
