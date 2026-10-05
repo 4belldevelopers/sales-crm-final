@@ -5511,7 +5511,7 @@ setTimeout(() => {
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
   @php
-    $rsNoteRaw = strip_tags((string)(@$application->recruiter_note ?? ''));
+    $rsNoteRaw = strip_tags((string)(@$application->recruiter_note ?: @$application->comment ?? ''));
     $rsSummaryFinal = $rsCareerSummary ?: trim(strip_tags(html_entity_decode((string)(@$application->cover_letter??''),ENT_QUOTES,'UTF-8')));
   @endphp
   data-recruiter-note="{{ \Illuminate\Support\Str::limit($rsNoteRaw, 500) }}"
