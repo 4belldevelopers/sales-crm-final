@@ -276,8 +276,7 @@
             finalize: '/service_company/cvtracker/test_fwd_resume_finalize',
             send: '/service_company/cvtracker/test_fwd_resume_send',
             quickUpload: '/service_company/cvtracker/quick_upload_resume',
-            emailTemplate: '/service_company/cvtracker/email_template',
-            legacyFallback: '/service_company/cvtracker/test_fwd_resume'
+            emailTemplate: '/service_company/cvtracker/email_template'
         },
         _csrfToken: '',
         _shellHtml: '',
@@ -429,7 +428,13 @@
                         })
                         .catch(function (err) {
                             console.error('Failed to load shell:', err);
-                            self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                            container.html(
+                                '<div class="alert alert-danger m-4">' +
+                                '<i class="ki-outline ki-cross-circle fs-2 me-2"></i> Failed to load Forward Resume interface. Please refresh and try again.</div>'
+                            );
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Failed to load Forward Resume interface. Please try again.');
+                            }
                         });
                 }
             } else {
@@ -475,16 +480,21 @@
                         if (res.applicationData) JeroFwdDB.saveCandidates(res.applicationData);
                         if (res.templateData) JeroFwdDB.saveTemplates(res.templateData);
                     } else {
-                        console.warn('Micro-JSON response failure, triggering fallback:', res);
+                        console.warn('Micro-JSON response failure:', res);
                         if (!self._applicationData || self._applicationData.length === 0) {
-                            self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                            var errMsg = (res && res.message) ? res.message : 'Unable to load candidate details for forward resume.';
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error(errMsg);
+                            }
                         }
                     }
                 },
                 error: function (xhr, status, error) {
                     console.error('Micro-JSON endpoint error:', error);
                     if (!self._applicationData || self._applicationData.length === 0) {
-                        self.fallbackToLegacy(candidateIds, jobIdArr, matchMap);
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Failed to retrieve candidate details. Please try again.');
+                        }
                     }
                 }
             });
@@ -2282,46 +2292,6 @@
                 if (drawer) drawer.hide();
             }
             self.closeRecipientDrawer();
-        },
-
-        // Circuit Breaker: Fallback to legacy endpoint if micro-JSON fails
-        fallbackToLegacy: function (candidateIds, jobIdArr, matchMap) {
-            console.warn('ForwardResumeManager: Activating legacy fallback path.');
-            var self = this;
-            var id = (jobIdArr && jobIdArr[0]) ? jobIdArr[0] : (candidateIds[0] || '1');
-            var url = self._routes.legacyFallback + '/' + id;
-            var token = self._csrfToken || $('input[name="_token"]').val();
-
-            $('#application_test_fwd_resume_body_content').html(
-                '<div class="d-flex align-items-center justify-content-center" style="min-height:200px;">' +
-                '<span class="spinner-border spinner-border-sm text-warning me-2"></span> Loading Fallback Forward Resume...</div>'
-            );
-
-            $.ajax({
-                type: 'POST',
-                url: url,
-                data: {
-                    '_token': token,
-                    '_method': 'POST',
-                    'arr': candidateIds,
-                    'jobIdArr': jobIdArr,
-                    'matchMap': matchMap
-                },
-                cache: false,
-                success: function (response) {
-                    if (response.status === 'success') {
-                        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
-                            try { CKEDITOR.instances['test_editor1'].destroy(true); } catch (e) {}
-                        }
-                        $('#application_test_fwd_resume_body_content').html(response.view);
-                    } else {
-                        toastr.error(response.message || 'Failed to initialize Forward Resume fallback');
-                    }
-                },
-                error: function () {
-                    toastr.error('Server error initializing Forward Resume fallback');
-                }
-            });
         }
     };
 
