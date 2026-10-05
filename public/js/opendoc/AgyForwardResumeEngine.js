@@ -113,28 +113,84 @@
     }).catch(function () { return rsTryList(list, index + 1, test); });
   }
 
-  function ensurePdfMake() {
-    if (rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
-    var core = ['/js/pdfmake.min.js', 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'];
-    var vfs = ['/js/vfs_fonts.min.js', 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js'];
-    rsPdfReady = rsTryList(core, 0, function () { return !!window.pdfMake; })
-      .then(function () { return rsTryList(vfs, 0, function () { return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
-      .then(function () {
-        window.pdfMake.fonts = { Roboto: { normal: 'Roboto-Regular.ttf', bold: 'Roboto-Medium.ttf', italics: 'Roboto-Italic.ttf', bolditalics: 'Roboto-MediumItalic.ttf' } };
+  function rsWithAmdDisabled(fn) {
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
+    try {
+      return Promise.resolve().then(fn).then(function (res) {
+        if (wasAmd && window.define) window.define.amd = wasAmd;
+        return res;
+      }).catch(function (err) {
+        if (wasAmd && window.define) window.define.amd = wasAmd;
+        throw err;
       });
+    } catch (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      return Promise.reject(err);
+    }
+  }
+
+  function ensurePdfMake() {
+    if (rsPdfReady && window.pdfMake && window.pdfMake.vfs && (window.pdfMake.vfs['Roboto-Regular.ttf'] || window.pdfMake.vfs['Roboto-Medium.ttf'])) return rsPdfReady;
+    var core = [
+      '/js/pdfmake.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'
+    ];
+    var vfs = [
+      '/js/vfs_fonts.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js'
+    ];
+    rsPdfReady = rsWithAmdDisabled(function () {
+      return rsTryList(core, 0, function () {
+        if (!window.pdfMake && typeof window.require === 'function') {
+          try { window.pdfMake = window.require('pdfmake'); } catch (e) {}
+        }
+        return !!(window.pdfMake && typeof window.pdfMake.createPdf === 'function');
+      }).then(function () {
+        return rsTryList(vfs, 0, function () {
+          return !!(window.pdfMake && (window.pdfMake.vfs || window.vfs));
+        });
+      }).then(function () {
+        if (window.vfs && window.pdfMake && !window.pdfMake.vfs) {
+          window.pdfMake.vfs = window.vfs;
+        }
+        if (window.pdfMake) {
+          window.pdfMake.fonts = {
+            Roboto: {
+              normal: 'Roboto-Regular.ttf',
+              bold: 'Roboto-Medium.ttf',
+              italics: 'Roboto-Italic.ttf',
+              bolditalics: 'Roboto-MediumItalic.ttf'
+            }
+          };
+        }
+        return window.pdfMake;
+      });
+    }).catch(function (err) {
+      rsPdfReady = null;
+      throw err;
+    });
     return rsPdfReady;
   }
 
   function ensurePdfLib() {
     if (rsPdfLibReady && window.PDFLib && window.PDFLib.PDFDocument) return rsPdfLibReady;
-    var sources = ['/js/pdf-lib.min.js', 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'];
-    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
-    if (wasAmd) window.define.amd = false;
-    rsPdfLibReady = rsTryList(sources, 0, function () { return !!(window.PDFLib && window.PDFLib.PDFDocument); }).then(function () {
-      if (wasAmd && window.define) window.define.amd = wasAmd;
-      return window.PDFLib;
+    var sources = [
+      '/js/pdf-lib.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js',
+      'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'
+    ];
+    rsPdfLibReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () {
+        if (!window.PDFLib && typeof window.require === 'function') {
+          try { window.PDFLib = window.require('pdf-lib'); } catch (e) {}
+        }
+        return !!(window.PDFLib && window.PDFLib.PDFDocument);
+      });
     }).catch(function (err) {
-      if (wasAmd && window.define) window.define.amd = wasAmd;
+      rsPdfLibReady = null;
       throw err;
     });
     return rsPdfLibReady;
@@ -142,21 +198,38 @@
 
   function ensureJsZip() {
     if (rsJsZipReady && window.JSZip) return rsJsZipReady;
-    var sources = ['/js/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
-    rsJsZipReady = rsTryList(sources, 0, function () { return !!window.JSZip; });
+    var sources = [
+      '/js/jszip.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+      'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+    ];
+    rsJsZipReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () {
+        if (!window.JSZip && typeof window.require === 'function') {
+          try { window.JSZip = window.require('jszip'); } catch (e) {}
+        }
+        return !!window.JSZip;
+      });
+    }).catch(function (err) {
+      rsJsZipReady = null;
+      throw err;
+    });
     return rsJsZipReady;
   }
 
   function ensureJsPdf() {
-    if (rsJsPdfReady && window.jspdf && typeof window.jspdf.jsPDF === 'function') return rsJsPdfReady;
-    var sources = ['/js/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
-    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
-    if (wasAmd) window.define.amd = false;
-    rsJsPdfReady = rsTryList(sources, 0, function () { return !!(window.jspdf && typeof window.jspdf.jsPDF === 'function'); }).then(function () {
-      if (wasAmd && window.define) window.define.amd = wasAmd;
-      return window.jspdf;
+    if (rsJsPdfReady && ((window.jspdf && typeof window.jspdf.jsPDF === 'function') || typeof window.jsPDF === 'function')) return rsJsPdfReady;
+    var sources = [
+      '/js/jspdf.umd.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    ];
+    rsJsPdfReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () {
+        return !!((window.jspdf && typeof window.jspdf.jsPDF === 'function') || typeof window.jsPDF === 'function');
+      });
     }).catch(function (err) {
-      if (wasAmd && window.define) window.define.amd = wasAmd;
+      rsJsPdfReady = null;
       throw err;
     });
     return rsJsPdfReady;
@@ -164,19 +237,29 @@
 
   function ensurePdfJs() {
     if (rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function') return rsPdfJsReady;
-    var sources = ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'];
-    rsPdfJsReady = rsTryList(sources, 0, function () { return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function'); }).then(function () {
-      try {
-        var ver = window.pdfjsLib.version || '2.11.338';
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + ver + '/pdf.worker.min.js';
-      } catch (err) {}
-      return window.pdfjsLib;
+    var sources = [
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/build/pdf.min.js'
+    ];
+    rsPdfJsReady = rsWithAmdDisabled(function () {
+      return rsTryList(sources, 0, function () {
+        return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument === 'function');
+      }).then(function () {
+        try {
+          var ver = window.pdfjsLib.version || '2.11.338';
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/' + ver + '/pdf.worker.min.js';
+        } catch (err) {}
+        return window.pdfjsLib;
+      });
+    }).catch(function (err) {
+      rsPdfJsReady = null;
+      throw err;
     });
     return rsPdfJsReady;
   }
 
   function ensureOpenDocLab(allowExternalFallback) {
-    allowExternalFallback = allowExternalFallback === true;
+    allowExternalFallback = allowExternalFallback !== false;
     if (rsOpenDocLocalReady) return rsOpenDocLocalReady;
 
     if (window.AgyWasmEngine && window.AgyWasmEngine.wasmModule && typeof window.AgyWasmEngine.wasmModule.open === 'function') {
@@ -186,14 +269,14 @@
 
     var openDocSources = [
       {
-        label: 'Cloudflare OpenDoc runtime',
-        moduleUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903',
-        wasmUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903'
-      },
-      {
         label: 'Local OpenDoc runtime',
         moduleUrl: '/js/opendoc/casual_doc_wasm.js',
         wasmUrl: '/js/opendoc/casual_doc_wasm_bg.wasm'
+      },
+      {
+        label: 'Cloudflare OpenDoc runtime',
+        moduleUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm.js?v=opendoc-20260903',
+        wasmUrl: 'https://file.jero.works/js/opendoc/casual_doc_wasm_bg.wasm?v=opendoc-20260903'
       }
     ];
 
@@ -334,15 +417,82 @@
     return { mime: match[1].toLowerCase(), bytes: bytes };
   }
 
-  function rsLogoDataUri(rawUrl) {
-    rawUrl = clean(rawUrl, '');
-    if (!rawUrl || rawUrl === '--') return Promise.resolve(null);
-    if (/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
-    if (rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
-    rsLogoCache[rawUrl] = fetch(rawUrl, { credentials: 'include', cache: 'force-cache' })
-      .then(function (response) { return response.ok ? response.blob() : null; })
+  function rsRasterizeBlobToPngDataUri(blob) {
+    return new Promise(function (resolve) {
+      try {
+        var url = URL.createObjectURL(blob);
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+          try {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width || 300;
+            canvas.height = img.naturalHeight || img.height || 100;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            var pngUri = canvas.toDataURL('image/png');
+            URL.revokeObjectURL(url);
+            resolve(pngUri);
+          } catch (err) {
+            URL.revokeObjectURL(url);
+            resolve(null);
+          }
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      } catch (ex) {
+        resolve(null);
+      }
+    });
+  }
+
+  function rsFetchBlobToDataUri(urlStr) {
+    if (!urlStr || urlStr === '--') return Promise.resolve(null);
+    if (/^data:image\/(png|jpe?g)/i.test(urlStr)) return Promise.resolve(urlStr);
+    if (/^data:image\//i.test(urlStr)) {
+      return fetch(urlStr)
+        .then(function (r) { return r.blob(); })
+        .then(rsRasterizeBlobToPngDataUri)
+        .catch(function () { return null; });
+    }
+
+    var fetchTarget = urlStr;
+    var isSameOrigin = false;
+    try {
+      var u = new URL(urlStr, window.location.origin);
+      if (u.pathname.indexOf('company-logo-proxy') !== -1) {
+        fetchTarget = u.pathname + (u.search || '');
+      }
+      isSameOrigin = (u.origin === window.location.origin);
+    } catch (e) {}
+
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var signal = controller ? controller.signal : undefined;
+    var timer = setTimeout(function () {
+      if (controller) controller.abort();
+    }, 15000);
+
+    var fetchOpts = {
+      credentials: isSameOrigin ? 'include' : 'same-origin',
+      mode: 'cors',
+      cache: 'force-cache',
+      signal: signal
+    };
+
+    return fetch(fetchTarget, fetchOpts)
+      .then(function (resp) {
+        clearTimeout(timer);
+        return resp && resp.ok ? resp.blob() : null;
+      })
       .then(function (blob) {
-        if (!blob) return null;
+        if (!blob || blob.size < 32) return null;
+        var type = (blob.type || '').toLowerCase();
+        if (type.indexOf('png') === -1 && type.indexOf('jpeg') === -1 && type.indexOf('jpg') === -1) {
+          return rsRasterizeBlobToPngDataUri(blob);
+        }
         return new Promise(function (resolve) {
           var reader = new FileReader();
           reader.onload = function () { resolve(reader.result); };
@@ -350,8 +500,46 @@
           reader.readAsDataURL(blob);
         });
       })
-      .catch(function () { return null; });
-    return rsLogoCache[rawUrl];
+      .catch(function () {
+        clearTimeout(timer);
+        return null;
+      });
+  }
+
+  function rsLogoDataUri(rawUrl, fallbackRawUrl) {
+    rawUrl = clean(rawUrl, '');
+    fallbackRawUrl = clean(fallbackRawUrl, '');
+    if (!rawUrl || rawUrl === '--') {
+      if (fallbackRawUrl && fallbackRawUrl !== '--') {
+        rawUrl = fallbackRawUrl;
+        fallbackRawUrl = '';
+      } else {
+        return Promise.resolve(null);
+      }
+    }
+    if (/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
+    if (rsLogoCache[rawUrl] && typeof rsLogoCache[rawUrl] === 'string') return Promise.resolve(rsLogoCache[rawUrl]);
+
+    return rsFetchBlobToDataUri(rawUrl).then(function (resultUri) {
+      if (resultUri && /^data:image\//i.test(resultUri)) {
+        rsLogoCache[rawUrl] = resultUri;
+        return resultUri;
+      }
+      if (fallbackRawUrl && fallbackRawUrl !== '--' && fallbackRawUrl !== rawUrl) {
+        if (/^data:image\//i.test(fallbackRawUrl)) {
+          rsLogoCache[rawUrl] = fallbackRawUrl;
+          return fallbackRawUrl;
+        }
+        return rsFetchBlobToDataUri(fallbackRawUrl).then(function (fallbackUri) {
+          if (fallbackUri && /^data:image\//i.test(fallbackUri)) {
+            rsLogoCache[rawUrl] = fallbackUri;
+            return fallbackUri;
+          }
+          return null;
+        });
+      }
+      return null;
+    });
   }
 
   function downloadBlob(blob, fileName) {
@@ -830,7 +1018,7 @@
     await yieldToMain();
 
     var initResults = await Promise.all([
-      ensureOpenDocLab(false),
+      ensureOpenDocLab(true),
       ensureJsPdf(),
       ensureJsZip()
     ]);
@@ -1395,7 +1583,7 @@
     var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
     var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
-    var logoUri = await rsLogoDataUri(brandingData && brandingData.reportCompanyLogo);
+    var logoUri = await rsLogoDataUri(brandingData && (brandingData.reportCompanyLogo || brandingData.companyLogo), brandingData && (brandingData.reportCompanyLogoRaw || brandingData.companyLogoRaw));
     var logoImage = null;
     var logoData = dataUriBytes(logoUri);
     if (logoData) {
@@ -1868,7 +2056,7 @@
     options = options || {};
     var ready = await Promise.all([
       ensurePdfMake(),
-      options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data && data.reportCompanyLogo)
+      options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data && (data.reportCompanyLogo || data.companyLogo), data && (data.reportCompanyLogoRaw || data.companyLogoRaw))
     ]);
     return new Promise(function (resolve, reject) {
       try {
@@ -1960,7 +2148,32 @@
 
     if (options.statusCallback) options.statusCallback('Preparing resume processing...');
 
-    // 1. Identify format extension and fetch resume bytes
+    // ═════════════════════════════════════════════════════════════════════════
+    // OPTION 5: Standalone Pre-Screened Report (Does not require resume bytes)
+    // ═════════════════════════════════════════════════════════════════════════
+    if (optNum === 5) {
+      if (options.statusCallback) options.statusCallback('Compiling Pre-Screened Report dossier (50%)...');
+      var prescreenBlob = await buildRecruiterSummaryBlob(data, {});
+      var prescreenFileName = 'PRESCREEN_REPORT_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      prescreenBlob.filename = prescreenFileName;
+      if (options.returnBlob === true) {
+        return prescreenBlob;
+      }
+      if (options.statusCallback) options.statusCallback('Download ready (100%)...');
+      downloadBlob(prescreenBlob, prescreenFileName);
+      return true;
+    }
+
+    // Highlighting keywords
+    var allKeywords = Array.isArray(options.keywords) ? options.keywords.slice() : [];
+    if (Array.isArray(data.skills)) {
+      data.skills.forEach(function (s) {
+        var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
+        if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
+      });
+    }
+
+    // 1. Identify format extension and fetch resume bytes for resume-dependent options
     var resumeExt = clean(options.resumeExt || data.resumeExt || '', '').toUpperCase();
     if (!resumeExt && data.resume) {
       var rParts = String(data.resume).split('?')[0].split('.');
@@ -1982,6 +2195,9 @@
       if (rsResumeBytesCache[cacheKey]) {
         docxBytes = rsResumeBytesCache[cacheKey];
       } else {
+        if (!sources.length) {
+          throw new Error('No resume file or download URL available for ' + (data.name || 'candidate'));
+        }
         if (options.statusCallback) options.statusCallback('Fetching candidate resume bytes (15%)...');
         docxBytes = await fetchResumeBytesFromSources(sources);
         if (cacheKey && docxBytes && docxBytes.byteLength) {
@@ -1999,32 +2215,17 @@
       resumeExt = 'DOCX';
     }
 
-    // Highlighting keywords
-    var allKeywords = Array.isArray(options.keywords) ? options.keywords.slice() : [];
-    if (Array.isArray(data.skills)) {
-      data.skills.forEach(function (s) {
-        var sName = typeof s === 'string' ? s : (s && s.name ? s.name : '');
-        if (sName && allKeywords.indexOf(sName) === -1) allKeywords.push(sName);
-      });
-    }
-
     var pdfBlob = null;
     var outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     // ═════════════════════════════════════════════════════════════════════════
-    // DISPATCHER BY OPTION ID (1, 5, 41 - 53)
+    // DISPATCHER BY OPTION ID (1, 41 - 53)
     // ═════════════════════════════════════════════════════════════════════════
     if (optNum === 1) {
       // Option 1: Original Resume
       var mime = resumeExt === 'PDF' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       pdfBlob = new Blob([docxBytes], { type: mime });
       outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.' + resumeExt.toLowerCase();
-
-    } else if (optNum === 5) {
-      // Option 5: Pre-Screened Report (Standalone)
-      if (options.statusCallback) options.statusCallback('Compiling Pre-Screened Report dossier (50%)...');
-      pdfBlob = await buildRecruiterSummaryBlob(data, {});
-      outFileName = 'PRESCREEN_REPORT_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     } else if (optNum === 41) {
       // Option 41: Resume + Company Branding
@@ -2305,6 +2506,64 @@
     candidate = candidate || {};
     companyData = companyData || {};
 
+    // Canonical Snapshot Resolver Delegation (Zero-Fabrication & 0% Server Strain)
+    if (typeof CandidateSnapshotResolver !== 'undefined' && typeof CandidateSnapshotResolver.resolveSnapshot === 'function') {
+      try {
+        var cId = parseInt(candidate.id || candidate.candidateId || candidate.reportId || 0, 10);
+        if (cId > 0) {
+          var rootElement = null;
+          if (typeof document !== 'undefined') {
+            rootElement = document.querySelector('[data-candidate-root][data-candidate-id="' + cId + '"]') || document.querySelector('[data-cand-id="' + cId + '"]');
+            if (rootElement && !rootElement.getAttribute('data-candidate-id')) {
+              try { rootElement.setAttribute('data-candidate-id', String(cId)); } catch (e) {}
+            }
+          }
+          var snapshot = CandidateSnapshotResolver.resolveSnapshot({
+            candidateId: cId,
+            rootElement: rootElement,
+            rawData: candidate
+          });
+          var sf = snapshot.fields;
+          return {
+            id: snapshot.candidateId,
+            name: sf.name,
+            email: sf.email,
+            secondaryEmail: candidate.secondrary_email || candidate.secondaryEmail || '',
+            phone: sf.phone,
+            secondaryPhone: candidate.secondary_mobile || candidate.secondaryPhone || '',
+            phoneCode: candidate.phone_code || candidate.phoneCode || '',
+            secondaryPhoneCode: candidate.second_phone_code || candidate.secondaryPhoneCode || '',
+            linkedin: sf.linkedin,
+            designation: sf.designation,
+            company: sf.company,
+            location: sf.location,
+            experience: sf.experience,
+            notice: sf.noticePeriod,
+            education: sf.education,
+            workMode: sf.workMode,
+            reportId: candidate.report_id || candidate.reportId || ('JR' + (new Date()).toISOString().slice(0, 10).replace(/-/g, '') + String(cId).padStart(6, '0')),
+            reportDate: candidate.report_date || candidate.reportDate || (new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            recruiterName: candidate.recruiter_name || candidate.recruiterName || companyData.recruiterName || 'Hiring Team',
+            reportCompanyName: companyData.companyName || candidate.report_company_name || candidate.reportCompanyName || 'Hiring Partner',
+            reportCompanyLogo: companyData.companyLogo || candidate.report_company_logo || candidate.reportCompanyLogo || '',
+            reportCompanyLogoRaw: companyData.companyLogoRaw || candidate.report_company_logo_raw || candidate.reportCompanyLogoRaw || '',
+            aiVersion: 'Live Intelligence',
+            match: sf.match,
+            isImmediate: snapshot.noticeDetails ? snapshot.noticeDetails.mode === 'IMMEDIATE' : false,
+            recruiterNote: sf.recruiterNote || '',
+            careerSummary: sf.careerSummary || '',
+            jobTitle: candidate.job_title || candidate.jobTitle || sf.designation || 'Verified Professional',
+            skills: sf.skills && sf.skills.length ? sf.skills : (candidate.skills || []),
+            validation: sf.validation && sf.validation.length ? sf.validation : (candidate.validation || []),
+            resume: candidate.resume || '',
+            resumeExt: candidate.resumeExt || ''
+          };
+        }
+      } catch (err) {
+        console.warn('[AgyForwardResumeEngine.normalizeCandidateData] CandidateSnapshotResolver fallback:', err);
+      }
+    }
+
     var cityName = (!/^\d+$/.test(String(candidate.city_name || '').trim()) && candidate.city_name)
       || (!/^\d+$/.test(String(candidate.city || '').trim()) && candidate.city)
       || (!/^\d+$/.test(String(candidate.cityName || '').trim()) && candidate.cityName) || '';
@@ -2473,9 +2732,16 @@
       throw new Error('AgyForwardResumeEngine produced an invalid or empty resume blob for: ' + data.name);
     }
 
-    var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Candidate';
+    var safeName = String(data.name || 'Candidate').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, '_').trim() || 'Candidate';
     var ext = (optId === 1 && resumeExt === 'DOCX') ? 'docx' : 'pdf';
-    var filename = 'Jeroworks_' + safeName + '.' + ext;
+    var filename;
+    if (optId === 5) {
+      filename = 'Prescreen_Report_' + safeName + '.pdf';
+    } else if (optId === 49) {
+      filename = 'Jeroworks_Resume.pdf';
+    } else {
+      filename = 'Jeroworks_' + safeName + '.' + ext;
+    }
     blob.filename = filename;
 
     return blob;
