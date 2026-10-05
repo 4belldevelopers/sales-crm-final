@@ -354,6 +354,67 @@
                 }
             }
 
+            // 5b. Nationality Auto-Detection (Client RAM In-Memory Matcher)
+            var detectedNationality = null;
+            if (cand.nationality) {
+                detectedNationality = cand.nationality;
+            }
+            if (!detectedNationality) {
+                var rawCc = String(cand.countryCode || '').replace(/^\+/, '').trim();
+                if (rawCc === '91') detectedNationality = 'Indian';
+                else if (rawCc === '44') detectedNationality = 'British';
+                else if (rawCc === '61') detectedNationality = 'Australian';
+                else if (rawCc === '971') detectedNationality = 'Emirati';
+                else if (rawCc === '65') detectedNationality = 'Singaporean';
+                else if (rawCc === '49') detectedNationality = 'German';
+                else if (rawCc === '33') detectedNationality = 'French';
+                else if (rawCc === '353') detectedNationality = 'Irish';
+                else if (rawCc === '31') detectedNationality = 'Dutch';
+                else if (rawCc === '966') detectedNationality = 'Saudi';
+                else if (rawCc === '1') {
+                    var locStr = String(parsedLocData || '').toLowerCase();
+                    if (/canada|ontario|toronto|vancouver|quebec|alberta|montreal|calgary|ottawa/.test(locStr)) {
+                        detectedNationality = 'Canadian';
+                    } else {
+                        detectedNationality = 'American';
+                    }
+                }
+            }
+            if (!detectedNationality && parsedLocData) {
+                var locLower = String(parsedLocData).toLowerCase();
+                if (/india|bengaluru|bangalore|delhi|mumbai|hyderabad|pune|chennai|kolkata|noida|gurgaon|ahmedabad/.test(locLower)) {
+                    detectedNationality = 'Indian';
+                } else if (/united states|usa|california|new york|texas|seattle|san francisco|chicago|los angeles|boston|austin/.test(locLower)) {
+                    detectedNationality = 'American';
+                } else if (/united kingdom|uk|london|manchester|birmingham|england|scotland|wales|edinburgh/.test(locLower)) {
+                    detectedNationality = 'British';
+                } else if (/canada|toronto|vancouver|montreal|ottawa|calgary|edmonton/.test(locLower)) {
+                    detectedNationality = 'Canadian';
+                } else if (/australia|sydney|melbourne|brisbane|perth|adelaide/.test(locLower)) {
+                    detectedNationality = 'Australian';
+                } else if (/dubai|abu dhabi|uae|united arab emirates|sharjah/.test(locLower)) {
+                    detectedNationality = 'Emirati';
+                } else if (/singapore/.test(locLower)) {
+                    detectedNationality = 'Singaporean';
+                } else if (/germany|berlin|munich|frankfurt|hamburg|stuttgart/.test(locLower)) {
+                    detectedNationality = 'German';
+                } else if (/france|paris|lyon|marseille/.test(locLower)) {
+                    detectedNationality = 'French';
+                } else if (/ireland|dublin|cork/.test(locLower)) {
+                    detectedNationality = 'Irish';
+                } else if (/netherlands|amsterdam|rotterdam|utrecht|hague/.test(locLower)) {
+                    detectedNationality = 'Dutch';
+                } else if (/saudi arabia|riyadh|jeddah|dammam/.test(locLower)) {
+                    detectedNationality = 'Saudi';
+                }
+            }
+            if (detectedNationality) {
+                setVal('#nationality', detectedNationality);
+                if ($.fn.select2 && $('#nationality').hasClass('select2-hidden-accessible')) {
+                    $('#nationality').trigger('change.select2');
+                }
+            }
+
             // 6. Phase 8: Skills Population via Tagify Bridge
             var skillsList = Array.isArray(result.skills) ? result.skills : [];
             if (skillsList.length) {
