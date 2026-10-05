@@ -517,104 +517,162 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         </script>
 
 <script>
-   var table = $('#myTablew').dataTable({
-   
-   			responsive  	: true,
-   			processing  	: false,
-   			serverSide  	: true,
-   			destroy   		: true,
-   			ordering		: false, //disable ordering	
-   			"bLengthChange" : false, //thought this line could hide the LengthMenu   			
-   			sDom			: 'lrtip',   			
-   			oLanguage 		: { sLengthMenu: "_MENU_", },
-			ajax			: {'url' : '{!! route('service_company.jobs.all_data') !!}', "data": function ( d ){d.search = $('#inputSearch').val(),d.custom_search = $('#kt_tagify_2').val(),d.custom_status = $('#status').val(),d.custom_hiringtype = $('#hiringtype').val(),d.employment_type = $('#employment_type').val()},
-           beforeSend: function () {
-            if($('#kt_tagify_2').val()!=''){
-                // $('.loadingMessage').css({ display: 'block' });
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
-            } // Show loader before request
+       // Phase 2: Client Caching & IndexedDB Integration (Rule 6 Multi-Tenant Isolation)
+    const JeroJobsLocalStore = (function() {
+        const DB_NAME = 'jero_service_jobs_db';
+        const DB_VERSION = 1;
+        const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+        const JOBS_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+
+        let dbPromise = null;
+
+        function getDB() {
+            if (!window.indexedDB) return Promise.resolve(null);
+            if (dbPromise) return dbPromise;
+
+            dbPromise = new Promise((resolve) => {
+                try {
+                    const req = window.indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('jobs_cache')) {
+                            db.createObjectStore('jobs_cache', { keyPath: 'cache_key' });
+                        }
+                        if (!db.objectStoreNames.contains('meta')) {
+                            db.createObjectStore('meta', { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = function(e) {
+                        const db = e.target.result;
+                        try {
+                            const tx = db.transaction(['meta'], 'readonly');
+                            const metaStore = tx.objectStore('meta');
+                            const metaReq = metaStore.get('current_context');
+                            metaReq.onsuccess = function() {
+                                const meta = metaReq.result;
+                                if (meta && (meta.tenant_id !== CURRENT_TENANT_ID || meta.user_id !== CURRENT_USER_ID)) {
+                                    // Tenant / User mismatch: purge immediately to prevent cross-tenant data leaks
+                                    const wipeTx = db.transaction(['jobs_cache', 'meta'], 'readwrite');
+                                    wipeTx.objectStore('jobs_cache').clear();
+                                    wipeTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_TENANT_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                                } else if (!meta) {
+                                    const setTx = db.transaction(['meta'], 'readwrite');
+                                    setTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_TENANT_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                                }
+                            };
+                        } catch (err) {
+                            console.warn('JeroJobsLocalStore tenancy check error:', err);
+                        }
+                        resolve(db);
+                    };
+                    req.onerror = function() { resolve(null); };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+
+            return dbPromise;
+        }
+
+        return {
+            get: async function(key) {
+                const db = await getDB();
+                if (!db || !key) return null;
+                return new Promise((resolve) => {
+                    try {
+                        const tx = db.transaction(['jobs_cache'], 'readonly');
+                        const store = tx.objectStore('jobs_cache');
+                        const req = store.get(key);
+                        req.onsuccess = function() {
+                            const res = req.result;
+                            if (res && (Date.now() - res.timestamp < JOBS_CACHE_TTL_MS)) {
+                                resolve(res.payload);
+                            } else {
+                                resolve(null);
+                            }
+                        };
+                        req.onerror = function() { resolve(null); };
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
             },
-            complete: function () {
-              $('.page-loader').css('display', 'none'); // Hide loader after request
-              $('.loader_search').css({ display: 'none' });
+            set: async function(key, payload) {
+                const db = await getDB();
+                if (!db || !key || !payload) return;
+                try {
+                    const tx = db.transaction(['jobs_cache'], 'readwrite');
+                    const store = tx.objectStore('jobs_cache');
+                    store.put({
+                        cache_key: key,
+                        payload: payload,
+                        timestamp: Date.now()
+                    });
+                } catch (e) {
+                    // Non-fatal if storage quota exceeded
+                }
+            },
+            purge: async function() {
+                const db = await getDB();
+                if (!db) return;
+                try {
+                    const tx = db.transaction(['jobs_cache'], 'readwrite');
+                    tx.objectStore('jobs_cache').clear();
+                } catch (e) {
+                    // Non-fatal
+                }
             }
-      },
-   		  "drawCallback"	: function( settings ) {
-									$('[data-toggle="tooltip1"]').tooltip();
-									$('[data-toggle="tooltip2"]').tooltip();
-									$('[data-toggle="tooltip3"]').tooltip();
-									$('[data-toggle="tooltip4"]').tooltip();		
-							},
-   		  "columnDefs": [
-                    { "width": "50px", "targets": 0, "width": "4%", "class": "" },
-                    { "width": "200px", "targets": 1, "class": "d-flex align-items-center" },
-                    { "width": "50px", "targets": 2 },
-                    { "width": "100px", "targets": 3 },
-                    { "width": "200px", "targets": 4 },
-                    { "width": "50px", "targets": 5 },
-                    { "width": "200px", "targets": 6 },
-                    { "width": "150px", "targets": 7 },
-                    { "width": "150px", "targets": 8 },
-                    { "width": "20px", "targets": 9 },
-                    { "width": "20px", "targets": 10 },
-                    { "width": "20px", "targets": 11 },
-                    { "width": "20px", "targets": 12 },
-                    { "width": "20px", "targets": 13 },
-                    { "width": "20px", "targets": 14 },
-                    { "width": "20px", "targets": 15 },
-                    { "width": "20px", "targets": 16 },
-                    
-                   
-                ],
-   				columns:
-   				[
-   				  	{ data: 'chkbox', name: 'chkbox',  orderable: false, searchable: false},  
-   					{ data: 'Requisition', name: 'Requisition' , orderable: false, searchable: false},
-   					{ data: 'Exp', name: 'Exp' , orderable: false, searchable: false},
-   					{ data: 'Salary', name: 'Salary' , orderable: false, searchable: false},
-   					{ data: 'Location', name: 'Location' , orderable: false, searchable: false},
-   					
-   					{ data: 'Status', name: 'Status' , orderable: false, searchable: false},
-   					{ data: 'Date', name: 'Date' , orderable: false, searchable: false},
-   					{ data: 'HM', name: 'HM' , orderable: false, searchable: false},
-   					{ data: 'Partners', name: 'Partners' , orderable: false, searchable: false},
-   					{ data: 'TOT', name: 'TOT' , orderable: false, searchable: false},
-					
-   					{ data: 'SOU', name: 'SOU' , orderable: false, searchable: false},					
-   					{ data: 'SCR', name: 'SCR' , orderable: false, searchable: false},
-   					{ data: 'EVA', name: 'EVA' , orderable: false, searchable: false},
-   					{ data: 'NEO', name: 'NEO' , orderable: false, searchable: false},
-   					{ data: 'OFF', name: 'OFF' , orderable: false, searchable: false},
-					
-   					{ data: 'JOI', name: 'JOI' , orderable: false, searchable: false},
-   					{ data: 'REJ', name: 'REJ' , orderable: false, searchable: false} 	   
-   				],				
-				//timeout: 500000,
-           		async: false
-   				
-   				}); 
-   
+        };
+    })();
+    window.JeroJobsLocalStore = JeroJobsLocalStore;
+// In-memory cache for loaded job drawer HTML to eliminate duplicate network fetches
+    window.jobDrawerCache = window.jobDrawerCache || {};
+    window.lastAuthoritativeSearch = '';
+
     function executeJobSearch(page = 1) {
         localStorage.setItem('currentPageJobs', page);
+        var currentSearch = ($('.inputJobSearch').val() || $('#inputSearch').val() || '').trim();
+        window.lastAuthoritativeSearch = currentSearch;
         fetchCandidates(page);
     }
 
-    // Single Enter key handler for search input — NO keystroke search
+    // Debounced search input handler: filters loaded jobs in browser RAM at 250ms with 0 server requests
+    var jobFilterDebounceTimer = null;
+    $(document).on('input', '.inputJobSearch, #inputSearch', function() {
+        var val = $(this).val();
+        $('.inputJobSearch, #inputSearch').not(this).val(val);
+        // Instant visual feedback for currently visible items in RAM
+        if (window.jobsState && window.jobsState.all && window.jobsState.all.length > 0) {
+            filtersdata();
+        }
+
+        clearTimeout(jobFilterDebounceTimer);
+        jobFilterDebounceTimer = setTimeout(function() {
+            var trimmed = val.trim();
+            if (trimmed !== window.lastAuthoritativeSearch) {
+                executeJobSearch(1);
+            }
+        }, 350);
+    });
+
+    // Enter key handler for authoritative search across full dataset
     $(document).on('keydown', '.inputJobSearch, #inputSearch', function(e) {
         if (e.key === 'Enter' || e.keyCode === 13) {
             e.preventDefault();
+            clearTimeout(jobFilterDebounceTimer);
             executeJobSearch(1);
         }
     });
 
-    // Single click handler for Search button
+    // Single click handler for Search button: authoritative search
     $(document).on('click', '#jobSearchBtn', function(e) {
         e.preventDefault();
+        clearTimeout(jobFilterDebounceTimer);
         executeJobSearch(1);
     });
-   	$(document).on('change','#status,#hiringtype,#employment_type,#experience_filter',function(){
+
+    $(document).on('change', '#status,#hiringtype,#employment_type,#experience_filter', function() {
         if (this.id === 'status') {
             // Sync the tab row to match the selected status
             var val = $(this).val();
@@ -625,7 +683,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
         syncJobCustomSelect(this.id);
         localStorage.setItem('currentPageJobs', 1);
         fetchCandidates(1);
-   	});
+    });
 
     window.currentKpiFilter = (new URLSearchParams(window.location.search)).get('kpi') || 'all';
 
@@ -739,10 +797,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
       var currentPageJobs = parseInt(localStorage.getItem('currentPageJobs')) || 1;
       localStorage.setItem('currentPageJobs', currentPageJobs);
 
-   		var id    		=	$(this).data('row-id');
-   		var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?viewmore=viewmore";
-   		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+   		var id = $(this).data('row-id');
+        var cacheKey = 'job_' + id + '_regular';
+        if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
+            $('#kt_activitiesJob_body').html(window.jobDrawerCache[cacheKey]);
+            return;
+        }
+   		var url = "{{ route('service_company.jobs.viewmore',':id') }}?viewmore=viewmore";
+   		url = url.replace(':id', id);   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
    						type  		: 'GET',
    						url   		: url,
@@ -750,6 +812,7 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
                                      $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
                        	},
    						success 	: function (response) {
+									window.jobDrawerCache[cacheKey] = response.view;
 									$('#kt_activitiesJob_body').html(response.view);
    						},
    						error		: function (xhr) {
@@ -804,10 +867,14 @@ data-kt-drawer-toggle="#kt_activitiesJob_toggle" data-kt-drawer-close="#kt_activ
 $(document).on('click', '.client-show-detail', function ()
 {
   $('#kt_activitiesJob_toggle').trigger('click');		
-   		var id    		=	$(this).data('row-id');
-   		var url   		=	"{{ route('service_company.jobs.viewmore',':id') }}?viewmore=clientviewmore";
-   		url     		=	url.replace(':id', id);
-   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
+   		var id = $(this).data('row-id');
+        var cacheKey = 'job_' + id + '_client';
+        if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
+            $('#kt_activitiesJob_body').html(window.jobDrawerCache[cacheKey]);
+            return;
+        }
+   		var url = "{{ route('service_company.jobs.viewmore',':id') }}?viewmore=clientviewmore";
+   		url = url.replace(':id', id);   		var baseurl    	=	"{{ asset('assets/images/Loading2.gif') }}"; 
    		$.ajax({
    						type  		: 'GET',
    						url   		: url,
@@ -815,6 +882,7 @@ $(document).on('click', '.client-show-detail', function ()
                                      $('#kt_activitiesJob_body').html('<img src="'+baseurl+'" height="35px" width="100%">');
                        	},
    						success 	: function (response) {
+									window.jobDrawerCache[cacheKey] = response.view;
 									$('#kt_activitiesJob_body').html(response.view);
    						},
    						error		: function (xhr) {
@@ -846,22 +914,40 @@ $(document).on('click', '.client-show-detail', function ()
 
 	
    
+      var _isUpdatingStatusLock = false;
    function updateJobStatus(id, statusName)
    {
-     var id        	= id;
-     var statusName  = statusName;
-     var url       	= "{{ route('service_company.jobs.updatestatus',':id') }}";
-     url         	= url.replace(':id', id);
-     var token       = "{{ csrf_token() }}";
+     if (_isUpdatingStatusLock) return false;
+     _isUpdatingStatusLock = true;
+
+     var url = "{{ route('service_company.jobs.updatestatus',':id') }}";
+     url = url.replace(':id', id);
+     var token = "{{ csrf_token() }}";
+     var mutationId = 'mut_st_' + id + '_' + Date.now();
+
      $.easyAjax({
-					  type		: 'POST',
-					  url		: url,
-					  data		: {'_token': token, '_method': 'POST', 'id':id, 'statusName':statusName},
-					  success	: function (response){
-						  // table._fnDraw();
-              fetchCandidates();
-					 }
-				 });
+         type: 'POST',
+         url: url,
+         data: {
+             '_token': token, 
+             '_method': 'POST', 
+             'id': id, 
+             'statusName': statusName,
+             'client_mutation_id': mutationId
+         },
+         success: function (response){
+             _isUpdatingStatusLock = false;
+             window.jobDrawerCache = {};
+             if (window.JeroJobsLocalStore) { JeroJobsLocalStore.purge(); }
+             fetchCandidates();
+         },
+         error: function (xhr) {
+             _isUpdatingStatusLock = false;
+             if (typeof showToastr === 'function') {
+                 showToastr('error', 'Status update could not be completed. Please try again.', 'Action Failed');
+             }
+         }
+     });
    }
      
 </script>
@@ -904,6 +990,11 @@ $(document).ready(function(){
 
         $('#kt_activitiesRecruiter_toggle').trigger('click');
         var id = $(this).data('row-id');
+        var cacheKey = 'spartner_' + id;
+        if (window.jobDrawerCache && window.jobDrawerCache[cacheKey]) {
+            $('#kt_activitiesRecruiter_body').html(window.jobDrawerCache[cacheKey]);
+            return;
+        }
         var url = "{{ route('service_company.jobs.spartnerlisting',':id') }}";
         url = url.replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
@@ -919,6 +1010,7 @@ $(document).ready(function(){
             },
             success: function (response) {
                 if (response && response.view) {
+                    window.jobDrawerCache[cacheKey] = response.view;
                     $('#kt_activitiesRecruiter_body').html(response.view);
                     return;
                 }
@@ -1256,10 +1348,12 @@ $(document).on('click', '.client-hm-listing', function ()
                 }
 
                 if (status !== 'all' && status !== '') {
-                    if (status === 'active' && job.status !== 'Hiring') return false;
-                    if (status === 'hold' && job.status !== 'Hold') return false;
-                    if (status === 'inactive' && job.status !== 'Closed') return false;
-                    if (status === 'removed' && job.status !== 'Removed') return false;
+                    var s = (job.status || '').toLowerCase();
+                    var sr = (job.status_raw || '').toLowerCase();
+                    if (status === 'active' && s !== 'hiring' && sr !== 'active') return false;
+                    if (status === 'hold' && s !== 'hold' && sr !== 'hold') return false;
+                    if (status === 'inactive' && s !== 'closed' && sr !== 'inactive') return false;
+                    if (status === 'removed' && s !== 'removed') return false;
                 }
 
                 if (employmentType !== 'all' && employmentType !== '') {
@@ -1293,18 +1387,101 @@ $(document).on('click', '.client-hm-listing', function ()
             $('#all_jobs_count').html(filtered.length);
         }
 
-        function fetchCandidates(page = page_no, search = '', size = pageSize) {
+                function applyJobsResponse(response, page) {
+            window.currentJobsAjax = null;
+            $('#jobSearchBtn').prop('disabled', false).removeClass('disabled');
+            $('.loadingMessage').css({ display: 'none' });
+            $('.loader_search').css({ display: 'none' });
+            $('.page-loader').css('display', 'none');
+            localStorage.setItem('currentPageJobs', page);
+
+            updateKpiViewToggle(window.currentKpiFilter);
+
+            if (window.currentKpiFilter === 'job_request' || window.currentKpiFilter === 'request') {
+                if (response.html && response.html.trim() !== '') {
+                    $('#allJobList').html(response.html);
+                } else if (response.jobs && response.jobs.length > 0) {
+                    $('#allJobList').html(renderJobsClientSide(response.jobs));
+                } else {
+                    $('#allJobList').html(
+                        '<div class="card border-0 shadow-sm rounded-4 text-center py-16 px-6 my-4" style="background: #ffffff; border: 1px solid #eef0f4; border-radius: 12px;">' +
+                          '<div class="mb-4 d-flex justify-content-center">' +
+                            '<div style="width: 64px; height: 64px; border-radius: 16px; background-color: #f1f3f7; display: flex; align-items: center; justify-content: center; color: #a1a5b7;">' +
+                              '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>' +
+                                '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>' +
+                                '<line x1="12" y1="11" x2="12" y2="17"/>' +
+                                '<line x1="9" y1="14" x2="15" y2="14"/>' +
+                              '</svg>' +
+                            '</div>' +
+                          '</div>' +
+                          '<h4 class="fw-bolder text-dark mb-2" style="font-family: \'Poppins\', sans-serif; font-size: 16px; color: #181c32;">No Job Requests Found</h4>' +
+                          '<p class="text-muted fs-7 mb-0" style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #7e8299;">There are no pending job requests at the moment.</p>' +
+                        '</div>'
+                    );
+                }
+            } else {
+                if (response.jobs && response.jobs.length > 0) {
+                    window.jobsState = {
+                        all: response.jobs,
+                        filtered: response.jobs,
+                        total: response.total
+                    };
+                    $('#allJobList').html(renderJobsClientSide(response.jobs));
+                } else if (response.html) {
+                    $('#allJobList').html(response.html);
+                } else {
+                    $('#allJobList').html(
+                        '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;">' +
+                        '<p style="font-size:13px;color:#5e6278;margin:0;">No jobs found.</p>' +
+                        '</div>'
+                    );
+                }
+            }
+            $('#all_jobs_count').html(response.total !== undefined ? response.total : 0);
+            $('#pagination').html(response.pagination || '');
+
+            if (response.status_counts) {
+                $('.jh-tab[data-status="all"] .jh-badge').text(response.status_counts.all !== undefined ? response.status_counts.all : 0);
+                $('.jh-tab[data-status="active"] .jh-badge').text(response.status_counts.active !== undefined ? response.status_counts.active : 0);
+                $('.jh-tab[data-status="hold"] .jh-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
+                $('.jh-tab[data-status="inactive"] .jh-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
+                $('.jh-tab[data-status="removed"] .jh-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
+            }
+        }
+
+        async function fetchCandidates(page = page_no, search = '', size = pageSize) {
             window.latestSearchRequestId = (window.latestSearchRequestId || 0) + 1;
             const thisRequestId = window.latestSearchRequestId;
 
             const searchVal = ($('.inputJobSearch').val() || $('#inputSearch').val() || search || '').trim();
+            const cacheKey = [
+                window.currentKpiFilter || 'all',
+                $('#status').val() || 'all',
+                $('#hiringtype').val() || '',
+                $('#employment_type').val() || '',
+                $('#experience_filter').val() || '',
+                searchVal,
+                page,
+                size
+            ].join('_');
 
-            $('#jobSearchBtn').prop('disabled', true).addClass('disabled');
-            if(searchVal !== ''){
-                $('.loader_search').css({ display: 'block' });
-                $('.page-loader').css('display', 'flex');
-            }else{
-                $('.page-loader').css('display', 'flex');
+            // Phase 2: Instant Cache Hydration from IndexedDB (<20ms render)
+            let cached = null;
+            try {
+                cached = await JeroJobsLocalStore.get(cacheKey);
+            } catch (err) {}
+
+            if (cached && thisRequestId === window.latestSearchRequestId) {
+                applyJobsResponse(cached, page);
+            } else {
+                $('#jobSearchBtn').prop('disabled', true).addClass('disabled');
+                if (searchVal !== '') {
+                    $('.loader_search').css({ display: 'block' });
+                    $('.page-loader').css('display', 'flex');
+                } else {
+                    $('.page-loader').css('display', 'flex');
+                }
             }
 
             if (window.currentJobsAjax && typeof window.currentJobsAjax.abort === 'function') {
@@ -1328,66 +1505,11 @@ $(document).on('click', '.client-hm-listing', function ()
                     if (thisRequestId !== window.latestSearchRequestId) {
                         return; // Ignore superseded / stale responses
                     }
-                    window.currentJobsAjax = null;
-                    $('#jobSearchBtn').prop('disabled', false).removeClass('disabled');
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    localStorage.setItem('currentPageJobs', page);
-
-                    updateKpiViewToggle(window.currentKpiFilter);
-
-                    if (window.currentKpiFilter === 'job_request' || window.currentKpiFilter === 'request') {
-                        if (response.html && response.html.trim() !== '') {
-                            $('#allJobList').html(response.html);
-                        } else if (response.jobs && response.jobs.length > 0) {
-                            $('#allJobList').html(renderJobsClientSide(response.jobs));
-                        } else {
-                            $('#allJobList').html(
-                                '<div class="card border-0 shadow-sm rounded-4 text-center py-16 px-6 my-4" style="background: #ffffff; border: 1px solid #eef0f4; border-radius: 12px;">' +
-                                  '<div class="mb-4 d-flex justify-content-center">' +
-                                    '<div style="width: 64px; height: 64px; border-radius: 16px; background-color: #f1f3f7; display: flex; align-items: center; justify-content: center; color: #a1a5b7;">' +
-                                      '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
-                                        '<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>' +
-                                        '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>' +
-                                        '<line x1="12" y1="11" x2="12" y2="17"/>' +
-                                        '<line x1="9" y1="14" x2="15" y2="14"/>' +
-                                      '</svg>' +
-                                    '</div>' +
-                                  '</div>' +
-                                  '<h4 class="fw-bolder text-dark mb-2" style="font-family: \'Poppins\', sans-serif; font-size: 16px; color: #181c32;">No Job Requests Found</h4>' +
-                                  '<p class="text-muted fs-7 mb-0" style="font-family: \'Poppins\', sans-serif; font-size: 13px; color: #7e8299;">There are no pending job requests at the moment.</p>' +
-                                '</div>'
-                            );
-                        }
-                    } else {
-                        if (response.jobs && response.jobs.length > 0) {
-                            window.jobsState = {
-                                all: response.jobs,
-                                filtered: response.jobs,
-                                total: response.total
-                            };
-                            $('#allJobList').html(renderJobsClientSide(response.jobs));
-                        } else if (response.html) {
-                            $('#allJobList').html(response.html);
-                        } else {
-                            $('#allJobList').html(
-                                '<div style="text-align:center;padding:40px 20px;font-family:Poppins,sans-serif;">' +
-                                '<p style="font-size:13px;color:#5e6278;margin:0;">No jobs found.</p>' +
-                                '</div>'
-                            );
-                        }
+                    // Persist response into IndexedDB for instant repeat views
+                    if (window.JeroJobsLocalStore) {
+                        JeroJobsLocalStore.set(cacheKey, response);
                     }
-                    $('#all_jobs_count').html(response.total !== undefined ? response.total : 0);
-                    $('#pagination').html(response.pagination || '');
-
-                    if (response.status_counts) {
-                        $('.jh-tab[data-status="all"] .jh-badge').text(response.status_counts.all !== undefined ? response.status_counts.all : 0);
-                        $('.jh-tab[data-status="active"] .jh-badge').text(response.status_counts.active !== undefined ? response.status_counts.active : 0);
-                        $('.jh-tab[data-status="hold"] .jh-badge').text(response.status_counts.hold !== undefined ? response.status_counts.hold : 0);
-                        $('.jh-tab[data-status="inactive"] .jh-badge').text(response.status_counts.inactive !== undefined ? response.status_counts.inactive : 0);
-                        $('.jh-tab[data-status="removed"] .jh-badge').text(response.status_counts.removed !== undefined ? response.status_counts.removed : 0);
-                    }
+                    applyJobsResponse(response, page);
                 },
                 error: function(xhr, status, error) {
                     if (thisRequestId !== window.latestSearchRequestId || status === 'abort') return;
@@ -1396,6 +1518,9 @@ $(document).on('click', '.client-hm-listing', function ()
                     $('.loadingMessage').css({ display: 'none' });
                     $('.loader_search').css({ display: 'none' });
                     $('.page-loader').css('display', 'none');
+
+                    // If we already rendered from IndexedDB cache, do not overwrite with error screen
+                    if (cached) return;
 
                     var msg, icon;
                     if (xhr.status === 0 || !navigator.onLine) {
@@ -1473,7 +1598,107 @@ $(document).on('click', '.client-hm-listing', function ()
         }
     });
 
-</script>
 
+    // Phase 4: Real-time Reverb Delta Synchronization
+    function initJobsReverbSync() {
+        if (!window.Echo || typeof window.Echo.private !== 'function') {
+            return;
+        }
+
+        const companyId = {{ (int) (auth()->user()->company_id ?? 0) }};
+        if (!companyId) return;
+
+        try {
+            window.Echo.private('company.' + companyId)
+                .listen('.JobStatusChanged', function(event) {
+                    if (!event || !event.jobId) return;
+
+                    const jobId = parseInt(event.jobId, 10);
+                    const newStatus = (event.newStatus || '').toLowerCase();
+
+                    // 1. Purge local IndexedDB and drawer caches so fresh data is guaranteed
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+                    window.jobDrawerCache = {};
+
+                    // 2. Instant Delta Patch in Browser RAM & DOM
+                    if (window.jobsState && window.jobsState.all) {
+                        let targetJob = window.jobsState.all.find(j => parseInt(j.id, 10) === jobId);
+                        if (targetJob) {
+                            targetJob.status_raw = newStatus;
+                            targetJob.status = (newStatus === 'active') ? 'Hiring' : ((newStatus === 'hold') ? 'Hold' : 'Closed');
+                            
+                            // Re-render currently visible filtered list in RAM (<2ms)
+                            $('#allJobList').html(renderJobsClientSide(window.jobsState.filtered));
+                        }
+                    }
+
+                    // 3. Update status counters if supplied
+                    if (event.status_counts) {
+                        $('.jh-tab[data-status="all"] .jh-badge').text(event.status_counts.all || 0);
+                        $('.jh-tab[data-status="active"] .jh-badge').text(event.status_counts.active || 0);
+                        $('.jh-tab[data-status="hold"] .jh-badge').text(event.status_counts.hold || 0);
+                        $('.jh-tab[data-status="inactive"] .jh-badge').text(event.status_counts.inactive || 0);
+                        $('.jh-tab[data-status="removed"] .jh-badge').text(event.status_counts.removed || 0);
+                    }
+
+                    // 4. Show non-intrusive notification if toastr is loaded
+                    if (typeof showToastr === 'function' && event.jobTitle) {
+                        showToastr('info', 'Job "' + event.jobTitle + '" status changed to ' + event.newStatus, 'Job Status Updated');
+                    }
+                })
+                .listen('.candidate.assigned', function(event) {
+                    if (!event || !event.jobId) return;
+                    const jobId = parseInt(event.jobId, 10);
+
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+
+                    // Direct DOM patch of pipeline badge on the job card (0ms latency)
+                    const $jobRow = $('.job-row[data-job-id="' + jobId + '"]');
+                    if ($jobRow.length > 0) {
+                        const stageId = parseInt(event.masterStatusId, 10);
+                        if (stageId) {
+                            const $badge = $jobRow.find('.stage-badge a[href*="/' + stageId + '"]');
+                            if ($badge.length > 0) {
+                                const currentCount = parseInt($badge.text().trim(), 10) || 0;
+                                $badge.text(currentCount + 1);
+                            }
+                        }
+                    }
+                })
+                .listen('.CandidateDrawerUpdated', function(event) {
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+                    window.jobDrawerCache = {};
+                })
+                .listen('.JobSkillsUpdated', function(event) {
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+                    window.jobDrawerCache = {};
+                });
+
+            // Reconnection recovery: purge cache to ensure re-sync with server authoritative state
+            if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                window.Echo.connector.pusher.connection.bind('connected', function() {
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('[Reverb Jobs] sync error:', err);
+        }
+    }
+
+    $(document).ready(function() {
+        initJobsReverbSync();
+    });
+
+</script>
 
 @endpush

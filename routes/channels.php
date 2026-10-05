@@ -22,3 +22,8 @@ Broadcast::channel('company.{companyId}.job.{jobId}', function ($user, int $comp
     return (int) $user->company_id === (int) $companyId;
 });
 
+// Company-wide private tenant channel for job status, candidate assignment, and drawer push events
+Broadcast::channel('company.{companyId}', function ($user, int $companyId) {
+    return (int) $user->company_id === (int) $companyId;
+});
+

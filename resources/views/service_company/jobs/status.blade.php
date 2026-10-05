@@ -199,16 +199,25 @@ function jsdSelectStatus(el) {
     $('.changetextupdate').text('Update Status to ' + meta.label);
 }
 
+var _isSubmittingJobStatus = false;
 function newUpdateJobstatus(){
+    if (_isSubmittingJobStatus) return false;
+    _isSubmittingJobStatus = true;
+
     $('#status_confirm_btn').prop('disabled', true);
     $('.changetextupdate').text('Updating…');
     var page = parseInt(localStorage.getItem('currentPageJobs')) || 1;
+    var formData = $('#createSchedule').serialize();
+    var mutationId = 'mut_' + Date.now();
+    formData += '&client_mutation_id=' + encodeURIComponent(mutationId);
+
     $.ajax({
         url: '{{ route("service_company.jobs.newUpdateJobstatus") }}',
         container: '#createSchedule',
         type: "POST",
-        data: $('#createSchedule').serialize(),
+        data: formData,
         success: function (response) {
+            _isSubmittingJobStatus = false;
 
             if (response.status == 'coinCheck') {
                 Swal.fire("Failed", `${response.message}`, "warning").then(function(){
@@ -220,6 +229,8 @@ function newUpdateJobstatus(){
             }
 
             if (response.status == 'success') {
+                if (window.JeroJobsLocalStore) { window.JeroJobsLocalStore.purge(); }
+                window.jobDrawerCache = {};
                 $('.activeJobs').html(response.activeJobs);
                 $('.inactiveJobs').html(response.inactiveJobs);
                 $('.holdJobs').html(response.holdJobs);
@@ -240,6 +251,18 @@ function newUpdateJobstatus(){
                 $('#status_msg').html("<div style='color:#FF0000'>Oops, something went wrong. Please try again</div>");
                 $('#status_confirm_btn').prop('disabled', false);
                 $('.changetextupdate').text('Update Status');
+            }
+        },
+        error: function (xhr) {
+            _isSubmittingJobStatus = false;
+            $('#status_confirm_btn').prop('disabled', false);
+            $('.changetextupdate').text('Update Status');
+            var errorMsg = (xhr.status === 0 || !navigator.onLine)
+                ? 'Network disconnected. Please check your connection and try again.'
+                : 'Status update failed (HTTP ' + xhr.status + '). Please try again.';
+            $('#status_msg').html("<div style='color:#FF0000'>" + errorMsg + "</div>");
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Failed', errorMsg, 'error');
             }
         }
     });
