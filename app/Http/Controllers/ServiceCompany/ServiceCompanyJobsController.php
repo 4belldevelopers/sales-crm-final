@@ -1292,28 +1292,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
         // BUG-03: was Company::all() — full table scan every request. Now single-tenant lookup with 1h cache.
         $this->company = Cache::remember('company:'.$this->user->company_id, 3600, fn () => Company::find($this->user->company_id));
-        $this->totalJobs = Job::where('id', '>', '0')->count();
-        $this->activeJobs = Job::where('status', 'active')->count();
-        $this->inactiveJobs = Job::where('status', 'inactive')->count();
 
-        $chkAdminRole = $this->user->hasRole('admin');
-
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        if ($chkAdminRole > 0) {
-            $this->totalJobs = Job::where('id', '>', '0')->count();
-            $this->activeJobs = Job::where('status', 'active')->count();
-            $this->inactiveJobs = Job::where('status', 'inactive')->count();
-            $this->holdJobs = Job::where('status', 'hold')->count();
-
-        } else {
-
-            $this->totalJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.id', '>', '0')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->activeJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'active')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->inactiveJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'inactive')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->holdJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.status', 'hold')->where('job_assign.user_id', '=', $this->user->id)->count();
-
-        }
+        // INTENT: Derive counts strictly from cached dataCnt (Elasticsearch CQRS) with 0% MySQL reads.
         $this->dataCnt = $this->dataCnt();
+        $this->totalJobs = $this->dataCnt['allRequisition'] ?? 0;
+        $this->activeJobs = $this->dataCnt['hiringCount'] ?? 0;
+        $this->inactiveJobs = $this->dataCnt['closedCount'] ?? 0;
+        $this->holdJobs = $this->dataCnt['holdCount'] ?? 0;
 
         if (session()->has('UrlMailJobId')) {
             $this->UrlMailJobId = session('UrlMailJobId');
@@ -1332,8 +1317,16 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     public function dataCnt()
     {
-
         $company_id = auth()->user()->company_id;
+        $userVersionKey = 'alljobslist_version_user_'.$this->user->id;
+        $companyVersionKey = 'alljobslist_version_company_'.$company_id;
+        $version = cache()->get($userVersionKey, 1).'_'.cache()->get($companyVersionKey, 1);
+        $cacheKey = 'ats:jobs_data_cnt:'.$this->user->id.':'.$company_id.':'.$version;
+
+        if (cache()->has($cacheKey)) {
+            return cache()->get($cacheKey);
+        }
+
         $chkAdminRole = $this->user->hasRole('admin');
         $isAdmin = ($chkAdminRole > 0) && in_array('all_requisition', $this->userPermissions) && in_array('view_jobs', $this->userPermissions);
         $isNonAdmin = ! $isAdmin;
@@ -1551,8 +1544,9 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         }
         $dataCnt['allTabCount'] = $dataCnt['hiringCount'] + $dataCnt['holdCount'] + $dataCnt['closedCount'] + $dataCnt['removedCount'];
 
-        return $dataCnt;
+        cache()->put($cacheKey, $dataCnt, now()->addMinutes(10));
 
+        return $dataCnt;
     }
 
     public function client_job_data_ajax(Request $request)
@@ -2914,14 +2908,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ->merge(collect($data)->pluck('companyidcount'))
                 ->merge([$company_id])
                 ->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
-            $companiesMap = ! empty($parentCompanyIds)
-                ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('company_name', 'id')->toArray()
-                : [];
-
-            // INTENT: Bulk pre-fetch company logo paths & client details to eliminate N+1 companyDetails ES calls.
-            $companiesLogoMap = ! empty($parentCompanyIds)
-                ? DB::table('companies')->whereIn('id', $parentCompanyIds)->pluck('logo', 'id')->toArray()
-                : [];
+            // INTENT: Bulk pre-fetch company names & logos in a single query to eliminate duplicate companies table scans.
+            $parentCompanies = ! empty($parentCompanyIds)
+                ? DB::table('companies')->whereIn('id', $parentCompanyIds)->get(['id', 'company_name', 'logo'])->keyBy('id')
+                : collect();
+            $companiesMap = $parentCompanies->pluck('company_name', 'id')->toArray();
+            $companiesLogoMap = $parentCompanies->pluck('logo', 'id')->toArray();
 
             $allClientIds = collect($data)->pluck('client_id')->filter(fn ($id) => $id > 0)->unique()->values()->toArray();
             $clientsDetailsMap = ! empty($allClientIds)
@@ -3523,25 +3515,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function client_requisition($id)
     {
         $this->pageTitle = __('Client Requisition');
-        // $this->companies = Company::all();
-        $this->totalJobs = Job::where('id', '>', '0')->count();
-        $this->activeJobs = Job::where('status', 'active')->count();
-        $this->inactiveJobs = Job::where('status', 'inactive')->count();
-        $chkAdminRole = $this->user->hasRole('admin');
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-        if ($chkAdminRole > 0) {
-            $this->totalJobs = Job::where('id', '>', '0')->count();
-            $this->activeJobs = Job::where('status', 'active')->count();
-            $this->inactiveJobs = Job::where('status', 'inactive')->count();
-            $this->holdJobs = Job::where('status', 'hold')->count();
-        } else {
-            $this->totalJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.id', '>', '0')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->activeJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'active')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->inactiveJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'inactive')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->holdJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'hold')->where('job_assign.user_id', '=', $this->user->id)->count();
-        }
 
+        // INTENT: Derive counts strictly from cached dataCnt (Elasticsearch CQRS) with 0% MySQL reads.
         $this->dataCnt = $this->dataCnt();
+        $this->totalJobs = $this->dataCnt['clientRequisition'] ?? 0;
+        $this->activeJobs = $this->dataCnt['hiringCount'] ?? 0;
+        $this->inactiveJobs = $this->dataCnt['closedCount'] ?? 0;
+        $this->holdJobs = $this->dataCnt['holdCount'] ?? 0;
 
         return view('service_company.jobs.client_requisition', $this->data);
     }
@@ -3840,27 +3820,13 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
     public function custom_requisition($id)
     {
         $this->pageTitle = __('Custom Requisition');
-        // $this->companies = Company::all();
-        $this->totalJobs = Job::where('id', '>', '0')->count();
-        $this->activeJobs = Job::where('status', 'active')->count();
-        $this->inactiveJobs = Job::where('status', 'inactive')->count();
 
-        $chkAdminRole = $this->user->hasRole('admin');
-
-        // $chkAdminRole = DB::table('roles')->select('roles.id')->where('id', $this->user->role->role_id)->where('name', 'admin')->count();
-
-        if ($chkAdminRole > 0) {
-            $this->totalJobs = Job::where('id', '>', '0')->count();
-            $this->activeJobs = Job::where('status', 'active')->count();
-            $this->inactiveJobs = Job::where('status', 'inactive')->count();
-            $this->holdJobs = Job::where('status', 'hold')->count();
-        } else {
-            $this->totalJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('jobs.id', '>', '0')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->activeJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'active')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->inactiveJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'inactive')->where('job_assign.user_id', '=', $this->user->id)->count();
-            $this->holdJobs = Job::join('job_assign', 'job_assign.job_id', 'jobs.id')->where('status', 'hold')->where('job_assign.user_id', '=', $this->user->id)->count();
-        }
+        // INTENT: Derive counts strictly from cached dataCnt (Elasticsearch CQRS) with 0% MySQL reads.
         $this->dataCnt = $this->dataCnt();
+        $this->totalJobs = $this->dataCnt['customRequisition'] ?? 0;
+        $this->activeJobs = $this->dataCnt['hiringCount'] ?? 0;
+        $this->inactiveJobs = $this->dataCnt['closedCount'] ?? 0;
+        $this->holdJobs = $this->dataCnt['holdCount'] ?? 0;
 
         return view('service_company.jobs.custom_requisition', $this->data);
     }
