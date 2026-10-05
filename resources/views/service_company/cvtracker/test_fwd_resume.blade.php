@@ -59,11 +59,92 @@ setTimeout(initTestFwdCkEditor, 250);
 
 <div class="main_container" id="test_main_container">
 @php
+$appDataList = is_array($applicationData ?? null) ? $applicationData : (!empty($applicationData) ? [$applicationData] : []);
+$candCount = count($appDataList);
+$isMulti = $candCount > 1;
+$compName = $companyName ?? 'Hiring Partner';
+$senderName = auth()->user()->name ?? 'Recruitment Team';
+$senderEmail = auth()->user()->email ?? '';
+
+$tableRowsHtml = '';
+foreach ($appDataList as $idx => $c) {
+    $rowNum = str_pad((string) ($idx + 1), 2, '0', STR_PAD_LEFT);
+    $cName = $c->full_name ?? ('Candidate #' . ($c->id ?? ($idx + 1)));
+    $cExp = $c->total_exp ?? ($c->experience ?? '--');
+    if (is_numeric($cExp)) {
+        $cExp = $cExp . ' Yrs';
+    }
+    $cDesig = $c->current_designation ?? ($c->job_title ?? 'Technical Specialist');
+    
+    $cSkills = '--';
+    if (!empty($c->parsed_skills) && is_array($c->parsed_skills)) {
+        $skillNames = array_slice(array_column($c->parsed_skills, 'name'), 0, 5);
+        $cSkills = implode(', ', $skillNames);
+    } elseif (!empty($c->skills)) {
+        $cSkills = is_string($c->skills) ? implode(', ', array_slice(explode(',', $c->skills), 0, 5)) : '--';
+    }
+
+    $cLoc = $c->city_name ?? ($c->city ?? ($c->location ?? 'Open to Relocation'));
+    $cWorkMode = !empty($c->wm) ? ucwords(str_replace(['_', '-'], ' ', strtolower($c->wm))) : ($c->work_mode ?? 'Hybrid');
+    $cNotice = $c->notice ?? 'Immediate';
+    $cMatch = !empty($c->rating) ? ($c->rating . '/5 Rating') : '--';
+    $hasCv = !empty($c->has_resume);
+
+    $tableRowsHtml .= '<tr style="background:#FFFFFF;border-bottom:1px solid #E2E8F0;">'
+        . '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0F766E;border:1px solid #CBD5E1;">' . $rowNum . '</td>'
+        . '<td style="padding:8px 8px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' . htmlspecialchars($cName, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">' . htmlspecialchars($cExp, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($cDesig, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;font-size:11.5px;">' . htmlspecialchars($cSkills, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;border:1px solid #CBD5E1;">' . htmlspecialchars($cLoc, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:4px;font-size:11px;">' . htmlspecialchars($cWorkMode, ENT_QUOTES) . '</span></td>'
+        . '<td style="padding:8px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' . htmlspecialchars($cNotice, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;font-weight:600;color:#2563EB;border:1px solid #CBD5E1;">' . htmlspecialchars($cMatch, ENT_QUOTES) . '</td>'
+        . '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' . ($hasCv ? '<strong style="color:#0D9488;">[Attached CV]</strong>' : '<span style="color:#D97706;">[Profile]</span>') . '</td>'
+        . '</tr>';
+}
+
+$matrixTableHtml = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">'
+    . '<thead>'
+    . '<tr style="background:#F1F5F9;color:#334155;text-align:left;font-size:11.5px;font-weight:700;border-bottom:2px solid #CBD5E1;">'
+    . '<th style="padding:8px 6px;text-align:center;width:35px;border:1px solid #CBD5E1;">#</th>'
+    . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Candidate</th>'
+    . '<th style="padding:8px 6px;text-align:center;border:1px solid #CBD5E1;">Exp.</th>'
+    . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Designation</th>'
+    . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Primary Skills</th>'
+    . '<th style="padding:8px 8px;border:1px solid #CBD5E1;">Location</th>'
+    . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Work Mode</th>'
+    . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Notice Period</th>'
+    . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Match</th>'
+    . '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Profile</th>'
+    . '</tr>'
+    . '</thead>'
+    . '<tbody>'
+    . $tableRowsHtml
+    . '</tbody>'
+    . '</table>';
+
 $template_body = '';
+if ($candCount > 0) {
+    $introLine = $isMulti
+        ? ('Sharing our shortlisted candidate profiles (' . $candCount . ' candidates) for your evaluation. Please find below the comparative executive candidate matrix for your review:')
+        : 'Sharing shortlisted candidate profile for your evaluation. Please find the details below:';
+
+    $template_body = '<p>Dear Hiring Manager,</p>'
+        . '<p>' . $introLine . '</p>'
+        . $matrixTableHtml
+        . '<p><strong>Formatted Resumes:</strong> Attached for the corresponding candidates (' . $candCount . ' ' . ($isMulti ? 'profiles' : 'profile') . ').</p>'
+        . '<p>All candidates have undergone initial screening and are available for introductory technical discussions. Please let us know your feedback or shortlist availability.</p>'
+        . '<p>Best regards,<br>'
+        . '<strong>' . htmlspecialchars($senderName, ENT_QUOTES) . '</strong><br>'
+        . ($senderEmail ? (htmlspecialchars($senderEmail, ENT_QUOTES) . '<br>') : '')
+        . '<strong>' . htmlspecialchars($compName, ENT_QUOTES) . '</strong></p>';
+}
+
 $to_email = '';
 $cc_email = '';
 if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
-    $cc_email = implode(', ', $cc_email_data);
+    $cc_email = implode(', ', array_slice($cc_email_data, 0, 4));
 }
 @endphp
 
@@ -614,6 +695,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       <div class="mm-field-col">
         <select name="template" id="test_template" class="mm-select" onchange="if(window.onTestTemplateChange) window.onTestTemplateChange(this);">
           <option value="">Select Email Template...</option>
+          <option value="__executive_matrix__" {{ $isMulti ? 'selected' : '' }}>📊 Executive Multi-Candidate Matrix Table (Recommended)</option>
           @if(!empty($templateData))
             @foreach($templateData as $tdata)
               <option value="{{ $tdata->e_temp_id ?? ($tdata->id ?? '') }}">{{ $tdata->display_name ?? ($tdata->template_name ?? 'Template #' . ($tdata->e_temp_id ?? $tdata->id)) }}</option>
@@ -633,7 +715,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Subject <span class="mm-req">*</span>
       </div>
       <div class="mm-field-col">
-        <input class="mm-input" name="subject" id="test_subject" placeholder="Enter email subject" value="Forwarded Candidate Profiles: {{ !empty($applicationData[0]->full_name) ? $applicationData[0]->full_name : 'Profiles' }}">
+        <input class="mm-input" name="subject" id="test_subject" placeholder="Enter email subject" value="{{ $isMulti ? ('Shortlisted Candidate Profiles (' . $candCount . ' Candidates) | ' . $compName) : ('Forwarded Candidate Profile: ' . (!empty($appDataList[0]->full_name) ? $appDataList[0]->full_name : 'Candidate') . ' - ' . (!empty($appDataList[0]->current_designation) ? $appDataList[0]->current_designation : 'Specialist')) }}">
       </div>
     </div>
 
@@ -1080,6 +1162,13 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Email Body
       </div>
       <div class="mm-field-col">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:11.5px;color:#6B7280;font-weight:500;">Email Body &amp; Presentation</span>
+          <button type="button" class="btn btn-sm" id="btn_insert_test_matrix_table" onclick="if(window.insertTestMatrixTableIntoEditor) window.insertTestMatrixTableIntoEditor();" style="background:#F0FDF4;color:#0F766E;border:1px solid #A7F3D0;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:all .15s;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Insert Executive Matrix Table
+          </button>
+        </div>
         <div class="mm-editor-wrap">
           <textarea id="test_editor1" name="editor1" rows="10">{{ @$template_body }}</textarea>
         </div>
@@ -1445,7 +1534,7 @@ function updateTestRosterFilenames(optId) {
             return;
         }
         var filename = 'Jeroworks_' + safeName + '.pdf';
-        if (optId === 5) {
+        if (optId === 5 || (optId >= 51 && optId <= 54)) {
             filename = 'Prescreen_Report_' + safeName + '.pdf';
             $(this).css('color', '#059669').text(filename);
         } else if (hasResume) {
@@ -1775,9 +1864,67 @@ window.onTestFwdAttachToggle = function (el) {
     updateTestSendButtonState();
 };
 
+// Dynamic Matrix Table & Executive Presentation Generators
+window.buildTestDynamicMatrixTable = function() {
+    return {!! json_encode($matrixTableHtml ?? '') !!};
+};
+
+window.buildTestExecutivePresentation = function() {
+    return {!! json_encode($template_body ?? '') !!};
+};
+
+window.insertTestMatrixTableIntoEditor = function() {
+    var tableHtml = window.buildTestDynamicMatrixTable ? window.buildTestDynamicMatrixTable() : '';
+    if (!tableHtml) {
+        if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
+        return;
+    }
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        var inst = CKEDITOR.instances['test_editor1'];
+        try {
+            inst.insertHtml(tableHtml);
+            $('#test_editor1').val(inst.getData());
+            if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
+            return;
+        } catch(e) {
+            console.warn('CKEditor insertHtml notice:', e);
+        }
+    }
+    var currentVal = $('#test_editor1').val() || '';
+    var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
+    $('#test_editor1').val(updatedVal);
+    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+        try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
+    }
+    if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
+};
+
 // Template change populates Subject and Editor
 window.onTestTemplateChange = function(selectEl) {
     var template = $(selectEl).val();
+    if (template === '__executive_matrix__') {
+        var isMulti = @json($isMulti ?? false);
+        var candCount = @json($candCount ?? 0);
+        var compName = @json($compName ?? 'Hiring Partner');
+        var primaryName = @json($appDataList[0]->full_name ?? 'Candidate');
+        var primaryDesig = @json($appDataList[0]->current_designation ?? 'Specialist');
+        var subj = isMulti
+            ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
+            : ('Forwarded Candidate Profile: ' + primaryName + ' - ' + primaryDesig);
+        $('#test_subject').val(subj);
+
+        var execBody = window.buildTestExecutivePresentation ? window.buildTestExecutivePresentation() : '';
+        if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+            try {
+                CKEDITOR.instances['test_editor1'].setData(execBody, function() {
+                    if (window.syncFirstRecipientSalutation) window.syncFirstRecipientSalutation();
+                });
+            } catch(e) {}
+        }
+        $('#test_editor1').val(execBody);
+        return;
+    }
+
     if (template > 0) {
         var id = template;
         var url = "{{ route('service_company.cvtracker.email_template', ':id') }}";
@@ -1813,6 +1960,13 @@ window.onTestTemplateChange = function(selectEl) {
             success: function(response) {
                 if (response.status == "success") {
                     var desc = response.template_description || response.template_body || '';
+                    var matrixTableHtml = window.buildTestDynamicMatrixTable ? window.buildTestDynamicMatrixTable() : '';
+                    desc = desc
+                        .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, matrixTableHtml)
+                        .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, matrixTableHtml)
+                        .replace(/\[\{MATRIX_TABLE\}\]/gi, matrixTableHtml)
+                        .replace(/\[MATRIX_TABLE\]/gi, matrixTableHtml);
+
                     $('#test_subject').val(response.subject || '');
                     if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
                         try {
@@ -1930,6 +2084,19 @@ window.onTestFwdSubmitClick = async function (e) {
             }
         }
         $('#test_cc_email_tag_box').css('border-color', '#E5E7EB');
+    }
+
+    // Client-Side Enforcement: Maximum 5 total recipients (To + CC combined)
+    var totalRecipients = toList.length + ccList.length;
+    var MAX_TEST_TOTAL_RECIPIENTS = 5;
+    if (totalRecipients > MAX_TEST_TOTAL_RECIPIENTS) {
+        Swal.fire({
+            title: 'Recipient Limit Exceeded',
+            text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed to maintain high email deliverability. You currently have ' + totalRecipients + ' recipients. Please remove ' + (totalRecipients - MAX_TEST_TOTAL_RECIPIENTS) + ' recipient(s).',
+            icon: 'warning',
+            confirmButtonColor: '#0D9488'
+        });
+        return;
     }
 
     if (!subject) {
@@ -2305,6 +2472,13 @@ window.syncFirstRecipientSalutation = function() {
 };
 
 var emailTagRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+var MAX_TEST_TOTAL_RECIPIENTS = 5;
+
+function getTestTotalRecipientsCount() {
+    var toCount = (window._testEmailTags && window._testEmailTags.to) ? window._testEmailTags.to.length : 0;
+    var ccCount = (window._testEmailTags && window._testEmailTags.cc) ? window._testEmailTags.cc.length : 0;
+    return toCount + ccCount;
+}
 
 window.renderTestTags = function(target) {
     var list = window._testEmailTags[target] || [];
@@ -2332,6 +2506,17 @@ window.renderTestTags = function(target) {
         $input.attr('placeholder', (target === 'to') ? 'Type recipient email and press Enter...' : 'Type CC email and press Enter...');
     }
 
+    var totalRecipients = getTestTotalRecipientsCount();
+    var $badge = $('#test_fwd_recipients_badge');
+    if ($badge.length) {
+        $badge.text(totalRecipients + ' / ' + MAX_TEST_TOTAL_RECIPIENTS + ' Recipients (Max)');
+        if (totalRecipients >= MAX_TEST_TOTAL_RECIPIENTS) {
+            $badge.css({ 'background': '#FEE2E2', 'color': '#DC2626', 'border-color': '#FCA5A5' });
+        } else {
+            $badge.css({ 'background': '#F1F5F9', 'color': '#475569', 'border-color': '#E2E8F0' });
+        }
+    }
+
     syncTestRecipientDrawerState();
     if (target === 'to') {
         window.syncFirstRecipientSalutation();
@@ -2347,6 +2532,21 @@ window.addTestEmailTag = function(target, email) {
     var lower = email.toLowerCase();
     var exists = window._testEmailTags[target].some(function(e) { return e.toLowerCase() === lower; });
     if (!exists) {
+        var total = getTestTotalRecipientsCount();
+        if (total >= MAX_TEST_TOTAL_RECIPIENTS) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Recipient Limit Reached',
+                    text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed to maintain high email deliverability. Please remove an existing recipient to add a new one.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+            } else if (typeof toastr !== 'undefined') {
+                toastr.warning('Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' recipients allowed.');
+            }
+            return false;
+        }
+
         window._testEmailTags[target].push(email);
         renderTestTags(target);
         return true;
@@ -2374,9 +2574,21 @@ window.removeTestEmailByAddress = function(target, email) {
 window.processTestTagInputText = function(target, text) {
     if (!text) return;
     var items = String(text).split(/[\s,;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
-    items.forEach(function(item) {
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        if (getTestTotalRecipientsCount() >= MAX_TEST_TOTAL_RECIPIENTS) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Recipient Limit Reached',
+                    text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed to maintain high email deliverability.',
+                    icon: 'warning',
+                    confirmButtonColor: '#0D9488'
+                });
+            }
+            break;
+        }
         addTestEmailTag(target, item);
-    });
+    }
 };
 
 function setupTestTagInput(target) {
@@ -2434,20 +2646,30 @@ function getTestExistingEmails() {
 
 function syncTestRecipientDrawerState() {
     var existing = getTestExistingEmails();
+    var totalRecipients = getTestTotalRecipientsCount();
+    var atLimit = totalRecipients >= MAX_TEST_TOTAL_RECIPIENTS;
+
     $('.test-rcp-toggle-btn').each(function() {
         var email = ($(this).attr('data-email') || '').trim().toLowerCase();
-        if (email && existing.indexOf(email) !== -1) {
+        var isAdded = email && existing.indexOf(email) !== -1;
+        if (isAdded) {
             $(this).addClass('is-added');
             $(this).find('.rcp-btn-label-add').hide();
             $(this).find('.rcp-btn-label-added').css('display', 'inline-flex').show();
+            $(this).css({ 'opacity': '1', 'cursor': 'pointer' }).attr('title', 'Click to remove recipient');
         } else {
             $(this).removeClass('is-added');
             $(this).find('.rcp-btn-label-added').hide();
             $(this).find('.rcp-btn-label-add').show();
+            if (atLimit) {
+                $(this).css({ 'opacity': '0.5', 'cursor': 'not-allowed' }).attr('title', 'Recipient limit of 5 reached');
+            } else {
+                $(this).css({ 'opacity': '1', 'cursor': 'pointer' }).attr('title', 'Click to add recipient');
+            }
         }
     });
     var count = existing.length;
-    $('#test_rcp_footer_count_text').text(count + (count === 1 ? ' recipient selected' : ' recipients selected'));
+    $('#test_rcp_footer_count_text').text(count + (count === 1 ? ' recipient selected' : ' recipients selected') + ' (Total: ' + totalRecipients + '/' + MAX_TEST_TOTAL_RECIPIENTS + ')');
 }
 
 window.openTestEmailRecipientDrawer = function(target) {
@@ -2520,6 +2742,15 @@ $(document).off('click', '.test-rcp-toggle-btn').on('click', '.test-rcp-toggle-b
     var existing = getTestExistingEmails();
     var lower = email.toLowerCase();
     if (existing.indexOf(lower) === -1) {
+        if (getTestTotalRecipientsCount() >= MAX_TEST_TOTAL_RECIPIENTS) {
+            Swal.fire({
+                title: 'Recipient Limit Reached',
+                text: 'Maximum ' + MAX_TEST_TOTAL_RECIPIENTS + ' total recipients (To + CC combined) allowed to maintain high email deliverability. Please remove an existing recipient first.',
+                icon: 'warning',
+                confirmButtonColor: '#0D9488'
+            });
+            return;
+        }
         addTestEmailTag(_testCurrentRcpTarget, email);
     } else {
         removeTestEmailByAddress(_testCurrentRcpTarget, email);
@@ -2544,13 +2775,16 @@ $(document).off('input', '#test_rcp_search_input').on('input', '#test_rcp_search
 
 // Initial synchronization on drawer load
 function initTestDrawerTagsAndSendState() {
-    // Populate tags from initial hidden inputs
+    // Populate tags from initial hidden inputs (capped at MAX_TEST_TOTAL_RECIPIENTS)
     var initTo = ($('#test_to_email').val() || '').trim();
-    window._testEmailTags.to = initTo ? initTo.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    var toArr = initTo ? initTo.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    window._testEmailTags.to = toArr.slice(0, MAX_TEST_TOTAL_RECIPIENTS);
     renderTestTags('to');
 
+    var remainingSlots = Math.max(0, MAX_TEST_TOTAL_RECIPIENTS - window._testEmailTags.to.length);
     var initCc = ($('#test_cc_email_panel').val() || '').trim();
-    window._testEmailTags.cc = initCc ? initCc.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    var ccArr = initCc ? initCc.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    window._testEmailTags.cc = ccArr.slice(0, remainingSlots);
     renderTestTags('cc');
 
     setupTestTagInput('to');

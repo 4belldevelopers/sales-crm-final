@@ -5100,6 +5100,10 @@ setTimeout(() => {
                         if (wId) window.invalidateCandidateDrawerCache(wId);
                         if (cId) window.invalidateCandidateDrawerCache(cId);
                     }
+                    if (window.invalidateCvTrackerDownloadResumeCache) {
+                        if (wId) window.invalidateCvTrackerDownloadResumeCache(wId);
+                        if (cId) window.invalidateCvTrackerDownloadResumeCache(cId);
+                    }
 
                     // Close drawer first; remove open class; blur active element
                     $('#jw-recruiter-note-drawer').removeClass('jw-drawer-open');
@@ -5828,6 +5832,24 @@ setTimeout(() => {
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
+      {{-- 54: Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding --}}
+      <label class="rdc-opt" data-opt="54" data-coins="4">
+        <input class="rdc-rinput" type="radio" name="rdcFormat" value="54">
+        <span class="rdc-onum">54</span>
+        <span class="rdc-oi" style="background:#fdf2f8;color:#be185d;" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><circle cx="12" cy="16" r="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><path d="M8 17h5"/><path d="m15 18 2 2 4-4"/></svg>
+        </span>
+        <span class="rdc-obody">
+          <span class="rdc-otitle">Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding</span>
+          <span class="rdc-odesc">Keep the name visible, highlight role-matched skills, hide contact channels, and attach an unbranded pre-screened report.</span>
+        </span>
+        <span class="rdc-ometa">
+          <span class="rdc-ocost">4 Coins</span>
+          <span class="rdc-otime">Instant</span>
+        </span>
+        <span class="rdc-ocirc" aria-hidden="true"></span>
+      </label>
+
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6048,7 +6070,8 @@ setTimeout(() => {
     50:{cost:3, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
     51:{cost:3, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
     52:{cost:3, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
+    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
+    54:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding is browser-only and available for direct PDF/DOCX resumes.')}
   };
 
   var selectedOpt = 1;
@@ -6093,7 +6116,7 @@ setTimeout(() => {
     if(optMeta[1]){
       optMeta[1].avail = (originalR2Available && !!(originalR2DirectUrl || originalR2PublicUrl)) || !!dlUrl;
     }
-    [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53].forEach(function(id){
+    [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54].forEach(function(id){
       if(optMeta[id]){
         optMeta[id].avail = ['PDF','DOCX'].indexOf(resumeExt) !== -1 && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl);
       }
@@ -6160,7 +6183,7 @@ setTimeout(() => {
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47]},
-      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]}
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53,54]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -6366,7 +6389,7 @@ setTimeout(() => {
     syncDownloadCenterSummary(m,n);
     if(m.dlKey === 'rs' && typeof window.__preloadRS === 'function') window.__preloadRS();
     if(m.dlKey && m.dlKey.indexOf('test-agy-') === 0 && typeof window.__preloadAgyMetricFonts === 'function') window.__preloadAgyMetricFonts();
-    if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-branded' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-highlighted') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
+    if((m.dlKey === 'test-agy-strategy2-branded' || m.dlKey === 'test-agy-strategy2-prescreened-branded' || m.dlKey === 'test-agy-strategy2-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-branded' || m.dlKey === 'test-agy-strategy2-prescreened-highlighted-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-branded' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-nobrand' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-highlighted' || m.dlKey === 'test-agy-strategy2-contact-hidden-prescreened-highlighted-nobrand') && typeof window.__preloadRSCombined === 'function') window.__preloadRSCombined();
   }
 
   var toastTimer = null;

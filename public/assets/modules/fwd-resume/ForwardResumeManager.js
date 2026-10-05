@@ -622,20 +622,36 @@
             }
 
             // Default Subject
-            var primaryName = (self._applicationData.length > 0 && self._applicationData[0].full_name)
-                ? self._applicationData[0].full_name
-                : 'Profiles';
-            $('#test_subject').val('Forwarded Candidate Profiles: ' + primaryName);
+            var isMulti = self._applicationData.length > 1;
+            var primaryCand = self._applicationData[0] || {};
+            var defaultSubj = isMulti
+                ? ('Shortlisted Candidate Profiles (' + self._applicationData.length + ' Candidates) | ' + (self._companyData.companyName || 'Hiring Partner'))
+                : ('Forwarded Candidate Profile: ' + (primaryCand.full_name || 'Candidate') + ' - ' + (primaryCand.designation || primaryCand.current_designation || 'Specialist'));
+            $('#test_subject').val(defaultSubj);
 
-            // Populate Templates Dropdown
+            // Populate Templates Dropdown (Includes Dynamic Executive Matrix Table)
             var tmplSelect = $('#test_fwd_template_select');
             tmplSelect.empty();
             tmplSelect.append('<option value="">-- Select Email Template (Optional) --</option>');
+            tmplSelect.append('<option value="__executive_matrix__"' + (isMulti ? ' selected' : '') + '>📊 Executive Multi-Candidate Matrix Table (Recommended)</option>');
             self._templateData.forEach(function (tmpl) {
                 var tid = tmpl.e_temp_id || tmpl.id || '';
                 var tname = tmpl.display_name || tmpl.template_name || ('Template #' + tid);
                 tmplSelect.append('<option value="' + escapeHtml(tid) + '">' + escapeHtml(tname) + '</option>');
             });
+
+            // Populate Executive Presentation Body into Editor
+            if (self._applicationData.length > 0) {
+                var initialBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
+                $('#test_editor1').val(initialBody);
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                    try {
+                        CKEDITOR.instances['test_editor1'].setData(initialBody, function () {
+                            self.syncFirstRecipientSalutation();
+                        });
+                    } catch (e) {}
+                }
+            }
 
             // Render Candidate Roster Cards
             self.renderCandidateRoster();
@@ -1026,7 +1042,7 @@
                     return;
                 }
                 var fname = 'Jeroworks_' + safeName + '.pdf';
-                if (optId === 5) fname = 'Prescreen_Report_' + safeName + '.pdf';
+                if (optId === 5 || (optId >= 51 && optId <= 54)) fname = 'Prescreen_Report_' + safeName + '.pdf';
                 else if (optId === 49) fname = 'Jeroworks_Resume.pdf';
                 $(this).text(hasResume || optId === 5 ? fname : 'No resume uploaded');
             });
@@ -1277,48 +1293,125 @@
             return html;
         },
 
-        buildClientSummaryHtml: function () {
+        buildDynamicMatrixTable: function () {
             var self = this;
             if (!self._applicationData || self._applicationData.length === 0) return '';
-            var html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:\'Poppins\',Arial,sans-serif;font-size:12px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">';
-            html += '<thead><tr style="background:#0D9488;color:#ffffff;font-size:11.5px;font-weight:700;border-bottom:2px solid #0B7268;">';
+            var html = '<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:\'Poppins\',Arial,Helvetica,sans-serif;font-size:12px;color:#1E293B;border:1px solid #CBD5E1;margin:14px 0;">';
+            html += '<thead><tr style="background:#F1F5F9;color:#334155;text-align:left;font-size:11.5px;font-weight:700;border-bottom:2px solid #CBD5E1;">';
             html += '<th style="padding:8px 6px;text-align:center;width:35px;border:1px solid #CBD5E1;">#</th>';
-            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Candidate Name</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Candidate</th>';
             html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Exp.</th>';
             html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Designation</th>';
-            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Key Skills</th>';
+            html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Primary Skills</th>';
             html += '<th style="padding:8px 10px;text-align:left;border:1px solid #CBD5E1;">Location</th>';
-            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Document</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Work Mode</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Availability</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Match</th>';
+            html += '<th style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">Profile</th>';
             html += '</tr></thead><tbody>';
 
             self._applicationData.forEach(function (cand, idx) {
                 var rowNum = String(idx + 1).padStart(2, '0');
                 var cName = escapeHtml(cand.full_name || ('Candidate #' + (idx + 1)));
-                var desig = escapeHtml(cand.current_designation || cand.job_title || 'Software Professional');
-                var exp = escapeHtml(cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
-                var loc = escapeHtml(cand.current_location || cand.location || '--');
-                var skillsList = '';
+                var desig = escapeHtml(cand.current_designation || cand.designation || cand.job_title || 'Technical Specialist');
+                var exp = escapeHtml(cand.experience || cand.total_exp || (cand.total_exp_years ? (cand.total_exp_years + ' Yrs') : '--'));
+                if (typeof exp === 'number') exp = exp + ' Yrs';
+                var loc = escapeHtml(cand.location || cand.current_location || '--');
+                var wm = escapeHtml(cand.work_mode || cand.wm || 'Hybrid');
+                var notice = escapeHtml(cand.notice || (cand.is_immediate ? 'Immediate' : 'Standard'));
+                
+                var skillsList = '--';
                 if (Array.isArray(cand.skills) && cand.skills.length > 0) {
-                    skillsList = cand.skills.slice(0, 4).map(function(s) { return typeof s === 'string' ? s : (s.name || s.skill_name || ''); }).filter(Boolean).join(', ');
+                    skillsList = cand.skills.slice(0, 5).map(function(s) { return typeof s === 'string' ? s : (s.name || s.skill_name || ''); }).filter(Boolean).join(', ');
                 } else if (cand.skills && typeof cand.skills === 'string') {
-                    skillsList = cand.skills;
-                } else {
-                    skillsList = '--';
+                    skillsList = cand.skills.split(',').slice(0, 5).join(', ');
                 }
-                var bg = (idx % 2 === 0) ? '#FFFFFF' : '#F9FAFB';
+                
+                var matchScore = '--';
+                if (cand.match) {
+                    matchScore = (typeof cand.match === 'number') ? (cand.match + '%') : String(cand.match);
+                } else if (cand.rating) {
+                    matchScore = cand.rating + '/5';
+                }
+
+                var bg = (idx % 2 === 0) ? '#FFFFFF' : '#F8FAFC';
+                var hasResume = !!(cand.has_resume || cand.resume);
 
                 html += '<tr style="background:' + bg + ';border-bottom:1px solid #E2E8F0;">';
-                html += '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0D9488;border:1px solid #CBD5E1;">' + rowNum + '</td>';
+                html += '<td style="padding:8px 6px;text-align:center;font-weight:700;color:#0F766E;border:1px solid #CBD5E1;">' + rowNum + '</td>';
                 html += '<td style="padding:8px 10px;font-weight:600;color:#0F172A;border:1px solid #CBD5E1;">' + cName + '</td>';
                 html += '<td style="padding:8px 6px;text-align:center;color:#334155;border:1px solid #CBD5E1;">' + exp + '</td>';
                 html += '<td style="padding:8px 10px;color:#334155;border:1px solid #CBD5E1;">' + desig + '</td>';
-                html += '<td style="padding:8px 10px;color:#475569;border:1px solid #CBD5E1;">' + escapeHtml(skillsList) + '</td>';
+                html += '<td style="padding:8px 10px;color:#475569;border:1px solid #CBD5E1;font-size:11.5px;">' + escapeHtml(skillsList) + '</td>';
                 html += '<td style="padding:8px 10px;color:#334155;border:1px solid #CBD5E1;">' + loc + '</td>';
-                html += '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><strong style="color:#0D9488;">[Attached CV]</strong></td>';
+                html += '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;"><span style="background:#EFF6FF;color:#1D4ED8;padding:2px 6px;border-radius:4px;font-size:11px;">' + wm + '</span></td>';
+                html += '<td style="padding:8px 8px;text-align:center;color:#059669;font-weight:600;border:1px solid #CBD5E1;">' + notice + '</td>';
+                html += '<td style="padding:8px 8px;text-align:center;font-weight:600;color:#2563EB;border:1px solid #CBD5E1;">' + escapeHtml(matchScore) + '</td>';
+                html += '<td style="padding:8px 8px;text-align:center;border:1px solid #CBD5E1;">' + (hasResume ? '<strong style="color:#0D9488;">[Attached CV]</strong>' : '<span style="color:#D97706;">[Profile]</span>') + '</td>';
                 html += '</tr>';
             });
             html += '</tbody></table>';
             return html;
+        },
+
+        buildClientSummaryHtml: function () {
+            return this.buildDynamicMatrixTable();
+        },
+
+        buildExecutivePresentationBody: function (recipientName) {
+            var self = this;
+            var cands = self._applicationData || [];
+            var count = cands.length;
+            var isMulti = count > 1;
+            var hrSalutation = recipientName ? ('Dear ' + recipientName + ',') : 'Dear Hiring Manager,';
+            var senderName = (self._companyData && self._companyData.sender_name) || 'Recruitment Team';
+            var compName = (self._companyData && self._companyData.companyName) || 'Hiring Partner';
+            var senderEmail = (self._companyData && self._companyData.sender_email) || '';
+
+            var introText = isMulti
+                ? ('Sharing our shortlisted candidate profiles (' + count + ' candidates) for your evaluation. Please find below the comparative executive candidate matrix for your review:')
+                : 'Sharing shortlisted candidate profile for your evaluation. Please find the details below:';
+
+            var matrixHtml = self.buildDynamicMatrixTable();
+
+            var bodyHtml = '<p>' + hrSalutation + '</p>' +
+                '<p>' + introText + '</p>' +
+                matrixHtml +
+                '<p><strong>Formatted Resumes:</strong> Attached for the corresponding candidates (' + count + ' ' + (isMulti ? 'profiles' : 'profile') + ').</p>' +
+                '<p>All candidates have undergone initial screening and are available for introductory technical discussions. Please let us know your feedback or shortlist availability.</p>' +
+                '<p>Best regards,<br>' +
+                '<strong>' + escapeHtml(senderName) + '</strong><br>' +
+                (senderEmail ? (escapeHtml(senderEmail) + '<br>') : '') +
+                '<strong>' + escapeHtml(compName) + '</strong></p>';
+
+            return bodyHtml;
+        },
+
+        insertMatrixTableIntoEditor: function () {
+            var self = this;
+            var tableHtml = self.buildDynamicMatrixTable();
+            if (!tableHtml) {
+                if (typeof toastr !== 'undefined') toastr.warning('No candidate data available to generate matrix table.');
+                return;
+            }
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                var inst = CKEDITOR.instances['test_editor1'];
+                try {
+                    inst.insertHtml(tableHtml);
+                    $('#test_editor1').val(inst.getData());
+                    if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
+                    return;
+                } catch(e) {
+                    console.warn('CKEditor insertHtml notice:', e);
+                }
+            }
+            var currentVal = $('#test_editor1').val() || '';
+            var updatedVal = currentVal ? (currentVal + '<br>' + tableHtml) : tableHtml;
+            $('#test_editor1').val(updatedVal);
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                try { CKEDITOR.instances['test_editor1'].setData(updatedVal); } catch(e) {}
+            }
+            if (typeof toastr !== 'undefined') toastr.success('Executive Candidate Matrix Table inserted into email body.');
         },
 
         renderClientTemplate: function (templateId) {
@@ -1351,7 +1444,7 @@
             $('#test_subject').val(sub);
 
             var skillTrackerHtml = self.buildClientSkillTrackerHtml();
-            var candidateSummaryHtml = self.buildClientSummaryHtml();
+            var candidateSummaryHtml = self.buildDynamicMatrixTable();
             var dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
             var body = rawBody
@@ -1364,6 +1457,10 @@
                 .replace(/\[\{POSITION\}\]/gi, jobTitle)
                 .replace(/\[\{SKILL_TRACKER\}\]/gi, skillTrackerHtml)
                 .replace(/\[\{CANDIDATE_SUMMARY\}\]/gi, candidateSummaryHtml)
+                .replace(/\[\{CANDIDATE_MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
+                .replace(/\[CANDIDATE_MATRIX_TABLE\]/gi, candidateSummaryHtml)
+                .replace(/\[\{MATRIX_TABLE\}\]/gi, candidateSummaryHtml)
+                .replace(/\[MATRIX_TABLE\]/gi, candidateSummaryHtml)
                 .replace(/\[\{DATE\}\]/gi, dateStr);
 
             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
@@ -1386,6 +1483,24 @@
                 }
                 $('#test_editor1').val('');
                 $('#test_subject').val('');
+                return;
+            }
+
+            if (templateId === '__executive_matrix__') {
+                var isMulti = self._applicationData.length > 1;
+                var subj = isMulti
+                    ? ('Shortlisted Candidate Profiles (' + self._applicationData.length + ' Candidates) | ' + (self._companyData.companyName || 'Hiring Partner'))
+                    : ('Forwarded Candidate Profile: ' + (self._applicationData[0] ? (self._applicationData[0].full_name || 'Candidate') : 'Candidate') + ' - ' + (self._applicationData[0] ? (self._applicationData[0].designation || 'Specialist') : 'Specialist'));
+                $('#test_subject').val(subj);
+                var execBody = self.buildExecutivePresentationBody(self.getFirstRecipientName());
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances && CKEDITOR.instances['test_editor1']) {
+                    try {
+                        CKEDITOR.instances['test_editor1'].setData(execBody, function () {
+                            self.syncFirstRecipientSalutation();
+                        });
+                    } catch (e) {}
+                }
+                $('#test_editor1').val(execBody);
                 return;
             }
 
@@ -2101,7 +2216,7 @@
 
                         if (blob) {
                             var safeName = (cand.full_name || 'Candidate').replace(/[^\w\s.-]/g, '').replace(/\s+/g, '_');
-                            var outName = (optId === 5) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf');
+                            var outName = (blob && blob.filename) ? blob.filename : ((optId === 5 || (optId >= 51 && optId <= 54)) ? ('Prescreen_Report_' + safeName + '.pdf') : ('Jeroworks_' + safeName + '.pdf'));
                             var blobSha = await computeSha256Hex(blob);
 
                             candidateBlobs[cand.id] = { blob: blob, filename: outName, sha256: blobSha };
