@@ -484,6 +484,14 @@
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
+    try {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('rdc:download-started', { detail: { fileName: fileName } }));
+        if (typeof window.__rdcCompleteDownloadUi === 'function') {
+          [0, 120, 500, 1200].forEach(function (d) { setTimeout(function () { window.__rdcCompleteDownloadUi(fileName); }, d); });
+        }
+      }
+    } catch (e) {}
     setTimeout(function () {
       URL.revokeObjectURL(url);
       if (a.parentNode) a.parentNode.removeChild(a);
@@ -2563,6 +2571,16 @@
     data = normalizeCandidateData(data || {}, options.companyData || {});
 
     if (options.statusCallback) options.statusCallback('Preparing resume processing...');
+
+    if (optNum === 5) {
+      if (options.statusCallback) options.statusCallback('Compiling Pre-Screened Report dossier (50%)...');
+      var psBlob = await buildRecruiterSummaryBlob(data, {});
+      var psName = 'PRESCREEN_REPORT_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      if (options.returnBlob === true) return psBlob;
+      if (options.statusCallback) options.statusCallback('Download ready (100%)...');
+      downloadBlob(psBlob, psName);
+      return true;
+    }
 
     // 1. Identify format extension and fetch resume bytes
     var resumeExt = clean(options.resumeExt || data.resumeExt || '', '').toUpperCase();
