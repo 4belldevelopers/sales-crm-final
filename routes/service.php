@@ -492,6 +492,10 @@ Route::group(['middleware' => 'auth'], function () {
                 // Intent: Isolated Forward Resume endpoints for Bench Talent Drawer
                 Route::post('bench-candidates/fwd_resume', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume'])->name('bench-candidates.fwd_resume');
                 Route::post('bench-candidates/fwd_resume_send', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_send'])->name('bench-candidates.fwd_resume_send');
+                Route::post('bench-candidates/quick_upload_resume', [ServiceCompanyBenchCandidatesController::class, 'quick_upload_resume'])->name('bench-candidates.quick_upload_resume');
+                Route::post('bench-candidates/fwd_resume_intent', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_intent'])->name('bench-candidates.fwd_resume_intent');
+                Route::post('bench-candidates/fwd_resume_presigned', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_presigned'])->name('bench-candidates.fwd_resume_presigned');
+                Route::post('bench-candidates/fwd_resume_finalize', [ServiceCompanyBenchCandidatesController::class, 'fwd_resume_finalize'])->name('bench-candidates.fwd_resume_finalize');
                 // Intent: Isolated Download Resume Center endpoints for Bench Talent Drawer (Engine 1-B)
                 Route::post('bench-candidates/download_center', [ServiceCompanyBenchCandidatesController::class, 'download_center'])->name('bench-candidates.download_center');
                 Route::post('bench-candidates/record_download', [ServiceCompanyBenchCandidatesController::class, 'record_download'])->name('bench-candidates.record_download');

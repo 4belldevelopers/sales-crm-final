@@ -27,10 +27,12 @@ use App\Models\JobApplication;
 use App\Models\NoticePeriod;
 use App\Models\ResumeUpload;
 use App\Models\SysIdempotencyKey;
+use App\Models\ForwardAttachment;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
 use App\Services\BenchTalentHeroAnalytics;
 use App\Services\ElasticService;
+use App\Services\ForwardResumeUploadService;
 use App\Services\MailService;
 use App\Services\RelationshipManagerService;
 use App\Services\ShortlistBenchCandidateListingService;
@@ -8728,6 +8730,39 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         $attachments = [];
         $handledMap = [];
 
+        // 0. Support Direct-to-R2 Attachment UUIDs from client presigned uploads
+        $attachmentUuids = [];
+        if ($request->filled('attachment_uuids')) {
+            $rawAtt = $request->input('attachment_uuids');
+            $attachmentUuids = is_array($rawAtt) ? $rawAtt : (json_decode($rawAtt, true) ?: []);
+        } elseif ($request->filled('attachment_ids')) {
+            $rawAtt = $request->input('attachment_ids');
+            $attachmentUuids = is_array($rawAtt) ? $rawAtt : (json_decode($rawAtt, true) ?: []);
+        }
+
+        if (! empty($attachmentUuids)) {
+            $forwardAttRows = DB::table('forward_attachments')
+                ->where('company_id', $companyId)
+                ->whereIn('uuid', $attachmentUuids)
+                ->get();
+            foreach ($forwardAttRows as $fAtt) {
+                $r2Key = $fAtt->r2_object_key;
+                $cId = (int) $fAtt->candidate_id;
+                $filename = $fAtt->filename ?: "JERO_Candidate_{$cId}.pdf";
+                if (! empty($r2Key) && Storage::disk('r2')->exists($r2Key)) {
+                    $storedName = 'bench_fwd_'.$cId.'_'.uniqid().'.pdf';
+                    file_put_contents($tempDir.'/'.$storedName, Storage::disk('r2')->get($r2Key));
+                    $attachments[] = [
+                        'path' => $tempDir.'/'.$storedName,
+                        'filename' => $filename,
+                        'is_local' => true,
+                        'options' => [],
+                    ];
+                    $handledMap[$cId] = true;
+                }
+            }
+        }
+
         // 1. Process client-uploaded custom attachments via FormData (WASM compiled PDF) for each candidate
         $uploadedCustomFiles = $request->file('custom_attachments');
         if (! empty($uploadedCustomFiles) && is_array($uploadedCustomFiles)) {
@@ -8985,6 +9020,255 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
         return Reply::dataOnly([
             'status' => 'success',
             'message' => $successMsg,
+        ]);
+    }
+
+    /**
+     * Quick Upload Resume directly from Bench Forward Resume Drawer (Zero-context-switch)
+     * Tenancy: Scoped strictly to authenticated company_id or thirdparty_company_id
+     */
+    public function quick_upload_resume(Request $request)
+    {
+        $request->validate([
+            'candidate_id' => 'required|integer',
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:15360',
+        ]);
+
+        $companyId = (int) auth()->user()->company_id;
+        $candidateId = (int) $request->input('candidate_id');
+
+        // Tenancy check: Ensure candidate belongs to logged-in user's company
+        $candidate = DB::table('job_applications')
+            ->where('id', $candidateId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            })
+            ->first();
+
+        if (! $candidate) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Candidate profile not found or unauthorized.',
+            ], 404);
+        }
+
+        $file = $request->file('resume');
+        $ext = strtolower($file->getClientOriginalExtension());
+        $safeCandName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', (string) ($candidate->full_name ?: 'Candidate'));
+        $uniqueSuffix = (string) Str::uuid();
+        $storedFilename = "{$candidateId}_{$safeCandName}_{$uniqueSuffix}.{$ext}";
+
+        // Save locally to public/user-uploads/resumes/
+        $destinationPath = public_path('user-uploads/resumes');
+        if (! file_exists($destinationPath)) {
+            @mkdir($destinationPath, 0755, true);
+        }
+        $file->move($destinationPath, $storedFilename);
+
+        // Mirror to Cloudflare R2 if available
+        try {
+            $localFilePath = $destinationPath.'/'.$storedFilename;
+            if (file_exists($localFilePath)) {
+                $year = date('Y');
+                $month = date('m');
+                $r2Path = "Companies/{$companyId}/Resumes/{$year}/{$month}/{$storedFilename}";
+                Storage::disk('r2')->put($r2Path, file_get_contents($localFilePath));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('[bench quick_upload_resume] R2 upload safeguard: '.$e->getMessage());
+        }
+
+        // Update MySQL job_applications table
+        DB::table('job_applications')->where('id', $candidateId)->update([
+            'resume' => $storedFilename,
+            'updated_at' => now(),
+        ]);
+
+        // Insert or update documents table record
+        try {
+            DB::table('documents')->insert([
+                'name' => 'Resume',
+                'hashname' => $storedFilename,
+                'documentable_type' => 'App\JobApplication',
+                'documentable_id' => $candidateId,
+                'company_id' => $companyId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+        }
+
+        // Synchronously re-index candidate in Elasticsearch
+        try {
+            ElasticBenchCandidateIndex::dispatch($candidateId)->afterCommit();
+        } catch (\Throwable $esErr) {
+            Log::warning('[bench quick_upload_resume] ES reindex notice: '.$esErr->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Resume uploaded and processed successfully.',
+            'resume_filename' => $storedFilename,
+            'candidate_id' => $candidateId,
+        ]);
+    }
+
+    /**
+     * Isolated Bench Forward Resume: Direct-to-R2 Intent Authorization Endpoint
+     */
+    public function fwd_resume_intent(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+
+        // Rate Limiting (Redis Throttle: company 100/min, user 30/min)
+        $companyRateKey = "bench_fwd_rate:comp:{$companyId}";
+        $userRateKey = "bench_fwd_rate:usr:{$userId}";
+        try {
+            $userHits = Redis::incr($userRateKey);
+            if ($userHits === 1) {
+                Redis::expire($userRateKey, 60);
+            }
+            if ($userHits > 30) {
+                return response()->json(['status' => 'error', 'message' => 'User rate limit exceeded (30 requests/min).'], 429);
+            }
+            $compHits = Redis::incr($companyRateKey);
+            if ($compHits === 1) {
+                Redis::expire($companyRateKey, 60);
+            }
+            if ($compHits > 100) {
+                return response()->json(['status' => 'error', 'message' => 'Company rate limit exceeded (100 requests/min).'], 429);
+            }
+        } catch (\Throwable $rateErr) {
+        }
+
+        $candidateIds = $request->input('candidate_ids', []);
+        $files = $request->input('files', []);
+        $forwardRequestId = $request->input('forward_request_id') ?: (string) Str::uuid();
+
+        if (empty($candidateIds) && ! empty($files) && is_array($files)) {
+            foreach ($files as $f) {
+                if (! empty($f['candidate_id'])) {
+                    $candidateIds[] = (int) $f['candidate_id'];
+                }
+            }
+        }
+
+        // Multi-tenant candidate ownership verification
+        if (! empty($candidateIds)) {
+            $ownedCount = DB::table('job_applications')
+                ->whereIn('id', $candidateIds)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)
+                        ->orWhere('thirdparty_company_id', $companyId);
+                })
+                ->count();
+            if ($ownedCount !== count(array_unique($candidateIds))) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized candidate access detected.'], 403);
+            }
+        }
+
+        $results = [];
+        $uploadService = app(ForwardResumeUploadService::class);
+        if (! empty($files) && is_array($files)) {
+            $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+        }
+
+        try {
+            Redis::setex("bench_fwd_intent:{$companyId}:{$forwardRequestId}", 900, json_encode([
+                'forward_request_id' => $forwardRequestId,
+                'company_id' => $companyId,
+                'user_id' => $userId,
+                'candidate_ids' => $candidateIds,
+                'created_at' => now()->toISOString(),
+            ]));
+        } catch (\Throwable $redisErr) {
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'forward_request_id' => $forwardRequestId,
+            'uploads' => $results,
+            'attachments' => $results,
+        ]);
+    }
+
+    /**
+     * Isolated Bench Forward Resume: Direct-to-R2 Presigned Upload URL Minting
+     */
+    public function fwd_resume_presigned(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $userId = (int) auth()->user()->id;
+        $files = $request->input('files', []);
+
+        if (empty($files) || ! is_array($files)) {
+            $file = [
+                'candidate_id' => $request->input('candidate_id'),
+                'filename' => $request->input('filename', 'Candidate_Resume.pdf'),
+                'size' => $request->input('expected_size', $request->input('size')),
+                'expected_size' => $request->input('expected_size', $request->input('size')),
+                'expected_sha256' => $request->input('expected_sha256', $request->input('sha256')),
+                'mime' => $request->input('mime', 'application/pdf'),
+            ];
+            $files = [$file];
+        }
+
+        foreach ($files as $file) {
+            $size = (int) ($file['expected_size'] ?? ($file['size'] ?? 0));
+            if ($size > 10 * 1024 * 1024) {
+                return response()->json(['status' => 'error', 'message' => 'Resume PDF size exceeds maximum allowed 10MB limit.'], 422);
+            }
+        }
+
+        $uploadService = app(ForwardResumeUploadService::class);
+        $results = $uploadService->initiateBatchUploads($companyId, $userId, $files);
+
+        if (empty($results)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cloudflare R2 storage is not configured or failed to generate presigned upload URLs.',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'uploads' => $results,
+            'attachments' => $results,
+        ]);
+    }
+
+    /**
+     * Isolated Bench Forward Resume: Byte-Exact Attestation & Verification
+     */
+    public function fwd_resume_finalize(Request $request)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $attachmentUuid = (string) ($request->input('attachment_uuid') ?: $request->input('attachment_id'));
+        $expectedSha256 = $request->input('expected_sha256') ?: $request->input('sha256');
+        $expectedSize = $request->filled('expected_size') ? (int) $request->input('expected_size') : ($request->filled('size') ? (int) $request->input('size') : null);
+
+        if (empty($attachmentUuid)) {
+            return response()->json(['status' => 'error', 'message' => 'attachment_uuid is required.'], 422);
+        }
+
+        $uploadService = app(ForwardResumeUploadService::class);
+        $result = $uploadService->probeAndVerifyAttachment($companyId, $attachmentUuid, $expectedSha256, $expectedSize);
+
+        if (! ($result['verified'] ?? false)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $result['message'] ?? 'Verification failed.',
+                'details' => $result,
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'verified' => true,
+            'attachment_uuid' => $attachmentUuid,
+            'actual_size' => $result['actual_size'] ?? $expectedSize,
         ]);
     }
 

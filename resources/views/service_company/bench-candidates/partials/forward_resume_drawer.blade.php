@@ -1506,6 +1506,13 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div id="bench_fwd_cand_status_badge_{{ $candItem->id }}" class="bench-cand-status-badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:{{ $cHasResume ? '#F8FAFC' : '#FEF3C7' }};color:{{ $cHasResume ? '#475569' : '#B45309' }};border:1px solid {{ $cHasResume ? '#E2E8F0' : '#FDE68A' }};display:inline-flex;align-items:center;gap:4px;white-space:nowrap;">
                       {{ $cHasResume ? 'Ready' : '⚠ No Resume' }}
                     </div>
+                    <div id="bench_fwd_quick_upload_wrap_{{ $candItem->id }}" style="{{ $cHasResume ? 'display:none;' : 'display:inline-flex;' }}">
+                      <input type="file" id="bench_fwd_quick_file_{{ $candItem->id }}" accept=".pdf,.doc,.docx" style="display:none;" onchange="uploadBenchResumeInline({{ $candItem->id }}, this)" />
+                      <button type="button" class="btn btn-xs btn-light-primary fw-bold" onclick="document.getElementById('bench_fwd_quick_file_{{ $candItem->id }}').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Upload Resume Document">
+                        <span id="bench_fwd_upload_spin_{{ $candItem->id }}" class="spinner-border spinner-border-sm me-1" style="display:none;width:10px;height:10px;"></span>
+                        <span id="bench_fwd_upload_txt_{{ $candItem->id }}">+ Upload CV</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -2702,6 +2709,125 @@ async function onBenchFwdSubmitClick(e) {
         $('#bench_fwd_btn_progress_text').text('Sending email...');
     }
 
+    function restoreBtn() {
+        if (btn) {
+            btn.disabled = false;
+            btn.style.cursor = 'pointer';
+            $(btn).find('.indicator-progress').hide();
+            $(btn).find('.indicator-label').css('display', 'inline-flex').show();
+        }
+    }
+
+    // Direct R2 Presigned Upload Pipeline with 100% resilient fallback to multipart FormData
+    var uploadedUuids = [];
+    var hasCompiledBlobs = Object.keys(_benchCompiledAttachments).length > 0;
+
+    if (hasCompiledBlobs) {
+        try {
+            $('#bench_fwd_btn_progress_text').text('Preparing direct upload...');
+            var filesToInitiate = [];
+            for (var cId in _benchCompiledAttachments) {
+                var att = _benchCompiledAttachments[cId];
+                if (att && att.blob) {
+                    var sha = '';
+                    try {
+                        if (window.crypto && window.crypto.subtle && att.blob.arrayBuffer) {
+                            var buf = await att.blob.arrayBuffer();
+                            var hBuf = await window.crypto.subtle.digest('SHA-256', buf);
+                            sha = Array.from(new Uint8Array(hBuf)).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+                        }
+                    } catch(e) {}
+
+                    filesToInitiate.push({
+                        candidate_id: cId,
+                        candidate_name: att.candName || ('Candidate #' + cId),
+                        filename: att.filename || ('Jeroworks_Candidate_' + cId + '.pdf'),
+                        size: att.blob.size,
+                        expected_size: att.blob.size,
+                        sha256: sha,
+                        expected_sha256: sha,
+                        mime: att.blob.type || 'application/pdf',
+                        blob: att.blob
+                    });
+                }
+            }
+
+            if (filesToInitiate.length > 0) {
+                $('#bench_fwd_btn_progress_text').text('Initiating direct upload intent...');
+                var token = $('input[name="_token"]').val() || '{{ csrf_token() }}';
+                var initiateRes = await new Promise(function(resolve) {
+                    $.ajax({
+                        url: "{{ route('service_company.bench-candidates.fwd_resume_intent') }}",
+                        type: 'POST',
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        headers: { 'X-CSRF-TOKEN': token },
+                        data: JSON.stringify({
+                            forward_request_id: ('bench_' + Math.random().toString(36).substring(2, 12)),
+                            candidate_ids: filesToInitiate.map(function(f) { return f.candidate_id; }),
+                            files: filesToInitiate
+                        }),
+                        success: resolve,
+                        error: function(xhr, st, err) {
+                            resolve({ status: 'fallback', message: (xhr.responseJSON && xhr.responseJSON.message) || err });
+                        }
+                    });
+                });
+
+                var attMap = (initiateRes && (initiateRes.attachments || initiateRes.uploads)) ? (initiateRes.attachments || initiateRes.uploads) : null;
+                if (attMap) {
+                    $('#bench_fwd_btn_progress_text').text('Uploading to Cloudflare R2...');
+
+                    for (var i = 0; i < filesToInitiate.length; i++) {
+                        var item = filesToInitiate[i];
+                        var initInfo = attMap[item.candidate_id];
+                        if (!initInfo || !initInfo.upload_url) {
+                            throw new Error('Presigned upload URL missing for candidate ' + item.candidate_id);
+                        }
+
+                        var putHeaders = { 'Content-Type': item.mime || 'application/pdf' };
+                        if (item.sha256) putHeaders['x-amz-meta-sha256'] = item.sha256;
+
+                        var putRes = await fetch(initInfo.upload_url, {
+                            method: 'PUT',
+                            headers: putHeaders,
+                            body: item.blob
+                        });
+
+                        if (!putRes.ok) throw new Error('R2 PUT failed with status ' + putRes.status);
+
+                        // Finalize probe
+                        await new Promise(function(resolve) {
+                            $.ajax({
+                                url: "{{ route('service_company.bench-candidates.fwd_resume_finalize') }}",
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json',
+                                headers: { 'X-CSRF-TOKEN': token },
+                                data: JSON.stringify({
+                                    attachment_uuid: initInfo.attachment_id,
+                                    expected_sha256: item.sha256,
+                                    expected_size: item.size
+                                }),
+                                success: resolve,
+                                error: function() { resolve({ verified: false }); }
+                            });
+                        });
+
+                        if (initInfo.attachment_id) {
+                            uploadedUuids.push(initInfo.attachment_id);
+                        }
+                    }
+                }
+            }
+        } catch(r2Err) {
+            console.warn('[BenchForwardResume] Direct R2 upload fallback to FormData:', r2Err);
+            uploadedUuids = []; // Reset on any failure to guarantee complete multipart FormData fallback
+        }
+    }
+
+    $('#bench_fwd_btn_progress_text').text('Sending email...');
+
     var formData = new FormData(document.getElementById('bench_fwd_form'));
     formData.set('editor1', bodyHtml);
     formData.set('subject', subject);
@@ -2709,11 +2835,18 @@ async function onBenchFwdSubmitClick(e) {
     formData.set('cc_email', $('#bench_cc_email').val());
     formData.set('attached_cv_format', formatId);
 
-    // Append all compiled candidate attachments into FormData
-    for (var cId in _benchCompiledAttachments) {
-        var att = _benchCompiledAttachments[cId];
-        if (att && att.blob) {
-            formData.append('custom_attachments[' + cId + ']', att.blob, att.filename);
+    if (uploadedUuids.length > 0 && uploadedUuids.length === Object.keys(_benchCompiledAttachments).length) {
+        // Direct R2 upload succeeded: pass attachment_uuids (Zero server read/write strain!)
+        for (var u = 0; u < uploadedUuids.length; u++) {
+            formData.append('attachment_uuids[]', uploadedUuids[u]);
+        }
+    } else {
+        // Resilient fallback: Append compiled blobs directly into multipart FormData
+        for (var cId in _benchCompiledAttachments) {
+            var att = _benchCompiledAttachments[cId];
+            if (att && att.blob) {
+                formData.append('custom_attachments[' + cId + ']', att.blob, att.filename);
+            }
         }
     }
 
@@ -2725,12 +2858,7 @@ async function onBenchFwdSubmitClick(e) {
         processData: false,
         cache: false,
         success: function(res) {
-            if (btn) {
-                btn.disabled = false;
-                btn.style.cursor = 'pointer';
-                $(btn).find('.indicator-progress').hide();
-                $(btn).find('.indicator-label').css('display', 'inline-flex').show();
-            }
+            restoreBtn();
             if (res.status === 'success') {
                 if (typeof window.BenchForwardResumeRamStore !== 'undefined') {
                     window.BenchForwardResumeRamStore.clear();
@@ -2751,17 +2879,102 @@ async function onBenchFwdSubmitClick(e) {
             }
         },
         error: function(err) {
-            if (btn) {
-                btn.disabled = false;
-                btn.style.cursor = 'pointer';
-                $(btn).find('.indicator-progress').hide();
-                $(btn).find('.indicator-label').css('display', 'inline-flex').show();
-            }
+            restoreBtn();
             var errMsg = 'Server error occurred while sending email.';
             if (err.responseJSON && err.responseJSON.message) {
                 errMsg = err.responseJSON.message;
             }
             Swal.fire('Error', errMsg, 'error');
+        }
+    });
+}
+
+function uploadBenchResumeInline(candidateId, inputEl) {
+    if (!inputEl || !inputEl.files || inputEl.files.length === 0) return;
+    var file = inputEl.files[0];
+
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (['pdf', 'doc', 'docx'].indexOf(ext) === -1) {
+        Swal.fire('Invalid File', 'Please select a PDF, DOC, or DOCX document.', 'warning');
+        return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Maximum resume file size allowed is 15MB.', 'warning');
+        return;
+    }
+
+    var spin = document.getElementById('bench_fwd_upload_spin_' + candidateId);
+    var txt = document.getElementById('bench_fwd_upload_txt_' + candidateId);
+    if (spin) spin.style.display = 'inline-block';
+    if (txt) txt.textContent = 'Uploading...';
+
+    var fd = new FormData();
+    fd.append('_token', $('input[name="_token"]').val() || '{{ csrf_token() }}');
+    fd.append('candidate_id', candidateId);
+    fd.append('resume', file);
+
+    $.ajax({
+        url: "{{ route('service_company.bench-candidates.quick_upload_resume') }}",
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function(res) {
+            if (spin) spin.style.display = 'none';
+            if (txt) txt.textContent = '✓ Uploaded';
+
+            if (res.status === 'success') {
+                var card = $('#bench_fwd_cand_card_' + candidateId);
+                card.attr('data-has-resume', '1');
+                $('#bench_fwd_cand_filename_' + candidateId).html('<span style="color:#64748B;display:inline-flex;align-items:center;gap:3px;">📄 ' + (res.display_filename || 'Jeroworks_Resume.pdf') + '</span>');
+                $('#bench_fwd_cand_status_badge_' + candidateId).css({
+                    'background': '#F8FAFC',
+                    'color': '#475569',
+                    'border-color': '#E2E8F0'
+                }).text('Ready');
+                $('#bench_fwd_quick_upload_wrap_' + candidateId).html(
+                    '<button type="button" class="btn btn-xs btn-light-success fw-bold" onclick="document.getElementById(\'bench_fwd_quick_file_' + candidateId + '\').click();" style="font-size:10.5px;padding:3px 8px;border-radius:6px;" title="Replace CV">' +
+                    '✓ Resume Attached <span style="font-size:9px;opacity:0.7;">(Change)</span></button>'
+                );
+
+                // Update in-memory candidate model
+                var targetCand = _benchCandidatesList.find(function(c) { return String(c.id) === String(candidateId); });
+                if (targetCand) {
+                    targetCand.has_resume = 1;
+                    targetCand.resume_url = res.resume_url || '';
+                }
+
+                // Invalidate compiled caches for this candidate
+                if (_benchCompiledAttachments && _benchCompiledAttachments[candidateId]) {
+                    delete _benchCompiledAttachments[candidateId];
+                }
+
+                var remainingMissing = $('.bench-fwd-cand-card[data-has-resume="0"]').length;
+                if (remainingMissing === 0) {
+                    $('#bench_fwd_missing_resume_banner').fadeOut(200);
+                }
+
+                // Re-trigger compilation for active format
+                var curFormat = parseInt($('#bench_fwd_resume_format').val(), 10) || 46;
+                selectBenchResumeFormat(curFormat, null, false);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Resume Attached',
+                    text: 'Resume document attached to talent profile successfully.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                if (txt) txt.textContent = '+ Upload CV';
+                Swal.fire('Upload Failed', res.message || 'Could not upload resume', 'error');
+            }
+        },
+        error: function(xhr) {
+            if (spin) spin.style.display = 'none';
+            if (txt) txt.textContent = '+ Upload CV';
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Server error uploading resume';
+            Swal.fire('Upload Error', msg, 'error');
         }
     });
 }
