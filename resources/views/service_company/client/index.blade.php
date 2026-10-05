@@ -459,8 +459,18 @@ $(document).ready(function() {
                     $('.page-loader').css('display', 'none');
                     localStorage.setItem('currentPageClients', targetPage);
                     $('#allClients').html(response.html);
-                    if (activeClientTab === 'all' && response.total !== undefined) {
-                        $('#span_clientAll').html(response.total);
+                    if (response.total !== undefined) {
+                        if (activeClientTab === 'all') {
+                            $('#span_clientAll').html(response.total);
+                        } else if (activeClientTab === 'internal' || activeClientTab === 'custom') {
+                            $('#span_clientCustom').html(response.total);
+                        } else if (activeClientTab === 'direct') {
+                            $('#span_clientDirect').html(response.total);
+                        } else if (activeClientTab === 'hiring') {
+                            $('#span_clientHiring').html(response.total);
+                        } else if (activeClientTab === 'request') {
+                            $('#span_clientRequest').html(response.total);
+                        }
                     }
                     $('#pagination').html(response.pagination);
                 }

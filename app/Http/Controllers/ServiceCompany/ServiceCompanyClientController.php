@@ -1100,13 +1100,15 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $clientCounter = [];
 
-        // Direct Client Count via Elasticsearch (tenant-scoped by to_company_id)
+        // Direct Client Count via Elasticsearch (tenant-scoped by to_company_id and self_company = 1)
         $clientDirect = 0;
+        $directCompanyIds = [];
         if ($this->elasticService->indexExists(ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX)) {
             try {
-                $response = $this->elasticService->getClient()->count([
+                $relResponse = $this->elasticService->getClient()->search([
                     'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
                     'body' => [
+                        'size' => 10000,
                         'query' => [
                             'bool' => [
                                 'must' => [
@@ -1118,24 +1120,65 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                                 ],
                             ],
                         ],
+                        '_source' => ['from_company_id'],
                     ],
                 ]);
-                $clientDirect = $response['count'] ?? 0;
+                $directCompanyIds = collect($relResponse['hits']['hits'])
+                    ->pluck('_source.from_company_id')
+                    ->unique()
+                    ->values()
+                    ->toArray();
             } catch (\Exception $e) {
-                $clientDirect = DB::table('staffing_company_relation')
+                $directCompanyIds = DB::table('staffing_company_relation')
                     ->where('staffing_company_relation.to_company_id', '=', $company_id)
                     ->where('staffing_company_relation.from_company_id', '!=', $company_id)
                     ->where('staffing_company_relation.final_status', '=', 1)
                     ->distinct()
-                    ->count(DB::raw('CONCAT(from_company_id,"-",to_company_id)'));
+                    ->pluck('from_company_id')
+                    ->toArray();
             }
         } else {
-            $clientDirect = DB::table('staffing_company_relation')
+            $directCompanyIds = DB::table('staffing_company_relation')
                 ->where('staffing_company_relation.to_company_id', '=', $company_id)
                 ->where('staffing_company_relation.from_company_id', '!=', $company_id)
                 ->where('staffing_company_relation.final_status', '=', 1)
                 ->distinct()
-                ->count(DB::raw('CONCAT(from_company_id,"-",to_company_id)'));
+                ->pluck('from_company_id')
+                ->toArray();
+        }
+
+        if (! empty($directCompanyIds) && $this->elasticService->indexExists(ELASTIC_CLIENT_LIST)) {
+            try {
+                $response = $this->elasticService->getClient()->count([
+                    'index' => ELASTIC_CLIENT_LIST,
+                    'body' => [
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['self_company' => 1]],
+                                    ['terms' => ['company_id' => array_map('intval', $directCompanyIds)]],
+                                ],
+                                'must_not' => [
+                                    ['term' => ['company_id' => (int) $company_id]],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+                $clientDirect = $response['count'] ?? 0;
+            } catch (\Exception $e) {
+                $clientDirect = Client::where('self_company', 1)
+                    ->whereIn('company_id', $directCompanyIds)
+                    ->where('company_id', '!=', $company_id)
+                    ->count();
+            }
+        } elseif (! empty($directCompanyIds)) {
+            $clientDirect = Client::where('self_company', 1)
+                ->whereIn('company_id', $directCompanyIds)
+                ->where('company_id', '!=', $company_id)
+                ->count();
+        } else {
+            $clientDirect = 0;
         }
         $clientCounter['clientDirect'] = $clientDirect;
 
@@ -1499,7 +1542,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
             $response = $this->elasticService->getClient()->search($params);
             $bucketData = $response['aggregations']['status_counts']['buckets'] ?? [];
-            $result = collect($bucketData)->mapWithKeys(fn ($item) => [(string)$item['key'] => $item['doc_count']]);
+            $result = collect($bucketData)->mapWithKeys(fn ($item) => [(string) $item['key'] => $item['doc_count']]);
         }
 
         $joined_count = $result->get('6', 0) ?? $result->get(6, 0);

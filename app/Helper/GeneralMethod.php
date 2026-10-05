@@ -14536,7 +14536,7 @@ END:VCALENDAR";
                     'status_counts' => [
                         'filters' => [
                             'filters' => [
-                                '1' => ['term' => ['job_master_status_id' => 1]],
+                                '1' => ['terms' => ['job_master_status_id' => [1, 8]]],
                                 '2' => ['term' => ['job_master_status_id' => 2]],
                                 '3' => ['term' => ['job_master_status_id' => 3]],
                                 '4' => ['term' => ['job_master_status_id' => 4]],
@@ -14565,6 +14565,7 @@ END:VCALENDAR";
                 'Offered' => $buckets['5']['doc_count'] ?? 0,
                 'Joined' => $buckets['6']['doc_count'] ?? 0,
                 'Rejected' => $buckets['7']['doc_count'] ?? 0,
+                'InReview' => $buckets['8']['doc_count'] ?? 0,
                 'Interview' => $buckets['8']['doc_count'] ?? 0,
             ];
 
