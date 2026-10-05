@@ -2510,14 +2510,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
      */
     public function companyLogoProxy(Request $request)
     {
-        $cid = auth()->user()->company_id ?? 0;
+        $cid = auth()->user()->company_id ?? (int) $request->get('cid', 0);
+        if (empty($cid)) {
+            abort(404);
+        }
         $row = DB::table('companies')->select('logo')->where('id', $cid)->first();
         $logo = $row->logo ?? '';
         if (empty($logo)) {
             abort(404);
         }
         try {
-            $payload = Cache::remember('company_logo_proxy:'.$cid.':'.md5($logo), 3600, function () use ($logo) {
+            $payload = Cache::remember('company_logo_proxy:'.$cid.':'.md5($logo), 86400, function () use ($logo) {
                 // 1. Authoritative Cloudflare R2 disk read
                 $r2Key = '';
                 if (str_starts_with($logo, 'https://file.jero.works/')) {
@@ -2529,30 +2532,59 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 if (! empty($r2Key)) {
                     try {
                         if (\Storage::disk('r2')->exists($r2Key)) {
+                            $body = \Storage::disk('r2')->get($r2Key);
                             $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION));
                             $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
                             $ct = $map[$ext] ?? 'image/png';
-                            return ['body' => \Storage::disk('r2')->get($r2Key), 'content_type' => $ct];
+                            if (str_starts_with($body, "\x89PNG\r\n\x1a\n")) {
+                                $ct = 'image/png';
+                            } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
+                                $ct = 'image/jpeg';
+                            }
+                            return ['body' => $body, 'content_type' => $ct];
                         }
                     } catch (\Throwable $r2Err) {
                         \Log::warning('R2 logo fetch warning: '.$r2Err->getMessage());
                     }
                 }
 
-                // 2. Remote HTTP fetch fallback
+                // 2. Local public storage read
+                if (! filter_var($logo, FILTER_VALIDATE_URL)) {
+                    $localPath = public_path(ltrim($logo, '/'));
+                    if (file_exists($localPath) && is_readable($localPath)) {
+                        $body = file_get_contents($localPath);
+                        $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+                        $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                        $ct = $map[$ext] ?? 'image/png';
+                        if (str_starts_with($body, "\x89PNG\r\n\x1a\n")) {
+                            $ct = 'image/png';
+                        } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
+                            $ct = 'image/jpeg';
+                        }
+                        return ['body' => $body, 'content_type' => $ct];
+                    }
+                }
+
+                // 3. Remote HTTP fetch fallback
                 $resp = \Illuminate\Support\Facades\Http::timeout(8)->withOptions(['verify' => false])->get($logo);
                 if (! $resp->successful() || strlen($resp->body()) > 1024 * 1024) {
                     return null;
                 }
 
+                $body = $resp->body();
                 $ct = $resp->header('Content-Type');
                 if (! $ct || strpos($ct, 'image/') !== 0) {
                     $ext = strtolower(pathinfo(parse_url($logo, PHP_URL_PATH) ?: $logo, PATHINFO_EXTENSION));
                     $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
                     $ct = $map[$ext] ?? 'image/png';
                 }
+                if (str_starts_with($body, "\x89PNG\r\n\x1a\n")) {
+                    $ct = 'image/png';
+                } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
+                    $ct = 'image/jpeg';
+                }
 
-                return ['body' => $resp->body(), 'content_type' => $ct];
+                return ['body' => $body, 'content_type' => $ct];
             });
 
             if (! $payload || empty($payload['body'])) {
@@ -2561,7 +2593,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             return response($payload['body'], 200)
                 ->header('Content-Type', $payload['content_type'])
-                ->header('Cache-Control', 'private, max-age=3600');
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                ->header('Cache-Control', 'public, max-age=86400');
         } catch (\Throwable $e) {
             abort(404);
         }
