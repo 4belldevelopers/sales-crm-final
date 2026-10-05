@@ -2163,9 +2163,7 @@ window.onFwdSubmitClick = async function (e) {
         }
     }
 
-    var id      = 1;
-    var url     = "{{ route('service_company.cvtracker.fwd_resume_send',':id') }}";
-    url         = url.replace(':id', id);
+    var url     = "{{ route('service_company.cvtracker.test_fwd_resume_send') }}";
     var token   = "{{ csrf_token() }}";
 
     var arr = [];

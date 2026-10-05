@@ -359,9 +359,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::post('cvtracker/candidate_process_update', [ServiceCompanyCvTrackerController::class, 'candidate_process_update'])->name('cvtracker.candidate_process_update');
                 Route::post('cvtracker/copy_current_selected_applicant', [ServiceCompanyCvTrackerController::class, 'copy_current_selected_applicant'])->name('cvtracker.copy_current_selected_applicant');
                 Route::post('cvtracker/email_template', [ServiceCompanyCvTrackerController::class, 'email_template'])->name('cvtracker.email_template');
-                Route::post('cvtracker/fwd_attachments_initiate', [ServiceCompanyCvTrackerController::class, 'fwd_attachments_initiate'])->name('cvtracker.fwd_attachments_initiate');
-                Route::post('cvtracker/fwd_resume_send', [ServiceCompanyCvTrackerController::class, 'fwd_resume_send'])->name('cvtracker.fwd_resume_send');
-                // Isolated Test Forward Resume Pipeline (0% Server Load / Direct-to-R2 Engine)
+                // Primary Forward Resume Pipeline (0% Server Load / Direct-to-R2 Engine)
                 Route::post('cvtracker/test_fwd_resume/{id?}', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume'])->name('cvtracker.test_fwd_resume');
                 Route::post('cvtracker/test_fwd_resume_data', [ServiceCompanyCvTrackerController::class, 'test_fwd_resume_data'])->name('cvtracker.test_fwd_resume_data');
                 Route::match(['get', 'post'], 'cvtracker/fwd_recipients', [ServiceCompanyCvTrackerController::class, 'fwd_recipients'])->name('cvtracker.fwd_recipients');
