@@ -387,9 +387,6 @@
 .rdc-section-amber .rdc-section-head{background:linear-gradient(90deg,#fff0d6,#fffaf0);}
 .rdc-section-amber .rdc-section-icon{background:linear-gradient(135deg,#f97316,#f59e0b);}
 .rdc-section-amber .rdc-section-pill{background:#ffedd5;color:#c2410c;}
-.rdc-section-teal .rdc-section-head{background:linear-gradient(90deg,#e6fffa,#f0fdfa);}
-.rdc-section-teal .rdc-section-icon{background:linear-gradient(135deg,#0d9488,#14b8a6);}
-.rdc-section-teal .rdc-section-pill{background:#ccfbf1;color:#0f766e;}
 .rdc-opt{grid-template-columns:44px minmax(0,1fr) 108px 20px;column-gap:12px;padding:9px 10px;border:1px solid #d9e5f4;border-radius:9px;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.03);}
 .rdc-opt:hover{border-color:#c9d7ef;background:#fbfdff;box-shadow:0 6px 14px rgba(15,23,42,.06);}
 .rdc-opt.rdc-opt-sel{border-color:#6d28d9;background:#fbfaff;box-shadow:0 0 0 2px rgba(109,40,217,.10);}
@@ -5831,96 +5828,6 @@ setTimeout(() => {
         <span class="rdc-ocirc" aria-hidden="true"></span>
       </label>
 
-      {{-- 61: Edit & Optimize Resume (Text, Formatting & ATS Score) --}}
-      <label class="rdc-opt" data-opt="61" data-coins="2">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="61">
-        <span class="rdc-onum">61</span>
-        <span class="rdc-oi" style="background:#ccfbf1;color:#0f766e;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Edit & Optimize Resume (Text, Formatting & ATS Score)</span>
-          <span class="rdc-odesc">Edit candidate resume text, 1-click insert missing job skills, optimize ATS score in real time, and download clean vector PDF.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">2 Coins</span>
-          <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 62: Edit & Optimize Resume + Company Branding --}}
-      <label class="rdc-opt" data-opt="62" data-coins="3">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="62">
-        <span class="rdc-onum">62</span>
-        <span class="rdc-oi" style="background:#e0f2fe;color:#0284c7;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10l6 6v10a2 2 0 0 1-2 2H4V4z"/><path d="M14 4v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/><path d="M3 7h18"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Edit & Optimize Resume + Company Branding</span>
-          <span class="rdc-odesc">Full interactive text and ATS optimization with your company logo & agency header styled on the exported PDF.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 63: Edit & Optimize Resume + Highlighted Keywords --}}
-      <label class="rdc-opt" data-opt="63" data-coins="3">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="63">
-        <span class="rdc-onum">63</span>
-        <span class="rdc-oi" style="background:#fef3c7;color:#b45309;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="m7 16 8.5-8.5 3 3L10 19H7v-3z"/><path d="M9 7h6"/><path d="M9 11h4"/><path d="M14 2v6h6"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Edit & Optimize Resume + Highlighted Keywords</span>
-          <span class="rdc-odesc">Interactive text editor and ATS optimizer with matched job keywords highlighted for fast hiring manager review.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 64: Edit & Optimize Resume + Pre-Screened Report --}}
-      <label class="rdc-opt" data-opt="64" data-coins="3">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="64">
-        <span class="rdc-onum">64</span>
-        <span class="rdc-oi" style="background:#fce7f3;color:#be185d;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Edit & Optimize Resume + Pre-Screened Report</span>
-          <span class="rdc-odesc">Edit candidate resume and download packaged with recruiter pre-screened evaluation report on Page 1.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">3 Coins</span>
-          <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
-      {{-- 65: Edit & Optimize Resume + Pre-Screened Report + Highlighted Keywords --}}
-      <label class="rdc-opt" data-opt="65" data-coins="4">
-        <input class="rdc-rinput" type="radio" name="rdcFormat" value="65">
-        <span class="rdc-onum">65</span>
-        <span class="rdc-oi" style="background:#f3e8ff;color:#7e22ce;" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/><path d="M12 2v5"/><path d="m4.93 4.93 3.53 3.53"/></svg>
-        </span>
-        <span class="rdc-obody">
-          <span class="rdc-otitle">Edit & Optimize Resume + Pre-Screened Report + Highlighted Keywords</span>
-          <span class="rdc-odesc">Full recruiter bundle: Pre-screened report + live optimized resume with target skills highlighted in yellow.</span>
-        </span>
-        <span class="rdc-ometa">
-          <span class="rdc-ocost">4 Coins</span>
-          <span class="rdc-otime">Instant</span>
-        </span>
-        <span class="rdc-ocirc" aria-hidden="true"></span>
-      </label>
-
     </div>{{-- /.rdc-opts-list --}}
 
     {{-- Coin info summary --}}
@@ -6141,12 +6048,7 @@ setTimeout(() => {
     50:{cost:3, label:'Hide Contact Details + Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-branded', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
     51:{cost:3, label:'Hide Contact Details + Pre-Screened Report', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report is browser-only and available for direct PDF/DOCX resumes.')},
     52:{cost:3, label:'Hide Contact Details + Pre-Screened Report without Company Branding', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-nobrand', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report without Company Branding is browser-only and available for direct PDF/DOCX resumes.')},
-    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')},
-    61:{cost:2, label:'Edit & Download Resume', avail:hasResume, dlKey:'agy-opt-clean'},
-    62:{cost:3, label:'Edit & Download Resume + Company Branding', avail:hasResume, dlKey:'agy-opt-branded'},
-    63:{cost:3, label:'Edit & Download Resume + Highlighted Keywords', avail:hasResume, dlKey:'agy-opt-highlighted'},
-    64:{cost:3, label:'Edit & Download Resume + Pre-Screened Report', avail:hasResume, dlKey:'agy-opt-prescreened'},
-    65:{cost:4, label:'Edit & Download Resume + Pre-Screened Report + Highlighted Keywords', avail:hasResume, dlKey:'agy-opt-prescreened-highlighted'}
+    53:{cost:4, label:'Hide Contact Details + Pre-Screened Report + Highlighted Keywords', avail:(['PDF','DOCX'].indexOf(resumeExt) !== -1) && !!(r2DirectUrl || r2PublicUrl || originalR2DirectUrl || originalR2PublicUrl || dlUrl), dlKey:'test-agy-strategy2-contact-hidden-prescreened-highlighted', unavailableMsg:(resumeExt === 'DOC' ? docUnsupportedMsg : 'Hide Contact Details + Pre-Screened Report + Highlighted Keywords is browser-only and available for direct PDF/DOCX resumes.')}
   };
 
   var selectedOpt = 1;
@@ -6234,8 +6136,7 @@ setTimeout(() => {
       privacy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V7l-8-4z"/><path d="m9 12 2 2 4-5"/></svg>',
       report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 19v-7"/><path d="M12 19V9"/><path d="M16 19v-4"/><path d="M20 19V7"/></svg>',
       package:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="m3 8 9 5v8l-9-5V8z"/><path d="m21 8-9 5v8l9-5V8z"/></svg>',
-      keyword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="m15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="m4.93 19.07 3.53-3.53"/><path d="m15.54 8.46 3.53-3.53"/></svg>',
-      edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      keyword:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v5"/><path d="M12 17v5"/><path d="M4.93 4.93 8.46 8.46"/><path d="m15.54 15.54 3.53 3.53"/><path d="M2 12h5"/><path d="M17 12h5"/><path d="m4.93 19.07 3.53-3.53"/><path d="m15.54 8.46 3.53-3.53"/></svg>'
     };
     return icons[type] || icons.resume;
   }
@@ -6259,8 +6160,7 @@ setTimeout(() => {
       {theme:'rose',icon:'report',title:'2. Pre-Screened Report',pill:'Get AI-powered insights and verification details.',ids:[5]},
       {theme:'green',icon:'package',title:'3. Recruiter Packages (Report + Resume)',pill:'',ids:[42,43]},
       {theme:'amber',icon:'keyword',title:'4. Highlighted skills',pill:'',ids:[44,45,46,47]},
-      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]},
-      {theme:'teal',icon:'edit',title:'6. Edit & Optimize Resume',pill:'Live ATS score, keyword optimizer & client-ready export.',ids:[61,62,63,64,65]}
+      {theme:'purple',icon:'privacy',title:'5. Privacy & Anonymization',pill:'Protect candidate information as needed.',ids:[48,49,50,51,52,53]}
     ];
     var moved={};
     var frag=document.createDocumentFragment();
@@ -6386,96 +6286,6 @@ setTimeout(() => {
       }
     }).catch(function(){});
   }
-
-  var _rdcGroup6Optimizer = null;
-
-  function getResumeTextForOptimization(){
-    // Tier 1: Viewer extracted text from canvas/WASM/HTML
-    if(window.__rcvResumeText && window.__rcvResumeText.trim().length > 30){
-      return window.__rcvResumeText.trim();
-    }
-
-    // Tier 2: Check text layers in DOM
-    var textNodes = document.querySelectorAll('#rcvPages .rcv-textlayer span, #rcvPages .rcv-wasm-hit-span');
-    if(textNodes && textNodes.length > 5){
-      var domParts = [];
-      for(var i = 0; i < textNodes.length; i++){
-        var t = (textNodes[i].textContent || '').trim();
-        if(t) domParts.push(t);
-      }
-      var domJoined = domParts.join(' ').replace(/\s+/g, ' ').trim();
-      if(domJoined.length > 40) return domJoined;
-    }
-
-    var htmlEl = document.getElementById('rcvHtml');
-    if(htmlEl && htmlEl.innerText && htmlEl.innerText.trim().length > 30){
-      return htmlEl.innerText.trim();
-    }
-
-    if(window.__rdcPreloadedResumeText && window.__rdcPreloadedResumeText.trim().length > 30){
-      return window.__rdcPreloadedResumeText.trim();
-    }
-
-    // Tier 3: Structured candidate profile synthesis (Guarantees textarea is NEVER blank)
-    var lines = [];
-    var candName = @json(ucwords(@$application->full_name ?: @$application->name ?: 'Candidate'));
-    var jobTitle = @json(ucwords(@$job->title ?: @$application->job_title ?: ''));
-    var designation = @json(ucwords(@$application->current_designation ?: ''));
-    var company = @json(ucwords(@$application->current_company ?: @$application->cur_company_name ?: ''));
-    var exp = @json(@$application->total_experience ? (@$application->total_experience . ' Years Experience') : '');
-    var email = @json(@$application->email ?: '');
-    var phone = @json(@$application->phone ?: '');
-    var candSkills = @json($rcvCandSkills ?? []);
-    var summary = @json(\Illuminate\Support\Str::limit(strip_tags((string)(@$application->cover_letter ?: @$application->career_summary ?: @$application->comment ?? '')), 500));
-
-    lines.push(candName);
-    var subParts = [];
-    if(designation) subParts.push(designation);
-    if(company) subParts.push('at ' + company);
-    if(exp) subParts.push('• ' + exp);
-    if(subParts.length) lines.push(subParts.join(' '));
-
-    var contactParts = [];
-    if(email) contactParts.push(email);
-    if(phone) contactParts.push(phone);
-    if(contactParts.length) lines.push(contactParts.join(' | '));
-
-    lines.push('');
-    if(summary){
-      lines.push('PROFESSIONAL SUMMARY:');
-      lines.push(summary);
-      lines.push('');
-    }
-
-    if(candSkills && candSkills.length){
-      lines.push('CORE SKILLS & EXPERTISE:');
-      lines.push(candSkills.map(function(s){ return '• ' + s; }).join('\n'));
-      lines.push('');
-    }
-
-    if(jobTitle){
-      lines.push('TARGET POSITION OBJECTIVE:');
-      lines.push('Experienced candidate seeking to contribute strong industry expertise for the role of ' + jobTitle + '.');
-      lines.push('');
-    }
-
-    return lines.join('\n');
-  }
-
-  function openCvOptimizerWorkspace(optId){
-    optId = parseInt(optId, 10) || 61;
-    if(window.AgyEditorWasmEngine && typeof window.AgyEditorWasmEngine.initWasm === 'function'){
-      try { window.AgyEditorWasmEngine.initWasm().catch(function(){}); } catch(e){}
-    }
-    var studioUrl = "{{ route('service_company.job-applications.resume-studio', ['id' => $application->id]) }}?opt=" + optId;
-    var win = window.open(studioUrl, '_blank');
-    if(!win){
-      showToast('Please allow popup windows to open the Live Resume Studio tab.', 'warn');
-      return;
-    }
-  }
-
-  window.cvOptOpenInNewTab = openCvOptimizerWorkspace;
 
   function openRdc(){
     if(!hasDownloadableResume()){
@@ -6763,13 +6573,6 @@ setTimeout(() => {
           showToast(err && err.message ? err.message : 'Could not download original resume. Please try again.', 'warn');
           resetBtn();
         }
-        return;
-      }
-
-      if([61, 62, 63, 64, 65].indexOf(selectedOpt) !== -1){
-        openCvOptimizerWorkspace(selectedOpt);
-        closeRdc();
-        resetBtn();
         return;
       }
 
