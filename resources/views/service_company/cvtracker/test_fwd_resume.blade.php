@@ -59,12 +59,27 @@ setTimeout(initTestFwdCkEditor, 250);
 
 <div class="main_container" id="test_main_container">
 @php
-$appDataList = is_array($applicationData ?? null) ? $applicationData : (!empty($applicationData) ? [$applicationData] : []);
+if (isset($applicationData) && $applicationData instanceof \Illuminate\Support\Collection) {
+    $appDataList = $applicationData->values()->all();
+} elseif (isset($applicationData) && is_array($applicationData)) {
+    $appDataList = array_values($applicationData);
+} elseif (isset($applicationData) && is_iterable($applicationData)) {
+    $appDataList = array_values(iterator_to_array($applicationData));
+} elseif (!empty($applicationData)) {
+    $appDataList = [$applicationData];
+} else {
+    $appDataList = [];
+}
 $candCount = count($appDataList);
 $isMulti = $candCount > 1;
 $compName = $companyName ?? 'Hiring Partner';
-$senderName = auth()->user()->name ?? 'Recruitment Team';
-$senderEmail = auth()->user()->email ?? '';
+$userdata = $userdata ?? (auth()->check() ? auth()->user() : null);
+$senderName = !empty($userdata->name) ? $userdata->name : ((auth()->check() && auth()->user()->name) ? auth()->user()->name : 'Recruitment Team');
+$senderEmail = !empty($userdata->email) ? $userdata->email : ((auth()->check() && auth()->user()->email) ? auth()->user()->email : '');
+
+$firstCand = !empty($appDataList[0]) ? (object) $appDataList[0] : null;
+$firstCandName = $firstCand ? ($firstCand->full_name ?? 'Candidate') : 'Candidate';
+$firstCandDesig = $firstCand ? ($firstCand->current_designation ?? ($firstCand->job_title ?? 'Specialist')) : 'Specialist';
 
 $tableRowsHtml = '';
 foreach ($appDataList as $idx => $c) {
@@ -619,7 +634,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
       </div>
       <div class="mm-field-col" style="display:flex;gap:12px;align-items:center;">
         <select class="mm-select" name="from_email" id="test_from_email" style="flex:1;min-width:0;">
-          <option value="notify@jeroworks.com">{{ $userdata->name ?? $userdata->email }} &lt;notify@jeroworks.com&gt;</option>
+          <option value="notify@jeroworks.com">{{ (!empty($userdata->name) ? $userdata->name : (!empty($userdata->email) ? $userdata->email : 'Jeroworks')) }} &lt;notify@jeroworks.com&gt;</option>
           @if(!empty($userdata->email) && $userdata->email !== 'notify@jeroworks.com')
             <option value="{{ $userdata->email }}">{{ $userdata->name ?? $userdata->email }} &lt;{{ $userdata->email }}&gt;</option>
           @endif
@@ -631,8 +646,8 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
           Reply To
         </div>
         <select class="mm-select" name="reply_to_email" id="test_reply_to_email" style="flex:1;min-width:0;">
-          <option value="{{ $userdata->email }}">{{ $userdata->email }}</option>
-          @if(!empty(auth()->user()->company->company_email) && auth()->user()->company->company_email !== $userdata->email)
+          <option value="{{ $userdata->email ?? 'notify@jeroworks.com' }}">{{ $userdata->email ?? 'notify@jeroworks.com' }}</option>
+          @if(auth()->check() && !empty(auth()->user()->company->company_email) && (!empty($userdata->email) && auth()->user()->company->company_email !== $userdata->email))
             <option value="{{ auth()->user()->company->company_email }}">{{ auth()->user()->company->company_email }}</option>
           @endif
         </select>
@@ -715,7 +730,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         Subject <span class="mm-req">*</span>
       </div>
       <div class="mm-field-col">
-        <input class="mm-input" name="subject" id="test_subject" placeholder="Enter email subject" value="{{ $isMulti ? ('Shortlisted Candidate Profiles (' . $candCount . ' Candidates) | ' . $compName) : ('Forwarded Candidate Profile: ' . (!empty($appDataList[0]->full_name) ? $appDataList[0]->full_name : 'Candidate') . ' - ' . (!empty($appDataList[0]->current_designation) ? $appDataList[0]->current_designation : 'Specialist')) }}">
+        <input class="mm-input" name="subject" id="test_subject" placeholder="Enter email subject" value="{{ $isMulti ? ('Shortlisted Candidate Profiles (' . $candCount . ' Candidates) | ' . $compName) : ('Forwarded Candidate Profile: ' . $firstCandName . ' - ' . $firstCandDesig) }}">
       </div>
     </div>
 
@@ -1906,8 +1921,8 @@ window.onTestTemplateChange = function(selectEl) {
         var isMulti = @json($isMulti ?? false);
         var candCount = @json($candCount ?? 0);
         var compName = @json($compName ?? 'Hiring Partner');
-        var primaryName = @json($appDataList[0]->full_name ?? 'Candidate');
-        var primaryDesig = @json($appDataList[0]->current_designation ?? 'Specialist');
+        var primaryName = @json($firstCandName ?? 'Candidate');
+        var primaryDesig = @json($firstCandDesig ?? 'Specialist');
         var subj = isMulti
             ? ('Shortlisted Candidate Profiles (' + candCount + ' Candidates) | ' + compName)
             : ('Forwarded Candidate Profile: ' + primaryName + ' - ' + primaryDesig);
