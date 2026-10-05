@@ -237,14 +237,42 @@
   }
 
   function ensurePdfMake() {
-    if (rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
-    var core = ['/js/pdfmake.min.js', 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'];
-    var vfs = ['/js/vfs_fonts.min.js', 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js'];
-    rsPdfReady = rsTryList(core, 0, function () { return !!window.pdfMake; })
-      .then(function () { return rsTryList(vfs, 0, function () { return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
-      .then(function () {
-        window.pdfMake.fonts = { Roboto: { normal: 'Roboto-Regular.ttf', bold: 'Roboto-Medium.ttf', italics: 'Roboto-Italic.ttf', bolditalics: 'Roboto-MediumItalic.ttf' } };
+    if (rsPdfReady && window.pdfMake && window.pdfMake.vfs && (window.pdfMake.vfs['Roboto-Regular.ttf'] || window.pdfMake.vfs['Roboto-Medium.ttf'])) return rsPdfReady;
+    var core = [
+      '/js/pdfmake.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'
+    ];
+    var vfs = [
+      '/js/vfs_fonts.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js',
+      'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js'
+    ];
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
+    rsPdfReady = rsTryList(core, 0, function () {
+      if (!window.pdfMake && typeof window.require === 'function') {
+        try { window.pdfMake = window.require('pdfmake'); } catch (e) {}
+      }
+      return !!(window.pdfMake && typeof window.pdfMake.createPdf === 'function');
+    }).then(function () {
+      return rsTryList(vfs, 0, function () {
+        return !!(window.pdfMake && (window.pdfMake.vfs || window.vfs));
       });
+    }).then(function () {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      if (window.vfs && window.pdfMake && !window.pdfMake.vfs) {
+        window.pdfMake.vfs = window.vfs;
+      }
+      if (window.pdfMake) {
+        window.pdfMake.fonts = { Roboto: { normal: 'Roboto-Regular.ttf', bold: 'Roboto-Medium.ttf', italics: 'Roboto-Italic.ttf', bolditalics: 'Roboto-MediumItalic.ttf' } };
+      }
+      return window.pdfMake;
+    }).catch(function (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      rsPdfReady = null;
+      throw err;
+    });
     return rsPdfReady;
   }
 
@@ -265,8 +293,22 @@
 
   function ensureJsZip() {
     if (rsJsZipReady && window.JSZip) return rsJsZipReady;
-    var sources = ['/js/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
-    rsJsZipReady = rsTryList(sources, 0, function () { return !!window.JSZip; });
+    var sources = ['/js/jszip.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js', 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
+    var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+    if (wasAmd) window.define.amd = false;
+    rsJsZipReady = rsTryList(sources, 0, function () {
+      if (!window.JSZip && typeof window.require === 'function') {
+        try { window.JSZip = window.require('jszip'); } catch (e) {}
+      }
+      return !!window.JSZip;
+    }).then(function () {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      return window.JSZip;
+    }).catch(function (err) {
+      if (wasAmd && window.define) window.define.amd = wasAmd;
+      rsJsZipReady = null;
+      throw err;
+    });
     return rsJsZipReady;
   }
 
