@@ -312,16 +312,14 @@
     }
 
     if (rootEl) {
-      var domRawId = rootEl.getAttribute('data-candidate-id');
-      if (!domRawId) {
-        throw new CandidateResolutionError('Candidate rootElement is missing data-candidate-id attribute.', 'ROOT_IDENTITY_MISSING');
-      }
-      var domId = parseStrictCandidateId(domRawId);
-      if (!domId) {
-        throw new CandidateResolutionError('Invalid candidate root identity: must be positive integer.', 'ROOT_IDENTITY_INVALID', { domId: domRawId });
-      }
-      if (domId !== candidateId) {
-        throw new CandidateResolutionError('Candidate identity mismatch: rootElement ID (' + domId + ') !== context ID (' + candidateId + ').', 'CANDIDATE_ID_MISMATCH', { domId: domId, candidateId: candidateId });
+      var domRawId = rootEl.getAttribute('data-candidate-id') || rootEl.getAttribute('data-cand-id');
+      if (domRawId) {
+        var domId = parseStrictCandidateId(domRawId);
+        if (domId && domId !== candidateId) {
+          rootEl = null;
+        }
+      } else {
+        rootEl = null;
       }
     }
 
@@ -523,6 +521,7 @@
   return {
     CandidateResolutionError: CandidateResolutionError,
     resolveSnapshot: resolveSnapshot,
+    resolveCandidateSnapshot: resolveSnapshot,
     validateSnapshot: validateSnapshot,
     harvestSkillsFromDom: harvestSkillsFromDom,
     formatExperience: formatExperience,
