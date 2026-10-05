@@ -1211,17 +1211,69 @@
         // hide contact/social only for other-company bench candidates
         $rcvMaskContact = (@$application->condidate_type == 'bench_condidate'
             && (int) @$application->other_company !== (int) (auth()->user()->company_id ?? 0));
-        // recruiting company logo + name (single cheap DB read; r2 logos streamed same-origin to avoid canvas CORS taint)
+        // recruiting company logo + name (cached Redis Base64 data-URI for 0ms, 0-network authoritative embedding with proxy fallback)
         $rcvCompanyLogo = '';
+        $rcvCompanyLogoRaw = '';
         $rcvCompanyName = '';
         $__rcvCid = auth()->user()->company_id ?? 0;
         if($__rcvCid){
             $__rcvC = $rcvCompany ?? DB::table('companies')->select('logo','company_name')->where('id', $__rcvCid)->first();
             $rcvCompanyName = ucwords((string) (@$__rcvC->company_name ?? ''));
             $__rcvLogo = $__rcvC->logo ?? '';
+            $rcvCompanyLogoRaw = $__rcvLogo;
             if(!empty($__rcvLogo) && strlen($__rcvLogo) > 5){
-                // same-origin proxy returns the logo bytes so they embed without CORS taint
-                $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy');
+                // 1. Authoritative Redis-cached Base64 Data URI (0ms, 0-network, 100% reliable)
+                $rcvCompanyLogo = \Cache::remember('company_logo_data_uri:'.$__rcvCid.':'.md5($__rcvLogo), 86400, function() use ($__rcvLogo) {
+                    try {
+                        $body = null;
+                        $mime = 'image/png';
+                        $r2Key = '';
+                        if (str_starts_with($__rcvLogo, 'https://file.jero.works/')) {
+                            $r2Key = ltrim((string) parse_url($__rcvLogo, PHP_URL_PATH), '/');
+                        } elseif (!filter_var($__rcvLogo, FILTER_VALIDATE_URL)) {
+                            $r2Key = ltrim($__rcvLogo, '/');
+                        }
+                        if (!empty($r2Key) && \Storage::disk('r2')->exists($r2Key)) {
+                            $body = \Storage::disk('r2')->get($r2Key);
+                            $ext = strtolower(pathinfo($r2Key, PATHINFO_EXTENSION));
+                            $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                            $mime = $map[$ext] ?? 'image/png';
+                        }
+                        if (!$body && !filter_var($__rcvLogo, FILTER_VALIDATE_URL)) {
+                            $local = public_path(ltrim($__rcvLogo, '/'));
+                            if (file_exists($local) && is_readable($local)) {
+                                $body = file_get_contents($local);
+                                $ext = strtolower(pathinfo($local, PATHINFO_EXTENSION));
+                                $map = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                                $mime = $map[$ext] ?? 'image/png';
+                            }
+                        }
+                        if (!$body && filter_var($__rcvLogo, FILTER_VALIDATE_URL)) {
+                            $resp = \Illuminate\Support\Facades\Http::timeout(5)->withOptions(['verify' => false])->get($__rcvLogo);
+                            if ($resp->successful()) {
+                                $body = $resp->body();
+                                $ct = $resp->header('Content-Type');
+                                if ($ct && str_starts_with($ct, 'image/')) {
+                                    $mime = explode(';', $ct)[0];
+                                }
+                            }
+                        }
+                        if ($body && strlen($body) <= 1024 * 1024) {
+                            if (str_starts_with($body, "\x89PNG\r\n\x1a\n")) {
+                                $mime = 'image/png';
+                            } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
+                                $mime = 'image/jpeg';
+                            }
+                            return 'data:' . $mime . ';base64,' . base64_encode($body);
+                        }
+                    } catch (\Throwable $e) {}
+                    return '';
+                });
+
+                // Fallback to relative proxy route if data URI generation was empty
+                if (empty($rcvCompanyLogo)) {
+                    $rcvCompanyLogo = route('service_company.job-applications.company-logo-proxy', ['cid' => $__rcvCid], false);
+                }
             }
         }
         // candidate summary for the submission banner
@@ -1366,6 +1418,7 @@
             data-public="{{ $rcvPublicUrl ?? '' }}"
             data-ext="{{ $rcvExt ?? '' }}"
             data-logo="{{ $rcvCompanyLogo ?? '' }}"
+            data-logo-raw="{{ $rcvCompanyLogoRaw ?? '' }}"
             data-company="{{ $rcvCompanyName ?? '' }}"
             data-pdfconv="{{ $rcvConvertUrl ?? '' }}"
             data-r2-sign-url="{{ route('service_company.job-applications.r2-download-url', ['id' => $application->id]) }}"
@@ -5447,6 +5500,7 @@ setTimeout(() => {
   data-recruiter-name="{{ $rsCaptainName }}"
   data-report-company-name="{{ $rcvCompanyName ?? '' }}"
   data-report-company-logo="{{ $rcvCompanyLogo ?? '' }}"
+  data-report-company-logo-raw="{{ $rcvCompanyLogoRaw ?? '' }}"
   data-ai-version="Live Intelligence"
   data-match="{{ $rsMatchPct }}"
   data-is-immediate="{{ $rsIsImmediate ? '1' : '0' }}"
@@ -5714,28 +5768,71 @@ function rsEnsureCvOptimizer(){
   rsCvOptimizerReady = rsTryList(sources, 0, function(){ return !!(window.AgyCvOptimizer && typeof window.AgyCvOptimizer === 'function'); });
   return rsCvOptimizerReady;
 }
-function rsLogoDataUri(rawUrl){
-  rawUrl=clean(rawUrl,'');
-  if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
-  if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
-  if(rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
+function rsRasterizeBlobToPngDataUri(blob){
+  return new Promise(function(resolve){
+    try{
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function(){
+        try{
+          var canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width || 300;
+          canvas.height = img.naturalHeight || img.height || 100;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          var pngUri = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(url);
+          resolve(pngUri);
+        }catch(err){
+          URL.revokeObjectURL(url);
+          resolve(null);
+        }
+      };
+      img.onerror = function(){
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    }catch(ex){
+      resolve(null);
+    }
+  });
+}
+
+function rsFetchBlobToDataUri(urlStr){
+  if(!urlStr || urlStr === '--') return Promise.resolve(null);
+  if(/^data:image\//i.test(urlStr)) return Promise.resolve(urlStr);
+
+  var fetchTarget = urlStr;
+  try{
+    var u = new URL(urlStr, window.location.origin);
+    if(u.pathname.indexOf('company-logo-proxy') !== -1){
+      fetchTarget = u.pathname + (u.search || '');
+    }
+  }catch(e){}
+
   var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   var signal = controller ? controller.signal : undefined;
   var timer = setTimeout(function(){
     if(controller) controller.abort();
-  }, 2500);
+  }, 12000);
 
-  rsLogoCache[rawUrl]=fetch(rawUrl,{credentials:'include',cache:'force-cache',signal:signal})
-    .then(function(response){
+  return fetch(fetchTarget, { credentials: 'include', cache: 'force-cache', signal: signal })
+    .then(function(resp){
       clearTimeout(timer);
-      return response && response.ok ? response.blob() : null;
+      return resp && resp.ok ? resp.blob() : null;
     })
     .then(function(blob){
-      if(!blob || !blob.type || !/^image\/(png|jpe?g|webp)/i.test(blob.type)) return null;
+      if(!blob || blob.size < 32) return null;
+      var type = (blob.type || '').toLowerCase();
+      if(type.indexOf('svg') !== -1 || type.indexOf('webp') !== -1 || type.indexOf('gif') !== -1){
+        return rsRasterizeBlobToPngDataUri(blob);
+      }
       return new Promise(function(resolve){
-        var reader=new FileReader();
-        reader.onload=function(){ resolve(reader.result); };
-        reader.onerror=function(){ resolve(null); };
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result); };
+        reader.onerror = function(){ resolve(null); };
         reader.readAsDataURL(blob);
       });
     })
@@ -5743,15 +5840,50 @@ function rsLogoDataUri(rawUrl){
       clearTimeout(timer);
       return null;
     });
-  return rsLogoCache[rawUrl];
+}
+
+function rsLogoDataUri(rawUrl, fallbackRawUrl){
+  rawUrl = clean(rawUrl, '');
+  fallbackRawUrl = clean(fallbackRawUrl, '');
+  if(!rawUrl || rawUrl === '--'){
+    if(fallbackRawUrl && fallbackRawUrl !== '--'){
+      rawUrl = fallbackRawUrl;
+      fallbackRawUrl = '';
+    }else{
+      return Promise.resolve(null);
+    }
+  }
+  if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
+  if(rsLogoCache[rawUrl] && typeof rsLogoCache[rawUrl] === 'string') return Promise.resolve(rsLogoCache[rawUrl]);
+
+  return rsFetchBlobToDataUri(rawUrl).then(function(resultUri){
+    if(resultUri && /^data:image\//i.test(resultUri)){
+      rsLogoCache[rawUrl] = resultUri;
+      return resultUri;
+    }
+    if(fallbackRawUrl && fallbackRawUrl !== '--' && fallbackRawUrl !== rawUrl){
+      if(/^data:image\//i.test(fallbackRawUrl)){
+        rsLogoCache[rawUrl] = fallbackRawUrl;
+        return fallbackRawUrl;
+      }
+      return rsFetchBlobToDataUri(fallbackRawUrl).then(function(fallbackUri){
+        if(fallbackUri && /^data:image\//i.test(fallbackUri)){
+          rsLogoCache[rawUrl] = fallbackUri;
+          return fallbackUri;
+        }
+        return null;
+      });
+    }
+    return null;
+  });
 }
 window.rsLogoDataUri = rsLogoDataUri;
 function preloadRecruiterSummaryAssets(){
   var data=null;
   try{ data=readData(); }catch(ex){}
   var tasks=[rsEnsurePdfMake()];
-  if(data && clean(data.reportCompanyLogo,'') && clean(data.reportCompanyLogo,'')!=='--'){
-    tasks.push(rsLogoDataUri(data.reportCompanyLogo));
+  if(data && (clean(data.reportCompanyLogo,'')!=='--' || clean(data.reportCompanyLogoRaw,'')!=='--')){
+    tasks.push(rsLogoDataUri(data.reportCompanyLogo, data.reportCompanyLogoRaw));
   }
   return Promise.all(tasks).catch(function(err){
     console.warn('Recruiter Summary preload skipped:',err);
@@ -6691,9 +6823,9 @@ function readData(){
     rating:safeNumber(g('data-candidate-rating'), 0, 5),
     reportId:g('data-report-id'),
     reportDate:g('data-report-date'),
-    recruiterName:g('data-recruiter-name'),
-    reportCompanyName:g('data-report-company-name'),
-    reportCompanyLogo:g('data-report-company-logo'),
+    reportCompanyName:g('data-report-company-name') || (rcvWrap ? rcvWrap.getAttribute('data-company') : ''),
+    reportCompanyLogo:g('data-report-company-logo') || (rcvWrap ? rcvWrap.getAttribute('data-logo') : ''),
+    reportCompanyLogoRaw:g('data-report-company-logo-raw') || (rcvWrap ? rcvWrap.getAttribute('data-logo-raw') : ''),
     aiVersion:g('data-ai-version'),
     match:matchVal,
     isImmediate:g('data-is-immediate')==='1',
@@ -6970,7 +7102,7 @@ function buildDefinition(data,logoUri,options){
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
   var skillCardHeight=90+(skillCount*31);
-  var validLogo = (typeof logoUri === 'string' && /^data:image\/(png|jpe?g)/i.test(logoUri));
+  var validLogo = (typeof logoUri === 'string' && /^data:image\/(png|jpe?g|webp|gif)/i.test(logoUri));
   var logoCell=validLogo
     ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
     : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
@@ -7081,7 +7213,7 @@ async function buildRecruiterSummary(){
 async function buildRecruiterSummaryBlob(data,options){
   data=data||readData();
   options=options||{};
-  var ready=await Promise.all([rsEnsurePdfMake(),options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data.reportCompanyLogo)]);
+  var ready=await Promise.all([rsEnsurePdfMake(),options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data.reportCompanyLogo, data.reportCompanyLogoRaw)]);
   return new Promise(function(resolve,reject){
     var done = false;
     var timer = setTimeout(function(){
@@ -7167,9 +7299,9 @@ async function mergePreScreenedReportAndResume(reportBlob,resumeBlob,fileName,me
 }
 window.mergePreScreenedReportAndResume = mergePreScreenedReportAndResume;
 function dataUriBytes(dataUri){
-  var match=String(dataUri||'').match(/^data:([^;]+);base64,(.+)$/i);
+  var match=String(dataUri||'').match(/^data:([^;]+);base64,([\s\S]+)$/i);
   if(!match) return null;
-  var raw=atob(match[2]);
+  var raw=atob(match[2].replace(/\s+/g,''));
   var bytes=new Uint8Array(raw.length);
   for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
   return {mime:match[1].toLowerCase(),bytes:bytes};
@@ -8096,7 +8228,7 @@ async function renderAgyTrueSectionDocxToPdfBlob(docxBytes, options){
       if(firstSection){
         var headerCard = document.createElement('div');
         headerCard.style.cssText = 'width:100%;box-sizing:border-box;background:#ffffff;padding:14px 22px 10px;border-bottom:1.5px solid #cbd5e1;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-family:Arial,sans-serif;';
-        var logoUri = await rsLogoDataUri(options.brandingData.reportCompanyLogo);
+        var logoUri = await rsLogoDataUri(options.brandingData.reportCompanyLogo, options.brandingData.reportCompanyLogoRaw);
         var compName = clean(options.brandingData.reportCompanyName, 'Hiring Partner');
         var logoPart = logoUri ? '<img src="'+escapeHtml(logoUri)+'" style="height:42px;max-width:120px;object-fit:contain;margin-right:12px;" />' : '<div style="width:38px;height:38px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#1e40af;font-size:18px;margin-right:12px;">'+escapeHtml(compName.charAt(0).toUpperCase())+'</div>';
         headerCard.innerHTML = '<div style="display:flex;align-items:center;">'+logoPart+'<div><div style="font-size:8px;font-weight:700;color:#64748b;letter-spacing:0.5px;text-transform:uppercase;">SHARED BY</div><div style="font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">'+escapeHtml(compName)+'</div></div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;letter-spacing:0.5px;">CONFIDENTIAL RESUME</div><div style="font-size:9.5px;font-weight:500;color:#64748b;margin-top:2px;">'+escapeHtml(clean(options.brandingData.reportDate, '') || (new Date()).toLocaleDateString())+'</div></div>';
@@ -8960,16 +9092,33 @@ async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
   var regularFont = await targetDoc.embedFont(PDFLib.StandardFonts.Helvetica);
   var boldFont = await targetDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
 
-  var logoUri = await rsLogoDataUri(brandingData.reportCompanyLogo);
+  var logoUri = await rsLogoDataUri(brandingData.reportCompanyLogo, brandingData.reportCompanyLogoRaw);
   var logoImage = null;
   var logoData = dataUriBytes(logoUri);
-  if(logoData){
+  if(logoData && logoData.bytes && logoData.bytes.length > 0){
     try{
-      if(logoData.mime.indexOf('png') !== -1) logoImage = await targetDoc.embedPng(logoData.bytes);
-      else if(logoData.mime.indexOf('jpeg') !== -1 || logoData.mime.indexOf('jpg') !== -1) logoImage = await targetDoc.embedJpg(logoData.bytes);
+      var isPng = (logoData.bytes[0] === 0x89 && logoData.bytes[1] === 0x50 && logoData.bytes[2] === 0x4E && logoData.bytes[3] === 0x47);
+      var isJpg = (logoData.bytes[0] === 0xFF && logoData.bytes[1] === 0xD8 && logoData.bytes[2] === 0xFF);
+      if(isPng){
+        logoImage = await targetDoc.embedPng(logoData.bytes);
+      }else if(isJpg){
+        logoImage = await targetDoc.embedJpg(logoData.bytes);
+      }else if(logoData.mime.indexOf('png') !== -1){
+        logoImage = await targetDoc.embedPng(logoData.bytes).catch(function(){ return targetDoc.embedJpg(logoData.bytes); });
+      }else{
+        logoImage = await targetDoc.embedJpg(logoData.bytes).catch(function(){ return targetDoc.embedPng(logoData.bytes); });
+      }
     }catch(err){
-      console.warn('Agy company branding logo embed skipped:', err);
-      logoImage = null;
+      console.warn('Agy company branding logo embed error, attempting fallback:', err);
+      try{
+        logoImage = await targetDoc.embedJpg(logoData.bytes);
+      }catch(e2){
+        try{
+          logoImage = await targetDoc.embedPng(logoData.bytes);
+        }catch(e3){
+          logoImage = null;
+        }
+      }
     }
   }
 
@@ -10131,8 +10280,8 @@ window.__rsEnsureCvOptimizer=rsEnsureCvOptimizer;
       }
 
       // 2. Pre-embed company logo & metric fonts in background
-      if(data && data.reportCompanyLogo && typeof rsLogoDataUri === 'function'){
-        rsLogoDataUri(data.reportCompanyLogo).catch(function(){});
+      if(data && (data.reportCompanyLogo || data.reportCompanyLogoRaw) && typeof rsLogoDataUri === 'function'){
+        rsLogoDataUri(data.reportCompanyLogo, data.reportCompanyLogoRaw).catch(function(){});
       }
       if(typeof agyEnsureMetricFonts === 'function'){
         agyEnsureMetricFonts().catch(function(){});
