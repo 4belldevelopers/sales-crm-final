@@ -48,6 +48,7 @@ use App\Models\ResumeUpload;
 use App\Models\Skill;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
+use App\Models\SysIdempotencyKey;
 use App\Notifications\CandidateScheduleInterview;
 use App\Services\CandidateNoticePeriodState;
 use App\Services\ElasticService;
@@ -2902,7 +2903,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // editing an existing one — $appId > 0 means an existing record is being edited.
         $isEdit = ! empty($appId) && (int) $appId !== 0;
         if (! $isEdit) {
-            $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+            $packageStatus = Cache::remember("company:coins_val:{$companyId}:{$eventId}:{$coinsRequ}", 60, function () use ($companyId, $eventId, $coinsRequ) {
+                return GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+            });
             if ($packageStatus->status) {
                 session()->flash('packageStatus', $packageStatus->message);
                 $url = url('service_company/apptracker/'.@$jobId.'/all');
@@ -2930,7 +2933,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->join('job_assign', 'job_assign.job_id', 'jobs.id')->join('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('job_assign.user_id', '=', $this->user->id)->where('jobs.company_id', '=', $this->user->company_id)->groupBy('jobs.id')->get();
         }
 
-        $this->qualification = ReferenceDataCache::qualifications();
+        $this->qualification = Cache::rememberForever('qualification_master_list', function () {
+            return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
+        });
         $this->jobId = $jobId;
         $this->appId = $appId;
         $this->currentSlug = request()->get('currentSlug') ?: request()->get('slug') ?: '';
@@ -2969,7 +2974,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->orderBy('client_location_jobs.id', 'DESC')
             ->first();
 
-        $this->cities = GeneralMethod::allCities();
+        $this->cities = [];
 
         $selectedCityIds = ! empty($this->application) && ! empty($this->application->city_id)
             ? [(int) $this->application->city_id]
@@ -2995,12 +3000,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($this->jobSkill);
         $this->skillShow = false;
 
-        // $this->countries = GeneralMethod::getAllCountryList();
+        $this->countries = Cache::rememberForever('country_list_json', function () {
+            return GeneralMethod::getAllCountryList();
+        });
         $this->statelist = '';
         $this->cityListArr = '';
         $this->currentPage = 1;
         $this->resumeAwsPath = false;
-        $this->currencyConverter = GeneralMethod::currencyConverter();
+        $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
+            return GeneralMethod::currencyConverter();
+        });
         $this->recruiterNoteTemplates = DB::table('recruiter_note_master')
             ->where('status', 1)
             ->where(function ($q) {
@@ -3063,32 +3072,50 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
         }
 
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
+        $company_id = (int) auth()->user()->company_id;
 
-        $clientSubmissionUuid = $request->input('client_submission_uuid');
+        $clientSubmissionUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: null);
+        $requestPayloadForHash = $request->except(['_token', 'resume', 'client_submission_uuid', '_idempotency_token']);
+        $requestHash = hash('xxh128', json_encode($requestPayloadForHash));
         $redisLockKey = null;
         $redisLockAcquired = false;
 
         if (! empty($clientSubmissionUuid)) {
             $redisLockKey = "idemp:cand:{$company_id}:{$clientSubmissionUuid}";
             try {
-                $lockStatus = Redis::get($redisLockKey);
-                if ($lockStatus === 'PROCESSING') {
-                    return response()->json([
-                        'status' => 'error',
-                        'msgType' => 'warning',
-                        'message' => 'Candidate submission is currently processing. Please wait...',
-                    ], 409);
-                } elseif ($lockStatus && str_starts_with($lockStatus, 'COMPLETED:')) {
-                    $cachedResponse = json_decode(substr($lockStatus, 10), true);
-                    if (is_array($cachedResponse)) {
-                        return Reply::successWithData(__('messages.createdSuccessfully'), $cachedResponse);
-                    }
-                }
                 $acquired = Redis::set($redisLockKey, 'PROCESSING', 'EX', 120, 'NX');
                 if ($acquired) {
                     $redisLockAcquired = true;
+                } else {
+                    $existingRecord = SysIdempotencyKey::where('tenant_id', $company_id)
+                        ->where('idempotency_key', $clientSubmissionUuid)
+                        ->first();
+
+                    // INVARIANT G-53: Request Hash Mismatch Defense
+                    if ($existingRecord && $existingRecord->request_hash !== $requestHash) {
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IDEMPOTENCY_KEY_REUSE',
+                            'message' => 'Idempotency key has already been used for a conflicting payload.',
+                        ], 409);
+                    }
+
+                    if ($existingRecord && $existingRecord->status === 'COMPLETED') {
+                        $body = json_decode($existingRecord->response_body, true) ?? [];
+
+                        return response()->json($body, $existingRecord->response_status ?? 200);
+                    }
+
+                    // Check if lease has expired (Gate G-52)
+                    if ($existingRecord && $existingRecord->status === 'PROCESSING' && $existingRecord->processing_until < now()) {
+                        // Lease expired -> allow recovery
+                    } else {
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IN_FLIGHT',
+                            'message' => 'Candidate submission is currently processing. Please wait...',
+                        ], 409);
+                    }
                 }
             } catch (\Throwable $e) {
                 \Log::warning('store(): Redis idempotency lock failed open: '.$e->getMessage());
@@ -3098,6 +3125,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $eventId = 4;
         $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
         if ($coinsDeductions->status) {
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)->where('idempotency_key', $clientSubmissionUuid)->delete();
+            }
             if ($redisLockKey && $redisLockAcquired) {
                 try {
                     Redis::del($redisLockKey);
@@ -3403,6 +3433,54 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         DB::beginTransaction();
         try {
+            if (! empty($clientSubmissionUuid)) {
+                $idempotencyRow = SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($idempotencyRow) {
+                    if ($idempotencyRow->request_hash !== $requestHash) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IDEMPOTENCY_KEY_REUSE',
+                            'message' => 'Idempotency key has already been used for a conflicting payload.',
+                        ], 409);
+                    }
+
+                    if ($idempotencyRow->status === 'COMPLETED') {
+                        DB::rollBack();
+                        $cachedBody = json_decode($idempotencyRow->response_body, true) ?? [];
+
+                        return response()->json($cachedBody, $idempotencyRow->response_status ?? 200);
+                    }
+
+                    if ($idempotencyRow->status === 'PROCESSING' && $idempotencyRow->processing_until < now()) {
+                        // Gate G-52: Lease recovery
+                        $idempotencyRow->update([
+                            'processing_until' => now()->addSeconds(60),
+                        ]);
+                    } else {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IN_FLIGHT',
+                            'message' => 'A submission with this UUID is currently being processed. Please wait.',
+                        ], 409);
+                    }
+                } else {
+                    SysIdempotencyKey::create([
+                        'tenant_id' => $company_id,
+                        'idempotency_key' => $clientSubmissionUuid,
+                        'request_hash' => $requestHash,
+                        'status' => 'PROCESSING',
+                        'processing_until' => now()->addSeconds(60),
+                    ]);
+                }
+            }
 
             $this->resilientSaveJobApplication($jobApplication);
 
@@ -3698,6 +3776,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'resume' => (string) ($jobApplication->resume ?? ''),
             ];
 
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode($responseData),
+                    ]);
+            }
+
             if ($redisLockKey && $redisLockAcquired) {
                 try {
                     Redis::set($redisLockKey, 'COMPLETED:'.json_encode($responseData), 'EX', 300);
@@ -3719,6 +3807,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Layer 3 Idempotent replay on duplicate submission UUID (MySQL error 1062)
             if ((isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) || str_contains($e->getMessage(), '1062 Duplicate entry')) {
                 if (! empty($clientSubmissionUuid)) {
+                    $completedRecord = SysIdempotencyKey::where('tenant_id', $company_id)
+                        ->where('idempotency_key', $clientSubmissionUuid)
+                        ->first();
+                    if ($completedRecord && $completedRecord->response_body) {
+                        $body = json_decode($completedRecord->response_body, true) ?? [];
+
+                        return response()->json($body, $completedRecord->response_status ?? 200);
+                    }
+
                     $existing = DB::table('job_applications')
                         ->where('company_id', $company_id)
                         ->where('client_submission_uuid', $clientSubmissionUuid)
@@ -3751,11 +3848,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 }
             }
 
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->where('status', 'PROCESSING')
+                    ->delete();
+            }
+
             \Log::error('store() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         } catch (\Throwable $e) {
             DB::rollBack();
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->where('status', 'PROCESSING')
+                    ->delete();
+            }
             if ($redisLockKey && $redisLockAcquired) {
                 try {
                     Redis::del($redisLockKey);

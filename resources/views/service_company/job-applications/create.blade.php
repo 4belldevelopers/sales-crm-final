@@ -578,6 +578,15 @@
                       <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
                       <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
                       <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
+                      <option {{ (@$application->nationality==='Canadian') ? 'selected' : '' }}>Canadian</option>
+                      <option {{ (@$application->nationality==='Australian') ? 'selected' : '' }}>Australian</option>
+                      <option {{ (@$application->nationality==='Emirati') ? 'selected' : '' }}>Emirati</option>
+                      <option {{ (@$application->nationality==='Singaporean') ? 'selected' : '' }}>Singaporean</option>
+                      <option {{ (@$application->nationality==='German') ? 'selected' : '' }}>German</option>
+                      <option {{ (@$application->nationality==='French') ? 'selected' : '' }}>French</option>
+                      <option {{ (@$application->nationality==='Dutch') ? 'selected' : '' }}>Dutch</option>
+                      <option {{ (@$application->nationality==='Irish') ? 'selected' : '' }}>Irish</option>
+                      <option {{ (@$application->nationality==='Saudi') ? 'selected' : '' }}>Saudi</option>
                       <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
                     </select></div>
                   </div>
@@ -801,6 +810,7 @@
                             }
                         @endphp
                       </select></label>
+                      <div id="rel_exp_error" class="text-danger fs-8 mt-1" style="display:none;font-weight:500;"></div>
                     </div>
                   </div>
                   <div class="candidate-experience-tip">
@@ -1421,7 +1431,46 @@
   </div>
   <!--end::Post-->
 </div>
-<!--end::Content--> 
+<!-- Enterprise Complete Required Fields Modal (Ported from Bench Candidates Architecture) -->
+<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+    <div class="rf-modal-box">
+        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <!-- Warning Icon -->
+        <div class="rf-warning-icon-wrap" aria-hidden="true">
+            <span class="rf-warning-icon">!</span>
+        </div>
+
+        <!-- Title -->
+        <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+
+        <!-- Description -->
+        <p class="rf-modal-desc" id="rfModalDesc">
+            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
+        </p>
+
+        <!-- Section Heading -->
+        <div class="rf-section-header">REQUIRED FIELDS</div>
+
+        <!-- Interactive Fields List -->
+        <div class="rf-fields-list" id="rfFieldsList">
+        </div>
+
+        <!-- Helper text -->
+        <div class="rf-helper-text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Click a field above to jump directly to it.</span>
+        </div>
+
+        <!-- Primary CTA -->
+        <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+            <span>Review Required Fields</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+    </div>
+</div>
 
 @endsection
 
@@ -4026,6 +4075,25 @@ var KTAddCandidate = function () {
                             // Rotate client_submission_uuid for any subsequent submission
                             $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
 
+                            // Phase 5: Multi-Tenant Atomic Cache Invalidation
+                            try {
+                                var tenantCachePrefix = 'jero_cand_v1_{{ $companyId }}_';
+                                for (var k in sessionStorage) {
+                                    if (sessionStorage.hasOwnProperty(k) && k.indexOf(tenantCachePrefix) === 0) {
+                                        sessionStorage.removeItem(k);
+                                    }
+                                }
+                            } catch (e) {}
+
+                            try {
+                                window.dispatchEvent(new CustomEvent('jero:candidate-updated', {
+                                    detail: {
+                                        companyId: '{{ $companyId }}',
+                                        timestamp: Date.now()
+                                    }
+                                }));
+                            } catch (e) {}
+
                             var saveRedirected = false;
                             function executeSaveRedirect() {
                                 if (saveRedirected) return;
@@ -4093,16 +4161,21 @@ var KTAddCandidate = function () {
                 } 
 				else 
 				{
-              submitButton.disabled = false;     
-                    Swal.fire({
-									text				: "Sorry, looks like there are some errors detected, please try again.",
-									icon				: "error",
-									buttonsStyling		: false,
-									confirmButtonText	: "Ok, got it!",
-									customClass			: {
-																confirmButton: "btn btn-primary"
-														  }
-                    });
+                    submitButton.disabled = false;
+                    var missing = detectCandidateMissingFields(form, validator);
+                    if (missing && missing.length > 0) {
+                        showCandidateRequiredFieldsModal(missing);
+                    } else {
+                        Swal.fire({
+                            text: "Sorry, looks like there are some errors detected, please check the highlighted fields.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, got it!",
+                            customClass: {
+                                confirmButton: "btn btn-primary"
+                            }
+                        });
+                    }
                 }
             });
         });
@@ -4116,6 +4189,308 @@ var KTAddCandidate = function () {
 									}
     };
 }();
+
+// Candidate Required Fields Config and Modal Navigation
+var candidateFieldConfigMap = {
+    'resume': {
+        label: 'Upload Resume',
+        selector: '#dropzone_resum',
+        message: 'Please upload a resume file (PDF or Word).'
+    },
+    'full_name': {
+        label: 'Full Name',
+        selector: '#full_name',
+        message: 'Candidate full name is required.'
+    },
+    'email': {
+        label: 'Primary Email',
+        selector: '#email',
+        message: 'A valid primary email address is required.'
+    },
+    'phone': {
+        label: 'Primary Contact Number',
+        selector: '#phone',
+        message: 'A valid primary mobile number is required.'
+    },
+    'kt_tagify_work_location': {
+        label: 'Current Location',
+        selector: '#kt_tagify_work_location',
+        message: 'Current location is required.'
+    },
+    'qualification': {
+        label: 'Highest Qualification',
+        selector: '#qualification',
+        message: 'Highest qualification is required.'
+    },
+    'nationality': {
+        label: 'Nationality',
+        selector: '#nationality',
+        message: 'Nationality is required.'
+    },
+    'gender': {
+        label: 'Gender',
+        selector: '#gender',
+        message: 'Gender is required.'
+    },
+    'current_company': {
+        label: 'Current Company',
+        selector: '#current_company',
+        message: 'Current company is required.'
+    },
+    'current_designation': {
+        label: 'Current Designation',
+        selector: '#current_designation',
+        message: 'Current designation is required.'
+    },
+    'employmentType': {
+        label: 'Employment Type',
+        selector: '#EmploymentType',
+        message: 'Employment type is required.'
+    },
+    'total_exp': {
+        label: 'Total Experience',
+        selector: '#total_exp_year',
+        message: 'Total experience is required.'
+    },
+    'rel_exp': {
+        label: 'Relevant Experience',
+        selector: '#rel_exp_year',
+        message: 'Relevant experience is required.'
+    },
+    'skills': {
+        label: 'Primary Skills',
+        selector: '#kt_tagify_2',
+        message: 'Primary skills are required.'
+    }
+};
+
+function detectCandidateMissingFields(formEl, validatorInstance) {
+    var missing = [];
+    var seenKeys = {};
+
+    function addMissing(key, customLabel, customSelector, customMessage) {
+        if (!seenKeys[key]) {
+            seenKeys[key] = true;
+            var cfg = candidateFieldConfigMap[key] || {};
+            missing.push({
+                key: key,
+                label: customLabel || cfg.label || key,
+                selector: customSelector || cfg.selector || ('#' + key),
+                message: customMessage || cfg.message || ((customLabel || cfg.label || key) + ' is required.')
+            });
+        }
+    }
+
+    // 1. Resume check
+    var hasResume = false;
+    if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
+        ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim())) {
+        hasResume = true;
+    } else {
+        var ri = document.getElementById('resume');
+        if (ri && ri.files && ri.files.length > 0) {
+            hasResume = true;
+        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+            hasResume = true;
+        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+            hasResume = true;
+        }
+    }
+    if (!hasResume) {
+        addMissing('resume');
+    }
+
+    // 2. Full Name
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn) addMissing('full_name');
+
+    // 3. Email
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/\S+@\S+\.\S+/.test(em)) addMissing('email');
+
+    // 4. Phone
+    var ph = ($('#phone').val() || '').trim();
+    if (!ph || ph.length < 6) addMissing('phone');
+
+    // 5. Current Location
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    if (!loc) addMissing('kt_tagify_work_location');
+
+    // 6. Current Designation
+    var cd = ($('#current_designation').val() || '').trim();
+    if (!cd) addMissing('current_designation');
+
+    // 7. Current Company
+    var cc = ($('#current_company').val() || '').trim();
+    if (!cc) addMissing('current_company');
+
+    // 8. Employment Type
+    var et = ($('#EmploymentType').val() || '').trim();
+    if (!et) addMissing('employmentType');
+
+    // 9. Total Exp
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp');
+
+    // 10. Rel Exp
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
+
+    // 11. Highest Qualification
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification');
+
+    // 12. Primary Skills
+    var sk = ($('#kt_tagify_2').val() || '').trim();
+    if (!sk) addMissing('skills');
+
+    // 13. Nationality
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality');
+
+    // 14. Gender
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender');
+
+    return missing;
+}
+
+function jumpToCandidateField(fieldKey) {
+    closeCandidateRequiredFieldsModal();
+
+    var cfg = candidateFieldConfigMap[fieldKey];
+    var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
+    if (!targetEl) {
+        targetEl = document.querySelector('[name="' + fieldKey + '"]');
+    }
+
+    if (targetEl) {
+        var parentDetails = targetEl.closest('details');
+        if (parentDetails && !parentDetails.open) {
+            parentDetails.open = true;
+        }
+
+        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs, .candidate-card') || targetEl;
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .candidate-card, .candidate-field-control') || targetEl;
+        $(highlightEl).addClass('field-attention-highlight');
+        setTimeout(function () {
+            $(highlightEl).removeClass('field-attention-highlight');
+        }, 3000);
+
+        setTimeout(function () {
+            if (fieldKey === 'resume') {
+                var btn = document.querySelector('.candidate-resume-cta') || targetEl;
+                if (btn && typeof btn.focus === 'function') btn.focus();
+            } else if (fieldKey === 'kt_tagify_work_location' || fieldKey === 'skills') {
+                var container = targetEl.closest('.candidate-field-control, .candidate-card-body');
+                var tagifyInput = container ? container.querySelector('.tagify__input') : null;
+                if (tagifyInput) tagifyInput.focus();
+                else if (typeof targetEl.focus === 'function') targetEl.focus();
+            } else if (typeof targetEl.focus === 'function') {
+                targetEl.focus();
+            }
+        }, 350);
+    }
+}
+
+function showCandidateRequiredFieldsModal(missingFields) {
+    if (!missingFields || !missingFields.length) {
+        missingFields = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
+    }
+
+    window.__currentMissingFields = missingFields;
+
+    var count = missingFields.length;
+    var countText = count === 1 ? '1 required field' : (count + ' required fields');
+    var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can submit this candidate.';
+
+    $('#rfMissingCountText').text(countText);
+    $('#rfModalDesc').text(descText);
+
+    var $list = $('#rfFieldsList');
+    $list.empty();
+
+    missingFields.forEach(function (f) {
+        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">'
+            + '<div class="rf-field-row-left">'
+            + '<span class="rf-field-badge" aria-hidden="true">!</span>'
+            + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
+            + '</div>'
+            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+            + '</div>';
+        $list.append(rowHtml);
+    });
+
+    var $modal = $('#requiredFieldsModal');
+    $modal.fadeIn(150, function () {
+        $('#rfPrimaryCta').focus();
+    });
+}
+
+function closeCandidateRequiredFieldsModal() {
+    $('#requiredFieldsModal').fadeOut(120);
+}
+
+// Modal event listeners
+$(document).on('click', '#rfModalClose', function (e) {
+    e.preventDefault();
+    closeCandidateRequiredFieldsModal();
+});
+
+$(document).on('click', '#requiredFieldsModal', function (e) {
+    if (e.target === this) {
+        closeCandidateRequiredFieldsModal();
+    }
+});
+
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+        closeCandidateRequiredFieldsModal();
+    }
+});
+
+$(document).on('click', '.rf-field-row', function (e) {
+    e.preventDefault();
+    var key = $(this).data('field-key');
+    if (key) {
+        jumpToCandidateField(key);
+    }
+});
+
+$(document).on('keydown', '.rf-field-row', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var key = $(this).data('field-key');
+        if (key) {
+            jumpToCandidateField(key);
+        }
+    }
+});
+
+$(document).on('click', '#rfPrimaryCta', function (e) {
+    e.preventDefault();
+    if (window.__currentMissingFields && window.__currentMissingFields.length > 0) {
+        jumpToCandidateField(window.__currentMissingFields[0].key);
+    } else {
+        closeCandidateRequiredFieldsModal();
+    }
+});
+
+// Phase 6: Keyboard Shortcut Ctrl+S / Cmd+S for rapid candidate submission
+document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        var submitBtn = document.getElementById('save-form');
+        if (submitBtn && !submitBtn.disabled) {
+            submitBtn.click();
+        }
+    }
+});
 
 KTUtil.onDOMContentLoaded(function () {
     KTAddCandidate.init();
@@ -4134,22 +4509,33 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('dob').setAttribute('max', today);
 });
 
-          
-
     function total_exp_and_rel_exp(){
-        var total_exp = parseFloat($('#total_exp').val());
-        var rel_exp = parseFloat($('#rel_exp').val());
-        if(rel_exp>total_exp){
-       $('#rel_exp_error').text('Relevant Experience can not be higher then Total Experience');
-       setTimeout(() => {
-        $('#rel_exp').val('');
-       }, 1000);
-         
-    }else{
-      $('#rel_exp_error').text('');
+        var totalYear = $('#total_exp_year').val();
+        var relYear = $('#rel_exp_year').val();
+        var totalExp = (totalYear !== '' && totalYear !== null) ? parseFloat(totalYear) : parseFloat($('#total_exp').val() || 0);
+        var relExp = (relYear !== '' && relYear !== null) ? parseFloat(relYear) : parseFloat($('#rel_exp').val() || 0);
+
+        if (!isNaN(totalExp) && !isNaN(relExp) && relExp > totalExp) {
+            $('#rel_exp_error').text('Relevant experience (' + relExp + ' yrs) cannot be higher than total experience (' + totalExp + ' yrs).').show();
+            Swal.fire({
+                title: "Invalid Experience",
+                text: "Relevant Experience (" + relExp + " years) cannot be higher than Total Experience (" + totalExp + " years).",
+                icon: "warning",
+                confirmButtonText: "Ok, got it!",
+                customClass: { confirmButton: "btn btn-primary" }
+            });
+            $('#rel_exp_year').val('').trigger('change');
+            $('#rel_exp').val('');
+            return false;
+        } else {
+            $('#rel_exp_error').text('').hide();
+            return true;
+        }
     }
-             
-    }
+
+    $(document).on('change', '#total_exp_year, #rel_exp_year, #total_exp, #rel_exp', function() { 
+        total_exp_and_rel_exp();
+    });
 
     function normalizeResumeText(text) {
         return text
