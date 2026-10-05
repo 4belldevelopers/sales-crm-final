@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926&required_fields_modal=20261006_v2" rel="stylesheet" type="text/css" />
 <style>
 /* Scoped Enterprise Currency Select2 Dropdown on Add Candidate Page */
 .job-candidate-create .candidate-salary-header-currency {
@@ -1431,41 +1431,296 @@
   </div>
   <!--end::Post-->
 </div>
-<!-- Enterprise Complete Required Fields Modal (Ported from Bench Candidates Architecture) -->
-<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
-    <div class="rf-modal-box">
-        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal">
+<!-- Enterprise Complete Required Fields Modal (Self-Contained Isolation) -->
+<style>
+.rf-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 999999 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    animation: rfFadeIn 0.18s ease-out;
+}
+
+@keyframes rfFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes rfScaleIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.rf-modal-box {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    padding: 32px 30px 26px !important;
+    position: relative !important;
+    font-family: 'Poppins', sans-serif !important;
+    animation: rfScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-sizing: border-box !important;
+    margin: auto !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.rf-modal-close {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    border: none !important;
+    color: #64748b !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    padding: 0 !important;
+}
+
+.rf-modal-close:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+.rf-modal-close svg {
+    stroke: currentColor !important;
+    transition: transform 0.15s ease !important;
+}
+
+.rf-modal-close:hover svg {
+    transform: rotate(90deg) !important;
+}
+
+.rf-warning-icon-wrap {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 50% !important;
+    background: #fef9c3 !important;
+    border: 2px solid #facc15 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 16px !important;
+}
+
+.rf-warning-icon {
+    font-size: 30px !important;
+    font-weight: 700 !important;
+    color: #ca8a04 !important;
+    line-height: 1 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.rf-modal-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    text-align: center !important;
+    margin: 0 0 8px 0 !important;
+    line-height: 1.25 !important;
+}
+
+.rf-modal-desc {
+    font-size: 13.5px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    line-height: 1.45 !important;
+    margin: 0 auto 22px !important;
+    max-width: 360px !important;
+}
+
+.rf-section-header {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    text-align: left !important;
+    margin-bottom: 10px !important;
+}
+
+.rf-fields-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    max-height: 240px !important;
+    overflow-y: auto !important;
+    padding-right: 4px !important;
+    margin-bottom: 12px !important;
+}
+
+.rf-field-row {
+    background: #fef2f2 !important;
+    border: 1px solid #fee2e2 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.rf-field-row:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    transform: translateY(-1px) !important;
+}
+
+.rf-field-row-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.rf-field-badge {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+}
+
+.rf-field-name {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.rf-field-chevron {
+    color: #64748b !important;
+    font-size: 12px !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
+    stroke: currentColor !important;
+    transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.rf-field-row:hover .rf-field-chevron {
+    color: #0f172a !important;
+    transform: translateX(2px) !important;
+}
+
+.rf-helper-text {
+    font-size: 12px !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 20px !important;
+    text-align: left !important;
+}
+
+.rf-helper-text svg {
+    font-size: 13px !important;
+    color: #64748b !important;
+    stroke: currentColor !important;
+    flex-shrink: 0 !important;
+}
+
+.rf-cta-btn {
+    width: 100% !important;
+    height: 44px !important;
+    background: #1b84ff !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, transform 0.1s ease !important;
+}
+
+.rf-cta-btn:hover {
+    background: #1570ef !important;
+}
+
+.rf-cta-btn:active {
+    transform: scale(0.99) !important;
+}
+
+.field-attention-highlight {
+    outline: 2px solid #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: rgba(239, 246, 255, 0.4) !important;
+}
+</style>
+
+<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:999999;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+    <div class="rf-modal-box" style="background:#ffffff;border-radius:16px;width:100%;max-width:480px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25),0 10px 15px -3px rgba(0,0,0,0.1);padding:32px 30px 26px;position:relative;font-family:'Poppins',sans-serif;box-sizing:border-box;margin:auto;border:1px solid #e2e8f0;">
+        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
         <!-- Warning Icon -->
-        <div class="rf-warning-icon-wrap" aria-hidden="true">
-            <span class="rf-warning-icon">!</span>
+        <div class="rf-warning-icon-wrap" aria-hidden="true" style="width:64px;height:64px;border-radius:50%;background:#fef9c3;border:2px solid #facc15;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <span class="rf-warning-icon" style="font-size:30px;font-weight:700;color:#ca8a04;line-height:1;font-family:'Poppins',sans-serif;">!</span>
         </div>
 
         <!-- Title -->
-        <h3 class="rf-modal-title" id="rfModalTitle">Complete Required Fields</h3>
+        <h3 class="rf-modal-title" id="rfModalTitle" style="font-size:20px;font-weight:700;color:#0f172a;text-align:center;margin:0 0 8px 0;line-height:1.25;">Complete Required Fields</h3>
 
         <!-- Description -->
-        <p class="rf-modal-desc" id="rfModalDesc">
+        <p class="rf-modal-desc" id="rfModalDesc" style="font-size:13.5px;color:#64748b;text-align:center;line-height:1.45;margin:0 auto 22px;max-width:360px;">
             <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
         </p>
 
         <!-- Section Heading -->
-        <div class="rf-section-header">REQUIRED FIELDS</div>
+        <div class="rf-section-header" style="font-size:11px;font-weight:700;letter-spacing:0.6px;color:#64748b;text-transform:uppercase;text-align:left;margin-bottom:10px;">REQUIRED FIELDS</div>
 
         <!-- Interactive Fields List -->
-        <div class="rf-fields-list" id="rfFieldsList">
+        <div class="rf-fields-list" id="rfFieldsList" style="display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;padding-right:4px;margin-bottom:12px;">
         </div>
 
         <!-- Helper text -->
-        <div class="rf-helper-text">
+        <div class="rf-helper-text" style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;margin-bottom:20px;text-align:left;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             <span>Click a field above to jump directly to it.</span>
         </div>
 
         <!-- Primary CTA -->
-        <button type="button" class="rf-cta-btn" id="rfPrimaryCta">
+        <button type="button" class="rf-cta-btn" id="rfPrimaryCta" style="width:100%;height:44px;background:#1b84ff;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
             <span>Review Required Fields</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
@@ -4416,24 +4671,26 @@ function showCandidateRequiredFieldsModal(missingFields) {
     $list.empty();
 
     missingFields.forEach(function (f) {
-        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '">'
-            + '<div class="rf-field-row-left">'
-            + '<span class="rf-field-badge" aria-hidden="true">!</span>'
-            + '<span class="rf-field-name">' + $('<div>').text(f.label).html() + '</span>'
+        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '" style="background:#fef2f2;border:1px solid #fee2e2;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px;">'
+            + '<div class="rf-field-row-left" style="display:flex;align-items:center;gap:12px;min-width:0;">'
+            + '<span class="rf-field-badge" aria-hidden="true" style="width:20px;height:20px;border-radius:50%;background:#ef4444;color:#ffffff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">!</span>'
+            + '<span class="rf-field-name" style="font-size:13.5px;font-weight:600;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + $('<div>').text(f.label).html() + '</span>'
             + '</div>'
-            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"></polyline></svg>'
             + '</div>';
         $list.append(rowHtml);
     });
 
     var $modal = $('#requiredFieldsModal');
-    $modal.fadeIn(150, function () {
+    $modal.css('display', 'flex').hide().fadeIn(150, function () {
         $('#rfPrimaryCta').focus();
     });
 }
 
 function closeCandidateRequiredFieldsModal() {
-    $('#requiredFieldsModal').fadeOut(120);
+    $('#requiredFieldsModal').fadeOut(120, function () {
+        $(this).css('display', 'none');
+    });
 }
 
 // Modal event listeners
