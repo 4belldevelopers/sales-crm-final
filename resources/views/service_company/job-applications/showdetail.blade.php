@@ -5500,11 +5500,30 @@ var rsIconEmail='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><pa
 var rsIconPhone='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M7.2 2.8l3 3a2 2 0 0 1 .4 2.2l-.9 2.1a13.5 13.5 0 0 0 4.2 4.2l2.1-.9a2 2 0 0 1 2.2.4l3 3a2 2 0 0 1 0 2.8l-1.4 1.4c-.8.8-2 .9-3 .5A25.2 25.2 0 0 1 2.5 7.2c-.4-1-.3-2.2.5-3l1.4-1.4a2 2 0 0 1 2.8 0z"/></svg>';
 var rsIconLinkedin='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3.4 15V9.6H6V18h2.4zM7.2 8.5a1.4 1.4 0 1 0 0-2.8 1.4 1.4 0 0 0 0 2.8zM18 18v-4.8c0-2.5-1.3-3.8-3.2-3.8-1.4 0-2.1.8-2.5 1.4V9.6H10V18h2.4v-4.2c0-1.1.2-2.2 1.6-2.2s1.5 1.3 1.5 2.3V18H18z"/></svg>';
 var rsIconJobDescription='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#2563eb" d="M8 2h8a2 2 0 0 1 2 2v2h2v16H4V6h2V4a2 2 0 0 1 2-2zm0 4h8V4H8v2zm-1 6h10v-1.8H7V12zm0 4h10v-1.8H7V16zm0 4h7v-1.8H7V20z"/></svg>';
+function rsWithAmdDisabled(fn){
+  var wasAmd = (typeof window !== 'undefined' && window.define && window.define.amd);
+  if(wasAmd) window.define.amd = false;
+  try {
+    return Promise.resolve().then(fn).then(function(res){
+      if(wasAmd && window.define) window.define.amd = wasAmd;
+      return res;
+    }).catch(function(err){
+      if(wasAmd && window.define) window.define.amd = wasAmd;
+      throw err;
+    });
+  } catch(err) {
+    if(wasAmd && window.define) window.define.amd = wasAmd;
+    return Promise.reject(err);
+  }
+}
 function rsLoadScript(src){
   return new Promise(function(resolve,reject){
     var existing=document.querySelector('script[src="'+src+'"]');
     if(existing && existing.getAttribute('data-ready')==='1'){ resolve(); return; }
-    var s=existing||document.createElement('script');
+    if(existing && existing.parentNode){
+      existing.parentNode.removeChild(existing);
+    }
+    var s=document.createElement('script');
     var done=false;
     var finish=function(ok){
       if(done) return;
@@ -5519,69 +5538,165 @@ function rsLoadScript(src){
     s.src=src; s.async=true;
     s.onload=function(){ finish(true); };
     s.onerror=function(){ finish(false); };
-    if(!existing) document.head.appendChild(s);
-    if(existing) setTimeout(function(){ finish(true); },100);
-    setTimeout(function(){ finish(false); },8000);
+    document.head.appendChild(s);
+    setTimeout(function(){ finish(false); },10000);
   });
 }
 function rsTryList(list,index,test){
-  if(index>=list.length) return Promise.reject(new Error('Could not load Recruiter Summary PDF engine'));
+  if(index>=list.length) return Promise.reject(new Error('Could not load required document engine'));
   if(test()) return Promise.resolve();
   return rsLoadScript(list[index]).then(function(){
-    return test()?Promise.resolve():Promise.reject(new Error('Loaded script but PDF engine missing'));
+    return test()?Promise.resolve():Promise.reject(new Error('Loaded script but global engine missing'));
   }).catch(function(){ return rsTryList(list,index+1,test); });
 }
 function rsEnsurePdfMake(){
-  if(rsPdfReady && window.pdfMake && window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']) return rsPdfReady;
-  var core=['/js/pdfmake.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'];
-  var vfs=['/js/vfs_fonts.min.js','https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.min.js'];
-  rsPdfReady=rsTryList(core,0,function(){ return !!window.pdfMake; })
-    .then(function(){ return rsTryList(vfs,0,function(){ return !!(window.pdfMake.vfs && window.pdfMake.vfs['Roboto-Regular.ttf']); }); })
-    .then(function(){
-      window.pdfMake.fonts={Roboto:{normal:'Roboto-Regular.ttf',bold:'Roboto-Medium.ttf',italics:'Roboto-Italic.ttf',bolditalics:'Roboto-MediumItalic.ttf'}};
+  if(rsPdfReady && window.pdfMake && window.pdfMake.vfs && (window.pdfMake.vfs['Roboto-Regular.ttf'] || window.pdfMake.vfs['Roboto-Medium.ttf'])) return rsPdfReady;
+  var core=[
+    '/js/pdfmake.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/pdfmake.min.js'
+  ];
+  var vfs=[
+    '/js/vfs_fonts.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js',
+    'https://cdn.jsdelivr.net/npm/pdfmake@0.2.7/build/vfs_fonts.js'
+  ];
+  rsPdfReady=rsWithAmdDisabled(function(){
+    return rsTryList(core,0,function(){
+      if(!window.pdfMake && typeof window.require === 'function'){
+        try { window.pdfMake = window.require('pdfmake'); } catch(e){}
+      }
+      return !!(window.pdfMake && typeof window.pdfMake.createPdf === 'function');
+    }).then(function(){
+      return rsTryList(vfs,0,function(){
+        return !!(window.pdfMake && (window.pdfMake.vfs || window.vfs));
+      });
+    }).then(function(){
+      if(window.vfs && window.pdfMake && !window.pdfMake.vfs){
+        window.pdfMake.vfs = window.vfs;
+      }
+      if(window.pdfMake){
+        window.pdfMake.fonts={
+          Roboto:{
+            normal:'Roboto-Regular.ttf',
+            bold:'Roboto-Medium.ttf',
+            italics:'Roboto-Italic.ttf',
+            bolditalics:'Roboto-MediumItalic.ttf'
+          }
+        };
+      }
+      return window.pdfMake;
     });
+  }).catch(function(err){
+    rsPdfReady=null;
+    throw err;
+  });
   return rsPdfReady;
 }
 function rsEnsurePdfLib(){
   if(rsPdfLibReady && window.PDFLib && window.PDFLib.PDFDocument) return rsPdfLibReady;
-  var sources=['/js/pdf-lib.min.js','https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'];
-  rsPdfLibReady=rsTryList(sources,0,function(){ return !!(window.PDFLib && window.PDFLib.PDFDocument); });
+  var sources=[
+    '/js/pdf-lib.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js',
+    'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'
+  ];
+  rsPdfLibReady=rsWithAmdDisabled(function(){
+    return rsTryList(sources,0,function(){
+      if(!window.PDFLib && typeof window.require === 'function'){
+        try { window.PDFLib = window.require('pdf-lib'); } catch(e){}
+      }
+      return !!(window.PDFLib && window.PDFLib.PDFDocument);
+    });
+  }).catch(function(err){
+    rsPdfLibReady=null;
+    throw err;
+  });
   return rsPdfLibReady;
 }
 function rsEnsureJsZip(){
   if(rsJsZipReady && window.JSZip) return rsJsZipReady;
-  var sources=['/js/jszip.min.js','https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'];
-  rsJsZipReady=rsTryList(sources,0,function(){ return !!window.JSZip; });
+  var sources=[
+    '/js/jszip.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
+  ];
+  rsJsZipReady=rsWithAmdDisabled(function(){
+    return rsTryList(sources,0,function(){
+      if(!window.JSZip && typeof window.require === 'function'){
+        try { window.JSZip = window.require('jszip'); } catch(e){}
+      }
+      return !!window.JSZip;
+    });
+  }).catch(function(err){
+    rsJsZipReady=null;
+    throw err;
+  });
   return rsJsZipReady;
 }
 function rsEnsureDocxPreview(){
   if(rsDocxReady && window.docx && typeof window.docx.renderAsync==='function') return rsDocxReady;
-  var sources=['/js/docx-preview.min.js','https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js'];
+  var sources=[
+    '/js/docx-preview.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/docx-preview/0.3.7/docx-preview.min.js',
+    'https://cdn.jsdelivr.net/npm/docx-preview@0.3.7/dist/docx-preview.min.js'
+  ];
   rsDocxReady=rsEnsureJsZip().then(function(){
-    return rsTryList(sources,0,function(){ return !!(window.docx && typeof window.docx.renderAsync==='function'); });
+    return rsWithAmdDisabled(function(){
+      return rsTryList(sources,0,function(){ return !!(window.docx && typeof window.docx.renderAsync==='function'); });
+    });
+  }).catch(function(err){
+    rsDocxReady=null;
+    throw err;
   });
   return rsDocxReady;
 }
 function rsEnsureHtml2Canvas(){
   if(rsHtml2CanvasReady && typeof window.html2canvas==='function') return rsHtml2CanvasReady;
-  var sources=['/js/html2canvas.min.js','https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'];
-  rsHtml2CanvasReady=rsTryList(sources,0,function(){ return typeof window.html2canvas==='function'; });
+  var sources=[
+    '/js/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'
+  ];
+  rsHtml2CanvasReady=rsWithAmdDisabled(function(){
+    return rsTryList(sources,0,function(){ return typeof window.html2canvas==='function'; });
+  }).catch(function(err){
+    rsHtml2CanvasReady=null;
+    throw err;
+  });
   return rsHtml2CanvasReady;
 }
 function rsEnsureJsPdf(){
-  if(rsJsPdfReady && window.jspdf && typeof window.jspdf.jsPDF==='function') return rsJsPdfReady;
-  var sources=['/js/jspdf.umd.min.js','https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'];
-  rsJsPdfReady=rsTryList(sources,0,function(){ return !!(window.jspdf && typeof window.jspdf.jsPDF==='function'); });
+  if(rsJsPdfReady && ((window.jspdf && typeof window.jspdf.jsPDF==='function') || typeof window.jsPDF==='function')) return rsJsPdfReady;
+  var sources=[
+    '/js/jspdf.umd.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+  ];
+  rsJsPdfReady=rsWithAmdDisabled(function(){
+    return rsTryList(sources,0,function(){ return !!((window.jspdf && typeof window.jspdf.jsPDF==='function') || typeof window.jsPDF==='function'); });
+  }).catch(function(err){
+    rsJsPdfReady=null;
+    throw err;
+  });
   return rsJsPdfReady;
 }
 function rsEnsurePdfJs(){
   if(rsPdfJsReady && window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function') return rsPdfJsReady;
-  var sources=['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js'];
-  rsPdfJsReady=rsTryList(sources,0,function(){ return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function'); }).then(function(){
-    try{
-      var ver=window.pdfjsLib.version || '2.11.338';
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js';
-    }catch(err){}
+  var sources=[
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js',
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.11.338/build/pdf.min.js'
+  ];
+  rsPdfJsReady=rsWithAmdDisabled(function(){
+    return rsTryList(sources,0,function(){ return !!(window.pdfjsLib && typeof window.pdfjsLib.getDocument==='function'); }).then(function(){
+      try{
+        var ver=window.pdfjsLib.version || '2.11.338';
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/'+ver+'/pdf.worker.min.js';
+      }catch(err){}
+      return window.pdfjsLib;
+    });
+  }).catch(function(err){
+    rsPdfJsReady=null;
+    throw err;
   });
   return rsPdfJsReady;
 }
@@ -5604,10 +5719,19 @@ function rsLogoDataUri(rawUrl){
   if(!rawUrl || rawUrl==='--') return Promise.resolve(null);
   if(/^data:image\//i.test(rawUrl)) return Promise.resolve(rawUrl);
   if(rsLogoCache[rawUrl]) return rsLogoCache[rawUrl];
-  rsLogoCache[rawUrl]=fetch(rawUrl,{credentials:'include',cache:'force-cache'})
-    .then(function(response){ return response.ok ? response.blob() : null; })
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var signal = controller ? controller.signal : undefined;
+  var timer = setTimeout(function(){
+    if(controller) controller.abort();
+  }, 2500);
+
+  rsLogoCache[rawUrl]=fetch(rawUrl,{credentials:'include',cache:'force-cache',signal:signal})
+    .then(function(response){
+      clearTimeout(timer);
+      return response && response.ok ? response.blob() : null;
+    })
     .then(function(blob){
-      if(!blob) return null;
+      if(!blob || !blob.type || !/^image\/(png|jpe?g|webp)/i.test(blob.type)) return null;
       return new Promise(function(resolve){
         var reader=new FileReader();
         reader.onload=function(){ resolve(reader.result); };
@@ -5615,7 +5739,10 @@ function rsLogoDataUri(rawUrl){
         reader.readAsDataURL(blob);
       });
     })
-    .catch(function(){ return null; });
+    .catch(function(){
+      clearTimeout(timer);
+      return null;
+    });
   return rsLogoCache[rawUrl];
 }
 window.rsLogoDataUri = rsLogoDataUri;
@@ -6843,7 +6970,8 @@ function buildDefinition(data,logoUri,options){
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
   var skillCardHeight=90+(skillCount*31);
-  var logoCell=logoUri
+  var validLogo = (typeof logoUri === 'string' && /^data:image\/(png|jpe?g)/i.test(logoUri));
+  var logoCell=validLogo
     ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
     : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
 
@@ -6945,8 +7073,7 @@ async function buildRecruiterSummary(){
     return true;
   }catch(err){
     console.error('Recruiter Summary error:',err);
-    alert('Could not generate the Recruiter Summary. Please try again.');
-    return false;
+    throw err;
   }finally{
     window.__rsBusy=false;
   }
@@ -6956,12 +7083,29 @@ async function buildRecruiterSummaryBlob(data,options){
   options=options||{};
   var ready=await Promise.all([rsEnsurePdfMake(),options.noBranding ? Promise.resolve(null) : rsLogoDataUri(data.reportCompanyLogo)]);
   return new Promise(function(resolve,reject){
+    var done = false;
+    var timer = setTimeout(function(){
+      if(!done){
+        done = true;
+        reject(new Error('PDF generation timed out after 10 seconds.'));
+      }
+    }, 10000);
     try{
-      window.pdfMake.createPdf(buildDefinition(data,ready[1],options)).getBlob(function(blob){
+      var docDef = buildDefinition(data,ready[1],options);
+      window.pdfMake.createPdf(docDef).getBlob(function(blob){
+        if(done) return;
+        clearTimeout(timer);
+        done = true;
         if(blob && blob.size>200) resolve(blob);
         else reject(new Error('Recruiter Summary PDF output was empty'));
       });
-    }catch(ex){ reject(ex); }
+    }catch(ex){
+      if(!done){
+        clearTimeout(timer);
+        done = true;
+        reject(ex);
+      }
+    }
   });
 }
 async function copyPdfPagesToA4(targetDoc,sourceDoc){
@@ -8437,7 +8581,7 @@ async function processAgyTestOption(optNum, options){
     if(options.statusCallback) options.statusCallback('Downloading Resume (10%)...');
     var docxBytes = cacheKey ? window.__agyResumeCache[cacheKey] : null;
     if(!docxBytes || !docxBytes.byteLength){
-      docxBytes = await fetchResumeBytesFromSources(resumeSources);
+      docxBytes = await fetchResumeBytesFromSources(resumeSources, resumeExt === 'PDF' ? rsPdfMaxBytes : rsDocxMaxBytes);
       if(cacheKey && docxBytes && docxBytes.byteLength){
         window.__agyResumeCache[cacheKey] = docxBytes;
       }
@@ -8786,8 +8930,7 @@ async function processAgyTestOption(optNum, options){
     throw new Error('PDF output could not be created');
   }catch(err){
     console.error('Antigravity Test Lab Error:', err);
-    alert('Antigravity Test Lab Error:\n\n' + (err && err.message ? err.message : 'Unknown conversion error'));
-    return false;
+    throw err;
   }finally{
     window.__rsBusy = false;
   }
