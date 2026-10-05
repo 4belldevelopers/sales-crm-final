@@ -44,6 +44,7 @@
     window.downloadBlob = exp.downloadBlob;
     window.rdcAnonymizeRules = exp.rdcAnonymizeRules;
     window.renderAnonymizedPdfBlob = exp.renderAnonymizedPdfBlob;
+    window.fetchPdfResumeBlob = exp.fetchPdfResumeBlob;
   }
   if (typeof root !== 'undefined') {
     root.AgyCvTrackerDownloadResumeEngine = exp;
@@ -322,23 +323,39 @@ function rsRasterizeBlobToPngDataUri(blob){
 
 function rsFetchBlobToDataUri(urlStr){
   if(!urlStr || urlStr === '--') return Promise.resolve(null);
-  if(/^data:image\//i.test(urlStr)) return Promise.resolve(urlStr);
+  if(/^data:image\/(png|jpe?g)/i.test(urlStr)) return Promise.resolve(urlStr);
+  if(/^data:image\//i.test(urlStr)){
+    // Rasterize non-PNG/JPEG data URI (e.g. svg, webp) to PNG for pdfMake
+    return fetch(urlStr)
+      .then(function(r){ return r.blob(); })
+      .then(rsRasterizeBlobToPngDataUri)
+      .catch(function(){ return null; });
+  }
 
   var fetchTarget = urlStr;
+  var isSameOrigin = false;
   try{
     var u = new URL(urlStr, window.location.origin);
     if(u.pathname.indexOf('company-logo-proxy') !== -1){
       fetchTarget = u.pathname + (u.search || '');
     }
+    isSameOrigin = (u.origin === window.location.origin);
   }catch(e){}
 
   var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   var signal = controller ? controller.signal : undefined;
   var timer = setTimeout(function(){
     if(controller) controller.abort();
-  }, 12000);
+  }, 15000);
 
-  return fetch(fetchTarget, { credentials: 'include', cache: 'force-cache', signal: signal })
+  var fetchOpts = {
+    credentials: isSameOrigin ? 'include' : 'same-origin',
+    mode: 'cors',
+    cache: 'force-cache',
+    signal: signal
+  };
+
+  return fetch(fetchTarget, fetchOpts)
     .then(function(resp){
       clearTimeout(timer);
       return resp && resp.ok ? resp.blob() : null;
@@ -346,7 +363,7 @@ function rsFetchBlobToDataUri(urlStr){
     .then(function(blob){
       if(!blob || blob.size < 32) return null;
       var type = (blob.type || '').toLowerCase();
-      if(type.indexOf('svg') !== -1 || type.indexOf('webp') !== -1 || type.indexOf('gif') !== -1){
+      if(type.indexOf('png') === -1 && type.indexOf('jpeg') === -1 && type.indexOf('jpg') === -1){
         return rsRasterizeBlobToPngDataUri(blob);
       }
       return new Promise(function(resolve){
@@ -900,6 +917,11 @@ async function fetchPdfBlobFromSources(resumeUrls){
   }
   throw (lastErr || new Error('Direct R2 PDF fetch failed'));
 }
+async function fetchPdfResumeBlob(resumePdfUrl){
+  if(!resumePdfUrl) throw new Error('Resume PDF URL is required');
+  return fetchPdfBlobFromSources([resumePdfUrl]);
+}
+window.fetchPdfResumeBlob = fetchPdfResumeBlob;
 function rsKeywordPatternEscape(value){
   return String(value==null?'':value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 }
@@ -1280,29 +1302,21 @@ function readData(){
       liveNote = (displayEl.innerText || displayEl.textContent || '').trim();
     }
   }
-  var finalNote = liveNote || g('data-recruiter-note');
+  var finalNote = (!isGap(liveNote) ? liveNote : '') || g('data-recruiter-note');
 
-  // Live DOM synchronization for notice period
-  var liveNotice = '';
   var rcvWrap = document.querySelector('.rcv-wrap');
-  if (rcvWrap && rcvWrap.getAttribute('data-b-notice')) {
-    liveNotice = rcvWrap.getAttribute('data-b-notice');
-  }
-  var finalNotice = liveNotice || g('data-notice');
 
-  // Live DOM synchronization for location
-  var liveLoc = '';
-  if (rcvWrap && rcvWrap.getAttribute('data-b-loc')) {
-    liveLoc = rcvWrap.getAttribute('data-b-loc');
-  }
-  var finalLoc = liveLoc || g('data-location');
+  // Live DOM synchronization for notice period (do not overwrite valid data with '--' or gaps)
+  var liveNotice = rcvWrap ? clean(rcvWrap.getAttribute('data-b-notice'), '') : '';
+  var finalNotice = (!isGap(liveNotice) ? liveNotice : '') || g('data-notice');
 
-  // Live DOM synchronization for experience
-  var liveExp = '';
-  if (rcvWrap && rcvWrap.getAttribute('data-b-exp')) {
-    liveExp = rcvWrap.getAttribute('data-b-exp');
-  }
-  var finalExp = liveExp || g('data-experience');
+  // Live DOM synchronization for location (do not overwrite valid data with '--', 'Not Specified', or gaps)
+  var liveLoc = rcvWrap ? clean(rcvWrap.getAttribute('data-b-loc'), '') : '';
+  var finalLoc = (!isGap(liveLoc) && liveLoc !== 'Not Specified' ? liveLoc : '') || g('data-location');
+
+  // Live DOM synchronization for experience (do not overwrite valid data with '--', 'Not Specified', or gaps)
+  var liveExp = rcvWrap ? clean(rcvWrap.getAttribute('data-b-exp'), '') : '';
+  var finalExp = (!isGap(liveExp) && liveExp !== 'Not Specified' ? liveExp : '') || g('data-experience');
 
   // Live DOM synchronization for match score
   var matchVal = safeNumber(g('data-match'), 0, 100);
@@ -1343,12 +1357,13 @@ function readData(){
     rating:safeNumber(g('data-candidate-rating'), 0, 5),
     reportId:g('data-report-id'),
     reportDate:g('data-report-date'),
+    recruiterName:clean(g('data-recruiter-name'), '--'),
     reportCompanyName:g('data-report-company-name') || (rcvWrap ? rcvWrap.getAttribute('data-company') : ''),
     reportCompanyLogo:g('data-report-company-logo') || (rcvWrap ? rcvWrap.getAttribute('data-logo') : ''),
     reportCompanyLogoRaw:g('data-report-company-logo-raw') || (rcvWrap ? rcvWrap.getAttribute('data-logo-raw') : ''),
     aiVersion:g('data-ai-version'),
     match:matchVal,
-    isImmediate:g('data-is-immediate')==='1',
+    isImmediate:g('data-is-immediate')==='1' || /immediate/i.test(finalNotice),
     recruiterNote:finalNote,
     careerSummary:g('data-career-summary'),
     jobTitle:g('data-job-title'),
@@ -1622,7 +1637,7 @@ function buildDefinition(data,logoUri,options){
   var companyName=clean(data.reportCompanyName,'Hiring Partner');
   var skillCount=Math.max(1,Math.min(7,(data.skills||[]).filter(function(skill){ return clean(skill.name,'')!==''; }).length));
   var skillCardHeight=90+(skillCount*31);
-  var validLogo = (typeof logoUri === 'string' && /^data:image\/(png|jpe?g|webp|gif)/i.test(logoUri));
+  var validLogo = (typeof logoUri === 'string' && /^data:image\/(png|jpe?g)/i.test(logoUri));
   var logoCell=validLogo
     ? {image:logoUri,fit:[42,28],alignment:'center',margin:[0,0,12,0],border:[false,false,false,false]}
     : {text:companyName.charAt(0).toUpperCase(),fontSize:13,bold:true,color:'#1d4ed8',alignment:'center',margin:[0,5,12,4],fillColor:'#eef2ff',border:[false,false,false,false]};
@@ -1749,9 +1764,9 @@ async function buildRecruiterSummaryBlob(data,options){
     var timer = setTimeout(function(){
       if(!done){
         done = true;
-        reject(new Error('PDF generation timed out after 10 seconds.'));
+        reject(new Error('PDF generation timed out after 30 seconds.'));
       }
-    }, 10000);
+    }, 30000);
     try{
       var docDef = buildDefinition(data,ready[1],options);
       window.pdfMake.createPdf(docDef).getBlob(function(blob){
@@ -3269,53 +3284,42 @@ async function processAgyTestOption(optNum, options){
     var pdfBlob = null;
     var outFileName = '';
 
-    // Base Vector PDF Normalization (Unified across PDF and DOCX in Browser RAM)
-    window.__agyBasePdfCache = window.__agyBasePdfCache || {};
-    var basePdfBlob = null;
-    if(cacheKey && window.__agyBasePdfCache[cacheKey]){
-      basePdfBlob = window.__agyBasePdfCache[cacheKey];
-    } else {
-      notify(25, 'Normalizing vector document...', 'Preparing high-resolution vector layout in browser RAM...');
-      if(resumeExt === 'PDF'){
-        basePdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
-      } else {
-        // For DOCX resumes: first check if enterprise pre-converted vector PDF is available
-        if(options.resumePdfUrl){
-          try {
-            basePdfBlob = await fetchPdfResumeBlob(options.resumePdfUrl);
-          } catch(e){}
-        }
-        if(!basePdfBlob){
-          notify(35, 'Converting DOCX via WASM...', 'Rendering Word document to vector PDF in browser RAM...');
-          basePdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
-            statusCallback: options.statusCallback
-          });
-        }
-      }
-      if(cacheKey && basePdfBlob && basePdfBlob instanceof Blob){
-        window.__agyBasePdfCache[cacheKey] = basePdfBlob;
-      }
-    }
-
-    if(!basePdfBlob || !(basePdfBlob instanceof Blob)){
-      throw new Error('Could not prepare vector PDF for document compilation.');
-    }
-
     if(optNum === 41){
       // Option 41: Resume + Company Branding
+      notify(30, 'Rendering resume layout in browser RAM...', 'Preparing document for company branding...');
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        notify(40, 'Converting DOCX via WASM...', 'Rendering Word document to vector PDF in browser RAM...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
       notify(75, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
-      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(basePdfBlob, data);
+      pdfBlob = await applyAgyCompanyBrandingToPdfBlob(resumeBlob, data);
+      notify(95, 'Branded resume ready!', 'Document ready for download');
       outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 42){
       // Option 42: Pre-Screened Report + Resume + Company Branding
       notify(30, 'Generating Pre-Screened Report...', 'Compiling technical evaluation dossier with AI insights...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { statusCallback: options.statusCallback });
-      notify(65, 'Stamping company branding on resume...', 'Injecting header with company logo and metadata...');
-      var bResume = await applyAgyCompanyBrandingToPdfBlob(basePdfBlob, data);
+
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Preparing candidate resume...', 'Normalizing PDF document pages...');
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        notify(50, 'Converting DOCX via WASM...', 'Rendering Word document to vector PDF in browser RAM...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(85, 'Merging dossier and resume...', 'Concatenating recruiter package with uniform A4 width...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, bResume, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       notify(100, 'Recruiter package ready!', 'Document ready for download');
       return true;
 
@@ -3323,39 +3327,79 @@ async function processAgyTestOption(optNum, options){
       // Option 43: Pre-Screened Report + Resume without Company Branding
       notify(30, 'Generating unbranded Pre-Screened Report...', 'Compiling neutral evaluation dossier...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true, statusCallback: options.statusCallback });
+
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Preparing candidate resume...', 'Normalizing PDF document pages...');
+        resumeBlob = new Blob([docxBytes], { type: 'application/pdf' });
+      }else{
+        notify(50, 'Converting DOCX via WASM...', 'Rendering Word document to vector PDF in browser RAM...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(85, 'Merging unbranded dossier and resume...', 'Concatenating neutral recruiter package with uniform A4 width...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, basePdfBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       notify(100, 'Unbranded package ready!', 'Document ready for download');
       return true;
 
     }else if(optNum === 44){
       // Option 44: Resume + Highlighted Keywords
-      notify(35, 'Extracting evaluated skills...', 'Matching job skills with candidate profile...');
+      notify(25, 'Extracting evaluated skills...', 'Matching job skills with candidate profile...');
       var allKeywords = rsDrawerHighlightedKeywords();
-      notify(60, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
-      pdfBlob = await buildTurboVectorHighlightedResume({
-        resumeBlob: basePdfBlob,
-        keywords: allKeywords,
-        returnBlob: true,
-        ignoreBusy: true,
-        throwOnError: true
-      });
+
+      if(resumeExt === 'PDF'){
+        notify(60, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        pdfBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+      }else{
+        notify(50, 'Rendering DOCX with skill highlights via WASM...', 'Extracting word coordinates & burning vector highlights...');
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
       notify(95, 'Highlighted resume ready!', 'Document ready for download');
       outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 45){
       // Option 45: Resume + Highlighted Keywords + Company Branding
-      notify(30, 'Extracting evaluated skills...', 'Matching job skills with candidate profile...');
+      notify(25, 'Extracting evaluated skills...', 'Matching job skills with candidate profile...');
       var allKeywords = rsDrawerHighlightedKeywords();
-      notify(55, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
-      var highlightedBlob = await buildTurboVectorHighlightedResume({
-        resumeBlob: basePdfBlob,
-        keywords: allKeywords,
-        returnBlob: true,
-        ignoreBusy: true,
-        throwOnError: true
-      });
+
+      var highlightedBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(50, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+      }else{
+        notify(50, 'Rendering DOCX with skill highlights via WASM...', 'Extracting word coordinates & burning vector highlights...');
+        highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(75, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
       pdfBlob = await applyAgyCompanyBrandingToPdfBlob(highlightedBlob, data);
       notify(95, 'Branded highlighted resume ready!', 'Document ready for download');
@@ -3365,20 +3409,33 @@ async function processAgyTestOption(optNum, options){
       // Option 46: Pre-Screened Report + Resume + Highlighted Keywords + Company Branding
       notify(25, 'Generating Pre-Screened Report...', 'Compiling technical evaluation dossier with verified skills...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { statusCallback: options.statusCallback });
-      notify(50, 'Highlighting evaluated skills on resume...', 'Extracting vector coordinates for skill keywords...');
+
       var allKeywords = rsDrawerHighlightedKeywords();
-      var highlightedBlob = await buildTurboVectorHighlightedResume({
-        resumeBlob: basePdfBlob,
-        keywords: allKeywords,
-        returnBlob: true,
-        ignoreBusy: true,
-        throwOnError: true
-      });
-      notify(75, 'Stamping company branding on highlighted resume...', 'Injecting header with company logo and metadata...');
-      var bHlBlob = await applyAgyCompanyBrandingToPdfBlob(highlightedBlob, data);
+      var highlightedBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Highlighting evaluated skills on resume...', 'Extracting vector coordinates for skill keywords...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+      }else{
+        notify(55, 'Rendering DOCX with skill highlights via WASM...', 'Extracting word coordinates & burning vector highlights...');
+        highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(88, 'Merging dossier and highlighted resume...', 'Assembling recruiter presentation package with uniform A4 width...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
-      await mergePreScreenedReportAndResume(reportBlob, bHlBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName);
       notify(100, 'Executive presentation package ready!', 'Document ready for download');
       return true;
 
@@ -3386,15 +3443,30 @@ async function processAgyTestOption(optNum, options){
       // Option 47: Pre-Screened Report + Resume + Highlighted Keywords without Company Branding
       notify(25, 'Generating unbranded Pre-Screened Report...', 'Compiling neutral dossier...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true, statusCallback: options.statusCallback });
-      notify(50, 'Highlighting evaluated skills on resume...', 'Applying sub-pixel vector highlights to rated skills...');
+
       var allKeywords = rsDrawerHighlightedKeywords();
-      var highlightedBlob = await buildTurboVectorHighlightedResume({
-        resumeBlob: basePdfBlob,
-        keywords: allKeywords,
-        returnBlob: true,
-        ignoreBusy: true,
-        throwOnError: true
-      });
+      var highlightedBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Highlighting evaluated skills on resume...', 'Applying sub-pixel vector highlights to rated skills...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+      }else{
+        notify(55, 'Rendering DOCX with skill highlights via WASM...', 'Extracting word coordinates & burning vector highlights...');
+        highlightedBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(85, 'Merging unbranded dossier and highlighted resume...', 'Concatenating recruiter package with uniform A4 width...');
       var mergedName = resumeTrackingFileName(data, 'C', 'pdf');
       await mergePreScreenedReportAndResume(reportBlob, highlightedBlob, mergedName);
@@ -3403,28 +3475,60 @@ async function processAgyTestOption(optNum, options){
 
     }else if(optNum === 48){
       // Option 48: Hide Contact Details
-      notify(30, 'Analyzing contact details...', 'Extracting phone numbers, emails, and URLs...');
+      notify(25, 'Analyzing contact details...', 'Extracting phone numbers, emails, and URLs...');
       var rules = rdcAnonymizeRules(data, { keepName: true });
-      notify(60, 'Masking contact information with white strip...', 'Applying white strips on telephone, email, and social profiles...');
-      pdfBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
+
+      if(resumeExt === 'PDF'){
+        notify(60, 'Masking contact information with white strip...', 'Applying white strips on telephone, email, and social profiles...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        pdfBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        notify(55, 'Redacting contact information via WASM OOXML engine...', 'Redacting contact channels directly in Word XML structure...');
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
       notify(95, 'Redacted resume ready!', 'Document ready for download');
       outFileName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
 
     }else if(optNum === 49){
       // Option 49: Anti-Poaching Blind Profile (Hide Candidate Name & Contact Details)
-      notify(30, 'Generating confidential blind profile...', 'Extracting candidate PII & sensitive contact rules...');
+      notify(25, 'Generating confidential blind profile...', 'Extracting candidate PII & sensitive contact rules...');
       var rules = rdcAnonymizeRules(data, { keepName: false });
-      notify(60, 'Redacting candidate name & contact details...', 'Masking candidate name and personal contact channels with white strips...');
-      pdfBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
+
+      if(resumeExt === 'PDF'){
+        notify(60, 'Redacting candidate name & contact details...', 'Masking candidate name and personal contact channels with white strips...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        pdfBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        notify(55, 'Generating blind profile via WASM OOXML engine...', 'Redacting candidate name and contact channels directly in Word XML structure...');
+        pdfBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
       notify(95, 'Confidential blind profile ready!', 'Document ready for download');
       outFileName = 'Jeroworks_Blind_Resume.pdf';
 
     }else if(optNum === 50){
       // Option 50: Hide Contact Details + Company Branding
-      notify(30, 'Analyzing contact details...', 'Extracting phone numbers, emails, and URLs...');
+      notify(25, 'Analyzing contact details...', 'Extracting phone numbers, emails, and URLs...');
       var rules = rdcAnonymizeRules(data, { keepName: true });
-      notify(55, 'Masking contact information with white strip...', 'Applying white strips on telephone, email, and social profiles...');
-      var contactHiddenBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
+
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(50, 'Masking contact information with white strip...', 'Applying white strips on telephone, email, and social profiles...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        notify(50, 'Redacting contact information via WASM OOXML engine...', 'Redacting contact channels directly in Word XML structure...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(75, 'Stamping company branding...', 'Injecting header with company logo and metadata...');
       pdfBlob = await applyAgyCompanyBrandingToPdfBlob(contactHiddenBlob, data);
       notify(95, 'Branded redacted resume ready!', 'Document ready for download');
@@ -3432,26 +3536,48 @@ async function processAgyTestOption(optNum, options){
 
     }else if(optNum === 51){
       // Option 51: Hide Contact Details + Pre-Screened Report + Company Branding
-      notify(20, 'Generating Pre-Screened Report...', 'Compiling technical evaluation dossier...');
+      notify(25, 'Generating Pre-Screened Report...', 'Compiling technical evaluation dossier...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { statusCallback: options.statusCallback });
-      notify(45, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+
       var rules = rdcAnonymizeRules(data, { keepName: true });
-      var contactHiddenBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
-      notify(70, 'Stamping company branding on confidential resume...', 'Injecting header with company logo and metadata...');
-      var bRedBlob = await applyAgyCompanyBrandingToPdfBlob(contactHiddenBlob, data);
-      notify(85, 'Merging evaluation report and confidential resume...', 'Assembling recruiter package with uniform A4 width...');
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        notify(55, 'Redacting contact information via WASM OOXML engine...', 'Redacting contact channels directly in Word XML structure...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      notify(88, 'Merging evaluation report and confidential resume...', 'Assembling recruiter package with uniform A4 width...');
       var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
-      await mergePreScreenedReportAndResume(reportBlob, bRedBlob, mergedName);
+      await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
       notify(100, 'Branded confidential package ready!', 'Document ready for download');
       return true;
 
     }else if(optNum === 52){
       // Option 52: Hide Contact Details + Pre-Screened Report without Company Branding
-      notify(20, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
+      notify(25, 'Generating unbranded evaluation report...', 'Compiling neutral dossier...');
       var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true, statusCallback: options.statusCallback });
-      notify(45, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+
       var rules = rdcAnonymizeRules(data, { keepName: true });
-      var contactHiddenBlob = await renderAnonymizedPdfBlob(basePdfBlob, rules);
+      var contactHiddenBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(55, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        contactHiddenBlob = await renderAnonymizedPdfBlob(rawPdfBlob, rules);
+      }else{
+        notify(55, 'Redacting contact information via WASM OOXML engine...', 'Redacting contact channels directly in Word XML structure...');
+        contactHiddenBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          statusCallback: options.statusCallback
+        });
+      }
+
       notify(85, 'Merging unbranded dossier and confidential resume...', 'Assembling recruiter package with uniform A4 width...');
       var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       await mergePreScreenedReportAndResume(reportBlob, contactHiddenBlob, mergedName);
@@ -3464,17 +3590,33 @@ async function processAgyTestOption(optNum, options){
       var reportBlob = await buildRecruiterSummaryBlob(data, { statusCallback: options.statusCallback });
       var allKeywords = rsDrawerHighlightedKeywords();
       var rules = rdcAnonymizeRules(data, { keepName: true });
-      notify(40, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
-      var highlightedBlob = await buildTurboVectorHighlightedResume({
-        resumeBlob: basePdfBlob,
-        keywords: allKeywords,
-        returnBlob: true,
-        ignoreBusy: true,
-        throwOnError: true
-      });
-      notify(65, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
-      var resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
-      notify(85, 'Merging report and highlighted confidential resume...', 'Assembling recruiter package with uniform A4 width...');
+
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(45, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        var highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+        notify(70, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+        resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
+      }else{
+        notify(55, 'Processing DOCX: burning highlights & redacting contacts via WASM...', 'Applying OOXML contact redactions and burning skill highlights...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      notify(88, 'Merging report and highlighted confidential resume...', 'Assembling recruiter package with uniform A4 width...');
       var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
       await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       notify(100, 'Confidential highlighted package ready!', 'Document ready for download');
@@ -3700,6 +3842,7 @@ async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
     resumeTrackingFileName: resumeTrackingFileName,
     fileSafeName: fileSafeName,
     fetchResumeBytesFromSources: fetchResumeBytesFromSources,
+    fetchPdfResumeBlob: fetchPdfResumeBlob,
     logoDataUri: rsLogoDataUri,
     rsDrawerHighlightedKeywords: rsDrawerHighlightedKeywords,
     mergePreScreenedReportAndResume: mergePreScreenedReportAndResume,
