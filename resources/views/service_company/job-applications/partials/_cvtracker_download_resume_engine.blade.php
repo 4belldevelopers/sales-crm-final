@@ -46,6 +46,12 @@
     window.renderAnonymizedPdfBlob = exp.renderAnonymizedPdfBlob;
     window.fetchPdfResumeBlob = exp.fetchPdfResumeBlob;
     window.ensurePdfBlobUnderLimit = exp.ensurePdfBlobUnderLimit;
+    window.CvTrackerDownloadResumeRamStore = exp.ramStore;
+    window.invalidateCvTrackerDownloadResumeCache = function(candidateId){
+      if(exp && exp.ramStore && typeof exp.ramStore.invalidate === 'function'){
+        exp.ramStore.invalidate(candidateId);
+      }
+    };
   }
   if (typeof root !== 'undefined') {
     root.AgyCvTrackerDownloadResumeEngine = exp;
@@ -65,6 +71,48 @@ var rsOpenDocExternalReady=null;
 var rsLogoCache={};
 var rsDocxMaxBytes=10*1024*1024;
 var rsPdfMaxBytes=30*1024*1024;
+var rsCvTrackerDownloadBytesCache={};
+var CvTrackerDownloadResumeRamStore = {
+  get: function(key){
+    return rsCvTrackerDownloadBytesCache[key] || null;
+  },
+  set: function(key, data){
+    if(key && data){
+      rsCvTrackerDownloadBytesCache[key] = data;
+    }
+  },
+  evict: function(key){
+    delete rsCvTrackerDownloadBytesCache[key];
+  },
+  clear: function(){
+    rsCvTrackerDownloadBytesCache = {};
+  },
+  invalidate: function(candidateId){
+    if(!candidateId){
+      rsCvTrackerDownloadBytesCache = {};
+      return;
+    }
+    var idStr = String(candidateId);
+    Object.keys(rsCvTrackerDownloadBytesCache).forEach(function(k){
+      if(k.indexOf(idStr) !== -1){
+        delete rsCvTrackerDownloadBytesCache[k];
+      }
+    });
+  }
+};
+
+function agyYieldToMain(){
+  if(typeof window !== 'undefined' && window.scheduler && typeof window.scheduler.yield === 'function'){
+    return window.scheduler.yield();
+  }
+  return new Promise(function(resolve){
+    if(typeof requestAnimationFrame === 'function'){
+      requestAnimationFrame(function(){ setTimeout(resolve, 0); });
+    }else{
+      setTimeout(resolve, 0);
+    }
+  });
+}
 var rsAtsHighlightKeywords=@json($rcvJobSkills ?? []);
 var rsDrawerMatchedKeywords=@json($__hdrMatchedSkillNames ?? []);
 var rsStarGold='<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#f59e0b" d="M12 2.6l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.16l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93L12 2.6z"/></svg>';
@@ -604,6 +652,7 @@ async function ensurePdfBlobUnderLimit(blob, maxBytes){
 
     var outPdf = null;
     for(var p = 1; p <= numPages; p++){
+      await agyYieldToMain();
       var page = await pdfDoc.getPage(p);
       var vp = page.getViewport({ scale: scale });
       var cvs = document.createElement('canvas');
@@ -951,6 +1000,9 @@ async function fetchResumeBytes(resumeUrl,maxBytes){
   resumeUrl=clean(resumeUrl,'');
   if(resumeUrl==='--') resumeUrl='';
   if(!resumeUrl) throw new Error('Resume URL not available');
+  if(rsCvTrackerDownloadBytesCache[resumeUrl]){
+    return rsCvTrackerDownloadBytesCache[resumeUrl].slice(0);
+  }
   var byteLimit=parseInt(maxBytes,10)||rsDocxMaxBytes;
   var fetchOptions={cache:'no-store'};
   try{
@@ -966,6 +1018,7 @@ async function fetchResumeBytes(resumeUrl,maxBytes){
   if(size && size>byteLimit) throw new Error('DOCX resume is larger than the browser conversion limit');
   var bytes=await response.arrayBuffer();
   if(bytes.byteLength>byteLimit) throw new Error('DOCX resume is larger than the browser conversion limit');
+  rsCvTrackerDownloadBytesCache[resumeUrl] = bytes;
   return bytes;
 }
 async function fetchResumeBytesFromSources(resumeUrls,maxBytes){
@@ -997,6 +1050,11 @@ async function fetchPdfBlobFromSources(resumeUrls){
     return url && url!=='--' && self.indexOf(url)===index;
   });
   if(!sources.length) throw new Error('Direct R2 PDF URL not available');
+  for(var s=0;s<sources.length;s++){
+    if(rsCvTrackerDownloadBytesCache[sources[s]] && rsCvTrackerDownloadBytesCache[sources[s]] instanceof Blob){
+      return rsCvTrackerDownloadBytesCache[sources[s]];
+    }
+  }
   var lastErr=null;
   for(var i=0;i<sources.length;i++){
     try{
@@ -1006,6 +1064,7 @@ async function fetchPdfBlobFromSources(resumeUrls){
       if(size && size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
       var blob=await response.blob();
       if(blob.size>rsPdfMaxBytes) throw new Error('PDF resume is larger than the browser merge limit');
+      rsCvTrackerDownloadBytesCache[sources[i]] = blob;
       return blob;
     }catch(err){
       lastErr=err;
@@ -1324,6 +1383,7 @@ async function renderAnonymizedPdfBlob(pdfBlob,rules){
   var textItems=0;
   var redactions=0;
   for(var p=1;p<=doc.numPages;p++){
+    await agyYieldToMain();
     var pdfJsPage=await doc.getPage(p);
     var base=pdfJsPage.getViewport({scale:1});
     var cssScale=Math.min(1.35,820/base.width);
@@ -1895,6 +1955,7 @@ async function copyPdfPagesToA4(targetDoc,sourceDoc){
   var pages=sourceDoc.getPages();
   if(!pages.length) throw new Error('PDF has no pages to merge');
   for(var i=0;i<pages.length;i++){
+    await agyYieldToMain();
     var size=pages[i].getSize();
     var scale=Math.min(A4_W/size.width,A4_H/size.height);
     var drawW=size.width*scale;
@@ -2017,6 +2078,7 @@ async function buildTurboVectorHighlightedResume(options){
     var fullResumeText='';
 
     for(var p=1;p<=pdfjsDoc.numPages;p++){
+      await agyYieldToMain();
       var page=await pdfjsDoc.getPage(p);
       var tc=await page.getTextContent();
       var pageStr=tc.items.map(function(item){ return item.str || ''; }).join(' ');
@@ -3732,6 +3794,44 @@ async function processAgyTestOption(optNum, options){
       await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
       notify(100, 'Confidential highlighted package ready!', 'Document ready for download');
       return true;
+
+    }else if(optNum === 54){
+      // Option 54: Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding
+      notify(20, 'Generating unbranded evaluation report...', 'Compiling neutral technical evaluation dossier...');
+      var reportBlob = await buildRecruiterSummaryBlob(data, { noBranding: true, statusCallback: options.statusCallback });
+      var allKeywords = rsDrawerHighlightedKeywords();
+      var rules = rdcAnonymizeRules(data, { keepName: true });
+
+      var resumeBlob = null;
+      if(resumeExt === 'PDF'){
+        notify(45, 'Highlighting evaluated skills in resume...', 'Applying sub-pixel vector highlights to keywords...');
+        var rawPdfBlob = new Blob([docxBytes], { type: 'application/pdf' });
+        var highlightedBlob = await buildTurboVectorHighlightedResume({
+          resumeBlob: rawPdfBlob,
+          resumeUrl: resumeSources,
+          resumeExt: 'PDF',
+          keywords: allKeywords,
+          returnBlob: true,
+          ignoreBusy: true,
+          throwOnError: true
+        });
+        notify(70, 'Masking contact details on resume with white strip...', 'Applying white strips on phone, email, and URLs...');
+        resumeBlob = await renderAnonymizedPdfBlob(highlightedBlob, rules);
+      }else{
+        notify(55, 'Processing DOCX: burning highlights & redacting contacts via WASM...', 'Applying OOXML contact redactions and burning skill highlights...');
+        resumeBlob = await renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, {
+          anonymizeRules: rules,
+          keywords: allKeywords,
+          burnHighlights: true,
+          statusCallback: options.statusCallback
+        });
+      }
+
+      notify(88, 'Merging unbranded report and highlighted confidential resume...', 'Assembling recruiter package with uniform A4 width...');
+      var mergedName = 'Jeroworks_' + fileSafeName(data.name, 'Candidate') + '.pdf';
+      await mergePreScreenedReportAndResume(reportBlob, resumeBlob, mergedName);
+      notify(100, 'Unbranded confidential highlighted package ready!', 'Document ready for download');
+      return true;
     }
 
     if(pdfBlob instanceof Blob){
@@ -3964,7 +4064,8 @@ async function applyAgyCompanyBrandingToPdfBlob(resumePdfBlob, brandingData){
     downloadBlob: downloadBlob,
     rdcAnonymizeRules: rdcAnonymizeRules,
     renderAnonymizedPdfBlob: renderAnonymizedPdfBlob,
-    ensurePdfBlobUnderLimit: ensurePdfBlobUnderLimit
+    ensurePdfBlobUnderLimit: ensurePdfBlobUnderLimit,
+    ramStore: CvTrackerDownloadResumeRamStore
   };
 }));
 </script>
