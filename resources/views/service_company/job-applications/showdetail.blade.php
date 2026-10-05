@@ -5213,7 +5213,7 @@ setTimeout(() => {
       $rdcOriginalR2Available = true;
       $rdcOriginalR2PublicUrl = 'https://file.jero.works/'.$rdcR2Key;
       $rdcR2PublicUrl = $rdcOriginalR2PublicUrl;
-      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '='), 'preview' => 1]);
+      $rdcDownloadUrl = route('download.resume', ['id' => $application->id, 'path' => rtrim(strtr(base64_encode($rdcR2Key), '+/', '-_'), '=')]);
       $rdcR2SignUrl = route('service_company.job-applications.r2-download-url', ['id' => $application->id]);
     } elseif(filter_var($rdcResumeRaw, FILTER_VALIDATE_URL)) {
       $rdcResumeAvailable = true;
@@ -5227,7 +5227,7 @@ setTimeout(() => {
       }
     } else {
       $rdcResumeAvailable = true;
-      $rdcDownloadUrl = route('service_company.cvtracker.resume', ['id' => $application->id, 'preview' => 1]);
+      $rdcDownloadUrl = url($rdcResumeRaw);
     }
 
     if($rdcResumeAvailable){
@@ -5461,7 +5461,6 @@ setTimeout(() => {
   data-validation='@json($rsValidation)'></div>
 </div>{{-- /#jw_candidate_root_detail (Scoped Candidate Context) --}}
 
-<script src="{{ asset('js/opendoc/CandidateSnapshotResolver.js') }}"></script>
 <script>
 /* buildRecruiterSummary — client-side vector PDF report, no server calls */
 (function(){
@@ -6578,59 +6577,6 @@ function readData(){
     validation:gj('data-validation')
   };
 
-  // Authoritative Canonical Snapshot Resolution (Zero Fabrication, Scoped DOM, 0% Server Load)
-  if (typeof CandidateSnapshotResolver !== 'undefined' && typeof CandidateSnapshotResolver.resolveSnapshot === 'function') {
-    try {
-      var rootEl = document.getElementById('jw_candidate_root_detail') || document.querySelector('[data-candidate-root]');
-      var snapshot = CandidateSnapshotResolver.resolveSnapshot({
-        candidateId: raw.id,
-        rootElement: rootEl,
-        rawData: raw
-      });
-      var sf = snapshot.fields;
-      return {
-        id: snapshot.candidateId,
-        name: sf.name,
-        email: sf.email,
-        secondaryEmail: raw.secondaryEmail,
-        phone: sf.phone,
-        secondaryPhone: raw.secondaryPhone,
-        phoneCode: raw.phoneCode,
-        secondaryPhoneCode: raw.secondaryPhoneCode,
-        linkedin: sf.linkedin,
-        designation: sf.designation,
-        company: sf.company,
-        location: sf.location,
-        experience: sf.experience,
-        notice: sf.noticePeriod,
-        education: sf.education,
-        workMode: sf.workMode,
-        reportId: raw.reportId,
-        reportDate: raw.reportDate,
-        recruiterName: raw.recruiterName,
-        reportCompanyName: raw.reportCompanyName,
-        reportCompanyLogo: raw.reportCompanyLogo,
-        aiVersion: raw.aiVersion,
-        match: sf.match,
-        isImmediate: snapshot.noticeDetails ? snapshot.noticeDetails.mode === 'IMMEDIATE' : false,
-        recruiterNote: sf.recruiterNote,
-        careerSummary: sf.careerSummary,
-        jobTitle: raw.jobTitle,
-        skills: sf.skills,
-        validation: sf.validation
-      };
-    } catch (resolverErr) {
-      console.warn('[readData] CandidateSnapshotResolver fallback:', resolverErr);
-    }
-  }
-
-  if (window.AgyResumeRenderer && typeof window.AgyResumeRenderer.normalizeCandidateData === 'function') {
-    return window.AgyResumeRenderer.normalizeCandidateData(raw, {
-      companyName: raw.reportCompanyName,
-      companyLogo: raw.reportCompanyLogo,
-      recruiterName: raw.recruiterName
-    });
-  }
   return raw;
 }
 function isGap(value){
@@ -6991,10 +6937,6 @@ function buildDefinition(data,logoUri,options){
 }
 async function buildRecruiterSummary(){
   if(window.__rsBusy) return Promise.resolve(false);
-  if(window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function'){
-    var cData = typeof readData === 'function' ? readData() : {};
-    return window.AgyResumeRenderer.processOption(5, cData);
-  }
   window.__rsBusy=true;
   try{
     var data=readData();
@@ -8474,10 +8416,6 @@ async function renderAgyStrategy2WasmDocxToPdfBlob(docxBytes, options){
 async function processAgyTestOption(optNum, options){
   options = options || {};
   if(window.__rsBusy) return Promise.resolve(false);
-  if(window.AgyResumeRenderer && typeof window.AgyResumeRenderer.processOption === 'function'){
-    var candData = typeof readData === 'function' ? readData() : {};
-    return window.AgyResumeRenderer.processOption(optNum, candData, options);
-  }
   window.__rsBusy = true;
   try{
     var resumeSources = (Array.isArray(options.resumeUrl) ? options.resumeUrl : [options.resumeUrl || '']).map(function(url){
