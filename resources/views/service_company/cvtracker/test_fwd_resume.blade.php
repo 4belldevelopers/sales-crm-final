@@ -651,7 +651,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
         <div id="test_fwd_format_container">
           <!-- Custom Resume Format Trigger Button -->
           <div class="mm-fwd-format-dropdown-wrap" id="test_fwd_format_dropdown_wrap">
-            <div class="mm-fwd-format-trigger" id="test_fwd_format_trigger" onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.toggleFormatDropdown();">
+            <div class="mm-fwd-format-trigger" id="test_fwd_format_trigger" onclick="toggleTestFwdFormatDropdown(event)">
               <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
                 <span id="test_fwd_trigger_icon" style="width:28px;height:28px;border-radius:6px;background:#EFF6FF;color:#2563EB;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -684,7 +684,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#1E3A8A;">1. Standard Resume Options</span>
                   <span class="mm-fwd-sec-badge" style="background:#DBEAFE; color:#1E40AF;">2 formats</span>
                 </div>
-                <div class="mm-fwd-opt-row is-selected" data-opt-id="1" data-title="1.a Original Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(1, this);">
+                <div class="mm-fwd-opt-row is-selected" data-opt-id="1" data-title="1.a Original Resume" data-desc="Download the candidate's uploaded resume exactly as received, with no edits or formatting changes." onclick="selectTestFwdResumeFormat(1, this);">
                   <div class="mf-radio is-checked">
                     <div class="mf-radio-inner"></div>
                   </div>
@@ -703,7 +703,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   </div>
                   <span class="mf-default-badge">Default</span>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="41" data-title="1.b Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(41, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="41" data-title="1.b Resume + Company Branding" data-desc="Add your company logo and shared-by header above the resume while keeping all candidate details visible." onclick="selectTestFwdResumeFormat(41, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -726,7 +726,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#065F46;">2. Pre-Screened Candidate Report</span>
                   <span class="mm-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">1 format</span>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="5" data-title="2.a Pre-Screened Candidate Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(5, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="5" data-title="2.a Pre-Screened Candidate Report" data-desc="Generate a concise hiring report with fit summary, key skills, and verification status for recruiter review." onclick="selectTestFwdResumeFormat(5, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -750,7 +750,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#C2410C;">3. Recruiter Packages (Report + Resume)</span>
                   <span class="mm-fwd-sec-badge" style="background:#FFEDD5; color:#C2410C;">2 formats</span>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="42" data-title="3.a Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(42, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="42" data-title="3.a Pre-Screened Report + Resume + Company Branding" data-desc="Deliver one polished PDF with the pre-screened report first, followed by the candidate resume with company branding." onclick="selectTestFwdResumeFormat(42, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -766,7 +766,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Dossier report followed by branded resume.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="43" data-title="3.b Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(43, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="43" data-title="3.b Pre-Screened Report + Resume without Company Branding" data-desc="Download the same report-and-resume package without company logo or company name on the report page." onclick="selectTestFwdResumeFormat(43, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -789,7 +789,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#854D0E;">4. Highlighted Skills</span>
                   <span class="mm-fwd-sec-badge" style="background:#FEF08A; color:#854D0E;">4 formats</span>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="44" data-title="4.a Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(44, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="44" data-title="4.a Resume + Highlighted Keywords" data-desc="Download a clean resume copy with the most relevant skills highlighted for quick recruiter review." onclick="selectTestFwdResumeFormat(44, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -803,7 +803,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Resume with relevant skills highlighted for fast screening.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="45" data-title="4.b Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(45, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="45" data-title="4.b Resume + Highlighted Keywords + Company Branding" data-desc="Download a branded resume with job-matching keywords highlighted for faster recruiter screening." onclick="selectTestFwdResumeFormat(45, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -817,7 +817,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Resume with highlighted skills and company branding.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="46" data-title="4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(46, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="46" data-title="4.c Pre-Screened Report + Resume + Highlighted Keywords + Company Branding" data-desc="Create the recruiter package: pre-screened report, branded resume pages, and highlighted job-matching skills." onclick="selectTestFwdResumeFormat(46, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -832,7 +832,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Pre-screened report, branded resume, and highlighted job-matching skills.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="47" data-title="4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(47, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="47" data-title="4.d Pre-Screened Report + Resume + Highlighted Keywords without Company Branding" data-desc="Create the recruiter package with report, resume, and highlighted skills, without company branding." onclick="selectTestFwdResumeFormat(47, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#854D0E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -855,7 +855,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                   <span class="mm-fwd-sec-title" style="color:#065F46;">5. Privacy & Anonymization (Anti-Poaching Shield)</span>
                   <span class="mm-fwd-sec-badge" style="background:#D1FAE5; color:#065F46;">7 formats</span>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="48" data-title="5.a Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(48, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="48" data-title="5.a Hide Contact Details" data-desc="Keep candidate name visible while hiding email, phone, mobile, contact and LinkedIn details in browser." onclick="selectTestFwdResumeFormat(48, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -867,7 +867,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Hide candidate phone, email, mobile, and LinkedIn details.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="49" data-title="5.b Hide Candidate Name & Contact Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(49, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="49" data-title="5.b Hide Candidate Name & Contact Details" data-desc="Hide candidate name, email, and phone numbers in a browser-only resume copy." onclick="selectTestFwdResumeFormat(49, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -879,7 +879,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Hide candidate name, email, and phone numbers completely.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="50" data-title="5.c Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(50, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="50" data-title="5.c Hide Contact Details + Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then add your company header." onclick="selectTestFwdResumeFormat(50, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -891,7 +891,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Hide contact details and apply your company header banner.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="51" data-title="5.d Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(51, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="51" data-title="5.d Hide Contact Details + Pre-Screened Report (Branded)" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge the pre-screened report." onclick="selectTestFwdResumeFormat(51, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -903,7 +903,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Anonymized contact details with branded pre-screened dossier.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="52" data-title="5.e Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(52, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="52" data-title="5.e Hide Contact Details + Pre-Screened Report without Company Branding" data-desc="Keep the name visible, hide contact and LinkedIn details, then merge a no-brand report." onclick="selectTestFwdResumeFormat(52, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -915,7 +915,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Anonymized contacts and report dossier without company branding.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="53" data-title="5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(53, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="53" data-title="5.f Hide Contact Details + Pre-Screened Report + Highlighted Keywords" data-desc="Full privacy package: masked contacts, highlighted skills, and pre-screened report dossier." onclick="selectTestFwdResumeFormat(53, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -927,7 +927,7 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
                     <div class="mf-opt-desc">Full privacy package: masked contacts, highlighted skills, report with branding.</div>
                   </div>
                 </div>
-                <div class="mm-fwd-opt-row" data-opt-id="54" data-title="5.g Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and pre-screened report dossier — no branding applied." onclick="if(window.ForwardResumeManager) window.ForwardResumeManager.selectResumeFormat(54, this);">
+                <div class="mm-fwd-opt-row" data-opt-id="54" data-title="5.g Hide Contact Details + Pre-Screened Report + Highlighted Keywords without Company Branding" data-desc="Full privacy package without company logo: masked contacts, highlighted skills, and pre-screened report dossier — no branding applied." onclick="selectTestFwdResumeFormat(54, this);">
                   <div class="mf-radio"><div class="mf-radio-inner"></div></div>
                   <div class="mf-opt-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -948,20 +948,15 @@ if(!empty($cc_email_count) && $cc_email_count > 0 && !empty($cc_email_data)){
 
           <!-- Hidden by default until user selects a format from the dropdown above -->
           <div id="test_fwd_format_details_section">
-            <!-- Live Attachment Format Summary & Deliverability Badge -->
-            <div id="test_fwd_attachment_preview_card" style="margin-top:8px;padding:9px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-              <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                <span style="width:26px;height:26px;border-radius:6px;background:#E2E8F0;color:#475569;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;">PDF</span>
-                <div style="min-width:0;">
-                  <div id="test_fwd_preview_format_title" style="font-size:12.5px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    1.a Original Resume (Default)
-                  </div>
-                  <div id="test_fwd_preview_desc" style="font-size:11px;color:#64748B;margin-top:1px;">
-                    Download candidate's uploaded resume exactly as received, with no edits or formatting changes.
-                  </div>
-                </div>
+            <!-- Attached Documents Section Header & Badges (Clean 2-tier UI: Format selector + Candidates list) -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:8px;padding:0 2px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:12px;font-weight:700;color:#1E293B;">
+                  Attached Documents
+                </span>
+                <span style="font-size:11px;color:#64748B;">• Selected format applied universally</span>
               </div>
-              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+              <div style="display:flex;align-items:center;gap:6px;">
                 <span id="test_fwd_total_size_badge" style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:12px;background:#F1F5F9;color:#475569;border:1px solid #E2E8F0;display:inline-flex;align-items:center;gap:4px;">
                   Total: 0.0 MB / 6.0 MB
                 </span>
@@ -1209,6 +1204,112 @@ window._testFwdCompiledAttachments = window._testFwdCompiledAttachments || {};
 window._testFwdR2UploadedUuids = window._testFwdR2UploadedUuids || [];
 var _testFwdGlobalToken = 0;
 var _testFwdIsCompiling = false;
+
+window.toggleTestFwdFormatDropdown = function(e) {
+    if (e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.preventDefault) e.preventDefault();
+    }
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.toggleFormatDropdown === 'function') {
+        window.ForwardResumeManager.toggleFormatDropdown(e);
+        return;
+    }
+    var menu = $('#test_fwd_format_dropdown_menu');
+    var trigger = $('#test_fwd_format_trigger');
+    var caret = $('#test_fwd_trigger_caret');
+    if (menu.is(':visible')) {
+        menu.hide();
+        trigger.removeClass('is-active').css('border-color', '#CBD5E1');
+        if (caret.length) caret.css('transform', 'rotate(0deg)');
+    } else {
+        menu.show();
+        trigger.addClass('is-active').css('border-color', '#2563EB');
+        if (caret.length) caret.css('transform', 'rotate(180deg)');
+        menu.off('wheel.fwdMenu').on('wheel.fwdMenu', function(ev) {
+            var oe = ev.originalEvent || ev;
+            var d = oe.deltaY;
+            var st = this.scrollTop;
+            var sh = this.scrollHeight;
+            var ch = this.clientHeight;
+            if ((d > 0 && st + ch >= sh) || (d < 0 && st <= 0)) {
+                ev.preventDefault();
+            }
+            ev.stopPropagation();
+        });
+    }
+};
+
+window.closeTestFwdFormatDropdown = function() {
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.closeFormatDropdown === 'function') {
+        window.ForwardResumeManager.closeFormatDropdown();
+        return;
+    }
+    $('#test_fwd_format_dropdown_menu').hide();
+    $('#test_fwd_format_trigger').removeClass('is-active').css('border-color', '#CBD5E1');
+    var caret = $('#test_fwd_trigger_caret');
+    if (caret.length) caret.css('transform', 'rotate(0deg)');
+};
+
+window.selectTestFwdResumeFormat = function(optId, el) {
+    optId = parseInt(optId, 10) || 0;
+    if (!optId) return;
+
+    if (window.ForwardResumeManager && typeof window.ForwardResumeManager.selectResumeFormat === 'function') {
+        window.ForwardResumeManager.selectResumeFormat(optId, el);
+        return;
+    }
+
+    if (!el) {
+        el = $('.mm-fwd-opt-row[data-opt-id="' + optId + '"]')[0];
+    }
+
+    $('#test_fwd_resume_format').val(optId);
+
+    $('.mm-fwd-opt-row').removeClass('is-selected');
+    if (el) $(el).addClass('is-selected');
+
+    $('.mf-radio').removeClass('is-checked');
+    if (el) $(el).find('.mf-radio').addClass('is-checked');
+
+    var title = 'Option ' + optId;
+    var desc = 'Generate formatted document for candidate delivery.';
+    var iconHtml = null;
+
+    if (el) {
+        var card = $(el);
+        title = card.attr('data-title') || card.find('.mf-opt-title').text().trim();
+        desc = card.attr('data-desc') || card.find('.mf-opt-desc').text().trim();
+        iconHtml = card.find('.mf-opt-icon').html();
+    }
+
+    if (iconHtml) {
+        $('#test_fwd_trigger_icon').html(iconHtml);
+    }
+    $('#test_fwd_trigger_title').text(title);
+    $('#test_fwd_trigger_desc').text(desc);
+
+    if (optId === 1) {
+        $('#test_fwd_trigger_badge').show();
+    } else {
+        $('#test_fwd_trigger_badge').hide();
+    }
+
+    if ($('#test_fwd_preview_format_title').length) $('#test_fwd_preview_format_title').text(title);
+    if ($('#test_fwd_preview_desc').length) $('#test_fwd_preview_desc').text(desc);
+
+    window.closeTestFwdFormatDropdown();
+    if (typeof updateTestSendButtonState === 'function') {
+        updateTestSendButtonState();
+    }
+};
+
+$(document).off('click.fwdFormatDismiss').on('click.fwdFormatDismiss', function(e) {
+    if (!$(e.target).closest('#test_fwd_format_dropdown_wrap').length) {
+        if (typeof window.closeTestFwdFormatDropdown === 'function') {
+            window.closeTestFwdFormatDropdown();
+        }
+    }
+});
 
 window.closeTestFwdResumeDrawer = function() {
     _testFwdGlobalToken++;
@@ -1644,9 +1745,9 @@ window.onTestFwdFormatChange = function (el) {
     var val = $el.val();
     if (!val) {
         $('#test_fwd_format_details_section').slideUp(150);
-        $('#test_fwd_preview_format_title').text('Select Resume Format');
-        $('#test_fwd_preview_desc').text('Choose a resume format above to attach candidate resumes.');
-        $('#test_fwd_attachment_preview_card').css({ 'background': '#F8FAFC', 'border-color': '#E2E8F0' });
+        if ($('#test_fwd_preview_format_title').length) $('#test_fwd_preview_format_title').text('Select Resume Format');
+        if ($('#test_fwd_preview_desc').length) $('#test_fwd_preview_desc').text('Choose a resume format above to attach candidate resumes.');
+        if ($('#test_fwd_attachment_preview_card').length) $('#test_fwd_attachment_preview_card').css({ 'background': '#F8FAFC', 'border-color': '#E2E8F0' });
         $el.css('border-color', '#E5E7EB');
         updateTestSendButtonState();
         return;
@@ -1656,9 +1757,9 @@ window.onTestFwdFormatChange = function (el) {
     var label = sel.attr('data-label') || sel.text();
     var desc = sel.attr('data-desc') || '';
 
-    $('#test_fwd_preview_format_title').text(label);
-    $('#test_fwd_preview_desc').text(desc);
-    $('#test_fwd_attachment_preview_card').css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
+    if ($('#test_fwd_preview_format_title').length) $('#test_fwd_preview_format_title').text(label);
+    if ($('#test_fwd_preview_desc').length) $('#test_fwd_preview_desc').text(desc);
+    if ($('#test_fwd_attachment_preview_card').length) $('#test_fwd_attachment_preview_card').css({ 'background': '#F0FDF4', 'border-color': '#BBF7D0' });
     $el.css('border-color', '#E5E7EB');
 
     updateTestSendButtonState();
