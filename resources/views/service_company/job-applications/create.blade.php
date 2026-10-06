@@ -454,36 +454,433 @@
 .jero-indicative-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
-    font-size: 11px !important;
-    font-weight: 600 !important;
+    gap: 3px;
+    padding: 0 4px;
+    font-size: 8.8px !important; /* 20% reduction from 11px */
+    font-weight: 500 !important;
     font-family: 'Poppins', sans-serif !important;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
     line-height: 1.35;
     transition: all 0.15s ease-in-out;
     user-select: none;
     text-decoration: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 .jero-indicative-pill--base {
-    background-color: #e8fff3 !important;
-    color: #50cd89 !important;
-    border: 1px solid #b4f1d0 !important;
+    background: transparent !important;
+    color: #10b981 !important;
+    border: none !important;
 }
 .jero-indicative-pill--converted {
-    background-color: #f1faff !important;
+    background: transparent !important;
     color: #009ef7 !important;
-    border: 1px solid #b5e4fd !important;
+    border: none !important;
 }
 .jero-indicative-pill:hover,
 .jero-indicative-pill:focus-visible {
-    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
-    transform: translateY(-1px);
+    box-shadow: none !important;
+    transform: none !important;
+    color: #0077b5 !important;
+    text-decoration: underline dotted;
     outline: none;
 }
 .jero-indicative-pill i {
-    font-size: 10px;
+    font-size: 8px !important;
+}
+
+/* Seamless Unified Amount & Currency Input Box */
+.job-candidate-create .salary-card .candidate-salary-period .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 38px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.job-candidate-create .salary-card .candidate-salary-period .ig:focus-within {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+}
+.job-candidate-create .salary-card .candidate-salary-period .ig input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background: transparent !important;
+    margin: 0 !important;
+}
+.job-candidate-create .salary-card .candidate-salary-period .ig input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.job-candidate-create .salary-card .candidate-salary-period .ig .ig-a,
+.job-candidate-create .salary-card .candidate-salary-period .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 52px !important;
+    height: 100% !important;
+    padding: 0 12px !important;
+    background: #f8fafc !important;
+    border: none !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+.job-candidate-create .salary-card .candidate-salary-period .ig:focus-within .ig-a,
+.job-candidate-create .salary-card .candidate-salary-period .ig:focus-within .changeTextCurrency {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-left-color: #d0e3fc !important;
+}
+
+/* Unified Warm Theme for Expected Salary (Matching Current Salary) */
+.job-candidate-create .salary-card .candidate-salary-panel--expected {
+    border: 1px solid #efd36b !important;
+    background: #fffef8 !important;
+}
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head {
+    background: #fff8dc !important;
+}
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span {
+    color: #946b00 !important;
+    background: #ffefad !important;
+}
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-auto {
+    background: #fffaf0 !important;
+}
+
+/* ============================================================================
+   JERO ATS - GOD-LEVEL ENTERPRISE TIME CLOCK POPOVER
+   ============================================================================ */
+.jgtp-popover {
+    position: fixed !important;
+    z-index: 100000 !important;
+    width: 324px !important;
+    max-width: calc(100vw - 20px) !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(15, 23, 42, 0.06) !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1e293b !important;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px) scale(0.98);
+    transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.16s !important;
+    overflow: hidden !important;
+}
+.jgtp-popover.is-open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) scale(1) !important;
+}
+.jgtp-header {
+    background: linear-gradient(135deg, #071434 0%, #172346 100%) !important;
+    color: #ffffff !important;
+    padding: 12px 14px 10px !important;
+}
+.jgtp-header-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 8px !important;
+}
+.jgtp-slot-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffd233 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 3px 8px !important;
+    border-radius: 5px !important;
+    letter-spacing: 0.2px !important;
+}
+.jgtp-close-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.jgtp-close-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+.jgtp-display-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+}
+.jgtp-digits {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+.jgtp-digit {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+    min-width: 36px !important;
+    text-align: center !important;
+}
+.jgtp-colon {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #ffd233 !important;
+    line-height: 1 !important;
+    animation: jgtpBlink 1.5s infinite ease-in-out;
+}
+@keyframes jgtpBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.jgtp-ampm-switch {
+    display: inline-flex !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 6px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+}
+.jgtp-ampm-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 5px 10px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+}
+.jgtp-ampm-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.4) !important;
+}
+.jgtp-body {
+    padding: 10px 12px !important;
+    max-height: 310px !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+}
+.jgtp-section {
+    margin-bottom: 10px !important;
+}
+.jgtp-section:last-child {
+    margin-bottom: 0 !important;
+}
+.jgtp-section-label {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    margin-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+.jgtp-presets-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+}
+.jgtp-preset-chip {
+    padding: 5px 2px !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 5px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    transition: all 0.12s ease !important;
+    line-height: 1 !important;
+}
+.jgtp-preset-chip:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-preset-chip.is-active {
+    border-color: #009ef7 !important;
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+.jgtp-hours-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+}
+.jgtp-hour-btn {
+    height: 30px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 5px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-hour-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-hour-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+}
+.jgtp-min-btn {
+    height: 30px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 5px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-min-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-min-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-subgrid {
+    display: grid !important;
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+}
+.jgtp-min-subchip {
+    padding: 3px 0 !important;
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    border: 1px solid #edf2f7 !important;
+    border-radius: 4px !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    transition: all 0.12s ease !important;
+}
+.jgtp-min-subchip:hover {
+    border-color: #009ef7 !important;
+    color: #009ef7 !important;
+    background: #f0f9ff !important;
+}
+.jgtp-min-subchip.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+}
+.jgtp-footer {
+    padding: 8px 12px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+.jgtp-btn {
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.12s ease !important;
+}
+.jgtp-btn-clear {
+    background: transparent !important;
+    color: #ef4444 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 4px 6px !important;
+}
+.jgtp-btn-clear:hover {
+    background: #fef2f2 !important;
+}
+.jgtp-btn-now {
+    background: #edf2f7 !important;
+    color: #334155 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    padding: 5px 8px !important;
+}
+.jgtp-btn-now:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+.jgtp-btn-apply {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 5px 14px !important;
+}
+.jgtp-btn-apply:hover {
+    background: #0088d4 !important;
+}
+.candidate-slot-control input.is-picker-active {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
 }
 
 /* Multi-Currency Hover Lens Popover (Section 15.1) */
@@ -1144,10 +1541,10 @@
       $created_at 		=	@$jobDetail->created_at;
       $created_at 		=	date("d M, Y", strtotime($created_at));
 		
-      $snp_mode = null;
+      $snp_mode = 2; // Default to Immediate Joiner
       if (isset($application) && !empty($application->id)) {
         $stored_snp_mode = (int) ($application->serving_notice_period_mode ?? 0);
-        if (in_array($stored_snp_mode, [1, 2], true) || ($stored_snp_mode === 0 && !empty($application->np_id))) {
+        if (in_array($stored_snp_mode, [0, 1, 2], true) && ($stored_snp_mode !== 0 || !empty($application->np_id))) {
           $snp_mode = $stored_snp_mode;
         }
       }
@@ -2235,7 +2632,7 @@
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 1 ? 'is-selected' : '' }}" data-notice-period-value="1" role="radio" aria-checked="{{ $snp_mode === 1 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
                       <span class="candidate-notice-option-icon candidate-notice-option-icon--serving"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period</strong><small>Currently working, serving notice</small></span>
+                      <span class="candidate-notice-option-copy"><strong>Serving Notice Period (SNP)</strong><small>Currently working, serving notice</small></span>
                     </button>
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 0 ? 'is-selected' : '' }}" data-notice-period-value="0" role="radio" aria-checked="{{ $snp_mode === 0 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
@@ -2246,18 +2643,18 @@
                   <select class="candidate-notice-native-select" name="serving_notice_period" id="serving_notice_period" aria-hidden="true" tabindex="-1">
                     <option value="" {{ $snp_mode === null ? 'selected' : '' }}>Choose Notice Period</option>
                     <option value="0" {{ $snp_mode === 0 ? 'selected' : '' }}>Select Notice Period</option>
-                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period</option>
+                    <option value="1" {{ $snp_mode === 1 ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
                     <option value="2" {{ $snp_mode === 2 ? 'selected' : '' }}>Immediate Joiner</option>
                   </select>
                 </div>
 
                 <div class="candidate-notice-details-grid">
                   <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
-                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date' : 'Last Working Date' }} <span class="rq">*</span></label>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                       <div class="candidate-date-picker">
-                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date' : 'Select last working date' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
+                        <input type="text" id="np_id_display" class="form-control form-control-solid" name="np_id_display" value="{{ $snp_last_working ? date('d/M/Y', strtotime($snp_last_working)) : '' }}" placeholder="{{ $snp_mode === 1 ? 'Select expected last working date (LWD)' : 'Select last working date (LWD)' }}" readonly {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
                         <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" value="{{ $snp_last_working ? date('Y-m-d', strtotime($snp_last_working)) : '' }}" style="opacity:0;position:absolute;z-index:-1;top:0;" {{ !in_array($snp_mode, [1, 2], true) ? 'disabled' : '' }}>
                       </div>
                     </div>
@@ -2279,7 +2676,7 @@
                     </div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Reason for Job Change</label>
+                    <label>Reason for Job Change <span class="candidate-optional-label">(Optional)</span></label>
                     <div class="candidate-field-control candidate-reason-control"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i><input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" /></div>
                   </div>
                 </div>
@@ -2298,7 +2695,7 @@
                 <div class="candidate-work-mode-grid">
                   <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
                   <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office</strong><small>Office location based work.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -2497,7 +2894,7 @@
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
                       <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_one" id="interview_mode_one" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
                     </div>
                   </div>
@@ -2509,7 +2906,7 @@
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
                       <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_two" id="interview_mode_two" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
                     </div>
                   </div>
@@ -2521,7 +2918,7 @@
                     </div>
                     <div class="candidate-slot-fields">
                       <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off"></span></label>
+                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
                       <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_three" id="interview_mode_three" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
                     </div>
                   </div>
@@ -6384,7 +6781,7 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     var noticeDateInput = root.querySelector('#np_id');
     var noticeDateDisplay = root.querySelector('#np_id_display');
     var noticeDaysSelect = root.querySelector('#ddl_np_id');
-    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '0';
+    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '2';
 
     function formatNoticeDate(value) {
         if (!value) {
@@ -6427,15 +6824,15 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         if (noticeDateDisplay) {
             noticeDateDisplay.disabled = !usesDate;
             noticeDateDisplay.placeholder = mode === '1'
-                ? 'Select expected last working date'
-                : 'Select last working date';
+                ? 'Select expected last working date (LWD)'
+                : 'Select last working date (LWD)';
         }
         if (noticeDaysSelect) {
             noticeDaysSelect.disabled = mode !== '0';
             noticeDaysSelect.required = mode === '0';
         }
         if (noticeDateLabel) {
-            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date' : 'Last Working Date') + ' <span class="rq">*</span>';
+            noticeDateLabel.innerHTML = (mode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)') + ' <span class="rq">*</span>';
         }
 
         previousNoticeMode = mode;
@@ -7148,25 +7545,333 @@ $(function initializeCandidateSkillRatings() {
         return String(hour).padStart(2, '0') + ':' + match[2];
     }
 
-    if (typeof window.flatpickr === 'function') {
-        timeFieldIds.forEach(function (id) {
-            var field = document.getElementById(id);
-            if (!field || field._flatpickr) {
-                return;
+    // ── GOD-LEVEL ENTERPRISE TIME CLOCK PICKER ──
+    function initJeroGodLevelTimePicker(fieldIds, formatStr) {
+        var is12Hour = (formatStr !== 'H:i');
+        var activeInput = null;
+        var currentHour = 10;
+        var currentMin = 0;
+        var currentAmPm = 'AM';
+
+        var popover = document.getElementById('jero-god-time-picker');
+        if (!popover) {
+            popover = document.createElement('div');
+            popover.id = 'jero-god-time-picker';
+            popover.className = 'jgtp-popover';
+            popover.innerHTML = [
+                '<div class="jgtp-header">',
+                '  <div class="jgtp-header-top">',
+                '    <span class="jgtp-slot-badge"><i class="fa-regular fa-clock me-1"></i> <span id="jgtp-slot-label">Slot 1 Interview Time</span></span>',
+                '    <button type="button" class="jgtp-close-btn" id="jgtp-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>',
+                '  </div>',
+                '  <div class="jgtp-display-row">',
+                '    <div class="jgtp-digits">',
+                '      <span class="jgtp-digit jgtp-hour-display" id="jgtp-hour-display">10</span>',
+                '      <span class="jgtp-colon">:</span>',
+                '      <span class="jgtp-digit jgtp-min-display" id="jgtp-min-display">00</span>',
+                '    </div>',
+                '    <div class="jgtp-ampm-switch" id="jgtp-ampm-switch">',
+                '      <button type="button" class="jgtp-ampm-btn is-active" data-ampm="AM">AM</button>',
+                '      <button type="button" class="jgtp-ampm-btn" data-ampm="PM">PM</button>',
+                '    </div>',
+                '  </div>',
+                '</div>',
+                '<div class="jgtp-body">',
+                '  <div class="jgtp-section">',
+                '    <div class="jgtp-section-label"><i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Interview Slots</div>',
+                '    <div class="jgtp-presets-grid" id="jgtp-presets-grid">',
+                '      <button type="button" class="jgtp-preset-chip" data-time="09:00 AM">09:00 AM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="10:00 AM">10:00 AM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="11:00 AM">11:00 AM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="11:30 AM">11:30 AM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="12:00 PM">12:00 PM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="02:00 PM">02:00 PM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="03:00 PM">03:00 PM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="04:00 PM">04:00 PM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="05:00 PM">05:00 PM</button>',
+                '      <button type="button" class="jgtp-preset-chip" data-time="06:00 PM">06:00 PM</button>',
+                '    </div>',
+                '  </div>',
+                '  <div class="jgtp-section">',
+                '    <div class="jgtp-section-label"><i class="fa-regular fa-clock me-1 text-primary"></i> Select Hour</div>',
+                '    <div class="jgtp-hours-grid" id="jgtp-hours-grid"></div>',
+                '  </div>',
+                '  <div class="jgtp-section">',
+                '    <div class="jgtp-section-label"><i class="fa-solid fa-stopwatch me-1 text-info"></i> Select Minute</div>',
+                '    <div class="jgtp-mins-grid" id="jgtp-mins-grid">',
+                '      <button type="button" class="jgtp-min-btn is-active" data-min="00">:00</button>',
+                '      <button type="button" class="jgtp-min-btn" data-min="15">:15</button>',
+                '      <button type="button" class="jgtp-min-btn" data-min="30">:30</button>',
+                '      <button type="button" class="jgtp-min-btn" data-min="45">:45</button>',
+                '    </div>',
+                '    <div class="jgtp-mins-subgrid" id="jgtp-mins-subgrid">',
+                '      <button type="button" class="jgtp-min-subchip" data-min="05">:05</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="10">:10</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="20">:20</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="25">:25</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="35">:35</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="40">:40</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="50">:50</button>',
+                '      <button type="button" class="jgtp-min-subchip" data-min="55">:55</button>',
+                '    </div>',
+                '  </div>',
+                '</div>',
+                '<div class="jgtp-footer">',
+                '  <button type="button" class="jgtp-btn jgtp-btn-clear" id="jgtp-btn-clear">Clear</button>',
+                '  <button type="button" class="jgtp-btn jgtp-btn-now" id="jgtp-btn-now">Current Time</button>',
+                '  <button type="button" class="jgtp-btn jgtp-btn-apply" id="jgtp-btn-apply"><i class="fa-solid fa-check me-1"></i> Done</button>',
+                '</div>'
+            ].join('');
+            document.body.appendChild(popover);
+
+            var hoursGrid = popover.querySelector('#jgtp-hours-grid');
+            for (var h = 1; h <= 12; h++) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'jgtp-hour-btn';
+                var hStr = (h < 10 ? '0' : '') + h;
+                btn.setAttribute('data-hour', h);
+                btn.textContent = hStr;
+                hoursGrid.appendChild(btn);
+            }
+        }
+
+        var hourDisplay = popover.querySelector('#jgtp-hour-display');
+        var minDisplay = popover.querySelector('#jgtp-min-display');
+        var ampmSwitch = popover.querySelector('#jgtp-ampm-switch');
+        var slotLabel = popover.querySelector('#jgtp-slot-label');
+
+        function formatFormattedTime(h, m, ap) {
+            var hStr = (h < 10 ? '0' : '') + h;
+            var mStr = (m < 10 ? '0' : '') + m;
+            if (is12Hour) {
+                return hStr + ':' + mStr + ' ' + ap;
+            } else {
+                var h24 = h;
+                if (ap === 'PM' && h24 < 12) h24 += 12;
+                if (ap === 'AM' && h24 === 12) h24 = 0;
+                return ((h24 < 10 ? '0' : '') + h24) + ':' + mStr;
+            }
+        }
+
+        function updateDisplay() {
+            var hStr = (currentHour < 10 ? '0' : '') + currentHour;
+            var mStr = (currentMin < 10 ? '0' : '') + currentMin;
+            hourDisplay.textContent = hStr;
+            minDisplay.textContent = mStr;
+
+            popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-ampm') === currentAmPm);
+            });
+
+            popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+                btn.classList.toggle('is-active', parseInt(btn.getAttribute('data-hour'), 10) === currentHour);
+            });
+
+            var mPadded = (currentMin < 10 ? '0' : '') + currentMin;
+            popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-min') === mPadded);
+            });
+
+            var currentTimeStr = formatFormattedTime(currentHour, currentMin, currentAmPm);
+            popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-time') === currentTimeStr);
+            });
+        }
+
+        function parseTimeValue(val) {
+            if (!val) return null;
+            var m = String(val).trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+            if (!m) return null;
+            var h = parseInt(m[1], 10);
+            var min = parseInt(m[2], 10);
+            var ap = m[3] ? m[3].toUpperCase() : null;
+            if (!ap) {
+                if (h >= 12) {
+                    ap = 'PM';
+                    if (h > 12) h -= 12;
+                } else {
+                    ap = 'AM';
+                    if (h === 0) h = 12;
+                }
+            }
+            return { hour: h, min: min, ampm: ap };
+        }
+
+        function positionPicker(input) {
+            var rect = input.getBoundingClientRect();
+            var popoverWidth = 324;
+            var popoverHeight = 390;
+            var top = rect.bottom + 6;
+            var left = rect.left;
+
+            if (top + popoverHeight > window.innerHeight - 10) {
+                var altTop = rect.top - popoverHeight - 6;
+                if (altTop >= 10) {
+                    top = altTop;
+                }
+            }
+            if (left + popoverWidth > window.innerWidth - 10) {
+                left = Math.max(10, window.innerWidth - popoverWidth - 10);
+            }
+            if (left < 10) left = 10;
+
+            popover.style.top = top + 'px';
+            popover.style.left = left + 'px';
+        }
+
+        function openPicker(input) {
+            activeInput = input;
+            var val = input.value;
+            var parsed = parseTimeValue(val);
+            if (parsed) {
+                currentHour = parsed.hour;
+                currentMin = parsed.min;
+                currentAmPm = parsed.ampm;
+            } else {
+                currentHour = 10;
+                currentMin = 0;
+                currentAmPm = 'AM';
             }
 
-            window.flatpickr(field, {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: timeFormat,
-                time_24hr: timeFormat === 'H:i',
-                minuteIncrement: 1,
-                allowInput: true,
-                clickOpens: true,
-                disableMobile: true
-            });
+            var slotName = 'Slot 1';
+            if (input.id === 'interviewTimeTwo') slotName = 'Slot 2';
+            else if (input.id === 'interviewTimeThree') slotName = 'Slot 3';
+            slotLabel.textContent = slotName + ' Interview Time';
+
+            updateDisplay();
+            positionPicker(input);
+            popover.classList.add('is-open');
+            input.classList.add('is-picker-active');
+        }
+
+        function closePicker() {
+            if (!popover.classList.contains('is-open')) return;
+            popover.classList.remove('is-open');
+            if (activeInput) {
+                activeInput.classList.remove('is-picker-active');
+                activeInput = null;
+            }
+        }
+
+        function applyTime() {
+            if (!activeInput) return;
+            var formatted = formatFormattedTime(currentHour, currentMin, currentAmPm);
+            activeInput.value = formatted;
+            activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+            closePicker();
+        }
+
+        popover.querySelector('#jgtp-close').onclick = closePicker;
+        popover.querySelector('#jgtp-btn-apply').onclick = applyTime;
+        popover.querySelector('#jgtp-btn-clear').onclick = function () {
+            if (activeInput) {
+                activeInput.value = '';
+                activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            closePicker();
+        };
+        popover.querySelector('#jgtp-btn-now').onclick = function () {
+            var now = new Date();
+            var h = now.getHours();
+            var m = Math.round(now.getMinutes() / 15) * 15;
+            if (m === 60) {
+                m = 0;
+                h += 1;
+            }
+            var ap = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            if (h === 0) h = 12;
+            currentHour = h;
+            currentMin = m;
+            currentAmPm = ap;
+            updateDisplay();
+        };
+
+        popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+            btn.onclick = function () {
+                currentAmPm = btn.getAttribute('data-ampm');
+                updateDisplay();
+            };
         });
 
+        popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+            btn.onclick = function () {
+                currentHour = parseInt(btn.getAttribute('data-hour'), 10);
+                updateDisplay();
+            };
+        });
+
+        popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+            btn.onclick = function () {
+                currentMin = parseInt(btn.getAttribute('data-min'), 10);
+                updateDisplay();
+            };
+        });
+
+        popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+            btn.onclick = function () {
+                var tVal = btn.getAttribute('data-time');
+                var parsed = parseTimeValue(tVal);
+                if (parsed) {
+                    currentHour = parsed.hour;
+                    currentMin = parsed.min;
+                    currentAmPm = parsed.ampm;
+                    updateDisplay();
+                }
+                if (activeInput) {
+                    activeInput.value = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                    activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                closePicker();
+            };
+        });
+
+        fieldIds.forEach(function (id) {
+            var input = document.getElementById(id);
+            if (!input) return;
+            input.readOnly = true;
+            input.style.cursor = 'pointer';
+            input.onclick = function (e) {
+                e.stopPropagation();
+                if (activeInput === input && popover.classList.contains('is-open')) {
+                    closePicker();
+                } else {
+                    openPicker(input);
+                }
+            };
+            input.onfocus = function () {
+                if (activeInput !== input) {
+                    openPicker(input);
+                }
+            };
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!popover.classList.contains('is-open')) return;
+            if (!popover.contains(e.target) && (!activeInput || !activeInput.contains(e.target))) {
+                closePicker();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && popover.classList.contains('is-open')) {
+                closePicker();
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (activeInput && popover.classList.contains('is-open')) {
+                positionPicker(activeInput);
+            }
+        });
+    }
+
+    // Initialize Flatpickr for Date fields ONLY (Date calendar)
+    if (typeof window.flatpickr === 'function') {
         dateFields.forEach(function (config) {
             var field = document.getElementById(config.id);
             if (!field || field._flatpickr) {
@@ -7189,34 +7894,24 @@ $(function initializeCandidateSkillRatings() {
                 }] : []
             });
         });
+    } else {
+        dateFields.forEach(function (config) {
+            var field = document.getElementById(config.id);
+            if (!field) {
+                return;
+            }
 
-        return;
+            var savedDate = parseDisplayDate(field.value);
+            field.type = 'date';
+            field.value = nativeDateValue(savedDate || futureDate(config.offset));
+            if (!savedDate) {
+                field.min = nativeDateValue(futureDate(0));
+            }
+        });
     }
 
-    dateFields.forEach(function (config) {
-        var field = document.getElementById(config.id);
-        if (!field) {
-            return;
-        }
-
-        var savedDate = parseDisplayDate(field.value);
-        field.type = 'date';
-        field.value = nativeDateValue(savedDate || futureDate(config.offset));
-        if (!savedDate) {
-            field.min = nativeDateValue(futureDate(0));
-        }
-    });
-
-    timeFieldIds.forEach(function (id) {
-        var field = document.getElementById(id);
-        if (!field) {
-            return;
-        }
-
-        var existingValue = nativeTimeValue(field.value);
-        field.type = 'time';
-        field.value = existingValue;
-    });
+    // Initialize God-Level Time Clock Picker on Availability time inputs
+    initJeroGodLevelTimePicker(timeFieldIds, timeFormat);
 })();
 </script>
 <script>

@@ -134,36 +134,41 @@ body {overflow-x:hidden; }
 .jero-indicative-pill {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
-    font-size: 11px !important;
-    font-weight: 600 !important;
+    gap: 3px;
+    padding: 0 4px;
+    font-size: 8.8px !important; /* 20% reduction from 11px */
+    font-weight: 500 !important;
     font-family: 'Poppins', sans-serif !important;
-    border-radius: 4px;
+    border-radius: 3px;
     cursor: pointer;
     line-height: 1.35;
     transition: all 0.15s ease-in-out;
     user-select: none;
     text-decoration: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 .jero-indicative-pill--base {
-    background-color: #e8fff3 !important;
-    color: #50cd89 !important;
-    border: 1px solid #b4f1d0 !important;
+    background: transparent !important;
+    color: #10b981 !important;
+    border: none !important;
 }
 .jero-indicative-pill--converted {
-    background-color: #f1faff !important;
+    background: transparent !important;
     color: #009ef7 !important;
-    border: 1px solid #b5e4fd !important;
+    border: none !important;
 }
 .jero-indicative-pill:hover,
 .jero-indicative-pill:focus-visible {
-    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
-    transform: translateY(-1px);
+    box-shadow: none !important;
+    transform: none !important;
+    color: #0077b5 !important;
+    text-decoration: underline dotted;
     outline: none;
 }
 .jero-indicative-pill i {
-    font-size: 10px;
+    font-size: 8px !important;
 }
 
 /* Multi-Currency Hover Lens Popover (Section 15.1) */
