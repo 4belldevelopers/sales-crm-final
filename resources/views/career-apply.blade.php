@@ -14,6 +14,7 @@
     <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/job-application-create.css') }}?v=20261006-1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -33,6 +34,293 @@ body{overflow-x:hidden;}
 .dropzone{padding: 1.8rem 1.75rem!important; border: 2px dashed #e6e7e8!important; background:transparent!important; text-align: inherit!important;}
 .border-radius-rb {border-top-right-radius: 0em!important;}
 .border-radius-rt {border-bottom-right-radius: 0em!important;}
+.border-radius-lt {border-bottom-left-radius: .4em!important;}
+.border-radius-lb {border-top-left-radius: .4em!important;}
+.font-size-icon {font-size: 1.3em;}
+.dashed-border-top {border-top:1px dashed gray;}
+#dob::-webkit-inner-spin-button,
+#dob::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none;}
+#np_id::-webkit-inner-spin-button,
+#np_id::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none;}
+
+.br-currency-select2-dropdown {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+    z-index: 1060;
+}
+.br-currency-select2-dropdown .select2-search--dropdown {
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    background-color: #ffffff;
+    width: 100%;
+}
+.br-currency-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+.br-currency-select2-dropdown .select2-results__options {
+    max-height: 260px;
+}
+.br-currency-select2-dropdown .select2-results__option {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.4;
+}
+.br-currency-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+.br-currency-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.candidate-salary-header-currency {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 290px;
+    max-width: 380px;
+}
+.candidate-salary-header-currency > label {
+    margin: 0;
+    color: var(--jac-text, #1e293b);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.candidate-salary-header-currency .select2-container {
+    flex: 1 1 auto;
+    min-width: 220px;
+}
+.candidate-salary-header-currency .select2-container--default .select2-selection--single {
+    height: 38px;
+    border: 1px solid #d8deec !important;
+    border-radius: 6px !important;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 30px;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.candidate-salary-header-currency .select2-container--default.select2-container--open .select2-selection--single,
+.candidate-salary-header-currency .select2-container--default .select2-selection--single:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    outline: none;
+}
+.candidate-salary-header-currency .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    top: 1px;
+    right: 8px;
+}
+
+/* Scoped Enterprise Global Currency Indicative Pills & Hover Lens */
+.jero-pill-wrapper {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+.jero-indicative-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.35;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    text-decoration: none;
+}
+.jero-indicative-pill--base {
+    background-color: #e8fff3 !important;
+    color: #50cd89 !important;
+    border: 1px solid #b4f1d0 !important;
+}
+.jero-indicative-pill--converted {
+    background-color: #f1faff !important;
+    color: #009ef7 !important;
+    border: 1px solid #b5e4fd !important;
+}
+.jero-indicative-pill:hover,
+.jero-indicative-pill:focus-visible {
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
+    transform: translateY(-1px);
+    outline: none;
+}
+.jero-indicative-pill i {
+    font-size: 10px;
+}
+
+/* Multi-Currency Hover Lens Popover (Section 15.1) */
+.jero-currency-hover-lens {
+    position: fixed;
+    z-index: 1080;
+    width: 320px;
+    max-width: 90vw;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    font-family: 'Poppins', sans-serif;
+    color: #1e293b;
+    pointer-events: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.jero-currency-hover-lens.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.jero-hover-lens-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 0.2px;
+}
+.jero-hover-lens-header i {
+    color: #009ef7;
+    margin-right: 5px;
+}
+.jero-hover-lens-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+.jero-hover-lens-base {
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 11px;
+    color: #475569;
+}
+.jero-hover-lens-base strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+.jero-hover-lens-body {
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.jero-hover-lens-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 11.5px;
+}
+.jero-hover-lens-row:last-child {
+    border-bottom: none;
+}
+.jero-hover-lens-curr {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.jero-hover-lens-flag {
+    font-size: 14px;
+    line-height: 1;
+}
+.jero-hover-lens-vals {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.jero-hover-lens-primary {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 12px;
+}
+.jero-hover-lens-sub {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+}
+.jero-hover-lens-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px;
+    font-size: 10px;
+    color: #64748b;
+}
+.jero-hover-lens-footer i {
+    color: #f59e0b;
+    margin-right: 4px;
+}
+/* Salary Summary USD Equivalent Row */
+.candidate-salary-summary-usd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-top: 1px dashed #cbd5e1;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #475569;
+}
+.candidate-salary-summary-usd-row strong {
+    color: #009ef7;
+    font-weight: 700;
+    font-size: 12.5px;
+}
+@media (max-width: 767px) {
+    .candidate-salary-header-currency {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-top: 8px;
+    }
+}
 .border-radius-lt {border-bottom-left-radius: .4em!important;}
 .border-radius-lb {border-top-left-radius: .4em!important;}
 .font-size-icon {font-size: 1.3em;}
@@ -1542,207 +1830,182 @@ $currencySymbole = GeneralMethod::currencySymbole();
               </div>
             </div>
 
+            @php
+              $candidateSalaryMode = (int) (@$application->current_ctc_mode ?? 0);
+              $candidateSalaryMode = in_array($candidateSalaryMode, [0, 1, 2], true) ? $candidateSalaryMode : 0;
+              $candidateSalaryPeriod = [0 => 'annual', 1 => 'monthly', 2 => 'hourly'][$candidateSalaryMode];
+            @endphp
             <!-- Salary Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Salary Details</h3>
+            <div class="fs br-card salary-card candidate-card">
+              <div class="fsh candidate-card-header br-hero">
+                <div class="candidate-card-title br-hero-title">
+                  <span class="candidate-card-icon br-hero-icon"><i class="fa-solid fa-wallet" aria-hidden="true"></i></span>
+                  <span><strong>Salary Details</strong><small>Capture current and expected salary. Related values continue to calculate automatically.</small></span>
+                </div>
+                <div class="candidate-salary-header-currency">
+                  <label for="current_ctc_cur">Currency</label>
+                  <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
+                    @php
+                        $current_ctc_cur = "";
+                        $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
+                        $currencyFlags = [
+                            'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
+                            'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'NZD' => '🇳🇿', 'ZAR' => '🇿🇦',
+                            'BRL' => '🇧🇷', 'PHP' => '🇵🇭', 'MYR' => '🇲🇾', 'THB' => '🇹🇭', 'IDR' => '🇮🇩', 'VND' => '🇻🇳',
+                            'SEK' => '🇸🇪', 'NOK' => '🇳🇴', 'DKK' => '🇩🇰', 'PLN' => '🇵🇱', 'MXN' => '🇲🇽', 'HKD' => '🇭🇰',
+                            'TWD' => '🇹🇼', 'KRW' => '🇰🇷', 'TRY' => '🇹🇷', 'SAR' => '🇸🇦', 'QAR' => '🇶🇦', 'KWD' => '🇰🇼',
+                            'BHD' => '🇧🇭', 'OMR' => '🇴🇲', 'EGP' => '🇪🇬', 'ILS' => '🇮🇱', 'CZK' => '🇨🇿', 'HUF' => '🇭🇺',
+                            'RON' => '🇷🇴', 'CLP' => '🇨🇱', 'COP' => '🇨🇴', 'ARS' => '🇦🇷', 'NGN' => '🇳🇬', 'KES' => '🇰🇪',
+                            'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵'
+                        ];
+                        foreach($currency as $key=>$val){
+                            $sel = '';
+                            if($current_ctc_cur===null){
+                              if($currency_code==$val){
+                                $sel = 'selected="selected"';
+                              }
+                            }else{
+                              if($current_ctc_cur == $key){
+                                $sel = 'selected="selected"';
+                              }
+                            }
+                            $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                            $entLabel = $cMeta['label'];
+                            $keywords = $cMeta['keywords'];
+                            $flag = $currencyFlags[$val] ?? '🌐';
+
+                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
+                        }
+                    @endphp
+                  </select>
+                  <div class="d-none">
+                    <select name="current_ectc_cur" id="current_ectc_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                    <select name="current_th_cur" id="current_th_cur">
+                      @php
+                          foreach($currency as $key=>$val){
+                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
+                          }
+                      @endphp
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div class="fsc">
-                <div class="sg">
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Annual Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color:var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-
-                      
-                      <div class="col-4 pl-0 d-none">
+              <div class="fsc candidate-card-body br-body">
+                <div class="candidate-salary-grid">
+                  <section class="candidate-salary-panel candidate-salary-panel--current">
+                    <div class="candidate-salary-panel-head">
+                      <span><i class="fa-solid fa-coins" aria-hidden="true"></i></span>
+                      <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
+                    </div>
+                    <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="annual" data-salary-mode="0">Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="current" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="annual">
+                      <div class="d-none">
                         <select class="form-select form-select-solid" arial-label="Select Annual Salary" name="current_ectc_mode" id="current_ectc_mode">
-                              @php 
-                                          $current_ectc_mode	=	"";
-                                          $current_ectc_mode	=	@$application->current_ectc_mode;
-                                          foreach($salaryMode as $key=>$val){
-                                            $sel	=	'';
-                                            if(2==$key){
-                                              $sel	=	'selected="selected"';	
-                                            }
-                                            echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                                          }
-                              @endphp
+                          @php
+                              $current_ectc_mode = "";
+                              $current_ectc_mode = @$application->current_ectc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if($candidateSalaryMode==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
                         </select>
-                      </div>
-                      <div class="col-4 pl-0 d-none">
                         <select class="form-select form-select-solid" arial-label="Select Annual Salary" id="current_ctc_mode" name="current_ctc_mode">
-                            @php 
-                                        $current_ctc_mode	=	"";
-                                        $current_ctc_mode	=	@$application->current_ctc_mode;
-                                        foreach($salaryMode as $key=>$val){
-                                          $sel	=	'';
-                                          if(2==$key){
-                                            $sel	=	'selected="selected"';	
-                                          }	
-                                          echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                                        }
-                            @endphp
+                          @php
+                              $current_ctc_mode = "";
+                              $current_ctc_mode = @$application->current_ctc_mode;
+                              foreach($salaryMode as $key=>$val){
+                                $sel = '';
+                                if($candidateSalaryMode==$key){
+                                  $sel = 'selected="selected"';
+                                }
+                                echo '<option value="'.$key.'" '.$sel.'>'.$val.'</option>';
+                              }
+                          @endphp
                         </select>
                       </div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                    </div>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                    </div>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-current-auto-label-one">Monthly Salary</strong><b id="candidate-current-monthly-auto">{{ @$application->ctc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-current-auto-label-two">Hourly Salary</strong><b id="candidate-current-hourly-auto">{{ @$application->ctc_hourly ?: 0 }}</b></div>
+                    </div>
+                  </section>
 
-                      
-                      <select id="current_ctc_cur" name="current_ctc_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
-                              foreach($currency as $key=>$val){
-                                  $sel	=	'';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
-                                  }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                              }
-                          @endphp
-                      </select>
+                  <section class="candidate-salary-panel candidate-salary-panel--expected">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" data-salary-mode="0">Annual</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
+                      <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
-                    <div class="fg fv-row"><label>Current CTC (Annual) <span  style="float: right; color: #ef560a;"id="pay_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted payrateannual"></span>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
-                    <div class="fg fv-row"><label>Expected CTC (Annual) <span style="float: right; color: #ef560a;" id="bill_rate_annual_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billrateannual"></span>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row">
-                      <label style="color: var(--p)">Monthly Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="current_ectc_cur" id="current_ectc_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
-                              foreach($currency as $key=>$val){
-                                  $sel	=	'';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
-                                  }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                              }
-                          @endphp
-                      </select>
+                    <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
-                    <div class="fg fv-row"><label>Current (Monthly)<span style="float: right; color: #ef560a;" id="pay_rate_monthly_usd"></span></label>
-                      <div class="ig">
-                        <input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted payratemonthly"></span>
+                    <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
+                    <div class="candidate-salary-auto candidate-salary-auto--dynamic">
+                      <span>Auto Calculated</span>
+                      <div><strong id="candidate-expected-auto-label-one">Monthly Salary</strong><b id="candidate-expected-monthly-auto">{{ @$application->ectc_monthly ?: 0 }}</b></div>
+                      <div><strong id="candidate-expected-auto-label-two">Hourly Salary</strong><b id="candidate-expected-hourly-auto">{{ @$application->ectc_hourly ?: 0 }}</b></div>
                     </div>
-                    <div class="fg fv-row"><label>Expected (Monthly) <span style="float: right; color: #ef560a;" id="bill_rate_monthly_usd"> </span></label>
-                      <div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted billratemonthly"></span>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row"><label style="color: var(--p)">Hourly Salary</label>
-                      <div style="font-size: 1rem; font-weight: 600; color: var(--t); margin-bottom: 4px;">Currency <span class="rq">*</span>
-                      </div>
-                      <select name="current_th_cur" id="current_th_cur">
-                          @php 
-                              $current_ctc_cur	=	"";
-                              $current_ctc_cur	=	@$application->current_ctc_cur ?? $salary_currency;//@$application->current_ctc_cur;
-                              
-                              foreach($currency as $key=>$val){
-                                  $sel	=	'';
-                                  if($current_ctc_cur===null){
-                                    if($currency_code==$val){
-                                      $sel	=	'selected="selected"';	
-                                      }	
-                                  }else{
-                                    if($current_ctc_cur == $key){
-                                      $sel	=	'selected="selected"';	
-                                  }	
-                                  }
-                                                      
-                                  echo '<option value="'.$key.'"  '.$sel.'>'.$val.'</option>';	
-                              }
-                          @endphp
-                      </select>
-                    </div>
-                    <div class="fg fv-row"><label>Current (Hourly) <span style="float: right; color: #ef560a;" id="pay_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted CurrentCTC"></span> 
-                    </div>
-                    <div class="fg fv-row"><label>Expected (Hourly) <span  style="float: right; color: #ef560a;"id="bill_rate_hourly_usd"> </span></label>
-                      <div class="ig">
-                        <input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" />
-                        <span class="ig-a changeTextCurrency">INR</span>
-                      </div>
-                      <span class="form-text text-muted expectedctc"></span> 
-                    </div>
-                  </div>
-                  <div>
-                    <div class="fg fv-row">
-                          <label style="color: var(--p)">Other Salary Details</label>
-                        <div style="display: flex;">
-                            <div class="">
-                              <label>Hike Percentage</label>
-                              <div class="ig">
-                                <input type="number" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" style="text-align: center" />
-                                <span class="ig-a">%</span>
-                              </div>
-                              <div style="font-size: 0.95rem; color: var(--t-l); margin-top: 3px;">(Calculated from Annual CTC)</div>
-                            </div>
-                            <div class="" style="margin-left: 10px;">
-                              <div style="margin-bottom: 8px">
-                                <label style="font-size: 1rem; font-weight: 600">Offer in Hand?</label>
-                                <div class="rg">
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} />
-                                    <label for="ohy">Yes</label>
-                                  </div>
-                                  <div class="ri">
-                                    <input type="radio" name="oh" id="ohn" value="no"  {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }}  />
-                                    <label for="ohn">No</label>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                        </div>
-                    </div>
+                  </section>
 
-                    <div class="fg fv-row">
-                      <label>Comments</label>
-                      <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                      <div class="cc">0 / 500</div>
+                  <aside class="candidate-salary-panel candidate-salary-summary">
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-calculator" aria-hidden="true"></i></span><div><strong>Salary Summary</strong><small>Calculated from the entered values</small></div></div>
+                    <div class="candidate-salary-summary-list">
+                      <div><span id="candidateSalaryCurrentLabel">Current Salary (Annual)</span><strong id="candidateSalaryCurrentSummary">0</strong></div>
+                      <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
+                      <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
+                      <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
+                      <div class="candidate-salary-summary-usd-row" id="candidateSalaryUsdEquivalentRow">
+                        <span id="candidateSalaryUsdLabel"><i class="fa-solid fa-earth-americas text-primary me-1"></i>USD Equivalent</span>
+                        <strong id="candidateSalaryUsdEquivalentSummary">$0.00 / yr</strong>
+                      </div>
                     </div>
-                  </div>
+                    <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
+                    <div class="candidate-offer-field">
+                      <strong>Offer in Hand</strong>
+                      <div class="rg">
+                        <div class="ri"><input type="radio" name="oh" id="ohy" value="yes" {{ @$application->oh == 'yes' ? 'checked' : '' }} /><label for="ohy">Yes</label></div>
+                        <div class="ri"><input type="radio" name="oh" id="ohn" value="no" {{ (@$application->wm == 'no' || empty(@$application->oh)) ? 'checked' : '' }} /><label for="ohn">No</label></div>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+
+                <div class="candidate-salary-comments">
+                  <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
+                  <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
+                  <div class="cc" id="salaryCommentCounter">0 / 500</div>
                 </div>
               </div>
             </div>
@@ -2079,24 +2342,17 @@ $currencySymbole = GeneralMethod::currencySymbole();
 <!--end::Content--> 
 
 @php
-    $rates = $currencyConverter['usd_based_rates'] ?? [
+    $fxSnapshot = GeneralMethod::getLatestFxSnapshot();
+    $rates = $fxSnapshot['rates_json'] ?? ($currencyConverter['usd_based_rates'] ?? [
         'USD' => 1,
         'INR' => 83,
         'EUR' => 0.87,
         'JPY' => 159.65,
         'GBP' => 0.76,
         'AED' => 3.67
-    ];
-    
-    $currencyKeys = $currencyConverter['getKey'] ?? [
-        'INR',
-        'EUR',
-        'JPY',
-        'GBP',
-        'USD',
-        'AED'
-    ];
-
+    ]);
+    $fxVersion = $fxSnapshot['version'] ?? '202610-001';
+    $currencyKeys = array_keys($rates);
 @endphp
 
 <script src="{{ asset('demo/plugins/global/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
@@ -2602,194 +2858,21 @@ $(document).ready(function () {
 
         let isUpdating = false;
 
-        // Base values (USD)
-        let payBase = { hourly: 0 };
-        let billBase = { hourly: 0 };
-
         function format(val) {
             return val ? parseFloat(val).toFixed(2) : '';
         }
-        
+
+        // Legacy Pay Rate listeners superseded by JeroCandidateCurrencyEngine
         function fromUSD(amount, currency) {
-            return amount / currencyRates[currency];
+            return (currencyRates && currencyRates[currency]) ? (amount / currencyRates[currency]) : amount;
         }
 
-   
-        // ================= PAY RATE =================
-        $('#ctc').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
+        function updatePayUI() { /* delegated to JeroCandidateCurrencyEngine */ }
+        function updateBillUI() { /* delegated to JeroCandidateCurrencyEngine */ }
 
-            let hourly = parseFloat($(this).val()) || 0;
-
-            $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
-            $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-            updatePayUI();
-            percentage_hike();
-
-            isUpdating = false;
-        });
-
-        $('#pay_monthly').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let monthly = parseFloat($(this).val()) || 0;
-
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ctc').val(format(hourly));
-            $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
-            updatePayUI();
-            percentage_hike();
-
-            isUpdating = false;
-        });
-
-        $('#pay_annual').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let annual = parseFloat($(this).val()) || 0;
-
-            let monthly = annual / MONTHS_PER_YEAR;
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ctc').val(format(hourly));
-            $('#pay_monthly').val(format(monthly));
-            updatePayUI();
-            percentage_hike();
-
-            isUpdating = false;
-        });
-
-        // ================= BILL RATE =================
-        $('#ectc').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let hourly = parseFloat($(this).val()) || 0;
-
-            $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
-            $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-            updateBillUI();
-            percentage_hike();
-            isUpdating = false;
-        });
-
-        $('#bill_monthly').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let monthly = parseFloat($(this).val()) || 0;
-
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ectc').val(format(hourly));
-            $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
-            updateBillUI();
-            percentage_hike();
-
-            isUpdating = false;
-        });
-
-        $('#bill_annual').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let annual = parseFloat($(this).val()) || 0;
-
-            let monthly = annual / MONTHS_PER_YEAR;
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ectc').val(format(hourly));
-            $('#bill_monthly').val(format(monthly));
-            updateBillUI();
-            percentage_hike();
-
-            isUpdating = false;
-        });
-        function updatePayUI() {
-            let currency = $('#current_ctc_cur').val();
-            let pay_rate_amount = $('#ctc').val();
-            let currSet = currencyRateschar[currency];
-            if(currency==4){ 
-              $('#pay_rate_hourly_usd').text('');
-              $('#pay_rate_monthly_usd').text('');
-              $('#pay_rate_annual_usd').text('');
-              updateCTCFields();
-              return false;
-            }
-
-            let hourly = fromUSD(pay_rate_amount, currSet);
-            let monthly = hourly * HOURS_PER_MONTH;
-            let annual = monthly * MONTHS_PER_YEAR;
-            
-            $('#pay_rate_hourly_usd').text('Approx $ '+ format(hourly));
-            $('#pay_rate_monthly_usd').text('Approx $ '+ format(monthly));
-            $('#pay_rate_annual_usd').text('Approx $ '+ format(annual));
-            updateCTCFields();
-        }
-        function updateBillUI() {
-            let currency = $('#current_ctc_cur').val();
-            let bill_rate_amount = $('#ectc').val();
-            let currSet = currencyRateschar[currency];
-            if(currency==4){ 
-              $('#bill_rate_hourly_usd').text('');
-              $('#bill_rate_monthly_usd').text('');
-              $('#bill_rate_annual_usd').text('');
-              updateCTCFields();
-              return false;
-            }
-
-            let hourly = fromUSD(bill_rate_amount, currSet);
-            let monthly = hourly * HOURS_PER_MONTH;
-            let annual = monthly * MONTHS_PER_YEAR;
-
-            $('#bill_rate_hourly_usd').text('Approx $ '+ format(hourly));
-            $('#bill_rate_monthly_usd').text('Approx $ '+ format(monthly));
-            $('#bill_rate_annual_usd').text('Approx $ '+ format(annual));
-            updateCTCFields();
-        }
-
-
-
-        function payRateUpdate(){
-
-          if (isUpdating) return;
-            isUpdating = true;
-           
-
-            updatePayUI();
-
-            isUpdating = false;
-          
-        }
-
-        function billRateUpdate(){
-
-          if (isUpdating) return;
-            isUpdating = true;
-          
-            updateBillUI();
-
-            isUpdating = false;
-          
-        }
-
-
-        $('#current_ctc_cur').on('change', function () {
-            updatePayUI();
-            updateBillUI();
-        });
-        $('#current_ectc_cur').on('change', function () {
-            updateBillUI();
-            updatePayUI();
-        });
-        setTimeout(() => {
-              billRateUpdate();
-              payRateUpdate();
-          }, 1000);
+        function payRateUpdate() { /* delegated to JeroCandidateCurrencyEngine */ }
+        function billRateUpdate() { /* delegated to JeroCandidateCurrencyEngine */ }
+        function percentageBillRate() { /* delegated to JeroCandidateCurrencyEngine */ }
 
 
   });
@@ -3686,14 +3769,7 @@ setTimeout(() => {
 
 
 
-   $('body').on('change', '#current_ctc_cur', function(){
-   			var	current_ctc_cur		=	$(this).val();
-			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
-   });
-   $('body').on('change', '#current_ectc_cur', function(){
-   			var	current_ectc_cur	=	$(this).val();
-			document.getElementById("current_ctc_cur").selectedIndex = current_ectc_cur;
-   });
+   // Candidate currency Select2 and synchronization delegated to JeroCandidateCurrencyEngine
    $('body').on('change', '#current_ctc_mode', function(){
    			var	current_ctc_mode	=	$(this).val();
 			document.getElementById("current_ectc_mode").selectedIndex = current_ctc_mode;
@@ -3735,133 +3811,77 @@ setTimeout(() => {
    								
    	});
 
-    function numberToIndianWords(num) {
+    function numberToIndianWords(num, currCode) {
+        num = Math.floor(Number(num));
+        if (!num || isNaN(num) || num <= 0) return '';
+        var code = (currCode || $('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
 
-    num = Math.floor(Number(num));
+        const ones = [
+            '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
+            'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+            'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+            'Seventeen', 'Eighteen', 'Nineteen'
+        ];
 
-    if (!num || isNaN(num)) return '';
+        const tens = [
+            '', '', 'Twenty', 'Thirty', 'Forty',
+            'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+        ];
 
-    const ones = [
-        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
-        'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
-        'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
-        'Seventeen', 'Eighteen', 'Nineteen'
-    ];
-
-    const tens = [
-        '', '', 'Twenty', 'Thirty', 'Forty',
-        'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
-    ];
-
-    function convert(n) {
-
-        if (n < 20) {
-            return ones[n];
+        function convertIndian(n) {
+            if (n < 20) return ones[n];
+            if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+            if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + convertIndian(n % 100);
+            if (n < 100000) return convertIndian(Math.floor(n / 1000)) + ' Thousand ' + convertIndian(n % 1000);
+            if (n < 10000000) return convertIndian(Math.floor(n / 100000)) + ' Lakh ' + convertIndian(n % 100000);
+            if (n < 1000000000) return convertIndian(Math.floor(n / 10000000)) + ' Crore ' + convertIndian(n % 10000000);
+            return convertIndian(Math.floor(n / 1000000000)) + ' Arab ' + convertIndian(n % 1000000000);
         }
 
-        if (n < 100) {
-            return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+        function convertInternational(n) {
+            if (n < 20) return ones[n];
+            if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+            if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + convertInternational(n % 100);
+            if (n < 1000000) return convertInternational(Math.floor(n / 1000)) + ' Thousand ' + convertInternational(n % 1000);
+            if (n < 1000000000) return convertInternational(Math.floor(n / 1000000)) + ' Million ' + convertInternational(n % 1000000);
+            return convertInternational(Math.floor(n / 1000000000)) + ' Billion ' + convertInternational(n % 1000000000);
         }
 
-        if (n < 1000) {
-            return ones[Math.floor(n / 100)] + ' Hundred ' + convert(n % 100);
+        if (code === 'INR') {
+            return convertIndian(num).replace(/\s+/g, ' ').trim() + ' Rupees';
         }
-
-        if (n < 100000) {
-            return convert(Math.floor(n / 1000)) + ' Thousand ' + convert(n % 1000);
-        }
-
-        if (n < 10000000) {
-            return convert(Math.floor(n / 100000)) + ' Lakh ' + convert(n % 100000);
-        }
-
-        if (n < 1000000000) {
-            return convert(Math.floor(n / 10000000)) + ' Crore ' + convert(n % 10000000);
-        }
-
-        return convert(Math.floor(n / 1000000000)) + ' Arab ' + convert(n % 1000000000);
+        return convertInternational(num).replace(/\s+/g, ' ').trim() + ' ' + code;
     }
-
-    return convert(num).replace(/\s+/g, ' ').trim() + ' Rupees';
-}
-
 
     function updateCTCFields() {
+        var ctcVal = parseFloat($("#ctc").val()) || 0;
+        var payMonthly = parseFloat($("#pay_monthly").val()) || 0;
+        var payAnnual = parseFloat($("#pay_annual").val()) || 0;
+        var ectcVal = parseFloat($("#ectc").val()) || 0;
+        var billMonthly = parseFloat($("#bill_monthly").val()) || 0;
+        var billAnnual = parseFloat($("#bill_annual").val()) || 0;
+        var code = ($('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
 
-              let maxLimit = 99999999999;
+        if (payAnnual > 0) {
+            $(".payrateannual").text(numberToIndianWords(payAnnual, code));
+            $(".payratemonthly").text(numberToIndianWords(payMonthly, code));
+            $(".CurrentCTC").text(numberToIndianWords(ctcVal, code));
+        } else {
+            $(".payrateannual, .payratemonthly, .CurrentCTC").text('');
+        }
 
-                // Current CTC
-                var ctcVal = parseInt($("#ctc").val(), 10);
-                var payMonthly = parseInt($("#pay_monthly").val(), 10);
-                var payAnnual = parseInt($("#pay_annual").val(), 10);
-                var ctcCurrency = $(".currency").val();
-
-                if (Number(payAnnual) > maxLimit) {
-                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
-                    $('#pay_annual').val(maxLimit);
-                    $(".payrateannual").text(numberToIndianWords(maxLimit));
-                    return false;
-                }
-
-                if (!isNaN(payAnnual)) {
-                    var ctcWords = window.numberToWords(ctcVal, ctcCurrency);
-                    var payMonthlyWords = window.numberToWords(payMonthly, ctcCurrency);
-                    var payAnnualWords = window.numberToWords(payAnnual, ctcCurrency);
-                    
-                    
-                    $(".payrateannual").text(numberToIndianWords(payAnnual));
-                    $(".payratemonthly").text(numberToIndianWords(payMonthly));
-                    $(".CurrentCTC").text(numberToIndianWords(ctcVal));
-
-                    // $(".CurrentCTC").text(ctcWords.charAt(0).toUpperCase() + ctcWords.slice(1));
-                    // $(".payratemonthly").text(payMonthlyWords.charAt(0).toUpperCase() + payMonthlyWords.slice(1));
-                    // $(".payrateannual").text(payAnnualWords.charAt(0).toUpperCase() + payAnnualWords.slice(1));
-                }else{
-                    $(".payrateannual").text(' ');
-                    $(".payratemonthly").text(' ');
-                    $(".CurrentCTC").text(' ');
-                }
-
-                // Expected CTC
-                var ectcVal = parseInt($("#ectc").val(), 10);
-                var billMonthly = parseInt($("#bill_monthly").val(), 10);
-                var billAnnual = parseInt($("#bill_annual").val(), 10);
-                var ectcCurrency = $(".currency").val();
-
-                
-                if (Number(billAnnual) > maxLimit) {
-                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
-                    $('#bill_annual').val(maxLimit);
-                    $(".billrateannual").text(numberToIndianWords(maxLimit));
-                    return false;
-                }
-                
-                if (!isNaN(billAnnual)) {
-                    var ectcWords = window.numberToWords(ectcVal, ectcCurrency);
-                    var billMonthlyWords = window.numberToWords(billMonthly, ctcCurrency);
-                    var billAnnualWords = window.numberToWords(billAnnual, ctcCurrency);
-                    
-                    
-                    $(".billrateannual").text(numberToIndianWords(billAnnual));
-                    $(".billratemonthly").text(numberToIndianWords(billMonthly));
-                    $(".expectedctc").text(numberToIndianWords(ectcVal));
-
-                    // $(".expectedctc").text(ectcWords.charAt(0).toUpperCase() + ectcWords.slice(1));
-                    // $(".billratemonthly").text(billMonthlyWords.charAt(0).toUpperCase() + billMonthlyWords.slice(1));
-                    // $(".billrateannual").text(billAnnualWords.charAt(0).toUpperCase() + billAnnualWords.slice(1));
-
-                }else{
-                    $(".billrateannual").text('');
-                    $(".billratemonthly").text('');
-                    $(".expectedctc").text('');
-                }
+        if (billAnnual > 0) {
+            $(".billrateannual").text(numberToIndianWords(billAnnual, code));
+            $(".billratemonthly").text(numberToIndianWords(billMonthly, code));
+            $(".expectedctc").text(numberToIndianWords(ectcVal, code));
+        } else {
+            $(".billrateannual, .billratemonthly, .expectedctc").text('');
+        }
     }
     setTimeout(() => {
-          updateCTCFields();
+        updateCTCFields();
     }, 500);
-    $(document).on("keyup", "#ctc", updateCTCFields);
-    $(document).on("keyup", "#ectc", updateCTCFields);
-    $(".currency").on("change", updateCTCFields);
+    $(document).on("input change", "#ctc, #ectc, #pay_annual, #bill_annual, #pay_monthly, #bill_monthly", updateCTCFields);
             
     $(document).on('keyup', '#ectc', function() { 
       percentage_hike()
@@ -5123,3 +5143,577 @@ async function isInternetAvailable() {
 
 </script>
 
+<script>
+// ============================================================================
+// JERO ATS - GLOBAL CURRENCY CANDIDATE ENGINE (RULES 7, 14, 17)
+// ============================================================================
+(function initializeJeroCandidateCurrencyEngine() {
+    'use strict';
+
+    var root = document.querySelector('.salary-card') || document.querySelector('.job-candidate-create') || document;
+    var salaryCurrencySelect = root.querySelector('#current_ctc_cur');
+    if (!salaryCurrencySelect) return;
+
+    // 1. BOUNDED LRU CACHE (Max 200 items, <50KB footprint)
+    class BoundedLRU {
+        constructor(max = 200) {
+            this.max = max;
+            this.map = new Map();
+        }
+        get(key) {
+            if (!this.map.has(key)) return null;
+            var val = this.map.get(key);
+            this.map.delete(key);
+            this.map.set(key, val);
+            return val;
+        }
+        set(key, val) {
+            if (this.map.has(key)) {
+                this.map.delete(key);
+            } else if (this.map.size >= this.max) {
+                var oldestKey = this.map.keys().next().value;
+                this.map.delete(oldestKey);
+            }
+            this.map.set(key, val);
+        }
+        clear() { this.map.clear(); }
+    }
+
+    var _lruCache = new BoundedLRU(200);
+    var _isUpdating = false;
+
+    // FX Data injected from backend
+    var fxRates = @json($rates);
+    var fxVersion = @json($fxVersion);
+
+    var CURRENCY_SYMBOLS = {
+        USD: '$', INR: '₹', EUR: '€', GBP: '£', AED: 'AED ', CAD: 'CA$',
+        AUD: 'A$', SGD: 'S$', JPY: '¥', CHF: 'CHF ', NZD: 'NZ$', ZAR: 'R ',
+        BRL: 'R$', PHP: '₱', MYR: 'RM ', THB: '฿', IDR: 'Rp ', VND: '₫',
+        SEK: 'kr ', NOK: 'kr ', DKK: 'kr ', PLN: 'zł ', MXN: 'Mex$', HKD: 'HK$',
+        TWD: 'NT$', KRW: '₩', TRY: '₺', SAR: 'SAR ', QAR: 'QAR ', KWD: 'KD ',
+        BHD: 'BD ', OMR: 'OMR ', EGP: 'E£ ', ILS: '₪', CZK: 'Kč ', HUF: 'Ft ',
+        RON: 'lei ', CLP: 'CLP$', COP: 'COL$', ARS: 'AR$', NGN: '₦', KES: 'KSh ',
+        PKR: 'PKR ', BDT: '৳', LKR: 'Rs ', NPR: 'Rs '
+    };
+
+    var CURRENCY_FLAGS = {
+        INR: '🇮🇳', EUR: '🇪🇺', JPY: '🇯🇵', GBP: '🇬🇧', USD: '🇺🇸', AED: '🇦🇪',
+        CAD: '🇨🇦', AUD: '🇦🇺', SGD: '🇸🇬', CHF: '🇨🇭', NZD: '🇳🇿', ZAR: '🇿🇦',
+        BRL: '🇧🇷', PHP: '🇵🇭', MYR: '🇲🇾', THB: '🇹🇭', IDR: '🇮🇩', VND: '🇻🇳',
+        SEK: '🇸🇪', NOK: '🇳🇴', DKK: '🇩🇰', PLN: '🇵🇱', MXN: '🇲🇽', HKD: '🇭🇰',
+        TWD: '🇹🇼', KRW: '🇰🇷', TRY: '🇹🇷', SAR: '🇸🇦', QAR: '🇶🇦', KWD: '🇰🇼',
+        BHD: '🇧🇭', OMR: '🇴🇲', EGP: '🇪🇬', ILS: '🇮🇱', CZK: '🇨🇿', HUF: '🇭🇺',
+        RON: '🇷🇴', CLP: '🇨🇱', COP: '🇨🇴', ARS: '🇦🇷', NGN: '🇳🇬', KES: '🇰🇪',
+        PKR: '🇵🇰', BDT: '🇧🇩', LKR: '🇱🇰', NPR: '🇳🇵'
+    };
+
+    var salaryFieldMap = {
+        current: {
+            annual: 'pay_annual',
+            monthly: 'pay_monthly',
+            hourly: 'ctc'
+        },
+        expected: {
+            annual: 'bill_annual',
+            monthly: 'bill_monthly',
+            hourly: 'ectc'
+        }
+    };
+
+    var salaryPeriodLabels = {
+        annual: 'Annual',
+        monthly: 'Monthly',
+        hourly: 'Hourly'
+    };
+
+    var salaryHoursPerMonth = 160;
+    var salaryMonthsPerYear = 12;
+
+    var salaryCurrencyMirrors = [
+        root.querySelector('#current_ectc_cur'),
+        root.querySelector('#current_th_cur')
+    ];
+
+    function safeConvert(amount, fromCurr, toCurr) {
+        try {
+            if (amount === null || amount === undefined || isNaN(amount)) return 0;
+            var num = parseFloat(amount);
+            if (!isFinite(num) || num <= 0) return 0;
+            if (fromCurr === toCurr) return num;
+
+            var cacheKey = fromCurr + '_' + toCurr + '_' + num + '_' + fxVersion;
+            var cached = _lruCache.get(cacheKey);
+            if (cached !== null) return cached;
+
+            var rateFrom = fxRates[fromCurr] || 1;
+            var rateTo = fxRates[toCurr] || 1;
+            if (rateFrom <= 0 || rateTo <= 0) return num;
+
+            var result = (num / rateFrom) * rateTo;
+            _lruCache.set(cacheKey, result);
+            return result;
+        } catch (e) {
+            return typeof amount === 'number' ? amount : 0;
+        }
+    }
+
+    function safeFormat(amount, currencyCode, options) {
+        options = options || {};
+        try {
+            var curr = (currencyCode || getActiveCurrencyCode()).toUpperCase();
+            var symbol = CURRENCY_SYMBOLS[curr] || curr + ' ';
+            var noDecimals = ['JPY', 'KRW', 'VND'].indexOf(curr) !== -1;
+            var decimals = options.decimals !== undefined ? options.decimals : (noDecimals ? 0 : 2);
+            var num = parseFloat(amount) || 0;
+
+            var formattedNum = num.toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+
+            return symbol + formattedNum;
+        } catch (e) {
+            return (currencyCode || '') + ' ' + (amount || 0);
+        }
+    }
+
+    function getActiveCurrencyCode() {
+        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) return 'INR';
+        var opt = salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex];
+        var code = opt.getAttribute('data-code');
+        if (!code) {
+            code = opt.text.trim().split('—')[0].split('-')[0].replace(/[^\w]/g, '').trim();
+        }
+        return (code || 'INR').toUpperCase();
+    }
+
+    function fieldValue(id) {
+        var field = root.querySelector('#' + id);
+        var value = field ? parseFloat(field.value) : 0;
+        return Number.isFinite(value) ? value : 0;
+    }
+
+    function activeSalaryPeriod() {
+        var activeButton = root.querySelector('.candidate-salary-tabs button.is-active[data-salary-group="current"]');
+        return activeButton ? activeButton.getAttribute('data-salary-period') : 'annual';
+    }
+
+    function salaryValuesFromPeriod(period, amount) {
+        var values = { annual: 0, monthly: 0, hourly: 0 };
+        if (period === 'annual') {
+            values.annual = amount;
+            values.monthly = amount / salaryMonthsPerYear;
+            values.hourly = values.monthly / salaryHoursPerMonth;
+        } else if (period === 'monthly') {
+            values.monthly = amount;
+            values.annual = amount * salaryMonthsPerYear;
+            values.hourly = amount / salaryHoursPerMonth;
+        } else {
+            values.hourly = amount;
+            values.monthly = amount * salaryHoursPerMonth;
+            values.annual = values.monthly * salaryMonthsPerYear;
+        }
+        return values;
+    }
+
+    // 2-Way Input Synchronizer with Mutex Guard
+    function syncInputsForGroup(group, sourcePeriod) {
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try {
+            var sourceId = salaryFieldMap[group][sourcePeriod];
+            var sourceVal = fieldValue(sourceId);
+            var values = salaryValuesFromPeriod(sourcePeriod, sourceVal);
+
+            ['annual', 'monthly', 'hourly'].forEach(function (period) {
+                if (period !== sourcePeriod) {
+                    var targetField = root.querySelector('#' + salaryFieldMap[group][period]);
+                    if (targetField) {
+                        targetField.value = values[period] > 0 ? (values[period] % 1 === 0 ? values[period] : values[period].toFixed(2)) : '';
+                    }
+                }
+            });
+        } finally {
+            _isUpdating = false;
+        }
+    }
+
+    function updateSalaryAutoValues(group, activePeriod) {
+        var activeAmount = fieldValue(salaryFieldMap[group][activePeriod]);
+        var values = salaryValuesFromPeriod(activePeriod, activeAmount);
+        var otherPeriods = ['annual', 'monthly', 'hourly'].filter(function (period) {
+            return period !== activePeriod;
+        });
+        var prefix = group === 'current' ? 'candidate-current-' : 'candidate-expected-';
+        var labelOne = root.querySelector('#' + prefix + 'auto-label-one');
+        var labelTwo = root.querySelector('#' + prefix + 'auto-label-two');
+        var outputOne = root.querySelector('#' + prefix + 'monthly-auto');
+        var outputTwo = root.querySelector('#' + prefix + 'hourly-auto');
+        var curr = getActiveCurrencyCode();
+
+        if (labelOne) labelOne.textContent = salaryPeriodLabels[otherPeriods[0]] + ' Salary';
+        if (labelTwo) labelTwo.textContent = salaryPeriodLabels[otherPeriods[1]] + ' Salary';
+        if (outputOne) outputOne.textContent = safeFormat(values[otherPeriods[0]], curr);
+        if (outputTwo) outputTwo.textContent = safeFormat(values[otherPeriods[1]], curr);
+    }
+
+    // Live Indicative USD Preview Pills (RULE-COMMERCIAL-005)
+    function updateIndicativePills() {
+        var curr = getActiveCurrencyCode();
+        var isUSD = (curr === 'USD');
+
+        var configs = [
+            { id: 'pay_rate_annual_usd',  field: 'pay_annual',  freq: 'yr' },
+            { id: 'pay_rate_monthly_usd', field: 'pay_monthly', freq: 'mo' },
+            { id: 'pay_rate_hourly_usd',  field: 'ctc',         freq: 'hr' },
+            { id: 'bill_rate_annual_usd',  field: 'bill_annual',  freq: 'yr' },
+            { id: 'bill_rate_monthly_usd', field: 'bill_monthly', freq: 'mo' },
+            { id: 'bill_rate_hourly_usd',  field: 'ectc',         freq: 'hr' }
+        ];
+
+        configs.forEach(function (cfg) {
+            var el = root.querySelector('#' + cfg.id);
+            if (!el) return;
+
+            var amount = fieldValue(cfg.field);
+
+            if (isUSD) {
+                el.innerHTML = '<span class="jero-indicative-pill jero-indicative-pill--base" title="Base currency USD"><i class="fa-solid fa-check-circle fs-9 me-1"></i>Base USD</span>';
+            } else {
+                var usdAmount = safeConvert(amount, curr, 'USD');
+                var formatted = (usdAmount > 0)
+                    ? '$ ' + usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '$ 0.00';
+
+                el.innerHTML = '<span class="jero-indicative-pill jero-indicative-pill--converted" data-amount="' + amount + '" data-curr="' + curr + '" data-freq="' + cfg.freq + '" title="Click to view 5 global benchmarks or switch currency"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + formatted + ' / ' + cfg.freq + ' USD <i class="fa-solid fa-circle-info fs-9 ms-1"></i></span>';
+            }
+        });
+    }
+
+    function updateSalarySummary() {
+        var period = activeSalaryPeriod();
+        var currentAmount = fieldValue(salaryFieldMap.current[period]);
+        var expectedAmount = fieldValue(salaryFieldMap.expected[period]);
+        var currentTarget = root.querySelector('#candidateSalaryCurrentSummary');
+        var expectedTarget = root.querySelector('#candidateSalaryExpectedSummary');
+        var currentLabel = root.querySelector('#candidateSalaryCurrentLabel');
+        var expectedLabel = root.querySelector('#candidateSalaryExpectedLabel');
+        var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
+        var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
+        var hikeInput = root.querySelector('#percentage_hike');
+        var usdSummaryTarget = root.querySelector('#candidateSalaryUsdEquivalentSummary');
+        var currency = getActiveCurrencyCode();
+        var difference = expectedAmount - currentAmount;
+        var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
+            ? (difference / currentAmount) * 100
+            : 0;
+
+        if (currentTarget) currentTarget.textContent = safeFormat(currentAmount, currency);
+        if (expectedTarget) expectedTarget.textContent = safeFormat(expectedAmount, currency);
+        if (currentLabel) currentLabel.textContent = 'Current Salary (' + salaryPeriodLabels[period] + ')';
+        if (expectedLabel) expectedLabel.textContent = 'Expected Salary (' + salaryPeriodLabels[period] + ')';
+        if (differenceOutput) differenceOutput.textContent = safeFormat(difference, currency);
+        if (increaseOutput) increaseOutput.textContent = calculatedIncrease.toFixed(2) + '%';
+        if (hikeInput) hikeInput.value = calculatedIncrease ? String(Math.round(calculatedIncrease * 100) / 100) : '0';
+
+        // USD Equivalent (Annual) in Summary
+        if (usdSummaryTarget) {
+            var baseSummaryAnnual = expectedAmount > 0 ? salaryValuesFromPeriod(period, expectedAmount).annual : salaryValuesFromPeriod(period, currentAmount).annual;
+            var summaryUsd = safeConvert(baseSummaryAnnual, currency, 'USD');
+            usdSummaryTarget.textContent = safeFormat(summaryUsd, 'USD', { decimals: 2 }) + ' / yr';
+        }
+
+        updateSalaryAutoValues('current', period);
+        updateSalaryAutoValues('expected', period);
+        updateIndicativePills();
+    }
+
+    function syncSalaryPeriod(period) {
+        var modeByPeriod = { annual: '0', monthly: '1', hourly: '2' };
+        var normalizedPeriod = Object.prototype.hasOwnProperty.call(modeByPeriod, period) ? period : 'annual';
+
+        root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
+            var selected = button.getAttribute('data-salary-period') === normalizedPeriod;
+            button.classList.toggle('is-active', selected);
+            button.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+
+        root.querySelectorAll('.candidate-salary-period').forEach(function (panel) {
+            panel.classList.toggle('is-active', panel.getAttribute('data-salary-period') === normalizedPeriod);
+        });
+
+        var currentMode = root.querySelector('#current_ctc_mode');
+        var expectedMode = root.querySelector('#current_ectc_mode');
+        if (currentMode) currentMode.value = modeByPeriod[normalizedPeriod];
+        if (expectedMode) expectedMode.value = modeByPeriod[normalizedPeriod];
+
+        var currentHint = root.querySelector('#candidateCurrentSalaryHint');
+        var expectedHint = root.querySelector('#candidateExpectedSalaryHint');
+        if (currentHint) currentHint.textContent = 'Enter your current ' + normalizedPeriod + ' salary.';
+        if (expectedHint) expectedHint.textContent = 'Enter your expected ' + normalizedPeriod + ' salary.';
+
+        updateSalarySummary();
+    }
+
+    function syncSalaryCurrency() {
+        if (!salaryCurrencySelect) return;
+        var code = getActiveCurrencyCode();
+
+        salaryCurrencyMirrors.forEach(function (select) {
+            if (select) select.value = salaryCurrencySelect.value;
+        });
+
+        root.querySelectorAll('.changeTextCurrency').forEach(function (label) {
+            label.textContent = code;
+        });
+
+        updateSalarySummary();
+        if (typeof updateCTCFields === 'function') {
+            updateCTCFields();
+        }
+    }
+
+    // Multi-Currency Hover Lens Popover (Section 15.1)
+    var _hoverLensEl = null;
+    var _hoverLensTimeout = null;
+
+    function getOrCreateHoverLens() {
+        if (!_hoverLensEl) {
+            _hoverLensEl = document.createElement('div');
+            _hoverLensEl.className = 'jero-currency-hover-lens';
+            _hoverLensEl.id = 'candidateSalaryHoverLens';
+            _hoverLensEl.setAttribute('role', 'tooltip');
+            _hoverLensEl.innerHTML =
+                '<div class="jero-hover-lens-header">' +
+                    '<span><i class="fa-solid fa-globe"></i> GLOBAL BENCHMARKS</span>' +
+                    '<span class="jero-hover-lens-badge">User RAM</span>' +
+                '</div>' +
+                '<div class="jero-hover-lens-base" id="jeroHoverLensBase"></div>' +
+                '<div class="jero-hover-lens-body" id="jeroHoverLensBody"></div>' +
+                '<div class="jero-hover-lens-footer">' +
+                    '<span><i class="fa-solid fa-bolt"></i> Live 60 FPS • FX: ' + fxVersion + '</span>' +
+                    '<span style="color:#009ef7;font-weight:600;cursor:pointer;" id="jeroHoverLensSwitchCta">Change Currency ▾</span>' +
+                '</div>';
+            document.body.appendChild(_hoverLensEl);
+
+            _hoverLensEl.addEventListener('mouseenter', function () {
+                clearTimeout(_hoverLensTimeout);
+            });
+            _hoverLensEl.addEventListener('mouseleave', function () {
+                hideHoverLens();
+            });
+
+            var switchCta = _hoverLensEl.querySelector('#jeroHoverLensSwitchCta');
+            if (switchCta) {
+                switchCta.addEventListener('click', function () {
+                    hideHoverLens();
+                    if (window.jQuery && $.fn.select2 && $(salaryCurrencySelect).hasClass('select2-hidden-accessible')) {
+                        $(salaryCurrencySelect).select2('open');
+                    } else {
+                        salaryCurrencySelect.focus();
+                    }
+                });
+            }
+        }
+        return _hoverLensEl;
+    }
+
+    function showHoverLens(targetEl) {
+        clearTimeout(_hoverLensTimeout);
+        var lens = getOrCreateHoverLens();
+        var baseCurr = getActiveCurrencyCode();
+
+        var period = activeSalaryPeriod();
+        var rawAmount = 0;
+        var freq = 'yr';
+
+        var pill = targetEl.closest('.jero-indicative-pill');
+        if (pill) {
+            rawAmount = parseFloat(pill.getAttribute('data-amount')) || 0;
+            freq = pill.getAttribute('data-freq') || 'yr';
+        } else {
+            rawAmount = fieldValue(salaryFieldMap.expected[period]) || fieldValue(salaryFieldMap.current[period]);
+            freq = period === 'hourly' ? 'hr' : (period === 'monthly' ? 'mo' : 'yr');
+        }
+
+        var annualAmount = 0;
+        if (freq === 'yr') annualAmount = rawAmount;
+        else if (freq === 'mo') annualAmount = rawAmount * 12;
+        else annualAmount = rawAmount * 160 * 12;
+
+        var hourlyAmount = annualAmount / 1920;
+
+        var baseContainer = lens.querySelector('#jeroHoverLensBase');
+        if (baseContainer) {
+            baseContainer.innerHTML = 'Base Rate: <strong>' + safeFormat(rawAmount, baseCurr) + ' / ' + freq + '</strong> <small>(' + safeFormat(hourlyAmount, baseCurr) + '/hr)</small>';
+        }
+
+        var defaultBenchmarks = ['USD', 'EUR', 'GBP', 'AED', 'SGD'];
+        var alternates = ['CAD', 'AUD', 'JPY', 'CHF'];
+        var benchmarks = [];
+
+        defaultBenchmarks.forEach(function (b) {
+            if (b !== baseCurr && benchmarks.length < 5) {
+                benchmarks.push(b);
+            }
+        });
+        alternates.forEach(function (a) {
+            if (a !== baseCurr && benchmarks.length < 5) {
+                benchmarks.push(a);
+            }
+        });
+
+        var bodyContainer = lens.querySelector('#jeroHoverLensBody');
+        var rowsHtml = '';
+        benchmarks.forEach(function (bCurr) {
+            var bAnnual = safeConvert(annualAmount, baseCurr, bCurr);
+            var bHourly = bAnnual / 1920;
+            var flag = CURRENCY_FLAGS[bCurr] || '🌐';
+
+            rowsHtml +=
+                '<div class="jero-hover-lens-row">' +
+                    '<div class="jero-hover-lens-curr">' +
+                        '<span class="jero-hover-lens-flag">' + flag + '</span>' +
+                        '<strong>' + bCurr + '</strong>' +
+                    '</div>' +
+                    '<div class="jero-hover-lens-vals">' +
+                        '<span class="jero-hover-lens-primary">' + safeFormat(bAnnual, bCurr, { decimals: 0 }) + ' / yr</span>' +
+                        '<span class="jero-hover-lens-sub">(' + safeFormat(bHourly, bCurr, { decimals: 2 }) + ' / hr)</span>' +
+                    '</div>' +
+                '</div>';
+        });
+        if (bodyContainer) bodyContainer.innerHTML = rowsHtml;
+
+        var rect = targetEl.getBoundingClientRect();
+        var lensWidth = 320;
+        var top = rect.bottom + window.scrollY + 6;
+        var left = rect.left + window.scrollX - 20;
+
+        if (left + lensWidth > window.innerWidth - 10) {
+            left = window.innerWidth - lensWidth - 15;
+        }
+        if (left < 10) left = 10;
+
+        lens.style.top = top + 'px';
+        lens.style.left = left + 'px';
+        lens.classList.add('is-visible');
+    }
+
+    function hideHoverLens() {
+        _hoverLensTimeout = setTimeout(function () {
+            if (_hoverLensEl) {
+                _hoverLensEl.classList.remove('is-visible');
+            }
+        }, 150);
+    }
+
+    $(document).on('mouseenter focusin', '.jero-indicative-pill, .changeTextCurrency, #candidateSalaryUsdEquivalentRow', function () {
+        showHoverLens(this);
+    });
+    $(document).on('mouseleave focusout', '.jero-indicative-pill, .changeTextCurrency, #candidateSalaryUsdEquivalentRow', function () {
+        hideHoverLens();
+    });
+
+    root.querySelectorAll('.candidate-salary-tabs button[data-salary-period]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            syncSalaryPeriod(button.getAttribute('data-salary-period'));
+        });
+    });
+
+    var debounceTimers = {};
+    function debounceInput(id, fn, delay) {
+        clearTimeout(debounceTimers[id]);
+        debounceTimers[id] = setTimeout(fn, delay || 120);
+    }
+
+    [
+        { id: 'pay_annual',  group: 'current',  period: 'annual' },
+        { id: 'pay_monthly', group: 'current',  period: 'monthly' },
+        { id: 'ctc',         group: 'current',  period: 'hourly' },
+        { id: 'bill_annual',  group: 'expected', period: 'annual' },
+        { id: 'bill_monthly', group: 'expected', period: 'monthly' },
+        { id: 'ectc',         group: 'expected', period: 'hourly' }
+    ].forEach(function (item) {
+        var field = root.querySelector('#' + item.id);
+        if (field) {
+            field.addEventListener('input', function () {
+                debounceInput(item.id, function () {
+                    syncInputsForGroup(item.group, item.period);
+                    updateSalarySummary();
+                    if (typeof updateCTCFields === 'function') {
+                        updateCTCFields();
+                    }
+                }, 120);
+            });
+            field.addEventListener('change', function () {
+                syncInputsForGroup(item.group, item.period);
+                updateSalarySummary();
+                if (typeof updateCTCFields === 'function') {
+                    updateCTCFields();
+                }
+            });
+        }
+    });
+
+    if (salaryCurrencySelect) {
+        salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
+
+        if (window.jQuery && $.fn.select2) {
+            var $curSelect = $(salaryCurrencySelect);
+            if ($curSelect.hasClass('select2-hidden-accessible')) {
+                $curSelect.select2('destroy');
+            }
+            $curSelect.select2({
+                width: '100%',
+                dropdownParent: $(document.body),
+                dropdownCssClass: 'br-currency-select2-dropdown',
+                placeholder: 'Search currency (e.g. USD, INR, Euro, $)...',
+                minimumResultsForSearch: 0,
+                matcher: function (params, data) {
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    if (typeof data.text === 'undefined') {
+                        return null;
+                    }
+                    var term = params.term.toLowerCase();
+                    var text = data.text.toLowerCase();
+                    var $el = $(data.element);
+                    var code = ($el.data('code') || '').toString().toLowerCase();
+                    var symbol = ($el.data('symbol') || '').toString().toLowerCase();
+                    var searchKw = ($el.data('search') || '').toString().toLowerCase();
+
+                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || symbol.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                        return data;
+                    }
+                    return null;
+                }
+            }).on('change', function () {
+                syncSalaryCurrency();
+            });
+        }
+    }
+
+    var commentField = root.querySelector('#comment');
+    var commentCounter = root.querySelector('#salaryCommentCounter');
+    if (commentField && commentCounter) {
+        function updateCommentCount() {
+            commentCounter.textContent = (commentField.value || '').length + ' / 500';
+        }
+        commentField.addEventListener('input', updateCommentCount);
+        updateCommentCount();
+    }
+
+    $(document).on('click', '.candidate-salary-panel .changeTextCurrency, .candidate-salary-panel .ig-a', function () {
+        if (window.jQuery && $.fn.select2 && $('#current_ctc_cur').hasClass('select2-hidden-accessible')) {
+            $('#current_ctc_cur').select2('open');
+        } else if (salaryCurrencySelect) {
+            salaryCurrencySelect.focus();
+        }
+    });
+
+    syncSalaryPeriod(activeSalaryPeriod());
+    syncSalaryCurrency();
+})();
+</script>

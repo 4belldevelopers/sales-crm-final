@@ -2583,24 +2583,17 @@
 @endsection
 
 @php
-    $rates = $currencyConverter['usd_based_rates'] ?? [
+    $fxSnapshot = GeneralMethod::getLatestFxSnapshot();
+    $rates = $fxSnapshot['rates_json'] ?? ($currencyConverter['usd_based_rates'] ?? [
         'USD' => 1,
         'INR' => 83,
         'EUR' => 0.87,
         'JPY' => 159.65,
         'GBP' => 0.76,
         'AED' => 3.67
-    ];
-
-    $currencyKeys = $currencyConverter['getKey'] ?? [
-        'INR',
-        'EUR',
-        'JPY',
-        'GBP',
-        'USD',
-        'AED'
-    ];
-
+    ]);
+    $fxVersion = $fxSnapshot['version'] ?? '202610-001';
+    $currencyKeys = array_keys($rates);
 @endphp
 
 @push('footer-script')
@@ -3275,181 +3268,18 @@ $(document).ready(function () {
 
 <script>
 
-        const HOURS_PER_MONTH = 160;
-        const MONTHS_PER_YEAR = 12;
-        const currencyRates = @json($rates);
-        const currencyRateschar = @json($currencyKeys);
-
-        let isUpdating = false;
-
-        // Base values (USD)
-        let payBase = { hourly: 0 };
-        let billBase = { hourly: 0 };
-
-        function format(val) {
-            return val ? parseFloat(val).toFixed(2) : '';
-        }
-        
+        // Legacy Pay Rate listeners superseded by JeroCandidateCurrencyEngine
         function fromUSD(amount, currency) {
-            return amount / currencyRates[currency];
+            return (currencyRates && currencyRates[currency]) ? (amount / currencyRates[currency]) : amount;
         }
 
-   
-        // ================= PAY RATE =================
-        $('#ctc').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let hourly = parseFloat($(this).val()) || 0;
-
-            $('#pay_monthly').val(format(hourly * HOURS_PER_MONTH));
-            $('#pay_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-            updatePayUI();
-
-            isUpdating = false;
-        });
-
-        $('#pay_monthly').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let monthly = parseFloat($(this).val()) || 0;
-
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ctc').val(format(hourly));
-            $('#pay_annual').val(format(monthly * MONTHS_PER_YEAR));
-            updatePayUI();
-
-            isUpdating = false;
-        });
-
-        $('#pay_annual').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let annual = parseFloat($(this).val()) || 0;
-
-            let monthly = annual / MONTHS_PER_YEAR;
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ctc').val(format(hourly));
-            $('#pay_monthly').val(format(monthly));
-            updatePayUI();
-
-            isUpdating = false;
-        });
-
-        // ================= BILL RATE =================
-        $('#ectc').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let hourly = parseFloat($(this).val()) || 0;
-
-            $('#bill_monthly').val(format(hourly * HOURS_PER_MONTH));
-            $('#bill_annual').val(format(hourly * HOURS_PER_MONTH * MONTHS_PER_YEAR));
-            updateBillUI();
-            isUpdating = false;
-        });
-
-        $('#bill_monthly').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let monthly = parseFloat($(this).val()) || 0;
-
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ectc').val(format(hourly));
-            $('#bill_annual').val(format(monthly * MONTHS_PER_YEAR));
-            updateBillUI();
-
-            isUpdating = false;
-        });
-
-        $('#bill_annual').on('input', function () {
-            if (isUpdating) return;
-            isUpdating = true;
-
-            let annual = parseFloat($(this).val()) || 0;
-
-            let monthly = annual / MONTHS_PER_YEAR;
-            let hourly = monthly / HOURS_PER_MONTH;
-
-            $('#ectc').val(format(hourly));
-            $('#bill_monthly').val(format(monthly));
-            updateBillUI();
-
-            isUpdating = false;
-        });
-        function updatePayUI() {
-            let currency = $('#current_ctc_cur').val();
-            let pay_rate_amount = $('#ctc').val();
-            let currSet = currencyRateschar[currency];
-            if(currency==4){ 
-              $('#pay_rate_hourly_usd').text('');
-              $('#pay_rate_monthly_usd').text('');
-              $('#pay_rate_annual_usd').text('');
-              updateCTCFields();
-              return false;
-            }
-
-            let hourly = fromUSD(pay_rate_amount, currSet);
-            let monthly = hourly * HOURS_PER_MONTH;
-            let annual = monthly * MONTHS_PER_YEAR;
-            
-            $('#pay_rate_hourly_usd').text('Approx $ '+ format(hourly));
-            $('#pay_rate_monthly_usd').text('Approx $ '+ format(monthly));
-            $('#pay_rate_annual_usd').text('Approx $ '+ format(annual));
-            updateCTCFields();
-        }
-        function updateBillUI() {
-            let currency = $('#current_ctc_cur').val();
-            let bill_rate_amount = $('#ectc').val();
-            let currSet = currencyRateschar[currency];
-            if(currency==4){ 
-              $('#bill_rate_hourly_usd').text('');
-              $('#bill_rate_monthly_usd').text('');
-              $('#bill_rate_annual_usd').text('');
-              updateCTCFields();
-              return false;
-            }
-
-            let hourly = fromUSD(bill_rate_amount, currSet);
-            let monthly = hourly * HOURS_PER_MONTH;
-            let annual = monthly * MONTHS_PER_YEAR;
-
-            $('#bill_rate_hourly_usd').text('Approx $ '+ format(hourly));
-            $('#bill_rate_monthly_usd').text('Approx $ '+ format(monthly));
-            $('#bill_rate_annual_usd').text('Approx $ '+ format(annual));
-            updateCTCFields();
-        }
+        function updatePayUI() { /* delegated to JeroCandidateCurrencyEngine */ }
+        function updateBillUI() { /* delegated to JeroCandidateCurrencyEngine */ }
 
 
 
-        function payRateUpdate(){
-
-          if (isUpdating) return;
-            isUpdating = true;
-           
-
-            updatePayUI();
-
-            isUpdating = false;
-          
-        }
-
-        function billRateUpdate(){
-
-          if (isUpdating) return;
-            isUpdating = true;
-          
-            updateBillUI();
-
-            isUpdating = false;
-          
-        }
+        function payRateUpdate() { /* delegated to JeroCandidateCurrencyEngine */ }
+        function billRateUpdate() { /* delegated to JeroCandidateCurrencyEngine */ }
 
 
         
@@ -3458,28 +3288,7 @@ $(document).ready(function () {
 
 
 
-        $('#current_ctc_cur').on('change', function () {
-           var textCurrency = $(this).find('option:selected').text();
-           $('.changeTextCurrency').text(textCurrency);
-            updatePayUI();
-            updateBillUI();
-        });
-        $('#current_ectc_cur').on('change', function () {
-           var textCurrency = $(this).find('option:selected').text();
-           $('.changeTextCurrency').text(textCurrency);
-            updateBillUI();
-            updatePayUI();
-        });
-        $('#current_th_cur').on('change', function () {
-           var textCurrency = $(this).find('option:selected').text();
-           $('.changeTextCurrency').text(textCurrency);
-            updateBillUI();
-            updatePayUI();
-        });
-        setTimeout(() => {
-              billRateUpdate();
-              payRateUpdate();
-          }, 1000);
+        // Legacy currency change events superseded by JeroCandidateCurrencyEngine
 
 
 
@@ -5006,130 +4815,77 @@ KTUtil.onDOMContentLoaded(function () {
    								
    	});
 
-        function numberToIndianWords(num) {
+        function numberToIndianWords(num, currCode) {
+            num = Math.floor(Number(num));
+            if (!num || isNaN(num) || num <= 0) return '';
+            var code = (currCode || $('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
 
-    num = Math.floor(Number(num));
+            const ones = [
+                '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
+                'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+                'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+                'Seventeen', 'Eighteen', 'Nineteen'
+            ];
 
-    if (!num || isNaN(num)) return '';
+            const tens = [
+                '', '', 'Twenty', 'Thirty', 'Forty',
+                'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+            ];
 
-    const ones = [
-        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six',
-        'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
-        'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
-        'Seventeen', 'Eighteen', 'Nineteen'
-    ];
+            function convertIndian(n) {
+                if (n < 20) return ones[n];
+                if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+                if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + convertIndian(n % 100);
+                if (n < 100000) return convertIndian(Math.floor(n / 1000)) + ' Thousand ' + convertIndian(n % 1000);
+                if (n < 10000000) return convertIndian(Math.floor(n / 100000)) + ' Lakh ' + convertIndian(n % 100000);
+                if (n < 1000000000) return convertIndian(Math.floor(n / 10000000)) + ' Crore ' + convertIndian(n % 10000000);
+                return convertIndian(Math.floor(n / 1000000000)) + ' Arab ' + convertIndian(n % 1000000000);
+            }
 
-    const tens = [
-        '', '', 'Twenty', 'Thirty', 'Forty',
-        'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
-    ];
+            function convertInternational(n) {
+                if (n < 20) return ones[n];
+                if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+                if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + convertInternational(n % 100);
+                if (n < 1000000) return convertInternational(Math.floor(n / 1000)) + ' Thousand ' + convertInternational(n % 1000);
+                if (n < 1000000000) return convertInternational(Math.floor(n / 1000000)) + ' Million ' + convertInternational(n % 1000000);
+                return convertInternational(Math.floor(n / 1000000000)) + ' Billion ' + convertInternational(n % 1000000000);
+            }
 
-    function convert(n) {
-
-        if (n < 20) {
-            return ones[n];
+            if (code === 'INR') {
+                return convertIndian(num).replace(/\s+/g, ' ').trim() + ' Rupees';
+            }
+            return convertInternational(num).replace(/\s+/g, ' ').trim() + ' ' + code;
         }
 
-        if (n < 100) {
-            return tens[Math.floor(n / 10)] + ' ' + ones[n % 10];
+        function updateCTCFields() {
+            var ctcVal = parseFloat($("#ctc").val()) || 0;
+            var payMonthly = parseFloat($("#pay_monthly").val()) || 0;
+            var payAnnual = parseFloat($("#pay_annual").val()) || 0;
+            var ectcVal = parseFloat($("#ectc").val()) || 0;
+            var billMonthly = parseFloat($("#bill_monthly").val()) || 0;
+            var billAnnual = parseFloat($("#bill_annual").val()) || 0;
+            var code = ($('#current_ctc_cur option:selected').data('code') || 'INR').toString().toUpperCase();
+
+            if (payAnnual > 0) {
+                $(".payrateannual").text(numberToIndianWords(payAnnual, code));
+                $(".payratemonthly").text(numberToIndianWords(payMonthly, code));
+                $(".CurrentCTC").text(numberToIndianWords(ctcVal, code));
+            } else {
+                $(".payrateannual, .payratemonthly, .CurrentCTC").text('');
+            }
+
+            if (billAnnual > 0) {
+                $(".billrateannual").text(numberToIndianWords(billAnnual, code));
+                $(".billratemonthly").text(numberToIndianWords(billMonthly, code));
+                $(".expectedctc").text(numberToIndianWords(ectcVal, code));
+            } else {
+                $(".billrateannual, .billratemonthly, .expectedctc").text('');
+            }
         }
-
-        if (n < 1000) {
-            return ones[Math.floor(n / 100)] + ' Hundred ' + convert(n % 100);
-        }
-
-        if (n < 100000) {
-            return convert(Math.floor(n / 1000)) + ' Thousand ' + convert(n % 1000);
-        }
-
-        if (n < 10000000) {
-            return convert(Math.floor(n / 100000)) + ' Lakh ' + convert(n % 100000);
-        }
-
-        if (n < 1000000000) {
-            return convert(Math.floor(n / 10000000)) + ' Crore ' + convert(n % 10000000);
-        }
-
-        return convert(Math.floor(n / 1000000000)) + ' Arab ' + convert(n % 1000000000);
-    }
-
-    return convert(num).replace(/\s+/g, ' ').trim() + ' Rupees';
-}
-
-
-    function updateCTCFields() {
-                // Current CTC
-                
-                let maxLimit = 99999999999;
-                var ctcVal = parseInt($("#ctc").val(), 10);
-                var payMonthly = parseInt($("#pay_monthly").val(), 10);
-                var payAnnual = parseInt($("#pay_annual").val(), 10);
-                var ctcCurrency = $(".currency").val();
-
-                if (Number(payAnnual) > maxLimit) {
-                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
-                    $('#pay_annual').val(maxLimit);
-                    $(".payrateannual").text(numberToIndianWords(maxLimit));
-                    return false;
-                }
-
-                if (!isNaN(payAnnual)) {
-                    var ctcWords = window.numberToWords(ctcVal, ctcCurrency);
-                    var payMonthlyWords = window.numberToWords(payMonthly, ctcCurrency);
-                    var payAnnualWords = window.numberToWords(payAnnual, ctcCurrency);
-                    
-                    
-                    $(".payrateannual").text(numberToIndianWords(payAnnual));
-                    $(".payratemonthly").text(numberToIndianWords(payMonthly));
-                    $(".CurrentCTC").text(numberToIndianWords(ctcVal));
-
-                    // $(".CurrentCTC").text(ctcWords.charAt(0).toUpperCase() + ctcWords.slice(1));
-                    // $(".payratemonthly").text(payMonthlyWords.charAt(0).toUpperCase() + payMonthlyWords.slice(1));
-                    // $(".payrateannual").text(payAnnualWords.charAt(0).toUpperCase() + payAnnualWords.slice(1));
-                }else{
-                    $(".payrateannual").text(' ');
-                    $(".payratemonthly").text(' ');
-                    $(".CurrentCTC").text(' ');
-                }
-
-                // Expected CTC
-                var ectcVal = parseInt($("#ectc").val(), 10);
-                var billMonthly = parseInt($("#bill_monthly").val(), 10);
-                var billAnnual = parseInt($("#bill_annual").val(), 10);
-
-                
-                if (Number(billAnnual) > maxLimit) {
-                    Swal.fire("Warning", "Value above Arab is not allowed", "warning");
-                    $('#bill_annual').val(maxLimit);
-                    $(".billrateannual").text(numberToIndianWords(maxLimit));
-                    return false;
-                }
-
-                var ectcCurrency = $(".currency").val();
-                if (!isNaN(billAnnual)) {
-                    var ectcWords = window.numberToWords(ectcVal, ectcCurrency);
-                    var billMonthlyWords = window.numberToWords(billMonthly, ctcCurrency);
-                    var billAnnualWords = window.numberToWords(billAnnual, ctcCurrency);
-                    
-                    $(".billrateannual").text(numberToIndianWords(billAnnual));
-                    $(".billratemonthly").text(numberToIndianWords(billMonthly));
-                    $(".expectedctc").text(numberToIndianWords(ectcVal));
-
-                    // $(".expectedctc").text(ectcWords.charAt(0).toUpperCase() + ectcWords.slice(1));
-                    // $(".billratemonthly").text(billMonthlyWords.charAt(0).toUpperCase() + billMonthlyWords.slice(1));
-                    // $(".billrateannual").text(billAnnualWords.charAt(0).toUpperCase() + billAnnualWords.slice(1));
-                }else{
-                    $(".billrateannual").text('');
-                    $(".billratemonthly").text('');
-                    $(".expectedctc").text('');
-                }
-    }
-    setTimeout(() => {
-          updateCTCFields();
-    }, 500);
-    $(document).on("keyup", "#ctc", updateCTCFields);
-    $(document).on("keyup", "#ectc", updateCTCFields);
-    $(".currency").on("change", updateCTCFields);
+        setTimeout(() => {
+            updateCTCFields();
+        }, 500);
+        $(document).on("input change", "#ctc, #ectc, #pay_annual, #bill_annual, #pay_monthly, #bill_monthly", updateCTCFields);
             
 
      $(document).on('change', '#total_exp, #rel_exp', function() { 
@@ -6169,6 +5925,72 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         });
         syncNoticePeriodComponent(false);
     }
+})();
+
+// ============================================================================
+// JERO ATS - GLOBAL CURRENCY CANDIDATE ENGINE (RULES 7, 14, 17)
+// ============================================================================
+(function initializeJeroCandidateCurrencyEngine() {
+    'use strict';
+
+    var root = document.querySelector('.job-candidate-create') || document;
+    var salaryCurrencySelect = root.querySelector('#current_ctc_cur');
+    if (!salaryCurrencySelect) return;
+
+    // 1. BOUNDED LRU CACHE (Max 200 items, <50KB footprint)
+    class BoundedLRU {
+        constructor(max = 200) {
+            this.max = max;
+            this.map = new Map();
+        }
+        get(key) {
+            if (!this.map.has(key)) return null;
+            var val = this.map.get(key);
+            this.map.delete(key);
+            this.map.set(key, val);
+            return val;
+        }
+        set(key, val) {
+            if (this.map.has(key)) {
+                this.map.delete(key);
+            } else if (this.map.size >= this.max) {
+                var oldestKey = this.map.keys().next().value;
+                this.map.delete(oldestKey);
+            }
+            this.map.set(key, val);
+        }
+        clear() { this.map.clear(); }
+    }
+
+    var _lruCache = new BoundedLRU(200);
+    var _isUpdating = false;
+
+    // FX Data injected from backend
+    var fxRates = @json($rates);
+    var fxVersion = @json($fxVersion);
+
+    var CURRENCY_SYMBOLS = {
+        USD: '$', INR: '₹', EUR: '€', GBP: '£', AED: 'AED ', CAD: 'CA$',
+        AUD: 'A$', SGD: 'S$', JPY: '¥', CHF: 'CHF ', NZD: 'NZ$', ZAR: 'R ',
+        BRL: 'R$', PHP: '₱', MYR: 'RM ', THB: '฿', IDR: 'Rp ', VND: '₫',
+        SEK: 'kr ', NOK: 'kr ', DKK: 'kr ', PLN: 'zł ', MXN: 'Mex$', HKD: 'HK$',
+        TWD: 'NT$', KRW: '₩', TRY: '₺', SAR: 'SAR ', QAR: 'QAR ', KWD: 'KD ',
+        BHD: 'BD ', OMR: 'OMR ', EGP: 'E£ ', ILS: '₪', CZK: 'Kč ', HUF: 'Ft ',
+        RON: 'lei ', CLP: 'CLP$', COP: 'COL$', ARS: 'AR$', NGN: '₦', KES: 'KSh ',
+        PKR: 'PKR ', BDT: '৳', LKR: 'Rs ', NPR: 'Rs '
+    };
+
+    var CURRENCY_FLAGS = {
+        INR: '🇮🇳', EUR: '🇪🇺', JPY: '🇯🇵', GBP: '🇬🇧', USD: '🇺🇸', AED: '🇦🇪',
+        CAD: '🇨🇦', AUD: '🇦🇺', SGD: '🇸🇬', CHF: '🇨🇭', NZD: '🇳🇿', ZAR: '🇿🇦',
+        BRL: '🇧🇷', PHP: '🇵🇭', MYR: '🇲🇾', THB: '🇹🇭', IDR: '🇮🇩', VND: '🇻🇳',
+        SEK: '🇸🇪', NOK: '🇳🇴', DKK: '🇩🇰', PLN: '🇵🇱', MXN: '🇲🇽', HKD: '🇭🇰',
+        TWD: '🇹🇼', KRW: '🇰🇷', TRY: '🇹🇷', SAR: '🇸🇦', QAR: '🇶🇦', KWD: '🇰🇼',
+        BHD: '🇧🇭', OMR: '🇴🇲', EGP: '🇪🇬', ILS: '🇮🇱', CZK: '🇨🇿', HUF: '🇭🇺',
+        RON: '🇷🇴', CLP: '🇨🇱', COP: '🇨🇴', ARS: '🇦🇷', NGN: '🇳🇬', KES: '🇰🇪',
+        PKR: '🇵🇰', BDT: '🇧🇩', LKR: '🇱🇰', NPR: '🇳🇵'
+    };
+
     var salaryFieldMap = {
         current: {
             annual: 'pay_annual',
@@ -6181,43 +6003,78 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             hourly: 'ectc'
         }
     };
+
     var salaryPeriodLabels = {
         annual: 'Annual',
         monthly: 'Monthly',
         hourly: 'Hourly'
     };
+
     var salaryHoursPerMonth = 160;
     var salaryMonthsPerYear = 12;
-    var salaryCurrencySelect = root.querySelector('#current_ctc_cur');
+
     var salaryCurrencyMirrors = [
         root.querySelector('#current_ectc_cur'),
         root.querySelector('#current_th_cur')
     ];
 
-    function fieldValue(id) {
-        var field = root.querySelector('#' + id);
-        var value = field ? parseFloat(field.value) : 0;
-        return Number.isFinite(value) ? value : 0;
+    function safeConvert(amount, fromCurr, toCurr) {
+        try {
+            if (amount === null || amount === undefined || isNaN(amount)) return 0;
+            var num = parseFloat(amount);
+            if (!isFinite(num) || num <= 0) return 0;
+            if (fromCurr === toCurr) return num;
+
+            var cacheKey = fromCurr + '_' + toCurr + '_' + num + '_' + fxVersion;
+            var cached = _lruCache.get(cacheKey);
+            if (cached !== null) return cached;
+
+            var rateFrom = fxRates[fromCurr] || 1;
+            var rateTo = fxRates[toCurr] || 1;
+            if (rateFrom <= 0 || rateTo <= 0) return num;
+
+            var result = (num / rateFrom) * rateTo;
+            _lruCache.set(cacheKey, result);
+            return result;
+        } catch (e) {
+            return typeof amount === 'number' ? amount : 0;
+        }
     }
 
-    function currencyLabel() {
-        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) {
-            return 'INR';
-        }
+    function safeFormat(amount, currencyCode, options) {
+        options = options || {};
+        try {
+            var curr = (currencyCode || getActiveCurrencyCode()).toUpperCase();
+            var symbol = CURRENCY_SYMBOLS[curr] || curr + ' ';
+            var noDecimals = ['JPY', 'KRW', 'VND'].indexOf(curr) !== -1;
+            var decimals = options.decimals !== undefined ? options.decimals : (noDecimals ? 0 : 2);
+            var num = parseFloat(amount) || 0;
 
+            var formattedNum = num.toLocaleString('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+
+            return symbol + formattedNum;
+        } catch (e) {
+            return (currencyCode || '') + ' ' + (amount || 0);
+        }
+    }
+
+    function getActiveCurrencyCode() {
+        if (!salaryCurrencySelect || salaryCurrencySelect.selectedIndex < 0) return 'INR';
         var opt = salaryCurrencySelect.options[salaryCurrencySelect.selectedIndex];
         var code = opt.getAttribute('data-code');
         if (!code) {
-            code = opt.text.trim().split('—')[0].split('-')[0].trim();
+            code = opt.text.trim().split('—')[0].split('-')[0].replace(/[^\w]/g, '').trim();
         }
         return (code || 'INR').toUpperCase();
     }
 
-    function formatAmount(value) {
-        return new Intl.NumberFormat('en-IN', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(value || 0);
+    function fieldValue(id) {
+        var field = root.querySelector('#' + id);
+        var value = field ? parseFloat(field.value) : 0;
+        return Number.isFinite(value) ? value : 0;
     }
 
     function activeSalaryPeriod() {
@@ -6226,12 +6083,7 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     }
 
     function salaryValuesFromPeriod(period, amount) {
-        var values = {
-            annual: 0,
-            monthly: 0,
-            hourly: 0
-        };
-
+        var values = { annual: 0, monthly: 0, hourly: 0 };
         if (period === 'annual') {
             values.annual = amount;
             values.monthly = amount / salaryMonthsPerYear;
@@ -6245,8 +6097,29 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             values.monthly = amount * salaryHoursPerMonth;
             values.annual = values.monthly * salaryMonthsPerYear;
         }
-
         return values;
+    }
+
+    // 2-Way Input Synchronizer with Mutex Guard
+    function syncInputsForGroup(group, sourcePeriod) {
+        if (_isUpdating) return;
+        _isUpdating = true;
+        try {
+            var sourceId = salaryFieldMap[group][sourcePeriod];
+            var sourceVal = fieldValue(sourceId);
+            var values = salaryValuesFromPeriod(sourcePeriod, sourceVal);
+
+            ['annual', 'monthly', 'hourly'].forEach(function (period) {
+                if (period !== sourcePeriod) {
+                    var targetField = root.querySelector('#' + salaryFieldMap[group][period]);
+                    if (targetField) {
+                        targetField.value = values[period] > 0 ? (values[period] % 1 === 0 ? values[period] : values[period].toFixed(2)) : '';
+                    }
+                }
+            });
+        } finally {
+            _isUpdating = false;
+        }
     }
 
     function updateSalaryAutoValues(group, activePeriod) {
@@ -6260,19 +6133,45 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         var labelTwo = root.querySelector('#' + prefix + 'auto-label-two');
         var outputOne = root.querySelector('#' + prefix + 'monthly-auto');
         var outputTwo = root.querySelector('#' + prefix + 'hourly-auto');
+        var curr = getActiveCurrencyCode();
 
-        if (labelOne) {
-            labelOne.textContent = salaryPeriodLabels[otherPeriods[0]] + ' Salary';
-        }
-        if (labelTwo) {
-            labelTwo.textContent = salaryPeriodLabels[otherPeriods[1]] + ' Salary';
-        }
-        if (outputOne) {
-            outputOne.textContent = formatAmount(values[otherPeriods[0]]);
-        }
-        if (outputTwo) {
-            outputTwo.textContent = formatAmount(values[otherPeriods[1]]);
-        }
+        if (labelOne) labelOne.textContent = salaryPeriodLabels[otherPeriods[0]] + ' Salary';
+        if (labelTwo) labelTwo.textContent = salaryPeriodLabels[otherPeriods[1]] + ' Salary';
+        if (outputOne) outputOne.textContent = safeFormat(values[otherPeriods[0]], curr);
+        if (outputTwo) outputTwo.textContent = safeFormat(values[otherPeriods[1]], curr);
+    }
+
+    // Live Indicative USD Preview Pills (RULE-COMMERCIAL-005)
+    function updateIndicativePills() {
+        var curr = getActiveCurrencyCode();
+        var isUSD = (curr === 'USD');
+
+        var configs = [
+            { id: 'pay_rate_annual_usd',  field: 'pay_annual',  freq: 'yr' },
+            { id: 'pay_rate_monthly_usd', field: 'pay_monthly', freq: 'mo' },
+            { id: 'pay_rate_hourly_usd',  field: 'ctc',         freq: 'hr' },
+            { id: 'bill_rate_annual_usd',  field: 'bill_annual',  freq: 'yr' },
+            { id: 'bill_rate_monthly_usd', field: 'bill_monthly', freq: 'mo' },
+            { id: 'bill_rate_hourly_usd',  field: 'ectc',         freq: 'hr' }
+        ];
+
+        configs.forEach(function (cfg) {
+            var el = root.querySelector('#' + cfg.id);
+            if (!el) return;
+
+            var amount = fieldValue(cfg.field);
+
+            if (isUSD) {
+                el.innerHTML = '<span class="jero-indicative-pill jero-indicative-pill--base" title="Base currency USD"><i class="fa-solid fa-check-circle fs-9 me-1"></i>Base USD</span>';
+            } else {
+                var usdAmount = safeConvert(amount, curr, 'USD');
+                var formatted = (usdAmount > 0)
+                    ? '$ ' + usdAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    : '$ 0.00';
+
+                el.innerHTML = '<span class="jero-indicative-pill jero-indicative-pill--converted" data-amount="' + amount + '" data-curr="' + curr + '" data-freq="' + cfg.freq + '" title="Click to view 5 global benchmarks or switch currency"><i class="fa-solid fa-dollar-sign fs-9 me-1"></i>≈ ' + formatted + ' / ' + cfg.freq + ' USD <i class="fa-solid fa-circle-info fs-9 ms-1"></i></span>';
+            }
+        });
     }
 
     function updateSalarySummary() {
@@ -6286,44 +6185,35 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         var differenceOutput = root.querySelector('#candidateSalaryDifferenceSummary');
         var increaseOutput = root.querySelector('#candidateSalaryHikeSummary');
         var hikeInput = root.querySelector('#percentage_hike');
-        var currency = currencyLabel();
+        var usdSummaryTarget = root.querySelector('#candidateSalaryUsdEquivalentSummary');
+        var currency = getActiveCurrencyCode();
         var difference = expectedAmount - currentAmount;
         var calculatedIncrease = currentAmount > 0 && expectedAmount > 0
             ? (difference / currentAmount) * 100
             : 0;
 
-        if (currentTarget) {
-            currentTarget.textContent = currency + ' ' + formatAmount(currentAmount);
-        }
-        if (expectedTarget) {
-            expectedTarget.textContent = currency + ' ' + formatAmount(expectedAmount);
-        }
-        if (currentLabel) {
-            currentLabel.textContent = 'Current Salary (' + salaryPeriodLabels[period] + ')';
-        }
-        if (expectedLabel) {
-            expectedLabel.textContent = 'Expected Salary (' + salaryPeriodLabels[period] + ')';
-        }
-        if (differenceOutput) {
-            differenceOutput.textContent = currency + ' ' + formatAmount(difference);
-        }
-        if (increaseOutput) {
-            increaseOutput.textContent = formatAmount(calculatedIncrease) + '%';
-        }
-        if (hikeInput) {
-            hikeInput.value = calculatedIncrease ? String(Math.round(calculatedIncrease * 100) / 100) : '0';
+        if (currentTarget) currentTarget.textContent = safeFormat(currentAmount, currency);
+        if (expectedTarget) expectedTarget.textContent = safeFormat(expectedAmount, currency);
+        if (currentLabel) currentLabel.textContent = 'Current Salary (' + salaryPeriodLabels[period] + ')';
+        if (expectedLabel) expectedLabel.textContent = 'Expected Salary (' + salaryPeriodLabels[period] + ')';
+        if (differenceOutput) differenceOutput.textContent = safeFormat(difference, currency);
+        if (increaseOutput) increaseOutput.textContent = calculatedIncrease.toFixed(2) + '%';
+        if (hikeInput) hikeInput.value = calculatedIncrease ? String(Math.round(calculatedIncrease * 100) / 100) : '0';
+
+        // USD Equivalent (Annual) in Summary
+        if (usdSummaryTarget) {
+            var baseSummaryAnnual = expectedAmount > 0 ? salaryValuesFromPeriod(period, expectedAmount).annual : salaryValuesFromPeriod(period, currentAmount).annual;
+            var summaryUsd = safeConvert(baseSummaryAnnual, currency, 'USD');
+            usdSummaryTarget.textContent = safeFormat(summaryUsd, 'USD', { decimals: 2 }) + ' / yr';
         }
 
         updateSalaryAutoValues('current', period);
         updateSalaryAutoValues('expected', period);
+        updateIndicativePills();
     }
 
     function syncSalaryPeriod(period) {
-        var modeByPeriod = {
-            annual: '0',
-            monthly: '1',
-            hourly: '2'
-        };
+        var modeByPeriod = { annual: '0', monthly: '1', hourly: '2' };
         var normalizedPeriod = Object.prototype.hasOwnProperty.call(modeByPeriod, period) ? period : 'annual';
 
         root.querySelectorAll('.candidate-salary-tabs button').forEach(function (button) {
@@ -6338,42 +6228,175 @@ $(document).on('change', '#recruiter_note_template_select', function () {
 
         var currentMode = root.querySelector('#current_ctc_mode');
         var expectedMode = root.querySelector('#current_ectc_mode');
-        if (currentMode) {
-            currentMode.value = modeByPeriod[normalizedPeriod];
-        }
-        if (expectedMode) {
-            expectedMode.value = modeByPeriod[normalizedPeriod];
-        }
+        if (currentMode) currentMode.value = modeByPeriod[normalizedPeriod];
+        if (expectedMode) expectedMode.value = modeByPeriod[normalizedPeriod];
 
         var currentHint = root.querySelector('#candidateCurrentSalaryHint');
         var expectedHint = root.querySelector('#candidateExpectedSalaryHint');
-        if (currentHint) {
-            currentHint.textContent = 'Enter your current ' + normalizedPeriod + ' salary.';
-        }
-        if (expectedHint) {
-            expectedHint.textContent = 'Enter your expected ' + normalizedPeriod + ' salary.';
-        }
+        if (currentHint) currentHint.textContent = 'Enter your current ' + normalizedPeriod + ' salary.';
+        if (expectedHint) expectedHint.textContent = 'Enter your expected ' + normalizedPeriod + ' salary.';
 
         updateSalarySummary();
     }
 
     function syncSalaryCurrency() {
-        if (!salaryCurrencySelect) {
-            return;
-        }
+        if (!salaryCurrencySelect) return;
+        var code = getActiveCurrencyCode();
 
         salaryCurrencyMirrors.forEach(function (select) {
-            if (select) {
-                select.value = salaryCurrencySelect.value;
-            }
+            if (select) select.value = salaryCurrencySelect.value;
         });
 
         root.querySelectorAll('.changeTextCurrency').forEach(function (label) {
-            label.textContent = currencyLabel();
+            label.textContent = code;
         });
 
         updateSalarySummary();
+        if (typeof updateCTCFields === 'function') {
+            updateCTCFields();
+        }
     }
+
+    // Multi-Currency Hover Lens Popover (Section 15.1)
+    var _hoverLensEl = null;
+    var _hoverLensTimeout = null;
+
+    function getOrCreateHoverLens() {
+        if (!_hoverLensEl) {
+            _hoverLensEl = document.createElement('div');
+            _hoverLensEl.className = 'jero-currency-hover-lens';
+            _hoverLensEl.id = 'candidateSalaryHoverLens';
+            _hoverLensEl.setAttribute('role', 'tooltip');
+            _hoverLensEl.innerHTML =
+                '<div class="jero-hover-lens-header">' +
+                    '<span><i class="fa-solid fa-globe"></i> GLOBAL BENCHMARKS</span>' +
+                    '<span class="jero-hover-lens-badge">User RAM</span>' +
+                '</div>' +
+                '<div class="jero-hover-lens-base" id="jeroHoverLensBase"></div>' +
+                '<div class="jero-hover-lens-body" id="jeroHoverLensBody"></div>' +
+                '<div class="jero-hover-lens-footer">' +
+                    '<span><i class="fa-solid fa-bolt"></i> Live 60 FPS • FX: ' + fxVersion + '</span>' +
+                    '<span style="color:#009ef7;font-weight:600;cursor:pointer;" id="jeroHoverLensSwitchCta">Change Currency ▾</span>' +
+                '</div>';
+            document.body.appendChild(_hoverLensEl);
+
+            _hoverLensEl.addEventListener('mouseenter', function () {
+                clearTimeout(_hoverLensTimeout);
+            });
+            _hoverLensEl.addEventListener('mouseleave', function () {
+                hideHoverLens();
+            });
+
+            var switchCta = _hoverLensEl.querySelector('#jeroHoverLensSwitchCta');
+            if (switchCta) {
+                switchCta.addEventListener('click', function () {
+                    hideHoverLens();
+                    if (window.jQuery && $.fn.select2 && $(salaryCurrencySelect).hasClass('select2-hidden-accessible')) {
+                        $(salaryCurrencySelect).select2('open');
+                    } else {
+                        salaryCurrencySelect.focus();
+                    }
+                });
+            }
+        }
+        return _hoverLensEl;
+    }
+
+    function showHoverLens(targetEl) {
+        clearTimeout(_hoverLensTimeout);
+        var lens = getOrCreateHoverLens();
+        var baseCurr = getActiveCurrencyCode();
+
+        var period = activeSalaryPeriod();
+        var rawAmount = 0;
+        var freq = 'yr';
+
+        var pill = targetEl.closest('.jero-indicative-pill');
+        if (pill) {
+            rawAmount = parseFloat(pill.getAttribute('data-amount')) || 0;
+            freq = pill.getAttribute('data-freq') || 'yr';
+        } else {
+            rawAmount = fieldValue(salaryFieldMap.expected[period]) || fieldValue(salaryFieldMap.current[period]);
+            freq = period === 'hourly' ? 'hr' : (period === 'monthly' ? 'mo' : 'yr');
+        }
+
+        var annualAmount = 0;
+        if (freq === 'yr') annualAmount = rawAmount;
+        else if (freq === 'mo') annualAmount = rawAmount * 12;
+        else annualAmount = rawAmount * 160 * 12;
+
+        var hourlyAmount = annualAmount / 1920;
+
+        var baseContainer = lens.querySelector('#jeroHoverLensBase');
+        if (baseContainer) {
+            baseContainer.innerHTML = 'Base Rate: <strong>' + safeFormat(rawAmount, baseCurr) + ' / ' + freq + '</strong> <small>(' + safeFormat(hourlyAmount, baseCurr) + '/hr)</small>';
+        }
+
+        var defaultBenchmarks = ['USD', 'EUR', 'GBP', 'AED', 'SGD'];
+        var alternates = ['CAD', 'AUD', 'JPY', 'CHF'];
+        var benchmarks = [];
+
+        defaultBenchmarks.forEach(function (b) {
+            if (b !== baseCurr && benchmarks.length < 5) {
+                benchmarks.push(b);
+            }
+        });
+        alternates.forEach(function (a) {
+            if (a !== baseCurr && benchmarks.length < 5) {
+                benchmarks.push(a);
+            }
+        });
+
+        var bodyContainer = lens.querySelector('#jeroHoverLensBody');
+        var rowsHtml = '';
+        benchmarks.forEach(function (bCurr) {
+            var bAnnual = safeConvert(annualAmount, baseCurr, bCurr);
+            var bHourly = bAnnual / 1920;
+            var flag = CURRENCY_FLAGS[bCurr] || '🌐';
+
+            rowsHtml +=
+                '<div class="jero-hover-lens-row">' +
+                    '<div class="jero-hover-lens-curr">' +
+                        '<span class="jero-hover-lens-flag">' + flag + '</span>' +
+                        '<strong>' + bCurr + '</strong>' +
+                    '</div>' +
+                    '<div class="jero-hover-lens-vals">' +
+                        '<span class="jero-hover-lens-primary">' + safeFormat(bAnnual, bCurr, { decimals: 0 }) + ' / yr</span>' +
+                        '<span class="jero-hover-lens-sub">(' + safeFormat(bHourly, bCurr, { decimals: 2 }) + ' / hr)</span>' +
+                    '</div>' +
+                '</div>';
+        });
+        if (bodyContainer) bodyContainer.innerHTML = rowsHtml;
+
+        var rect = targetEl.getBoundingClientRect();
+        var lensWidth = 320;
+        var top = rect.bottom + window.scrollY + 6;
+        var left = rect.left + window.scrollX - 20;
+
+        if (left + lensWidth > window.innerWidth - 10) {
+            left = window.innerWidth - lensWidth - 15;
+        }
+        if (left < 10) left = 10;
+
+        lens.style.top = top + 'px';
+        lens.style.left = left + 'px';
+        lens.classList.add('is-visible');
+    }
+
+    function hideHoverLens() {
+        _hoverLensTimeout = setTimeout(function () {
+            if (_hoverLensEl) {
+                _hoverLensEl.classList.remove('is-visible');
+            }
+        }, 150);
+    }
+
+    $(document).on('mouseenter focusin', '.jero-indicative-pill, .changeTextCurrency, #candidateSalaryUsdEquivalentRow', function () {
+        showHoverLens(this);
+    });
+    $(document).on('mouseleave focusout', '.jero-indicative-pill, .changeTextCurrency, #candidateSalaryUsdEquivalentRow', function () {
+        hideHoverLens();
+    });
 
     root.querySelectorAll('.candidate-salary-tabs button[data-salary-period]').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -6381,20 +6404,41 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         });
     });
 
+    var debounceTimers = {};
+    function debounceInput(id, fn, delay) {
+        clearTimeout(debounceTimers[id]);
+        debounceTimers[id] = setTimeout(fn, delay || 120);
+    }
+
     [
-        'pay_annual', 'pay_monthly', 'ctc',
-        'bill_annual', 'bill_monthly', 'ectc'
-    ].forEach(function (id) {
-        var field = root.querySelector('#' + id);
+        { id: 'pay_annual',  group: 'current',  period: 'annual' },
+        { id: 'pay_monthly', group: 'current',  period: 'monthly' },
+        { id: 'ctc',         group: 'current',  period: 'hourly' },
+        { id: 'bill_annual',  group: 'expected', period: 'annual' },
+        { id: 'bill_monthly', group: 'expected', period: 'monthly' },
+        { id: 'ectc',         group: 'expected', period: 'hourly' }
+    ].forEach(function (item) {
+        var field = root.querySelector('#' + item.id);
         if (field) {
             field.addEventListener('input', function () {
-                window.setTimeout(updateSalarySummary, 0);
+                debounceInput(item.id, function () {
+                    syncInputsForGroup(item.group, item.period);
+                    updateSalarySummary();
+                    if (typeof updateCTCFields === 'function') {
+                        updateCTCFields();
+                    }
+                }, 120);
             });
             field.addEventListener('change', function () {
-                window.setTimeout(updateSalarySummary, 0);
+                syncInputsForGroup(item.group, item.period);
+                updateSalarySummary();
+                if (typeof updateCTCFields === 'function') {
+                    updateCTCFields();
+                }
             });
         }
     });
+
     if (salaryCurrencySelect) {
         salaryCurrencySelect.addEventListener('change', syncSalaryCurrency);
 
@@ -6420,9 +6464,10 @@ $(document).on('change', '#recruiter_note_template_select', function () {
                     var text = data.text.toLowerCase();
                     var $el = $(data.element);
                     var code = ($el.data('code') || '').toString().toLowerCase();
+                    var symbol = ($el.data('symbol') || '').toString().toLowerCase();
                     var searchKw = ($el.data('search') || '').toString().toLowerCase();
 
-                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
+                    if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || symbol.indexOf(term) > -1 || searchKw.indexOf(term) > -1) {
                         return data;
                     }
                     return null;
@@ -6431,6 +6476,16 @@ $(document).on('change', '#recruiter_note_template_select', function () {
                 syncSalaryCurrency();
             });
         }
+    }
+
+    var commentField = root.querySelector('#comment');
+    var commentCounter = root.querySelector('#salaryCommentCounter');
+    if (commentField && commentCounter) {
+        function updateCommentCount() {
+            commentCounter.textContent = (commentField.value || '').length + ' / 500';
+        }
+        commentField.addEventListener('input', updateCommentCount);
+        updateCommentCount();
     }
 
     $(document).on('click', '.candidate-salary-panel .changeTextCurrency, .candidate-salary-panel .ig-a', function () {
