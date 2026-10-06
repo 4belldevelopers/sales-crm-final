@@ -118,6 +118,184 @@
     }
 }
 
+/* Scoped Enterprise Global Currency Indicative Pills & Hover Lens */
+.jero-pill-wrapper {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+.jero-indicative-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.35;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    text-decoration: none;
+}
+.jero-indicative-pill--base {
+    background-color: #e8fff3 !important;
+    color: #50cd89 !important;
+    border: 1px solid #b4f1d0 !important;
+}
+.jero-indicative-pill--converted {
+    background-color: #f1faff !important;
+    color: #009ef7 !important;
+    border: 1px solid #b5e4fd !important;
+}
+.jero-indicative-pill:hover,
+.jero-indicative-pill:focus-visible {
+    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.25);
+    transform: translateY(-1px);
+    outline: none;
+}
+.jero-indicative-pill i {
+    font-size: 10px;
+}
+
+/* Multi-Currency Hover Lens Popover (Section 15.1) */
+.jero-currency-hover-lens {
+    position: fixed;
+    z-index: 1080;
+    width: 320px;
+    max-width: 90vw;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+    font-family: 'Poppins', sans-serif;
+    color: #1e293b;
+    pointer-events: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.jero-currency-hover-lens.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.jero-hover-lens-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    letter-spacing: 0.2px;
+}
+.jero-hover-lens-header i {
+    color: #009ef7;
+    margin-right: 5px;
+}
+.jero-hover-lens-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    background: #e0f2fe;
+    color: #0284c7;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+.jero-hover-lens-base {
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 11px;
+    color: #475569;
+}
+.jero-hover-lens-base strong {
+    color: #0f172a;
+    font-weight: 700;
+}
+.jero-hover-lens-body {
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.jero-hover-lens-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 11.5px;
+}
+.jero-hover-lens-row:last-child {
+    border-bottom: none;
+}
+.jero-hover-lens-curr {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.jero-hover-lens-flag {
+    font-size: 14px;
+    line-height: 1;
+}
+.jero-hover-lens-vals {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.jero-hover-lens-primary {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 12px;
+}
+.jero-hover-lens-sub {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+}
+.jero-hover-lens-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-radius: 0 0 8px 8px;
+    font-size: 10px;
+    color: #64748b;
+}
+.jero-hover-lens-footer i {
+    color: #f59e0b;
+    margin-right: 4px;
+}
+/* Salary Summary USD Equivalent Row */
+.candidate-salary-summary-usd-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-top: 1px dashed #cbd5e1;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #475569;
+}
+.candidate-salary-summary-usd-row strong {
+    color: #009ef7;
+    font-weight: 700;
+    font-size: 12.5px;
+}
+
+
 /* ==========================================================================
    HIGHEST QUALIFICATION: 100% BROWSER RAM COMBOBOX & CARD OVERFLOW PROTECTION
    ========================================================================== */
@@ -1540,6 +1718,16 @@
                     @php
                         $current_ctc_cur = "";
                         $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
+                        $currencyFlags = [
+                            'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
+                            'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'NZD' => '🇳🇿', 'ZAR' => '🇿🇦',
+                            'BRL' => '🇧🇷', 'PHP' => '🇵🇭', 'MYR' => '🇲🇾', 'THB' => '🇹🇭', 'IDR' => '🇮🇩', 'VND' => '🇻🇳',
+                            'SEK' => '🇸🇪', 'NOK' => '🇳🇴', 'DKK' => '🇩🇰', 'PLN' => '🇵🇱', 'MXN' => '🇲🇽', 'HKD' => '🇭🇰',
+                            'TWD' => '🇹🇼', 'KRW' => '🇰🇷', 'TRY' => '🇹🇷', 'SAR' => '🇸🇦', 'QAR' => '🇶🇦', 'KWD' => '🇰🇼',
+                            'BHD' => '🇧🇭', 'OMR' => '🇴🇲', 'EGP' => '🇪🇬', 'ILS' => '🇮🇱', 'CZK' => '🇨🇿', 'HUF' => '🇭🇺',
+                            'RON' => '🇷🇴', 'CLP' => '🇨🇱', 'COP' => '🇨🇴', 'ARS' => '🇦🇷', 'NGN' => '🇳🇬', 'KES' => '🇰🇪',
+                            'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵'
+                        ];
                         foreach($currency as $key=>$val){
                             $sel = '';
                             if($current_ctc_cur===null){
@@ -1554,8 +1742,9 @@
                             $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
                             $entLabel = $cMeta['label'];
                             $keywords = $cMeta['keywords'];
+                            $flag = $currencyFlags[$val] ?? '🌐';
 
-                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-search="'.e($keywords).'" '.$sel.'>'.e($entLabel).'</option>';
+                            echo '<option value="'.$key.'" data-code="'.e($val).'" data-symbol="'.e($cMeta['symbol']).'" data-flag="'.e($flag).'" data-search="'.e($keywords).'" '.$sel.'>'.$flag.' '.e($entLabel).'</option>';
                         }
                     @endphp
                   </select>
@@ -1621,13 +1810,13 @@
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -1645,13 +1834,13 @@
                       <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
-                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -1668,6 +1857,10 @@
                       <div><span id="candidateSalaryExpectedLabel">Expected Salary (Annual)</span><strong id="candidateSalaryExpectedSummary">0</strong></div>
                       <div><span>Difference</span><strong id="candidateSalaryDifferenceSummary">0</strong></div>
                       <div><span>Expected Increase</span><strong id="candidateSalaryHikeSummary">0%</strong></div>
+                      <div class="candidate-salary-summary-usd-row" id="candidateSalaryUsdEquivalentRow">
+                        <span id="candidateSalaryUsdLabel"><i class="fa-solid fa-earth-americas text-primary me-1"></i>USD Equivalent</span>
+                        <strong id="candidateSalaryUsdEquivalentSummary">$0.00 / yr</strong>
+                      </div>
                     </div>
                     <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
                     <div class="candidate-offer-field">
@@ -1683,7 +1876,7 @@
                 <div class="candidate-salary-comments">
                   <div class="candidate-salary-comments-head"><span><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></span><div><strong>Comments <small>(Optional)</small></strong><small>Add salary expectations or internal compensation notes.</small></div></div>
                   <textarea name="comment" id="comment" placeholder="Enter comments about salary expectations or any other details..." rows="4">{{ @$application->comment }}</textarea>
-                  <div class="cc">0 / 500</div>
+                  <div class="cc" id="salaryCommentCounter">0 / 500</div>
                 </div>
               </div>
             </div>
@@ -2040,12 +2233,12 @@
               </div>
             </div>
 
-            <!-- Additional Details -->
+            <!-- Visa Status & Work Authorization (Optional) -->
             <div class="fs candidate-card additional-details-card">
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--additional"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
-                  <span><strong>Additional Details</strong><small>Provide any other relevant information about the candidate's professional background.</small></span>
+                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Provide any other relevant information about the candidate's professional background.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -2053,11 +2246,6 @@
                   <div class="fg fv-row">
                     <label>Current Visa Status (For International)</label>
                     <div class="candidate-detail-control candidate-detail-control--select"><span><i class="fa-solid fa-globe" aria-hidden="true"></i></span><select name="visastatu" id="visastatu"><option value="">Select visa status</option><option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option><option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option><option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option><option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option><option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option></select></div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Professional Reference <span class="candidate-optional-label">(Optional)</span></label>
-                    <div class="candidate-detail-control"><span><i class="fa-solid fa-user" aria-hidden="true"></i></span><input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" /></div>
-                    <small class="candidate-field-help">Provide a reference name who can vouch for the candidate's work experience.</small>
                   </div>
                 </div>
               </div>

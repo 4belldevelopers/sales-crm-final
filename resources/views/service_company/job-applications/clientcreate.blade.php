@@ -1845,10 +1845,10 @@ select#gender {
                 </div>
             </div>
 
-            <!-- Additional Information -->
+            <!-- Professional Links -->
             <div class="fs">
               <div class="fsh">
-                <h3>Additional Information</h3>
+                <h3>Professional Links (Optional)</h3>
               </div>
               <div class="fsc">
                 <div class="g4">
@@ -1869,6 +1869,15 @@ select#gender {
                     <input type="url" value="{{ @$application->otherLink }}" id="otherLink" name="otherLink" placeholder="Enter URL" />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- Visa Status & Work Authorization (Optional) -->
+            <div class="fs">
+              <div class="fsh">
+                <h3>Visa Status & Work Authorization (Optional)</h3>
+              </div>
+              <div class="fsc">
                 <div class="g4">
                   <div class="fg fv-row">
                     <label>Current Visa Status (For International)</label>
@@ -1880,10 +1889,6 @@ select#gender {
                       <option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option>
                       <option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option>
                     </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Reference Name (Optional)</label>
-                    <input type="text" name="referencename" value="{{ @$application->referencename}}" id="referencename" placeholder="Enter reference name" />
                   </div>
                 </div>
               </div>
