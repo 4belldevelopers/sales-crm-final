@@ -4219,30 +4219,370 @@ $(document).ready(function () {
           var defaultTimeFormat = '{{$defaultTimeFormat}}';
          
 
-          // For all time pickers
-          function initTimePicker(selector, format) {
-                return $(selector).flatpickr({
-                    enableTime: true,
-                    noCalendar: true,
-                    dateFormat: format,   // "h:i K" or "H:i"
-                    time_24hr: format === "H:i", 
-                    minuteIncrement: 1,
-                    allowInput: true, // allow user to delete value
-                    onChange: function(selectedDates, dateStr, instance) {
-                        if (selectedDates.length > 0) {
-                            let d = selectedDates[0];
-                            if (d.getHours() === 0 && d.getMinutes() === 0) {
-                                instance.clear(); // auto clear if 00:00
-                            }
-                        }
-                    }
-                });
-            }
+          // ── GOD-LEVEL ENTERPRISE TIME CLOCK PICKER (15.6" Screen Adaptive) ──
+          function initJeroGodLevelTimePicker(fieldIds, formatStr) {
+              var is12Hour = (formatStr !== 'H:i');
+              var activeInput = null;
+              var currentHour = 10;
+              var currentMin = 0;
+              var currentAmPm = 'AM';
 
-            // Example init
-          let timeOnePicker   = initTimePicker("#interviewTimeOne",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeTwoPicker   = initTimePicker("#interviewTimeTwo",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeThreePicker = initTimePicker("#interviewTimeThree",'{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
+              var popover = document.getElementById('jero-god-time-picker');
+              if (!popover) {
+                  popover = document.createElement('div');
+                  popover.id = 'jero-god-time-picker';
+                  popover.className = 'jgtp-popover';
+                  popover.innerHTML = [
+                      '<div class="jgtp-header">',
+                      '  <div class="jgtp-header-top">',
+                      '    <span class="jgtp-slot-badge"><i class="fa-regular fa-clock me-1"></i> <span id="jgtp-slot-label">Slot 1 Interview Time</span></span>',
+                      '    <button type="button" class="jgtp-close-btn" id="jgtp-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>',
+                      '  </div>',
+                      '  <div class="jgtp-display-row">',
+                      '    <div class="jgtp-digits">',
+                      '      <span class="jgtp-digit jgtp-hour-display" id="jgtp-hour-display">10</span>',
+                      '      <span class="jgtp-colon">:</span>',
+                      '      <span class="jgtp-digit jgtp-min-display" id="jgtp-min-display">00</span>',
+                      '    </div>',
+                      '    <div class="jgtp-ampm-switch" id="jgtp-ampm-switch">',
+                      '      <button type="button" class="jgtp-ampm-btn is-active" data-ampm="AM">AM</button>',
+                      '      <button type="button" class="jgtp-ampm-btn" data-ampm="PM">PM</button>',
+                      '    </div>',
+                      '  </div>',
+                      '</div>',
+                      '<div class="jgtp-body">',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Interview Slots</div>',
+                      '    <div class="jgtp-presets-grid" id="jgtp-presets-grid">',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="09:00 AM">09:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="10:00 AM">10:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="11:00 AM">11:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="11:30 AM">11:30 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="12:00 PM">12:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="02:00 PM">02:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="03:00 PM">03:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="04:00 PM">04:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="05:00 PM">05:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="06:00 PM">06:00 PM</button>',
+                      '    </div>',
+                      '  </div>',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-regular fa-clock me-1 text-primary"></i> Select Hour</div>',
+                      '    <div class="jgtp-hours-grid" id="jgtp-hours-grid"></div>',
+                      '  </div>',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-solid fa-stopwatch me-1 text-info"></i> Select Minute</div>',
+                      '    <div class="jgtp-mins-grid" id="jgtp-mins-grid">',
+                      '      <button type="button" class="jgtp-min-btn is-active" data-min="00">:00</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="15">:15</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="30">:30</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="45">:45</button>',
+                      '    </div>',
+                      '    <div class="jgtp-mins-subgrid" id="jgtp-mins-subgrid">',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="05">:05</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="10">:10</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="20">:20</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="25">:25</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="35">:35</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="40">:40</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="50">:50</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="55">:55</button>',
+                      '    </div>',
+                      '  </div>',
+                      '</div>',
+                      '<div class="jgtp-footer">',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-clear" id="jgtp-btn-clear">Clear</button>',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-now" id="jgtp-btn-now">Current Time</button>',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-apply" id="jgtp-btn-apply"><i class="fa-solid fa-check me-1"></i> Done</button>',
+                      '</div>'
+                  ].join('');
+                  document.body.appendChild(popover);
+
+                  var hoursGrid = popover.querySelector('#jgtp-hours-grid');
+                  for (var h = 1; h <= 12; h++) {
+                      var btn = document.createElement('button');
+                      btn.type = 'button';
+                      btn.className = 'jgtp-hour-btn';
+                      var hStr = (h < 10 ? '0' : '') + h;
+                      btn.setAttribute('data-hour', h);
+                      btn.textContent = hStr;
+                      hoursGrid.appendChild(btn);
+                  }
+              }
+
+              var hourDisplay = popover.querySelector('#jgtp-hour-display');
+              var minDisplay = popover.querySelector('#jgtp-min-display');
+              var ampmSwitch = popover.querySelector('#jgtp-ampm-switch');
+              var slotLabel = popover.querySelector('#jgtp-slot-label');
+
+              function formatFormattedTime(h, m, ap) {
+                  var mStr = (m < 10 ? '0' : '') + m;
+                  if (!is12Hour) {
+                      var h24 = h;
+                      if (ap === 'PM' && h < 12) h24 = h + 12;
+                      else if (ap === 'AM' && h === 12) h24 = 0;
+                      var h24Str = (h24 < 10 ? '0' : '') + h24;
+                      return h24Str + ':' + mStr;
+                  }
+                  var h12Str = (h < 10 ? '0' : '') + h;
+                  return h12Str + ':' + mStr + ' ' + ap;
+              }
+
+              function updateDisplay() {
+                  var hStr = (currentHour < 10 ? '0' : '') + currentHour;
+                  var mStr = (currentMin < 10 ? '0' : '') + currentMin;
+                  hourDisplay.textContent = hStr;
+                  minDisplay.textContent = mStr;
+
+                  if (is12Hour) {
+                      ampmSwitch.style.display = 'inline-flex';
+                      popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+                          btn.classList.toggle('is-active', btn.getAttribute('data-ampm') === currentAmPm);
+                      });
+                  } else {
+                      ampmSwitch.style.display = 'none';
+                  }
+
+                  popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+                      btn.classList.toggle('is-active', parseInt(btn.getAttribute('data-hour'), 10) === currentHour);
+                  });
+
+                  var mPadded = (currentMin < 10 ? '0' : '') + currentMin;
+                  popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+                      btn.classList.toggle('is-active', btn.getAttribute('data-min') === mPadded);
+                  });
+
+                  var currentTimeStr = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                  popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+                      btn.classList.toggle('is-active', btn.getAttribute('data-time') === currentTimeStr);
+                  });
+              }
+
+              function parseTimeValue(val) {
+                  if (!val) return null;
+                  var m = String(val).trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+                  if (!m) return null;
+                  var h = parseInt(m[1], 10);
+                  var min = parseInt(m[2], 10);
+                  var ap = m[3] ? m[3].toUpperCase() : null;
+                  if (!ap) {
+                      if (h >= 12) {
+                          ap = 'PM';
+                          if (h > 12) h -= 12;
+                      } else {
+                          ap = 'AM';
+                          if (h === 0) h = 12;
+                      }
+                  }
+                  return { hour: h, min: min, ampm: ap };
+              }
+
+              function positionPicker(input) {
+                  if (!input) return;
+                  var vh = window.innerHeight;
+                  var vw = window.innerWidth;
+                  var rect = input.getBoundingClientRect();
+                  var popoverWidth = 310;
+                  var popoverHeight = popover.offsetHeight || 295;
+
+                  var spaceBelow = vh - rect.bottom - 8;
+                  var spaceAbove = rect.top - 8;
+
+                  var top;
+                  if (spaceBelow >= popoverHeight) {
+                      top = rect.bottom + 4;
+                  } else if (spaceAbove >= popoverHeight) {
+                      top = rect.top - popoverHeight - 4;
+                  } else {
+                      if (spaceBelow >= spaceAbove) {
+                          top = rect.bottom + 4;
+                          var availBelow = Math.max(180, spaceBelow);
+                          popover.style.maxHeight = availBelow + 'px';
+                      } else {
+                          var availAbove = Math.max(180, spaceAbove);
+                          top = Math.max(8, rect.top - availAbove - 4);
+                          popover.style.maxHeight = availAbove + 'px';
+                      }
+                  }
+
+                  if (top < 8) top = 8;
+                  if (top + popoverHeight > vh - 8) {
+                      top = Math.max(8, vh - popoverHeight - 8);
+                  }
+                  if (top + (popover.offsetHeight || popoverHeight) > vh - 8) {
+                      popover.style.maxHeight = Math.max(180, vh - top - 8) + 'px';
+                  }
+
+                  var left = rect.left;
+                  if (left + popoverWidth > vw - 10) {
+                      left = Math.max(10, vw - popoverWidth - 10);
+                  }
+                  if (left < 10) left = 10;
+
+                  popover.style.top = Math.round(top) + 'px';
+                  popover.style.left = Math.round(left) + 'px';
+                  popover.style.width = popoverWidth + 'px';
+              }
+
+              function openPicker(input) {
+                  activeInput = input;
+                  var val = input.value;
+                  var parsed = parseTimeValue(val);
+                  if (parsed) {
+                      currentHour = parsed.hour;
+                      currentMin = parsed.min;
+                      currentAmPm = parsed.ampm;
+                  } else {
+                      currentHour = 10;
+                      currentMin = 0;
+                      currentAmPm = 'AM';
+                  }
+
+                  var slotName = 'Slot 1';
+                  if (input.id === 'interviewTimeTwo') slotName = 'Slot 2';
+                  else if (input.id === 'interviewTimeThree') slotName = 'Slot 3';
+                  slotLabel.textContent = slotName + ' Interview Time';
+
+                  updateDisplay();
+                  popover.style.maxHeight = '';
+                  popover.classList.add('is-open');
+                  input.classList.add('is-picker-active');
+                  positionPicker(input);
+              }
+
+              function closePicker() {
+                  if (!popover.classList.contains('is-open')) return;
+                  popover.classList.remove('is-open');
+                  popover.style.maxHeight = '';
+                  if (activeInput) {
+                      activeInput.classList.remove('is-picker-active');
+                      activeInput = null;
+                  }
+              }
+
+              function applyTime() {
+                  if (!activeInput) return;
+                  var formatted = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                  activeInput.value = formatted;
+                  activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  closePicker();
+              }
+
+              popover.querySelector('#jgtp-close').onclick = closePicker;
+              popover.querySelector('#jgtp-btn-apply').onclick = applyTime;
+              popover.querySelector('#jgtp-btn-clear').onclick = function () {
+                  if (activeInput) {
+                      activeInput.value = '';
+                      activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                      activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  }
+                  closePicker();
+              };
+              popover.querySelector('#jgtp-btn-now').onclick = function () {
+                  var now = new Date();
+                  var h = now.getHours();
+                  var m = Math.round(now.getMinutes() / 15) * 15;
+                  if (m === 60) {
+                      m = 0;
+                      h += 1;
+                  }
+                  var ap = h >= 12 ? 'PM' : 'AM';
+                  h = h % 12;
+                  if (h === 0) h = 12;
+                  currentHour = h;
+                  currentMin = m;
+                  currentAmPm = ap;
+                  updateDisplay();
+              };
+
+              popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentAmPm = btn.getAttribute('data-ampm');
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentHour = parseInt(btn.getAttribute('data-hour'), 10);
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentMin = parseInt(btn.getAttribute('data-min'), 10);
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+                  btn.onclick = function () {
+                      var tVal = btn.getAttribute('data-time');
+                      var parsed = parseTimeValue(tVal);
+                      if (parsed) {
+                          currentHour = parsed.hour;
+                          currentMin = parsed.min;
+                          currentAmPm = parsed.ampm;
+                          updateDisplay();
+                      }
+                      if (activeInput) {
+                          activeInput.value = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                          activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                          activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                      }
+                      closePicker();
+                  };
+              });
+
+              fieldIds.forEach(function (id) {
+                  var input = document.getElementById(id);
+                  if (!input) return;
+                  input.readOnly = true;
+                  input.style.cursor = 'pointer';
+                  input.onclick = function (e) {
+                      e.stopPropagation();
+                      if (activeInput === input && popover.classList.contains('is-open')) {
+                          closePicker();
+                      } else {
+                          openPicker(input);
+                      }
+                  };
+                  input.onfocus = function () {
+                      if (activeInput !== input) {
+                          openPicker(input);
+                      }
+                  };
+              });
+
+              document.addEventListener('click', function (e) {
+                  if (!popover.classList.contains('is-open')) return;
+                  if (!popover.contains(e.target) && (!activeInput || !activeInput.contains(e.target))) {
+                      closePicker();
+                  }
+              });
+
+              document.addEventListener('keydown', function (e) {
+                  if (e.key === 'Escape' && popover.classList.contains('is-open')) {
+                      closePicker();
+                  }
+              });
+
+              window.addEventListener('scroll', function () {
+                  if (activeInput && popover.classList.contains('is-open')) {
+                      positionPicker(activeInput);
+                  }
+              }, true);
+
+              window.addEventListener('resize', function () {
+                  if (activeInput && popover.classList.contains('is-open')) {
+                      positionPicker(activeInput);
+                  }
+              });
+          }
+
+          initJeroGodLevelTimePicker(['interviewTimeOne', 'interviewTimeTwo', 'interviewTimeThree'], '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
 
 
 
@@ -4445,13 +4785,15 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 			return clean;
 		}
 
+		var JERO_SKILLS_VERSION = '2026-10-06.enterprise-pristine-v2';
+
 		function loadLocalSkillsTaxonomy() {
-			if (_skillsTaxonomy && _skillsList.length) return;
+			if (_skillsTaxonomy && _skillsList.length && _skillsTaxonomy.version === JERO_SKILLS_VERSION) return;
 			try {
-				var cached = localStorage.getItem('jero_skills_taxonomy_v1');
+				var cached = localStorage.getItem('jero_skills_taxonomy_' + JERO_SKILLS_VERSION);
 				if (cached) {
 					var parsed = JSON.parse(cached);
-					if (parsed && Array.isArray(parsed.skills)) {
+					if (parsed && parsed.version === JERO_SKILLS_VERSION && Array.isArray(parsed.skills)) {
 						_skillsTaxonomy = parsed;
 						_skillsAliases = parsed.aliases || {};
 						_skillsRelations = parsed.relations || {};
@@ -4461,10 +4803,12 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 						return;
 					}
 				}
+				// Purge stale legacy cache
+				localStorage.removeItem('jero_skills_taxonomy_v1');
 			} catch (e) {}
 
 			if (window.fetch) {
-				fetch("{{ asset('skills/jero-skills-taxonomy.json') }}", { cache: 'force-cache' })
+				fetch("{{ asset('skills/jero-skills-taxonomy.json') }}?v=" + JERO_SKILLS_VERSION, { cache: 'no-cache' })
 					.then(function (res) { return res.json(); })
 					.then(function (data) {
 						if (data && Array.isArray(data.skills)) {
@@ -4475,8 +4819,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 							_skillsList = data.skills;
 							window._jeroSkillsTaxonomy = data;
 							try {
-								localStorage.setItem('jero_skills_taxonomy_v1', JSON.stringify(data));
+								localStorage.setItem('jero_skills_taxonomy_' + JERO_SKILLS_VERSION, JSON.stringify(data));
 							} catch (e) {}
+							if (typeof refreshCandidatePrimarySkills === 'function') {
+								refreshCandidatePrimarySkills();
+							}
 						}
 					})
 					.catch(function () {});
@@ -5886,9 +6233,10 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
    					  redirect			:	true,
    					  file				:	true,
    					  success			:	function (response) {
+   					  							$(document).trigger('jero-candidate-saved');
    					  							window.location = response.url;
    					  						},
-              			error			:	sfunction (response) {
+              			error			:	function (response) {
                   										handleFails(response);
               										}
           		})
@@ -6190,6 +6538,8 @@ var KTAddCandidate = function () {
                                 formRedirected = true;
                                 if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
                                 if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
+                                $(document).trigger('jero-candidate-saved');
+                                $(document).trigger('jero-candidate-saved');
                                 window.location.assign(targetUrl);
                             }
 
@@ -6668,25 +7018,578 @@ $.ajax({
     // Attach event listener to file input
     // document.getElementById('resume').addEventListener('change', handleFileInputChange);
 
-// Initialize CKEditor for recruiter_note
-if (typeof CKEDITOR !== 'undefined') {
-    CKEDITOR.replace('recruiter_note', { height: 350 });
-}
+// ==========================================================================
+// RECRUITER EVALUATION MATRIX — CLIENT-SIDE JERO ENGINE (Option 3)
+// 100% Client-Side Browser RAM & LocalStorage Execution (0% Server Strain)
+// Complies with Rule 1, 2, 3, 4, 7 (No Business Logic Mutation, 10K Concurrency)
+// ==========================================================================
+var RecruiterEvaluationMatrix = (function () {
+    'use strict';
 
-// Recruiter note templates keyed by id
-var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+    var companyId = '{{ auth()->user()->company_id ?? 0 }}';
+    var candidateId = '{{ @$application->id ?: "new" }}';
+    var isEditMode = {{ ($page_event === 'EDIT' || !empty(@$application->id)) ? 'true' : 'false' }};
+    var storageKey = 'jero_sem_draft_client_' + companyId + '_' + candidateId;
 
-// Template selector → load content into CKEditor
-$(document).on('change', '#recruiter_note_template_select', function () {
-    var id = $(this).val();
-    if (!id || !recruiterNoteTemplates[id]) return;
-    var content = recruiterNoteTemplates[id].content;
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-        CKEDITOR.instances['recruiter_note'].setData(content);
-    } else {
-        $('#recruiter_note').val(content);
+    var initialDbNote = ($('#recruiter_note').val() || '').trim();
+
+    // DOM Elements Cache
+    var $card = $('#recruiter_evaluation_matrix_card');
+    if (!$card.length) {
+        return { compile: function () {} };
     }
-});
+
+    var $matrixView = $('#sem_matrix_view');
+    var $compiledView = $('#sem_compiled_view');
+    var $btnViewMatrix = $('#sem_btn_view_matrix');
+    var $btnViewCompiled = $('#sem_btn_view_compiled');
+    var $syncBtn = $('#sem_sync_btn');
+    var $recompileBtn = $('#sem_recompile_btn');
+    var $draftBadge = $('#sem_draft_badge');
+    var $draftLabel = $('#sem_draft_label');
+    var $restoreBanner = $('#sem_restore_banner');
+    var $btnKeepDraft = $('#sem_btn_keep_draft');
+    var $btnDiscardDraft = $('#sem_btn_discard_draft');
+    var $templateSelect = $('#recruiter_note_template_select');
+    var $applyTemplateBtn = $('#sem_apply_template_btn');
+
+    // Matrix Form Inputs
+    var $verdictChips = $('#sem_verdict_group .sem-chip-btn');
+    var $summaryInput = $('#sem_summary');
+    var $roleInput = $('#sem_role');
+    var $skillsInput = $('#sem_skills');
+    var $strengthsNote = $('#sem_strengths_note');
+    var $noticeInput = $('#sem_notice');
+    var $salaryInput = $('#sem_salary');
+    var $workModeInput = $('#sem_work_mode');
+    var $logisticsNote = $('#sem_logistics_note');
+    var $workAuthInput = $('#sem_work_auth');
+    var $commChips = $('#sem_comm_group .sem-comm-btn');
+    var $additionalNote = $('#sem_additional_note');
+
+    // Compiled Output & Hidden Persistence
+    var $compiledDisplay = $('#sem_compiled_display');
+    var $hiddenNote = $('#recruiter_note');
+    var $wordCount = $('#sem_word_count');
+    var $charCount = $('#sem_char_count');
+
+    var currentView = 'matrix'; // 'matrix' or 'compiled'
+    var saveTimeout = null;
+    var compileTimeout = null;
+
+    // --- Helper: Extract Live Variables from Candidate Form in Browser RAM ---
+    function getLiveCandidateFormVariables() {
+        // Candidate Name
+        var firstName = ($('#first_name').val() || '').trim();
+        var lastName = ($('#last_name').val() || '').trim();
+        var candidateName = (firstName + ' ' + lastName).trim() || 'Candidate';
+
+        // Target Role / Current Designation
+        var role = ($('#current_designation').val() || '').trim();
+        if (!role) {
+            var jobSelected = $('#job_id option:selected').text();
+            if (jobSelected && jobSelected.indexOf('Select') === -1) {
+                role = jobSelected.trim();
+            }
+        }
+
+        // Technical Skills
+        var skillsRaw = ($('#kt_tagify_2').val() || '').trim();
+        var skillsFormatted = '';
+        if (skillsRaw) {
+            try {
+                if (skillsRaw.charAt(0) === '[' && skillsRaw.charAt(skillsRaw.length - 1) === ']') {
+                    var parsed = JSON.parse(skillsRaw);
+                    if (Array.isArray(parsed)) {
+                        skillsFormatted = parsed.map(function (item) { return item.value || item; }).filter(Boolean).join(', ');
+                    }
+                }
+            } catch (e) {
+                skillsFormatted = '';
+            }
+            if (!skillsFormatted) {
+                skillsFormatted = skillsRaw;
+            }
+        }
+        if (!skillsFormatted) {
+            var summaryPills = [];
+            $('.candidate-skills-summary-pill, #skillTags .skill-tag').each(function () {
+                var t = $(this).text().trim().replace(/[×✕]/g, '').trim();
+                if (t && summaryPills.indexOf(t) === -1) summaryPills.push(t);
+            });
+            if (summaryPills.length > 0) {
+                skillsFormatted = summaryPills.join(', ');
+            }
+        }
+
+        // Joining Readiness / Notice Period
+        var noticeVal = ($('#serving_notice_period').val() || '').toString();
+        var noticeText = '';
+        if (noticeVal === '2') {
+            noticeText = 'Immediate Joiner (0 Days Notice)';
+        } else if (noticeVal === '1') {
+            var lwd = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
+            noticeText = 'Serving Notice Period (SNP)' + (lwd ? ' • Expected LWD: ' + lwd : '');
+        } else if (noticeVal === '0') {
+            var days = $('#ddl_np_id option:selected').text().trim();
+            if (days && days.indexOf('Select') === -1) {
+                noticeText = days;
+            } else {
+                noticeText = 'Standard Notice Period';
+            }
+        }
+
+        // Salary Alignment
+        var salaryText = '';
+        var curCode = $('#currency option:selected').attr('data-code') || $('#current_ctc_cur option:selected').text().trim() || 'INR';
+        var expSummary = ($('#candidateSalaryExpectedSummary').text() || '').trim();
+        var curSummary = ($('#candidateSalaryCurrentSummary').text() || '').trim();
+        var hikeSummary = ($('#candidateSalaryHikeSummary').text() || '').trim();
+
+        var billAnnual = ($('#bill_annual').val() || '').trim();
+        var billMonthly = ($('#bill_monthly').val() || '').trim();
+        var billHourly = ($('#ectc').val() || '').trim();
+        var expVal = billAnnual || billMonthly || billHourly;
+
+        if (expSummary && expSummary !== '0') {
+            salaryText = 'Expected: ' + expSummary;
+            if (curSummary && curSummary !== '0') {
+                salaryText += ' (Current: ' + curSummary + ')';
+            }
+            if (hikeSummary && hikeSummary !== '0%' && hikeSummary !== '0') {
+                salaryText += ' • Hike: ' + hikeSummary;
+            }
+        } else if (expVal) {
+            salaryText = 'Expected: ' + expVal + ' ' + curCode;
+        }
+
+        // Preferred Work Mode
+        var wmChecked = $('input[name="wm"]:checked').val() || 'office';
+        var workModeText = 'Work From Office (WFO)';
+        if (wmChecked === 'remote') {
+            workModeText = 'Remote';
+        } else if (wmChecked === 'hybrid') {
+            workModeText = 'Hybrid';
+        }
+
+        // Work Authorization
+        var workAuthText = '';
+        var $waSelect = $('#visastatu');
+        if ($waSelect.length) {
+            var selectedWa = $waSelect.find('option:selected').text().trim();
+            var waVal = $waSelect.val();
+            if (waVal && selectedWa && selectedWa.indexOf('Select') === -1) {
+                workAuthText = selectedWa;
+            }
+        }
+
+        return {
+            name: candidateName,
+            role: role,
+            skills: skillsFormatted,
+            notice: noticeText,
+            salary: salaryText,
+            workMode: workModeText,
+            workAuth: workAuthText
+        };
+    }
+
+    // --- Synchronize Live Form Variables into Matrix Fields ---
+    function syncLiveFormVariablesToMatrix(forceAll) {
+        var vars = getLiveCandidateFormVariables();
+        var updatedCount = 0;
+
+        function setIfAllowed($input, val) {
+            if (!val) return;
+            var isUserModified = $input.data('user-modified') === true;
+            if (forceAll || !isUserModified || !$input.val().trim()) {
+                $input.val(val);
+                $input.addClass('sem-highlight');
+                setTimeout(function () { $input.removeClass('sem-highlight'); }, 800);
+                updatedCount++;
+            }
+        }
+
+        setIfAllowed($roleInput, vars.role);
+        setIfAllowed($skillsInput, vars.skills);
+        setIfAllowed($noticeInput, vars.notice);
+        setIfAllowed($salaryInput, vars.salary);
+        setIfAllowed($workModeInput, vars.workMode);
+        setIfAllowed($workAuthInput, vars.workAuth);
+
+        compileEvaluationMatrix();
+        triggerDraftSave();
+        return updatedCount;
+    }
+
+    // --- Compile Structured Evaluation Matrix into Authoritative Plain Text ---
+    function compileEvaluationMatrix() {
+        if (currentView === 'compiled') {
+            var directText = $compiledDisplay.val();
+            $hiddenNote.val(directText);
+            updateCounters(directText);
+            return directText;
+        }
+
+        var verdict = $verdictChips.filter('.is-active').attr('data-verdict') || 'Strong Fit (Priority Submission)';
+        var summary = ($summaryInput.val() || '').trim();
+        var role = ($roleInput.val() || '').trim();
+        var skills = ($skillsInput.val() || '').trim();
+        var strengths = ($strengthsNote.val() || '').trim();
+        var notice = ($noticeInput.val() || '').trim();
+        var salary = ($salaryInput.val() || '').trim();
+        var workMode = ($workModeInput.val() || '').trim();
+        var logistics = ($logisticsNote.val() || '').trim();
+        var workAuth = ($workAuthInput.val() || '').trim();
+        var comm = $commChips.filter('.is-active').attr('data-comm') || 'Strong Professional';
+        var additional = ($additionalNote.val() || '').trim();
+
+        var sections = [];
+
+        var s1 = ['[EVALUATION MATRIX SUMMARY]'];
+        s1.push('■ VERDICT: ' + verdict);
+        if (summary) {
+            s1.push('■ EXECUTIVE SUMMARY: ' + summary);
+        }
+        sections.push(s1.join('\n'));
+
+        var s2 = ['[PROFILE & TECHNICAL COMPETENCIES]'];
+        if (role) s2.push('• Target Role: ' + role);
+        if (skills) s2.push('• Key Technical Strengths: ' + skills);
+        if (strengths) s2.push('• Highlights & Accomplishments: ' + strengths);
+        if (s2.length > 1) sections.push(s2.join('\n'));
+
+        var s3 = ['[LOGISTICS & AVAILABILITY]'];
+        if (notice) s3.push('• Notice Period: ' + notice);
+        if (salary) s3.push('• Compensation: ' + salary);
+        if (workMode) s3.push('• Work Mode: ' + workMode);
+        if (logistics) s3.push('• Availability Remarks: ' + logistics);
+        if (s3.length > 1) sections.push(s3.join('\n'));
+
+        var s4 = ['[AUTHORIZATION & SOFT SKILLS]'];
+        if (workAuth) s4.push('• Work Authorization: ' + workAuth);
+        if (comm) s4.push('• Communication Assessment: ' + comm);
+        if (additional) s4.push('• Observations: ' + additional);
+        if (s4.length > 1) sections.push(s4.join('\n'));
+
+        var compiledOutput = sections.join('\n\n');
+
+        $compiledDisplay.val(compiledOutput);
+        $hiddenNote.val(compiledOutput);
+        updateCounters(compiledOutput);
+        return compiledOutput;
+    }
+
+    // --- Word & Character Counters ---
+    function updateCounters(text) {
+        text = text || '';
+        var charCount = text.length;
+        var words = text.trim().split(/\s+/).filter(function (w) { return w.length > 0; });
+        var wordCount = words.length;
+
+        $charCount.text(charCount);
+        $wordCount.text(wordCount);
+    }
+
+    // --- LocalStorage Draft Auto-Save Engine (400ms Debounce) ---
+    function triggerDraftSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        $draftLabel.text('Saving...');
+        saveTimeout = setTimeout(function () {
+            try {
+                var draftData = {
+                    updated_at: Date.now(),
+                    view: currentView,
+                    verdict: $verdictChips.filter('.is-active').attr('data-verdict') || '',
+                    summary: $summaryInput.val(),
+                    role: $roleInput.val(),
+                    skills: $skillsInput.val(),
+                    strengths_note: $strengthsNote.val(),
+                    notice: $noticeInput.val(),
+                    salary: $salaryInput.val(),
+                    work_mode: $workModeInput.val(),
+                    logistics_note: $logisticsNote.val(),
+                    work_auth: $workAuthInput.val(),
+                    comm: $commChips.filter('.is-active').attr('data-comm') || '',
+                    additional_note: $additionalNote.val(),
+                    compiled_text: $compiledDisplay.val()
+                };
+                localStorage.setItem(storageKey, JSON.stringify(draftData));
+                $draftLabel.text('Draft Saved');
+                $draftBadge.find('i').removeClass('text-warning text-danger').addClass('text-success');
+            } catch (e) {
+                console.warn('[SEM] LocalStorage save quota exceeded or unavailable:', e);
+                $draftLabel.text('Draft in RAM');
+            }
+        }, 400);
+    }
+
+    // --- LocalStorage Draft Restoration on Load ---
+    function restoreDraftIfAvailable() {
+        try {
+            var raw = localStorage.getItem(storageKey);
+            if (!raw) {
+                if (initialDbNote) {
+                    $compiledDisplay.val(initialDbNote);
+                    $hiddenNote.val(initialDbNote);
+                    updateCounters(initialDbNote);
+                    if (initialDbNote.indexOf('[EVALUATION MATRIX SUMMARY]') === -1) {
+                        switchView('compiled');
+                    }
+                } else {
+                    syncLiveFormVariablesToMatrix(false);
+                }
+                return;
+            }
+
+            var draft = JSON.parse(raw);
+            if (!draft) return;
+
+            if (isEditMode && initialDbNote && initialDbNote !== draft.compiled_text) {
+                $restoreBanner.slideDown(200);
+                applyDraftData(draft);
+            } else {
+                applyDraftData(draft);
+            }
+        } catch (e) {
+            console.warn('[SEM] Error restoring draft:', e);
+            syncLiveFormVariablesToMatrix(false);
+        }
+    }
+
+    function applyDraftData(draft) {
+        if (!draft) return;
+        if (draft.verdict) {
+            $verdictChips.removeClass('is-active');
+            var $vMatch = $verdictChips.filter('[data-verdict="' + draft.verdict + '"]');
+            if ($vMatch.length) $vMatch.addClass('is-active');
+            else $verdictChips.first().addClass('is-active');
+        }
+        if (typeof draft.summary !== 'undefined') $summaryInput.val(draft.summary);
+        if (typeof draft.role !== 'undefined') $roleInput.val(draft.role);
+        if (typeof draft.skills !== 'undefined') $skillsInput.val(draft.skills);
+        if (typeof draft.strengths_note !== 'undefined') $strengthsNote.val(draft.strengths_note);
+        if (typeof draft.notice !== 'undefined') $noticeInput.val(draft.notice);
+        if (typeof draft.salary !== 'undefined') $salaryInput.val(draft.salary);
+        if (typeof draft.work_mode !== 'undefined') $workModeInput.val(draft.work_mode);
+        if (typeof draft.logistics_note !== 'undefined') $logisticsNote.val(draft.logistics_note);
+        if (typeof draft.work_auth !== 'undefined') $workAuthInput.val(draft.work_auth);
+        if (draft.comm) {
+            $commChips.removeClass('is-active');
+            var $cMatch = $commChips.filter('[data-comm="' + draft.comm + '"]');
+            if ($cMatch.length) $cMatch.addClass('is-active');
+            else $commChips.first().addClass('is-active');
+        }
+        if (typeof draft.additional_note !== 'undefined') $additionalNote.val(draft.additional_note);
+
+        if (draft.compiled_text) {
+            $compiledDisplay.val(draft.compiled_text);
+            $hiddenNote.val(draft.compiled_text);
+            updateCounters(draft.compiled_text);
+        } else {
+            compileEvaluationMatrix();
+        }
+
+        if (draft.view === 'compiled') {
+            switchView('compiled');
+        }
+    }
+
+    // --- View Mode Switcher ---
+    function switchView(viewName) {
+        currentView = viewName;
+        if (viewName === 'compiled') {
+            $btnViewMatrix.removeClass('is-active');
+            $btnViewCompiled.addClass('is-active');
+            $matrixView.hide();
+            $compiledView.fadeIn(150);
+            $compiledDisplay.focus();
+        } else {
+            $btnViewCompiled.removeClass('is-active');
+            $btnViewMatrix.addClass('is-active');
+            $compiledView.hide();
+            $matrixView.fadeIn(150);
+        }
+        triggerDraftSave();
+    }
+
+    // --- Template Selector & Interpolator ---
+    var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+    function applySelectedTemplate() {
+        var id = $templateSelect.val();
+        if (!id || !recruiterNoteTemplates[id]) return;
+        var rawContent = recruiterNoteTemplates[id].content || '';
+        if (!rawContent) return;
+
+        var vars = getLiveCandidateFormVariables();
+        var interpolated = rawContent
+            .replace(/\{candidate_name\}|\{name\}/gi, vars.name)
+            .replace(/\{role\}|\{designation\}|\{target_role\}/gi, vars.role)
+            .replace(/\{skills\}|\{key_skills\}/gi, vars.skills)
+            .replace(/\{notice\}|\{notice_period\}/gi, vars.notice)
+            .replace(/\{salary\}|\{compensation\}/gi, vars.salary)
+            .replace(/\{work_mode\}/gi, vars.workMode)
+            .replace(/\{work_auth\}|\{visa\}/gi, vars.workAuth);
+
+        if (currentView === 'compiled') {
+            var existing = $compiledDisplay.val().trim();
+            $compiledDisplay.val(existing ? (existing + '\n\n' + interpolated) : interpolated);
+            $hiddenNote.val($compiledDisplay.val());
+            updateCounters($compiledDisplay.val());
+        } else {
+            var curAdditional = $additionalNote.val().trim();
+            $additionalNote.val(curAdditional ? (curAdditional + '\n' + interpolated) : interpolated);
+            $additionalNote.data('user-modified', true);
+            compileEvaluationMatrix();
+        }
+        triggerDraftSave();
+    }
+
+    // --- Event Bindings ---
+    $card.on('click', '#sem_verdict_group .sem-chip-btn', function (e) {
+        e.preventDefault();
+        $verdictChips.removeClass('is-active');
+        $(this).addClass('is-active');
+        compileEvaluationMatrix();
+        triggerDraftSave();
+    });
+
+    $card.on('click', '#sem_comm_group .sem-comm-btn', function (e) {
+        e.preventDefault();
+        $commChips.removeClass('is-active');
+        $(this).addClass('is-active');
+        compileEvaluationMatrix();
+        triggerDraftSave();
+    });
+
+    $matrixView.on('input change', 'input, textarea', function () {
+        $(this).data('user-modified', true);
+        if (compileTimeout) clearTimeout(compileTimeout);
+        compileTimeout = setTimeout(function () {
+            compileEvaluationMatrix();
+            triggerDraftSave();
+        }, 150);
+    });
+
+    $card.on('click', '#sem_btn_view_matrix', function (e) {
+        e.preventDefault();
+        switchView('matrix');
+    });
+
+    $card.on('click', '#sem_btn_view_compiled', function (e) {
+        e.preventDefault();
+        compileEvaluationMatrix();
+        switchView('compiled');
+    });
+
+    $compiledDisplay.on('input', function () {
+        var val = $(this).val();
+        $hiddenNote.val(val);
+        updateCounters(val);
+        triggerDraftSave();
+    });
+
+    $card.on('click', '#sem_recompile_btn', function (e) {
+        e.preventDefault();
+        var prevView = currentView;
+        currentView = 'matrix';
+        var compiled = compileEvaluationMatrix();
+        currentView = prevView;
+        $compiledDisplay.addClass('sem-highlight');
+        setTimeout(function () { $compiledDisplay.removeClass('sem-highlight'); }, 700);
+        triggerDraftSave();
+    });
+
+    $card.on('click', '#sem_sync_btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $icon = $btn.find('i');
+        $icon.addClass('fa-spin');
+        var count = syncLiveFormVariablesToMatrix(true);
+        setTimeout(function () {
+            $icon.removeClass('fa-spin');
+        }, 600);
+    });
+
+    $card.on('change', '#recruiter_note_template_select', function () {
+        applySelectedTemplate();
+    });
+    $card.on('click', '#sem_apply_template_btn', function (e) {
+        e.preventDefault();
+        applySelectedTemplate();
+    });
+
+    $card.on('click', '#sem_btn_keep_draft', function (e) {
+        e.preventDefault();
+        $restoreBanner.slideUp(200);
+        triggerDraftSave();
+    });
+
+    $card.on('click', '#sem_btn_discard_draft', function (e) {
+        e.preventDefault();
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (err) {}
+        $restoreBanner.slideUp(200);
+        if (initialDbNote) {
+            $compiledDisplay.val(initialDbNote);
+            $hiddenNote.val(initialDbNote);
+            updateCounters(initialDbNote);
+            if (initialDbNote.indexOf('[EVALUATION MATRIX SUMMARY]') === -1) {
+                switchView('compiled');
+            } else {
+                syncLiveFormVariablesToMatrix(true);
+            }
+        } else {
+            $matrixView.find('input, textarea').val('').removeData('user-modified');
+            $verdictChips.removeClass('is-active').first().addClass('is-active');
+            $commChips.removeClass('is-active').first().addClass('is-active');
+            syncLiveFormVariablesToMatrix(true);
+        }
+    });
+
+    $card.on('paste', 'input, textarea', function (e) {
+        var clipboardData = e.originalEvent && e.originalEvent.clipboardData;
+        if (clipboardData && clipboardData.files && clipboardData.files.length > 0) {
+            var file = clipboardData.files[0];
+            var resumeInput = document.getElementById('resume') || document.querySelector('.resumeupload');
+            if (resumeInput && typeof processFile === 'function') {
+                e.preventDefault();
+                e.stopPropagation();
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                resumeInput.files = dt.files;
+                processFile(file);
+            }
+        }
+    });
+
+    $(document).on('jero-candidate-saved', function () {
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (e) {}
+    });
+
+    restoreDraftIfAvailable();
+
+    var autoSyncDebounce = null;
+    $(document).on('change', '#current_designation, #serving_notice_period, #ddl_np_id, #np_id, input[name="wm"], #visastatu, #currency, #current_ctc_cur, #bill_annual, #bill_monthly, #ectc', function () {
+        if (autoSyncDebounce) clearTimeout(autoSyncDebounce);
+        autoSyncDebounce = setTimeout(function () {
+            syncLiveFormVariablesToMatrix(false);
+        }, 300);
+    });
+
+    window.compileEvaluationMatrix = compileEvaluationMatrix;
+    window.syncRecruiterEvaluationMatrix = syncLiveFormVariablesToMatrix;
+
+    return {
+        compile: compileEvaluationMatrix,
+        sync: syncLiveFormVariablesToMatrix,
+        switchView: switchView
+    };
+})();
 </script>
 
 <script>
