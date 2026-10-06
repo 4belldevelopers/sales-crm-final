@@ -65,21 +65,25 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         $searchTerms = request('cus_search');
         $custom_search = $searchTerms;
         $searchQuery = $request->input('q');
+        $countryFilter = request('country');
+        $performanceFilter = request('agency_performance');
+        $slaFilter = request('response_sla');
+        $valCheck = request('sortingfilter');
         $page = max((int) $request->input('page', 1), 1);
         $size = (int) ($request->input('per_page') ?? $request->input('size') ?? $request->input('limit') ?? 10);
         $from = ($page - 1) * $size;
         $sort = [];
         $customSearch = trim($custom_search);
         $shouldSearch = [];
-        $sort = [];
         $must = [];
-        $valCheck = request('sortingfilter');
 
         $cachePayload = [
             'page' => $page,
             'size' => $size,
             'q' => $searchQuery,
-            'country' => request('country'),
+            'country' => $countryFilter,
+            'agency_performance' => $performanceFilter,
+            'response_sla' => $slaFilter,
             'company' => $company_id,
             'custom_search' => $custom_search,
             'user_id' => $this->user->id,
@@ -94,17 +98,38 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         ----------------------------- */
         if (cache()->has($cacheKeySet)) {
             return response()->json(cache()->get($cacheKeySet));
-        }        try {
+        }
+
+        try {
+            // Build relation query based on Status filter ($valCheck: '' = All Status, 1 = Active, 2 = Inactive)
+            $relationMust = [
+                ['term' => ['from_company_id' => $company_id]],
+            ];
+
+            if ($valCheck == '1') {
+                $relationMust[] = ['term' => ['final_status' => 1]];
+            } elseif ($valCheck == '2') {
+                $relationMust[] = ['term' => ['final_status' => 0]];
+            } else {
+                // All Status: include both active and inactive relations
+                $relationMust[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['final_status' => 1]],
+                            ['term' => ['final_status' => 0]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
+            }
+
             $relationIds = $this->elasticService->getClient()->search([
                 'index' => ELASTIC_CLIENT_AND_AGENCY_RELATION_INDEX,
                 'body' => [
                     'size' => 10000,
                     'query' => [
                         'bool' => [
-                            'must' => [
-                                ['term' => ['from_company_id' => $company_id]],
-                                ['term' => ['final_status' => 1]],
-                            ],
+                            'must' => $relationMust,
                         ],
                     ],
                     '_source' => ['to_company_id'],
@@ -142,21 +167,23 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
             return response()->json($responseData);
         }
 
-        if (! empty($valCheck)) {
-            if ($valCheck == 1) {
-                $sort[] = ['created_at' => ['order' => 'desc']];
-            } elseif ($valCheck == 2) {
-                $sort[] = ['created_at' => ['order' => 'asc']];
-            } else {
-                $sort[] = ['id' => ['order' => 'desc']];
-            }
-        } else {
-            $sort[] = ['id' => ['order' => 'desc']];
-        }
+        $sort = [['id' => ['order' => 'desc']]];
 
         // Cleaned up ES filter conditions
         $must[] = ['term' => ['self_company' => 1]];
         $must[] = ['terms' => ['company_id' => $companyIds]];
+
+        // Specialization (Country) filter via nested client_location
+        if (! empty($countryFilter)) {
+            $must[] = [
+                'nested' => [
+                    'path' => 'client_location',
+                    'query' => [
+                        'term' => ['client_location.country_id' => (int) $countryFilter],
+                    ],
+                ],
+            ];
+        }
 
         if (! empty($customSearch)) {
             $customSearchLower = strtolower($customSearch);
@@ -225,6 +252,24 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
                 $batchLocations = $this->agencyListingService->getBatchLocations($clientIds);
                 $batchIndustries = $this->agencyListingService->getBatchIndustries($industryIds);
                 $batchRelations = $this->agencyListingService->getBatchRelationData($agencyCompanyIds, $company_id);
+
+                // Optional: Performance filtering based on batch pipeline activity
+                if (! empty($performanceFilter)) {
+                    $data = array_values(array_filter($data, function ($agency) use ($batchAgencyStats, $performanceFilter) {
+                        $cId = $agency['company_id'] ?? null;
+                        $stats = $batchAgencyStats[$cId] ?? null;
+                        $score = $stats ? ($stats->all_candidates + $stats->all_interview + $stats->offers + $stats->Joined) : 0;
+                        if ($performanceFilter === 'high') {
+                            return $score >= 5;
+                        } elseif ($performanceFilter === 'medium') {
+                            return $score >= 1 && $score < 5;
+                        } elseif ($performanceFilter === 'low') {
+                            return $score === 0;
+                        }
+                        return true;
+                    }));
+                    $total = count($data);
+                }
             } catch (\Exception $e) {
                 $total = 0;
                 $data = [];
@@ -278,6 +323,19 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'warning', 'message' => $validator->errors()->first()]);
         }
+
+        // Concurrency & Idempotency Protection: Atomic lock per tenant + email
+        $lockKey = 'lock:staffing_invite:comp_'.$company_id.':'.md5(strtolower(trim($staffing_partners_email)));
+        $lock = cache()->lock($lockKey, 10); // 10 second safety TTL
+
+        if (! $lock->get()) {
+            return Reply::dataOnly([
+                'status' => 'warning',
+                'message' => 'An invitation request for this email is currently being processed. Please wait a moment.'
+            ]);
+        }
+
+        try {
 
         $clientRow = DB::table('clients')->select('*')->where('company_id', $company_id)->where('self_company', 1)->first();
 
@@ -419,6 +477,15 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 						After completing these steps, they will be able to start collaborating with your organization.';
                     $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
+                    try {
+                        \App\Events\ConsultancyPartnershipUpdated::dispatch(
+                            $company_id,
+                            'invitation_sent',
+                            $spartnerDataCnt['spartnerAll'] ?? null,
+                            $spartnerDataCnt['sentRequest'] ?? null
+                        );
+                    } catch (\Throwable $e) {}
+
                     return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
                 }
             }
@@ -508,8 +575,21 @@ class ServiceCompanyConsultancyController extends ServiceCompanyBaseController
 
             $spartnerDataCnt = $this->agencyListingService->getSummaryCounters($company_id);
 
+            try {
+                \App\Events\ConsultancyPartnershipUpdated::dispatch(
+                    $company_id,
+                    'invitation_sent',
+                    $spartnerDataCnt['spartnerAll'] ?? null,
+                    $spartnerDataCnt['sentRequest'] ?? null
+                );
+            } catch (\Throwable $e) {}
+
             return Reply::dataOnly(['status' => 'success', 'message' => $message, 'spartnerDataCnt' => $spartnerDataCnt]);
 
+        }
+
+        } finally {
+            $lock->release();
         }
 
     }

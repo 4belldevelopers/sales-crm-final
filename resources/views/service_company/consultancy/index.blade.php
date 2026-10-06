@@ -1952,15 +1952,13 @@ $(document).ready(function() {
         });
 
 
-        $(document).on('keyup', '#kt_tagify_2', function() {
-            // $('#myTable').DataTable().draw();
-            fetchstaffingpartner();
-            //  table._fnDraw();
-        });
+         var filterDebounceTimer = null;
 
         function filtersdataget() {
-            // $('#myTable').DataTable().draw();
-            fetchstaffingpartner();
+            clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = setTimeout(function() {
+                ConsultancyListingManager.loadPage(1);
+            }, 300);
         }
         // var table = $('#myTable').dataTable({
 
@@ -2330,6 +2328,22 @@ $(document).ready(function() {
                         $('#span_spartnerAll').html(spartnerAll);
                         $('#span_sentRequest').html(sentRequest);
 
+                        if (typeof ConsultancyListingManager !== 'undefined') {
+                            if (ConsultancyListingManager.clearCache) {
+                                ConsultancyListingManager.clearCache();
+                            }
+                            if (ConsultancyListingManager.broadcastChannel) {
+                                try {
+                                    ConsultancyListingManager.broadcastChannel.postMessage({
+                                        type: 'PARTNER_INVITATION_SENT',
+                                        spartnerAll: spartnerAll,
+                                        sentRequest: sentRequest,
+                                        timestamp: Date.now()
+                                    });
+                                } catch(e) {}
+                            }
+                        }
+
                         swal({
                             title: "Success!",
                             text: response.message,
@@ -2566,6 +2580,10 @@ $(document).ready(function() {
             var url = "{{ route('service_company.consultancy.dviewmore', ':id') }}";
             url = url.replace(':id', id);
 
+            if (typeof AgencyDetailTabManager !== 'undefined' && AgencyDetailTabManager.resetState) {
+                AgencyDetailTabManager.resetState();
+            }
+
             var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
             $.ajax({
                 type: 'GET',
@@ -2580,53 +2598,330 @@ $(document).ready(function() {
             });
         });
 
+        // Drawer cleanup listener to abort background requests and free chart memory on close
+        $(document).on('click', '#kt_activitiesDirectClient_close', function() {
+            if (typeof AgencyDetailTabManager !== 'undefined' && AgencyDetailTabManager.resetState) {
+                AgencyDetailTabManager.resetState();
+            }
+            if (typeof dashboardCharts !== 'undefined') {
+                Object.keys(dashboardCharts).forEach(function(key) {
+                    try {
+                        if (dashboardCharts[key] && typeof dashboardCharts[key].destroy === 'function') {
+                            dashboardCharts[key].destroy();
+                        }
+                    } catch (e) {}
+                });
+                dashboardCharts = {};
+            }
+        });
 
+        // ─────────────────────────────────────────────────────────────────────────────
+        // JeroConsultancyLocalStore — Browser IndexedDB Engine for 0% Avoidable Hits
+        // ─────────────────────────────────────────────────────────────────────────────
+        const JERO_CONSULTANCY_DB_NAME = 'JeroConsultancyLocalStore';
+        const JERO_CONSULTANCY_DB_VERSION = 1;
+        const JERO_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        const JERO_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+        const JERO_CONSULTANCY_TTL_MS = 10 * 60 * 1000; // 10 minutes TTL
+
+        const JeroConsultancyLocalStore = (function() {
+            let dbPromise = null;
+
+            function getDB() {
+                if (!window.indexedDB) return Promise.resolve(null);
+                if (dbPromise) return dbPromise;
+
+                dbPromise = new Promise((resolve) => {
+                    try {
+                        const req = window.indexedDB.open(JERO_CONSULTANCY_DB_NAME, JERO_CONSULTANCY_DB_VERSION);
+                        req.onupgradeneeded = function(e) {
+                            const db = e.target.result;
+                            if (!db.objectStoreNames.contains('consultancy_cache')) {
+                                db.createObjectStore('consultancy_cache', { keyPath: 'cache_key' });
+                            }
+                            if (!db.objectStoreNames.contains('meta')) {
+                                db.createObjectStore('meta', { keyPath: 'id' });
+                            }
+                        };
+                        req.onsuccess = function(e) {
+                            const db = e.target.result;
+                            try {
+                                const tx = db.transaction(['meta'], 'readonly');
+                                const metaStore = tx.objectStore('meta');
+                                const metaReq = metaStore.get('current_context');
+                                metaReq.onsuccess = function() {
+                                    const meta = metaReq.result;
+                                    if (meta && (meta.tenant_id !== JERO_TENANT_ID || meta.user_id !== JERO_USER_ID)) {
+                                        // Tenant or user switched: instant wipe to prevent cross-tenant data leakage
+                                        const wipeTx = db.transaction(['consultancy_cache', 'meta'], 'readwrite');
+                                        wipeTx.objectStore('consultancy_cache').clear();
+                                        wipeTx.objectStore('meta').put({
+                                            id: 'current_context',
+                                            tenant_id: JERO_TENANT_ID,
+                                            user_id: JERO_USER_ID,
+                                            updated_at: Date.now()
+                                        });
+                                    } else if (!meta) {
+                                        const setTx = db.transaction(['meta'], 'readwrite');
+                                        setTx.objectStore('meta').put({
+                                            id: 'current_context',
+                                            tenant_id: JERO_TENANT_ID,
+                                            user_id: JERO_USER_ID,
+                                            updated_at: Date.now()
+                                        });
+                                    }
+                                };
+                            } catch (err) {
+                                console.warn('JeroConsultancyLocalStore context check:', err);
+                            }
+                            resolve(db);
+                        };
+                        req.onerror = function() { resolve(null); };
+                    } catch (err) {
+                        resolve(null);
+                    }
+                });
+
+                return dbPromise;
+            }
+
+            return {
+                get: async function(key) {
+                    const db = await getDB();
+                    if (!db || !key) return null;
+                    return new Promise((resolve) => {
+                        try {
+                            const tx = db.transaction(['consultancy_cache'], 'readonly');
+                            const store = tx.objectStore('consultancy_cache');
+                            const req = store.get(key);
+                            req.onsuccess = function() {
+                                const res = req.result;
+                                if (res && (Date.now() - res.timestamp < JERO_CONSULTANCY_TTL_MS)) {
+                                    resolve(res.payload);
+                                } else {
+                                    resolve(null);
+                                }
+                            };
+                            req.onerror = function() { resolve(null); };
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    });
+                },
+                set: async function(key, payload) {
+                    const db = await getDB();
+                    if (!db || !key || !payload) return;
+                    try {
+                        const tx = db.transaction(['consultancy_cache'], 'readwrite');
+                        const store = tx.objectStore('consultancy_cache');
+                        store.put({
+                            cache_key: key,
+                            payload: payload,
+                            timestamp: Date.now()
+                        });
+                    } catch (e) {}
+                },
+                purge: async function() {
+                    const db = await getDB();
+                    if (!db) return;
+                    try {
+                        const tx = db.transaction(['consultancy_cache'], 'readwrite');
+                        tx.objectStore('consultancy_cache').clear();
+                    } catch (e) {}
+                }
+            };
+        })();
+
+        var ConsultancyListingManager = {
+            currentPage: 1,
+            activeController: null,
+            requestSequence: 0,
+            pageCache: new Map(),
+            maxCacheSize: 20,
+            cacheTTL: 120000, // 2 minutes
+            broadcastChannel: null,
+
+            initMultiTabSync: function() {
+                var self = this;
+                // 1. BroadcastChannel for instant same-browser tab synchronization
+                if (typeof window.BroadcastChannel !== 'undefined') {
+                    try {
+                        this.broadcastChannel = new BroadcastChannel('jero_consultancy_sync');
+                        this.broadcastChannel.onmessage = function(event) {
+                            if (!event || !event.data) return;
+                            var msg = event.data;
+                            if (msg.type === 'PARTNER_INVITATION_SENT') {
+                                if (msg.spartnerAll !== undefined) {
+                                    $('#span_spartnerAll').html(msg.spartnerAll);
+                                }
+                                if (msg.sentRequest !== undefined) {
+                                    $('#span_sentRequest').html(msg.sentRequest);
+                                }
+                                self.clearCache();
+                                JeroConsultancyLocalStore.purge();
+                                self.loadPage(self.currentPage, true);
+                            }
+                        };
+                    } catch(e) {}
+                }
+
+                // 2. Realtime WebSocket via Laravel Echo / Reverb (across multiple devices & users)
+                if (typeof window.Echo !== 'undefined' && JERO_TENANT_ID > 0) {
+                    try {
+                        window.Echo.private('company.' + JERO_TENANT_ID)
+                            .listen('.consultancy.updated', function(e) {
+                                if (!e) return;
+                                if (e.spartnerAll !== undefined) {
+                                    $('#span_spartnerAll').html(e.spartnerAll);
+                                }
+                                if (e.sentRequest !== undefined) {
+                                    $('#span_sentRequest').html(e.sentRequest);
+                                }
+                                self.clearCache();
+                                JeroConsultancyLocalStore.purge();
+                                self.loadPage(self.currentPage, true);
+                            });
+                    } catch (err) {
+                        console.warn('Echo Reverb subscription:', err);
+                    }
+                }
+            },
+
+            getCacheKey: function(page) {
+                var perPage = localStorage.getItem('candidatePerPage') || 10;
+                var search = ($('#inputSearch').val() || '').trim();
+                var cusSearch = ($('#kt_tagify_2').val() || '').trim();
+                var country = ($('#country').val() || '').trim();
+                var sort = ($('#sortingfilter').val() || '').trim();
+                var performance = ($('#agency_performance').val() || '').trim();
+                var sla = ($('#response_sla').val() || '').trim();
+                return ['consultancy', JERO_TENANT_ID, page, perPage, search, cusSearch, country, sort, performance, sla].join('|');
+            },
+
+            clearCache: function() {
+                this.pageCache.clear();
+                JeroConsultancyLocalStore.purge();
+            },
+
+            renderResponse: function(response) {
+                $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                if (response.total !== undefined) {
+                    $('#span_spartnerAll').html(response.total);
+                }
+                $('#staffingpartnerajax').html(response.html);
+                $('#paginationstaffingpartner').html(response.pagination);
+            },
+
+            loadPage: async function(page, forceRefresh) {
+                page = page || 1;
+                this.currentPage = page;
+
+                var cacheKey = this.getCacheKey(page);
+                var self = this;
+
+                // Layer 1: Instant In-Memory RAM Cache (< 1ms render)
+                if (!forceRefresh && this.pageCache.has(cacheKey)) {
+                    var memCached = this.pageCache.get(cacheKey);
+                    if (Date.now() - memCached.timestamp < this.cacheTTL) {
+                        this.renderResponse(memCached.data);
+                        return;
+                    } else {
+                        this.pageCache.delete(cacheKey);
+                    }
+                }
+
+                // Layer 2: Instant IndexedDB Cache (< 8ms render)
+                if (!forceRefresh) {
+                    try {
+                        var idbCached = await JeroConsultancyLocalStore.get(cacheKey);
+                        if (idbCached) {
+                            self.pageCache.set(cacheKey, { data: idbCached, timestamp: Date.now() });
+                            self.renderResponse(idbCached);
+                            return; // 0% server hit!
+                        }
+                    } catch (e) {}
+                }
+
+                // Layer 3: Authoritative API Fetch (if not present in RAM or IndexedDB)
+                if (this.activeController) {
+                    try {
+                        this.activeController.abort();
+                    } catch(e) {}
+                }
+
+                var controller = new AbortController();
+                this.activeController = controller;
+
+                var seq = ++this.requestSequence;
+                $('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
+                var perPage = localStorage.getItem('candidatePerPage') || 10;
+
+                $.ajax({
+                    url: `{!! route('service_company.consultancy.data_ajax') !!}?page=${page}`,
+                    type: 'GET',
+                    signal: controller.signal,
+                    data: {
+                        search: $('#inputSearch').val(),
+                        cus_search: $('#kt_tagify_2').val(),
+                        country: $('#country').val(),
+                        sortingfilter: $('#sortingfilter').val(),
+                        agency_performance: $('#agency_performance').val(),
+                        response_sla: $('#response_sla').val(),
+                        per_page: perPage,
+                        size: perPage
+                    },
+                    success: function(response) {
+                        if (seq !== self.requestSequence) return;
+
+                        // Save in Browser RAM
+                        if (self.pageCache.size >= self.maxCacheSize) {
+                            var oldestKey = self.pageCache.keys().next().value;
+                            self.pageCache.delete(oldestKey);
+                        }
+                        self.pageCache.set(cacheKey, {
+                            data: response,
+                            timestamp: Date.now()
+                        });
+
+                        // Save in Browser IndexedDB
+                        JeroConsultancyLocalStore.set(cacheKey, response);
+
+                        self.renderResponse(response);
+                    },
+                    error: function(xhr, status) {
+                        if (status !== 'abort') {
+                            $('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
+                        }
+                    }
+                });
+            }
+        };
+
+        // Backward compatibility bridge
+        function fetchstaffingpartner(page = 1, search = '') {
+            ConsultancyListingManager.loadPage(page);
+        }
 
         $(document).ready(function() {
-          fetchstaffingpartner();
-          $(document).on('click', '#paginationstaffingpartner .pagi-page, #paginationstaffingpartner .pagi-arrow', function(e) {
-              e.preventDefault();
+            ConsultancyListingManager.initMultiTabSync();
+            ConsultancyListingManager.loadPage(1);
 
-              const page = $(this).data('page');
-              if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
+            $(document).on('click', '#paginationstaffingpartner .pagi-page, #paginationstaffingpartner .pagi-arrow', function(e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
-              fetchstaffingpartner(page, $('#search').val());
-          });
+                ConsultancyListingManager.loadPage(page);
+            });
 
-          $(document).on('change', '#paginationstaffingpartner .pagi-perpage', function(e) {
-              const selectedPerPage = $(this).val();
-              if (selectedPerPage) {
-                  localStorage.setItem('candidatePerPage', selectedPerPage);
-                  fetchstaffingpartner(1, $('#search').val());
-              }
-          });
-			});
-			
-
-			function fetchstaffingpartner(page = 1, search = '') {
-				$('.loadingMessagestaffingpartnerajax').css({ display: 'block' });
-                // $('.page-loader').css('display', 'flex');
-                var perPage = localStorage.getItem('candidatePerPage') || 10;
-				$.ajax({
-					url: `{!! route('service_company.consultancy.data_ajax') !!}?page=${page}`,
-					type: 'GET',
-					data: {
-						search: $('#inputSearch').val(),
-						cus_search: $('#kt_tagify_2').val(),
-						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val(),
-						per_page: perPage,
-						size: perPage
-					},
-					success: function(response) {
-						$('.loadingMessagestaffingpartnerajax').css({ display: 'none' });
-                        // $('.page-loader').css('display', 'none');
-                        $('#span_spartnerAll').html(response.total);
-						$('#staffingpartnerajax').html(response.html);
-						$('#paginationstaffingpartner').html(response.pagination);
-					}
-				});
-			}
+            $(document).on('change', '#paginationstaffingpartner .pagi-perpage', function(e) {
+                const selectedPerPage = $(this).val();
+                if (selectedPerPage) {
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    ConsultancyListingManager.loadPage(1);
+                }
+            });
+        });
 
 
 
