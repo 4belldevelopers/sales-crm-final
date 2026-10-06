@@ -79,7 +79,7 @@ window.ResumePresign = (function () {
             // Required before the submit handler's atomic claim (Injection 1 status check).
             await _finalize(session.uuid);
 
-            _setState(STATE.UPLOADED, 100);
+            _setState(STATE.UPLOADED, 100, null, 'Method A');
             return session;
         } catch (err) {
             _setState(STATE.FAILED, 0, err.message);
@@ -159,7 +159,7 @@ window.ResumePresign = (function () {
                 // File is in R2 — restore state so the submit handler can claim it.
                 _sessionUuid = storedUuid;
                 _setSessionUuidGlobal(storedUuid);
-                _setState(STATE.UPLOADED, 100);
+                _setState(STATE.UPLOADED, 100, null, 'Method c');
                 return body;
             }
 
@@ -380,9 +380,15 @@ window.ResumePresign = (function () {
             .join('');
     }
 
-    function _setState(state, progress, error) {
+    function _setState(state, progress, error, method) {
         _state = state;
-        var payload = { state: state, progress: progress || 0, error: error || null, sessionUuid: _sessionUuid };
+        var payload = {
+            state: state,
+            progress: progress || 0,
+            error: error || null,
+            sessionUuid: _sessionUuid,
+            method: method || (state === STATE.UPLOADED ? 'Method A' : null),
+        };
         _listeners.forEach(function (fn) { try { fn(payload); } catch (_) {} });
     }
 

@@ -3567,7 +3567,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'candidate_id' => $jobApplication->id,
                         'resume_asset_id' => $resumeAssetId,
                     ], $company_id, $submitted_by);
-                } elseif ($request->hasFile('resume')) {
+                } elseif ($request->hasFile('resume') || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))) {
                     $companyNameR2 = DB::table('companies')
                         ->where('id', auth()->user()->company_id)
                         ->value('company_name');
@@ -3626,7 +3626,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
 
             // Guard: do not wipe the resume URL when v2 or file upload already set it above.
-            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume')) {
+            if (empty($request->resumeCheck) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
                 $jobApplication->current_resume_id = null;
                 $jobApplication->resume = '';
                 $this->resilientSaveJobApplication($jobApplication);
@@ -7513,7 +7513,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'candidate_id' => $jobApplication->id,
                     'resume_asset_id' => $newAssetId,
                 ], $company_id, auth()->id());
-            } elseif ($request->hasFile('resume')) {
+            } elseif ($request->hasFile('resume') || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))) {
                 $companyNameR2 = DB::table('companies')
                     ->where('id', auth()->user()->company_id)
                     ->value('company_name');
