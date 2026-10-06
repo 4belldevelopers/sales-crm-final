@@ -1598,10 +1598,10 @@ select#gender {
     overflow: visible !important;
     position: relative;
     z-index: 20;
-    border: 1px solid #dbeafe !important;
+    border: 1px solid #efd36b !important;
     border-radius: 8px !important;
     background: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05) !important;
+    box-shadow: 0 4px 14px rgba(214, 158, 0, 0.06) !important;
     margin-bottom: 20px;
 }
 .rm-note-card.has-open-dropdown,
@@ -1615,10 +1615,10 @@ select#gender {
 #recruiter_comments_section .candidate-card-header {
     min-height: 58px !important;
     padding: 12px 18px !important;
-    border-bottom: 1px solid #dbeafe !important;
+    border-bottom: 1px solid #f5e3a0 !important;
     border-top-left-radius: 7px !important;
     border-top-right-radius: 7px !important;
-    background: linear-gradient(90deg, #f0f6ff 0%, #ffffff 82%) !important;
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 82%) !important;
     display: flex;
     align-items: center;
 }
@@ -1636,16 +1636,16 @@ select#gender {
     flex-basis: 38px !important;
     border-radius: 8px !important;
     border: 0 !important;
-    color: #ffffff !important;
-    background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
-    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important;
+    color: #071434 !important;
+    background: #ffca0a !important;
+    box-shadow: 0 4px 10px rgba(214, 158, 0, 0.22) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 .rm-note-card .candidate-card-icon--note i,
 #recruiter_comments_section .candidate-card-icon--note i {
-    color: #ffffff !important;
+    color: #071434 !important;
     opacity: 1 !important;
     font-size: 18px !important;
     line-height: 1 !important;
@@ -1696,20 +1696,20 @@ select#gender {
     height: 44px;
     padding: 0 14px;
     background: #ffffff;
-    border: 1px solid #dbeafe;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.18s ease;
     user-select: none;
 }
 .custom-template-trigger:hover {
-    border-color: #2563eb;
-    background: #f8fafc;
+    border-color: #f59e0b;
+    background: #fffdf5;
 }
 .custom-template-trigger:focus,
 .custom-template-dropdown.is-open .custom-template-trigger {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
     outline: none;
     background: #ffffff;
 }
@@ -1722,7 +1722,7 @@ select#gender {
 }
 .custom-template-trigger .trigger-icon {
     font-size: 15px;
-    color: #2563eb;
+    color: #d97706;
     flex-shrink: 0;
 }
 .custom-template-trigger .trigger-label {
@@ -1746,7 +1746,7 @@ select#gender {
 }
 .custom-template-dropdown.is-open .custom-template-trigger .trigger-arrow {
     transform: rotate(180deg);
-    color: #2563eb;
+    color: #d97706;
 }
 .custom-template-menu {
     position: absolute;
@@ -1792,6 +1792,10 @@ select#gender {
     margin-bottom: 4px;
     font-family: 'Poppins', sans-serif;
 }
+.tpl-cat--amber {
+    background: #fffbeb;
+    color: #92400e;
+}
 .tpl-cat--blue {
     background: #eff6ff;
     color: #1d4ed8;
@@ -1799,10 +1803,6 @@ select#gender {
 .tpl-cat--green {
     background: #f0fdf4;
     color: #166534;
-}
-.tpl-cat--amber {
-    background: #fffbeb;
-    color: #92400e;
 }
 .tpl-cat--purple {
     background: #f5f3ff;
@@ -1821,12 +1821,12 @@ select#gender {
     transition: all 0.15s ease-in-out;
 }
 .tpl-card-item:hover {
-    background: #f8fafc;
-    border-color: #e2e8f0;
+    background: #fffdf5;
+    border-color: #fde68a;
 }
 .tpl-card-item.is-selected {
-    background: #eff6ff !important;
-    border-color: #bfdbfe !important;
+    background: #fefce8 !important;
+    border-color: #fde68a !important;
 }
 .tpl-card-left {
     display: flex;
@@ -1841,7 +1841,7 @@ select#gender {
     justify-content: center;
     width: 26px;
     height: 26px;
-    color: #2563eb;
+    color: #d97706;
     font-size: 15px;
     flex-shrink: 0;
 }
@@ -1875,7 +1875,7 @@ select#gender {
 }
 .tpl-card-check i {
     font-size: 16px;
-    color: #2563eb;
+    color: #d97706;
 }
 .tpl-card-item.is-selected .tpl-card-check {
     display: inline-flex !important;
@@ -1898,17 +1898,17 @@ select#gender {
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 .recruiter-editor-field textarea#recruiter_note:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
     outline: none !important;
 }
 .recruiter-private-note {
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
-    background: #eff6ff !important;
-    color: #1d4ed8 !important;
-    border: 1px solid #dbeafe !important;
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde68a !important;
     border-radius: 9999px !important;
     padding: 4px 10px !important;
     font-size: 11px !important;
@@ -1922,17 +1922,17 @@ select#gender {
     font-family: 'Poppins', sans-serif;
 }
 #btn_sync_rm_template {
-    background: #eff6ff !important;
-    color: #2563eb !important;
-    border: 1px solid #dbeafe !important;
+    background: #fffbeb !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
     border-radius: 6px !important;
     font-weight: 600 !important;
     transition: all 0.15s ease !important;
 }
 #btn_sync_rm_template:hover {
-    background: #dbeafe !important;
-    color: #1d4ed8 !important;
-    border-color: #bfdbfe !important;
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border-color: #fcd34d !important;
 }
 .field-attention-highlight {
     animation: rmFieldPulse 0.7s ease !important;
@@ -3559,111 +3559,102 @@ select#gender {
               </div>
               <div class="fsc candidate-card-body">
                 @php
-                  // Categorize master templates into 4 enterprise groupings
-                  $catAvailability  = [];
-                  $catEngagement    = [];
-                  $catStrength      = [];
-                  $catRestructuring = [];
+                  // Categorize Add Candidate master templates into 4 enterprise groupings
+                  $catTechnical        = [];
+                  $catAlignment        = [];
+                  $catLogistics        = [];
+                  $catCultureRecommend = [];
 
                   $masterTemplatesList = [
                       [
-                          'id'       => 101,
-                          'cat'      => 'avail',
-                          'icon'     => 'fa-regular fa-clock',
-                          'title'    => 'Bench Availability & Immediate Deployment',
-                          'subtitle' => 'Active on bench and ready for immediate opportunities.',
+                          'id'       => 201,
+                          'cat'      => 'technical',
+                          'icon'     => 'fa-solid fa-code',
+                          'title'    => 'Technical Competency & Skills Fit',
+                          'subtitle' => 'Hands-on skills proficiency and role suitability.',
                           'order'    => 1,
-                          'content'  => "Talent is active with immediate availability.\n• Technical competencies, problem-solving, and client communication thoroughly assessed.\n• Ready for full-time deployment across hybrid/remote client engagements.\n• All onboarding compliance and background checks verified.",
+                          'content'  => "Key technical strengths and role suitability:\n• Hands-on proficiency across primary skill stack: [3 skills].\n• Evaluated problem-solving approach, architecture understanding, and code quality.\n• Relevant experience in [current designation] aligns well with target requisition requirements.",
                       ],
                       [
-                          'id'       => 102,
-                          'cat'      => 'avail',
-                          'icon'     => 'fa-regular fa-calendar-days',
-                          'title'    => 'Notice Period & Availability',
-                          'subtitle' => 'Currently serving notice period with defined availability.',
+                          'id'       => 2,
+                          'cat'      => 'technical',
+                          'icon'     => 'fa-solid fa-laptop-code',
+                          'title'    => 'Technical Skills Assessment',
+                          'subtitle' => 'Standard screening note from recruiter template master.',
                           'order'    => 2,
-                          'content'  => "Deployment logistics:\n• Availability / Notice Period: [Availability / Notice Period].\n• Work Authorization / Visa: [Work Authorization / Visa Status].\n• Technical competencies and client communication thoroughly assessed.\n• Prepared to initiate client interviews upon requisition approval.",
+                          'content'  => "Candidate has solid technical foundation with hands-on experience in the required technologies. Code quality, problem-solving approach, and technical depth were assessed during the screening.",
                       ],
                       [
-                          'id'       => 103,
-                          'cat'      => 'avail',
-                          'icon'     => 'fa-solid fa-wifi',
-                          'title'    => 'Remote Only',
-                          'subtitle' => 'Available for remote opportunities only.',
+                          'id'       => 3,
+                          'cat'      => 'technical',
+                          'icon'     => 'fa-solid fa-magnifying-glass-chart',
+                          'title'    => 'Needs Further Evaluation',
+                          'subtitle' => 'Recommend scheduling a follow-up technical deep-dive.',
                           'order'    => 3,
-                          'content'  => "• Currently active and available for remote opportunities only.\n• Technical skills, problem-solving ability and communication skills have been assessed.\n• Ready for immediate deployment on remote engagements.\n• Background verification and onboarding compliance completed.",
+                          'content'  => "Candidate shows potential but requires a more in-depth technical round before making a final decision. Recommend scheduling a follow-up interview to assess specific skill gaps.",
                       ],
                       [
-                          'id'       => 104,
-                          'cat'      => 'eng',
+                          'id'       => 202,
+                          'cat'      => 'alignment',
                           'icon'     => 'fa-solid fa-briefcase',
-                          'title'    => 'Contract Engagement',
-                          'subtitle' => 'Available for contract / C2C / C2H engagements only.',
+                          'title'    => 'Role Alignment & Domain Experience',
+                          'subtitle' => 'Domain knowledge and industry track record match.',
                           'order'    => 1,
-                          'content'  => "• Currently active and available for contract engagements only.\n• Technical skills, problem-solving ability and communication skills have been assessed.\n• Ready for immediate deployment on contract engagements.\n• Background verification and onboarding compliance completed.",
+                          'content'  => "Role and domain alignment analysis:\n• Candidate brings solid background as [current designation] with proven execution track record.\n• Core competencies match target position requirements for [most relevant requirement].\n• Strong understanding of end-to-end SDLC, agile team collaboration, and production delivery.",
                       ],
                       [
-                          'id'       => 105,
-                          'cat'      => 'eng',
-                          'icon'     => 'fa-regular fa-user',
-                          'title'    => 'Direct Hire / Permanent',
-                          'subtitle' => 'Available for full-time / direct-hire opportunities only.',
-                          'order'    => 2,
-                          'content'  => "• Currently active and available for full-time/direct-hire opportunities only.\n• Technical skills, problem-solving ability and communication skills have been assessed.\n• Ready for immediate deployment.\n• Background verification and onboarding compliance completed.",
-                      ],
-                      [
-                          'id'       => 106,
-                          'cat'      => 'eng',
-                          'icon'     => 'fa-solid fa-right-left',
-                          'title'    => 'Contract or Direct Hire',
-                          'subtitle' => 'Open to both contract and full-time opportunities.',
-                          'order'    => 3,
-                          'content'  => "• Currently active and open to both contract and full-time/direct-hire engagements.\n• Technical skills, problem-solving ability and communication skills have been assessed.\n• Ready for immediate deployment across flexible engagement models.\n• Background verification and onboarding compliance completed.",
-                      ],
-                      [
-                          'id'       => 107,
-                          'cat'      => 'strength',
-                          'icon'     => 'fa-regular fa-star',
-                          'title'    => 'Core Skills & Role Fit',
-                          'subtitle' => 'Strong technical skills and alignment with target roles.',
-                          'order'    => 1,
-                          'content'  => "Key strengths and project suitability:\n• Proven track record in delivery with enterprise-grade architectures.\n• Recommended for lead or senior developer roles matching primary skill stack.\n• Candidate demonstrates high adaptability and rapid ramp-up capability.",
-                      ],
-                      [
-                          'id'       => 108,
-                          'cat'      => 'strength',
-                          'icon'     => 'fa-solid fa-wand-magic-sparkles',
-                          'title'    => 'Role Alignment & Skills Match',
-                          'subtitle' => 'Recommendation synced in real-time with role, skills, and availability.',
-                          'order'    => 2,
-                          'content'  => "This candidate appears to be a strong match for the requirement, with relevant experience in [current designation] and hands-on exposure to [3 skills]. The profile aligns well with the key requirements of the position, particularly [most relevant requirement].\n\nAvailability: [Immediate / X days / Serving notice / Available from date].\n\nRecommended to review for this requirement.",
-                      ],
-                      [
-                          'id'       => 109,
-                          'cat'      => 'strength',
+                          'id'       => 203,
+                          'cat'      => 'alignment',
                           'icon'     => 'fa-regular fa-comments',
-                          'title'    => 'Good Communication Skills',
-                          'subtitle' => 'Well-rounded professional profile with evaluated communication abilities.',
-                          'order'    => 3,
-                          'content'  => "The candidate has relevant experience and a well-rounded professional profile, with good communication skills along with the required technical, functional or domain knowledge. The candidate demonstrates a professional approach, adaptability and practical exposure relevant to the role.\n\nOverall, the profile appears suitable for the current requirement and is worth reviewing based on the candidate's experience, skills and professional background.\n\nRecommended to review this profile.",
+                          'title'    => 'Communication & Stakeholder Management',
+                          'subtitle' => 'Articulate communication and cross-functional collaboration.',
+                          'order'    => 2,
+                          'content'  => "Communication and professional presentation:\n• Articulate verbal and written communication during screening discussion.\n• Experienced in interacting with cross-functional technical teams, clients, and leadership.\n• Professional demeanor, high accountability, and proactive problem solver.",
                       ],
                       [
-                          'id'       => 110,
-                          'cat'      => 'strength',
-                          'icon'     => 'fa-solid fa-graduation-cap',
-                          'title'    => 'Trained & Job-Ready Entry-Level Talent',
-                          'subtitle' => 'Job-ready entry-level talent with comprehensive practical training.',
-                          'order'    => 4,
-                          'content'  => "• Job-ready entry-level talent with comprehensive practical training in relevant technologies and industry best practices.\n• Core technical competencies, hands-on project exposure, and professional communication skills have been assessed.\n• Available for full-time or contract engagement opportunities.\n• Background verification completed and ready for immediate deployment.",
-                      ],
-                      [
-                          'id'       => 111,
-                          'cat'      => 'restructure',
-                          'icon'     => 'fa-solid fa-user-clock',
-                          'title'    => 'Laid-Off Talents',
-                          'subtitle' => 'Experienced talent available immediately due to workforce restructuring.',
+                          'id'       => 5,
+                          'cat'      => 'logistics',
+                          'icon'     => 'fa-regular fa-calendar-check',
+                          'title'    => 'Notice Period & Availability',
+                          'subtitle' => 'Notice period, joining availability, and early release.',
                           'order'    => 1,
-                          'content'  => "• Experienced talent currently available due to organizational workforce restructuring.\n• Relevant skills, domain experience and communication capabilities have been assessed.\n• Available for immediate full-time or contract opportunities.\n• Background verification completed; open to suitable roles and ready for prompt deployment.",
+                          'content'  => "Availability and joining logistics:\n• Availability / Notice Period: [Availability / Notice Period].\n• Work Authorization / Visa: [Work Authorization / Visa Status].\n• Confirm last working date and explore possible early-release / buy-out options with current employer.",
+                      ],
+                      [
+                          'id'       => 4,
+                          'cat'      => 'logistics',
+                          'icon'     => 'fa-solid fa-coins',
+                          'title'    => 'Salary Expectations & Budget Fit',
+                          'subtitle' => 'Expected CTC and compensation flexibility note.',
+                          'order'    => 2,
+                          'content'  => "Compensation and budget alignment:\n• Current Salary: [current salary] | Expected Salary: [expected salary].\n• Candidate salary expectations evaluated against budgeted requisition range.\n• Discuss compensation flexibility before proceeding to the final offer stage.",
+                      ],
+                      [
+                          'id'       => 1,
+                          'cat'      => 'recommend',
+                          'icon'     => 'fa-solid fa-heart',
+                          'title'    => 'Strong Cultural Fit',
+                          'subtitle' => 'Culture, values alignment, and collaborative mindset.',
+                          'order'    => 1,
+                          'content'  => "This candidate demonstrates a strong alignment with our company culture and values. They show initiative, adaptability, and a collaborative mindset that would make them a great team addition.",
+                      ],
+                      [
+                          'id'       => 204,
+                          'cat'      => 'recommend',
+                          'icon'     => 'fa-solid fa-circle-check',
+                          'title'    => 'Strong Hire Recommendation',
+                          'subtitle' => 'Highly recommended to fast-track through next hiring rounds.',
+                          'order'    => 2,
+                          'content'  => "Recruiter Recommendation: Highly Recommended for hire.\n• Exceeds technical benchmarks across core stack: [3 skills].\n• Strong domain depth, professional communication, and collaborative mindset.\n• Fast-track candidate to next interview round.",
+                      ],
+                      [
+                          'id'       => 205,
+                          'cat'      => 'recommend',
+                          'icon'     => 'fa-regular fa-folder-open',
+                          'title'    => 'Talent Pool / Backup Candidate',
+                          'subtitle' => 'Recommended for future opportunities matching skill profile.',
+                          'order'    => 3,
+                          'content'  => "Talent Pool note:\n• Candidate possesses solid foundational skills but differs slightly from immediate requisition profile.\n• Recommended for future opportunities requiring expertise in [3 skills].\n• Maintain active contact for upcoming hiring cycles.",
                       ],
                   ];
 
@@ -3671,27 +3662,28 @@ select#gender {
                       foreach ($recruiterNoteTemplates as $dbTpl) {
                           $found = false;
                           foreach ($masterTemplatesList as $m) {
-                              if ($m['title'] === $dbTpl->title) { $found = true; break; }
+                              if ($m['id'] === $dbTpl->id || $m['title'] === $dbTpl->title) { $found = true; break; }
                           }
                           if (!$found) {
+                              $cleanContent = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], ["\n", "\n", "\n", "\n\n", "\n"], $dbTpl->content));
                               $masterTemplatesList[] = [
                                   'id'       => $dbTpl->id,
-                                  'cat'      => 'strength',
+                                  'cat'      => 'recommend',
                                   'icon'     => 'fa-regular fa-file-lines',
                                   'title'    => $dbTpl->title,
                                   'subtitle' => 'Organization candidate evaluation note template.',
                                   'order'    => 99,
-                                  'content'  => strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], ["\n", "\n", "\n", "\n\n", "\n"], $dbTpl->content)),
+                                  'content'  => trim($cleanContent),
                               ];
                           }
                       }
                   }
 
                   foreach ($masterTemplatesList as $item) {
-                      if ($item['cat'] === 'avail') $catAvailability[] = $item;
-                      elseif ($item['cat'] === 'eng') $catEngagement[] = $item;
-                      elseif ($item['cat'] === 'restructure') $catRestructuring[] = $item;
-                      else $catStrength[] = $item;
+                      if ($item['cat'] === 'technical') $catTechnical[] = $item;
+                      elseif ($item['cat'] === 'alignment') $catAlignment[] = $item;
+                      elseif ($item['cat'] === 'logistics') $catLogistics[] = $item;
+                      else $catCultureRecommend[] = $item;
                   }
                 @endphp
 
@@ -3703,66 +3695,20 @@ select#gender {
                     <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
                       <div class="trigger-left">
                         <i class="fa-solid fa-file-lines trigger-icon"></i>
-                        <span class="trigger-label" id="selected_template_label">Core Skills & Role Fit</span>
+                        <span class="trigger-label" id="selected_template_label">Technical Competency & Skills Fit</span>
                       </div>
                       <i class="fa-solid fa-chevron-down trigger-arrow"></i>
                     </div>
 
                     <div class="custom-template-menu" id="custom_template_menu" style="display: none;" role="listbox">
-                      {{-- 1. Availability & Readiness --}}
-                      @if(count($catAvailability) > 0)
-                      <div class="tpl-category-section">
-                        <div class="tpl-category-heading tpl-cat--blue">
-                          <span>Availability & Readiness</span>
-                        </div>
-                        @foreach($catAvailability as $item)
-                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
-                          <div class="tpl-card-left">
-                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                            <div class="tpl-card-text">
-                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                            </div>
-                          </div>
-                          <span class="tpl-card-check">
-                            <i class="fa-solid fa-circle-check"></i>
-                          </span>
-                        </div>
-                        @endforeach
-                      </div>
-                      @endif
-
-                      {{-- 2. Engagement Type --}}
-                      @if(count($catEngagement) > 0)
-                      <div class="tpl-category-section">
-                        <div class="tpl-category-heading tpl-cat--green">
-                          <span>Engagement Type</span>
-                        </div>
-                        @foreach($catEngagement as $item)
-                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
-                          <div class="tpl-card-left">
-                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                            <div class="tpl-card-text">
-                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                            </div>
-                          </div>
-                          <span class="tpl-card-check">
-                            <i class="fa-solid fa-circle-check"></i>
-                          </span>
-                        </div>
-                        @endforeach
-                      </div>
-                      @endif
-
-                      {{-- 3. Candidate Strength --}}
-                      @if(count($catStrength) > 0)
+                      {{-- 1. Technical & Skill Evaluation --}}
+                      @if(count($catTechnical) > 0)
                       <div class="tpl-category-section">
                         <div class="tpl-category-heading tpl-cat--amber">
-                          <span>Candidate Strength</span>
+                          <span>Technical &amp; Skill Evaluation</span>
                         </div>
-                        @foreach($catStrength as $item)
-                        <div class="tpl-card-item {{ $item['title'] === 'Core Skills & Role Fit' ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        @foreach($catTechnical as $item)
+                        <div class="tpl-card-item {{ $item['id'] === 201 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3778,13 +3724,59 @@ select#gender {
                       </div>
                       @endif
 
-                      {{-- 4. Workforce Restructuring --}}
-                      @if(count($catRestructuring) > 0)
+                      {{-- 2. Role Fit & Experience --}}
+                      @if(count($catAlignment) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--blue">
+                          <span>Role Fit &amp; Experience</span>
+                        </div>
+                        @foreach($catAlignment as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+
+                      {{-- 3. Availability, Compensation & Notice --}}
+                      @if(count($catLogistics) > 0)
+                      <div class="tpl-category-section">
+                        <div class="tpl-category-heading tpl-cat--green">
+                          <span>Availability, Compensation &amp; Notice</span>
+                        </div>
+                        @foreach($catLogistics as $item)
+                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                          <div class="tpl-card-left">
+                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
+                            <div class="tpl-card-text">
+                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
+                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
+                            </div>
+                          </div>
+                          <span class="tpl-card-check">
+                            <i class="fa-solid fa-circle-check"></i>
+                          </span>
+                        </div>
+                        @endforeach
+                      </div>
+                      @endif
+
+                      {{-- 4. Culture & Recruiter Recommendation --}}
+                      @if(count($catCultureRecommend) > 0)
                       <div class="tpl-category-section">
                         <div class="tpl-category-heading tpl-cat--purple">
-                          <span>Workforce Restructuring</span>
+                          <span>Culture &amp; Recruiter Recommendation</span>
                         </div>
-                        @foreach($catRestructuring as $item)
+                        @foreach($catCultureRecommend as $item)
                         <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
@@ -3803,20 +3795,20 @@ select#gender {
                     </div>
 
                     {{-- Hidden input for backward compatibility and JS synchronization --}}
-                    <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="107" />
+                    <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="201" />
                   </div>
                 </div>
 
                 <div class="fg fv-row recruiter-editor-field">
                   <div class="d-flex align-items-center justify-content-between mb-2">
                     <label class="mb-0 fw-semibold text-gray-800 fs-7">Recruiter Comments <span class="rq" style="color: #f1416c;">*</span></label>
-                    <button type="button" class="btn btn-sm btn-light-primary py-1 px-3 fs-8" id="btn_sync_rm_template" title="Automatically prefill and sync comments with current Designation, Skills, and Availability from form">
+                    <button type="button" class="btn btn-sm btn-light-warning py-1 px-3 fs-8" id="btn_sync_rm_template" title="Automatically prefill and sync comments with current Designation, Skills, and Availability from form">
                       <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
                     </button>
                   </div>
                   <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add recruiter comments about this candidate (strictly up to 100 words)...">{{ @$application->recruiter_note }}</textarea>
                   <div class="d-flex align-items-center justify-content-between mt-2">
-                    <div class="recruiter-private-note"><i class="fa-solid fa-lock text-primary me-1" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
+                    <div class="recruiter-private-note"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i><span>Internal only - Visible to organization hiring & placement team</span></div>
                     <div class="rm-comments-counter" id="rm_comments_counter">0 / 100 words</div>
                   </div>
                 </div>
@@ -7453,6 +7445,23 @@ $.ajax({
             relReq = 'the core position requirements';
         }
 
+        var curSalVal = ($('#pay_annual').val() || $('#pay_monthly').val() || $('#ctc').val() || '').trim();
+        var curSalCur = ($('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur option:selected').text() || 'INR').trim();
+        var curSalaryStr = curSalVal ? (curSalCur + ' ' + Number(curSalVal).toLocaleString()) : 'Disclosed during screening';
+
+        var expSalVal = ($('#bill_annual').val() || $('#bill_monthly').val() || $('#ectc').val() || '').trim();
+        var expSalaryStr = expSalVal ? (curSalCur + ' ' + Number(expSalVal).toLocaleString()) : 'As per organization budget / Market standards';
+
+        var expYears = ($('#total_exp_year').val() || '').trim();
+        var expMonths = ($('#total_exp_month').val() || '').trim();
+        var totalExpStr = '';
+        if (expYears !== '' && expYears !== null) {
+            if (expYears === '0') totalExpStr = 'Fresher';
+            else totalExpStr = expYears + ' yr' + (expYears > 1 ? 's' : '') + (expMonths && expMonths !== '0' ? (' ' + expMonths + ' mos') : '');
+        } else {
+            totalExpStr = 'Relevant experience verified';
+        }
+
         return {
             designation: designation,
             skills: skillsStr,
@@ -7460,6 +7469,9 @@ $.ajax({
             noticePeriod: noticePeriodStr,
             workAuth: workAuthStr,
             requirement: relReq,
+            currentSalary: curSalaryStr,
+            expectedSalary: expSalaryStr,
+            totalExp: totalExpStr,
             name: ($('#full_name').val() || '').trim()
         };
     }
@@ -7477,10 +7489,16 @@ $.ajax({
         text = text.replace(/\[Availability\s*\/\s*Notice Period\]/gi, vars.noticePeriod);
         text = text.replace(/\[Notice Period\s*\/\s*Availability\]/gi, vars.noticePeriod);
         text = text.replace(/\[Notice Period\]/gi, vars.noticePeriod);
+        text = text.replace(/\[NOTICE PERIOD\]/g, vars.noticePeriod);
         text = text.replace(/\[Work Authorization\s*\/\s*Visa Status\]/gi, vars.workAuth);
         text = text.replace(/\[Work Authorization\s*\/\s*Visa\]/gi, vars.workAuth);
         text = text.replace(/\[Work Authorization\]/gi, vars.workAuth);
         text = text.replace(/\[Visa Status\]/gi, vars.workAuth);
+        text = text.replace(/\[current salary\]/gi, vars.currentSalary);
+        text = text.replace(/\[CURRENT CTC\]/g, vars.currentSalary);
+        text = text.replace(/\[expected salary\]/gi, vars.expectedSalary);
+        text = text.replace(/\[EXPECTED CTC\]/g, vars.expectedSalary);
+        text = text.replace(/\[total experience\]/gi, vars.totalExp);
         if (vars.name) text = text.replace(/\[(candidate name|candidate_name)\]/gi, vars.name);
         return text;
     }
@@ -7519,7 +7537,7 @@ $.ajax({
         if (!$rn.length) return;
         var currentVal = ($rn.val() || '').trim();
         if (!currentVal) {
-            var matchTpl = masterTemplatesData[107] || Object.values(masterTemplatesData)[0];
+            var matchTpl = masterTemplatesData[201] || Object.values(masterTemplatesData)[0];
             if (matchTpl && matchTpl.content) {
                 $('#recruiter_note_template_select').val(matchTpl.id);
                 $('.tpl-card-item').removeClass('is-selected');
@@ -7594,7 +7612,7 @@ $.ajax({
     // Sync button click
     $(document).on('click', '#btn_sync_rm_template', function (e) {
         e.preventDefault();
-        var selectedId = $('#recruiter_note_template_select').val() || 107;
+        var selectedId = $('#recruiter_note_template_select').val() || 201;
         var baseText = (masterTemplatesData[selectedId] && masterTemplatesData[selectedId].content) ? formatTemplateToPlainText(masterTemplatesData[selectedId].content) : $('#recruiter_note').val();
         var interpolated = interpolateTemplateVariables(baseText);
         var $rn = $('#recruiter_note');
