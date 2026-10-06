@@ -3630,7 +3630,6 @@ select#gender {
 @endphp
 
 @push('footer-script')
-<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
 @include('service_company.job-applications.jero-client-parser')
@@ -5872,7 +5871,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 @if($page_event == 'EDIT') 
 <script>
    $('#update-form').click(function () {				
-   		  if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
+   		  if (typeof compileEvaluationMatrix === 'function') { compileEvaluationMatrix(); }
    		  var formData 					=	new FormData($('#createForm')[0]);
    		  // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
    		  if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
@@ -6134,7 +6133,7 @@ var KTAddCandidate = function () {
                         submitButton.disabled = true;
                     }
 
-                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) { CKEDITOR.instances['recruiter_note'].updateElement(); }
+                    if (typeof compileEvaluationMatrix === 'function') { compileEvaluationMatrix(); }
                     var formData = new FormData($('#createForm')[0]);
                     // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
                     if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
