@@ -3436,6 +3436,22 @@
     color: #137333;
 }
 
+.job-candidate-create .candidate-primary-skill-suggestion-badge.is-alias {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.job-candidate-create .candidate-primary-skill-suggestion-badge.is-category {
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 8.5px;
+    font-weight: 500;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .job-candidate-create .candidate-primary-skill-suggestion:hover,
 .job-candidate-create .candidate-primary-skill-suggestion:focus-visible,
 .job-candidate-create .candidate-primary-skill-suggestion.is-active {
