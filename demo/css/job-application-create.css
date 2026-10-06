@@ -3392,6 +3392,8 @@
 .job-candidate-create .candidate-primary-skill-suggestion {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     width: 100%;
     min-height: 36px;
     padding: 8px 11px;
@@ -3403,6 +3405,35 @@
     font-size: 11px;
     font-weight: 600;
     text-align: left;
+    cursor: pointer;
+}
+
+.job-candidate-create .candidate-primary-skill-suggestion-name {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.job-candidate-create .candidate-primary-skill-suggestion-badge {
+    flex: 0 0 auto;
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #eef2f8;
+    color: #5b6782;
+    letter-spacing: 0.2px;
+}
+
+.job-candidate-create .candidate-primary-skill-suggestion-badge.is-required {
+    background: #fff0b8;
+    color: #8f6400;
+}
+
+.job-candidate-create .candidate-primary-skill-suggestion-badge.is-suggested {
+    background: #e6f4ea;
+    color: #137333;
 }
 
 .job-candidate-create .candidate-primary-skill-suggestion:hover,
@@ -3442,6 +3473,17 @@
     background: #fff9df;
     font-size: 11px;
     font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@keyframes skillChipPulseDuplicate {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 196, 0, 0.7); border-color: #ffc400; background-color: #fff4c4; }
+    50% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(255, 196, 0, 0); border-color: #e6b400; background-color: #ffe885; }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 196, 0, 0); border-color: #f0ca42; background-color: #fff9df; }
+}
+
+.job-candidate-create .candidate-primary-skill-chip.pulse-duplicate {
+    animation: skillChipPulseDuplicate 0.6s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .job-candidate-create .candidate-primary-skill-chip button {

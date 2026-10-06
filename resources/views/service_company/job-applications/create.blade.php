@@ -392,10 +392,44 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
 }
 
-.wa-select2-dropdown .select2-results__options {
-    max-height: 320px !important;
+/* ONLY top-level options list scrolls — single unified scrollbar */
+.wa-select2-dropdown .select2-results > .select2-results__options {
+    max-height: 340px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: 4px 0 !important;
+    margin: 0 !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+
+/* Strictly remove inner nested scrollbar on optgroup lists (e.g. United States) */
+.wa-select2-dropdown .select2-results__options--nested,
+.wa-select2-dropdown .select2-results__options .select2-results__options,
+.wa-select2-dropdown ul.select2-results__options--nested {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Sleek God-Level Scrollbar for Visa Status Dropdown */
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar {
+    width: 6px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
 }
 
 .wa-select2-dropdown .select2-results__group {
@@ -572,24 +606,28 @@
 }
 
 /* ============================================================================
-   JERO ATS - GOD-LEVEL ENTERPRISE TIME CLOCK POPOVER
+   JERO ATS - GOD-LEVEL ENTERPRISE TIME CLOCK POPOVER (15.6" & SMALL SCREENS)
    ============================================================================ */
 .jgtp-popover {
     position: fixed !important;
-    z-index: 100000 !important;
-    width: 324px !important;
-    max-width: calc(100vw - 20px) !important;
+    z-index: 100050 !important;
+    width: 310px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
     background: #ffffff !important;
     border-radius: 12px !important;
     border: 1px solid #e2e8f0 !important;
-    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(15, 23, 42, 0.06) !important;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
     font-family: 'Poppins', sans-serif !important;
     color: #1e293b !important;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(6px) scale(0.98);
-    transition: opacity 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.16s !important;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
 }
 .jgtp-popover.is-open {
     opacity: 1 !important;
@@ -597,34 +635,37 @@
     transform: translateY(0) scale(1) !important;
 }
 .jgtp-header {
+    flex: 0 0 auto !important;
     background: linear-gradient(135deg, #071434 0%, #172346 100%) !important;
     color: #ffffff !important;
-    padding: 12px 14px 10px !important;
+    padding: 8px 12px 7px !important;
+    box-sizing: border-box !important;
 }
 .jgtp-header-top {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 5px !important;
 }
 .jgtp-slot-badge {
     display: inline-flex !important;
     align-items: center !important;
     background: rgba(255, 255, 255, 0.14) !important;
     color: #ffd233 !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
-    padding: 3px 8px !important;
-    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
     letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
 }
 .jgtp-close-btn {
     background: transparent !important;
     border: none !important;
     color: rgba(255, 255, 255, 0.7) !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     cursor: pointer !important;
-    padding: 2px 6px !important;
+    padding: 2px 5px !important;
     border-radius: 4px !important;
     line-height: 1 !important;
     transition: color 0.15s ease, background 0.15s ease !important;
@@ -637,7 +678,7 @@
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 12px !important;
+    gap: 8px !important;
 }
 .jgtp-digits {
     display: flex !important;
@@ -645,16 +686,16 @@
     gap: 2px !important;
 }
 .jgtp-digit {
-    font-size: 26px !important;
+    font-size: 22px !important;
     font-weight: 700 !important;
     color: #ffffff !important;
     letter-spacing: 0.5px !important;
     line-height: 1 !important;
-    min-width: 36px !important;
+    min-width: 30px !important;
     text-align: center !important;
 }
 .jgtp-colon {
-    font-size: 22px !important;
+    font-size: 18px !important;
     font-weight: 700 !important;
     color: #ffd233 !important;
     line-height: 1 !important;
@@ -667,7 +708,7 @@
 .jgtp-ampm-switch {
     display: inline-flex !important;
     background: rgba(255, 255, 255, 0.12) !important;
-    border-radius: 6px !important;
+    border-radius: 5px !important;
     padding: 2px !important;
     gap: 2px !important;
 }
@@ -675,10 +716,10 @@
     background: transparent !important;
     border: none !important;
     color: rgba(255, 255, 255, 0.8) !important;
-    font-size: 11px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
-    padding: 5px 10px !important;
-    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
     line-height: 1 !important;
@@ -690,38 +731,56 @@
     box-shadow: 0 1px 3px rgba(0, 158, 247, 0.4) !important;
 }
 .jgtp-body {
-    padding: 10px 12px !important;
-    max-height: 310px !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 8px 10px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+    box-sizing: border-box !important;
+}
+.jgtp-body::-webkit-scrollbar {
+    width: 5px !important;
+}
+.jgtp-body::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
 }
 .jgtp-section {
-    margin-bottom: 10px !important;
+    margin-bottom: 7px !important;
 }
 .jgtp-section:last-child {
     margin-bottom: 0 !important;
 }
 .jgtp-section-label {
-    font-size: 9.5px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     color: #64748b !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 4px !important;
     display: flex !important;
     align-items: center !important;
+    line-height: 1.2 !important;
 }
 .jgtp-presets-grid {
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 4px !important;
+    gap: 3px !important;
 }
 .jgtp-preset-chip {
-    padding: 5px 2px !important;
-    font-size: 9.5px !important;
+    padding: 4px 2px !important;
+    font-size: 9px !important;
     font-weight: 600 !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 5px !important;
+    border-radius: 4px !important;
     background: #f8fafc !important;
     color: #334155 !important;
     cursor: pointer !important;
@@ -729,6 +788,10 @@
     white-space: nowrap !important;
     transition: all 0.12s ease !important;
     line-height: 1 !important;
+    min-height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 .jgtp-preset-chip:hover {
     border-color: #009ef7 !important;
@@ -744,14 +807,14 @@
 .jgtp-hours-grid {
     display: grid !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-    gap: 4px !important;
+    gap: 3px !important;
 }
 .jgtp-hour-btn {
-    height: 30px !important;
-    font-size: 11px !important;
+    height: 26px !important;
+    font-size: 10.5px !important;
     font-weight: 600 !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 5px !important;
+    border-radius: 4px !important;
     background: #f8fafc !important;
     color: #1e293b !important;
     cursor: pointer !important;
@@ -770,20 +833,20 @@
     color: #ffffff !important;
     border-color: #009ef7 !important;
     font-weight: 700 !important;
-    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.3) !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
 }
 .jgtp-mins-grid {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    margin-bottom: 4px !important;
+    gap: 3px !important;
+    margin-bottom: 3px !important;
 }
 .jgtp-min-btn {
-    height: 30px !important;
-    font-size: 11px !important;
+    height: 26px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 5px !important;
+    border-radius: 4px !important;
     background: #f8fafc !important;
     color: #1e293b !important;
     cursor: pointer !important;
@@ -801,24 +864,28 @@
     background: #009ef7 !important;
     color: #ffffff !important;
     border-color: #009ef7 !important;
-    box-shadow: 0 2px 6px rgba(0, 158, 247, 0.3) !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
 }
 .jgtp-mins-subgrid {
     display: grid !important;
     grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-    gap: 3px !important;
+    gap: 2px !important;
 }
 .jgtp-min-subchip {
-    padding: 3px 0 !important;
-    font-size: 9px !important;
+    padding: 2px 0 !important;
+    height: 20px !important;
+    font-size: 8.5px !important;
     font-weight: 500 !important;
     border: 1px solid #edf2f7 !important;
-    border-radius: 4px !important;
+    border-radius: 3px !important;
     background: #ffffff !important;
     color: #64748b !important;
     cursor: pointer !important;
     text-align: center !important;
     transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 .jgtp-min-subchip:hover {
     border-color: #009ef7 !important;
@@ -832,13 +899,15 @@
     font-weight: 700 !important;
 }
 .jgtp-footer {
-    padding: 8px 12px !important;
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
     background: #f8fafc !important;
     border-top: 1px solid #e2e8f0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 8px !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
 }
 .jgtp-btn {
     border: none !important;
@@ -850,7 +919,7 @@
 .jgtp-btn-clear {
     background: transparent !important;
     color: #ef4444 !important;
-    font-size: 11px !important;
+    font-size: 10.5px !important;
     font-weight: 600 !important;
     padding: 4px 6px !important;
 }
@@ -860,9 +929,9 @@
 .jgtp-btn-now {
     background: #edf2f7 !important;
     color: #334155 !important;
-    font-size: 10.5px !important;
+    font-size: 10px !important;
     font-weight: 600 !important;
-    padding: 5px 8px !important;
+    padding: 4px 8px !important;
 }
 .jgtp-btn-now:hover {
     background: #e2e8f0 !important;
@@ -871,9 +940,9 @@
 .jgtp-btn-apply {
     background: #009ef7 !important;
     color: #ffffff !important;
-    font-size: 11px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
-    padding: 5px 14px !important;
+    padding: 4px 12px !important;
 }
 .jgtp-btn-apply:hover {
     background: #0088d4 !important;
@@ -4854,54 +4923,202 @@ KTUtil.onDOMContentLoaded(function () {
           activeItem.element.scrollIntoView({ block: 'nearest' });
       }
 
-      function renderCandidateSkillSuggestions(suggestions, state, query) {
+      // JERO Autonomous Client-First Skills Taxonomy Engine (0% MySQL / 0% Elasticsearch Read Load)
+      var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
+      var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
+      var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
+      var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
+
+      function resolveSkillAlias(str) {
+          var clean = String(str || '').trim();
+          var lower = clean.toLowerCase();
+          if (_skillsAliases && _skillsAliases[lower]) {
+              return _skillsAliases[lower];
+          }
+          return clean;
+      }
+
+      function loadLocalSkillsTaxonomy() {
+          if (_skillsTaxonomy && _skillsList.length) {
+              return;
+          }
+          try {
+              var cached = localStorage.getItem('jero_skills_taxonomy_v1');
+              if (cached) {
+                  var parsed = JSON.parse(cached);
+                  if (parsed && Array.isArray(parsed.skills)) {
+                      _skillsTaxonomy = parsed;
+                      _skillsAliases = parsed.aliases || {};
+                      _skillsRelations = parsed.relations || {};
+                      _skillsList = parsed.skills;
+                      window._jeroSkillsTaxonomy = parsed;
+                      return;
+                  }
+              }
+          } catch (e) {}
+
+          if (window.fetch) {
+              fetch("{{ asset('skills/jero-skills-taxonomy.json') }}", { cache: 'force-cache' })
+                  .then(function (res) { return res.json(); })
+                  .then(function (data) {
+                      if (data && Array.isArray(data.skills)) {
+                          _skillsTaxonomy = data;
+                          _skillsAliases = data.aliases || {};
+                          _skillsRelations = data.relations || {};
+                          _skillsList = data.skills;
+                          window._jeroSkillsTaxonomy = data;
+                          try {
+                              localStorage.setItem('jero_skills_taxonomy_v1', JSON.stringify(data));
+                          } catch (e) {}
+                      }
+                  })
+                  .catch(function () {});
+          }
+      }
+      loadLocalSkillsTaxonomy();
+
+      function searchSkillsLocal(query) {
+          var normalizedQuery = candidateSkillKey(query);
+          if (!normalizedQuery) {
+              return [];
+          }
+
+          var selected = candidateSelectedSkills();
+          var isAlreadySelected = function (name) {
+              var n = candidateSkillKey(name);
+              return selected.some(function (s) { return candidateSkillKey(s.name) === n; });
+          };
+
+          var results = [];
+          var seen = new Set();
+
+          // 1. Direct Alias Match (e.g. k8s -> Kubernetes, js -> JavaScript)
+          if (_skillsAliases && _skillsAliases[normalizedQuery]) {
+              var canonical = _skillsAliases[normalizedQuery];
+              if (!isAlreadySelected(canonical)) {
+                  results.push({ name: canonical, type: 'alias' });
+                  seen.add(candidateSkillKey(canonical));
+              }
+          }
+
+          // 2. Job Required Skills matching query (Rank #1 Priority)
+          candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
+              var skillNorm = candidateSkillKey(skill.name);
+              if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
+                  if (skillNorm.indexOf(normalizedQuery) !== -1) {
+                      results.push({ id: skill.id, name: skill.name, type: 'required' });
+                      seen.add(skillNorm);
+                  }
+              }
+          });
+
+          // 3. Co-occurrence synergy skills based on currently selected stack
+          selected.forEach(function (sel) {
+              var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+              rels.forEach(function (rel) {
+                  var relNorm = candidateSkillKey(rel);
+                  if (!seen.has(relNorm) && !isAlreadySelected(rel)) {
+                      if (relNorm.indexOf(normalizedQuery) !== -1) {
+                          results.push({ name: rel, type: 'suggested' });
+                          seen.add(relNorm);
+                      }
+                  }
+              });
+          });
+
+          // 4. Prefix Matches from canonical dictionary (Instant in-memory lookup)
+          for (var i = 0; i < _skillsList.length && results.length < 15; i++) {
+              var item = _skillsList[i];
+              var itemNorm = candidateSkillKey(item);
+              if (!seen.has(itemNorm) && !isAlreadySelected(item)) {
+                  if (itemNorm.startsWith(normalizedQuery)) {
+                      results.push({ name: item, type: 'global' });
+                      seen.add(itemNorm);
+                  }
+              }
+          }
+
+          // 5. Substring / Word-Boundary Matches
+          if (results.length < 12) {
+              for (var j = 0; j < _skillsList.length && results.length < 15; j++) {
+                  var item2 = _skillsList[j];
+                  var itemNorm2 = candidateSkillKey(item2);
+                  if (!seen.has(itemNorm2) && !isAlreadySelected(item2)) {
+                      if (itemNorm2.indexOf(normalizedQuery) !== -1) {
+                          results.push({ name: item2, type: 'global' });
+                          seen.add(itemNorm2);
+                      }
+                  }
+              }
+          }
+
+          return results.slice(0, 12);
+      }
+
+      function flashDuplicateChip(norm) {
+          if (!candidatePrimarySkillChips) return;
+          var chips = candidatePrimarySkillChips.querySelectorAll('.candidate-primary-skill-chip');
+          chips.forEach(function (chip) {
+              var name = chip.getAttribute('data-skill-name') || chip.querySelector('span:first-child')?.textContent || '';
+              if (candidateSkillKey(name) === norm) {
+                  chip.classList.remove('pulse-duplicate');
+                  void chip.offsetWidth; // Trigger reflow
+                  chip.classList.add('pulse-duplicate');
+                  chip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+          });
+      }
+
+      function renderCandidateSkillSuggestions(suggestions, query) {
           if (!candidatePrimarySkillSuggestions || !candidatePrimarySkillQuickInput) {
               return;
           }
 
           candidateSkillLastSuggestions = Array.isArray(suggestions) ? suggestions : [];
-          var normalizedQuery = candidateSkillKey(query);
-          var selected = candidateSelectedSkills();
-          var combined = candidateUniqueSkills(candidateRequiredSkills.concat(candidateSkillLastSuggestions.map(function (name) {
-              return { name: name };
-          }))).filter(function (skill) {
-              var matchesQuery = !normalizedQuery || candidateSkillKey(skill.name).indexOf(normalizedQuery) !== -1;
-              var isSelected = selected.some(function (selectedSkill) {
-                  return candidateSkillsMatch(skill, selectedSkill);
-              });
-              return matchesQuery && !isSelected;
-          }).slice(0, 20);
-
           candidatePrimarySkillSuggestions.replaceChildren();
           candidateSkillSuggestionItems = [];
           candidateSkillActiveIndex = -1;
 
-          combined.forEach(function (skill, index) {
+          candidateSkillLastSuggestions.forEach(function (item, index) {
               var option = document.createElement('button');
               option.type = 'button';
               option.id = 'candidate-primary-skill-option-' + index;
               option.className = 'candidate-primary-skill-suggestion';
               option.setAttribute('role', 'option');
               option.setAttribute('aria-selected', 'false');
-              option.textContent = skill.name;
+
+              var nameSpan = document.createElement('span');
+              nameSpan.className = 'candidate-primary-skill-suggestion-name';
+              nameSpan.textContent = item.name;
+              option.appendChild(nameSpan);
+
+              if (item.type === 'required') {
+                  var badge = document.createElement('span');
+                  badge.className = 'candidate-primary-skill-suggestion-badge is-required';
+                  badge.textContent = 'Required';
+                  option.appendChild(badge);
+              } else if (item.type === 'suggested') {
+                  var badge = document.createElement('span');
+                  badge.className = 'candidate-primary-skill-suggestion-badge is-suggested';
+                  badge.textContent = 'Suggested';
+                  option.appendChild(badge);
+              }
+
               option.addEventListener('mousedown', function (event) {
                   event.preventDefault();
               });
               option.addEventListener('click', function () {
-                  addCandidatePrimarySkill(skill.name);
-                  closeCandidateSkillSuggestions();
+                  addCandidatePrimarySkill(item.name);
               });
               candidatePrimarySkillSuggestions.appendChild(option);
-              candidateSkillSuggestionItems.push({ element: option, skill: skill });
+              candidateSkillSuggestionItems.push({ element: option, skill: item });
           });
 
-          if (state === 'loading' || state === 'error' || (!combined.length && normalizedQuery)) {
+          if (!candidateSkillLastSuggestions.length && query) {
               var status = document.createElement('div');
               status.className = 'candidate-primary-skill-suggestion-status';
               status.setAttribute('role', 'status');
-              status.textContent = state === 'loading'
-                  ? 'Searching skills...'
-                  : (state === 'error' ? 'Unable to load suggestions. You can still add this skill.' : 'No matching skills found.');
+              status.textContent = 'Press Enter or click Add to add "' + query + '"';
               candidatePrimarySkillSuggestions.appendChild(status);
           }
 
@@ -4918,20 +5135,67 @@ KTUtil.onDOMContentLoaded(function () {
       }
 
       function addCandidatePrimarySkill(value) {
-          var name = String(value || '').trim();
-          if (!name) {
+          var rawName = String(value || '').trim();
+          if (!rawName) {
               return;
           }
-          var requiredSkill = candidateUniqueSkills(candidateRequiredSkills).find(function (skill) {
-              return candidateSkillKey(skill.name) === candidateSkillKey(name);
+
+          var resolvedName = resolveSkillAlias(rawName);
+          var norm = candidateSkillKey(resolvedName);
+          var selected = candidateSelectedSkills();
+
+          // Strict Deduplication Check with Pulse Feedback
+          var isDuplicate = selected.some(function (s) {
+              return candidateSkillKey(s.name) === norm;
           });
-          tagifyskill.addTags([requiredSkill ? { value: requiredSkill.name, id: requiredSkill.id } : name]);
+
+          if (isDuplicate) {
+              flashDuplicateChip(norm);
+              if (candidatePrimarySkillQuickInput) {
+                  candidatePrimarySkillQuickInput.value = '';
+              }
+              closeCandidateSkillSuggestions();
+              return;
+          }
+
+          var requiredSkill = candidateUniqueSkills(candidateRequiredSkills).find(function (skill) {
+              return candidateSkillKey(skill.name) === norm;
+          });
+
+          var tagPayload = requiredSkill ? { value: requiredSkill.name, id: requiredSkill.id } : resolvedName;
+          tagifyskill.addTags([tagPayload]);
+
           if (candidatePrimarySkillQuickInput) {
               candidatePrimarySkillQuickInput.value = '';
               candidatePrimarySkillQuickInput.focus();
           }
           closeCandidateSkillSuggestions();
       }
+
+      // Resume Parser Batch Bridge: Deduplicates & adds skills in bulk
+      window.addCandidatePrimarySkillsBatch = function (skillsList) {
+          if (!Array.isArray(skillsList) || !skillsList.length) return;
+          var selected = candidateSelectedSkills();
+          var selectedSet = new Set(selected.map(function (s) { return candidateSkillKey(s.name); }));
+          var toAdd = [];
+
+          skillsList.forEach(function (raw) {
+              var clean = resolveSkillAlias(String(raw || '').trim());
+              var norm = candidateSkillKey(clean);
+              if (clean && !selectedSet.has(norm)) {
+                  selectedSet.add(norm);
+                  var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
+                      return candidateSkillKey(r.name) === norm;
+                  });
+                  toAdd.push(req ? { value: req.name, id: req.id } : clean);
+              }
+          });
+
+          if (toAdd.length && tagifyskill && typeof tagifyskill.addTags === 'function') {
+              tagifyskill.addTags(toAdd);
+              refreshCandidatePrimarySkills();
+          }
+      };
 
       function refreshCandidatePrimarySkills() {
           var required = candidateUniqueSkills(candidateRequiredSkills);
@@ -4952,6 +5216,8 @@ KTUtil.onDOMContentLoaded(function () {
           selected.forEach(function (skill) {
               var chip = document.createElement('span');
               chip.className = 'candidate-primary-skill-chip';
+              chip.setAttribute('data-skill-name', skill.name);
+
               var label = document.createElement('span');
               label.textContent = skill.name;
               var remove = document.createElement('button');
@@ -4977,8 +5243,32 @@ KTUtil.onDOMContentLoaded(function () {
                   ? 'All required skills matched'
                   : matched.length + ' of ' + required.length + ' required skills matched');
 
+          // Render Suggestions: Missing job requirements or synergy relations
           candidateSuggestedSkillsList.replaceChildren();
-          missing.forEach(function (skill) {
+          var suggestionsToShow = [];
+          var isMissingRequired = missing.length > 0;
+
+          if (isMissingRequired) {
+              suggestionsToShow = missing;
+              candidateRemainingSkills.textContent = missing.length + ' remaining ' + (missing.length === 1 ? 'skill' : 'skills');
+          } else {
+              // Synergy suggestions based on selected stack
+              var seenSyn = new Set();
+              selected.forEach(function (sel) {
+                  var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+                  rels.forEach(function (rel) {
+                      var relNorm = candidateSkillKey(rel);
+                      var isAlreadySel = selected.some(function (s) { return candidateSkillKey(s.name) === relNorm; });
+                      if (!isAlreadySel && !seenSyn.has(relNorm) && suggestionsToShow.length < 8) {
+                          seenSyn.add(relNorm);
+                          suggestionsToShow.push({ name: rel });
+                      }
+                  });
+              });
+              candidateRemainingSkills.textContent = suggestionsToShow.length ? suggestionsToShow.length + ' suggested' : '';
+          }
+
+          suggestionsToShow.forEach(function (skill) {
               var button = document.createElement('button');
               button.type = 'button';
               button.className = 'candidate-suggested-skill';
@@ -4994,11 +5284,14 @@ KTUtil.onDOMContentLoaded(function () {
               });
               candidateSuggestedSkillsList.appendChild(button);
           });
-          candidateRemainingSkills.textContent = missing.length + ' remaining ' + (missing.length === 1 ? 'skill' : 'skills');
-          candidateSuggestedSkills.hidden = required.length === 0 || missing.length === 0;
+
+          candidateSuggestedSkills.hidden = suggestionsToShow.length === 0;
 
           if (candidatePrimarySkillQuickInput && document.activeElement === candidatePrimarySkillQuickInput) {
-              renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', candidatePrimarySkillQuickInput.value);
+              var q = candidatePrimarySkillQuickInput.value.trim();
+              if (q.length >= 1) {
+                  renderCandidateSkillSuggestions(searchSkillsLocal(q), q);
+              }
           }
       }
 
@@ -5012,12 +5305,14 @@ KTUtil.onDOMContentLoaded(function () {
               closeCandidateSkillSuggestions();
           });
       }
+
       if (candidatePrimarySkillQuickInput) {
           candidatePrimarySkillQuickInput.addEventListener('keydown', function (event) {
               if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
                   event.preventDefault();
                   if (candidatePrimarySkillSuggestions.hidden) {
-                      renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', candidatePrimarySkillQuickInput.value);
+                      var q = candidatePrimarySkillQuickInput.value.trim();
+                      renderCandidateSkillSuggestions(searchSkillsLocal(q), q);
                   }
                   setActiveCandidateSkillSuggestion(candidateSkillActiveIndex + (event.key === 'ArrowDown' ? 1 : -1));
                   return;
@@ -5041,62 +5336,22 @@ KTUtil.onDOMContentLoaded(function () {
 
           candidatePrimarySkillQuickInput.addEventListener('focus', function () {
               var query = candidatePrimarySkillQuickInput.value.trim();
-              renderCandidateSkillSuggestions(candidateSkillLastSuggestions, 'idle', query);
+              if (query.length >= 1) {
+                  renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
+              }
           });
 
           candidatePrimarySkillQuickInput.addEventListener('blur', function () {
-              window.setTimeout(closeCandidateSkillSuggestions, 120);
+              window.setTimeout(closeCandidateSkillSuggestions, 140);
           });
-      }
 
-      var _candidateSkillCache = new Map();
-      var fetchCandidateSkillSuggestions = candidateDebounce(function (query) {
-          if (!candidatePrimarySkillQuickInput || candidatePrimarySkillQuickInput.value.trim() !== query) {
-              return;
-          }
-
-          var cacheKey = query.toLowerCase();
-          if (_candidateSkillCache.has(cacheKey)) {
-              var cached = _candidateSkillCache.get(cacheKey);
-              tagifyskill.settings.whitelist = cached;
-              renderCandidateSkillSuggestions(cached, 'idle', query);
-              return;
-          }
-
-          if (candidateSkillRequest && candidateSkillRequest.readyState !== 4) {
-              candidateSkillRequest.abort();
-          }
-
-          var requestSequence = ++candidateSkillRequestSequence;
-          candidateSkillRequest = window.jQuery.get("{{ url('/') }}/skill-suggestions", { q: query })
-              .done(function (data) {
-                  if (requestSequence !== candidateSkillRequestSequence || candidatePrimarySkillQuickInput.value.trim() !== query) {
-                      return;
-                  }
-                  var suggestions = candidateNormalizeSuggestions(data);
-                  _candidateSkillCache.set(cacheKey, suggestions);
-                  tagifyskill.settings.whitelist = suggestions;
-                  renderCandidateSkillSuggestions(suggestions, 'idle', query);
-              })
-              .fail(function (_xhr, status) {
-                  if (status !== 'abort' && requestSequence === candidateSkillRequestSequence && candidatePrimarySkillQuickInput.value.trim() === query) {
-                      renderCandidateSkillSuggestions([], 'error', query);
-                  }
-              });
-      }, 250);
-
-      if (candidatePrimarySkillQuickInput) {
+          // 100% In-Browser Search Execution — ZERO network requests
           candidatePrimarySkillQuickInput.addEventListener('input', function () {
               var query = candidatePrimarySkillQuickInput.value.trim();
               if (query.length >= 1) {
-                  renderCandidateSkillSuggestions([], 'loading', query);
-                  fetchCandidateSkillSuggestions(query);
+                  renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
               } else {
-                  if (candidateSkillRequest && candidateSkillRequest.readyState !== 4) {
-                      candidateSkillRequest.abort();
-                  }
-                  candidateSkillRequestSequence++;
-                  renderCandidateSkillSuggestions([], 'idle', '');
+                  closeCandidateSkillSuggestions();
               }
           });
       }
@@ -7699,25 +7954,63 @@ $(function initializeCandidateSkillRatings() {
         }
 
         function positionPicker(input) {
+            if (!input) return;
+            var vh = window.innerHeight;
+            var vw = window.innerWidth;
             var rect = input.getBoundingClientRect();
-            var popoverWidth = 324;
-            var popoverHeight = 390;
-            var top = rect.bottom + 6;
-            var left = rect.left;
+            var popoverWidth = 310;
+            var popoverHeight = popover.offsetHeight || 295;
 
-            if (top + popoverHeight > window.innerHeight - 10) {
-                var altTop = rect.top - popoverHeight - 6;
-                if (altTop >= 10) {
-                    top = altTop;
+            var spaceBelow = vh - rect.bottom - 8;
+            var spaceAbove = rect.top - 8;
+
+            var top;
+
+            if (spaceBelow >= popoverHeight) {
+                // Comfortable room below input
+                top = rect.bottom + 4;
+            } else if (spaceAbove >= popoverHeight) {
+                // Comfortable room above input
+                top = rect.top - popoverHeight - 4;
+            } else {
+                // Viewport is constrained (e.g. 15.6" screen / small viewport)
+                // Pick whichever side has more room and clamp
+                if (spaceBelow >= spaceAbove) {
+                    top = rect.bottom + 4;
+                    var availBelow = Math.max(180, spaceBelow);
+                    popover.style.maxHeight = availBelow + 'px';
+                } else {
+                    var availAbove = Math.max(180, spaceAbove);
+                    top = Math.max(8, rect.top - availAbove - 4);
+                    popover.style.maxHeight = availAbove + 'px';
                 }
             }
-            if (left + popoverWidth > window.innerWidth - 10) {
-                left = Math.max(10, window.innerWidth - popoverWidth - 10);
-            }
-            if (left < 10) left = 10;
 
-            popover.style.top = top + 'px';
-            popover.style.left = left + 'px';
+            // Boundary clamping to ensure popover never spills offscreen
+            if (top < 8) {
+                top = 8;
+            }
+            if (top + popoverHeight > vh - 8) {
+                top = Math.max(8, vh - popoverHeight - 8);
+            }
+
+            // If still overflows viewport bottom, enforce maxHeight
+            if (top + (popover.offsetHeight || popoverHeight) > vh - 8) {
+                popover.style.maxHeight = Math.max(180, vh - top - 8) + 'px';
+            }
+
+            // Horizontal alignment with boundary protection
+            var left = rect.left;
+            if (left + popoverWidth > vw - 10) {
+                left = Math.max(10, vw - popoverWidth - 10);
+            }
+            if (left < 10) {
+                left = 10;
+            }
+
+            popover.style.top = Math.round(top) + 'px';
+            popover.style.left = Math.round(left) + 'px';
+            popover.style.width = popoverWidth + 'px';
         }
 
         function openPicker(input) {
@@ -7740,14 +8033,20 @@ $(function initializeCandidateSkillRatings() {
             slotLabel.textContent = slotName + ' Interview Time';
 
             updateDisplay();
-            positionPicker(input);
+
+            // Clear previous max-height constraint before recalculation
+            popover.style.maxHeight = '';
+
             popover.classList.add('is-open');
             input.classList.add('is-picker-active');
+
+            positionPicker(input);
         }
 
         function closePicker() {
             if (!popover.classList.contains('is-open')) return;
             popover.classList.remove('is-open');
+            popover.style.maxHeight = '';
             if (activeInput) {
                 activeInput.classList.remove('is-picker-active');
                 activeInput = null;
@@ -7862,6 +8161,12 @@ $(function initializeCandidateSkillRatings() {
                 closePicker();
             }
         });
+
+        window.addEventListener('scroll', function () {
+            if (activeInput && popover.classList.contains('is-open')) {
+                positionPicker(activeInput);
+            }
+        }, true);
 
         window.addEventListener('resize', function () {
             if (activeInput && popover.classList.contains('is-open')) {
@@ -8626,13 +8931,14 @@ $(document).ready(function () {
         });
     }
 
-    // Force search field visibility and focus upon opening
+    // Force search field visibility, placeholder and focus upon opening
     $(document).on('select2:open select2:opening', '#visastatu', function () {
         var $dropdown = $('.wa-select2-dropdown');
         $dropdown.find('.select2-search, .select2-search--dropdown').removeClass('select2-search--hide').css('display', 'block');
         setTimeout(function () {
             var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
             if (searchField) {
+                searchField.placeholder = 'Search visa status, permit or country (e.g. H-1B, Green Card)...';
                 searchField.focus();
             }
         }, 30);

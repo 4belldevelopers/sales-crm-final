@@ -1029,10 +1029,44 @@ select#gender {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
 }
 
-.wa-select2-dropdown .select2-results__options {
-    max-height: 320px !important;
+/* ONLY top-level options list scrolls — single unified scrollbar */
+.wa-select2-dropdown .select2-results > .select2-results__options {
+    max-height: 340px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: 4px 0 !important;
+    margin: 0 !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+
+/* Strictly remove inner nested scrollbar on optgroup lists (e.g. United States) */
+.wa-select2-dropdown .select2-results__options--nested,
+.wa-select2-dropdown .select2-results__options .select2-results__options,
+.wa-select2-dropdown ul.select2-results__options--nested {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Sleek God-Level Scrollbar for Visa Status Dropdown */
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar {
+    width: 6px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
 }
 
 .wa-select2-dropdown .select2-results__group {
@@ -1729,12 +1763,56 @@ select#gender {
               </div>
             </div>
 
-            <!-- Professional Details -->
-            <div class="fs fv-row">
-              <div class="fsh"><h3>Primary Skills *</h3></div>
-              <div class="fsc">
-              <div id="skillTags" class="skill-tags"></div>
-               <input type="text" class="" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
+            <!-- Primary Skills -->
+            @php
+              $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
+                  return is_object($skill) && trim((string) ($skill->skill_name ?? '')) !== '';
+              })->map(function ($skill) {
+                  return [
+                      'id' => (string) ($skill->id ?? ''),
+                      'name' => trim((string) $skill->skill_name),
+                  ];
+              })->unique(function ($skill) {
+                  return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
+              })->values();
+            @endphp
+            <div class="fs fv-row se-card primary-skills-card candidate-card">
+              <div class="fsh candidate-card-header se-hero">
+                <div class="candidate-card-title se-title">
+                  <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                  <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
+                </div>
+                <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
+                  <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
+                    <strong id="candidateSkillMatchPercentage">--</strong>
+                  </span>
+                  <span class="candidate-skill-match-copy">
+                    <strong>Job Skills Match</strong>
+                    <small id="candidateSkillMatchDetail">No job skills defined</small>
+                  </span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body candidate-primary-skills-body">
+                <div class="candidate-primary-skill-combobox">
+                  <div class="candidate-primary-skill-entry">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input type="text" id="candidatePrimarySkillInput" autocomplete="off" placeholder="Type a skill and press Enter..." aria-label="Add a primary skill" role="combobox" aria-autocomplete="list" aria-controls="candidatePrimarySkillSuggestions" aria-expanded="false" />
+                    <span class="candidate-primary-skill-divider" aria-hidden="true"></span>
+                    <button type="button" id="candidatePrimarySkillAdd"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>Add</span></button>
+                  </div>
+                  <div id="candidatePrimarySkillSuggestions" class="candidate-primary-skill-suggestions" role="listbox" aria-label="Skill suggestions" hidden></div>
+                </div>
+                <div id="candidatePrimarySkillChips" class="candidate-primary-skill-chips" aria-live="polite"></div>
+                <div id="candidatePrimarySkillEmpty" class="candidate-primary-skill-empty">No primary skills added yet.</div>
+                <div class="candidate-suggested-skills" id="candidateSuggestedSkills" hidden>
+                  <div class="candidate-suggested-skills-head">
+                    <span class="candidate-suggested-skills-title"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span><strong>Suggested Skills</strong><small>Based on skills from the job requirement. Click to add the missing skills.</small></span></span>
+                    <span class="candidate-suggested-skills-count" id="candidateRemainingSkills"></span>
+                  </div>
+                  <div class="candidate-suggested-skills-list" id="candidateSuggestedSkillsList"></div>
+                </div>
+                <div id="skillTags" class="skill-tags" hidden></div>
+                <input type="text" class="candidate-primary-skills-source" value="{{ @$application->skills }}" placeholder="Enter skills" id="kt_tagify_2" name="skills" />
               </div>
             </div>
 
@@ -3385,58 +3463,539 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 
 <script>
 	var input1 = document.querySelector("#kt_tagify_1");
-	var input2 = document.querySelector("#kt_tagify_2");
-	new Tagify(input1);
-	var tagifyskill =  new Tagify(input2, {
-        whitelist: [''],
-        maxTags: 10,
-        transformTag: function(tagData) {
-        // Remove special characters, allow only letters, numbers, and spaces
-        tagData.value = tagData.value.replace(/[^a-zA-Z0-9 +#\/.]/g, '');
-        return tagData;
-        },
-        validate: function(tagData) {
-            // Prevent empty tags after cleaning
-            return tagData.value.trim().length > 0 ? true : false;
-        }
-    });
+	if (input1 && typeof window.Tagify === 'function') {
+		new window.Tagify(input1);
+	}
 
-    const fetchSuggestionsSkills = debounce(function(query) {
-        $.ajax({
-            url: "{{ url('/') }}" + "/skill-suggestions?q=" + query,
-            method: 'GET',
-            success: function(data) {
-                console.warn("Fetched Skill: ", data);
+	var candidateSkillInput = document.querySelector('#kt_tagify_2');
+	var tagifyskill = null;
 
-                if (Array.isArray(data)) {
-                    tagifyskill.settings.whitelist = data; // Update whitelist
-                    // tagifyskill.dropdown.show(query); // Show suggestions
-                    tagifyskill.dropdown.show.call(tagifyskill);
-                } else {
-                    console.error("Invalid API response format: Expected array.");
-                }
-            },
-            error: function(err) {
-                console.error("Error fetching Skill:", err);
-            }
-        });
-    }, 5); 
+	if (typeof window.Tagify === 'function' && candidateSkillInput) {
+		tagifyskill = new window.Tagify(candidateSkillInput, {
+			whitelist: [],
+			maxTags: Infinity,
+			duplicates: false,
+			dropdown: {
+				maxItems: 50,
+				enabled: 1,
+				closeOnSelect: true,
+				highlightFirst: true
+			}
+		});
+		window.tagifyskill = tagifyskill;
 
-    // Listen for user input to trigger API call
-    tagifyskill.on('input', function(e) {
-        var query = e.detail.value.trim();
-        if (query.length < 1) return;
-        fetchSuggestionsSkills(query);
-    });
+		var candidateRequiredSkills = @json($candidateRequiredSkills ?? []);
+		var candidatePrimarySkillQuickInput = document.querySelector('#candidatePrimarySkillInput');
+		var candidatePrimarySkillAdd = document.querySelector('#candidatePrimarySkillAdd');
+		var candidatePrimarySkillSuggestions = document.querySelector('#candidatePrimarySkillSuggestions');
+		var candidatePrimarySkillsCard = document.querySelector('.primary-skills-card');
+		var candidatePrimarySkillChips = document.querySelector('#candidatePrimarySkillChips');
+		var candidatePrimarySkillEmpty = document.querySelector('#candidatePrimarySkillEmpty');
+		var candidateSkillMatch = document.querySelector('#candidateSkillMatch');
+		var candidateSkillMatchRing = document.querySelector('#candidateSkillMatchRing');
+		var candidateSkillMatchPercentage = document.querySelector('#candidateSkillMatchPercentage');
+		var candidateSkillMatchDetail = document.querySelector('#candidateSkillMatchDetail');
+		var candidateSuggestedSkills = document.querySelector('#candidateSuggestedSkills');
+		var candidateSuggestedSkillsList = document.querySelector('#candidateSuggestedSkillsList');
+		var candidateRemainingSkills = document.querySelector('#candidateRemainingSkills');
+		var candidateSkillSuggestionItems = [];
+		var candidateSkillLastSuggestions = [];
+		var candidateSkillActiveIndex = -1;
 
+		if (tagifyskill.DOM && tagifyskill.DOM.scope) {
+			tagifyskill.DOM.scope.classList.add('candidate-primary-skill-tagify-source');
+			tagifyskill.DOM.scope.setAttribute('aria-hidden', 'true');
+		}
 
-   function debounce(func, delay) {
-        let timer;
-        return function (...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => func.apply(this, args), delay);
-        };
-    }
+		function candidateSkillKey(value) {
+			return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+		}
+
+		function candidateSkillName(skill) {
+			return String((skill && (skill.name || skill.skill_name || skill.value)) || '').trim();
+		}
+
+		function candidateUniqueSkills(skills) {
+			var unique = new Map();
+			(Array.isArray(skills) ? skills : []).forEach(function (skill) {
+				var name = candidateSkillName(skill);
+				var id = String((skill && skill.id) || '').trim();
+				if (!name) return;
+				var key = 'name:' + candidateSkillKey(name);
+				if (!unique.has(key)) {
+					unique.set(key, { id: id, name: name, value: name });
+				}
+			});
+			return Array.from(unique.values());
+		}
+
+		function candidateSelectedSkills() {
+			return candidateUniqueSkills((tagifyskill.value || []).map(function (skill) {
+				return { id: skill.id || '', name: skill.value || '' };
+			}));
+		}
+
+		function candidateSkillsMatch(requiredSkill, selectedSkill) {
+			var requiredId = String(requiredSkill.id || '').trim();
+			var selectedId = String(selectedSkill.id || '').trim();
+			if (requiredId && selectedId) {
+				return requiredId === selectedId;
+			}
+			return candidateSkillKey(requiredSkill.name) === candidateSkillKey(selectedSkill.name);
+		}
+
+		function closeCandidateSkillSuggestions() {
+			if (!candidatePrimarySkillSuggestions || !candidatePrimarySkillQuickInput) return;
+			candidatePrimarySkillSuggestions.hidden = true;
+			candidatePrimarySkillSuggestions.replaceChildren();
+			if (candidatePrimarySkillsCard) {
+				candidatePrimarySkillsCard.classList.remove('has-open-skill-suggestions');
+			}
+			candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'false');
+			candidatePrimarySkillQuickInput.removeAttribute('aria-activedescendant');
+			candidateSkillSuggestionItems = [];
+			candidateSkillActiveIndex = -1;
+		}
+
+		function setActiveCandidateSkillSuggestion(index) {
+			if (!candidateSkillSuggestionItems.length || !candidatePrimarySkillQuickInput) {
+				candidateSkillActiveIndex = -1;
+				candidatePrimarySkillQuickInput.removeAttribute('aria-activedescendant');
+				return;
+			}
+			candidateSkillActiveIndex = (index + candidateSkillSuggestionItems.length) % candidateSkillSuggestionItems.length;
+			candidateSkillSuggestionItems.forEach(function (item, itemIndex) {
+				var isActive = itemIndex === candidateSkillActiveIndex;
+				item.element.classList.toggle('is-active', isActive);
+				item.element.setAttribute('aria-selected', isActive ? 'true' : 'false');
+			});
+			var activeItem = candidateSkillSuggestionItems[candidateSkillActiveIndex];
+			candidatePrimarySkillQuickInput.setAttribute('aria-activedescendant', activeItem.element.id);
+			activeItem.element.scrollIntoView({ block: 'nearest' });
+		}
+
+		// JERO Autonomous Client-First Skills Taxonomy Engine (0% MySQL / 0% Elasticsearch Read Load)
+		var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
+		var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
+		var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
+		var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
+
+		function resolveSkillAlias(str) {
+			var clean = String(str || '').trim();
+			var lower = clean.toLowerCase();
+			if (_skillsAliases && _skillsAliases[lower]) {
+				return _skillsAliases[lower];
+			}
+			return clean;
+		}
+
+		function loadLocalSkillsTaxonomy() {
+			if (_skillsTaxonomy && _skillsList.length) return;
+			try {
+				var cached = localStorage.getItem('jero_skills_taxonomy_v1');
+				if (cached) {
+					var parsed = JSON.parse(cached);
+					if (parsed && Array.isArray(parsed.skills)) {
+						_skillsTaxonomy = parsed;
+						_skillsAliases = parsed.aliases || {};
+						_skillsRelations = parsed.relations || {};
+						_skillsList = parsed.skills;
+						window._jeroSkillsTaxonomy = parsed;
+						return;
+					}
+				}
+			} catch (e) {}
+
+			if (window.fetch) {
+				fetch("{{ asset('skills/jero-skills-taxonomy.json') }}", { cache: 'force-cache' })
+					.then(function (res) { return res.json(); })
+					.then(function (data) {
+						if (data && Array.isArray(data.skills)) {
+							_skillsTaxonomy = data;
+							_skillsAliases = data.aliases || {};
+							_skillsRelations = data.relations || {};
+							_skillsList = data.skills;
+							window._jeroSkillsTaxonomy = data;
+							try {
+								localStorage.setItem('jero_skills_taxonomy_v1', JSON.stringify(data));
+							} catch (e) {}
+						}
+					})
+					.catch(function () {});
+			}
+		}
+		loadLocalSkillsTaxonomy();
+
+		function searchSkillsLocal(query) {
+			var normalizedQuery = candidateSkillKey(query);
+			if (!normalizedQuery) return [];
+
+			var selected = candidateSelectedSkills();
+			var isAlreadySelected = function (name) {
+				var n = candidateSkillKey(name);
+				return selected.some(function (s) { return candidateSkillKey(s.name) === n; });
+			};
+
+			var results = [];
+			var seen = new Set();
+
+			// 1. Direct Alias Match
+			if (_skillsAliases && _skillsAliases[normalizedQuery]) {
+				var canonical = _skillsAliases[normalizedQuery];
+				if (!isAlreadySelected(canonical)) {
+					results.push({ name: canonical, type: 'alias' });
+					seen.add(candidateSkillKey(canonical));
+				}
+			}
+
+			// 2. Job Required Skills matching query
+			candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
+				var skillNorm = candidateSkillKey(skill.name);
+				if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
+					if (skillNorm.indexOf(normalizedQuery) !== -1) {
+						results.push({ id: skill.id, name: skill.name, type: 'required' });
+						seen.add(skillNorm);
+					}
+				}
+			});
+
+			// 3. Co-occurrence synergy skills based on selected stack
+			selected.forEach(function (sel) {
+				var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+				rels.forEach(function (rel) {
+					var relNorm = candidateSkillKey(rel);
+					if (!seen.has(relNorm) && !isAlreadySelected(rel)) {
+						if (relNorm.indexOf(normalizedQuery) !== -1) {
+							results.push({ name: rel, type: 'suggested' });
+							seen.add(relNorm);
+						}
+					}
+				});
+			});
+
+			// 4. Prefix Matches from canonical dictionary
+			for (var i = 0; i < _skillsList.length && results.length < 15; i++) {
+				var item = _skillsList[i];
+				var itemNorm = candidateSkillKey(item);
+				if (!seen.has(itemNorm) && !isAlreadySelected(item)) {
+					if (itemNorm.startsWith(normalizedQuery)) {
+						results.push({ name: item, type: 'global' });
+						seen.add(itemNorm);
+					}
+				}
+			}
+
+			// 5. Substring / Word-Boundary Matches
+			if (results.length < 12) {
+				for (var j = 0; j < _skillsList.length && results.length < 15; j++) {
+					var item2 = _skillsList[j];
+					var itemNorm2 = candidateSkillKey(item2);
+					if (!seen.has(itemNorm2) && !isAlreadySelected(item2)) {
+						if (itemNorm2.indexOf(normalizedQuery) !== -1) {
+							results.push({ name: item2, type: 'global' });
+							seen.add(itemNorm2);
+						}
+					}
+				}
+			}
+
+			return results.slice(0, 12);
+		}
+
+		function flashDuplicateChip(norm) {
+			if (!candidatePrimarySkillChips) return;
+			var chips = candidatePrimarySkillChips.querySelectorAll('.candidate-primary-skill-chip');
+			chips.forEach(function (chip) {
+				var name = chip.getAttribute('data-skill-name') || chip.querySelector('span:first-child')?.textContent || '';
+				if (candidateSkillKey(name) === norm) {
+					chip.classList.remove('pulse-duplicate');
+					void chip.offsetWidth;
+					chip.classList.add('pulse-duplicate');
+					chip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+				}
+			});
+		}
+
+		function renderCandidateSkillSuggestions(suggestions, query) {
+			if (!candidatePrimarySkillSuggestions || !candidatePrimarySkillQuickInput) return;
+
+			candidateSkillLastSuggestions = Array.isArray(suggestions) ? suggestions : [];
+			candidatePrimarySkillSuggestions.replaceChildren();
+			candidateSkillSuggestionItems = [];
+			candidateSkillActiveIndex = -1;
+
+			candidateSkillLastSuggestions.forEach(function (item, index) {
+				var option = document.createElement('button');
+				option.type = 'button';
+				option.id = 'candidate-primary-skill-option-' + index;
+				option.className = 'candidate-primary-skill-suggestion';
+				option.setAttribute('role', 'option');
+				option.setAttribute('aria-selected', 'false');
+
+				var nameSpan = document.createElement('span');
+				nameSpan.className = 'candidate-primary-skill-suggestion-name';
+				nameSpan.textContent = item.name;
+				option.appendChild(nameSpan);
+
+				if (item.type === 'required') {
+					var badge = document.createElement('span');
+					badge.className = 'candidate-primary-skill-suggestion-badge is-required';
+					badge.textContent = 'Required';
+					option.appendChild(badge);
+				} else if (item.type === 'suggested') {
+					var badge = document.createElement('span');
+					badge.className = 'candidate-primary-skill-suggestion-badge is-suggested';
+					badge.textContent = 'Suggested';
+					option.appendChild(badge);
+				}
+
+				option.addEventListener('mousedown', function (event) {
+					event.preventDefault();
+				});
+				option.addEventListener('click', function () {
+					addCandidatePrimarySkill(item.name);
+				});
+				candidatePrimarySkillSuggestions.appendChild(option);
+				candidateSkillSuggestionItems.push({ element: option, skill: item });
+			});
+
+			if (!candidateSkillLastSuggestions.length && query) {
+				var status = document.createElement('div');
+				status.className = 'candidate-primary-skill-suggestion-status';
+				status.setAttribute('role', 'status');
+				status.textContent = 'Press Enter or click Add to add "' + query + '"';
+				candidatePrimarySkillSuggestions.appendChild(status);
+			}
+
+			if (!candidatePrimarySkillSuggestions.childElementCount) {
+				closeCandidateSkillSuggestions();
+				return;
+			}
+
+			candidatePrimarySkillSuggestions.hidden = false;
+			if (candidatePrimarySkillsCard) {
+				candidatePrimarySkillsCard.classList.add('has-open-skill-suggestions');
+			}
+			candidatePrimarySkillQuickInput.setAttribute('aria-expanded', 'true');
+		}
+
+		function addCandidatePrimarySkill(value) {
+			var rawName = String(value || '').trim();
+			if (!rawName) return;
+
+			var resolvedName = resolveSkillAlias(rawName);
+			var norm = candidateSkillKey(resolvedName);
+			var selected = candidateSelectedSkills();
+
+			var isDuplicate = selected.some(function (s) {
+				return candidateSkillKey(s.name) === norm;
+			});
+
+			if (isDuplicate) {
+				flashDuplicateChip(norm);
+				if (candidatePrimarySkillQuickInput) {
+					candidatePrimarySkillQuickInput.value = '';
+				}
+				closeCandidateSkillSuggestions();
+				return;
+			}
+
+			var requiredSkill = candidateUniqueSkills(candidateRequiredSkills).find(function (skill) {
+				return candidateSkillKey(skill.name) === norm;
+			});
+
+			var tagPayload = requiredSkill ? { value: requiredSkill.name, id: requiredSkill.id } : resolvedName;
+			tagifyskill.addTags([tagPayload]);
+
+			if (candidatePrimarySkillQuickInput) {
+				candidatePrimarySkillQuickInput.value = '';
+				candidatePrimarySkillQuickInput.focus();
+			}
+			closeCandidateSkillSuggestions();
+		}
+
+		window.addCandidatePrimarySkillsBatch = function (skillsList) {
+			if (!Array.isArray(skillsList) || !skillsList.length) return;
+			var selected = candidateSelectedSkills();
+			var selectedSet = new Set(selected.map(function (s) { return candidateSkillKey(s.name); }));
+			var toAdd = [];
+
+			skillsList.forEach(function (raw) {
+				var clean = resolveSkillAlias(String(raw || '').trim());
+				var norm = candidateSkillKey(clean);
+				if (clean && !selectedSet.has(norm)) {
+					selectedSet.add(norm);
+					var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
+						return candidateSkillKey(r.name) === norm;
+					});
+					toAdd.push(req ? { value: req.name, id: req.id } : clean);
+				}
+			});
+
+			if (toAdd.length && tagifyskill && typeof tagifyskill.addTags === 'function') {
+				tagifyskill.addTags(toAdd);
+				refreshCandidatePrimarySkills();
+			}
+		};
+
+		function refreshCandidatePrimarySkills() {
+			var required = candidateUniqueSkills(candidateRequiredSkills);
+			var selected = candidateSelectedSkills();
+			var matched = required.filter(function (requiredSkill) {
+				return selected.some(function (selectedSkill) {
+					return candidateSkillsMatch(requiredSkill, selectedSkill);
+				});
+			});
+			var missing = required.filter(function (requiredSkill) {
+				return !selected.some(function (selectedSkill) {
+					return candidateSkillsMatch(requiredSkill, selectedSkill);
+				});
+			});
+			var percentage = required.length ? Math.round((matched.length / required.length) * 100) : 0;
+
+			candidatePrimarySkillChips.replaceChildren();
+			selected.forEach(function (skill) {
+				var chip = document.createElement('span');
+				chip.className = 'candidate-primary-skill-chip';
+				chip.setAttribute('data-skill-name', skill.name);
+
+				var label = document.createElement('span');
+				label.textContent = skill.name;
+				var remove = document.createElement('button');
+				remove.type = 'button';
+				remove.setAttribute('aria-label', 'Remove ' + skill.name);
+				remove.title = 'Remove ' + skill.name;
+				remove.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+				remove.addEventListener('click', function () {
+					tagifyskill.removeTag(skill.name);
+				});
+				chip.append(label, remove);
+				candidatePrimarySkillChips.appendChild(chip);
+			});
+			candidatePrimarySkillEmpty.hidden = selected.length > 0;
+
+			candidateSkillMatch.classList.toggle('is-empty', required.length === 0);
+			candidateSkillMatch.classList.toggle('is-complete', required.length > 0 && percentage === 100);
+			candidateSkillMatchRing.style.setProperty('--candidate-skill-match', percentage + '%');
+			candidateSkillMatchPercentage.textContent = required.length ? percentage + '%' : '--';
+			candidateSkillMatchDetail.textContent = !required.length
+				? 'No job skills defined'
+				: (percentage === 100
+					? 'All required skills matched'
+					: matched.length + ' of ' + required.length + ' required skills matched');
+
+			candidateSuggestedSkillsList.replaceChildren();
+			var suggestionsToShow = [];
+			var isMissingRequired = missing.length > 0;
+
+			if (isMissingRequired) {
+				suggestionsToShow = missing;
+				candidateRemainingSkills.textContent = missing.length + ' remaining ' + (missing.length === 1 ? 'skill' : 'skills');
+			} else {
+				var seenSyn = new Set();
+				selected.forEach(function (sel) {
+					var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+					rels.forEach(function (rel) {
+						var relNorm = candidateSkillKey(rel);
+						var isAlreadySel = selected.some(function (s) { return candidateSkillKey(s.name) === relNorm; });
+						if (!isAlreadySel && !seenSyn.has(relNorm) && suggestionsToShow.length < 8) {
+							seenSyn.add(relNorm);
+							suggestionsToShow.push({ name: rel });
+						}
+					});
+				});
+				candidateRemainingSkills.textContent = suggestionsToShow.length ? suggestionsToShow.length + ' suggested' : '';
+			}
+
+			suggestionsToShow.forEach(function (skill) {
+				var button = document.createElement('button');
+				button.type = 'button';
+				button.className = 'candidate-suggested-skill';
+				var label = document.createElement('span');
+				label.textContent = skill.name;
+				var icon = document.createElement('span');
+				icon.className = 'candidate-suggested-skill-icon';
+				icon.setAttribute('aria-hidden', 'true');
+				icon.innerHTML = '<svg viewBox="0 0 20 20" focusable="false" aria-hidden="true"><path d="M10 4.25v11.5M4.25 10h11.5" /></svg>';
+				button.append(label, icon);
+				button.addEventListener('click', function () {
+					addCandidatePrimarySkill(skill.name);
+				});
+				candidateSuggestedSkillsList.appendChild(button);
+			});
+
+			candidateSuggestedSkills.hidden = suggestionsToShow.length === 0;
+
+			if (candidatePrimarySkillQuickInput && document.activeElement === candidatePrimarySkillQuickInput) {
+				var q = candidatePrimarySkillQuickInput.value.trim();
+				if (q.length >= 1) {
+					renderCandidateSkillSuggestions(searchSkillsLocal(q), q);
+				}
+			}
+		}
+
+		tagifyskill.on('add', refreshCandidatePrimarySkills);
+		tagifyskill.on('remove', refreshCandidatePrimarySkills);
+		window.refreshCandidatePrimarySkills = refreshCandidatePrimarySkills;
+
+		if (candidatePrimarySkillAdd) {
+			candidatePrimarySkillAdd.addEventListener('click', function () {
+				addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+				closeCandidateSkillSuggestions();
+			});
+		}
+
+		if (candidatePrimarySkillQuickInput) {
+			candidatePrimarySkillQuickInput.addEventListener('keydown', function (event) {
+				if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+					event.preventDefault();
+					if (candidatePrimarySkillSuggestions.hidden) {
+						var q = candidatePrimarySkillQuickInput.value.trim();
+						renderCandidateSkillSuggestions(searchSkillsLocal(q), q);
+					}
+					setActiveCandidateSkillSuggestion(candidateSkillActiveIndex + (event.key === 'ArrowDown' ? 1 : -1));
+					return;
+				}
+
+				if (event.key === 'Escape') {
+					event.preventDefault();
+					closeCandidateSkillSuggestions();
+					return;
+				}
+
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					if (candidateSkillActiveIndex >= 0 && candidateSkillSuggestionItems[candidateSkillActiveIndex]) {
+						addCandidatePrimarySkill(candidateSkillSuggestionItems[candidateSkillActiveIndex].skill.name);
+					} else {
+						addCandidatePrimarySkill(candidatePrimarySkillQuickInput.value);
+					}
+				}
+			});
+
+			candidatePrimarySkillQuickInput.addEventListener('focus', function () {
+				var query = candidatePrimarySkillQuickInput.value.trim();
+				if (query.length >= 1) {
+					renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
+				}
+			});
+
+			candidatePrimarySkillQuickInput.addEventListener('blur', function () {
+				window.setTimeout(closeCandidateSkillSuggestions, 140);
+			});
+
+			candidatePrimarySkillQuickInput.addEventListener('input', function () {
+				var query = candidatePrimarySkillQuickInput.value.trim();
+				if (query.length >= 1) {
+					renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
+				} else {
+					closeCandidateSkillSuggestions();
+				}
+			});
+		}
+
+		window.setTimeout(refreshCandidatePrimarySkills, 0);
+	}
 
   /**
    * JERO Canonical Location Resolution & Combobox Engine
@@ -6477,13 +7036,14 @@ $(document).ready(function () {
         });
     }
 
-    // Force search field visibility and focus upon opening
+    // Force search field visibility, placeholder and focus upon opening
     $(document).on('select2:open select2:opening', '#visastatu', function () {
         var $dropdown = $('.wa-select2-dropdown');
         $dropdown.find('.select2-search, .select2-search--dropdown').removeClass('select2-search--hide').css('display', 'block');
         setTimeout(function () {
             var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
             if (searchField) {
+                searchField.placeholder = 'Search visa status, permit or country (e.g. H-1B, Green Card)...';
                 searchField.focus();
             }
         }, 30);
