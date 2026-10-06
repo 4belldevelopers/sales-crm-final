@@ -249,10 +249,10 @@ class JobApplyService
         $cityID = '';
         $stateId = '';
         $countryID = '';
-        if ($request->filled('location_city_id') && (int)$request->location_city_id > 0) {
-            $cityID = (int)$request->location_city_id;
-            $stateId = (int)$request->location_state_id;
-            $countryID = (int)($request->location_country_id ?: 101);
+        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+            $cityID = (int) $request->location_city_id;
+            $stateId = (int) $request->location_state_id;
+            $countryID = (int) ($request->location_country_id ?: 101);
         } else {
             $work_city = $request->input('kt_tagify_work_location');
             if (! empty($work_city)) {

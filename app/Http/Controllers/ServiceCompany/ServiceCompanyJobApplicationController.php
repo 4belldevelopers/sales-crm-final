@@ -46,9 +46,9 @@ use App\Models\JobApplicationAnswer;
 use App\Models\OfferJobApplication;
 use App\Models\ResumeUpload;
 use App\Models\Skill;
+use App\Models\SysIdempotencyKey;
 use App\Models\UploadSessionAudit;
 use App\Models\User;
-use App\Models\SysIdempotencyKey;
 use App\Notifications\CandidateScheduleInterview;
 use App\Services\CandidateNoticePeriodState;
 use App\Services\ElasticService;
@@ -2542,6 +2542,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
                                 $ct = 'image/jpeg';
                             }
+
                             return ['body' => $body, 'content_type' => $ct];
                         }
                     } catch (\Throwable $r2Err) {
@@ -2562,6 +2563,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         } elseif (str_starts_with($body, "\xFF\xD8\xFF")) {
                             $ct = 'image/jpeg';
                         }
+
                         return ['body' => $body, 'content_type' => $ct];
                     }
                 }
