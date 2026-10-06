@@ -411,9 +411,9 @@
                                         </div>
                                     </div>
                                     <div class="up-file-actions">
-                                        <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn">
+                                        <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn" title="Delete Resume">
                                             <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
-                                            <span>Remove</span>
+                                            <span>Delete</span>
                                         </button>
                                     </div>
                                 </div>
@@ -2085,7 +2085,21 @@ $(document).ready(function () {
         var year = now.getFullYear();
         var hh = String(now.getHours()).padStart(2, '0');
         var mm = String(now.getMinutes()).padStart(2, '0');
-        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm);
+        var tz = '';
+        var tzMatch = now.toTimeString().match(/\(([A-Za-z\s]+)\)$/);
+        if (tzMatch && tzMatch[1]) {
+            var tzWords = tzMatch[1].trim().split(/\s+/);
+            tz = tzWords.length > 1 ? tzWords.map(function (w) { return w[0]; }).join('') : tzMatch[1];
+        }
+        if (!tz) {
+            try {
+                var tzParts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(now);
+                var tzFound = tzParts.find(function (p) { return p.type === 'timeZoneName'; });
+                if (tzFound && tzFound.value) tz = tzFound.value;
+            } catch (e) {}
+        }
+        var tzSuffix = tz ? (' ' + tz) : '';
+        $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hh + ':' + mm + tzSuffix);
 
         if (!window._clientParserState) {
             $('#upDetailParserStatus').text('Pending');
