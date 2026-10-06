@@ -4,14 +4,19 @@ use App\Helper\GeneralMethod;
 if(empty($updateTimeLine)){
     echo '<div class="text-center p-5 text-muted">No timeline activity recorded yet.</div>';
 } else {
+    $CaptainCompanyid = $CaptainCompanyid ?? (auth()->check() ? auth()->user()->company_id : 0);
     foreach($updateTimeLine as $tdata){
         $tdata = (object) $tdata;
-        $tdata->update_at = $tdata->updated_at;
-                        $company_or_client = isset($companyOrClientMap[$tdata->job_id]) ? $companyOrClientMap[$tdata->job_id] : (!empty($tdata->cur_companyname) ? $tdata->cur_companyname : 'N/A');
+        $tdata->create_at = $tdata->create_at ?? $tdata->created_at ?? null;
+        $tdata->created_at = $tdata->create_at;
+        $tdata->update_at = $tdata->update_at ?? $tdata->updated_at ?? null;
+        $tdata->updated_at = $tdata->update_at;
+        $tdata->name = $tdata->name ?? '';
+                        $company_or_client = isset($companyOrClientMap[@$tdata->job_id]) ? $companyOrClientMap[@$tdata->job_id] : (!empty($tdata->cur_companyname) ? $tdata->cur_companyname : 'N/A');
                         $create_at	=	$newDate	=	$newTime	= $prev_tiles_bg	=	$timeline_type = $current_tiles_bg =  "";
                         $create_at	=	$tdata->created_at;
-                        $newDate 							=	date("d-M-Y", strtotime($create_at));
-                        $newTime 							=	date("H:i A", strtotime($create_at));
+                        $newDate 							=	$create_at ? date("d-M-Y", strtotime($create_at)) : '';
+                        $newTime 							=	$create_at ? date("H:i A", strtotime($create_at)) : '';
                         $posted_by_image					=	$comment							=	"";
                         if(!empty(@$tdata->image)){
                           $posted_by_image				=	@$tdata->image;
