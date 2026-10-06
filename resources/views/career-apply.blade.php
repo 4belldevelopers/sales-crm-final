@@ -4609,7 +4609,47 @@ setTimeout(() => {
 			return clean;
 		}
 
-		var JERO_SKILLS_VERSION = '2026-10-06.enterprise-pristine-v2';
+		var JERO_SKILLS_VERSION = '2026-10-06.enterprise-god-level-v3';
+
+		function getSkillDomainIcon(category) {
+			switch (category) {
+				case 'Programming Languages': return 'fa-solid fa-code';
+				case 'Frontend Development': return 'fa-solid fa-desktop';
+				case 'Backend & APIs': return 'fa-solid fa-server';
+				case 'Databases & Storage': return 'fa-solid fa-database';
+				case 'Cloud Platforms': return 'fa-solid fa-cloud';
+				case 'DevOps, CI/CD & Infra': return 'fa-solid fa-gears';
+				case 'Data Engineering & Big Data': return 'fa-solid fa-diagram-project';
+				case 'AI, Machine Learning & Data Science': return 'fa-solid fa-brain';
+				case 'Mobile Development': return 'fa-solid fa-mobile-screen';
+				case 'Testing, QA & Automation': return 'fa-solid fa-vial-circle-check';
+				case 'Cybersecurity & Networking': return 'fa-solid fa-shield-halved';
+				case 'Enterprise Software, ERP & CRM': return 'fa-solid fa-building-columns';
+				case 'Business Intelligence & Product': return 'fa-solid fa-chart-pie';
+				case 'Architecture & Methodologies': return 'fa-solid fa-cubes-stacked';
+				default: return 'fa-solid fa-layer-group';
+			}
+		}
+
+		function highlightSkillQuery(text, query) {
+			if (!query || !text) return document.createTextNode(text);
+			var cleanQ = String(query).trim().toLowerCase();
+			var idx = text.toLowerCase().indexOf(cleanQ);
+			if (idx === -1) return document.createTextNode(text);
+
+			var frag = document.createDocumentFragment();
+			if (idx > 0) {
+				frag.appendChild(document.createTextNode(text.substring(0, idx)));
+			}
+			var mark = document.createElement('mark');
+			mark.className = 'candidate-skill-highlight';
+			mark.textContent = text.substring(idx, idx + cleanQ.length);
+			frag.appendChild(mark);
+			if (idx + cleanQ.length < text.length) {
+				frag.appendChild(document.createTextNode(text.substring(idx + cleanQ.length)));
+			}
+			return frag;
+		}
 
 		function loadLocalSkillsTaxonomy() {
 			if (_skillsTaxonomy && _skillsList.length && _skillsTaxonomy.version === JERO_SKILLS_VERSION) return;
@@ -4627,8 +4667,9 @@ setTimeout(() => {
 						return;
 					}
 				}
-				// Purge stale legacy cache
+				// Purge stale legacy caches
 				localStorage.removeItem('jero_skills_taxonomy_v1');
+				localStorage.removeItem('jero_skills_taxonomy_2026-10-06.enterprise-pristine-v2');
 			} catch (e) {}
 
 			if (window.fetch) {
@@ -4821,6 +4862,23 @@ setTimeout(() => {
 			candidateSkillSuggestionItems = [];
 			candidateSkillActiveIndex = -1;
 
+			var trimmedQ = String(query || '').trim();
+
+			// Header Bar
+			var header = document.createElement('div');
+			header.className = 'candidate-primary-skill-suggestions-header';
+			header.innerHTML = '<div class="candidate-primary-skill-suggestions-header-left"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Skill Suggestions</span></div>' +
+				'<div class="candidate-primary-skill-suggestions-header-right">' +
+				'<span class="candidate-primary-skill-count-badge">' + candidateSkillLastSuggestions.length + ' matches</span>' +
+				'<span class="candidate-primary-skill-perf-badge"><i class="fa-solid fa-bolt"></i>0% Server Load</span>' +
+				'</div>';
+			candidatePrimarySkillSuggestions.appendChild(header);
+
+			// Scrollable List Container
+			var listContainer = document.createElement('div');
+			listContainer.className = 'candidate-primary-skill-suggestions-list';
+			listContainer.setAttribute('role', 'listbox');
+
 			candidateSkillLastSuggestions.forEach(function (item, index) {
 				var option = document.createElement('button');
 				option.type = 'button';
@@ -4829,34 +4887,57 @@ setTimeout(() => {
 				option.setAttribute('role', 'option');
 				option.setAttribute('aria-selected', 'false');
 
+				// Left: Icon + Highlighted Name
+				var main = document.createElement('div');
+				main.className = 'candidate-primary-skill-suggestion-main';
+
+				var iconSpan = document.createElement('span');
+				iconSpan.className = 'candidate-primary-skill-suggestion-icon';
+				var iconEl = document.createElement('i');
+				iconEl.className = getSkillDomainIcon(item.category);
+				iconSpan.appendChild(iconEl);
+
 				var nameSpan = document.createElement('span');
 				nameSpan.className = 'candidate-primary-skill-suggestion-name';
-				nameSpan.textContent = item.name;
-				option.appendChild(nameSpan);
+				nameSpan.appendChild(highlightSkillQuery(item.name, trimmedQ));
+
+				main.append(iconSpan, nameSpan);
+				option.appendChild(main);
+
+				// Right: Meta Badges + Enter Hint
+				var meta = document.createElement('div');
+				meta.className = 'candidate-primary-skill-suggestion-meta';
 
 				if (item.type === 'required') {
 					var badge = document.createElement('span');
 					badge.className = 'candidate-primary-skill-suggestion-badge is-required';
-					badge.textContent = 'Required';
-					option.appendChild(badge);
+					badge.innerHTML = '<i class="fa-solid fa-star"></i><span>Required</span>';
+					meta.appendChild(badge);
 				} else if (item.type === 'suggested') {
 					var badge = document.createElement('span');
 					badge.className = 'candidate-primary-skill-suggestion-badge is-suggested';
-					badge.textContent = 'Suggested';
-					option.appendChild(badge);
+					badge.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i><span>Suggested</span>';
+					meta.appendChild(badge);
 				} else if (item.type === 'alias') {
 					var badge = document.createElement('span');
 					badge.className = 'candidate-primary-skill-suggestion-badge is-alias';
 					badge.textContent = 'Alias';
-					option.appendChild(badge);
+					meta.appendChild(badge);
 				}
 
 				if (item.category) {
 					var catBadge = document.createElement('span');
 					catBadge.className = 'candidate-primary-skill-suggestion-badge is-category';
 					catBadge.textContent = item.category;
-					option.appendChild(catBadge);
+					meta.appendChild(catBadge);
 				}
+
+				var kbdSpan = document.createElement('span');
+				kbdSpan.className = 'candidate-primary-skill-suggestion-kbd';
+				kbdSpan.innerHTML = '<kbd>↵</kbd>';
+				meta.appendChild(kbdSpan);
+
+				option.appendChild(meta);
 
 				option.addEventListener('mousedown', function (event) {
 					event.preventDefault();
@@ -4864,22 +4945,60 @@ setTimeout(() => {
 				option.addEventListener('click', function () {
 					addCandidatePrimarySkill(item.name);
 				});
-				candidatePrimarySkillSuggestions.appendChild(option);
+				listContainer.appendChild(option);
 				candidateSkillSuggestionItems.push({ element: option, skill: item });
 			});
 
-			if (!candidateSkillLastSuggestions.length && query) {
-				var status = document.createElement('div');
-				status.className = 'candidate-primary-skill-suggestion-status';
-				status.setAttribute('role', 'status');
-				status.textContent = 'Press Enter or click Add to add "' + query + '"';
-				candidatePrimarySkillSuggestions.appendChild(status);
+			candidatePrimarySkillSuggestions.appendChild(listContainer);
+
+			// Custom Skill Option if user typed something not matching exactly
+			if (trimmedQ) {
+				var exactFound = candidateSkillLastSuggestions.some(function (it) {
+					return it.name.toLowerCase() === trimmedQ.toLowerCase();
+				});
+				if (!exactFound) {
+					var customOption = document.createElement('div');
+					customOption.className = 'candidate-primary-skill-custom-option';
+
+					var customBtn = document.createElement('button');
+					customBtn.type = 'button';
+					customBtn.className = 'candidate-primary-skill-custom-btn';
+
+					var cMain = document.createElement('div');
+					cMain.className = 'candidate-primary-skill-suggestion-main';
+					cMain.innerHTML = '<span class="candidate-primary-skill-suggestion-icon custom-add-icon"><i class="fa-solid fa-plus"></i></span>' +
+						'<span class="candidate-primary-skill-suggestion-name">Add custom skill: <strong class="text-primary">"' + trimmedQ.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '"</strong></span>';
+
+					var cMeta = document.createElement('div');
+					cMeta.className = 'candidate-primary-skill-suggestion-meta';
+					cMeta.innerHTML = '<span class="candidate-primary-skill-suggestion-badge is-required">Custom</span><span class="candidate-primary-skill-suggestion-kbd"><kbd>↵</kbd></span>';
+
+					customBtn.append(cMain, cMeta);
+					customBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+					customBtn.addEventListener('click', function () {
+						addCandidatePrimarySkill(trimmedQ);
+					});
+					customOption.appendChild(customBtn);
+					candidatePrimarySkillSuggestions.appendChild(customOption);
+
+					if (!candidateSkillSuggestionItems.length) {
+						candidateSkillSuggestionItems.push({ element: customBtn, skill: { name: trimmedQ } });
+					}
+				}
 			}
 
-			if (!candidatePrimarySkillSuggestions.childElementCount) {
-				closeCandidateSkillSuggestions();
-				return;
-			}
+			// Footer Bar with Shortcut Hints
+			var footer = document.createElement('div');
+			footer.className = 'candidate-primary-skill-suggestions-footer';
+			footer.innerHTML = '<div class="candidate-primary-skill-shortcuts">' +
+				'<span class="candidate-primary-skill-shortcut-item"><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>' +
+				'<span class="candidate-primary-skill-shortcut-item"><kbd>↵</kbd> Select</span>' +
+				'<span class="candidate-primary-skill-shortcut-item"><kbd>Esc</kbd> Dismiss</span>' +
+				'</div>' +
+				'<div class="candidate-primary-skill-footer-note">' +
+				'<span>Client RAM (0% Server Load)</span>' +
+				'</div>';
+			candidatePrimarySkillSuggestions.appendChild(footer);
 
 			candidatePrimarySkillSuggestions.hidden = false;
 			if (candidatePrimarySkillsCard) {
