@@ -109,6 +109,333 @@
     color: #1d4ed8;
     font-weight: 600;
 }
+
+/* ==========================================================================
+   WORK AUTHORIZATION & COMPLIANCE ENGINE (ENTERPRISE 38PX SPECIFICATION)
+   ========================================================================== */
+.wa-popular-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    margin-top: 4px;
+}
+
+.wa-chips-label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.wa-popular-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.wa-chip-btn {
+    appearance: none;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 3px 11px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    line-height: 1.4;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease-in-out;
+    outline: none;
+    user-select: none;
+}
+
+.wa-chip-btn:hover {
+    background: #EFF6FF;
+    border-color: #93C5FD;
+    color: #1D4ED8;
+    transform: translateY(-1px);
+}
+
+.wa-chip-btn.is-active {
+    background: #2563EB !important;
+    border-color: #2563EB !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+}
+
+.addl-select-wrap {
+    position: relative !important;
+    width: 100% !important;
+    cursor: pointer !important;
+}
+
+.addl-select-wrap select.wa-select {
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    border: 1px solid #CDD7EB !important;
+    border-radius: 6px !important;
+    padding: 0 38px 0 14px !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background-color: #FFFFFF !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    line-height: 36px !important;
+}
+
+.addl-select-wrap select.select2-hidden-accessible {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+}
+
+.addl-select-wrap .select2-container {
+    width: 100% !important;
+    display: block !important;
+    cursor: pointer !important;
+}
+
+.addl-select-wrap .select2-selection,
+.addl-select-wrap .select2-selection--single,
+.addl-select-wrap .select2-selection.form-select,
+.addl-select-wrap .select2-container--default .select2-selection--single,
+.addl-select-wrap .select2-container--bootstrap5 .select2-selection--single,
+.addl-select-wrap .select2-container .select2-selection--single {
+    min-height: 38px !important;
+    height: 38px !important;
+    max-height: 38px !important;
+    border: 1px solid #CDD7EB !important;
+    border-radius: 6px !important;
+    padding: 0 38px 0 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    background-color: #FFFFFF !important;
+    background-image: none !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out !important;
+}
+
+.addl-select-wrap .select2-container.select2-container--open .select2-selection--single,
+.addl-select-wrap .select2-container.select2-container--focus .select2-selection--single,
+.addl-select-wrap .select2-container--default.select2-container--open .select2-selection--single,
+.addl-select-wrap .select2-container--default.select2-container--focus .select2-selection--single,
+.addl-select-wrap .select2-container--bootstrap5.select2-container--open .select2-selection--single,
+.addl-select-wrap .select2-container--bootstrap5.select2-container--focus .select2-selection--single {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, .12) !important;
+    outline: none !important;
+}
+
+.addl-select-wrap .select2-selection__rendered,
+.addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered,
+.addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__rendered,
+.addl-select-wrap .select2-container .select2-selection--single .select2-selection__rendered {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    line-height: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+.addl-select-wrap .select2-selection__placeholder,
+.addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__placeholder,
+.addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__placeholder,
+.addl-select-wrap .select2-selection__rendered .select2-selection__placeholder {
+    color: #8A94B4 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: 36px !important;
+}
+
+.addl-select-wrap .select2-selection__clear,
+.addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__clear,
+.addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__clear {
+    position: absolute !important;
+    right: 32px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #94A3B8 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    z-index: 3 !important;
+    padding: 2px !important;
+    transition: color 0.15s ease !important;
+}
+
+.addl-select-wrap .select2-selection__clear:hover {
+    color: #EF4444 !important;
+}
+
+.addl-select-wrap .select2-selection__arrow,
+.addl-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow,
+.addl-select-wrap .select2-container--bootstrap5 .select2-selection--single .select2-selection__arrow {
+    height: 36px !important;
+    top: 1px !important;
+    right: 12px !important;
+    width: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+}
+
+.addl-select-wrap .select2-selection__arrow b {
+    display: none !important;
+}
+
+.addl-select-wrap .select2-selection__arrow::after {
+    content: "\f078";
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    color: #64748B !important;
+    transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.addl-select-wrap .select2-container.select2-container--open .select2-selection__arrow::after,
+.addl-select-wrap .select2-container--open .select2-selection__arrow::after {
+    transform: rotate(180deg) !important;
+    color: #2563EB !important;
+}
+
+.addl-select-wrap > i.fa-chevron-down,
+.addl-select-wrap .select2-container ~ i.fa-chevron-down {
+    display: none !important;
+}
+
+.wa-select2-dropdown,
+.select2-dropdown.wa-select2-dropdown {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 13px !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden !important;
+    z-index: 99999 !important;
+    background: #FFFFFF !important;
+}
+
+.wa-select2-dropdown .select2-search,
+.wa-select2-dropdown .select2-search--dropdown,
+.wa-select2-dropdown .select2-search.select2-search--dropdown,
+.wa-select2-dropdown .select2-search--hide,
+.wa-select2-dropdown .select2-search--dropdown.select2-search--hide,
+.select2-dropdown.wa-select2-dropdown .select2-search,
+.select2-dropdown.wa-select2-dropdown .select2-search--dropdown,
+.select2-dropdown.wa-select2-dropdown .select2-search--dropdown.select2-search--hide {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    padding: 8px 10px !important;
+    background: #F8FAFC !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+}
+
+.wa-select2-dropdown .select2-search__field,
+.select2-dropdown.wa-select2-dropdown .select2-search__field {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 6px !important;
+    padding: 7px 12px !important;
+    font-size: 13px !important;
+    outline: none !important;
+    font-family: 'Poppins', sans-serif !important;
+    background-color: #FFFFFF !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    line-height: normal !important;
+    color: #0f172a !important;
+}
+
+.wa-select2-dropdown .select2-search__field:focus,
+.select2-dropdown.wa-select2-dropdown .select2-search__field:focus {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.wa-select2-dropdown .select2-results__options {
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    padding: 4px 0 !important;
+}
+
+.wa-select2-dropdown .select2-results__group {
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #475569 !important;
+    background-color: #F1F5F9 !important;
+    padding: 6px 12px !important;
+    border-top: 1px solid #E2E8F0 !important;
+    border-bottom: 1px solid #E2E8F0 !important;
+    line-height: 1.4 !important;
+}
+
+.wa-select2-dropdown .select2-results__group:first-child {
+    border-top: none !important;
+}
+
+.wa-select2-dropdown .select2-results__option {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1E293B !important;
+    line-height: 1.4 !important;
+    transition: background-color 0.12s ease !important;
+}
+
+.wa-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+    background-color: #3B82F6 !important;
+    color: #FFFFFF !important;
+}
+
+.wa-select2-dropdown .select2-results__option[aria-selected="true"] {
+    background-color: #EFF6FF !important;
+    color: #1D4ED8 !important;
+    font-weight: 600 !important;
+}
+
 @media (max-width: 767px) {
     .job-candidate-create .candidate-salary-header-currency {
         width: 100%;
@@ -1716,8 +2043,24 @@
                   <label for="current_ctc_cur">Currency</label>
                   <select id="current_ctc_cur" name="current_ctc_cur" class="form-select form-select-solid select2-candidate-currency" data-control="select2" data-placeholder="Search currency...">
                     @php
-                        $current_ctc_cur = "";
-                        $current_ctc_cur = @$application->current_ctc_cur ?? $salary_currency;
+                        $companyId = $company_id ?? (auth()->check() ? auth()->user()->company_id : null);
+                        if (empty($companyId) && isset($jobDetail) && !empty($jobDetail->company_id)) {
+                            $companyId = $jobDetail->company_id;
+                        }
+                        $tenantDefaultCode = $tenant_currency ?? \App\Helper\GeneralMethod::defaultCurrency($companyId);
+                        $tenantDefaultKey  = $tenant_currency_key ?? \App\Helper\GeneralMethod::defaultCurrencyKey($companyId);
+
+                        // If editing an existing candidate with saved currency, honor it (RULE-TENANT-001).
+                        // Otherwise, default strictly to tenant's configured currency from settings page.
+                        $selectedCurKey = null;
+                        if (isset($application) && isset($application->current_ctc_cur) && $application->current_ctc_cur !== null && $application->current_ctc_cur !== '') {
+                            $selectedCurKey = (int) $application->current_ctc_cur;
+                        } elseif (isset($current_ctc_cur) && $current_ctc_cur !== null && $current_ctc_cur !== '') {
+                            $selectedCurKey = (int) $current_ctc_cur;
+                        } else {
+                            $selectedCurKey = (int) $tenantDefaultKey;
+                        }
+
                         $currencyFlags = [
                             'INR' => '🇮🇳', 'EUR' => '🇪🇺', 'JPY' => '🇯🇵', 'GBP' => '🇬🇧', 'USD' => '🇺🇸', 'AED' => '🇦🇪',
                             'CAD' => '🇨🇦', 'AUD' => '🇦🇺', 'SGD' => '🇸🇬', 'CHF' => '🇨🇭', 'NZD' => '🇳🇿', 'ZAR' => '🇿🇦',
@@ -1729,17 +2072,8 @@
                             'PKR' => '🇵🇰', 'BDT' => '🇧🇩', 'LKR' => '🇱🇰', 'NPR' => '🇳🇵'
                         ];
                         foreach($currency as $key=>$val){
-                            $sel = '';
-                            if($current_ctc_cur===null){
-                              if($currency_code==$val){
-                                $sel = 'selected="selected"';
-                              }
-                            }else{
-                              if($current_ctc_cur == $key){
-                                $sel = 'selected="selected"';
-                              }
-                            }
-                            $cMeta = GeneralMethod::currencyEnterpriseMeta($val);
+                            $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
+                            $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
                             $entLabel = $cMeta['label'];
                             $keywords = $cMeta['keywords'];
                             $flag = $currencyFlags[$val] ?? '🌐';
@@ -1752,7 +2086,7 @@
                     <select name="current_ectc_cur" id="current_ectc_cur">
                       @php
                           foreach($currency as $key=>$val){
-                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
                               echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
                           }
                       @endphp
@@ -1760,7 +2094,7 @@
                     <select name="current_th_cur" id="current_th_cur">
                       @php
                           foreach($currency as $key=>$val){
-                              $sel = ($current_ctc_cur == $key) ? 'selected="selected"' : '';
+                              $sel = ((int)$key === (int)$selectedCurKey) ? 'selected="selected"' : '';
                               echo '<option value="'.$key.'" data-code="'.e($val).'" '.$sel.'>'.$val.'</option>';
                           }
                       @endphp
@@ -2234,19 +2568,225 @@
             </div>
 
             <!-- Visa Status & Work Authorization (Optional) -->
-            <div class="fs candidate-card additional-details-card">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--additional"><i class="fa-solid fa-user-plus" aria-hidden="true"></i></span>
-                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Provide any other relevant information about the candidate's professional background.</small></span>
+            <div class="fs candidate-card additional-details-card addl-card addl-card--details">
+              <div class="fsh candidate-card-header addl-hero">
+                <div class="candidate-card-title addl-hero-title">
+                  <span class="candidate-card-icon candidate-card-icon--additional" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF;"><i class="fa-solid fa-passport"></i></span>
+                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for client submissions.</small></span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body">
-                <div class="candidate-additional-details-grid">
-                  <div class="fg fv-row">
-                    <label>Current Visa Status (For International)</label>
-                    <div class="candidate-detail-control candidate-detail-control--select"><span><i class="fa-solid fa-globe" aria-hidden="true"></i></span><select name="visastatu" id="visastatu"><option value="">Select visa status</option><option {{ @$application->visastatu == 'H1B' ? 'selected' : '' }}>H1B</option><option {{ @$application->visastatu == 'L1' ? 'selected' : '' }}>L1</option><option {{ @$application->visastatu == 'F1' ? 'selected' : '' }}>F1</option><option {{ @$application->visastatu == 'Green Card' ? 'selected' : '' }}>Green Card</option><option {{ @$application->visastatu == 'Citizen' ? 'selected' : '' }}>Citizen</option></select></div>
+              <div class="fsc candidate-card-body addl-body">
+                <div class="addl-wide-field fv-row" style="width: 100%;">
+                  {{-- Quick Select Hub Chips --}}
+                  <div class="wa-popular-chips-wrap">
+                    <span class="wa-chips-label"><i class="fa-solid fa-bolt-lightning text-warning me-1"></i> Popular Hubs:</span>
+                    <div class="wa-popular-chips" role="group" aria-label="Quick Select Work Authorization Hubs">
+                      <button type="button" class="wa-chip-btn" data-region="United States" data-filter="United States" title="Filter United States Visas">🇺🇸 US</button>
+                      <button type="button" class="wa-chip-btn" data-region="Canada" data-filter="Canada" title="Filter Canada Visas">🇨🇦 Canada</button>
+                      <button type="button" class="wa-chip-btn" data-region="India" data-filter="India" title="Filter India Work Status">🇮🇳 India</button>
+                      <button type="button" class="wa-chip-btn" data-region="United Kingdom" data-filter="United Kingdom" title="Filter UK Visas">🇬🇧 UK</button>
+                      <button type="button" class="wa-chip-btn" data-region="Dubai" data-filter="UAE" title="Filter Dubai & UAE Visas">🇦🇪 Dubai / UAE</button>
+                      <button type="button" class="wa-chip-btn" data-region="Singapore" data-filter="Singapore" title="Filter Singapore Visas">🇸🇬 Singapore</button>
+                      <button type="button" class="wa-chip-btn" data-region="Australia" data-filter="Australia" title="Filter Australia & NZ Visas">🇦🇺 Australia</button>
+                      <button type="button" class="wa-chip-btn" data-region="Germany" data-filter="Germany" title="Filter Germany Visas">🇩🇪 Germany</button>
+                      <button type="button" class="wa-chip-btn" data-region="Global" data-filter="Global" title="Filter EU & Global Visas">🌐 Global</button>
+                    </div>
                   </div>
+
+                  {{-- Select Wrapper --}}
+                  <div class="addl-select-wrap">
+                    @php
+                      $currentVisa  = trim((string) @$application->visastatu);
+                      $isUsCitizen  = in_array($currentVisa, ['Citizen', 'US Citizen', 'US Citizen (USC)']);
+                      $isGreenCard  = in_array($currentVisa, ['Green Card', 'Permanent Resident (Green Card)']);
+                      $isGcEad      = in_array($currentVisa, ['GC-EAD', 'GC EAD', 'Green Card EAD']);
+                      $isH1b        = in_array($currentVisa, ['H1B', 'H-1B', 'H1-B']);
+                      $isH4Ead      = in_array($currentVisa, ['H4-EAD', 'H4 EAD', 'H-4 EAD']);
+                      $isL2Ead      = in_array($currentVisa, ['L2-EAD', 'L2 EAD', 'L-2 EAD']);
+                      $isTn         = in_array($currentVisa, ['TN Permit', 'TN Visa', 'TN-1', 'TN-2']);
+                      $isOpt        = in_array($currentVisa, ['F1', 'OPT', 'OPT-EAD', 'STEM-OPT', 'OPT / STEM-OPT']);
+                      $isCpt        = in_array($currentVisa, ['CPT']);
+                      $isE3         = in_array($currentVisa, ['E-3', 'E3']);
+                      $isO1         = in_array($currentVisa, ['O-1', 'O1']);
+                      $isL1         = in_array($currentVisa, ['L1', 'L-1']);
+                      $isOtherUsEad = in_array($currentVisa, ['Other US EAD', 'TPS EAD', 'Asylee EAD']);
+
+                      $isCaCitizen  = in_array($currentVisa, ['Canadian Citizen']);
+                      $isCaPr       = in_array($currentVisa, ['Canada PR', 'Canadian Permanent Resident']);
+                      $isCaOpenWp   = in_array($currentVisa, ['Canada Open Work Permit', 'PGWP']);
+                      $isCaClosedWp = in_array($currentVisa, ['Canada Closed Work Permit', 'LMIA Work Permit']);
+
+                      $isInCitizen  = in_array($currentVisa, ['Indian Citizen']);
+                      $isInOci      = in_array($currentVisa, ['OCI / PIO', 'OCI', 'PIO']);
+                      $isInVisa     = in_array($currentVisa, ['India Work Visa', 'Employment Visa (India)']);
+
+                      $isUkCitizen  = in_array($currentVisa, ['UK Citizen', 'British Citizen']);
+                      $isUkIlr      = in_array($currentVisa, ['UK ILR', 'Indefinite Leave to Remain']);
+                      $isUkSkilled  = in_array($currentVisa, ['UK Skilled Worker', 'Tier 2']);
+                      $isUkGrad     = in_array($currentVisa, ['UK Graduate Visa']);
+
+                      $isUaeGolden    = in_array($currentVisa, ['UAE Golden Visa', 'UAE Golden / Green Visa', 'Golden Visa']);
+                      $isUaeGreen     = in_array($currentVisa, ['UAE Green Visa', 'Green Visa']);
+                      $isUaeEmpVisa   = in_array($currentVisa, ['UAE Employment Visa', 'UAE Work Visa', 'Dubai Employment Visa']);
+                      $isUaeFreelance = in_array($currentVisa, ['UAE Freelance Visa', 'Dubai Freelance Visa', 'Remote Work Visa (UAE)']);
+                      $isUaeNational  = in_array($currentVisa, ['UAE National', 'UAE Citizen', 'Emirati Citizen']);
+                      $isGccIqama     = in_array($currentVisa, ['GCC Iqama', 'Saudi Iqama', 'GCC Work Permit']);
+
+                      $isSgCitizen    = in_array($currentVisa, ['Singapore Citizen']);
+                      $isSgPr         = in_array($currentVisa, ['Singapore PR', 'Singapore Permanent Resident']);
+                      $isSgEp         = in_array($currentVisa, ['Singapore EP', 'Employment Pass', 'Singapore Employment Pass']);
+                      $isSgSpass      = in_array($currentVisa, ['Singapore S Pass', 'S Pass', 'S-Pass']);
+                      $isSgOnePass    = in_array($currentVisa, ['Singapore ONE Pass', 'ONE Pass', 'Tech.Pass', 'PEP']);
+                      $isSgLocDp      = in_array($currentVisa, ['Singapore LOC / DP', 'LOC', 'Dependant Pass']);
+
+                      $isAuCitizenPr  = in_array($currentVisa, ['Australia Citizen / PR', 'Australian Citizen', 'Australian PR']);
+                      $isAuTss482     = in_array($currentVisa, ['Australia TSS 482', 'TSS 482', 'Subclass 482']);
+                      $isAuSkilled    = in_array($currentVisa, ['Australia Skilled 189/190', 'Subclass 189', 'Subclass 190']);
+                      $isAuGrad485    = in_array($currentVisa, ['Australia Graduate 485', 'Subclass 485']);
+                      $isNzCitizen    = in_array($currentVisa, ['New Zealand Citizen / PR', 'NZ Citizen', 'NZ PR']);
+
+                      $isEuCitizen    = in_array($currentVisa, ['EU Citizen', 'EU / EEA Citizen']);
+                      $isEuBlue       = in_array($currentVisa, ['EU Blue Card']);
+                      $isAuthWp       = in_array($currentVisa, ['Authorized Work Permit']);
+                      $isReqSpons     = in_array($currentVisa, ['Requires Sponsorship', 'Requires International Visa Sponsorship']);
+
+                      $hasMatchedOption = $isUsCitizen || $isGreenCard || $isGcEad || $isH1b || $isH4Ead || $isL2Ead || $isTn || $isOpt || $isCpt || $isE3 || $isO1 || $isL1 || $isOtherUsEad
+                                       || $isCaCitizen || $isCaPr || $isCaOpenWp || $isCaClosedWp
+                                       || $isInCitizen || $isInOci || $isInVisa
+                                       || $isUkCitizen || $isUkIlr || $isUkSkilled || $isUkGrad
+                                       || $isUaeGolden || $isUaeGreen || $isUaeEmpVisa || $isUaeFreelance || $isUaeNational || $isGccIqama
+                                       || $isSgCitizen || $isSgPr || $isSgEp || $isSgSpass || $isSgOnePass || $isSgLocDp
+                                       || $isAuCitizenPr || $isAuTss482 || $isAuSkilled || $isAuGrad485 || $isNzCitizen
+                                       || $isEuCitizen || $isEuBlue || $isAuthWp || $isReqSpons;
+
+                      // Load comprehensive 240+ countries taxonomy
+                      $allGlobalCountries = !empty($countries) ? (is_array($countries) ? $countries : $countries->toArray()) : [];
+                      if (empty($allGlobalCountries) && file_exists(base_path('country-state-city/countries.json'))) {
+                          $allGlobalCountries = json_decode(file_get_contents(base_path('country-state-city/countries.json')), true)['countries'] ?? [];
+                      }
+                      if (!empty($allGlobalCountries)) {
+                          usort($allGlobalCountries, function($a, $b) {
+                              return strcmp($a['name'] ?? '', $b['name'] ?? '');
+                          });
+                      }
+                    @endphp
+                    {{-- CRITICAL: Use class="wa-select" ONLY. NEVER include class="form-select" --}}
+                    <select name="visastatu" id="visastatu" class="wa-select" data-placeholder="Search visa / right-to-work or country (e.g. H-1B, UAE Golden Visa, PR, Citizen)...">
+                      <option value="">Select work authorization or visa status</option>
+
+                      {{-- POPULAR HUBS (TIER 1 RECRUITING DESTINATIONS) --}}
+                      <optgroup label="United States (US)">
+                        <option value="US Citizen" {{ $isUsCitizen ? 'selected' : '' }}>US Citizen (USC)</option>
+                        <option value="Green Card" {{ $isGreenCard ? 'selected' : '' }}>Permanent Resident (Green Card)</option>
+                        <option value="GC-EAD" {{ $isGcEad ? 'selected' : '' }}>GC-EAD (Adjustment of Status)</option>
+                        <option value="H1B" {{ $isH1b ? 'selected' : '' }}>H-1B (Specialty Occupation)</option>
+                        <option value="H-4 EAD" {{ $isH4Ead ? 'selected' : '' }}>H-4 EAD (Spouse Dependent)</option>
+                        <option value="L-2 EAD" {{ $isL2Ead ? 'selected' : '' }}>L-2 EAD (Intracompany Dependent)</option>
+                        <option value="TN Permit" {{ $isTn ? 'selected' : '' }}>TN Visa (USMCA - Canada / Mexico)</option>
+                        <option value="OPT-EAD" {{ $isOpt ? 'selected' : '' }}>OPT / STEM-OPT EAD</option>
+                        <option value="CPT" {{ $isCpt ? 'selected' : '' }}>CPT (Curricular Practical Training)</option>
+                        <option value="E-3" {{ $isE3 ? 'selected' : '' }}>E-3 (Australian Specialty Occupation)</option>
+                        <option value="O-1" {{ $isO1 ? 'selected' : '' }}>O-1 (Extraordinary Ability)</option>
+                        <option value="L1" {{ $isL1 ? 'selected' : '' }}>L-1 (Intracompany Transferee)</option>
+                        <option value="Other US EAD" {{ $isOtherUsEad ? 'selected' : '' }}>Other US EAD (TPS / Asylee / DACA)</option>
+                      </optgroup>
+
+                      <optgroup label="Canada (CA)">
+                        <option value="Canadian Citizen" {{ $isCaCitizen ? 'selected' : '' }}>Canadian Citizen</option>
+                        <option value="Canada PR" {{ $isCaPr ? 'selected' : '' }}>Canada Permanent Resident (PR)</option>
+                        <option value="Canada Open Work Permit" {{ $isCaOpenWp ? 'selected' : '' }}>Canada Open Work Permit / PGWP</option>
+                        <option value="Canada Closed Work Permit" {{ $isCaClosedWp ? 'selected' : '' }}>Canada LMIA / Closed Work Permit</option>
+                      </optgroup>
+
+                      <optgroup label="India (IN)">
+                        <option value="Indian Citizen" {{ $isInCitizen ? 'selected' : '' }}>Indian Citizen / Domestic Right to Work</option>
+                        <option value="OCI / PIO" {{ $isInOci ? 'selected' : '' }}>OCI / PIO Cardholder</option>
+                        <option value="India Work Visa" {{ $isInVisa ? 'selected' : '' }}>India Employment Visa</option>
+                      </optgroup>
+
+                      <optgroup label="United Kingdom (UK)">
+                        <option value="UK Citizen" {{ $isUkCitizen ? 'selected' : '' }}>British Citizen</option>
+                        <option value="UK ILR" {{ $isUkIlr ? 'selected' : '' }}>UK Indefinite Leave to Remain (ILR)</option>
+                        <option value="UK Skilled Worker" {{ $isUkSkilled ? 'selected' : '' }}>UK Skilled Worker / Tier 2</option>
+                        <option value="UK Graduate Visa" {{ $isUkGrad ? 'selected' : '' }}>UK Graduate / Youth Mobility</option>
+                      </optgroup>
+
+                      <optgroup label="United Arab Emirates & GCC (Dubai / UAE)">
+                        <option value="UAE Golden Visa" {{ $isUaeGolden ? 'selected' : '' }}>UAE Golden Visa (10-Year Self-Sponsored)</option>
+                        <option value="UAE Green Visa" {{ $isUaeGreen ? 'selected' : '' }}>UAE Green Visa (5-Year Skilled / Freelance)</option>
+                        <option value="UAE Employment Visa" {{ $isUaeEmpVisa ? 'selected' : '' }}>UAE Employment Residence Visa (Company / Freezone)</option>
+                        <option value="UAE Freelance Visa" {{ $isUaeFreelance ? 'selected' : '' }}>UAE Freelance / Remote Work Visa</option>
+                        <option value="UAE National" {{ $isUaeNational ? 'selected' : '' }}>UAE / GCC National</option>
+                        <option value="GCC Iqama" {{ $isGccIqama ? 'selected' : '' }}>GCC Resident Work Permit / Iqama</option>
+                      </optgroup>
+
+                      <optgroup label="Singapore (SG)">
+                        <option value="Singapore Citizen" {{ $isSgCitizen ? 'selected' : '' }}>Singapore Citizen (SC)</option>
+                        <option value="Singapore PR" {{ $isSgPr ? 'selected' : '' }}>Singapore Permanent Resident (PR)</option>
+                        <option value="Singapore EP" {{ $isSgEp ? 'selected' : '' }}>Singapore Employment Pass (EP)</option>
+                        <option value="Singapore S Pass" {{ $isSgSpass ? 'selected' : '' }}>Singapore S Pass (Skilled Staff)</option>
+                        <option value="Singapore ONE Pass" {{ $isSgOnePass ? 'selected' : '' }}>Singapore ONE Pass / Tech.Pass / PEP</option>
+                        <option value="Singapore LOC / DP" {{ $isSgLocDp ? 'selected' : '' }}>Singapore Letter of Consent (LOC / Dependant Pass)</option>
+                      </optgroup>
+
+                      <optgroup label="Australia & New Zealand (AU / NZ)">
+                        <option value="Australia Citizen / PR" {{ $isAuCitizenPr ? 'selected' : '' }}>Australian Citizen / Permanent Resident</option>
+                        <option value="Australia TSS 482" {{ $isAuTss482 ? 'selected' : '' }}>Australia TSS Visa (Subclass 482 - Temporary Skill)</option>
+                        <option value="Australia Skilled 189/190" {{ $isAuSkilled ? 'selected' : '' }}>Australia Skilled Work Visa (Subclass 189 / 190)</option>
+                        <option value="Australia Graduate 485" {{ $isAuGrad485 ? 'selected' : '' }}>Australia Temporary Graduate Visa (Subclass 485)</option>
+                        <option value="New Zealand Citizen / PR" {{ $isNzCitizen ? 'selected' : '' }}>New Zealand Citizen / Resident</option>
+                      </optgroup>
+
+                      <optgroup label="European Union (EU)">
+                        <option value="EU Citizen" {{ $isEuCitizen ? 'selected' : '' }}>EU / EEA Citizen</option>
+                        <option value="EU Blue Card" {{ $isEuBlue ? 'selected' : '' }}>EU Blue Card</option>
+                        <option value="Germany - Opportunity Card / Work Visa" {{ ($currentVisa === 'Germany - Opportunity Card / Work Visa') ? 'selected' : '' }}>Germany - Opportunity Card / Work Visa</option>
+                        <option value="Netherlands - Highly Skilled Migrant" {{ ($currentVisa === 'Netherlands - Highly Skilled Migrant') ? 'selected' : '' }}>Netherlands - Highly Skilled Migrant</option>
+                        <option value="Ireland - Critical Skills Employment Permit" {{ ($currentVisa === 'Ireland - Critical Skills Employment Permit') ? 'selected' : '' }}>Ireland - Critical Skills Employment Permit</option>
+                        <option value="Authorized Work Permit" {{ $isAuthWp ? 'selected' : '' }}>Authorized Work Permit (Country Specific)</option>
+                        <option value="Requires Sponsorship" {{ $isReqSpons ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                      </optgroup>
+
+                      {{-- 240+ COUNTRIES & TERRITORIES WORLDWIDE --}}
+                      @if(!empty($allGlobalCountries))
+                        @foreach($allGlobalCountries as $countryItem)
+                          @php
+                            $cName = trim($countryItem['name'] ?? '');
+                            $cCode = trim($countryItem['sortname'] ?? '');
+                            if (empty($cName)) continue;
+                            if (in_array($cCode, ['US', 'CA', 'IN', 'GB', 'AE', 'SG', 'AU', 'NZ'])) continue;
+
+                            $optCitizen = $cName . ' - Citizen / Domestic Right to Work';
+                            $optPr      = $cName . ' - Permanent Resident (PR)';
+                            $optVisa    = $cName . ' - Work Visa / Employment Permit';
+
+                            $isOptCitizenSelected = ($currentVisa === $optCitizen);
+                            $isOptPrSelected      = ($currentVisa === $optPr);
+                            $isOptVisaSelected    = ($currentVisa === $optVisa);
+
+                            if ($isOptCitizenSelected || $isOptPrSelected || $isOptVisaSelected) {
+                                $hasMatchedOption = true;
+                            }
+                          @endphp
+                          <optgroup label="{{ $cName }} ({{ $cCode }})">
+                            <option value="{{ $optCitizen }}" {{ $isOptCitizenSelected ? 'selected' : '' }}>{{ $optCitizen }}</option>
+                            <option value="{{ $optPr }}" {{ $isOptPrSelected ? 'selected' : '' }}>{{ $optPr }}</option>
+                            <option value="{{ $optVisa }}" {{ $isOptVisaSelected ? 'selected' : '' }}>{{ $optVisa }}</option>
+                          </optgroup>
+                        @endforeach
+                      @endif
+
+                      <optgroup label="Global & International">
+                        <option value="Requires International Visa Sponsorship" {{ ($currentVisa === 'Requires International Visa Sponsorship') ? 'selected' : '' }}>Requires International Visa Sponsorship</option>
+                        <option value="Global Remote / Freelance Contract" {{ ($currentVisa === 'Global Remote / Freelance Contract') ? 'selected' : '' }}>Global Remote / Freelance Contract Authorization</option>
+                      </optgroup>
+
+                      @if(!empty($currentVisa) && !$hasMatchedOption)
+                        <option value="{{ $currentVisa }}" selected>{{ $currentVisa }} (Current Status)</option>
+                      @endif
+                    </select>
+                  </div>
+                  <small class="text-muted mt-1 d-block" style="font-size:11px;color:#65708e;">Search by country name (e.g. Mexico, Japan, Germany), visa code (H1B, TN, EAD, Golden Visa, EP, TSS 482) or right-to-work status.</small>
                 </div>
               </div>
             </div>
@@ -4765,18 +5305,24 @@ KTUtil.onDOMContentLoaded(function () {
   })(window, jQuery);
    $('body').on('change', '#current_ctc_cur', function(){
    			var	current_ctc_cur		=	$(this).val();
-			document.getElementById("current_ectc_cur").selectedIndex = current_ctc_cur;
-			document.getElementById("current_th_cur").selectedIndex = current_ctc_cur;
+			var ectcCurEl = document.getElementById("current_ectc_cur");
+			var thCurEl = document.getElementById("current_th_cur");
+			if (ectcCurEl) { ectcCurEl.value = current_ctc_cur; }
+			if (thCurEl) { thCurEl.value = current_ctc_cur; }
    });
    $('body').on('change', '#current_ectc_cur', function(){
    			var	current_ectc_cur	=	$(this).val();
-			document.getElementById("current_ctc_cur").selectedIndex = current_ectc_cur;
-			document.getElementById("current_th_cur").selectedIndex = current_ectc_cur;
+			var ctcCurEl = document.getElementById("current_ctc_cur");
+			var thCurEl = document.getElementById("current_th_cur");
+			if (ctcCurEl) { ctcCurEl.value = current_ectc_cur; }
+			if (thCurEl) { thCurEl.value = current_ectc_cur; }
    });
    $('body').on('change', '#current_th_cur', function(){
    			var	current_th_cur		=	$(this).val();
-			document.getElementById("current_ectc_cur").selectedIndex = current_th_cur;
-			document.getElementById("current_ctc_cur").selectedIndex = current_th_cur;
+			var ectcCurEl = document.getElementById("current_ectc_cur");
+			var ctcCurEl = document.getElementById("current_ctc_cur");
+			if (ectcCurEl) { ectcCurEl.value = current_th_cur; }
+			if (ctcCurEl) { ctcCurEl.value = current_th_cur; }
    });
    $('body').on('change', '#current_ctc_mode', function(){
    			var	current_ctc_mode	=	$(this).val();
@@ -7283,5 +7829,182 @@ $(function initializeCandidateSkillRatings() {
     });
 
 })(jQuery);
+</script>
+
+<script>
+/**
+ * Enterprise Work Authorization & 240+ Country Compliance Engine
+ * Client-First Execution (User RAM & Browser CPU First - Rule 3, Rule 17)
+ */
+$(document).ready(function () {
+    function initWorkAuthorizationEngine() {
+        if (!$.fn || !$.fn.select2) {
+            setTimeout(initWorkAuthorizationEngine, 50);
+            return;
+        }
+
+        var $select = $('#visastatu');
+        if (!$select.length) return;
+
+        // Idempotency check: if already active, sync chips and return
+        if ($select.hasClass('select2-hidden-accessible')) {
+            syncWorkAuthActiveChip();
+            return;
+        }
+
+        $select.select2({
+            theme: 'default',
+            width: '100%',
+            dropdownParent: $(document.body),
+            dropdownCssClass: 'wa-select2-dropdown',
+            placeholder: 'Search visa / work authorization or country...',
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            templateSelection: function (item) {
+                if (!item || !item.id || item.id === '') {
+                    return item ? (item.text || 'Select work authorization or visa status') : 'Select work authorization or visa status';
+                }
+                return item.text;
+            },
+            matcher: function (params, data) {
+                if (!params.term || $.trim(params.term) === '') {
+                    return data;
+                }
+                var term = params.term.toLowerCase().trim();
+
+                // If optgroup: check if optgroup label matches search term
+                if (data.children && data.children.length > 0) {
+                    var groupLabel = (data.text || '').toLowerCase();
+                    if (groupLabel.indexOf(term) > -1) {
+                        return data;
+                    }
+
+                    // Filter matched child options
+                    var matchedChildren = [];
+                    for (var i = 0; i < data.children.length; i++) {
+                        var child = data.children[i];
+                        var childText = (child.text || '').toLowerCase();
+                        var childVal = (child.id || '').toLowerCase();
+                        if (childText.indexOf(term) > -1 || childVal.indexOf(term) > -1) {
+                            matchedChildren.push(child);
+                        }
+                    }
+                    if (matchedChildren.length > 0) {
+                        var cloned = $.extend({}, data, true);
+                        cloned.children = matchedChildren;
+                        return cloned;
+                    }
+                    return null;
+                }
+
+                // Leaf option check
+                var text = (data.text || '').toLowerCase();
+                var val = (data.id || '').toLowerCase();
+                if (text.indexOf(term) > -1 || val.indexOf(term) > -1) {
+                    return data;
+                }
+                return null;
+            }
+        });
+
+        syncWorkAuthActiveChip();
+    }
+
+    function syncWorkAuthActiveChip() {
+        var val = $('#visastatu').val();
+        $('.wa-chip-btn').removeClass('is-active');
+        if (!val) return;
+
+        var $selectedOpt = $('#visastatu').find('option:selected');
+        var $optgroup = $selectedOpt.closest('optgroup');
+        var groupLabel = ($optgroup.attr('label') || '').toLowerCase();
+        var optVal = (val || '').toLowerCase();
+
+        $('.wa-chip-btn').each(function () {
+            var filter = ($(this).data('filter') || '').toLowerCase();
+            var region = ($(this).data('region') || '').toLowerCase();
+            if ((groupLabel && (groupLabel.indexOf(filter) > -1 || groupLabel.indexOf(region) > -1)) ||
+                optVal.indexOf(filter) > -1 || optVal.indexOf(region) > -1) {
+                $(this).addClass('is-active');
+                return false;
+            }
+        });
+    }
+
+    // Force search field visibility and focus upon opening
+    $(document).on('select2:open select2:opening', '#visastatu', function () {
+        var $dropdown = $('.wa-select2-dropdown');
+        $dropdown.find('.select2-search, .select2-search--dropdown').removeClass('select2-search--hide').css('display', 'block');
+        setTimeout(function () {
+            var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
+            if (searchField) {
+                searchField.focus();
+            }
+        }, 30);
+    });
+
+    // Handle Quick Hub Chip click
+    $(document).on('click', '.wa-chip-btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var filterTerm = $btn.data('filter') || '';
+        var wasActive = $btn.hasClass('is-active');
+
+        $('.wa-chip-btn').removeClass('is-active');
+
+        var $visaSelect = $('#visastatu');
+        if (!$.fn.select2 || !$visaSelect.hasClass('select2-hidden-accessible')) {
+            initWorkAuthorizationEngine();
+        }
+
+        if (wasActive) {
+            if ($visaSelect.data('select2') && $visaSelect.data('select2').isOpen()) {
+                var $sf = $('.wa-select2-dropdown .select2-search__field');
+                if ($sf.length) {
+                    $sf.val('').trigger('input').trigger('keyup');
+                }
+            }
+            return;
+        }
+
+        $btn.addClass('is-active');
+
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            $visaSelect.select2('open');
+            setTimeout(function () {
+                var $searchField = $('.wa-select2-dropdown .select2-search__field');
+                if ($searchField.length) {
+                    $searchField.val(filterTerm).trigger('input').trigger('keyup');
+                }
+            }, 50);
+        } else {
+            $visaSelect.focus();
+        }
+    });
+
+    $(document).on('change', '#visastatu', function () {
+        syncWorkAuthActiveChip();
+    });
+
+    // Make dropdown container click trigger Select2 open reliably without interfering with internal toggle
+    $(document).on('click', '.addl-select-wrap', function (e) {
+        if ($(e.target).closest('.select2-container').length) return;
+        if ($(e.target).closest('.select2-selection__clear').length) return;
+        var $visaSelect = $('#visastatu');
+        if ($.fn.select2 && $visaSelect.hasClass('select2-hidden-accessible')) {
+            if (!$visaSelect.data('select2') || !$visaSelect.data('select2').isOpen()) {
+                $visaSelect.select2('open');
+            }
+        } else {
+            initWorkAuthorizationEngine();
+            if ($visaSelect.hasClass('select2-hidden-accessible')) {
+                $visaSelect.select2('open');
+            }
+        }
+    });
+
+    // Initial boot
+    initWorkAuthorizationEngine();
+});
 </script>
 @endpush

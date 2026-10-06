@@ -3095,13 +3095,16 @@ input[type="radio"]:checked {
                   <option value="" >Select a currency...</option>
                   @if(!empty($currencyArr))
                     @foreach($currencyArr as $cval)
-                      @php $sel	=	''; 
-                      if($account->currency == $cval->id ){
-                          $sel	=	'selected="selected"';
-                      }elseif($cval->id==53){
-                        $sel	=	'selected="selected"';
-                      } 
-                     @endphp
+                      @php
+                        $sel = '';
+                        if (!empty($account->currency)) {
+                            if ($account->currency == $cval->id || (is_string($account->currency) && strtoupper($account->currency) === strtoupper($cval->code))) {
+                                $sel = 'selected="selected"';
+                            }
+                        } elseif ($cval->id == 53) {
+                            $sel = 'selected="selected"';
+                        }
+                      @endphp
                       {!! '<option  value="'.$cval->id.'" '.$sel.'>'.$cval->code.' - '.$cval->country.'</option>' !!}
                     @endforeach
                   @endif
