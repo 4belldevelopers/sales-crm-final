@@ -3286,25 +3286,33 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $cityID = '';
         $countryID = '';
         $location_find = '';
-        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
-        if ($workLocation !== null) {
-            $cityName = $workLocation['city'];
-            $stateName = $workLocation['state'];
-            $countrName = $workLocation['country'];
-            $location_find = $cityName.'_'.$stateName.'_'.$countrName;
-            $city_row = DB::table('city_list')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city_id', 'countries.id as country_id')
-                ->where('city_list.city', '!=', '')
-                ->where('city_list.city', '=', $cityName)
-                ->where('countries.country_name', '=', $countrName)
-                ->first();
+        /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
+        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+            $cityID = (int) $request->location_city_id;
+            $stateId = (int) $request->location_state_id;
+            $countryID = (int) ($request->location_country_id ?: 101);
+            $location_find = (string) $request->location_canonical_label;
+        } else {
+            $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+            if ($workLocation !== null) {
+                $cityName = $workLocation['city'];
+                $stateName = $workLocation['state'];
+                $countrName = $workLocation['country'];
+                $location_find = $cityName.'_'.$stateName.'_'.$countrName;
+                $city_row = DB::table('city_list')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city_id', 'countries.id as country_id')
+                    ->where('city_list.city', '!=', '')
+                    ->where('city_list.city', '=', $cityName)
+                    ->where('countries.country_name', '=', $countrName)
+                    ->first();
 
-            if ($city_row) {
-                $cityID = $city_row->city_id;
-                $countryID = $city_row->country_id;
-                $stateId = GeneralMethod::stateId($cityID);
+                if ($city_row) {
+                    $cityID = $city_row->city_id;
+                    $countryID = $city_row->country_id;
+                    $stateId = GeneralMethod::stateId($cityID);
+                }
             }
         }
 
@@ -7276,25 +7284,33 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $cityID = '';
         $countryID = '';
         $location_find = '';
-        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
-        if ($workLocation !== null) {
-            $cityName = $workLocation['city'];
-            $stateName = $workLocation['state'];
-            $countrName = $workLocation['country'];
-            $location_find = $cityName.'_'.$stateName.'_'.$countrName;
-            $city_row = DB::table('city_list')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city_id', 'countries.id as country_id')
-                ->where('city_list.city', '!=', '')
-                ->where('city_list.city', '=', $cityName)
-                ->where('countries.country_name', '=', $countrName)
-                ->first();
+        /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
+        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+            $cityID = (int) $request->location_city_id;
+            $stateId = (int) $request->location_state_id;
+            $countryID = (int) ($request->location_country_id ?: 101);
+            $location_find = (string) $request->location_canonical_label;
+        } else {
+            $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+            if ($workLocation !== null) {
+                $cityName = $workLocation['city'];
+                $stateName = $workLocation['state'];
+                $countrName = $workLocation['country'];
+                $location_find = $cityName.'_'.$stateName.'_'.$countrName;
+                $city_row = DB::table('city_list')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city_id', 'countries.id as country_id')
+                    ->where('city_list.city', '!=', '')
+                    ->where('city_list.city', '=', $cityName)
+                    ->where('countries.country_name', '=', $countrName)
+                    ->first();
 
-            if ($city_row) {
-                $cityID = $city_row->city_id;
-                $countryID = $city_row->country_id;
-                $stateId = GeneralMethod::stateId($cityID);
+                if ($city_row) {
+                    $cityID = $city_row->city_id;
+                    $countryID = $city_row->country_id;
+                    $stateId = GeneralMethod::stateId($cityID);
+                }
             }
         }
 
@@ -11633,23 +11649,30 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $stateId = '';
         $cityID = '';
         $countryID = '';
-        $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
-        if ($workLocation !== null) {
-            $cityName = $workLocation['city'];
-            $countrName = $workLocation['country'];
-            $city_row = DB::table('city_list')
-                ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                ->select('city_list.city_id', 'countries.id as country_id')
-                ->where('city_list.city', '!=', '')
-                ->where('city_list.city', '=', $cityName)
-                ->where('countries.country_name', '=', $countrName)
-                ->first();
+        /* Intent: Canonical Location Resolution Engine Fast-Path (0% MySQL Reads, CQRS Compliant) */
+        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+            $cityID = (int) $request->location_city_id;
+            $stateId = (int) $request->location_state_id;
+            $countryID = (int) ($request->location_country_id ?: 101);
+        } else {
+            $workLocation = $this->normalizedCandidateLocation($request->input('kt_tagify_work_location'));
+            if ($workLocation !== null) {
+                $cityName = $workLocation['city'];
+                $countrName = $workLocation['country'];
+                $city_row = DB::table('city_list')
+                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                    ->select('city_list.city_id', 'countries.id as country_id')
+                    ->where('city_list.city', '!=', '')
+                    ->where('city_list.city', '=', $cityName)
+                    ->where('countries.country_name', '=', $countrName)
+                    ->first();
 
-            if ($city_row) {
-                $cityID = $city_row->city_id;
-                $countryID = $city_row->country_id;
-                $stateId = GeneralMethod::stateId($cityID);
+                if ($city_row) {
+                    $cityID = $city_row->city_id;
+                    $countryID = $city_row->country_id;
+                    $stateId = GeneralMethod::stateId($cityID);
+                }
             }
         }
         $job_application_arr['country'] = $countryID;
