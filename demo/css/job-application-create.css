@@ -407,9 +407,76 @@
     font-weight: 500 !important;
 }
 
-.job-candidate-create .bd-card .ig,
-.job-candidate-create .salary-card .ig {
+.job-candidate-create .bd-card .ig {
     width: 100%;
+}
+
+.job-candidate-create .salary-card .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 38px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.job-candidate-create .salary-card .ig:focus-within {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+}
+
+.job-candidate-create .salary-card .ig input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background: transparent !important;
+    margin: 0 !important;
+}
+
+.job-candidate-create .salary-card .ig input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.job-candidate-create .salary-card .ig .ig-a,
+.job-candidate-create .salary-card .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 52px !important;
+    height: 100% !important;
+    padding: 0 12px !important;
+    background: #f8fafc !important;
+    border: none !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+
+.job-candidate-create .salary-card .ig:focus-within .ig-a,
+.job-candidate-create .salary-card .ig:focus-within .changeTextCurrency {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-left-color: #d0e3fc !important;
 }
 
 .job-candidate-create .bd-card .iti,
@@ -3741,8 +3808,8 @@
 }
 
 .job-candidate-create .salary-card .candidate-salary-panel--expected {
-    border: 1px solid #c9dff8;
-    background: #fbfdff;
+    border: 1px solid #efd36b;
+    background: #fffef8;
 }
 
 .job-candidate-create .salary-card .candidate-salary-summary {
@@ -3760,7 +3827,7 @@
 }
 
 .job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head {
-    background: #f0f7ff;
+    background: #fff8dc;
 }
 
 .job-candidate-create .salary-card .candidate-salary-summary .candidate-salary-panel-head {
@@ -3783,8 +3850,8 @@
 }
 
 .job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span {
-    color: #167ce5;
-    background: #dceeff;
+    color: #946b00;
+    background: #ffefad;
 }
 
 .job-candidate-create .salary-card .candidate-salary-summary .candidate-salary-panel-head > span {
