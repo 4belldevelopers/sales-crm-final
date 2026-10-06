@@ -6539,7 +6539,6 @@ var KTAddCandidate = function () {
                                 if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
                                 if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
                                 $(document).trigger('jero-candidate-saved');
-                                $(document).trigger('jero-candidate-saved');
                                 window.location.assign(targetUrl);
                             }
 

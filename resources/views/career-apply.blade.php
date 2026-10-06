@@ -1173,6 +1173,487 @@ select#gender {
     color: #1D4ED8 !important;
     font-weight: 600 !important;
 }
+
+/* Scoped Enterprise Global Currency Indicative Pills & Hover Lens */
+.jero-pill-wrapper {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+.jero-indicative-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 4px;
+    font-size: 8.8px !important; /* 20% reduction from 11px */
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 3px;
+    cursor: pointer;
+    line-height: 1.35;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    text-decoration: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.jero-indicative-pill--base {
+    background: transparent !important;
+    color: #10b981 !important;
+    border: none !important;
+}
+.jero-indicative-pill--converted {
+    background: transparent !important;
+    color: #009ef7 !important;
+    border: none !important;
+}
+.jero-indicative-pill:hover,
+.jero-indicative-pill:focus-visible {
+    box-shadow: none !important;
+    transform: none !important;
+    color: #0077b5 !important;
+    text-decoration: underline dotted;
+    outline: none;
+}
+.jero-indicative-pill i {
+    font-size: 8px !important;
+}
+
+/* Seamless Unified Amount & Currency Input Box */
+.candidate-salary-panel .candidate-salary-period .ig,
+.salary-card .candidate-salary-period .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 38px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig:focus-within,
+.salary-card .candidate-salary-period .ig:focus-within {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig input,
+.salary-card .candidate-salary-period .ig input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background: transparent !important;
+    margin: 0 !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig input:focus,
+.salary-card .candidate-salary-period .ig input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig .ig-a,
+.candidate-salary-panel .candidate-salary-period .ig .changeTextCurrency,
+.salary-card .candidate-salary-period .ig .ig-a,
+.salary-card .candidate-salary-period .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 52px !important;
+    height: 100% !important;
+    padding: 0 12px !important;
+    background: #f8fafc !important;
+    border: none !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig:focus-within .ig-a,
+.candidate-salary-panel .candidate-salary-period .ig:focus-within .changeTextCurrency,
+.salary-card .candidate-salary-period .ig:focus-within .ig-a,
+.salary-card .candidate-salary-period .ig:focus-within .changeTextCurrency {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-left-color: #d0e3fc !important;
+}
+
+/* Unified Warm Theme for Expected Salary (Matching Current Salary) */
+.salary-card .candidate-salary-panel--expected,
+.candidate-salary-panel--expected {
+    border: 1px solid #efd36b !important;
+    background: #fffef8 !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-panel-head,
+.candidate-salary-panel--expected .candidate-salary-panel-head {
+    background: #fff8dc !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span,
+.candidate-salary-panel--expected .candidate-salary-panel-head > span {
+    color: #946b00 !important;
+    background: #ffefad !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-auto,
+.candidate-salary-panel--expected .candidate-salary-auto {
+    background: #fffaf0 !important;
+}
+
+/* ============================================================================
+   JERO ATS - GOD-LEVEL ENTERPRISE TIME CLOCK POPOVER (15.6" & SMALL SCREENS)
+   ============================================================================ */
+.jgtp-popover {
+    position: fixed !important;
+    z-index: 100050 !important;
+    width: 310px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1e293b !important;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+.jgtp-popover.is-open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) scale(1) !important;
+}
+.jgtp-header {
+    flex: 0 0 auto !important;
+    background: linear-gradient(135deg, #071434 0%, #172346 100%) !important;
+    color: #ffffff !important;
+    padding: 8px 12px 7px !important;
+    box-sizing: border-box !important;
+}
+.jgtp-header-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 5px !important;
+}
+.jgtp-slot-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffd233 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+}
+.jgtp-close-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.jgtp-close-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+.jgtp-display-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+.jgtp-digits {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+.jgtp-digit {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+    min-width: 30px !important;
+    text-align: center !important;
+}
+.jgtp-colon {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffd233 !important;
+    line-height: 1 !important;
+    animation: jgtpBlink 1.5s infinite ease-in-out;
+}
+@keyframes jgtpBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.jgtp-ampm-switch {
+    display: inline-flex !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 5px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+}
+.jgtp-ampm-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+}
+.jgtp-ampm-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.4) !important;
+}
+.jgtp-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 8px 10px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+    box-sizing: border-box !important;
+}
+.jgtp-body::-webkit-scrollbar {
+    width: 5px !important;
+}
+.jgtp-body::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+.jgtp-section {
+    margin-bottom: 7px !important;
+}
+.jgtp-section:last-child {
+    margin-bottom: 0 !important;
+}
+.jgtp-section-label {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1.2 !important;
+}
+.jgtp-presets-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+}
+.jgtp-preset-chip {
+    padding: 4px 2px !important;
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    transition: all 0.12s ease !important;
+    line-height: 1 !important;
+    min-height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-preset-chip:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-preset-chip.is-active {
+    border-color: #009ef7 !important;
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+.jgtp-hours-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+}
+.jgtp-hour-btn {
+    height: 26px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-hour-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-hour-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+    margin-bottom: 3px !important;
+}
+.jgtp-min-btn {
+    height: 26px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-min-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-min-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-subgrid {
+    display: grid !important;
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    gap: 2px !important;
+}
+.jgtp-min-subchip {
+    padding: 2px 0 !important;
+    height: 20px !important;
+    font-size: 8.5px !important;
+    font-weight: 500 !important;
+    border: 1px solid #edf2f7 !important;
+    border-radius: 3px !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-min-subchip:hover {
+    border-color: #009ef7 !important;
+    color: #009ef7 !important;
+    background: #f0f9ff !important;
+}
+.jgtp-min-subchip.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+}
+.jgtp-footer {
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+}
+.jgtp-btn {
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.12s ease !important;
+}
+.jgtp-btn-clear {
+    background: transparent !important;
+    color: #ef4444 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    padding: 4px 6px !important;
+}
+.jgtp-btn-clear:hover {
+    background: #fef2f2 !important;
+}
+.jgtp-btn-now {
+    background: #edf2f7 !important;
+    color: #334155 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+}
+.jgtp-btn-now:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+.jgtp-btn-apply {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    padding: 4px 12px !important;
+}
+.jgtp-btn-apply:hover {
+    background: #0088d4 !important;
+}
 </style>
 
 <style>
@@ -1362,16 +1843,19 @@ select#gender {
 		$snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
 		$snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
 		$snp_mode = @$application->serving_notice_period_mode;
+		if (is_null($snp_mode) || $snp_mode === '') {
+			$snp_mode = 2; // Default to Immediate Joiner
+		}
 		if($snp_mode== 1){
 			$snp_one		=	'checked="checked"';
 			$snp_text_one	=	'display: flex;';
-      $snp_text_dummy = 'Serving Notice Period';   
-      $snp_last_working = $application->np_id;                                 	
+			$snp_text_dummy = 'Serving Notice Period (SNP)';   
+			$snp_last_working = @$application->np_id;                                 	
 		}else if($snp_mode== 2){
 			$snp_two	=	'checked="checked"';
 			$snp_text_one	=	'display: flex;';
-      $snp_text_dummy = 'Immediate';  
-      $snp_last_working = $application->last_working_date;   
+			$snp_text_dummy = 'Immediate Joiner';  
+			$snp_last_working = @$application->last_working_date;   
 		}else{
 			$snp_zero		=	'checked="checked"';	
 			$snp_text_zero	=	'display:block';
@@ -1975,7 +2459,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
                       </div>
                       <div class="ri">
                         <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office</label>
+                        <label for="wo">Work From Office (WFO)</label>
                       </div>
                     </div>
                   </div>
@@ -2198,8 +2682,8 @@ $currencySymbole = GeneralMethod::currencySymbole();
                     <label>Notice Period <span class="rq">*</span></label>
                     <select name="serving_notice_period" id="serving_notice_period">
                       <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                   </div>
 
@@ -2211,7 +2695,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
                             </div>
                           
                             <div style="position: relative;">
-                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
+                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date (LWD)" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
                                 <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
                             </div>
                         </div>
@@ -2233,7 +2717,7 @@ $currencySymbole = GeneralMethod::currencySymbole();
                         <input type="text" id="calender" name="calender" style="display:none">
                     </div> 
                     <div class="fg fv-row">
-                      <label>Reason for Job Change </label>
+                      <label>Reason for Job Change (Optional)</label>
                       <input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter current company" />
                     </div>                  
                 </div>
@@ -3532,30 +4016,373 @@ setTimeout(() => {
           
           var defaultTimeFormat = '{{$defaultTimeFormat}}';
          
-           // For all time pickers
-          function initTimePicker(selector, format) {
-                return $(selector).flatpickr({
-                    enableTime: true,
-                    noCalendar: true,
-                    dateFormat: format,   // "h:i K" or "H:i"
-                    time_24hr: format === "H:i",
-                    minuteIncrement: 1,
-                    allowInput: true, // allow user to delete value
-                    onChange: function(selectedDates, dateStr, instance) {
-                        if (selectedDates.length > 0) {
-                            let d = selectedDates[0];
-                            if (d.getHours() === 0 && d.getMinutes() === 0) {
-                                instance.clear(); // auto clear if 00:00
-                            }
-                        }
-                    }
-                });
-            }
+          // ── GOD-LEVEL ENTERPRISE TIME CLOCK PICKER (15.6" Screen Adaptive) ──
+          function initJeroGodLevelTimePicker(fieldIds, formatStr) {
+              var is12Hour = (formatStr !== 'H:i');
+              var activeInput = null;
+              var currentHour = 10;
+              var currentMin = 0;
+              var currentAmPm = 'AM';
 
-            // Example init
-          let timeOnePicker   = initTimePicker("#interviewTimeOne",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeTwoPicker   = initTimePicker("#interviewTimeTwo",  '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
-          let timeThreePicker = initTimePicker("#interviewTimeThree",'{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
+              var popover = document.getElementById('jero-god-time-picker');
+              if (!popover) {
+                  popover = document.createElement('div');
+                  popover.id = 'jero-god-time-picker';
+                  popover.className = 'jgtp-popover';
+                  popover.innerHTML = [
+                      '<div class="jgtp-header">',
+                      '  <div class="jgtp-header-top">',
+                      '    <span class="jgtp-slot-badge"><i class="fa-regular fa-clock me-1"></i> <span id="jgtp-slot-label">Slot 1 Interview Time</span></span>',
+                      '    <button type="button" class="jgtp-close-btn" id="jgtp-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>',
+                      '  </div>',
+                      '  <div class="jgtp-display-row">',
+                      '    <div class="jgtp-digits">',
+                      '      <span class="jgtp-digit jgtp-hour-display" id="jgtp-hour-display">10</span>',
+                      '      <span class="jgtp-colon">:</span>',
+                      '      <span class="jgtp-digit jgtp-min-display" id="jgtp-min-display">00</span>',
+                      '    </div>',
+                      '    <div class="jgtp-ampm-switch" id="jgtp-ampm-switch">',
+                      '      <button type="button" class="jgtp-ampm-btn is-active" data-ampm="AM">AM</button>',
+                      '      <button type="button" class="jgtp-ampm-btn" data-ampm="PM">PM</button>',
+                      '    </div>',
+                      '  </div>',
+                      '</div>',
+                      '<div class="jgtp-body">',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Interview Slots</div>',
+                      '    <div class="jgtp-presets-grid" id="jgtp-presets-grid">',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="09:00 AM">09:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="10:00 AM">10:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="11:00 AM">11:00 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="11:30 AM">11:30 AM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="12:00 PM">12:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="02:00 PM">02:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="03:00 PM">03:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="04:00 PM">04:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="05:00 PM">05:00 PM</button>',
+                      '      <button type="button" class="jgtp-preset-chip" data-time="06:00 PM">06:00 PM</button>',
+                      '    </div>',
+                      '  </div>',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-regular fa-clock me-1 text-primary"></i> Select Hour</div>',
+                      '    <div class="jgtp-hours-grid" id="jgtp-hours-grid"></div>',
+                      '  </div>',
+                      '  <div class="jgtp-section">',
+                      '    <div class="jgtp-section-label"><i class="fa-solid fa-stopwatch me-1 text-info"></i> Select Minute</div>',
+                      '    <div class="jgtp-mins-grid" id="jgtp-mins-grid">',
+                      '      <button type="button" class="jgtp-min-btn is-active" data-min="00">:00</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="15">:15</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="30">:30</button>',
+                      '      <button type="button" class="jgtp-min-btn" data-min="45">:45</button>',
+                      '    </div>',
+                      '    <div class="jgtp-mins-subgrid" id="jgtp-mins-subgrid">',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="05">:05</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="10">:10</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="20">:20</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="25">:25</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="35">:35</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="40">:40</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="50">:50</button>',
+                      '      <button type="button" class="jgtp-min-subchip" data-min="55">:55</button>',
+                      '    </div>',
+                      '  </div>',
+                      '</div>',
+                      '<div class="jgtp-footer">',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-clear" id="jgtp-btn-clear">Clear</button>',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-now" id="jgtp-btn-now">Current Time</button>',
+                      '  <button type="button" class="jgtp-btn jgtp-btn-apply" id="jgtp-btn-apply"><i class="fa-solid fa-check me-1"></i> Done</button>',
+                      '</div>'
+                  ].join('');
+                  document.body.appendChild(popover);
+
+                  var hoursGrid = popover.querySelector('#jgtp-hours-grid');
+                  for (var h = 1; h <= 12; h++) {
+                      var btn = document.createElement('button');
+                      btn.type = 'button';
+                      btn.className = 'jgtp-hour-btn';
+                      var hStr = (h < 10 ? '0' : '') + h;
+                      btn.setAttribute('data-hour', h);
+                      btn.textContent = hStr;
+                      hoursGrid.appendChild(btn);
+                  }
+              }
+
+              var hourDisplay = popover.querySelector('#jgtp-hour-display');
+              var minDisplay = popover.querySelector('#jgtp-min-display');
+              var ampmSwitch = popover.querySelector('#jgtp-ampm-switch');
+              var slotLabel = popover.querySelector('#jgtp-slot-label');
+
+              function formatFormattedTime(h, m, ap) {
+                  var mStr = (m < 10 ? '0' : '') + m;
+                  if (!is12Hour) {
+                      var h24 = h;
+                      if (ap === 'PM' && h < 12) h24 = h + 12;
+                      else if (ap === 'AM' && h === 12) h24 = 0;
+                      var h24Str = (h24 < 10 ? '0' : '') + h24;
+                      return h24Str + ':' + mStr;
+                  }
+                  var h12Str = (h < 10 ? '0' : '') + h;
+                  return h12Str + ':' + mStr + ' ' + ap;
+              }
+
+              function updateDisplay() {
+                  var hStr = (currentHour < 10 ? '0' : '') + currentHour;
+                  var mStr = (currentMin < 10 ? '0' : '') + currentMin;
+                  hourDisplay.textContent = hStr;
+                  minDisplay.textContent = mStr;
+
+                  if (is12Hour) {
+                      ampmSwitch.style.display = 'inline-flex';
+                      popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+                          btn.classList.toggle('is-active', btn.getAttribute('data-ampm') === currentAmPm);
+                      });
+                  } else {
+                      ampmSwitch.style.display = 'none';
+                  }
+
+                  popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+                      btn.classList.toggle('is-active', parseInt(btn.getAttribute('data-hour'), 10) === currentHour);
+                  });
+
+                  var mPadded = (currentMin < 10 ? '0' : '') + currentMin;
+                  popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+                      btn.classList.toggle('is-active', btn.getAttribute('data-min') === mPadded);
+                  });
+
+                  var currentTimeStr = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                  popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+                      btn.classList.toggle('is-active', btn.getAttribute('data-time') === currentTimeStr);
+                  });
+              }
+
+              function parseTimeValue(val) {
+                  if (!val) return null;
+                  var m = String(val).trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+                  if (!m) return null;
+                  var h = parseInt(m[1], 10);
+                  var min = parseInt(m[2], 10);
+                  var ap = m[3] ? m[3].toUpperCase() : null;
+                  if (!ap) {
+                      if (h >= 12) {
+                          ap = 'PM';
+                          if (h > 12) h -= 12;
+                      } else {
+                          ap = 'AM';
+                          if (h === 0) h = 12;
+                      }
+                  }
+                  return { hour: h, min: min, ampm: ap };
+              }
+
+              function positionPicker(input) {
+                  if (!input) return;
+                  var vh = window.innerHeight;
+                  var vw = window.innerWidth;
+                  var rect = input.getBoundingClientRect();
+                  var popoverWidth = 310;
+                  var popoverHeight = popover.offsetHeight || 295;
+
+                  var spaceBelow = vh - rect.bottom - 8;
+                  var spaceAbove = rect.top - 8;
+
+                  var top;
+                  if (spaceBelow >= popoverHeight) {
+                      top = rect.bottom + 4;
+                  } else if (spaceAbove >= popoverHeight) {
+                      top = rect.top - popoverHeight - 4;
+                  } else {
+                      if (spaceBelow >= spaceAbove) {
+                          top = rect.bottom + 4;
+                          var availBelow = Math.max(180, spaceBelow);
+                          popover.style.maxHeight = availBelow + 'px';
+                      } else {
+                          var availAbove = Math.max(180, spaceAbove);
+                          top = Math.max(8, rect.top - availAbove - 4);
+                          popover.style.maxHeight = availAbove + 'px';
+                      }
+                  }
+
+                  if (top < 8) top = 8;
+                  if (top + popoverHeight > vh - 8) {
+                      top = Math.max(8, vh - popoverHeight - 8);
+                  }
+                  if (top + (popover.offsetHeight || popoverHeight) > vh - 8) {
+                      popover.style.maxHeight = Math.max(180, vh - top - 8) + 'px';
+                  }
+
+                  var left = rect.left;
+                  if (left + popoverWidth > vw - 10) {
+                      left = Math.max(10, vw - popoverWidth - 10);
+                  }
+                  if (left < 10) left = 10;
+
+                  popover.style.top = Math.round(top) + 'px';
+                  popover.style.left = Math.round(left) + 'px';
+                  popover.style.width = popoverWidth + 'px';
+              }
+
+              function openPicker(input) {
+                  activeInput = input;
+                  var val = input.value;
+                  var parsed = parseTimeValue(val);
+                  if (parsed) {
+                      currentHour = parsed.hour;
+                      currentMin = parsed.min;
+                      currentAmPm = parsed.ampm;
+                  } else {
+                      currentHour = 10;
+                      currentMin = 0;
+                      currentAmPm = 'AM';
+                  }
+
+                  var slotName = 'Slot 1';
+                  if (input.id === 'interviewTimeTwo') slotName = 'Slot 2';
+                  else if (input.id === 'interviewTimeThree') slotName = 'Slot 3';
+                  slotLabel.textContent = slotName + ' Interview Time';
+
+                  updateDisplay();
+                  popover.style.maxHeight = '';
+                  popover.classList.add('is-open');
+                  input.classList.add('is-picker-active');
+                  positionPicker(input);
+              }
+
+              function closePicker() {
+                  if (!popover.classList.contains('is-open')) return;
+                  popover.classList.remove('is-open');
+                  popover.style.maxHeight = '';
+                  if (activeInput) {
+                      activeInput.classList.remove('is-picker-active');
+                      activeInput = null;
+                  }
+              }
+
+              function applyTime() {
+                  if (!activeInput) return;
+                  var formatted = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                  activeInput.value = formatted;
+                  activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  closePicker();
+              }
+
+              popover.querySelector('#jgtp-close').onclick = closePicker;
+              popover.querySelector('#jgtp-btn-apply').onclick = applyTime;
+              popover.querySelector('#jgtp-btn-clear').onclick = function () {
+                  if (activeInput) {
+                      activeInput.value = '';
+                      activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                      activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  }
+                  closePicker();
+              };
+              popover.querySelector('#jgtp-btn-now').onclick = function () {
+                  var now = new Date();
+                  var h = now.getHours();
+                  var m = Math.round(now.getMinutes() / 15) * 15;
+                  if (m === 60) {
+                      m = 0;
+                      h += 1;
+                  }
+                  var ap = h >= 12 ? 'PM' : 'AM';
+                  h = h % 12;
+                  if (h === 0) h = 12;
+                  currentHour = h;
+                  currentMin = m;
+                  currentAmPm = ap;
+                  updateDisplay();
+              };
+
+              popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentAmPm = btn.getAttribute('data-ampm');
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentHour = parseInt(btn.getAttribute('data-hour'), 10);
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
+                  btn.onclick = function () {
+                      currentMin = parseInt(btn.getAttribute('data-min'), 10);
+                      updateDisplay();
+                  };
+              });
+
+              popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
+                  btn.onclick = function () {
+                      var tVal = btn.getAttribute('data-time');
+                      var parsed = parseTimeValue(tVal);
+                      if (parsed) {
+                          currentHour = parsed.hour;
+                          currentMin = parsed.min;
+                          currentAmPm = parsed.ampm;
+                          updateDisplay();
+                      }
+                      if (activeInput) {
+                          activeInput.value = formatFormattedTime(currentHour, currentMin, currentAmPm);
+                          activeInput.dispatchEvent(new Event('input', { bubbles: true }));
+                          activeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                      }
+                      closePicker();
+                  };
+              });
+
+              fieldIds.forEach(function (id) {
+                  var input = document.getElementById(id);
+                  if (!input) return;
+                  input.readOnly = true;
+                  input.style.cursor = 'pointer';
+                  input.onclick = function (e) {
+                      e.stopPropagation();
+                      if (activeInput === input && popover.classList.contains('is-open')) {
+                          closePicker();
+                      } else {
+                          openPicker(input);
+                      }
+                  };
+                  input.onfocus = function () {
+                      if (activeInput !== input) {
+                          openPicker(input);
+                      }
+                  };
+              });
+
+              document.addEventListener('click', function (e) {
+                  if (!popover.classList.contains('is-open')) return;
+                  if (!popover.contains(e.target) && (!activeInput || !activeInput.contains(e.target))) {
+                      closePicker();
+                  }
+              });
+
+              document.addEventListener('keydown', function (e) {
+                  if (e.key === 'Escape' && popover.classList.contains('is-open')) {
+                      closePicker();
+                  }
+              });
+
+              window.addEventListener('scroll', function () {
+                  if (activeInput && popover.classList.contains('is-open')) {
+                      positionPicker(activeInput);
+                  }
+              }, true);
+
+              window.addEventListener('resize', function () {
+                  if (activeInput && popover.classList.contains('is-open')) {
+                      positionPicker(activeInput);
+                  }
+              });
+          }
+
+          initJeroGodLevelTimePicker(['interviewTimeOne', 'interviewTimeTwo', 'interviewTimeThree'], '{{$defaultTimeFormat==1 ? "h:i K" : "H:i"}}');
+          let timeOnePicker   = { clear: function() { $('#interviewTimeOne').val(''); } };
+          let timeTwoPicker   = { clear: function() { $('#interviewTimeTwo').val(''); } };
+          let timeThreePicker = { clear: function() { $('#interviewTimeThree').val(''); } };
 
           function parseDMY(dmy) {
               if (!dmy) return null;
@@ -4889,7 +5716,7 @@ setTimeout(() => {
 			$('#np_id').show();		
 			$('#np_id').attr("disabled", false);	
 			$("#np_id").attr('type','date');
-      $('#text_display').val('Serving Notice Period');
+      $('#text_display').val('Serving Notice Period (SNP)');
 			$("#np_id").css({ '-webkit-calendar-picker-indicator':'display(none)' });	
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
@@ -4900,7 +5727,7 @@ setTimeout(() => {
 			// $("#np_id").attr('type','text');
 			$('#np_id').attr("disabled", false);
       $("#np_id").attr('type','date');
-			$('#text_display').val('Immediate');
+			$('#text_display').val('Immediate Joiner');
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
 		}	
@@ -4936,12 +5763,12 @@ setTimeout(() => {
                     // Future dates allowed
                     $('#np_id').removeAttr('max'); // Remove max restriction
                     $('#np_id').attr('min', today); // Set min to today
-                    $('#np_id').attr('placeholder', 'Select your last working date (future dates allowed)'); // Set placeholder
+                    $('#np_id').attr('placeholder', 'Select your last working date (LWD) (future dates allowed)'); // Set placeholder
                 } else {
                     // Past dates allowed
                     $('#np_id').removeAttr('min'); // Remove min restriction
                     $('#np_id').attr('max', today); // Set max to today
-                    $('#np_id').attr('placeholder', 'Select your last working date (past  dates allowed)'); // Set placeholder
+                    $('#np_id').attr('placeholder', 'Select your last working date (LWD) (past dates allowed)'); // Set placeholder
                 }
                   break; // Stop the loop once the selected radio button is found
               }
