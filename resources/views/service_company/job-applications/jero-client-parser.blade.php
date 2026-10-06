@@ -308,13 +308,24 @@
 
             // 1. Full Name
             if (cand.name) {
-                setVal('#full_name', cand.name);
-                setVal('#name', cand.name);
+                var rawName = String(cand.name).replace(/^(curriculum vitae|resume|profile|cv|candidate)\s*[-:]*\s*/i, '').trim();
+                if (rawName.length >= 2) {
+                    var formattedName = (typeof window.formatCandidateTitleCase === 'function')
+                        ? window.formatCandidateTitleCase(rawName)
+                        : rawName;
+                    setVal('#full_name', formattedName);
+                    setVal('#name', formattedName);
+                }
             }
 
             // 2. Primary Email
             if (cand.email) {
-                setVal('#email', cand.email);
+                var cleanEmail = String(cand.email)
+                    .replace(/^mailto:/i, '')
+                    .replace(/[.,;:\/\s]+$/, '')
+                    .trim()
+                    .toLowerCase();
+                setVal('#email', cleanEmail);
             }
 
             // 3. Primary Mobile & Country Code (Enterprise JeroPhoneBox Integration)
