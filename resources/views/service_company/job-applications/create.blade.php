@@ -281,6 +281,7 @@
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            <input type="hidden" name="resume_upload_method" id="resume_upload_method" value="">
             {{-- V4 Remediation hidden fields --}}
             <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
@@ -389,8 +390,8 @@
                                             <i class="fa-solid fa-check" aria-hidden="true"></i>
                                         </span>
                                         <div class="up-info-banner-text">
-                                            <strong>Resume uploaded successfully!</strong>
-                                            <small>Your resume has been uploaded and parsed.</small>
+                                            <strong id="upInfoBannerTitle">Resume uploaded successfully!</strong>
+                                            <small id="upInfoBannerSub">Your resume has been uploaded and parsed.</small>
                                         </div>
                                     </div>
                                     <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
@@ -1794,12 +1795,15 @@ $(document).ready(function () {
                 $('#upBar').css('width', '100%');
                 $('#upStats').html('100% &middot; Upload complete');
                 $('#upPill').css('display', 'inline-flex');
+                var activeMethod = data.method === 'Method c' ? 'Method c' : 'Method A';
+                $('#resume_upload_method').val(activeMethod);
                 $('#upBanner').removeClass('err').addClass('ok').html(
                     '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
                     + ' stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                     + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Upload complete!</strong> Resume file stored securely.</span>'
+                    + '<span><strong>Upload complete!</strong> Resume uploaded successfully using ' + activeMethod + '</span>'
                 ).show();
+                $('#upInfoBannerTitle').text('Resume uploaded successfully using ' + activeMethod);
                 $('#uploaded_file_path').val('');   // v2 uses session_uuid, not file path
                 $('#resume_original_name').val('');
                 $('#resumeCheck').val('1');
@@ -2037,8 +2041,10 @@ $(document).ready(function () {
         window._clientParserState = null;
         window._currentActiveResumeFile = null;
         $('#resume_session_uuid').val('');
+        $('#resume_upload_method').val('');
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
+        $('#upInfoBannerTitle').text('Resume uploaded successfully!');
         $('.resume-card').removeClass('has-uploaded-resume');
         $('#upInfo').removeClass('show');
         $('#uploadBox').removeClass('d-none').attr('style', '').show();
@@ -2170,11 +2176,13 @@ $(document).ready(function () {
                 $('#upBar').css('width', '100%');
                 $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
                 $('#upPill').css('display', 'inline-flex');
+                $('#resume_upload_method').val('Method B');
                 $('#upBanner').removeClass('err').addClass('ok').html(
                     '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                     + '<circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/></svg>'
-                    + '<span><strong>Upload complete!</strong> Resume uploaded successfully.</span>'
+                    + '<span><strong>Upload complete!</strong> Resume uploaded successfully using Method B</span>'
                 ).show();
+                $('#upInfoBannerTitle').text('Resume uploaded successfully using Method B');
 
                 $('#uploaded_file_path').val(r.file_path || '');
                 $('#resume_original_name').val(r.original_name || file.name || '');
@@ -2924,6 +2932,10 @@ async function isInternetAvailable() {
                     }
 
                     var formData = new FormData($('#createForm')[0]);
+                    // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
+                    if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
+                        if (formData.delete) { formData.delete('resume'); }
+                    }
                     var candidateEditId = '{{ @$application->id ?: @$appId }}';
                     $.ajax({
                         url         : '{{ url("service_company/job-applications/update") }}/' + candidateEditId + '?_token=' + '{{ csrf_token() }}',
@@ -4277,6 +4289,10 @@ var KTAddCandidate = function () {
                     }
 
                     var formData = new FormData($('#createForm')[0]);
+                    // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
+                    if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
+                        if (formData.delete) { formData.delete('resume'); }
+                    }
                     $.ajax({
                         url         : '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',
                         type        : 'POST',
