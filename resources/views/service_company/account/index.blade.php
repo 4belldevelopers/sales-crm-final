@@ -5129,6 +5129,9 @@ $(document).ready(function(){
 
                                           if(data.status == 'success'){
                                               Swal.fire("Success", "Account settings update successfully!", "success");	
+                                              if (data.tenant_defaults && window.JeroTenantDefaults) {
+                                                  window.JeroTenantDefaults.syncFromSettings(data.tenant_defaults);
+                                              }
                                           }
                                 },
                     complete            : function () {
