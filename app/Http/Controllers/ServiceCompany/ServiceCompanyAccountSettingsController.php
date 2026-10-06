@@ -1265,7 +1265,22 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             GeneralMethod::cacheClean($key);
         }
 
-        return Reply::dataOnly(['status' => 'success']);
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency_key:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency_symbol:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_currency_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_timezone:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_defaults_payload:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forever("tenant_defaults_version:{$company_id}", time());
+        $this->accountSettingsService->flushAccountCache($company_id);
+
+        return Reply::dataOnly([
+            'status' => 'success',
+            'tenant_defaults' => GeneralMethod::getTenantDefaultsPayload($company_id),
+        ]);
 
     }
 
@@ -1317,7 +1332,18 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
 
                     DB::table('client_location')->insert($values);
 
-                    return Reply::dataOnly(['status' => 'success']);
+                    $company_id = auth()->user()->company_id;
+                    \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_defaults_payload:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forever("tenant_defaults_version:{$company_id}", time());
+                    $this->accountSettingsService->flushAccountCache($company_id);
+
+                    return Reply::dataOnly([
+                        'status' => 'success',
+                        'tenant_defaults' => GeneralMethod::getTenantDefaultsPayload($company_id),
+                    ]);
 
                 }
 
@@ -1497,6 +1523,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         );
 
         /* Intent: Invalidate tenant career metadata and settings Redis caches when updated */
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
         $this->accountSettingsService->flushCareerCache($company_id);
 
         return Reply::success('Career page settings saved successfully.');

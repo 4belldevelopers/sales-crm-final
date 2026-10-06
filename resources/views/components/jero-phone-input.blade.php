@@ -10,6 +10,7 @@
     'countryCodeId' => null,
     'value' => '',
     'countryCode' => '',
+    'defaultIso' => null,
     'label' => 'Primary Contact Number',
     'required' => false,
     'placeholder' => 'Enter mobile number',
@@ -18,7 +19,7 @@
 
 @php
     $resolvedCountryCodeId = $countryCodeId ?: ($id . '_country_code');
-    $tenantHqIso = strtoupper(auth()->check() && auth()->user()->company ? (auth()->user()->company->headquarter_country_code ?? 'IN') : 'IN');
+    $tenantHqIso = strtoupper($defaultIso ?: \App\Helper\GeneralMethod::countryCodeFun());
 
     // Comprehensive ISO-2 to Dial Code mapping
     $isoToDial = [
@@ -103,6 +104,21 @@
     $initialLength = $dialToLen[$initialCode] ?? 10;
     $initialValue = old($name, $value);
     $initialDigitsCount = strlen(preg_replace('/[^\d]/', '', (string)$initialValue));
+
+    // Instant SSR SVG Flags for top recruitment jurisdictions (zero FOUC / zero CDN latency)
+    $ssrSvgFlags = [
+        'IN' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#FF9933"/><rect y="160" width="640" height="160" fill="#FFFFFF"/><rect y="320" width="640" height="160" fill="#138808"/><circle cx="320" cy="240" r="45" fill="none" stroke="#000080" stroke-width="4"/><circle cx="320" cy="240" r="10" fill="#000080"/><g stroke="#000080" stroke-width="2"><line x1="320" y1="195" x2="320" y2="285"/><line x1="275" y1="240" x2="365" y2="240"/><line x1="288" y1="208" x2="352" y2="272"/><line x1="288" y1="272" x2="352" y2="208"/><line x1="304" y1="197" x2="336" y2="283"/><line x1="336" y1="197" x2="304" y2="283"/><line x1="277" y1="224" x2="363" y2="256"/><line x1="277" y1="256" x2="363" y2="224"/></g></svg>',
+        'US' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#B22234"/><path d="M0,37h640M0,111h640M0,185h640M0,258h640M0,332h640M0,406h640" stroke="#FFFFFF" stroke-width="37"/><rect width="260" height="258" fill="#3C3B6E"/><g fill="#FFFFFF"><circle cx="40" cy="35" r="7"/><circle cx="90" cy="35" r="7"/><circle cx="140" cy="35" r="7"/><circle cx="190" cy="35" r="7"/><circle cx="240" cy="35" r="7"/><circle cx="65" cy="70" r="7"/><circle cx="115" cy="70" r="7"/><circle cx="165" cy="70" r="7"/><circle cx="215" cy="70" r="7"/><circle cx="40" cy="105" r="7"/><circle cx="90" cy="105" r="7"/><circle cx="140" cy="105" r="7"/><circle cx="190" cy="105" r="7"/><circle cx="240" cy="105" r="7"/><circle cx="65" cy="140" r="7"/><circle cx="115" cy="140" r="7"/><circle cx="165" cy="140" r="7"/><circle cx="215" cy="140" r="7"/><circle cx="40" cy="175" r="7"/><circle cx="90" cy="175" r="7"/><circle cx="140" cy="175" r="7"/><circle cx="190" cy="175" r="7"/><circle cx="240" cy="175" r="7"/><circle cx="65" cy="210" r="7"/><circle cx="115" cy="210" r="7"/><circle cx="165" cy="210" r="7"/><circle cx="215" cy="210" r="7"/></g></svg>',
+        'GB' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><clipPath id="js_gb_ssr"><rect width="640" height="480"/></clipPath><g clip-path="url(#js_gb_ssr)"><rect width="640" height="480" fill="#012169"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#FFFFFF" stroke-width="60"/><path d="M0,0 L640,480 M640,0 L0,480" stroke="#C8102E" stroke-width="36"/><path d="M320,0 V480 M0,240 H640" stroke="#FFFFFF" stroke-width="100"/><path d="M320,0 V480 M0,240 H640" stroke="#C8102E" stroke-width="60"/></g></svg>',
+        'AE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#00732f"/><rect y="160" width="640" height="160" fill="#ffffff"/><rect y="320" width="640" height="160" fill="#000000"/><rect width="160" height="480" fill="#ff0000"/></svg>',
+        'CA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="160" height="480" fill="#d80621"/><rect x="160" width="320" height="480" fill="#ffffff"/><rect x="480" width="160" height="480" fill="#d80621"/><path d="M320,130 L335,210 L370,185 L365,225 L405,230 L375,260 L390,290 L345,280 L350,305 L330,305 L330,350 L310,350 L310,305 L290,305 L295,280 L250,290 L265,260 L235,230 L275,225 L270,185 L305,210 Z" fill="#d80621"/></svg>',
+        'AU' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#00008b"/><circle cx="160" cy="360" r="30" fill="#ffffff"/><circle cx="480" cy="120" r="14" fill="#ffffff"/><circle cx="430" cy="200" r="14" fill="#ffffff"/><circle cx="530" cy="220" r="14" fill="#ffffff"/><circle cx="470" cy="300" r="14" fill="#ffffff"/><circle cx="500" cy="250" r="9" fill="#ffffff"/></svg>',
+        'SG' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="240" fill="#ed2939"/><rect y="240" width="640" height="240" fill="#ffffff"/><circle cx="130" cy="120" r="60" fill="#ffffff"/><circle cx="150" cy="120" r="55" fill="#ed2939"/><circle cx="170" cy="85" r="10" fill="#ffffff"/><circle cx="195" cy="105" r="10" fill="#ffffff"/><circle cx="195" cy="135" r="10" fill="#ffffff"/><circle cx="170" cy="155" r="10" fill="#ffffff"/><circle cx="155" cy="120" r="10" fill="#ffffff"/></svg>',
+        'SA' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#006c35"/><rect x="180" y="270" width="280" height="14" rx="7" fill="#ffffff"/><polygon points="180,277 210,265 210,289" fill="#ffffff"/><text x="320" y="230" fill="#ffffff" font-size="65" font-family="sans-serif" font-weight="bold" text-anchor="middle">SA</text></svg>',
+        'DE' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="160" fill="#000000"/><rect y="160" width="640" height="160" fill="#dd0000"/><rect y="320" width="640" height="160" fill="#ffce00"/></svg>',
+        'FR' => '<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="213" height="480" fill="#002395"/><rect x="213" width="214" height="480" fill="#ffffff"/><rect x="427" width="213" height="480" fill="#ed2939"/></svg>'
+    ];
+    $ssrFlagSvg = $ssrSvgFlags[$initialIso] ?? ('<svg viewBox="0 0 640 480" width="20" height="15" class="rounded-1 shadow-xs" style="display:inline-block; vertical-align:middle; border-radius:2px; flex-shrink:0;"><rect width="640" height="480" fill="#1e3c72" rx="60"/><text x="320" y="320" fill="#ffffff" font-size="240" font-family=\'Poppins\', sans-serif font-weight="700" text-anchor="middle">' . e($initialIso) . '</text></svg>');
 @endphp
 
 <div class="jero-phone-box-wrapper w-100 {{ $class }}" 
@@ -134,7 +150,7 @@
                 aria-expanded="false"
                 title="Select country code"
                 style="display: inline-flex !important; align-items: center !important; justify-content: center !important; height: 100% !important; min-height: 36px !important; max-height: 36px !important; background: transparent !important; background-color: transparent !important; border: 0 none transparent !important; border-radius: 5px 0 0 5px !important; padding: 0 10px 0 12px !important; margin: 0 !important; box-shadow: none !important; outline: none !important; flex-shrink: 0 !important;">
-            <span class="jero-selected-flag" id="{{ $id }}_flag" data-iso="{{ $initialIso }}"></span>
+            <span class="jero-selected-flag" id="{{ $id }}_flag" data-iso="{{ $initialIso }}">{!! $ssrFlagSvg !!}</span>
             <span class="jero-selected-dial" id="{{ $id }}_dial">{{ $initialCode }}</span>
             <i class="fa fa-chevron-down jero-chevron"></i>
         </button>
@@ -958,7 +974,7 @@
       }
     }
 
-    function selectCountry(c) {
+    function selectCountry(c, dispatchChange) {
       if (!c) return;
       currentCountry = c;
       hiddenCode.value = c.dial;
@@ -973,7 +989,11 @@
       }
       updateCounter(c.len);
       closeDropdown();
-      hiddenCode.dispatchEvent(new Event('change', { bubbles: true }));
+      if (dispatchChange !== false) {
+        const ev = new Event('change', { bubbles: true });
+        ev._fromJeroPhone = true;
+        hiddenCode.dispatchEvent(ev);
+      }
       input.focus();
     }
 
@@ -1147,22 +1167,44 @@
     }
 
     function openDropdown() {
-      // Close other dropdowns
+      // Close other dropdowns across DOM
       document.querySelectorAll('.jero-country-dropdown').forEach(d => {
         if (d !== dropdown) d.style.display = 'none';
       });
 
-      // Viewport collision flip check
-      const rect = wrapper.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < 340 && rect.top > 340) {
-        dropdown.style.top = 'auto';
-        dropdown.style.bottom = 'calc(100% + 4px)';
+      // Viewport collision flip check and modal/drawer clipping detection
+      const btnRect = btn.getBoundingClientRect();
+      const dropdownHeight = 350;
+      const spaceBelow = window.innerHeight - btnRect.bottom;
+      const isInModalOrDrawer = !!wrapper.closest('.modal, .offcanvas, .drawer, [data-kt-drawer="true"], .modal-dialog');
+
+      if (spaceBelow < 340 && btnRect.top > 340) {
+        if (isInModalOrDrawer) {
+          dropdown.style.position = 'fixed';
+          dropdown.style.top = Math.max(8, btnRect.top - dropdownHeight - 4) + 'px';
+          dropdown.style.bottom = 'auto';
+          dropdown.style.left = Math.max(8, Math.min(btnRect.left, window.innerWidth - 348)) + 'px';
+        } else {
+          dropdown.style.position = 'absolute';
+          dropdown.style.top = 'auto';
+          dropdown.style.bottom = 'calc(100% + 4px)';
+          dropdown.style.left = '0';
+        }
       } else {
-        dropdown.style.bottom = 'auto';
-        dropdown.style.top = 'calc(100% + 4px)';
+        if (isInModalOrDrawer) {
+          dropdown.style.position = 'fixed';
+          dropdown.style.top = (btnRect.bottom + 4) + 'px';
+          dropdown.style.bottom = 'auto';
+          dropdown.style.left = Math.max(8, Math.min(btnRect.left, window.innerWidth - 348)) + 'px';
+        } else {
+          dropdown.style.position = 'absolute';
+          dropdown.style.bottom = 'auto';
+          dropdown.style.top = 'calc(100% + 4px)';
+          dropdown.style.left = '0';
+        }
       }
 
+      dropdown.style.zIndex = '1080';
       wrapper.style.zIndex = '1060';
       dropdown.style.display = 'block';
       btn.setAttribute('aria-expanded', 'true');
@@ -1178,6 +1220,13 @@
       btn.setAttribute('aria-expanded', 'false');
       wrapper.style.zIndex = '1';
     }
+
+    // Dismiss open fixed/portal dropdown on window/drawer scroll
+    window.addEventListener('scroll', function() {
+      if (dropdown.style.display === 'block') {
+        closeDropdown();
+      }
+    }, true);
 
     // Toggle click on button
     btn.addEventListener('click', function(e) {
@@ -1256,8 +1305,51 @@
       });
     }
 
+    // Smart phone value setter & parser (Supports +CountryCode, spaces, hyphens, leading 0)
+    function applySmartValue(rawVal) {
+      if (rawVal === undefined || rawVal === null) return;
+      const trimmed = String(rawVal).trim();
+      if (!trimmed) {
+        input.value = '';
+        updateCounter(currentCountry ? currentCountry.len : 10);
+        return;
+      }
+
+      // Check for international dial code prefix (e.g. +91, +1, +971, +44, +65, etc.)
+      if (trimmed.startsWith('+')) {
+        const sorted = window.__JERO_COUNTRIES_DB__.slice().sort((a, b) => b.dial.length - a.dial.length);
+        for (let i = 0; i < sorted.length; i++) {
+          const c = sorted[i];
+          if (trimmed.startsWith(c.dial)) {
+            selectCountry(c, true);
+            const nationalDigits = trimmed.substring(c.dial.length).replace(/[^\d]/g, '');
+            input.value = nationalDigits.substring(0, c.len);
+            updateCounter(c.len);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            return;
+          }
+        }
+      }
+
+      // Strip non-digits and strip leading trunk zero if number exceeds target length
+      let digits = trimmed.replace(/[^\d]/g, '');
+      if (digits.startsWith('0') && currentCountry && digits.length > currentCountry.len) {
+        digits = digits.substring(1);
+      }
+
+      const targetLen = currentCountry ? currentCountry.len : 10;
+      input.value = digits.substring(0, targetLen);
+      updateCounter(targetLen);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
     // Digits input handling
     input.addEventListener('input', function() {
+      const val = this.value;
+      if (val && val.trim().startsWith('+')) {
+        applySmartValue(val);
+        return;
+      }
       const clean = this.value.replace(/[^\d]/g, '');
       if (this.value !== clean) this.value = clean;
       updateCounter(currentCountry ? currentCountry.len : 10);
@@ -1274,32 +1366,45 @@
       });
     });
 
+    input.addEventListener('change', function() {
+      updateCounter(currentCountry ? currentCountry.len : 10);
+    });
+
     // Smart paste handling
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const raw = (e.clipboardData || window.clipboardData).getData('text') || '';
-      const trimmed = raw.trim();
-
-      for (const c of window.__JERO_COUNTRIES_DB__) {
-        if (trimmed.startsWith(c.dial)) {
-          selectCountry(c);
-          const digits = trimmed.substring(c.dial.length).replace(/[^\d]/g, '');
-          input.value = digits.substring(0, c.len);
-          updateCounter(c.len);
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          return;
-        }
-      }
-
-      let digits = trimmed.replace(/[^\d]/g, '');
-      if (digits.startsWith('0') && currentCountry && digits.length > currentCountry.len) {
-        digits = digits.substring(1);
-      }
-      const len = currentCountry ? currentCountry.len : 10;
-      input.value = digits.substring(0, len);
-      updateCounter(len);
-      input.dispatchEvent(new Event('input', { bubbles: true }));
+      applySmartValue(raw);
     });
+
+    // Hidden country code external change listener (Syncs flag & dial code on external / parser change)
+    hiddenCode.addEventListener('change', function(e) {
+      if (e && e._fromJeroPhone) return;
+      const val = (this.value || '').trim();
+      if (!val) return;
+      let target = null;
+      if (/^[a-zA-Z]{2,4}$/.test(val)) {
+        const codeUpper = val.toUpperCase();
+        const codeLower = val.toLowerCase();
+        target = window.__JERO_COUNTRIES_DB__.find(c => 
+          c.iso === codeUpper || 
+          (c.iso3 && c.iso3 === codeUpper) ||
+          (c.aliases && c.aliases.includes(codeLower))
+        );
+      } else {
+        const clean = val.startsWith('+') ? val : ('+' + val);
+        target = window.__JERO_COUNTRIES_DB__.find(c => c.dial === clean && c.iso === defaultIso) ||
+                 window.__JERO_COUNTRIES_DB__.find(c => c.dial === clean);
+      }
+      if (target && (!currentCountry || currentCountry.iso !== target.iso)) {
+        selectCountry(target, false);
+      }
+    });
+
+    // Attach instance helpers to wrapper element
+    wrapper._jeroSelectCountry = selectCountry;
+    wrapper._jeroApplySmartValue = applySmartValue;
+    wrapper._jeroCurrentCountry = () => currentCountry;
 
     // Validation Conflict Resolution & Interception
     // 1. Intercept rogue FormValidation / jQuery Validate feedback nodes and icons injected inside 38px group
@@ -1376,6 +1481,43 @@
     },
     initAll() {
       document.querySelectorAll('.jero-phone-box-wrapper').forEach(w => window.setupJeroPhoneBox(w));
+    },
+    setCountry(fieldId, dialOrIso) {
+      const el = document.getElementById(fieldId);
+      const wrapper = el ? el.closest('.jero-phone-box-wrapper') : document.getElementById(fieldId + '_wrapper');
+      if (!wrapper) return;
+      if (!wrapper._jeroInitialized) window.setupJeroPhoneBox(wrapper);
+      const hidden = wrapper.querySelector('.jero-phone-country-code-input') || wrapper.querySelector('input[type="hidden"]');
+      if (hidden) {
+        hidden.value = dialOrIso;
+        hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    },
+    setPhone(fieldId, rawPhoneString) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+      const wrapper = el.closest('.jero-phone-box-wrapper');
+      if (!wrapper) return;
+      if (!wrapper._jeroInitialized) window.setupJeroPhoneBox(wrapper);
+      if (wrapper._jeroApplySmartValue) {
+        wrapper._jeroApplySmartValue(rawPhoneString);
+      } else {
+        el.value = rawPhoneString;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    },
+    getCleanNumber(fieldId) {
+      const el = document.getElementById(fieldId);
+      return el ? (el.value || '').replace(/[^\d]/g, '') : '';
+    },
+    getFullE164(fieldId) {
+      const el = document.getElementById(fieldId);
+      if (!el) return '';
+      const wrapper = el.closest('.jero-phone-box-wrapper');
+      const hidden = wrapper ? (wrapper.querySelector('.jero-phone-country-code-input') || wrapper.querySelector('input[type="hidden"]')) : null;
+      const code = hidden ? (hidden.value || '').trim() : '';
+      const digits = (el.value || '').replace(/[^\d]/g, '');
+      return (code.startsWith('+') ? code : ('+' + code)) + digits;
     }
   };
 

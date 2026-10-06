@@ -1131,22 +1131,22 @@ table{
                                                                     id="min_salary_currency">
                                                                     <option value="">Select currency</option>
                                                                     <option value="0"
-                                                                        {{ 0 == $min_salary_currency ? 'selected' : '' }}>INR
+                                                                        {{ (string)$min_salary_currency === '0' ? 'selected' : '' }}>INR
                                                                     </option>
                                                                     <option value="1"
-                                                                        {{ 1 == $min_salary_currency ? 'selected' : '' }}>EUR
+                                                                        {{ (string)$min_salary_currency === '1' ? 'selected' : '' }}>EUR
                                                                     </option>
                                                                     <option value="2"
-                                                                        {{ 2 == $min_salary_currency ? 'selected' : '' }}>JPY
+                                                                        {{ (string)$min_salary_currency === '2' ? 'selected' : '' }}>JPY
                                                                     </option>
                                                                     <option value="3"
-                                                                        {{ 3 == $min_salary_currency ? 'selected' : '' }}>GBP
+                                                                        {{ (string)$min_salary_currency === '3' ? 'selected' : '' }}>GBP
                                                                     </option>
                                                                     <option value="4"
-                                                                        {{ 4 == $min_salary_currency ? 'selected' : '' }}>USD
+                                                                        {{ (string)$min_salary_currency === '4' ? 'selected' : '' }}>USD
                                                                     </option>
                                                                     <option value="5"
-                                                                        {{ 5 == $min_salary_currency ? 'selected' : '' }}>AED
+                                                                        {{ (string)$min_salary_currency === '5' ? 'selected' : '' }}>AED
                                                                     </option>
                                                                 </select>
                                                             </div>

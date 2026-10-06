@@ -12,12 +12,15 @@
             <div class="col-md-9">
               <div class="form-group">
                 <label for="address">@lang('app.country')</label>
+                @php
+                    $tenantCountryId = \App\Helper\GeneralMethod::defaultCountryId();
+                @endphp
                 <select name="country_id" id="country_id"
                                             class="form-control select2 custom-select">
                   
                                         @foreach($countries as $country)
                                             
-                  <option value="{{ $country->id }}">{{ ucfirst($country->country_name) }}</option>
+                  <option value="{{ $country->id }}" {{ $tenantCountryId == $country->id ? 'selected="selected"' : '' }}>{{ ucfirst($country->country_name) }}</option>
                   
                                         @endforeach
                                     
