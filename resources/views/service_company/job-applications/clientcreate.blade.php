@@ -31,6 +31,60 @@ body {overflow-x:hidden; }
     background: #8a878d;
     opacity: 0.5;
 }
+
+/* Candidate Full Name & Email Field Wrap & Clear Button */
+.candidate-field-wrap {
+    position: relative;
+    width: 100%;
+}
+.candidate-field-wrap > input {
+    padding-right: 34px !important;
+}
+.candidate-field-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 50%;
+    background: #e4e6ef;
+    color: #7e8299;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 4;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.candidate-field-clear:hover {
+    background: #f1416c;
+    color: #ffffff;
+}
+.candidate-email-typo-hint {
+    margin-top: 5px;
+    font-size: 11.5px;
+    font-family: 'Poppins', sans-serif;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+.candidate-email-typo-hint a {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
 .br-currency-select2-dropdown {
     font-family: 'Poppins', sans-serif;
     font-size: 13px;
@@ -6543,8 +6597,12 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            notEmpty:{message: "Full name is required"}
-                           
+                            notEmpty:{message: "Full name is required"},
+                            stringLength:{min: 2, max: 191, message: "Full name must be between 2 and 191 characters"},
+                            regexp:{
+                                regexp: /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s\.\'\-]+$/,
+                                message: 'Full name can only contain letters, spaces, hyphens, dots and apostrophes'
+                            }
                         }
                     },
 					
@@ -6592,8 +6650,8 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{message: "Primary Email is required"},
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 191, message: "Email must not exceed 191 characters"}
                         }
                     },
                     
@@ -6601,8 +6659,14 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 55, message: "Secondary email must not exceed 55 characters"},
+                            different:{
+                                compare: function() {
+                                    return form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '';
+                                },
+                                message: 'Secondary email cannot be the same as primary email'
+                            }
                         }
                     },
 					
@@ -9029,5 +9093,119 @@ $(document).ready(function () {
     // Initial boot
     initWorkAuthorizationEngine();
 });
+
+// ============================================================================
+// ENTERPRISE CANDIDATE PROFILE: FULL NAME & EMAIL POLISH (CLIENT-FIRST)
+// ============================================================================
+(function () {
+    'use strict';
+
+    // 1. Cultural-Preserving Title-Caser (Preserves O'Connor, Jean-Luc, Al-Mansoor)
+    function formatCandidateTitleCase(str) {
+        if (!str) return '';
+        return String(str)
+            .trim()
+            .toLowerCase()
+            .replace(/(^|[\s\-\'])([a-z])/g, function (_, sep, chr) {
+                return sep + chr.toUpperCase();
+            });
+    }
+
+    // 2. Client-Side Fast Domain Typo Detector (Zero Server Overhead)
+    function detectDomainTypo(email) {
+        var commonDomains = {
+            'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com'
+        };
+        var parts = String(email || '').split('@');
+        if (parts.length === 2 && commonDomains[parts[1].toLowerCase()]) {
+            return parts[0] + '@' + commonDomains[parts[1].toLowerCase()];
+        }
+        return null;
+    }
+
+    // 3. Clear Button State Synchronization
+    function syncClearButton($input) {
+        var $clearBtn = $input.siblings('.candidate-field-clear');
+        if (($input.val() || '').trim().length > 0) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
+        }
+    }
+
+    $(document).on('input paste keyup change', '#full_name, #email, #secondrary_email', function () {
+        syncClearButton($(this));
+    });
+
+    $(document).on('click', '.candidate-field-clear', function (e) {
+        e.preventDefault();
+        var $input = $(this).siblings('input');
+        $input.val('').trigger('input').trigger('change').focus();
+        $(this).hide();
+        if ($input.attr('id') === 'email') {
+            $('#client-email-typo-hint').hide().empty();
+        }
+    });
+
+    // 4. Name Field Normalization
+    $(document).on('blur change', '#full_name', function () {
+        var val = $(this).val();
+        if (val) {
+            var formatted = formatCandidateTitleCase(val);
+            if (formatted !== val) {
+                $(this).val(formatted);
+            }
+        }
+    });
+
+    $(document).on('paste', '#full_name', function () {
+        var self = this;
+        setTimeout(function () {
+            var val = $(self).val();
+            if (val) {
+                $(self).val(formatCandidateTitleCase(val));
+            }
+        }, 15);
+    });
+
+    // 5. Email Normalization & Inline Typo Assistance
+    $(document).on('blur change', '#email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+
+        var fix = detectDomainTypo(raw);
+        var $hint = $('#client-email-typo-hint');
+        if (fix && fix !== raw) {
+            $hint.html('<i class="fa-solid fa-lightbulb text-warning" aria-hidden="true"></i> Did you mean <strong><a href="javascript:void(0);" class="apply-email-fix">' + fix + '</a></strong>?').show();
+        } else {
+            $hint.hide().empty();
+        }
+    });
+
+    $(document).on('click', '#client-email-typo-hint .apply-email-fix', function (e) {
+        e.preventDefault();
+        var fixed = $(this).text();
+        $('#email').val(fixed).trigger('change');
+        $('#client-email-typo-hint').hide().empty();
+        if (typeof validator !== 'undefined' && validator && typeof validator.revalidateField === 'function') {
+            validator.revalidateField('email');
+        }
+    });
+
+    $(document).on('blur change', '#secondrary_email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+    });
+
+    // Initial check on page load
+    $(document).ready(function () {
+        $('#full_name, #email, #secondrary_email').each(function () {
+            syncClearButton($(this));
+        });
+    });
+})();
 </script>
 @endpush

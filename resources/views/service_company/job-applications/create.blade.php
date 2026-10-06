@@ -1733,11 +1733,15 @@
     flex-shrink: 0;
     margin-left: 8px;
 }
+.custom-template-trigger * {
+    pointer-events: none;
+}
 .custom-template-dropdown.is-open .custom-template-trigger .trigger-arrow {
     transform: rotate(180deg);
     color: #d97706;
 }
 .custom-template-menu {
+    display: none;
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
@@ -1752,6 +1756,9 @@
     overflow-y: auto !important;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
+}
+.custom-template-dropdown.is-open .custom-template-menu {
+    display: block !important;
 }
 .custom-template-menu::-webkit-scrollbar {
     width: 6px;
@@ -3772,7 +3779,7 @@
                     Select Template <span class="text-muted fw-normal fs-8">(Click dropdown to select categorized template)</span>
                   </label>
                   <div class="custom-template-dropdown" id="custom_template_dropdown">
-                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="if(window.toggleRecruiterTemplateDropdown) window.toggleRecruiterTemplateDropdown(event);">
                       <div class="trigger-left">
                         <i class="fa-solid fa-award trigger-icon"></i>
                         <span class="trigger-label" id="selected_template_label">Strong Fit</span>
@@ -3780,7 +3787,7 @@
                       <i class="fa-solid fa-chevron-down trigger-arrow"></i>
                     </div>
 
-                    <div class="custom-template-menu" id="custom_template_menu" style="display: none;" role="listbox">
+                    <div class="custom-template-menu" id="custom_template_menu" role="listbox">
                       {{-- 1. Candidate Fit & Experience --}}
                       @if(count($catFit) > 0)
                       <div class="tpl-category-section">
@@ -3788,7 +3795,7 @@
                           <span>Candidate Fit &amp; Experience</span>
                         </div>
                         @foreach($catFit as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3811,7 +3818,7 @@
                           <span>Availability &amp; Notice Period</span>
                         </div>
                         @foreach($catAvailability as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -7787,11 +7794,56 @@ $(document).ready(function() {
 // ==========================================================================
 // RECRUITER COMMENTS — CLIENT-SIDE CATEGORIZED TEMPLATE ENGINE
 // 100% Client-Side Browser RAM Execution (0% Server Strain)
-// ==========================================================================
 (function () {
     'use strict';
 
-    var masterTemplatesData = @json(collect($masterTemplatesList)->keyBy('id'));
+    var fallbackMasterTemplates = {
+        101: {
+            id: 101,
+            cat: 'fit',
+            icon: 'fa-solid fa-award',
+            title: 'Strong Fit',
+            subtitle: 'Strong match with 5+ years relevant experience & product alignment.',
+            order: 1,
+            content: "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role."
+        },
+        104: {
+            id: 104,
+            cat: 'fit',
+            icon: 'fa-solid fa-building-user',
+            title: 'Similar Company / Product Experience',
+            subtitle: 'Product-based background with Agile and cross-functional delivery.',
+            order: 2,
+            content: "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration."
+        },
+        102: {
+            id: 102,
+            cat: 'availability',
+            icon: 'fa-solid fa-bolt-lightning',
+            title: '🟢 Immediate Joiner',
+            subtitle: 'Immediate joiner available within 2–3 days with matching relevant experience.',
+            order: 1,
+            content: "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change]."
+        },
+        103: {
+            id: 103,
+            cat: 'availability',
+            icon: 'fa-regular fa-calendar-check',
+            title: '🟢 Serving Notice Period',
+            subtitle: 'Currently serving notice with confirmed last working day & fast onboarding.',
+            order: 2,
+            content: "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week."
+        }
+    };
+
+    var serverTemplates = {};
+    try {
+        serverTemplates = @json(collect($masterTemplatesList)->keyBy('id')) || {};
+    } catch (e) {
+        serverTemplates = {};
+    }
+
+    var masterTemplatesData = Object.assign({}, fallbackMasterTemplates, serverTemplates);
 
     // Format HTML templates cleanly to readable plain text
     function formatTemplateToPlainText(html) {

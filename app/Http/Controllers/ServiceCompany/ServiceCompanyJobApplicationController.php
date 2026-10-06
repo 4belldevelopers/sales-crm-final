@@ -3062,15 +3062,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // }
 
         $validator = Validator::make($request->all(), array_merge([
+            'full_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:191',
+            ],
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
+                'max:191',
+            ],
+            'secondrary_email' => [
+                'nullable',
+                'email:rfc',
+                'max:55',
+                'different:email',
             ],
         ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
+            'full_name.required' => 'Full name is required',
+            'full_name.min' => 'Full name must be at least 2 characters',
+            'full_name.max' => 'Full name must not exceed 191 characters',
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'secondrary_email.email' => 'Please enter a valid secondary email',
+            'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
+            'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
         ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
@@ -3147,11 +3166,16 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication = new JobApplication;
         $jobApplication->client_submission_uuid = $clientSubmissionUuid ?: null;
         $jobApplication->resume_version = 1;
-        $jobApplication->full_name = ucwords(strtolower($request->full_name));
+        $fullName = trim((string) $request->full_name);
+        $jobApplication->full_name = preg_replace_callback(
+            '/(^|[\s\-\'])([a-zA-Z\p{L}])/u',
+            fn ($m) => $m[1].mb_strtoupper($m[2]),
+            mb_strtolower($fullName)
+        );
         $jobApplication->job_id = $request->job_id;
         // $jobApplication->status_id 			=	$applicationStatus->id;
         $jobApplication->status_id = 8;
-        $jobApplication->email = $request->email;
+        $jobApplication->email = strtolower(trim($request->email));
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
         $jobApplication->column_priority = 0;
@@ -3263,7 +3287,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         // $jobApplication->master_status_id 	=	$applicationStatus->id;
         $jobApplication->master_status_id = 8;
-        $jobApplication->secondrary_email = $request->secondrary_email;
+        $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim($request->secondrary_email)) : null;
         $jobApplication->secondary_mobile = $request->secondary_mobile;
         $submitted_by = '';
         $submitted_by = auth()->user()->id;
@@ -7067,7 +7091,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     ]
                 ));
             } catch (\Throwable $evtEx) {
-                \Log::warning('[ApplicationOfferUpdated] Broadcast error: ' . $evtEx->getMessage());
+                \Log::warning('[ApplicationOfferUpdated] Broadcast error: '.$evtEx->getMessage());
             }
 
             return response()->json(['status' => 'success', 'terms' => $this->offer_terms, 'message' => 'Offer Created successfully.']);
@@ -7158,15 +7182,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $validator = Validator::make($request->all(), array_merge([
+            'full_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:191',
+            ],
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
+                'max:191',
+            ],
+            'secondrary_email' => [
+                'nullable',
+                'email:rfc',
+                'max:55',
+                'different:email',
             ],
         ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
+            'full_name.required' => 'Full name is required',
+            'full_name.min' => 'Full name must be at least 2 characters',
+            'full_name.max' => 'Full name must not exceed 191 characters',
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'secondrary_email.email' => 'Please enter a valid secondary email',
+            'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
+            'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
         ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
@@ -7203,7 +7246,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $jobApplication = JobApplication::with(['documents'])->withoutGlobalScopes()->find($id);
         // dd($jobApplication,$id);
-        $jobApplication->full_name = ucwords(strtolower($request->full_name));
+        $fullName = trim((string) $request->full_name);
+        $jobApplication->full_name = preg_replace_callback(
+            '/(^|[\s\-\'])([a-zA-Z\p{L}])/u',
+            fn ($m) => $m[1].mb_strtoupper($m[2]),
+            mb_strtolower($fullName)
+        );
         if (! empty($request->current_designation)) {
             $jobApplication->current_designation = @$request->current_designation;
         }
@@ -7215,8 +7263,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if ($request->has('dob')) {
             $jobApplication->dob = $request->dob;
         }
-        $jobApplication->email = $request->email;
-        $jobApplication->secondrary_email = $request->secondrary_email;
+        $jobApplication->email = strtolower(trim($request->email));
+        $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim($request->secondrary_email)) : null;
 
         if (! empty($request->qualification)) {
             $jobApplication->qualification = @$request->qualification;
@@ -11460,15 +11508,34 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // }
 
         $validator = Validator::make($request->all(), array_merge([
+            'full_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:191',
+            ],
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
+                'max:191',
+            ],
+            'secondrary_email' => [
+                'nullable',
+                'email:rfc',
+                'max:55',
+                'different:email',
             ],
         ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
+            'full_name.required' => 'Full name is required',
+            'full_name.min' => 'Full name must be at least 2 characters',
+            'full_name.max' => 'Full name must not exceed 191 characters',
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'secondrary_email.email' => 'Please enter a valid secondary email',
+            'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
+            'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
         ], CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
@@ -11491,14 +11558,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_application_arr = [];
 
         if (! empty($request->full_name)) {
-            $job_application_arr['full_name'] = ucwords(strtolower($request->full_name));
+            $fullName = trim((string) $request->full_name);
+            $job_application_arr['full_name'] = preg_replace_callback(
+                '/(^|[\s\-\'])([a-zA-Z\p{L}])/u',
+                fn ($m) => $m[1].mb_strtoupper($m[2]),
+                mb_strtolower($fullName)
+            );
         }
         if (! empty($request->job_id)) {
             $job_application_arr['job_id'] = $request->job_id;
         }
         $job_application_arr['status_id'] = 8;
         if (! empty($request->email)) {
-            $job_application_arr['email'] = $request->email;
+            $job_application_arr['email'] = strtolower(trim($request->email));
         }
         if (! empty($request->phone)) {
             $job_application_arr['phone'] = $request->phone;
@@ -11650,7 +11722,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $job_application_arr['skills'] = $skillStr;
         $job_application_arr['master_status_id'] = 8;
         if (! empty($request->secondrary_email)) {
-            $job_application_arr['secondrary_email'] = $request->secondrary_email;
+            $job_application_arr['secondrary_email'] = strtolower(trim($request->secondrary_email));
         }
         if (! empty($request->secondary_mobile)) {
             $job_application_arr['secondary_mobile'] = $request->secondary_mobile;

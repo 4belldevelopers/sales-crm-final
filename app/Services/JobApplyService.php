@@ -47,15 +47,34 @@ class JobApplyService
     public function submitApplication(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'full_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:191',
+            ],
             'email' => [
                 'required',
                 'email:rfc,dns',
                 'disposable_email',
+                'max:191',
+            ],
+            'secondrary_email' => [
+                'nullable',
+                'email:rfc',
+                'max:55',
+                'different:email',
             ],
         ], [
+            'full_name.required' => 'Full name is required',
+            'full_name.min' => 'Full name must be at least 2 characters',
+            'full_name.max' => 'Full name must not exceed 191 characters',
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'secondrary_email.email' => 'Please enter a valid secondary email',
+            'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
+            'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
         ]);
 
         if ($validator->fails()) {
@@ -67,7 +86,7 @@ class JobApplyService
         }
 
         $company_id = (int) $request->input('company_id');
-        $email = trim((string) $request->input('email'));
+        $email = strtolower(trim((string) $request->input('email')));
         $jobId = (int) $request->input('job_id');
         $submissionToken = trim((string) $request->input('submission_token'));
 
@@ -139,7 +158,12 @@ class JobApplyService
 
         /* Intent: Prepare JobApplication model state prior to DB transaction start */
         $jobApplication = new JobApplication;
-        $jobApplication->full_name = ucwords(strtolower((string) $request->input('full_name')));
+        $fullName = trim((string) $request->input('full_name'));
+        $jobApplication->full_name = preg_replace_callback(
+            '/(^|[\s\-\'])([a-zA-Z\p{L}])/u',
+            fn ($m) => $m[1].mb_strtoupper($m[2]),
+            mb_strtolower($fullName)
+        );
         $jobApplication->job_id = $jobId;
         $jobApplication->status_id = 8;
         $jobApplication->email = $email;
@@ -227,7 +251,7 @@ class JobApplyService
         }
         $jobApplication->skills = $skillStr;
         $jobApplication->master_status_id = 8;
-        $jobApplication->secondrary_email = $request->input('secondrary_email');
+        $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim((string) $request->input('secondrary_email'))) : null;
         $jobApplication->secondary_mobile = $request->input('secondary_mobile');
         $jobApplication->submitted_by = 0;
         $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
