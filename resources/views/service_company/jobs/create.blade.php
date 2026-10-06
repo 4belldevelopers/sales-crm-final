@@ -2600,6 +2600,9 @@
                         if (data.status == 'success') {
                             $('#kt_add_address_close').click();
                             $("#client_id").val(clientId).change();
+                            if (data.tenant_defaults && window.JeroTenantDefaults) {
+                                window.JeroTenantDefaults.syncFromSettings(data.tenant_defaults);
+                            }
                         }
                     }
                 });

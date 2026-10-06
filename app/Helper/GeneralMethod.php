@@ -7459,6 +7459,91 @@ END:VCALENDAR";
 
     }
 
+    /**
+     * Intent: Generates a lightweight, cached client-side tenant defaults payload for Browser RAM and LocalStorage.
+     * Tenancy: Scoped strictly to the specified or authenticated company_id.
+     * Scale: 0% MySQL/Elasticsearch read strain on warm page requests via 24h Redis caching.
+     *
+     * @param int|null $company_id
+     * @return array
+     */
+    public static function getTenantDefaultsPayload($company_id = null): array
+    {
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        $company_id = (int) $company_id;
+        if ($company_id <= 0) {
+            return [
+                'company_id' => 0,
+                'currency' => [
+                    'code' => 'USD',
+                    'key' => 4,
+                    'symbol' => '$',
+                ],
+                'phone' => [
+                    'iso' => 'us',
+                    'calling_code' => '1',
+                    'dial_code' => '+1',
+                ],
+                'country' => [
+                    'id' => 233,
+                    'iso' => 'us',
+                ],
+                'timezone' => [
+                    'iana' => 'UTC',
+                    'abbreviation' => 'UTC',
+                ],
+                'version' => 1,
+            ];
+        }
+
+        return \Illuminate\Support\Facades\Cache::remember("tenant_defaults_payload:{$company_id}", 86400, function () use ($company_id) {
+            $currencyCode = self::defaultCurrency($company_id);
+            $currencyKey = self::defaultCurrencyKey($company_id);
+            $currencySymbol = self::defaultCurrencySymbol($company_id);
+            $countryIso = strtolower(self::countryCodeFun($company_id));
+            $countryId = self::defaultCountryId($company_id);
+            $callingCode = self::defaultCallingCode($company_id);
+            $timezone = self::defaultTimeZone($company_id);
+
+            $tzAbbr = 'IST';
+            try {
+                $dt = new \DateTime('now', new \DateTimeZone($timezone));
+                $tzAbbr = $dt->format('T');
+            } catch (\Throwable $e) {
+                $tzAbbr = 'UTC';
+            }
+
+            $version = (int) \Illuminate\Support\Facades\Cache::get("tenant_defaults_version:{$company_id}", time());
+
+            return [
+                'company_id' => $company_id,
+                'currency' => [
+                    'code' => $currencyCode,
+                    'key' => (int) $currencyKey,
+                    'symbol' => $currencySymbol,
+                ],
+                'phone' => [
+                    'iso' => $countryIso,
+                    'calling_code' => (string) $callingCode,
+                    'dial_code' => '+' . ltrim((string) $callingCode, '+'),
+                ],
+                'country' => [
+                    'id' => (int) $countryId,
+                    'iso' => $countryIso,
+                ],
+                'timezone' => [
+                    'iana' => $timezone,
+                    'abbreviation' => $tzAbbr,
+                ],
+                'version' => $version,
+            ];
+        });
+    }
+
     public static function separateNumberParts($value)
     {
         // Ensure value is treated as a string
