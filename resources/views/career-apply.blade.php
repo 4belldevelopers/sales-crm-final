@@ -1096,10 +1096,44 @@ select#gender {
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
 }
 
-.wa-select2-dropdown .select2-results__options {
-    max-height: 320px !important;
+/* ONLY top-level options list scrolls — single unified scrollbar */
+.wa-select2-dropdown .select2-results > .select2-results__options {
+    max-height: 340px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding: 4px 0 !important;
+    margin: 0 !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+
+/* Strictly remove inner nested scrollbar on optgroup lists (e.g. United States) */
+.wa-select2-dropdown .select2-results__options--nested,
+.wa-select2-dropdown .select2-results__options .select2-results__options,
+.wa-select2-dropdown ul.select2-results__options--nested {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Sleek God-Level Scrollbar for Visa Status Dropdown */
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar {
+    width: 6px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.wa-select2-dropdown .select2-results > .select2-results__options::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
 }
 
 .wa-select2-dropdown .select2-results__group {
@@ -6364,13 +6398,14 @@ $(document).ready(function () {
         });
     }
 
-    // Force search field visibility and focus upon opening
+    // Force search field visibility, placeholder and focus upon opening
     $(document).on('select2:open select2:opening', '#visastatu', function () {
         var $dropdown = $('.wa-select2-dropdown');
         $dropdown.find('.select2-search, .select2-search--dropdown').removeClass('select2-search--hide').css('display', 'block');
         setTimeout(function () {
             var searchField = document.querySelector('.wa-select2-dropdown .select2-search__field');
             if (searchField) {
+                searchField.placeholder = 'Search visa status, permit or country (e.g. H-1B, Green Card)...';
                 searchField.focus();
             }
         }, 30);
