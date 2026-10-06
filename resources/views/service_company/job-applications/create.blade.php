@@ -975,6 +975,7 @@
                         countryCodeId="primary_country_code"
                         :value="@$application->phone"
                         :countryCode="@$phone_code"
+                        :defaultIso="@$country_code"
                         label=""
                         :required="true"
                         placeholder="Enter primary number" />
@@ -1286,6 +1287,7 @@
                           countryCodeId="secondary_country_code"
                           :value="@$application->secondary_mobile"
                           :countryCode="@$second_phone_code"
+                          :defaultIso="@$country_code"
                           label=""
                           :required="false"
                           placeholder="Enter secondary number" />

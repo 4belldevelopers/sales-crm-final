@@ -952,6 +952,7 @@ select#gender {
                         countryCodeId="primary_country_code"
                         :value="@$application->phone"
                         :countryCode="@$phone_code"
+                        :defaultIso="@$country_code"
                         label=""
                         :required="true"
                         placeholder="Enter primary number" />
@@ -965,6 +966,7 @@ select#gender {
                         countryCodeId="secondary_country_code"
                         :value="@$application->secondary_mobile"
                         :countryCode="@$second_phone_code"
+                        :defaultIso="@$country_code"
                         label=""
                         :required="false"
                         placeholder="Enter secondary number" />
@@ -4372,7 +4374,13 @@ $.ajax({
                   success 	: function (response) {
                     $('.page-loader').css('display', 'none');
                     $('#full_name').val(response.name);
-                    $('#phone').val(response.number);
+                    if (response.number) {
+                        if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+                            window.JeroPhoneBox.setPhone('phone', response.number);
+                        } else {
+                            $('#phone').val(response.number).trigger('input');
+                        }
+                    }
                     $('#email').val(response.email);
                     $('#dob').val(response.dob);
                     $('#current_company').val(response.currentjob);

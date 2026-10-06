@@ -14,7 +14,6 @@
     <link href="{{ asset('demo/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/plugins/global/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('demo/css/style.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/css/intlTelInput.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.0/mammoth.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -1110,23 +1109,31 @@ $currencySymbole = GeneralMethod::currencySymbole();
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Primary Number <span class="rq">*</span></label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="phone" id="phone" value="{{ @$application->phone }}"
-                        placeholder="Enter primary number" style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$phone_code }}" id="primary_country_code" name="primary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="phone"
+                        name="phone"
+                        countryCodeName="primary_country_code"
+                        countryCodeId="primary_country_code"
+                        :value="@$application->phone"
+                        :countryCode="@$phone_code"
+                        :defaultIso="@$country_code"
+                        label=""
+                        :required="true"
+                        placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Secondary Number</label>
-                    <div class="ig">
-                      {{-- <span class="ig-p">+91 ▼</span> --}}
-                      <input type="number" name="secondary_mobile" id="secondary_mobile"
-                        value="{{ @$application->secondary_mobile }}" placeholder="Enter secondary number"
-                        style="padding-left: 76px !important; width: 307px;" />
-                      <input type="hidden" value="{{ @$second_phone_code }}" id="secondary_country_code"
-                        name="secondary_country_code">
-                    </div>
+                    <x-jero-phone-input
+                        id="secondary_mobile"
+                        name="secondary_mobile"
+                        countryCodeName="secondary_country_code"
+                        countryCodeId="secondary_country_code"
+                        :value="@$application->secondary_mobile"
+                        :countryCode="@$second_phone_code"
+                        :defaultIso="@$country_code"
+                        label=""
+                        :required="false"
+                        placeholder="Enter secondary number" />
                   </div>
                 </div>
                 <div class="g4">
@@ -2096,7 +2103,6 @@ $currencySymbole = GeneralMethod::currencySymbole();
 <script src="{{ asset('assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/jquery.dataTables.js') }}{{ TM_VERSION }}"></script>
 <script src="{{ asset('assets/plugins/datatables/dataTables.bootstrap4.js') }}{{ TM_VERSION }}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.17/js/intlTelInput.min.js"></script>
 <script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
@@ -2792,7 +2798,7 @@ $(document).ready(function () {
        }
    }
 
-   const inputs = document.querySelectorAll("#ctc, #ectc, #phone, #secondary_mobile");
+   const inputs = document.querySelectorAll("#ctc, #ectc");
 
     inputs.forEach(input => {
         // Disable arrow key increment/decrement
@@ -2931,50 +2937,9 @@ setTimeout(() => {
 
 
     $(document).ready(function () {
-      // Initialize intl-tel-input for Primary and Secondary phone fields
-      const primaryPhoneInput = window.intlTelInput(document.querySelector("#phone"), {
-        separateDialCode: true,
-        initialCountry: "{{ $phone_code }}",
-        preferredCountries: ["in", "us", "gb", "ca", "au"],
-      });
-
-      const secondaryPhoneInput = window.intlTelInput(document.querySelector("#secondary_mobile"), {
-        separateDialCode: true,
-        initialCountry: "{{ $second_phone_code }}",
-        preferredCountries: ["in", "us", "gb", "ca", "au"],
-      });
-
-        // Function to update hidden country code inputs
-      function updateCountryCode(inputField, hiddenField) {
-        const selectedCountryData = inputField.getSelectedCountryData();
-        //$(hiddenField).val(selectedCountryData.dialCode); // Set the country code in the hidden field
-        const countryCode = selectedCountryData.iso2; // e.g., 'us', 'in', etc.
-        $(hiddenField).val(countryCode);
-
+      if (window.JeroPhoneBox) {
+        window.JeroPhoneBox.initAll();
       }
-      // Update country code on input or country flag selection
-      $("#phone").on("input change", function () {
-        updateCountryCode(primaryPhoneInput, "#primary_country_code");
-      });
-
-      $("#secondary_mobile").on("input change", function () {
-        updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-      });
-      // Update country code dynamically when the user selects a different country flag
-      $(".iti__flag-container").on("click", function (event) {
-        const targetInput = $(event.target).closest(".iti").find("input");
-
-        if (targetInput.is("#phone")) {
-          updateCountryCode(primaryPhoneInput, "#primary_country_code");
-        } else if (targetInput.is("#secondary_mobile")) {
-          updateCountryCode(secondaryPhoneInput, "#secondary_country_code");
-        }
-      });
-
-      setTimeout(function () {	
-        $(".iti__flag-container").click();
-      },500);
-
     });
 
   
@@ -3944,10 +3909,10 @@ var KTAddCandidate = function () {
                   'full_name':{ validators:{notEmpty:{message: "Full name is required"}}},
                   'current_designation':{validators:{notEmpty:{ message: "Current designation is required"}}},
                   'phone': {validators: {notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}}},
-                  'secondary_mobile':{validators:{digits:{ message: "Primary number must contains only digits"},
-                            stringLength:{ min: 10, max: 10, message: "Primary number must contains 10 digits only"}}},
+                            digits:{ message: "Primary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}}},
+                  'secondary_mobile':{validators:{digits:{ message: "Secondary number must contain only digits"},
+                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}}},
                   'email':{validators:{notEmpty:{message: "Primary Email is required"},
                             emailAddress:{message: 'The value is not a valid email address'}}},
                   'secondrary_email':{validators:{emailAddress:{message: 'The value is not a valid email address'}}},
@@ -4308,7 +4273,13 @@ function re_test(text){
 
                       if(page_event_check != 'EDIT'){
                       $('#full_name').val(response.name);
-                      $('#phone').val(response.number);
+                      if (response.number) {
+                          if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+                              window.JeroPhoneBox.setPhone('phone', response.number);
+                          } else {
+                              $('#phone').val(response.number).trigger('input');
+                          }
+                      }
                       $('#email').val(response.email);
                       $('#dob').val(response.dob);
                       $('#current_company').val(response.currentjob);

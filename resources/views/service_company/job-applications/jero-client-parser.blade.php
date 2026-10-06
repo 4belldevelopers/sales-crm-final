@@ -317,18 +317,23 @@
                 setVal('#email', cand.email);
             }
 
-            // 3. Primary Mobile & Country Code
+            // 3. Primary Mobile & Country Code (Enterprise JeroPhoneBox Integration)
             var phoneVal = cand.mobileNumber || cand.phone;
             if (phoneVal) {
-                var digitsOnly = String(phoneVal).replace(/\D/g, '');
-                if (digitsOnly.length > 10) {
-                    digitsOnly = digitsOnly.slice(-10);
+                if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
+                    window.JeroPhoneBox.setPhone('phone', phoneVal);
+                } else {
+                    var digitsOnly = String(phoneVal).replace(/\D/g, '');
+                    setVal('#phone', digitsOnly);
                 }
-                setVal('#phone', digitsOnly);
             }
             if (cand.countryCode) {
-                var cc = String(cand.countryCode).replace(/^\+/, '').trim();
-                setVal('#primary_country_code', cc);
+                var cc = String(cand.countryCode).trim();
+                if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setCountry === 'function') {
+                    window.JeroPhoneBox.setCountry('phone', cc);
+                } else {
+                    setVal('#primary_country_code', cc.replace(/^\+/, ''));
+                }
             }
 
             // 4. Phase 10: Date of Birth (Normalized to YYYY-MM-DD)
