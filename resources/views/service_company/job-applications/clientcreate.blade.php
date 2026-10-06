@@ -97,6 +97,8 @@ body {overflow-x:hidden; }
 
 /* Bulletproof native select hiding scoped strictly to combobox container */
 .fg.has-combobox > select,
+.fg--has-combobox > select,
+.has-combobox > select,
 .candidate-field-control--has-combobox > select,
 .bd-control--has-combobox > select {
     position: absolute !important;
@@ -108,6 +110,16 @@ body {overflow-x:hidden; }
     overflow: hidden !important;
     z-index: -1 !important;
     pointer-events: none !important;
+}
+
+/* Hide static icons outside combobox when trigger has its own icon */
+.fg.has-combobox > i.fa-graduation-cap,
+.candidate-field-control--has-combobox > i.fa-graduation-cap,
+.bd-control--has-combobox > i.fa-graduation-cap,
+.fg.has-combobox > i.fa-flag,
+.candidate-field-control--has-combobox > i.fa-flag,
+.bd-control--has-combobox > i.fa-flag {
+    display: none !important;
 }
 
 /* Custom Combobox Trigger Container */
@@ -759,21 +771,97 @@ select#gender {
                   </div>
                   <div class="fg fv-row">
                     <label>Nationality</label>
+                    @php
+                      // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
+                      $countryToDemonym = [
+                          'in' => 'Indian',
+                          'us' => 'American',
+                          'gb' => 'British',
+                          'uk' => 'British',
+                          'ca' => 'Canadian',
+                          'au' => 'Australian',
+                          'ae' => 'Emirati',
+                          'sg' => 'Singaporean',
+                          'de' => 'German',
+                          'fr' => 'French',
+                          'nl' => 'Dutch',
+                          'ie' => 'Irish',
+                          'sa' => 'Saudi',
+                      ];
+                      $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
+                      $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
+
+                      // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
+                      $topPopularNationalities = [
+                          'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
+                          'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
+                          'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
+                          'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
+                          'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
+                          'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
+                          'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
+                          'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
+                          'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
+                          'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
+                          'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
+                          'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
+                          'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
+                      ];
+
+                      // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
+                      $allNationalities = [
+                          'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
+                          'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
+                          'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
+                          'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
+                          'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
+                          'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
+                          'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
+                          'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
+                          'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
+                          'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
+                          'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
+                          'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
+                          'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
+                          'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
+                          'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
+                          'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
+                          'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
+                          'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
+                          'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
+                          'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
+                          'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
+                          'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
+                          'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
+                          'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
+                          'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
+                          'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
+                          'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
+                          'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
+                          'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
+                          'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
+                          'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
+                          'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
+                          'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
+                          'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
+                          'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
+                          'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
+                          'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
+                          'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
+                      ];
+                    @endphp
                     <select name="nationality" id="nationality">
                       <option value="">Select nationality</option>
-                      <option {{ (@$application->nationality==='Indian') ? 'selected' : '' }}>Indian</option>
-                      <option {{ (@$application->nationality==='American') ? 'selected' : '' }}>American</option>
-                      <option {{ (@$application->nationality==='British') ? 'selected' : '' }}>British</option>
-                      <option {{ (@$application->nationality==='Canadian') ? 'selected' : '' }}>Canadian</option>
-                      <option {{ (@$application->nationality==='Australian') ? 'selected' : '' }}>Australian</option>
-                      <option {{ (@$application->nationality==='Emirati') ? 'selected' : '' }}>Emirati</option>
-                      <option {{ (@$application->nationality==='Singaporean') ? 'selected' : '' }}>Singaporean</option>
-                      <option {{ (@$application->nationality==='German') ? 'selected' : '' }}>German</option>
-                      <option {{ (@$application->nationality==='French') ? 'selected' : '' }}>French</option>
-                      <option {{ (@$application->nationality==='Dutch') ? 'selected' : '' }}>Dutch</option>
-                      <option {{ (@$application->nationality==='Irish') ? 'selected' : '' }}>Irish</option>
-                      <option {{ (@$application->nationality==='Saudi') ? 'selected' : '' }}>Saudi</option>
-                      <option {{ (@$application->nationality==='Other') ? 'selected' : '' }}>Other</option>
+                      <optgroup label="⭐ Top 10 Popular Nationalities">
+                        @foreach($topPopularNationalities as $natKey => $natItem)
+                          <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
+                        @endforeach
+                      </optgroup>
+                      <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
+                        @foreach($allNationalities as $demonym => $countrySynonyms)
+                          <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
+                        @endforeach
+                      </optgroup>
                     </select>
                   </div>
                   <div class="fg fv-row">
@@ -4135,7 +4223,84 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         $('.fs, .candidate-profile-card, .bd-card').removeClass('has-active-combobox');
     }
 
-    // 4. Build Custom Combobox DOM from native <select id="qualification">
+    // 4. Build Custom Combobox DOM from native <select id="nationality">
+    function buildNationalityCombobox() {
+        var $select = $('#nationality');
+        if (!$select.length) return;
+        $('#jero-cs-nationality').remove();
+
+        var placeholder = 'Select nationality';
+        var currentVal = ($select.val() || '').trim();
+        var currentLabel = placeholder;
+        if (currentVal) {
+            var $selOpt = $select.find('option:selected').first();
+            if ($selOpt.length && $selOpt.val()) {
+                currentLabel = $selOpt.text().trim();
+            }
+        }
+
+        var html = '<div class="jero-custom-select" id="jero-cs-nationality">' +
+            '<button type="button" class="jero-cs-trigger" aria-haspopup="listbox" aria-expanded="false">' +
+                '<div class="jero-cs-left">' +
+                    '<span class="jero-cs-icon"><i class="fa-regular fa-flag"></i></span>' +
+                    '<span class="jero-cs-value ' + (!currentVal ? 'jero-cs-placeholder' : '') + '">' + currentLabel + '</span>' +
+                '</div>' +
+                '<div class="jero-cs-right">' +
+                    '<span class="jero-cs-arrow"><i class="fa-solid fa-chevron-down"></i></span>' +
+                '</div>' +
+            '</button>' +
+            '<div class="jero-cs-dropdown">' +
+                '<div class="jero-cs-search-box">' +
+                    '<i class="fa-solid fa-magnifying-glass jero-cs-search-icon"></i>' +
+                    '<input type="text" class="jero-cs-search-input" placeholder="Search nationality or country (e.g. India, USA, UK, Canada)..." spellcheck="false" autocomplete="off">' +
+                    '<button type="button" class="jero-cs-search-clear" style="display:none;" title="Clear search">&times;</button>' +
+                '</div>' +
+                '<div class="jero-cs-list"></div>' +
+                '<div class="jero-cs-empty" style="display:none;"><i class="fa-solid fa-circle-question"></i> No nationality found</div>' +
+            '</div>' +
+        '</div>';
+
+        var $cs = $(html);
+        var $list = $cs.find('.jero-cs-list');
+        var selectedItemDone = false;
+
+        $select.children().each(function() {
+            var $node = $(this);
+            if ($node.is('optgroup')) {
+                var groupLabel = $node.attr('label') || '';
+                var $group = $('<div class="jero-cs-group"><div class="jero-cs-group-title">' + groupLabel + '</div></div>');
+                $node.find('option').each(function() {
+                    var $opt = $(this);
+                    var val = $opt.val();
+                    if (!val) return;
+                    var text = $opt.text().trim();
+                    var synonyms = $opt.attr('data-synonyms') || '';
+                    var isSelected = (val === currentVal && !selectedItemDone);
+                    if (isSelected) selectedItemDone = true;
+                    var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
+                        '<span class="jero-cs-item-text">' + text + '</span>' +
+                    '</div>');
+                    $group.append($item);
+                });
+                $list.append($group);
+            } else if ($node.is('option') && $node.val()) {
+                var val = $node.val();
+                var text = $node.text().trim();
+                var synonyms = $node.attr('data-synonyms') || '';
+                var isSelected = (val === currentVal && !selectedItemDone);
+                if (isSelected) selectedItemDone = true;
+                var $item = $('<div class="jero-cs-item ' + (isSelected ? 'is-selected' : '') + '" data-val="' + val + '" data-synonyms="' + synonyms + '">' +
+                    '<span class="jero-cs-item-text">' + text + '</span>' +
+                '</div>');
+                $list.append($item);
+            }
+        });
+
+        $select.closest('.fg, .candidate-field-control, .bd-control').addClass('candidate-field-control--has-combobox bd-control--has-combobox fg--has-combobox has-combobox');
+        $select.after($cs);
+    }
+
+    // 5. Build Custom Combobox DOM from native <select id="qualification">
     function buildQualificationCombobox() {
         var $select = $('#qualification');
         if (!$select.length) return;
@@ -4206,11 +4371,82 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             }
         });
 
-        $select.closest('.fg, .candidate-field-control, .bd-control').addClass('candidate-field-control--has-combobox bd-control--has-combobox has-combobox');
+        $select.closest('.fg, .candidate-field-control, .bd-control').addClass('candidate-field-control--has-combobox bd-control--has-combobox fg--has-combobox has-combobox');
         $select.after($cs);
     }
 
-    // 5. Intelligent Filtering (Idle Regional Curation vs Global Search Unlock)
+    // 6. Filter Nationality items by country synonyms or demonym text
+    function filterNationalityItems() {
+        var $cs = $('#jero-cs-nationality');
+        if (!$cs.length) return;
+        var rawQuery = $cs.find('.jero-cs-search-input').val() || '';
+        var cleanQ = jeroCleanStr(rawQuery);
+        var compactQ = cleanQ.replace(/\s+/g, '');
+        var queryWords = cleanQ.split(' ').filter(Boolean);
+        var totalVisible = 0;
+
+        $cs.find('.jero-cs-group').each(function() {
+            var $group = $(this);
+            var groupVisible = 0;
+
+            $group.find('.jero-cs-item').each(function() {
+                var $item = $(this);
+                var text = $item.find('.jero-cs-item-text').text() || '';
+                var synonyms = $item.attr('data-synonyms') || '';
+                var val = $item.attr('data-val') || '';
+
+                var isMatch = false;
+                if (!cleanQ) {
+                    isMatch = true;
+                } else {
+                    var cleanText = jeroCleanStr(text);
+                    var cleanSynonyms = jeroCleanStr(synonyms);
+                    var cleanVal = jeroCleanStr(val);
+                    var combined = cleanText + ' ' + cleanSynonyms + ' ' + cleanVal;
+                    var combinedCompact = combined.replace(/\s+/g, '');
+
+                    if (cleanText.indexOf(cleanQ) !== -1 || cleanSynonyms.indexOf(cleanQ) !== -1 || cleanVal.indexOf(cleanQ) !== -1) {
+                        isMatch = true;
+                    } else if (combinedCompact.indexOf(compactQ) !== -1) {
+                        isMatch = true;
+                    } else if (queryWords.length > 0) {
+                        var allWordsMatch = true;
+                        for (var w = 0; w < queryWords.length; w++) {
+                            if (combined.indexOf(queryWords[w]) === -1 && combinedCompact.indexOf(queryWords[w]) === -1) {
+                                allWordsMatch = false;
+                                break;
+                            }
+                        }
+                        if (allWordsMatch) {
+                            isMatch = true;
+                        }
+                    }
+                }
+
+                if (isMatch) {
+                    $item.removeClass('is-hidden').show();
+                    groupVisible++;
+                    totalVisible++;
+                } else {
+                    $item.addClass('is-hidden').hide();
+                }
+            });
+
+            if (groupVisible > 0) {
+                $group.removeClass('is-hidden').show();
+            } else {
+                $group.addClass('is-hidden').hide();
+            }
+        });
+
+        if (totalVisible === 0) {
+            $cs.find('.jero-cs-empty').removeClass('is-hidden').show();
+        } else {
+            $cs.find('.jero-cs-empty').addClass('is-hidden').hide();
+        }
+    }
+
+    // 7. Intelligent Filtering for Highest Qualification (Idle Regional Curation vs Global Search Unlock)
     function filterQualificationItems() {
         var $cs = $('#jero-cs-qualification');
         if (!$cs.length) return;
@@ -4298,10 +4534,10 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }
     }
 
-    // 6. Event Listeners & Two-Way Synchronization
+    // 8. Event Listeners & Two-Way Synchronization
 
     // Open/Toggle Combobox
-    $(document).on('click', '#jero-cs-qualification .jero-cs-trigger', function(e) {
+    $(document).on('click', '.jero-cs-trigger', function(e) {
         e.stopPropagation();
         var $combobox = $(this).closest('.jero-custom-select');
         var wasOpen = $combobox.hasClass('is-open');
@@ -4324,7 +4560,12 @@ $(document).on('change', '#recruiter_note_template_select', function () {
             var $search = $combobox.find('.jero-cs-search-input');
             $search.val('');
             $combobox.find('.jero-cs-search-clear').hide();
-            filterQualificationItems();
+
+            if ($combobox.attr('id') === 'jero-cs-nationality') {
+                filterNationalityItems();
+            } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+                filterQualificationItems();
+            }
 
             setTimeout(function() {
                 $search.focus().select();
@@ -4333,17 +4574,17 @@ $(document).on('change', '#recruiter_note_template_select', function () {
     });
 
     // Prevent clicks inside dropdown from bubbling and closing
-    $(document).on('click', '#jero-cs-qualification .jero-cs-dropdown', function(e) {
+    $(document).on('click', '.jero-cs-dropdown', function(e) {
         e.stopPropagation();
     });
 
-    $(document).on('click', '#jero-cs-qualification .jero-cs-search-box', function(e) {
+    $(document).on('click', '.jero-cs-search-box', function(e) {
         e.stopPropagation();
         $(this).find('.jero-cs-search-input').focus();
     });
 
     // Search Input Typing Handler
-    $(document).on('input keyup change', '#jero-cs-qualification .jero-cs-search-input', function(e) {
+    $(document).on('input keyup change', '.jero-cs-search-input', function(e) {
         if (e.which === 27 || e.which === 13 || e.which === 38 || e.which === 40) return;
         var $input = $(this);
         var val = $input.val();
@@ -4353,20 +4594,31 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         } else {
             $clearBtn.hide();
         }
-        filterQualificationItems();
+
+        var $combobox = $input.closest('.jero-custom-select');
+        if ($combobox.attr('id') === 'jero-cs-nationality') {
+            filterNationalityItems();
+        } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+            filterQualificationItems();
+        }
     });
 
     // Clear Search Input Button
-    $(document).on('click', '#jero-cs-qualification .jero-cs-search-clear', function(e) {
+    $(document).on('click', '.jero-cs-search-clear', function(e) {
         e.stopPropagation();
         var $input = $(this).siblings('.jero-cs-search-input');
         $input.val('').focus();
         $(this).hide();
-        filterQualificationItems();
+        var $combobox = $(this).closest('.jero-custom-select');
+        if ($combobox.attr('id') === 'jero-cs-nationality') {
+            filterNationalityItems();
+        } else if ($combobox.attr('id') === 'jero-cs-qualification') {
+            filterQualificationItems();
+        }
     });
 
     // Keyboard Navigation: Escape, Arrows, Enter
-    $(document).on('keydown', '#jero-cs-qualification.is-open', function(e) {
+    $(document).on('keydown', '.jero-custom-select.is-open', function(e) {
         var $combobox = $(this);
         var $visibleItems = $combobox.find('.jero-cs-item:not(.is-hidden):visible');
 
@@ -4414,7 +4666,36 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }
     });
 
-    // Option Item Click Handler
+    // Select Nationality Item
+    $(document).on('click', '#jero-cs-nationality .jero-cs-item', function(e) {
+        e.stopPropagation();
+        var $item = $(this);
+        var val = $item.attr('data-val') || '';
+        var text = $item.find('.jero-cs-item-text').text().trim();
+
+        var $cs = $('#jero-cs-nationality');
+        $cs.find('.jero-cs-item').removeClass('is-selected');
+        $item.addClass('is-selected');
+        $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text(text);
+        $cs.removeClass('has-validation-error');
+        $cs.closest('.fg, .candidate-field-control, .bd-control').removeClass('has-validation-error');
+        $('[data-field-error="nationality"]').remove();
+        closeAllComboboxes();
+
+        var $nativeNat = $('#nationality');
+        if ($nativeNat.val() !== val) {
+            $nativeNat.val(val).trigger('change');
+        }
+
+        filterQualificationItems();
+
+        if (window.benchFormValidator && typeof window.benchFormValidator.revalidateField === 'function') {
+            window.benchFormValidator.revalidateField('nationality');
+            window.benchFormValidator.revalidateField('qualification');
+        }
+    });
+
+    // Select Qualification Item
     $(document).on('click', '#jero-cs-qualification .jero-cs-item', function(e) {
         e.stopPropagation();
         var $item = $(this);
@@ -4452,6 +4733,25 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }
     });
 
+    // Native <select id="nationality"> External Change Listener (Resume Parser or programmatic update)
+    $(document).on('change', '#nationality', function() {
+        var val = ($(this).val() || '').trim();
+        var $cs = $('#jero-cs-nationality');
+        if ($cs.length) {
+            var $item = $cs.find('.jero-cs-item[data-val="' + val + '"]').first();
+            $cs.find('.jero-cs-item').removeClass('is-selected');
+            if ($item.length) {
+                $item.addClass('is-selected');
+                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text($item.find('.jero-cs-item-text').text().trim());
+            } else if (!val) {
+                $cs.find('.jero-cs-value').addClass('jero-cs-placeholder').text('Select nationality');
+            } else {
+                $cs.find('.jero-cs-value').removeClass('jero-cs-placeholder').text(val);
+            }
+        }
+        filterQualificationItems();
+    });
+
     // Native <select id="qualification"> External Change Listener (Resume Parser or programmatic update)
     $(document).on('change', '#qualification', function() {
         var val = ($(this).val() || '').trim();
@@ -4475,13 +4775,9 @@ $(document).on('change', '#recruiter_note_template_select', function () {
         }
     });
 
-    // Nationality Change Handler -> Re-filter idle list
-    $(document).on('change', '#nationality', function() {
-        filterQualificationItems();
-    });
-
     // Mount on DOM Ready
     $(document).ready(function() {
+        buildNationalityCombobox();
         buildQualificationCombobox();
         filterQualificationItems();
     });
