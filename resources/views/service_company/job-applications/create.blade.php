@@ -1517,10 +1517,101 @@
     background-position: right 14px center !important;
     background-size: 11px !important;
     box-sizing: border-box !important;
+}
+
 /* ============================================================================
    JERO ATS - RECRUITER COMMENTS CATEGORIZED TEMPLATE DROPDOWN & EDITOR
    Client-First • 0% Server Strain • 100% In-Memory Browser RAM
    ============================================================================ */
+.fs.rm-note-card,
+.rm-note-card,
+#recruiter_comments_section {
+    overflow: visible !important;
+    position: relative;
+    z-index: 20;
+    border: 1px solid #dbeafe !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05) !important;
+    margin-bottom: 20px;
+}
+.rm-note-card.has-open-dropdown,
+.rm-note-card:has(.custom-template-dropdown.is-open),
+#recruiter_comments_section.has-open-dropdown,
+#recruiter_comments_section:has(.custom-template-dropdown.is-open) {
+    position: relative !important;
+    z-index: 1060 !important;
+}
+.rm-note-card .candidate-card-header,
+#recruiter_comments_section .candidate-card-header {
+    min-height: 58px !important;
+    padding: 12px 18px !important;
+    border-bottom: 1px solid #dbeafe !important;
+    border-top-left-radius: 7px !important;
+    border-top-right-radius: 7px !important;
+    background: linear-gradient(90deg, #f0f6ff 0%, #ffffff 82%) !important;
+    display: flex;
+    align-items: center;
+}
+.rm-note-card .candidate-card-title,
+#recruiter_comments_section .candidate-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.rm-note-card .candidate-card-icon--note,
+#recruiter_comments_section .candidate-card-icon--note {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    flex-basis: 38px !important;
+    border-radius: 8px !important;
+    border: 0 !important;
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #2563eb, #38bdf8) !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.rm-note-card .candidate-card-icon--note i,
+#recruiter_comments_section .candidate-card-icon--note i {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+}
+.rm-note-card .candidate-card-title strong,
+#recruiter_comments_section .candidate-card-title strong {
+    color: #071434 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    display: block;
+}
+.rm-note-card .candidate-card-title small,
+#recruiter_comments_section .candidate-card-title small {
+    display: block !important;
+    color: #65708e !important;
+    font-size: 11px !important;
+    line-height: 1.4;
+}
+.rm-note-card .candidate-card-body,
+.rm-note-card .fsc,
+#recruiter_comments_section .candidate-card-body,
+#recruiter_comments_section .fsc {
+    overflow: visible !important;
+    position: relative;
+    padding: 16px 20px !important;
+    display: grid;
+    gap: 14px;
+}
+.rm-note-card .recruiter-template-field,
+#recruiter_comments_section .recruiter-template-field {
+    overflow: visible !important;
+    position: relative;
+    z-index: 1062;
+}
 .custom-template-dropdown {
     position: relative !important;
     width: 100%;
@@ -3793,8 +3884,6 @@
                 </div>
               </div>
             </div>
-            </div>
-          </div>
           </form>
         </main>
 
@@ -7876,14 +7965,17 @@ $(document).ready(function() {
     $(document).on('click', '#custom_template_trigger', function (e) {
         e.stopPropagation();
         var $dd = $('#custom_template_dropdown');
+        var $card = $(this).closest('.rm-note-card');
         var $menu = $('#custom_template_menu');
         var isOpen = $dd.hasClass('is-open');
         if (isOpen) {
             $dd.removeClass('is-open');
+            $card.removeClass('has-open-dropdown');
             $menu.hide();
             $(this).attr('aria-expanded', 'false');
         } else {
             $dd.addClass('is-open');
+            $card.addClass('has-open-dropdown');
             $menu.show();
             $(this).attr('aria-expanded', 'true');
         }
@@ -7892,6 +7984,7 @@ $(document).ready(function() {
     $(document).on('click', function (e) {
         if (!$(e.target).closest('#custom_template_dropdown').length) {
             $('#custom_template_dropdown').removeClass('is-open');
+            $('.rm-note-card').removeClass('has-open-dropdown');
             $('#custom_template_menu').hide();
             $('#custom_template_trigger').attr('aria-expanded', 'false');
         }
@@ -7910,6 +8003,7 @@ $(document).ready(function() {
         $('#selected_template_label').text(title).removeClass('is-placeholder');
 
         $('#custom_template_dropdown').removeClass('is-open');
+        $('.rm-note-card').removeClass('has-open-dropdown');
         $('#custom_template_menu').hide();
         $('#custom_template_trigger').attr('aria-expanded', 'false');
 
