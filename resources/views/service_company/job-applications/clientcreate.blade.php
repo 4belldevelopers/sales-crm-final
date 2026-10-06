@@ -1106,6 +1106,678 @@ select#gender {
     color: #1D4ED8 !important;
     font-weight: 600 !important;
 }
+
+/* Scoped Enterprise Global Currency Indicative Pills & Hover Lens */
+.jero-pill-wrapper {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+.jero-indicative-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0 4px;
+    font-size: 8.8px !important; /* 20% reduction from 11px */
+    font-weight: 500 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 3px;
+    cursor: pointer;
+    line-height: 1.35;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+    text-decoration: none;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.jero-indicative-pill--base {
+    background: transparent !important;
+    color: #10b981 !important;
+    border: none !important;
+}
+.jero-indicative-pill--converted {
+    background: transparent !important;
+    color: #009ef7 !important;
+    border: none !important;
+}
+.jero-indicative-pill:hover,
+.jero-indicative-pill:focus-visible {
+    box-shadow: none !important;
+    transform: none !important;
+    color: #0077b5 !important;
+    text-decoration: underline dotted;
+    outline: none;
+}
+.jero-indicative-pill i {
+    font-size: 8px !important;
+}
+
+/* Seamless Unified Amount & Currency Input Box */
+.candidate-salary-panel .candidate-salary-period .ig,
+.salary-card .candidate-salary-period .ig {
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 38px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig:focus-within,
+.salary-card .candidate-salary-period .ig:focus-within {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 3px rgba(0, 158, 247, 0.15) !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig input,
+.salary-card .candidate-salary-period .ig input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    background: transparent !important;
+    margin: 0 !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig input:focus,
+.salary-card .candidate-salary-period .ig input:focus {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig .ig-a,
+.candidate-salary-panel .candidate-salary-period .ig .changeTextCurrency,
+.salary-card .candidate-salary-period .ig .ig-a,
+.salary-card .candidate-salary-period .ig .changeTextCurrency {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 52px !important;
+    height: 100% !important;
+    padding: 0 12px !important;
+    background: #f8fafc !important;
+    border: none !important;
+    border-left: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    margin: 0 !important;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+}
+.candidate-salary-panel .candidate-salary-period .ig:focus-within .ig-a,
+.candidate-salary-panel .candidate-salary-period .ig:focus-within .changeTextCurrency,
+.salary-card .candidate-salary-period .ig:focus-within .ig-a,
+.salary-card .candidate-salary-period .ig:focus-within .changeTextCurrency {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-left-color: #d0e3fc !important;
+}
+
+/* Unified Warm Theme for Expected Salary (Matching Current Salary) */
+.salary-card .candidate-salary-panel--expected,
+.candidate-salary-panel--expected {
+    border: 1px solid #efd36b !important;
+    background: #fffef8 !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-panel-head,
+.candidate-salary-panel--expected .candidate-salary-panel-head {
+    background: #fff8dc !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span,
+.candidate-salary-panel--expected .candidate-salary-panel-head > span {
+    color: #946b00 !important;
+    background: #ffefad !important;
+}
+.salary-card .candidate-salary-panel--expected .candidate-salary-auto,
+.candidate-salary-panel--expected .candidate-salary-auto {
+    background: #fffaf0 !important;
+}
+
+/* ============================================================================
+   JERO ATS - GOD-LEVEL ENTERPRISE TIME CLOCK POPOVER (15.6" & SMALL SCREENS)
+   ============================================================================ */
+.jgtp-popover {
+    position: fixed !important;
+    z-index: 100050 !important;
+    width: 310px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.28), 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+    font-family: 'Poppins', sans-serif !important;
+    color: #1e293b !important;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.15s !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+}
+.jgtp-popover.is-open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) scale(1) !important;
+}
+.jgtp-header {
+    flex: 0 0 auto !important;
+    background: linear-gradient(135deg, #071434 0%, #172346 100%) !important;
+    color: #ffffff !important;
+    padding: 8px 12px 7px !important;
+    box-sizing: border-box !important;
+}
+.jgtp-header-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 5px !important;
+}
+.jgtp-slot-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    color: #ffd233 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.2px !important;
+    line-height: 1.3 !important;
+}
+.jgtp-close-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    padding: 2px 5px !important;
+    border-radius: 4px !important;
+    line-height: 1 !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.jgtp-close-btn:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+}
+.jgtp-display-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+}
+.jgtp-digits {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+.jgtp-digit {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.5px !important;
+    line-height: 1 !important;
+    min-width: 30px !important;
+    text-align: center !important;
+}
+.jgtp-colon {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffd233 !important;
+    line-height: 1 !important;
+    animation: jgtpBlink 1.5s infinite ease-in-out;
+}
+@keyframes jgtpBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.jgtp-ampm-switch {
+    display: inline-flex !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-radius: 5px !important;
+    padding: 2px !important;
+    gap: 2px !important;
+}
+.jgtp-ampm-btn {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+}
+.jgtp-ampm-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 3px rgba(0, 158, 247, 0.4) !important;
+}
+.jgtp-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 8px 10px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #cbd5e1 #f8fafc !important;
+    box-sizing: border-box !important;
+}
+.jgtp-body::-webkit-scrollbar {
+    width: 5px !important;
+}
+.jgtp-body::-webkit-scrollbar-track {
+    background: #f8fafc !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px !important;
+}
+.jgtp-body::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8 !important;
+}
+.jgtp-section {
+    margin-bottom: 7px !important;
+}
+.jgtp-section:last-child {
+    margin-bottom: 0 !important;
+}
+.jgtp-section-label {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    margin-bottom: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: 1.2 !important;
+}
+.jgtp-presets-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+}
+.jgtp-preset-chip {
+    padding: 4px 2px !important;
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    transition: all 0.12s ease !important;
+    line-height: 1 !important;
+    min-height: 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-preset-chip:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-preset-chip.is-active {
+    border-color: #009ef7 !important;
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+.jgtp-hours-grid {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+}
+.jgtp-hour-btn {
+    height: 26px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-hour-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-hour-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+    margin-bottom: 3px !important;
+}
+.jgtp-min-btn {
+    height: 26px !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 4px !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-min-btn:hover {
+    border-color: #009ef7 !important;
+    background: #f0f9ff !important;
+    color: #009ef7 !important;
+}
+.jgtp-min-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+.jgtp-mins-subgrid {
+    display: grid !important;
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    gap: 2px !important;
+}
+.jgtp-min-subchip {
+    padding: 2px 0 !important;
+    height: 20px !important;
+    font-size: 8.5px !important;
+    font-weight: 500 !important;
+    border: 1px solid #edf2f7 !important;
+    border-radius: 3px !important;
+    background: #ffffff !important;
+    color: #64748b !important;
+    cursor: pointer !important;
+    text-align: center !important;
+    transition: all 0.12s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.jgtp-min-subchip:hover {
+    border-color: #009ef7 !important;
+    color: #009ef7 !important;
+    background: #f0f9ff !important;
+}
+.jgtp-min-subchip.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    font-weight: 700 !important;
+}
+.jgtp-footer {
+    flex: 0 0 auto !important;
+    padding: 6px 10px !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    box-sizing: border-box !important;
+}
+.jgtp-btn {
+    border: none !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.12s ease !important;
+}
+.jgtp-btn-clear {
+    background: transparent !important;
+    color: #ef4444 !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    padding: 4px 6px !important;
+}
+.jgtp-btn-clear:hover {
+    background: #fef2f2 !important;
+}
+.jgtp-btn-now {
+    background: #edf2f7 !important;
+    color: #334155 !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 4px 8px !important;
+}
+.jgtp-btn-now:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+.jgtp-btn-apply {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    padding: 4px 12px !important;
+}
+.jgtp-btn-apply:hover {
+    background: #0088d4 !important;
+}
+
+/* ============================================================================
+   JERO ATS - STRUCTURED EVALUATION MATRIX (OPTION 3: ENTERPRISE STANDARD)
+   Client-First • 0% Server Strain • 100% In-Memory RAM Compilation
+   ============================================================================ */
+.sem-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    font-family: 'Poppins', sans-serif !important;
+    margin-bottom: 20px !important;
+}
+.sem-card .candidate-card-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    padding: 12px 18px !important;
+}
+.sem-card-body {
+    padding: 14px 18px !important;
+}
+.sem-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sem-sync-btn {
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
+    transition: all 0.15s ease !important;
+    padding: 3px 8px !important;
+}
+.sem-view-toggle .btn {
+    font-weight: 600 !important;
+    border-radius: 5px !important;
+    font-size: 10.5px !important;
+    padding: 3px 9px !important;
+}
+.sem-view-toggle .btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+}
+.sem-draft-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+.sem-section {
+    background: #ffffff;
+    border: 1px solid #e8ecf3;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s ease;
+}
+.sem-section:hover {
+    border-color: #cbd5e1;
+}
+.sem-section-title {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    display: flex;
+    align-items: center;
+}
+.sem-auto-badge {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.2px !important;
+}
+.sem-verdict-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.sem-chip-btn {
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    font-family: 'Poppins', sans-serif;
+}
+.sem-chip-btn:hover {
+    border-color: #009ef7;
+    background: #f0f9ff;
+    color: #009ef7;
+}
+.sem-chip-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+.sem-chip-btn.is-active i {
+    color: #ffffff !important;
+}
+.sem-comm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.sem-comm-btn {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    font-family: 'Poppins', sans-serif;
+}
+.sem-comm-btn:hover {
+    border-color: #009ef7;
+    color: #009ef7;
+}
+.sem-comm-btn.is-active {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-color: #93c5fd !important;
+    font-weight: 700 !important;
+}
+.sem-input {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    padding: 5px 8px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.sem-input:focus,
+.sem-textarea:focus,
+.sem-compiled-textarea:focus {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15) !important;
+    outline: none !important;
+}
+.sem-textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    resize: vertical !important;
+    min-height: 48px !important;
+    padding: 6px 8px !important;
+}
+.sem-compiled-textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-family: 'Poppins', monospace, sans-serif !important;
+    line-height: 1.55 !important;
+    color: #0f172a !important;
+    background: #f8fafc !important;
+    min-height: 220px !important;
+    padding: 10px 12px !important;
+}
+.sem-restore-banner {
+    border-radius: 6px !important;
+}
+.sem-highlight {
+    animation: semFieldPulse 0.7s ease !important;
+}
+@keyframes semFieldPulse {
+    0% { background-color: #fff9db !important; }
+    50% { background-color: #fef08a !important; }
+    100% { background-color: transparent !important; }
+}
 </style>
 
 
@@ -1128,17 +1800,17 @@ select#gender {
 
         $snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
         $snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
-        $snp_mode = @$application->serving_notice_period_mode;
-        if($snp_mode== 1){
+        $snp_mode = isset($application->serving_notice_period_mode) ? (int)$application->serving_notice_period_mode : 2;
+        if($snp_mode == 1){
           $snp_one		=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
-          $snp_text_dummy = 'Serving Notice Period';   
-          $snp_last_working = $application->np_id;                                 	
-        }else if($snp_mode== 2){
+          $snp_text_dummy = 'Serving Notice Period (SNP)';   
+          $snp_last_working = @$application->np_id;                                 	
+        }else if($snp_mode == 2){
           $snp_two	=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
-          $snp_text_dummy = 'Immediate';  
-          $snp_last_working = $application->last_working_date;   
+          $snp_text_dummy = 'Immediate Joiner';  
+          $snp_last_working = @$application->last_working_date;   
         }else{
           $snp_zero		=	'checked="checked"';	
           $snp_text_zero	=	'display:block';
@@ -1755,7 +2427,7 @@ select#gender {
                       </div>
                       <div class="ri">
                         <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office</label>
+                        <label for="wo">Work From Office (WFO)</label>
                       </div>
                     </div>
                   </div>
@@ -1977,9 +2649,9 @@ select#gender {
                   <div class="fg fv-row">
                     <label>Notice Period <span class="rq">*</span></label>
                     <select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode==0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate</option>
+                      <option value="0" {{ ($snp_mode===0) ? 'selected' : '' }}>Select notice period</option>
+                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                   </div>
 
@@ -1991,7 +2663,7 @@ select#gender {
                             </div>
                           
                             <div style="position: relative;">
-                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
+                                <input type="text" id="np_id_display" class="form-control form-control-solid" placeholder="Select last working date (LWD)" name="np_id_display" value="{{ ($snp_last_working) ? date('d/M/Y',strtotime(@$snp_last_working)) : '' }}" onclick="document.getElementById('np_id').click()" readonly>
                                 <input type="date" class="form-control form-control-solid np_id" name="np_id" id="np_id" style="opacity: 0; position: absolute; z-index: -1;top: 0;" onclick="this.showPicker()">
                             </div>
                         </div>
@@ -2013,8 +2685,8 @@ select#gender {
                         <input type="text" id="calender" name="calender" style="display:none">
                     </div> 
                     <div class="fg fv-row">
-                      <label>Reason for Job Change </label>
-                      <input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter current company" />
+                      <label>Reason for Job Change <span class="candidate-optional-label">(Optional)</span></label>
+                      <input type="text" name="reason_for_job_change" maxlength="55" id="reason_for_job_change" value="{{ @$application->reason_for_job_change }}" placeholder="Enter reason for job change" />
                     </div>                 
                 </div>
               </div>
@@ -2714,27 +3386,211 @@ select#gender {
             </div>
           </div>
 
-            <!-- Recruiter Note -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Recruiter Note</h3>
+            <!-- Recruiter Comments: Structured Evaluation Matrix (Option 3 - Enterprise Talent Marketplace Standard) -->
+            <div class="fs candidate-card recruiter-note-card sem-card" id="recruiter_evaluation_matrix_card">
+              <div class="fsh candidate-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
+                  <span><strong>Recruiter Evaluation Matrix</strong><small>Structured talent assessment • Auto-compiled into authoritative hiring context</small></span>
+                </div>
+                <div class="sem-header-actions d-flex align-items-center gap-2 flex-wrap">
+                  {{-- Live Sync Action Button --}}
+                  <button type="button" class="btn btn-sm btn-light-primary sem-sync-btn py-1 px-3 fs-8" id="sem_sync_btn" title="Sync live details from Candidate Information, Skills, Notice Period & Salary in Browser RAM">
+                    <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
+                  </button>
+
+                  {{-- View Switcher Pills --}}
+                  <div class="sem-view-toggle btn-group btn-group-sm" role="group" aria-label="Matrix View Mode">
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fs-8 is-active" id="sem_btn_view_matrix" data-view="matrix">
+                      <i class="fa-solid fa-table-cells-large me-1"></i> Matrix Form
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fs-8" id="sem_btn_view_compiled" data-view="compiled">
+                      <i class="fa-regular fa-file-lines me-1"></i> Compiled Note
+                    </button>
+                  </div>
+
+                  {{-- Auto-Draft Cloud Status Pill --}}
+                  <span class="sem-draft-badge" id="sem_draft_badge" title="Changes auto-saved in local browser memory">
+                    <i class="fa-solid fa-shield-halved me-1 text-success"></i> <span id="sem_draft_label">Draft Saved</span>
+                  </span>
+                </div>
               </div>
-              <div class="fsc">
+
+              <div class="fsc candidate-card-body sem-card-body">
+                {{-- Restored Draft Banner (hidden by default) --}}
+                <div class="sem-restore-banner alert alert-dismissible bg-light-primary border border-primary border-dashed d-flex align-items-center justify-content-between p-2 mb-3" id="sem_restore_banner" style="display: none;">
+                  <div class="d-flex align-items-center fs-8 text-primary">
+                    <i class="fa-solid fa-clock-rotate-left me-2 fs-7"></i>
+                    <span>Restored an unsaved evaluation matrix draft from local browser memory.</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-xs btn-primary py-0 px-2 fs-9" id="sem_btn_keep_draft">Keep Draft</button>
+                    <button type="button" class="btn btn-xs btn-light-danger py-0 px-2 fs-9" id="sem_btn_discard_draft">Discard</button>
+                  </div>
+                </div>
+
+                {{-- Optional Template Selector (If templates exist in DB) --}}
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
-                <div class="fg fv-row" style="grid-column: 1 / -1;">
-                  <label>Select Template <span style="color:#7e8299;font-weight:400;">(Optional — loads content into the note below)</span></label>
-                  <select id="recruiter_note_template_select" style="width:100%;padding:8px 12px;border:1px solid #e4e6ef;border-radius:6px;font-family:'Poppins',sans-serif;font-size:13px;color:#3f4254;background:#fff;cursor:pointer;">
-                    <option value="">Select Note Template...</option>
+                <div class="sem-template-bar d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded border border-gray-200">
+                  <span class="fs-8 fw-semibold text-gray-700 text-nowrap"><i class="fa-regular fa-bookmark me-1 text-primary"></i> Pre-set Template:</span>
+                  <select id="recruiter_note_template_select" class="form-select form-select-sm form-select-solid fs-8 py-1">
+                    <option value="">Select an evaluation template...</option>
                     @foreach($recruiterNoteTemplates as $tpl)
-                      <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                    <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
                     @endforeach
                   </select>
+                  <button type="button" class="btn btn-sm btn-light-info py-1 px-2 fs-8 text-nowrap" id="sem_apply_template_btn" title="Apply template content to evaluation notes">Apply</button>
                 </div>
+                @else
+                <input type="hidden" id="recruiter_note_template_select" value="" />
                 @endif
-                <div class="fg fv-row" style="grid-column: 1 / -1;">
-                  <label>Internal Note (Optional)</label>
-                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
+
+                {{-- ══════════════════════════════════════════════════════════════
+                     VIEW 1: STRUCTURED EVALUATION MATRIX (Default Active)
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="sem-matrix-view" id="sem_matrix_view">
+                  
+                  {{-- ROW 1: Overall Verdict & Highlights --}}
+                  <div class="sem-section sem-section--verdict mb-3">
+                    <div class="sem-section-header d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-award text-warning me-1"></i> Overall Recruiter Verdict <span class="rq text-danger">*</span>
+                      </label>
+                      <span class="fs-8 text-muted">Select recommendation outcome</span>
+                    </div>
+                    <div class="sem-verdict-chips d-flex align-items-center flex-wrap gap-2 mb-2" id="sem_verdict_group">
+                      <button type="button" class="sem-chip-btn is-active" data-verdict="Strong Fit (Priority Submission)">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> Strong Fit (Priority Submission)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Qualified Match (Standard)">
+                        <i class="fa-solid fa-check text-primary me-1"></i> Qualified Match (Standard)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Potential Fit (Needs Review)">
+                        <i class="fa-solid fa-circle-question text-warning me-1"></i> Potential Fit (Needs Review)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Backup / Talent Pool">
+                        <i class="fa-solid fa-user-clock text-info me-1"></i> Backup / Talent Pool
+                      </button>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Executive Summary / Candidate Hook</label>
+                      <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_summary" placeholder="e.g. Proven backend specialist with strong microservices architecture and clean production delivery..." />
+                    </div>
+                  </div>
+
+                  {{-- ROW 2: Core Competencies & Role Alignment --}}
+                  <div class="sem-section sem-section--competencies mb-3 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i> Core Competencies & Role Fit
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-primary bg-light-primary px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Target Role / Designation</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_role" placeholder="e.g. Senior Laravel Engineer" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Key Technical Strengths</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_skills" placeholder="e.g. PHP, Laravel, PostgreSQL, Docker" />
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Project & Technical Accomplishments</label>
+                      <textarea class="form-control form-control-sm form-control-solid sem-textarea fs-8" id="sem_strengths_note" rows="2" placeholder="Detail hands-on project accomplishments, system scale handled, and engineering problem-solving..."></textarea>
+                    </div>
+                  </div>
+
+                  {{-- ROW 3: Availability, Notice & Compensation Logistics --}}
+                  <div class="sem-section sem-section--logistics mb-3 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-regular fa-calendar-check text-success me-1"></i> Availability, Notice & Compensation
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-success bg-light-success px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Joining Readiness / Notice</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_notice" placeholder="e.g. Immediate Joiner / 0 Days" />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Salary Alignment</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_salary" placeholder="e.g. Expected: Within requisition budget" />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Preferred Work Mode</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_work_mode" placeholder="e.g. Work From Office (WFO) / Hybrid" />
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Logistics & Interview Availability Remarks</label>
+                      <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_logistics_note" placeholder="e.g. Last working date confirmed; flexible on shift timings; ready for client video rounds." />
+                    </div>
+                  </div>
+
+                  {{-- ROW 4: Work Authorization & Communication --}}
+                  <div class="sem-section sem-section--auth mb-2 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-passport text-info me-1"></i> Work Authorization & Soft Skills
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-info bg-light-info px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Work Authorization / Visa Status</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_work_auth" placeholder="e.g. US Citizen (USC) - Verified" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Communication Assessment</label>
+                        <div class="sem-comm-chips d-flex align-items-center flex-wrap gap-1" id="sem_comm_group">
+                          <button type="button" class="sem-comm-btn is-active" data-comm="Exceptional">Exceptional</button>
+                          <button type="button" class="sem-comm-btn" data-comm="Strong Professional">Strong Professional</button>
+                          <button type="button" class="sem-comm-btn" data-comm="Clear & Functional">Clear & Functional</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Additional Internal Observations</label>
+                      <textarea class="form-control form-control-sm form-control-solid sem-textarea fs-8" id="sem_additional_note" rows="2" placeholder="Cultural fit, motivation for job change, or specific placement notes..."></textarea>
+                    </div>
+                  </div>
+
                 </div>
+
+                {{-- ══════════════════════════════════════════════════════════════
+                     VIEW 2: COMPILED NOTE PREVIEW / FREE-TEXT EDIT (Hidden initially)
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="sem-compiled-view" id="sem_compiled_view" style="display: none;">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="fs-7 fw-bold text-gray-800 m-0">
+                      <i class="fa-regular fa-file-lines text-primary me-1"></i> Compiled Authoritative Recruiter Note
+                    </label>
+                    <span class="fs-8 text-muted"><i class="fa-solid fa-lock me-1"></i> Saved to database on form submission</span>
+                  </div>
+                  <textarea id="sem_compiled_display" class="form-control form-control-solid sem-compiled-textarea fs-8" rows="9" placeholder="The structured matrix compiles your evaluation here in real-time..."></textarea>
+                  <div class="d-flex align-items-center justify-content-between mt-2">
+                    <small class="text-muted fs-8"><i class="fa-solid fa-circle-info me-1"></i> Editing here directly sets the final submission note.</small>
+                    <button type="button" class="btn btn-xs btn-light-primary py-1 px-2 fs-8" id="sem_recompile_btn"><i class="fa-solid fa-rotate me-1"></i> Re-compile from Matrix Form</button>
+                  </div>
+                </div>
+
+                {{-- Authoritative Hidden Form Value (Persisted to MySQL / API) --}}
+                <textarea id="recruiter_note" name="recruiter_note" style="display: none !important;">{{ @$application->recruiter_note }}</textarea>
+
+                {{-- Footer Info --}}
+                <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top border-gray-200">
+                  <div class="recruiter-private-note d-flex align-items-center fs-8 text-muted">
+                    <i class="fa-solid fa-lock text-warning me-1" aria-hidden="true"></i>
+                    <span>Internal only • Strictly not visible to candidate</span>
+                  </div>
+                  <div class="sem-counter fs-8 fw-semibold text-gray-600" id="sem_word_counter">
+                    <span id="sem_word_count">0</span> words • <span id="sem_char_count">0</span> characters
+                  </div>
+                </div>
+
               </div>
             </div>
           </form>
@@ -3508,7 +4364,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 		}
 
 		function candidateSkillKey(value) {
-			return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+			return String(value || '').trim().replace(/[\.\-\_\s\/]/g, '').toLocaleLowerCase();
 		}
 
 		function candidateSkillName(skill) {
@@ -3578,6 +4434,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 		var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
 		var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
 		var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
+		var _skillsCategoryMap = (_skillsTaxonomy && _skillsTaxonomy.skill_category_map) || {};
 		var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
 
 		function resolveSkillAlias(str) {
@@ -3599,6 +4456,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 						_skillsTaxonomy = parsed;
 						_skillsAliases = parsed.aliases || {};
 						_skillsRelations = parsed.relations || {};
+						_skillsCategoryMap = parsed.skill_category_map || {};
 						_skillsList = parsed.skills;
 						window._jeroSkillsTaxonomy = parsed;
 						return;
@@ -3614,6 +4472,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 							_skillsTaxonomy = data;
 							_skillsAliases = data.aliases || {};
 							_skillsRelations = data.relations || {};
+							_skillsCategoryMap = data.skill_category_map || {};
 							_skillsList = data.skills;
 							window._jeroSkillsTaxonomy = data;
 							try {
@@ -3627,59 +4486,123 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 		loadLocalSkillsTaxonomy();
 
 		function searchSkillsLocal(query) {
-			var normalizedQuery = candidateSkillKey(query);
-			if (!normalizedQuery) return [];
+			var rawTrimmed = String(query || '').trim();
+			var normalizedQuery = candidateSkillKey(rawTrimmed);
 
 			var selected = candidateSelectedSkills();
 			var isAlreadySelected = function (name) {
-				var n = candidateSkillKey(name);
-				return selected.some(function (s) { return candidateSkillKey(s.name) === n; });
+				var n = candidateSkillKey(resolveSkillAlias(name));
+				return selected.some(function (s) { return candidateSkillKey(resolveSkillAlias(s.name)) === n; });
 			};
 
 			var results = [];
 			var seen = new Set();
 
-			// 1. Direct Alias Match
-			if (_skillsAliases && _skillsAliases[normalizedQuery]) {
-				var canonical = _skillsAliases[normalizedQuery];
-				if (!isAlreadySelected(canonical)) {
-					results.push({ name: canonical, type: 'alias' });
-					seen.add(candidateSkillKey(canonical));
+			if (!normalizedQuery) {
+				// 0-Keystroke Combobox State: Show Unselected Job Requirements + Synergy Recommendations + Top Essentials
+				candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
+					var skillNorm = candidateSkillKey(resolveSkillAlias(skill.name));
+					if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
+						results.push({
+							id: skill.id,
+							name: skill.name,
+							type: 'required',
+							category: (_skillsCategoryMap && _skillsCategoryMap[skill.name]) || ''
+						});
+						seen.add(skillNorm);
+					}
+				});
+
+				selected.forEach(function (sel) {
+					var canonName = resolveSkillAlias(sel.name);
+					var rels = (_skillsRelations && _skillsRelations[canonName]) || [];
+					rels.forEach(function (rel) {
+						var relNorm = candidateSkillKey(resolveSkillAlias(rel));
+						if (!seen.has(relNorm) && !isAlreadySelected(rel) && results.length < 10) {
+							results.push({
+								name: rel,
+								type: 'suggested',
+								category: (_skillsCategoryMap && _skillsCategoryMap[rel]) || ''
+							});
+							seen.add(relNorm);
+						}
+					});
+				});
+
+				for (var k = 0; k < _skillsList.length && results.length < 10; k++) {
+					var topSkill = _skillsList[k];
+					var topNorm = candidateSkillKey(resolveSkillAlias(topSkill));
+					if (!seen.has(topNorm) && !isAlreadySelected(topSkill)) {
+						results.push({
+							name: topSkill,
+							type: 'global',
+							category: (_skillsCategoryMap && _skillsCategoryMap[topSkill]) || ''
+						});
+						seen.add(topNorm);
+					}
 				}
+
+				return results.slice(0, 10);
 			}
 
-			// 2. Job Required Skills matching query
+			// 1. Direct Alias Match (e.g. k8s -> Kubernetes, js -> JavaScript)
+			var resolvedAlias = _skillsAliases && _skillsAliases[rawTrimmed.toLowerCase()];
+			if (resolvedAlias && !isAlreadySelected(resolvedAlias)) {
+				var aliasNorm = candidateSkillKey(resolvedAlias);
+				results.push({
+					name: resolvedAlias,
+					type: 'alias',
+					category: (_skillsCategoryMap && _skillsCategoryMap[resolvedAlias]) || ''
+				});
+				seen.add(aliasNorm);
+			}
+
+			// 2. Job Required Skills matching query (Rank #1 Priority)
 			candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
 				var skillNorm = candidateSkillKey(skill.name);
 				if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
 					if (skillNorm.indexOf(normalizedQuery) !== -1) {
-						results.push({ id: skill.id, name: skill.name, type: 'required' });
+						results.push({
+							id: skill.id,
+							name: skill.name,
+							type: 'required',
+							category: (_skillsCategoryMap && _skillsCategoryMap[skill.name]) || ''
+						});
 						seen.add(skillNorm);
 					}
 				}
 			});
 
-			// 3. Co-occurrence synergy skills based on selected stack
+			// 3. Co-occurrence synergy skills based on currently selected stack
 			selected.forEach(function (sel) {
-				var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+				var canonName = resolveSkillAlias(sel.name);
+				var rels = (_skillsRelations && _skillsRelations[canonName]) || [];
 				rels.forEach(function (rel) {
 					var relNorm = candidateSkillKey(rel);
 					if (!seen.has(relNorm) && !isAlreadySelected(rel)) {
 						if (relNorm.indexOf(normalizedQuery) !== -1) {
-							results.push({ name: rel, type: 'suggested' });
+							results.push({
+								name: rel,
+								type: 'suggested',
+								category: (_skillsCategoryMap && _skillsCategoryMap[rel]) || ''
+							});
 							seen.add(relNorm);
 						}
 					}
 				});
 			});
 
-			// 4. Prefix Matches from canonical dictionary
+			// 4. Prefix Matches from canonical dictionary (Instant in-memory lookup)
 			for (var i = 0; i < _skillsList.length && results.length < 15; i++) {
 				var item = _skillsList[i];
 				var itemNorm = candidateSkillKey(item);
 				if (!seen.has(itemNorm) && !isAlreadySelected(item)) {
 					if (itemNorm.startsWith(normalizedQuery)) {
-						results.push({ name: item, type: 'global' });
+						results.push({
+							name: item,
+							type: 'global',
+							category: (_skillsCategoryMap && _skillsCategoryMap[item]) || ''
+						});
 						seen.add(itemNorm);
 					}
 				}
@@ -3692,7 +4615,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 					var itemNorm2 = candidateSkillKey(item2);
 					if (!seen.has(itemNorm2) && !isAlreadySelected(item2)) {
 						if (itemNorm2.indexOf(normalizedQuery) !== -1) {
-							results.push({ name: item2, type: 'global' });
+							results.push({
+								name: item2,
+								type: 'global',
+								category: (_skillsCategoryMap && _skillsCategoryMap[item2]) || ''
+							});
 							seen.add(itemNorm2);
 						}
 					}
@@ -3747,6 +4674,18 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 					badge.className = 'candidate-primary-skill-suggestion-badge is-suggested';
 					badge.textContent = 'Suggested';
 					option.appendChild(badge);
+				} else if (item.type === 'alias') {
+					var badge = document.createElement('span');
+					badge.className = 'candidate-primary-skill-suggestion-badge is-alias';
+					badge.textContent = 'Alias';
+					option.appendChild(badge);
+				}
+
+				if (item.category) {
+					var catBadge = document.createElement('span');
+					catBadge.className = 'candidate-primary-skill-suggestion-badge is-category';
+					catBadge.textContent = item.category;
+					option.appendChild(catBadge);
 				}
 
 				option.addEventListener('mousedown', function (event) {
@@ -3975,22 +4914,23 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 
 			candidatePrimarySkillQuickInput.addEventListener('focus', function () {
 				var query = candidatePrimarySkillQuickInput.value.trim();
-				if (query.length >= 1) {
+				renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
+			});
+
+			candidatePrimarySkillQuickInput.addEventListener('click', function () {
+				if (candidatePrimarySkillSuggestions && candidatePrimarySkillSuggestions.hidden) {
+					var query = candidatePrimarySkillQuickInput.value.trim();
 					renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
 				}
 			});
 
 			candidatePrimarySkillQuickInput.addEventListener('blur', function () {
-				window.setTimeout(closeCandidateSkillSuggestions, 140);
+				window.setTimeout(closeCandidateSkillSuggestions, 160);
 			});
 
 			candidatePrimarySkillQuickInput.addEventListener('input', function () {
 				var query = candidatePrimarySkillQuickInput.value.trim();
-				if (query.length >= 1) {
-					renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
-				} else {
-					closeCandidateSkillSuggestions();
-				}
+				renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
 			});
 		}
 

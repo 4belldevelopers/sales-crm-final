@@ -5257,7 +5257,7 @@ KTUtil.onDOMContentLoaded(function () {
       }
 
       function candidateSkillKey(value) {
-          return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+          return String(value || '').trim().replace(/[\.\-\_\s\/]/g, '').toLocaleLowerCase();
       }
 
       function candidateSkillName(skill) {
@@ -5334,6 +5334,7 @@ KTUtil.onDOMContentLoaded(function () {
       var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
       var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
       var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
+      var _skillsCategoryMap = (_skillsTaxonomy && _skillsTaxonomy.skill_category_map) || {};
       var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
 
       function resolveSkillAlias(str) {
@@ -5357,6 +5358,7 @@ KTUtil.onDOMContentLoaded(function () {
                       _skillsTaxonomy = parsed;
                       _skillsAliases = parsed.aliases || {};
                       _skillsRelations = parsed.relations || {};
+                      _skillsCategoryMap = parsed.skill_category_map || {};
                       _skillsList = parsed.skills;
                       window._jeroSkillsTaxonomy = parsed;
                       return;
@@ -5372,6 +5374,7 @@ KTUtil.onDOMContentLoaded(function () {
                           _skillsTaxonomy = data;
                           _skillsAliases = data.aliases || {};
                           _skillsRelations = data.relations || {};
+                          _skillsCategoryMap = data.skill_category_map || {};
                           _skillsList = data.skills;
                           window._jeroSkillsTaxonomy = data;
                           try {
@@ -5385,27 +5388,75 @@ KTUtil.onDOMContentLoaded(function () {
       loadLocalSkillsTaxonomy();
 
       function searchSkillsLocal(query) {
-          var normalizedQuery = candidateSkillKey(query);
-          if (!normalizedQuery) {
-              return [];
-          }
+          var rawTrimmed = String(query || '').trim();
+          var normalizedQuery = candidateSkillKey(rawTrimmed);
 
           var selected = candidateSelectedSkills();
           var isAlreadySelected = function (name) {
-              var n = candidateSkillKey(name);
-              return selected.some(function (s) { return candidateSkillKey(s.name) === n; });
+              var n = candidateSkillKey(resolveSkillAlias(name));
+              return selected.some(function (s) { return candidateSkillKey(resolveSkillAlias(s.name)) === n; });
           };
 
           var results = [];
           var seen = new Set();
 
-          // 1. Direct Alias Match (e.g. k8s -> Kubernetes, js -> JavaScript)
-          if (_skillsAliases && _skillsAliases[normalizedQuery]) {
-              var canonical = _skillsAliases[normalizedQuery];
-              if (!isAlreadySelected(canonical)) {
-                  results.push({ name: canonical, type: 'alias' });
-                  seen.add(candidateSkillKey(canonical));
+          if (!normalizedQuery) {
+              // 0-Keystroke Combobox State: Show Unselected Job Requirements + Synergy Recommendations + Top Essentials
+              candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
+                  var skillNorm = candidateSkillKey(resolveSkillAlias(skill.name));
+                  if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
+                      results.push({
+                          id: skill.id,
+                          name: skill.name,
+                          type: 'required',
+                          category: (_skillsCategoryMap && _skillsCategoryMap[skill.name]) || ''
+                      });
+                      seen.add(skillNorm);
+                  }
+              });
+
+              selected.forEach(function (sel) {
+                  var canonName = resolveSkillAlias(sel.name);
+                  var rels = (_skillsRelations && _skillsRelations[canonName]) || [];
+                  rels.forEach(function (rel) {
+                      var relNorm = candidateSkillKey(resolveSkillAlias(rel));
+                      if (!seen.has(relNorm) && !isAlreadySelected(rel) && results.length < 10) {
+                          results.push({
+                              name: rel,
+                              type: 'suggested',
+                              category: (_skillsCategoryMap && _skillsCategoryMap[rel]) || ''
+                          });
+                          seen.add(relNorm);
+                      }
+                  });
+              });
+
+              for (var k = 0; k < _skillsList.length && results.length < 10; k++) {
+                  var topSkill = _skillsList[k];
+                  var topNorm = candidateSkillKey(resolveSkillAlias(topSkill));
+                  if (!seen.has(topNorm) && !isAlreadySelected(topSkill)) {
+                      results.push({
+                          name: topSkill,
+                          type: 'global',
+                          category: (_skillsCategoryMap && _skillsCategoryMap[topSkill]) || ''
+                      });
+                      seen.add(topNorm);
+                  }
               }
+
+              return results.slice(0, 10);
+          }
+
+          // 1. Direct Alias Match (e.g. k8s -> Kubernetes, js -> JavaScript)
+          var resolvedAlias = _skillsAliases && _skillsAliases[rawTrimmed.toLowerCase()];
+          if (resolvedAlias && !isAlreadySelected(resolvedAlias)) {
+              var aliasNorm = candidateSkillKey(resolvedAlias);
+              results.push({
+                  name: resolvedAlias,
+                  type: 'alias',
+                  category: (_skillsCategoryMap && _skillsCategoryMap[resolvedAlias]) || ''
+              });
+              seen.add(aliasNorm);
           }
 
           // 2. Job Required Skills matching query (Rank #1 Priority)
@@ -5413,7 +5464,12 @@ KTUtil.onDOMContentLoaded(function () {
               var skillNorm = candidateSkillKey(skill.name);
               if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
                   if (skillNorm.indexOf(normalizedQuery) !== -1) {
-                      results.push({ id: skill.id, name: skill.name, type: 'required' });
+                      results.push({
+                          id: skill.id,
+                          name: skill.name,
+                          type: 'required',
+                          category: (_skillsCategoryMap && _skillsCategoryMap[skill.name]) || ''
+                      });
                       seen.add(skillNorm);
                   }
               }
@@ -5421,12 +5477,17 @@ KTUtil.onDOMContentLoaded(function () {
 
           // 3. Co-occurrence synergy skills based on currently selected stack
           selected.forEach(function (sel) {
-              var rels = (_skillsRelations && _skillsRelations[sel.name]) || [];
+              var canonName = resolveSkillAlias(sel.name);
+              var rels = (_skillsRelations && _skillsRelations[canonName]) || [];
               rels.forEach(function (rel) {
                   var relNorm = candidateSkillKey(rel);
                   if (!seen.has(relNorm) && !isAlreadySelected(rel)) {
                       if (relNorm.indexOf(normalizedQuery) !== -1) {
-                          results.push({ name: rel, type: 'suggested' });
+                          results.push({
+                              name: rel,
+                              type: 'suggested',
+                              category: (_skillsCategoryMap && _skillsCategoryMap[rel]) || ''
+                          });
                           seen.add(relNorm);
                       }
                   }
@@ -5439,7 +5500,11 @@ KTUtil.onDOMContentLoaded(function () {
               var itemNorm = candidateSkillKey(item);
               if (!seen.has(itemNorm) && !isAlreadySelected(item)) {
                   if (itemNorm.startsWith(normalizedQuery)) {
-                      results.push({ name: item, type: 'global' });
+                      results.push({
+                          name: item,
+                          type: 'global',
+                          category: (_skillsCategoryMap && _skillsCategoryMap[item]) || ''
+                      });
                       seen.add(itemNorm);
                   }
               }
@@ -5452,7 +5517,11 @@ KTUtil.onDOMContentLoaded(function () {
                   var itemNorm2 = candidateSkillKey(item2);
                   if (!seen.has(itemNorm2) && !isAlreadySelected(item2)) {
                       if (itemNorm2.indexOf(normalizedQuery) !== -1) {
-                          results.push({ name: item2, type: 'global' });
+                          results.push({
+                              name: item2,
+                              type: 'global',
+                              category: (_skillsCategoryMap && _skillsCategoryMap[item2]) || ''
+                          });
                           seen.add(itemNorm2);
                       }
                   }
@@ -5509,6 +5578,18 @@ KTUtil.onDOMContentLoaded(function () {
                   badge.className = 'candidate-primary-skill-suggestion-badge is-suggested';
                   badge.textContent = 'Suggested';
                   option.appendChild(badge);
+              } else if (item.type === 'alias') {
+                  var badge = document.createElement('span');
+                  badge.className = 'candidate-primary-skill-suggestion-badge is-alias';
+                  badge.textContent = 'Alias';
+                  option.appendChild(badge);
+              }
+
+              if (item.category) {
+                  var catBadge = document.createElement('span');
+                  catBadge.className = 'candidate-primary-skill-suggestion-badge is-category';
+                  catBadge.textContent = item.category;
+                  option.appendChild(catBadge);
               }
 
               option.addEventListener('mousedown', function (event) {
@@ -5743,23 +5824,24 @@ KTUtil.onDOMContentLoaded(function () {
 
           candidatePrimarySkillQuickInput.addEventListener('focus', function () {
               var query = candidatePrimarySkillQuickInput.value.trim();
-              if (query.length >= 1) {
+              renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
+          });
+
+          candidatePrimarySkillQuickInput.addEventListener('click', function () {
+              if (candidatePrimarySkillSuggestions && candidatePrimarySkillSuggestions.hidden) {
+                  var query = candidatePrimarySkillQuickInput.value.trim();
                   renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
               }
           });
 
           candidatePrimarySkillQuickInput.addEventListener('blur', function () {
-              window.setTimeout(closeCandidateSkillSuggestions, 140);
+              window.setTimeout(closeCandidateSkillSuggestions, 160);
           });
 
           // 100% In-Browser Search Execution — ZERO network requests
           candidatePrimarySkillQuickInput.addEventListener('input', function () {
               var query = candidatePrimarySkillQuickInput.value.trim();
-              if (query.length >= 1) {
-                  renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
-              } else {
-                  closeCandidateSkillSuggestions();
-              }
+              renderCandidateSkillSuggestions(searchSkillsLocal(query), query);
           });
       }
 
