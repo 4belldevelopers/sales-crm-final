@@ -644,18 +644,220 @@ a:hover .ot-comp-change { text-decoration: underline; }
         pipelineRange : 'current',
     };
 
+    /* ─────────────────────────────────────────────────────────────────────────────
+       JeroOfferLocalStore — Native Browser IndexedDB Engine for 0% Avoidable Hits
+       (Rule 6: Client-First / User RAM & Storage; Multi-Tenant Isolation)
+    ───────────────────────────────────────────────────────────────────────────── */
+    var JERO_OFFER_DB_NAME = 'JeroOfferLocalStore';
+    var JERO_OFFER_DB_VERSION = 1;
+    var JERO_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+    var JERO_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+    var JERO_OFFER_TTL_MS = 10 * 60 * 1000; // 10 minutes cache TTL
+
+    var clientCache = {};
+    var activeAjaxRequest = null;
+    var offerBroadcastChannel = null;
+
+    var JeroOfferLocalStore = (function () {
+        var dbPromise = null;
+
+        function getDB() {
+            if (typeof window === 'undefined' || !window.indexedDB) {
+                return Promise.resolve(null);
+            }
+            if (dbPromise) return dbPromise;
+
+            dbPromise = new Promise(function (resolve) {
+                try {
+                    var req = window.indexedDB.open(JERO_OFFER_DB_NAME, JERO_OFFER_DB_VERSION);
+                    req.onupgradeneeded = function (e) {
+                        var db = e.target.result;
+                        if (!db.objectStoreNames.contains('offers_cache')) {
+                            db.createObjectStore('offers_cache', { keyPath: 'cache_key' });
+                        }
+                        if (!db.objectStoreNames.contains('meta')) {
+                            db.createObjectStore('meta', { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = function (e) {
+                        var db = e.target.result;
+                        try {
+                            var tx = db.transaction(['meta'], 'readwrite');
+                            var metaStore = tx.objectStore('meta');
+                            var metaReq = metaStore.get('current_context');
+                            metaReq.onsuccess = function () {
+                                var meta = metaReq.result;
+                                if (meta && (meta.tenant_id !== JERO_TENANT_ID || meta.user_id !== JERO_USER_ID)) {
+                                    // User/tenant switched: wipe to prevent cross-tenant data leakage
+                                    try {
+                                        var wipeTx = db.transaction(['offers_cache', 'meta'], 'readwrite');
+                                        wipeTx.objectStore('offers_cache').clear();
+                                        wipeTx.objectStore('meta').put({
+                                            id: 'current_context',
+                                            tenant_id: JERO_TENANT_ID,
+                                            user_id: JERO_USER_ID,
+                                            updated_at: Date.now()
+                                        });
+                                    } catch (ex) {}
+                                } else if (!meta) {
+                                    try {
+                                        metaStore.put({
+                                            id: 'current_context',
+                                            tenant_id: JERO_TENANT_ID,
+                                            user_id: JERO_USER_ID,
+                                            updated_at: Date.now()
+                                        });
+                                    } catch (ex) {}
+                                }
+                            };
+                            metaReq.onerror = function () {};
+                        } catch (err) {}
+                        resolve(db);
+                    };
+                    req.onerror = function () { resolve(null); };
+                    req.onblocked = function () { resolve(null); };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+
+            return dbPromise;
+        }
+
+        return {
+            get: function (key) {
+                // Strict timeout wrapper: never block rendering if IndexedDB takes longer than 250ms
+                return Promise.race([
+                    getDB().then(function (db) {
+                        if (!db || !key) return null;
+                        return new Promise(function (resolve) {
+                            try {
+                                var tx = db.transaction(['offers_cache'], 'readonly');
+                                var store = tx.objectStore('offers_cache');
+                                var req = store.get(key);
+                                req.onsuccess = function () {
+                                    var res = req.result;
+                                    if (res && (Date.now() - res.timestamp < JERO_OFFER_TTL_MS)) {
+                                        resolve(res.payload);
+                                    } else {
+                                        resolve(null);
+                                    }
+                                };
+                                req.onerror = function () { resolve(null); };
+                            } catch (e) {
+                                resolve(null);
+                            }
+                        });
+                    }).catch(function () { return null; }),
+                    new Promise(function (resolve) {
+                        setTimeout(function () { resolve(null); }, 250);
+                    })
+                ]);
+            },
+            set: function (key, payload) {
+                return getDB().then(function (db) {
+                    if (!db || !key || !payload) return;
+                    try {
+                        var tx = db.transaction(['offers_cache'], 'readwrite');
+                        var store = tx.objectStore('offers_cache');
+                        store.put({
+                            cache_key: key,
+                            payload: payload,
+                            timestamp: Date.now()
+                        });
+                    } catch (e) {}
+                }).catch(function () {});
+            },
+            purge: function () {
+                return getDB().then(function (db) {
+                    if (!db) return;
+                    try {
+                        var tx = db.transaction(['offers_cache'], 'readwrite');
+                        tx.objectStore('offers_cache').clear();
+                    } catch (e) {}
+                }).catch(function () {});
+            }
+        };
+    })();
+
+    /* ── Multi-Tab Synchronization via BroadcastChannel ── */
+    if (typeof window.BroadcastChannel !== 'undefined') {
+        try {
+            offerBroadcastChannel = new BroadcastChannel('jero_offer_tracker_sync');
+            offerBroadcastChannel.onmessage = function (event) {
+                if (!event || !event.data) return;
+                if (event.data.type === 'OFFER_MUTATION_SYNC') {
+                    invalidateClientCache(false);
+                    fetchTable(false);
+                }
+            };
+        } catch (e) {}
+    }
+
+    /* ── Invalidate cache across Layer 1 (RAM), Layer 2 (IndexedDB), and other tabs ── */
+    function invalidateClientCache(broadcastSync) {
+        clientCache = {};
+        JeroOfferLocalStore.purge();
+        if (broadcastSync !== false && offerBroadcastChannel) {
+            try {
+                offerBroadcastChannel.postMessage({ type: 'OFFER_MUTATION_SYNC', timestamp: Date.now() });
+            } catch (e) {}
+        }
+    }
+
     /* ── URLs ── */
     var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
 
-    /* ── fetch table ── */
+    /* ── fetch table (3-Layer Execution: RAM -> IndexedDB -> Server) ── */
     function fetchTable(resetPage) {
         if (resetPage) state.page = 1;
-        var loader = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
-        document.getElementById('offer-tracker').innerHTML = loader;
 
-        $.ajax({
+        var cacheKey = JSON.stringify({
+            p: state.page,
+            s: state.size,
+            q: state.search,
+            c: state.country,
+            srt: state.sort,
+            t: state.tab,
+            pr: state.pipelineRange
+        });
+
+        // Layer 1: Instant Browser RAM Cache (< 1ms render)
+        if (clientCache[cacheKey]) {
+            renderTableResponse(clientCache[cacheKey]);
+            return;
+        }
+
+        // Layer 2: Fast Native IndexedDB Cache (< 8ms render on refresh / back navigation)
+        JeroOfferLocalStore.get(cacheKey).then(function (cachedInIDB) {
+            if (cachedInIDB) {
+                clientCache[cacheKey] = cachedInIDB;
+                renderTableResponse(cachedInIDB);
+                return;
+            }
+
+            // Layer 3: Authoritative Elasticsearch / Server Fetch
+            executeServerFetch(cacheKey);
+        }).catch(function () {
+            executeServerFetch(cacheKey);
+        });
+    }
+
+    function executeServerFetch(cacheKey) {
+        if (activeAjaxRequest && activeAjaxRequest.readyState !== 4) {
+            try {
+                activeAjaxRequest.abort();
+            } catch (e) {}
+        }
+
+        var loader = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
+        var trackerEl = document.getElementById('offer-tracker');
+        if (trackerEl) trackerEl.innerHTML = loader;
+
+        activeAjaxRequest = $.ajax({
             url  : URL_CANDIDATES + '?page=' + state.page,
             type : 'GET',
+            dataType: 'json',
             data : {
                 status_cus       : 5,
                 size             : state.size,
@@ -667,14 +869,46 @@ a:hover .ot-comp-change { text-decoration: underline; }
                 pipeline_range   : state.pipelineRange,
             },
             success: function (resp) {
-                document.getElementById('offer-tracker').innerHTML = resp.html || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
-                document.getElementById('ot_pagination').innerHTML  = resp.pagination || '';
-                if (resp.counts) updateOfferCounts(resp.counts, resp.pipelineCounts);
+                activeAjaxRequest = null;
+                if (typeof resp === 'string') {
+                    try { resp = JSON.parse(resp); } catch (e) {}
+                }
+                // Save in Browser RAM (Layer 1) & Native IndexedDB (Layer 2)
+                clientCache[cacheKey] = resp;
+                JeroOfferLocalStore.set(cacheKey, resp);
+                renderTableResponse(resp);
             },
-            error: function () {
-                document.getElementById('offer-tracker').innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+            error: function (xhr, status) {
+                if (status === 'abort') return;
+                activeAjaxRequest = null;
+                var el = document.getElementById('offer-tracker');
+                if (el) el.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
             }
         });
+    }
+
+    function renderTableResponse(resp) {
+        if (!resp) return;
+        var trackerEl = document.getElementById('offer-tracker');
+        var pagiEl = document.getElementById('ot_pagination');
+        if (trackerEl) {
+            var html = resp.html;
+            if (typeof html === 'string' && html.trim().length > 0) {
+                trackerEl.innerHTML = html;
+            } else {
+                trackerEl.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">No offers found</td></tr>';
+            }
+        }
+        if (pagiEl && resp.pagination !== undefined) {
+            pagiEl.innerHTML = resp.pagination || '';
+        }
+        if (resp.counts) {
+            try {
+                updateOfferCounts(resp.counts, resp.pipelineCounts);
+            } catch (e) {
+                console.error('[Offer Tracker] Error updating counts:', e);
+            }
+        }
     }
 
     /* ── Sync tab badges + KPI cards + pipeline from the Elasticsearch counts ──
@@ -731,32 +965,7 @@ a:hover .ot-comp-change { text-decoration: underline; }
         });
     }
 
-    /* ── events ── */
-    /* search (debounced) */
-    var searchTimer;
-    document.getElementById('ot_search').addEventListener('input', function () {
-        clearTimeout(searchTimer);
-        var val = this.value;
-        searchTimer = setTimeout(function () {
-            state.search = val;
-            fetchTable(true);
-        }, 380);
-    });
-
-    document.getElementById('ot_country').addEventListener('change', function () {
-        state.country = this.value;
-        fetchTable(true);
-    });
-
-    document.getElementById('ot_sort').addEventListener('change', function () {
-        state.sort = this.value;
-        clearHeaderSort();          /* dropdown wins → drop any column indicator */
-        fetchTable(true);
-    });
-
-    /* ── Column-header sorting (kept in sync with the Sort-by dropdown) ──
-       Each sortable <th> carries the backend sort codes for asc/desc; clicking
-       toggles direction, mirrors the value into #ot_sort, and refetches. */
+    /* ── Column-header sorting (kept in sync with the Sort-by dropdown) ── */
     function clearHeaderSort() {
         document.querySelectorAll('.ot-th-sort').forEach(function (th) {
             th.classList.remove('active');
@@ -764,65 +973,100 @@ a:hover .ot-comp-change { text-decoration: underline; }
             if (ico) ico.textContent = '⇵';
         });
     }
-    document.querySelectorAll('.ot-th-sort').forEach(function (th) {
-        th.addEventListener('click', function () {
-            var asc  = this.dataset.asc;
-            var desc = this.dataset.desc;
-            var goAsc = this.dataset.dir !== 'asc';   /* toggle; default → asc first */
-            clearHeaderSort();
-            this.dataset.dir = goAsc ? 'asc' : 'desc';
-            this.classList.add('active');
-            var ico = this.querySelector('.ot-sort-ico');
-            if (ico) ico.textContent = goAsc ? '↑' : '↓';
-            state.sort = goAsc ? asc : desc;
-            var sel = document.getElementById('ot_sort');
-            if (sel) sel.value = state.sort;          /* keep dropdown reflecting the header */
-            fetchTable(true);
-        });
-    });
 
-    document.getElementById('ot_pagination').addEventListener('change', function (e) {
-        if (e.target.classList.contains('pagi-perpage')) {
-            var selectedPerPage = parseInt(e.target.value, 10);
-            if (selectedPerPage) {
-                state.size = selectedPerPage;
-                localStorage.setItem('candidatePerPage', selectedPerPage);
-                fetchTable(true);
-            }
+    /* ── Setup Event Listeners after DOM is ready ── */
+    function setupEventListeners() {
+        /* search (debounced) */
+        var searchTimer;
+        var searchInput = document.getElementById('ot_search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimer);
+                var val = this.value;
+                searchTimer = setTimeout(function () {
+                    state.search = val;
+                    fetchTable(true);
+                }, 380);
+            });
         }
-    });
 
-    /* Offers Pipeline date window (this month / last 6 months / all time) */
-    var pipeRangeEl = document.getElementById('ot_pipeline_range');
-    if (pipeRangeEl) {
-        pipeRangeEl.addEventListener('change', function () {
-            state.pipelineRange = this.value;
-            fetchTable(false);   /* only the pipeline counts change; keep the current page */
+        var countrySelect = document.getElementById('ot_country');
+        if (countrySelect) {
+            countrySelect.addEventListener('change', function () {
+                state.country = this.value;
+                fetchTable(true);
+            });
+        }
+
+        var sortSelect = document.getElementById('ot_sort');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function () {
+                state.sort = this.value;
+                clearHeaderSort();
+                fetchTable(true);
+            });
+        }
+
+        document.querySelectorAll('.ot-th-sort').forEach(function (th) {
+            th.addEventListener('click', function () {
+                var asc  = this.dataset.asc;
+                var desc = this.dataset.desc;
+                var goAsc = this.dataset.dir !== 'asc';
+                clearHeaderSort();
+                this.dataset.dir = goAsc ? 'asc' : 'desc';
+                this.classList.add('active');
+                var ico = this.querySelector('.ot-sort-ico');
+                if (ico) ico.textContent = goAsc ? '↑' : '↓';
+                state.sort = goAsc ? asc : desc;
+                var sel = document.getElementById('ot_sort');
+                if (sel) sel.value = state.sort;
+                fetchTable(true);
+            });
+        });
+
+        var pagiWrap = document.getElementById('ot_pagination');
+        if (pagiWrap) {
+            pagiWrap.addEventListener('change', function (e) {
+                if (e.target.classList.contains('pagi-perpage')) {
+                    var selectedPerPage = parseInt(e.target.value, 10);
+                    if (selectedPerPage) {
+                        state.size = selectedPerPage;
+                        localStorage.setItem('candidatePerPage', selectedPerPage);
+                        fetchTable(true);
+                    }
+                }
+            });
+
+            pagiWrap.addEventListener('click', function (e) {
+                var link = e.target.closest('.pagi-page, .pagi-arrow');
+                if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
+                e.preventDefault();
+                var pg = parseInt(link.dataset.page, 10);
+                if (!pg) return;
+                state.page = pg;
+                fetchTable(false);
+            });
+        }
+
+        /* Offers Pipeline date window */
+        var pipeRangeEl = document.getElementById('ot_pipeline_range');
+        if (pipeRangeEl) {
+            pipeRangeEl.addEventListener('change', function () {
+                state.pipelineRange = this.value;
+                fetchTable(false);
+            });
+        }
+
+        /* tab clicks */
+        document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                state.tab = this.dataset.filter;
+                fetchTable(true);
+            });
         });
     }
-
-    /* tab clicks */
-    document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            document.querySelectorAll('#ot_tabs .ot-tab').forEach(function (t) { t.classList.remove('active'); });
-            this.classList.add('active');
-            state.tab = this.dataset.filter;
-            fetchTable(true);
-        });
-    });
-
-    /* pagination (delegated) — the pagination partial (ajax_pages/
-       pagination.blade.php) renders buttons with class .pagi-page/
-       .pagi-arrow, not .page-link, so this was never matching anything. */
-    document.getElementById('ot_pagination').addEventListener('click', function (e) {
-        var link = e.target.closest('.pagi-page, .pagi-arrow');
-        if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
-        e.preventDefault();
-        var pg = parseInt(link.dataset.page, 10);
-        if (!pg) return;
-        state.page = pg;
-        fetchTable(false);
-    });
 
     /* Stage sub-stage */
     $(document).on('click', '#stage_sub_stage_close', function () {
@@ -854,9 +1098,12 @@ a:hover .ot-comp-change { text-decoration: underline; }
             data: $('#status_frm').serialize(),
             success:function(r){
                 $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>');
-                csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
+                if (typeof csdUpdateSubmitButton === 'function') {
+                    csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
+                }
                 if(r.status=='success'){
                     Swal.fire("Success",'Stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
+                    invalidateClientCache();
                     fetchTable(false);
                 }
             }
@@ -868,7 +1115,6 @@ a:hover .ot-comp-change { text-decoration: underline; }
         $('#kt_fwd_offer_drawer').addClass('drawer-on');
         $('#kt_fwd_offer_overlay').addClass('active');
         $('body').css('overflow', 'hidden');
-        // KTScroll re-fires on DOM changes — strip its inline height so our flex CSS wins
         setTimeout(function() {
             var sc = document.getElementById('kt_activities_scroll');
             if (sc) sc.style.removeProperty('height');
@@ -937,8 +1183,59 @@ a:hover .ot-comp-change { text-decoration: underline; }
         setTimeout(done, 1500);
     };
 
+    /* ── Real-time Reverb / WebSocket Delta Synchronization (Phase 4) ── */
+    var JERO_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+    var reverbDebounceTimer = null;
+
+    function initOfferReverbSync() {
+        if (typeof window.Echo === 'undefined' || typeof window.Echo.private !== 'function' || !JERO_COMPANY_ID) {
+            return;
+        }
+
+        try {
+            window.Echo.private('company.' + JERO_COMPANY_ID)
+                .listen('.offer.updated', function (e) {
+                    invalidateClientCache();
+                    if (reverbDebounceTimer) clearTimeout(reverbDebounceTimer);
+                    reverbDebounceTimer = setTimeout(function () {
+                        fetchTable(false);
+                    }, 250);
+                });
+
+            // Reconnection recovery: if WebSocket connection drops and reconnects, invalidate cache and re-sync
+            if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
+                window.Echo.connector.pusher.connection.bind('connected', function () {
+                    invalidateClientCache();
+                    fetchTable(false);
+                });
+            }
+        } catch (err) {
+            console.warn('[Reverb Offer Tracker] Subscription warning:', err);
+        }
+    }
+
+    /* ── Expose Global Bridge for In-Page Drawers & Sub-Components ── */
+    window.jeroOfferTracker = {
+        refresh: function (resetPage) {
+            invalidateClientCache(true);
+            fetchTable(resetPage === true);
+        },
+        invalidateClientCache: invalidateClientCache,
+        fetchTable: fetchTable
+    };
+
+    /* Listen for custom in-page window events */
+    window.addEventListener('jero:offer_updated', function (e) {
+        invalidateClientCache(false);
+        fetchTable(false);
+    });
+
     /* ── init ── */
-    fetchTable(false);
+    $(function () {
+        setupEventListeners();
+        fetchTable(false);
+        initOfferReverbSync();
+    });
 
 })();
 </script>

@@ -5217,8 +5217,23 @@
                                     $('.section_change_value').removeClass('d-none');
                                     var editorterms1 = CKEDITOR.instances.editorterms1.setData(response.terms);
                                     nextStep(event, 1);
-                                    var page = $('#pagination .active_disabled').data('page');
-                                    fetchCandidates(page);
+
+                                    // Realtime/delta synchronization: instantly refresh Offer Tracker or CV Tracker list
+                                    if (window.jeroOfferTracker && typeof window.jeroOfferTracker.refresh === 'function') {
+                                        window.jeroOfferTracker.refresh(false);
+                                    } else if (typeof fetchCandidates === 'function') {
+                                        var page = $('#pagination .active_disabled').data('page');
+                                        fetchCandidates(page);
+                                    }
+                                    try {
+                                        window.dispatchEvent(new CustomEvent('jero:offer_updated', { detail: { offerId: "{{ $offer_id }}" } }));
+                                        if (typeof BroadcastChannel !== 'undefined') {
+                                            var ch = new BroadcastChannel('jero_offer_tracker_channel');
+                                            ch.postMessage({ type: 'OFFER_MUTATION_SYNC', timestamp: Date.now() });
+                                            ch.close();
+                                        }
+                                    } catch (e) {}
+
                                     /* btn resets automatically as next step renders */
                                     if ($submitBtn) { $submitBtn.disabled = false; $submitBtn.value = $submitBtn._origVal || $submitBtn.value; }
                                     return false;
@@ -5890,6 +5905,19 @@
                             $('.co-send-fact-v.co-send-fact-sentby').html(
                                 '<span class="co-send-sentby-name">{{ e($so_from_name) }}</span><span class="co-send-sentby-when">Sent just now</span>'
                             );
+
+                            // Realtime/delta synchronization: instantly refresh Offer Tracker list
+                            if (window.jeroOfferTracker && typeof window.jeroOfferTracker.refresh === 'function') {
+                                window.jeroOfferTracker.refresh(false);
+                            }
+                            try {
+                                window.dispatchEvent(new CustomEvent('jero:offer_updated', { detail: { offerId: "{{ $offer_id }}" } }));
+                                if (typeof BroadcastChannel !== 'undefined') {
+                                    var ch = new BroadcastChannel('jero_offer_tracker_channel');
+                                    ch.postMessage({ type: 'OFFER_MUTATION_SYNC', timestamp: Date.now() });
+                                    ch.close();
+                                }
+                            } catch (e) {}
                         },
                         error: function () {
                             $btn.prop('disabled', false);

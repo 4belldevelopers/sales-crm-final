@@ -6929,7 +6929,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         ],
                         'doc_as_upsert' => false, // Changed to false since we verified existence
                     ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
+                    'refresh' => true, // Immediate consistency so Offer Tracker & CV Tracker reflect new values instantly
                 ];
                 // dd($updateParams);
 
@@ -7037,6 +7037,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
+            }
+
+            // Real-time delta broadcast over WebSocket / Laravel Reverb to synchronize all active browser sessions in company
+            try {
+                event(new \App\Events\ApplicationOfferUpdated(
+                    (int) auth()->user()->company_id,
+                    (int) $offer_id,
+                    (int) (@$Offertimelime->application_id ?? 0),
+                    'saved',
+                    [
+                        'amount' => $yearly_final_gross,
+                        'currency' => (int) $option_currency_val,
+                        'joined_date' => $joined_date,
+                        'designation' => @$request->current_designation,
+                    ]
+                ));
+            } catch (\Throwable $evtEx) {
+                \Log::warning('[ApplicationOfferUpdated] Broadcast error: ' . $evtEx->getMessage());
             }
 
             return response()->json(['status' => 'success', 'terms' => $this->offer_terms, 'message' => 'Offer Created successfully.']);
