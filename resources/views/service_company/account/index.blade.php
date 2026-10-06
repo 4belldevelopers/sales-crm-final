@@ -1686,9 +1686,9 @@ input[type="radio"]:checked {
         // Derived defaults — kept here at the include site so the partial stays pure
         // (the previous inline drawer body computed these inline; the agency_commercials_drawer
         // partial expects them as already-resolved values).
-        $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
-        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
-        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
+        $defaultTenantCurrencyKey = \App\Helper\GeneralMethod::defaultCurrencyKey();
+        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? $defaultTenantCurrencyKey);
+        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? $defaultTenantCurrencyKey);
         $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
         $aatReplacementPeriodDays = (int) (@$aatTerms->fulltime_replacement_period_days ?? 90);
         $aatFulltimePaymentTermsDays = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
@@ -3095,13 +3095,16 @@ input[type="radio"]:checked {
                   <option value="" >Select a currency...</option>
                   @if(!empty($currencyArr))
                     @foreach($currencyArr as $cval)
-                      @php $sel	=	''; 
-                      if($account->currency == $cval->id ){
-                          $sel	=	'selected="selected"';
-                      }elseif($cval->id==53){
-                        $sel	=	'selected="selected"';
-                      } 
-                     @endphp
+                      @php
+                        $sel = '';
+                        if (!empty($account->currency)) {
+                            if ($account->currency == $cval->id || (is_string($account->currency) && strtoupper($account->currency) === strtoupper($cval->code))) {
+                                $sel = 'selected="selected"';
+                            }
+                        } elseif ($cval->id == 53) {
+                            $sel = 'selected="selected"';
+                        }
+                      @endphp
                       {!! '<option  value="'.$cval->id.'" '.$sel.'>'.$cval->code.' - '.$cval->country.'</option>' !!}
                     @endforeach
                   @endif
@@ -5126,6 +5129,9 @@ $(document).ready(function(){
 
                                           if(data.status == 'success'){
                                               Swal.fire("Success", "Account settings update successfully!", "success");	
+                                              if (data.tenant_defaults && window.JeroTenantDefaults) {
+                                                  window.JeroTenantDefaults.syncFromSettings(data.tenant_defaults);
+                                              }
                                           }
                                 },
                     complete            : function () {

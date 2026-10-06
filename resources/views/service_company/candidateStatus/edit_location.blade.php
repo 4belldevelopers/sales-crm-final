@@ -40,8 +40,9 @@
 									$option_list ='';
 									foreach($countries as $country)
 									{	
+											$targetCountryId = (!empty($cl_info->country_id)) ? $cl_info->country_id : \App\Helper\GeneralMethod::defaultCountryId();
 											$sel 		= '';
-											if($cl_info->country_id == $country->id){
+											if($targetCountryId == $country->id){
 												$sel 	= 'selected="selected"'; 
 											}
 										echo $option 		=  '<option value="'.$country->id.'" '.$sel.'>'.ucfirst($country->country_name).'</option>';

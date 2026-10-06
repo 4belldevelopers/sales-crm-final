@@ -965,7 +965,7 @@
                                             <?php
                                             foreach ($currency as $key => $val) {
                                                 $sel = '';
-                                                if (@$job->min_salary_currency === null) { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
+                                                if (@$job->min_salary_currency === null || @$job->min_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
                                                 else { if (@$job->min_salary_currency == $key) { $sel = 'selected="selected"'; } }
                                                 $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
                                                 $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
@@ -984,7 +984,7 @@
                                             <?php
                                             foreach ($currency as $key => $val) {
                                                 $sel = '';
-                                                if (@$job->max_salary_currency === null) { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
+                                                if (@$job->max_salary_currency === null || @$job->max_salary_currency === '') { if ($currency_code == $val) { $sel = 'selected="selected"'; } }
                                                 else { if (@$job->max_salary_currency == $key) { $sel = 'selected="selected"'; } }
                                                 $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
                                                 $shortText = !empty($cMeta['symbol']) ? $cMeta['code'] . ' (' . $cMeta['symbol'] . ')' : $cMeta['code'];
@@ -1936,7 +1936,11 @@
                                 foreach ($currency as $key => $val) {
                                     $sel = '';
                                     $cur_sc = @$job->min_salary_currency;
-                                    if ($cur_sc == @$key) {
+                                    if ($cur_sc === null || $cur_sc === '') {
+                                        if ($currency_code == $val) {
+                                            $sel = 'selected="selected"';
+                                        }
+                                    } elseif ($cur_sc == @$key) {
                                         $sel = 'selected="selected"';
                                     }
                                     $cMeta = \App\Helper\GeneralMethod::currencyEnterpriseMeta($val);
@@ -2596,6 +2600,9 @@
                         if (data.status == 'success') {
                             $('#kt_add_address_close').click();
                             $("#client_id").val(clientId).change();
+                            if (data.tenant_defaults && window.JeroTenantDefaults) {
+                                window.JeroTenantDefaults.syncFromSettings(data.tenant_defaults);
+                            }
                         }
                     }
                 });

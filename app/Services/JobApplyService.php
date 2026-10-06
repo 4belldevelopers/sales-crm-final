@@ -245,32 +245,38 @@ class JobApplyService
             $jobApplication->dob = $request->input('dob');
         }
 
-        /* Geocode work city location */
+        /* Geocode work city location - Fast Path with 0% MySQL Reads (CQRS Compliant) */
         $cityID = '';
         $stateId = '';
         $countryID = '';
-        $work_city = $request->input('kt_tagify_work_location');
-        if (! empty($work_city)) {
-            $work_city_all = json_decode($work_city, true);
-            if (! empty($work_city_all)) {
-                foreach ($work_city_all as $cityVal) {
-                    $parts = explode('|', $cityVal['value']);
-                    $cityName = trim($parts[0] ?? '');
-                    $countrName = trim($parts[2] ?? '');
+        if ($request->filled('location_city_id') && (int) $request->location_city_id > 0) {
+            $cityID = (int) $request->location_city_id;
+            $stateId = (int) $request->location_state_id;
+            $countryID = (int) ($request->location_country_id ?: 101);
+        } else {
+            $work_city = $request->input('kt_tagify_work_location');
+            if (! empty($work_city)) {
+                $work_city_all = json_decode($work_city, true);
+                if (! empty($work_city_all)) {
+                    foreach ($work_city_all as $cityVal) {
+                        $parts = explode('|', $cityVal['value']);
+                        $cityName = trim($parts[0] ?? '');
+                        $countrName = trim($parts[2] ?? '');
 
-                    $city_row = DB::table('city_list')
-                        ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                        ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                        ->select('city_list.city_id', 'countries.id as country_id')
-                        ->where('city_list.city', '!=', '')
-                        ->where('city_list.city', '=', $cityName)
-                        ->where('countries.country_name', '=', $countrName)
-                        ->first();
+                        $city_row = DB::table('city_list')
+                            ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
+                            ->join('countries', 'countries.id', '=', 'state_list.country_id')
+                            ->select('city_list.city_id', 'countries.id as country_id')
+                            ->where('city_list.city', '!=', '')
+                            ->where('city_list.city', '=', $cityName)
+                            ->where('countries.country_name', '=', $countrName)
+                            ->first();
 
-                    if ($city_row) {
-                        $cityID = $city_row->city_id;
-                        $countryID = $city_row->country_id;
-                        $stateId = GeneralMethod::stateId($cityID);
+                        if ($city_row) {
+                            $cityID = $city_row->city_id;
+                            $countryID = $city_row->country_id;
+                            $stateId = GeneralMethod::stateId($cityID);
+                        }
                     }
                 }
             }

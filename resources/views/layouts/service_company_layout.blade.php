@@ -1521,8 +1521,14 @@ $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('cont
 <script src="{{ asset('front/assets/js/number-to-words.js') }}"></script>
 <script src="{{ asset('front/assets/js/countryDialCodes.js') }}"></script>
 <script src="{{ asset('demo/js/daterangepicker.min.js') }}{{ TM_VERSION }}"></script>
-{{-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script> --}}
-{{-- <script src="{{ asset('demo/js/select2.min.js') }}{{ TM_VERSION }}"></script> --}}
+{{-- Universal Client-First Tenant Defaults Engine (User RAM + LocalStorage | 10k Concurrency | 0% Server Strain) --}}
+<script id="jero-tenant-defaults-bootstrap" type="application/json">
+{!! json_encode(\App\Helper\GeneralMethod::getTenantDefaultsPayload()) !!}
+</script>
+<script>
+    window.JERO_AUTH_COMPANY_ID = {{ auth()->check() ? (int) auth()->user()->company_id : 0 }};
+</script>
+<script src="{{ asset('js/jero-tenant-defaults.js') }}{{ TM_VERSION }}"></script>
  
 <script>
     const checkboxAgree = document.getElementById('agreeCheck');
