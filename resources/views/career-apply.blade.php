@@ -3782,13 +3782,15 @@ setTimeout(() => {
 			return clean;
 		}
 
+		var JERO_SKILLS_VERSION = '2026-10-06.enterprise-pristine-v2';
+
 		function loadLocalSkillsTaxonomy() {
-			if (_skillsTaxonomy && _skillsList.length) return;
+			if (_skillsTaxonomy && _skillsList.length && _skillsTaxonomy.version === JERO_SKILLS_VERSION) return;
 			try {
-				var cached = localStorage.getItem('jero_skills_taxonomy_v1');
+				var cached = localStorage.getItem('jero_skills_taxonomy_' + JERO_SKILLS_VERSION);
 				if (cached) {
 					var parsed = JSON.parse(cached);
-					if (parsed && Array.isArray(parsed.skills)) {
+					if (parsed && parsed.version === JERO_SKILLS_VERSION && Array.isArray(parsed.skills)) {
 						_skillsTaxonomy = parsed;
 						_skillsAliases = parsed.aliases || {};
 						_skillsRelations = parsed.relations || {};
@@ -3798,10 +3800,12 @@ setTimeout(() => {
 						return;
 					}
 				}
+				// Purge stale legacy cache
+				localStorage.removeItem('jero_skills_taxonomy_v1');
 			} catch (e) {}
 
 			if (window.fetch) {
-				fetch("{{ asset('skills/jero-skills-taxonomy.json') }}", { cache: 'force-cache' })
+				fetch("{{ asset('skills/jero-skills-taxonomy.json') }}?v=" + JERO_SKILLS_VERSION, { cache: 'no-cache' })
 					.then(function (res) { return res.json(); })
 					.then(function (data) {
 						if (data && Array.isArray(data.skills)) {
@@ -3812,8 +3816,11 @@ setTimeout(() => {
 							_skillsList = data.skills;
 							window._jeroSkillsTaxonomy = data;
 							try {
-								localStorage.setItem('jero_skills_taxonomy_v1', JSON.stringify(data));
+								localStorage.setItem('jero_skills_taxonomy_' + JERO_SKILLS_VERSION, JSON.stringify(data));
 							} catch (e) {}
+							if (typeof refreshCandidatePrimarySkills === 'function') {
+								refreshCandidatePrimarySkills();
+							}
 						}
 					})
 					.catch(function () {});
