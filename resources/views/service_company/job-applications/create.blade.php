@@ -1519,6 +1519,64 @@
     box-sizing: border-box !important;
 }
 
+/* Metronic Full Name & Email Input Polish */
+.candidate-field-control--interactive {
+    position: relative;
+    width: 100%;
+}
+.candidate-field-control--interactive:focus-within > i {
+    color: #009ef7 !important;
+    transition: color 0.15s ease;
+}
+.candidate-field-control--interactive > input {
+    padding-right: 34px !important;
+}
+.candidate-field-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 50%;
+    background: #e4e6ef;
+    color: #7e8299;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 4;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.candidate-field-clear:hover {
+    background: #f1416c;
+    color: #ffffff;
+}
+.candidate-email-typo-hint {
+    margin-top: 5px;
+    font-size: 11.5px;
+    font-family: 'Poppins', sans-serif;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+.candidate-email-typo-hint a {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* ============================================================================
    JERO ATS - RECRUITER COMMENTS CATEGORIZED TEMPLATE DROPDOWN & EDITOR
    Client-First • 0% Server Strain • 100% In-Memory Browser RAM
@@ -2284,12 +2342,13 @@
               <div class="fsc candidate-card-body bd-body">
                 <div class="candidate-profile-grid">
                   <div class="fg fv-row">
-                    <label>Full Name <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" /></div>
+                    <label for="full_name">Full Name <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Primary Email <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" /></div>
+                    <label for="email">Primary Email <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" maxlength="191" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
+                    <div id="email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
                   </div>
                   <div class="fg fv-row">
                     <label>Primary Contact Number <span class="rq">*</span></label>
@@ -2600,8 +2659,8 @@
                   </summary>
                   <div class="candidate-secondary-grid">
                     <div class="fg fv-row">
-                      <label>Secondary Email</label>
-                      <div class="candidate-field-control"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" /></div>
+                      <label for="secondrary_email">Secondary Email</label>
+                      <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" maxlength="55" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
                     </div>
                     <div class="fg fv-row">
                       <label>Secondary Contact Number</label>
@@ -3621,131 +3680,90 @@
               </div>
               <div class="fsc candidate-card-body">
                 @php
-                  // Categorize Add Candidate master templates into 4 enterprise groupings
-                  $catTechnical        = [];
-                  $catAlignment        = [];
-                  $catLogistics        = [];
-                  $catCultureRecommend = [];
+                  // Categorize Add Candidate master templates into Enterprise categories:
+                  // 1. Candidate Fit & Experience
+                  // 2. Availability & Notice Period
+                  $catFit          = [];
+                  $catAvailability = [];
 
                   $masterTemplatesList = [
                       [
-                          'id'       => 201,
-                          'cat'      => 'technical',
-                          'icon'     => 'fa-solid fa-code',
-                          'title'    => 'Technical Competency & Skills Fit',
-                          'subtitle' => 'Hands-on skills proficiency and role suitability.',
+                          'id'       => 101,
+                          'cat'      => 'fit',
+                          'icon'     => 'fa-solid fa-award',
+                          'title'    => 'Strong Fit',
+                          'subtitle' => 'Strong match with 5+ years relevant experience & product alignment.',
                           'order'    => 1,
-                          'content'  => "Key technical strengths and role suitability:\n• Hands-on proficiency across primary skill stack: [3 skills].\n• Evaluated problem-solving approach, architecture understanding, and code quality.\n• Relevant experience in [current designation] aligns well with target requisition requirements.",
+                          'content'  => "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role.",
                       ],
                       [
-                          'id'       => 2,
-                          'cat'      => 'technical',
-                          'icon'     => 'fa-solid fa-laptop-code',
-                          'title'    => 'Technical Skills Assessment',
-                          'subtitle' => 'Standard screening note from recruiter template master.',
+                          'id'       => 104,
+                          'cat'      => 'fit',
+                          'icon'     => 'fa-solid fa-building-user',
+                          'title'    => 'Similar Company / Product Experience',
+                          'subtitle' => 'Product-based background with Agile and cross-functional delivery.',
                           'order'    => 2,
-                          'content'  => "Candidate has solid technical foundation with hands-on experience in the required technologies. Code quality, problem-solving approach, and technical depth were assessed during the screening.",
+                          'content'  => "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration.",
                       ],
                       [
-                          'id'       => 3,
-                          'cat'      => 'technical',
-                          'icon'     => 'fa-solid fa-magnifying-glass-chart',
-                          'title'    => 'Needs Further Evaluation',
-                          'subtitle' => 'Recommend scheduling a follow-up technical deep-dive.',
-                          'order'    => 3,
-                          'content'  => "Candidate shows potential but requires a more in-depth technical round before making a final decision. Recommend scheduling a follow-up interview to assess specific skill gaps.",
-                      ],
-                      [
-                          'id'       => 202,
-                          'cat'      => 'alignment',
-                          'icon'     => 'fa-solid fa-briefcase',
-                          'title'    => 'Role Alignment & Domain Experience',
-                          'subtitle' => 'Domain knowledge and industry track record match.',
+                          'id'       => 102,
+                          'cat'      => 'availability',
+                          'icon'     => 'fa-solid fa-bolt-lightning',
+                          'title'    => '🟢 Immediate Joiner',
+                          'subtitle' => 'Immediate joiner available within 2–3 days with matching relevant experience.',
                           'order'    => 1,
-                          'content'  => "Role and domain alignment analysis:\n• Candidate brings solid background as [current designation] with proven execution track record.\n• Core competencies match target position requirements for [most relevant requirement].\n• Strong understanding of end-to-end SDLC, agile team collaboration, and production delivery.",
+                          'content'  => "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change].",
                       ],
                       [
-                          'id'       => 203,
-                          'cat'      => 'alignment',
-                          'icon'     => 'fa-regular fa-comments',
-                          'title'    => 'Communication & Stakeholder Management',
-                          'subtitle' => 'Articulate communication and cross-functional collaboration.',
-                          'order'    => 2,
-                          'content'  => "Communication and professional presentation:\n• Articulate verbal and written communication during screening discussion.\n• Experienced in interacting with cross-functional technical teams, clients, and leadership.\n• Professional demeanor, high accountability, and proactive problem solver.",
-                      ],
-                      [
-                          'id'       => 5,
-                          'cat'      => 'logistics',
+                          'id'       => 103,
+                          'cat'      => 'availability',
                           'icon'     => 'fa-regular fa-calendar-check',
-                          'title'    => 'Notice Period & Availability',
-                          'subtitle' => 'Notice period, joining availability, and early release.',
-                          'order'    => 1,
-                          'content'  => "Availability and joining logistics:\n• Availability / Notice Period: [Availability / Notice Period].\n• Work Authorization / Visa: [Work Authorization / Visa Status].\n• Confirm last working date and explore possible early-release / buy-out options with current employer.",
-                      ],
-                      [
-                          'id'       => 4,
-                          'cat'      => 'logistics',
-                          'icon'     => 'fa-solid fa-coins',
-                          'title'    => 'Salary Expectations & Budget Fit',
-                          'subtitle' => 'Expected CTC and compensation flexibility note.',
+                          'title'    => '🟢 Serving Notice Period',
+                          'subtitle' => 'Currently serving notice with confirmed last working day & fast onboarding.',
                           'order'    => 2,
-                          'content'  => "Compensation and budget alignment:\n• Current Salary: [current salary] | Expected Salary: [expected salary].\n• Candidate salary expectations evaluated against budgeted requisition range.\n• Discuss compensation flexibility before proceeding to the final offer stage.",
-                      ],
-                      [
-                          'id'       => 1,
-                          'cat'      => 'recommend',
-                          'icon'     => 'fa-solid fa-heart',
-                          'title'    => 'Strong Cultural Fit',
-                          'subtitle' => 'Culture, values alignment, and collaborative mindset.',
-                          'order'    => 1,
-                          'content'  => "This candidate demonstrates a strong alignment with our company culture and values. They show initiative, adaptability, and a collaborative mindset that would make them a great team addition.",
-                      ],
-                      [
-                          'id'       => 204,
-                          'cat'      => 'recommend',
-                          'icon'     => 'fa-solid fa-circle-check',
-                          'title'    => 'Strong Hire Recommendation',
-                          'subtitle' => 'Highly recommended to fast-track through next hiring rounds.',
-                          'order'    => 2,
-                          'content'  => "Recruiter Recommendation: Highly Recommended for hire.\n• Exceeds technical benchmarks across core stack: [3 skills].\n• Strong domain depth, professional communication, and collaborative mindset.\n• Fast-track candidate to next interview round.",
-                      ],
-                      [
-                          'id'       => 205,
-                          'cat'      => 'recommend',
-                          'icon'     => 'fa-regular fa-folder-open',
-                          'title'    => 'Talent Pool / Backup Candidate',
-                          'subtitle' => 'Recommended for future opportunities matching skill profile.',
-                          'order'    => 3,
-                          'content'  => "Talent Pool note:\n• Candidate possesses solid foundational skills but differs slightly from immediate requisition profile.\n• Recommended for future opportunities requiring expertise in [3 skills].\n• Maintain active contact for upcoming hiring cycles.",
+                          'content'  => "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week.",
                       ],
                   ];
 
                   if (!empty($recruiterNoteTemplates)) {
                       foreach ($recruiterNoteTemplates as $dbTpl) {
                           $found = false;
+                          $dbTitle = $dbTpl->title ?? 'Custom Note';
                           foreach ($masterTemplatesList as $m) {
-                              if ($m['id'] === $dbTpl->id || $m['title'] === $dbTpl->title) { $found = true; break; }
+                              if ($m['id'] === $dbTpl->id || $m['title'] === $dbTitle) { $found = true; break; }
                           }
                           if (!$found) {
-                              $cleanContent = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], ["\n", "\n", "\n", "\n\n", "\n"], $dbTpl->content));
-                              $masterTemplatesList[] = [
-                                  'id'       => $dbTpl->id,
-                                  'cat'      => 'recommend',
-                                  'icon'     => 'fa-regular fa-file-lines',
-                                  'title'    => $dbTpl->title,
-                                  'subtitle' => 'Organization candidate evaluation note template.',
-                                  'order'    => 99,
-                                  'content'  => trim($cleanContent),
+                              $legacyTitles = [
+                                  'Bench Availability & Deployment Readiness',
+                                  'Bench Availability & Immediate Deployment',
+                                  'Notice Period & Availability',
+                                  'Remote Only',
+                                  'Remote Opportunity Only',
+                                  'Contract Engagement',
+                                  'Contract/C2C/C2H Engagement Only',
+                                  'Direct Hire / Permanent',
+                                  'Direct Hire/Permanent Hiring Engagement Only',
+                                  'Contract or Direct Hire'
                               ];
+                              if (!in_array($dbTitle, $legacyTitles, true)) {
+                                  $cleanContent = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>', '</li>'], ["\n", "\n", "\n", "\n\n", "\n"], $dbTpl->content ?? $dbTpl->note_text ?? ''));
+                                  $masterTemplatesList[] = [
+                                      'id'       => $dbTpl->id,
+                                      'cat'      => 'fit',
+                                      'icon'     => 'fa-regular fa-file-lines',
+                                      'title'    => $dbTitle,
+                                      'subtitle' => 'Organization candidate evaluation note template.',
+                                      'order'    => 99,
+                                      'content'  => trim($cleanContent),
+                                  ];
+                              }
                           }
                       }
                   }
 
                   foreach ($masterTemplatesList as $item) {
-                      if ($item['cat'] === 'technical') $catTechnical[] = $item;
-                      elseif ($item['cat'] === 'alignment') $catAlignment[] = $item;
-                      elseif ($item['cat'] === 'logistics') $catLogistics[] = $item;
-                      else $catCultureRecommend[] = $item;
+                      if ($item['cat'] === 'availability') $catAvailability[] = $item;
+                      else $catFit[] = $item;
                   }
                 @endphp
 
@@ -3756,21 +3774,21 @@
                   <div class="custom-template-dropdown" id="custom_template_dropdown">
                     <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
                       <div class="trigger-left">
-                        <i class="fa-solid fa-file-lines trigger-icon"></i>
-                        <span class="trigger-label" id="selected_template_label">Technical Competency & Skills Fit</span>
+                        <i class="fa-solid fa-award trigger-icon"></i>
+                        <span class="trigger-label" id="selected_template_label">Strong Fit</span>
                       </div>
                       <i class="fa-solid fa-chevron-down trigger-arrow"></i>
                     </div>
 
                     <div class="custom-template-menu" id="custom_template_menu" style="display: none;" role="listbox">
-                      {{-- 1. Technical & Skill Evaluation --}}
-                      @if(count($catTechnical) > 0)
+                      {{-- 1. Candidate Fit & Experience --}}
+                      @if(count($catFit) > 0)
                       <div class="tpl-category-section">
                         <div class="tpl-category-heading tpl-cat--amber">
-                          <span>Technical &amp; Skill Evaluation</span>
+                          <span>Candidate Fit &amp; Experience</span>
                         </div>
-                        @foreach($catTechnical as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 201 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        @foreach($catFit as $item)
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3786,60 +3804,14 @@
                       </div>
                       @endif
 
-                      {{-- 2. Role Fit & Experience --}}
-                      @if(count($catAlignment) > 0)
-                      <div class="tpl-category-section">
-                        <div class="tpl-category-heading tpl-cat--blue">
-                          <span>Role Fit &amp; Experience</span>
-                        </div>
-                        @foreach($catAlignment as $item)
-                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
-                          <div class="tpl-card-left">
-                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                            <div class="tpl-card-text">
-                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                            </div>
-                          </div>
-                          <span class="tpl-card-check">
-                            <i class="fa-solid fa-circle-check"></i>
-                          </span>
-                        </div>
-                        @endforeach
-                      </div>
-                      @endif
-
-                      {{-- 3. Availability, Compensation & Notice --}}
-                      @if(count($catLogistics) > 0)
+                      {{-- 2. Availability & Notice Period --}}
+                      @if(count($catAvailability) > 0)
                       <div class="tpl-category-section">
                         <div class="tpl-category-heading tpl-cat--green">
-                          <span>Availability, Compensation &amp; Notice</span>
+                          <span>Availability &amp; Notice Period</span>
                         </div>
-                        @foreach($catLogistics as $item)
-                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
-                          <div class="tpl-card-left">
-                            <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
-                            <div class="tpl-card-text">
-                              <strong class="tpl-card-title">{{ $item['title'] }}</strong>
-                              <small class="tpl-card-subtitle">{{ $item['subtitle'] }}</small>
-                            </div>
-                          </div>
-                          <span class="tpl-card-check">
-                            <i class="fa-solid fa-circle-check"></i>
-                          </span>
-                        </div>
-                        @endforeach
-                      </div>
-                      @endif
-
-                      {{-- 4. Culture & Recruiter Recommendation --}}
-                      @if(count($catCultureRecommend) > 0)
-                      <div class="tpl-category-section">
-                        <div class="tpl-category-heading tpl-cat--purple">
-                          <span>Culture &amp; Recruiter Recommendation</span>
-                        </div>
-                        @foreach($catCultureRecommend as $item)
-                        <div class="tpl-card-item" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        @foreach($catAvailability as $item)
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3857,7 +3829,7 @@
                     </div>
 
                     {{-- Hidden input for backward compatibility and JS synchronization --}}
-                    <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="201" />
+                    <input type="hidden" id="recruiter_note_template_select" name="recruiter_note_template_select" value="101" />
                   </div>
                 </div>
 
@@ -5006,8 +4978,12 @@ async function isInternetAvailable() {
                     {
                         validators:
                         {
-                            notEmpty:{message: "Full name is required"}
-                           
+                            notEmpty:{message: "Full name is required"},
+                            stringLength:{min: 2, max: 191, message: "Full name must be between 2 and 191 characters"},
+                            regexp:{
+                                regexp: /^[\p{L}\s\-\'.]+$/u,
+                                message: "Full name should only contain letters, spaces, hyphens, and apostrophes"
+                            }
                         }
                     },
 					
@@ -5016,7 +4992,7 @@ async function isInternetAvailable() {
                         validators:
                         {
                             notEmpty:{ message: "Current designation is required"}
-                           
+                            
                         }
                     },
 					
@@ -5054,16 +5030,22 @@ async function isInternetAvailable() {
                         validators:
                         {
                             notEmpty:{ message: 'Primary email is required'},
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 191, message: "Email must not exceed 191 characters"}
                         }
                     },
                     'secondrary_email':
                     {
                         validators:
                         {
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 55, message: "Secondary email must not exceed 55 characters"},
+                            different:{
+                                compare: function() {
+                                    return form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '';
+                                },
+                                message: 'Secondary email cannot be the same as primary email'
+                            }
                         }
                     },
 					
@@ -6946,8 +6928,12 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            notEmpty:{message: "Full name is required"}
-                           
+                            notEmpty:{message: "Full name is required"},
+                            stringLength:{min: 2, max: 191, message: "Full name must be between 2 and 191 characters"},
+                            regexp:{
+                                regexp: /^[\p{L}\s\-\'.]+$/u,
+                                message: "Full name should only contain letters, spaces, hyphens, and apostrophes"
+                            }
                         }
                     },
 					
@@ -6956,7 +6942,7 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{ message: "Current designation is required"}
-                           
+                            
                         }
                     },
 					
@@ -6995,8 +6981,8 @@ var KTAddCandidate = function () {
                         validators:
                         {
                             notEmpty:{message: "Primary Email is required"},
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 191, message: "Email must not exceed 191 characters"}
                         }
                     },
                     
@@ -7004,8 +6990,14 @@ var KTAddCandidate = function () {
                     {
                         validators:
                         {
-                            emailAddress:{message: 'The value is not a valid email address'}
-                            
+                            emailAddress:{message: 'The value is not a valid email address'},
+                            stringLength:{max: 55, message: "Secondary email must not exceed 55 characters"},
+                            different:{
+                                compare: function() {
+                                    return form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '';
+                                },
+                                message: 'Secondary email cannot be the same as primary email'
+                            }
                         }
                     },
 					
@@ -7820,109 +7812,156 @@ $(document).ready(function() {
     // Extract form variables from live browser RAM
     function getCandidateFormVariables() {
         var designation = ($('#current_designation').val() || '').trim();
-        if (!designation) {
-            designation = ($('#full_name').val() || '').trim() ? 'their professional domain' : 'the required role';
-        }
+        var company = ($('#current_company').val() || '').trim();
 
+        // Collect all skills present in candidate form / job
         var skillsList = [];
-        $('#skillExperienceWrapper tr input[name="skills[]"]').each(function () {
-            var s = (this.value || '').trim();
-            if (s && !skillsList.includes(s)) skillsList.push(s);
-        });
+        if (typeof candidateSelectedSkills === 'function') {
+            try {
+                candidateSelectedSkills().forEach(function (s) {
+                    var sName = (s && (s.name || s.value) ? (s.name || s.value) : String(s)).trim();
+                    if (sName && !skillsList.includes(sName)) skillsList.push(sName);
+                });
+            } catch (e) {}
+        }
+        if (skillsList.length === 0 && window.tagifyskill && Array.isArray(tagifyskill.value)) {
+            tagifyskill.value.forEach(function (tag) {
+                var sVal = (tag.value || tag.name || '').trim();
+                if (sVal && !skillsList.includes(sVal)) skillsList.push(sVal);
+            });
+        }
+        if (skillsList.length === 0) {
+            $('#skillExperienceWrapper tr input[name="skills[]"]').each(function () {
+                var s = (this.value || '').trim();
+                if (s && !skillsList.includes(s)) skillsList.push(s);
+            });
+        }
+        if (skillsList.length === 0 && typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
+            candidateRequiredSkills.forEach(function (r) {
+                var rName = (r.name || r.skill_name || r.value || '').trim();
+                if (rName && !skillsList.includes(rName)) skillsList.push(rName);
+            });
+        }
+
         var skillsStr = '';
-        if (skillsList.length >= 3) skillsStr = skillsList.slice(0, 3).join(', ');
-        else if (skillsList.length > 0) skillsStr = skillsList.join(', ');
-        else skillsStr = 'the required technical competencies';
-
-        var snp = $('#serving_notice_period').val();
-        var availStr = 'Immediate';
-        var noticePeriodStr = 'Immediate / 0 days';
-        if (snp === '2') {
-            availStr = 'Immediate';
-            noticePeriodStr = 'Immediate / 0 days';
-        } else if (snp === '1') {
-            var availDate = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
-            availStr = availDate ? ('Available from ' + availDate) : 'Available on scheduled start date';
-            noticePeriodStr = availDate ? ('Available from ' + availDate) : 'Available on scheduled start date';
-        } else if (snp === '0') {
-            var days = ($('#ddl_np_id option:selected').text() || $('#ddl_np_id').val() || '').trim();
-            availStr = days ? ('Serving notice period (' + days + ')') : 'Serving notice period';
-            noticePeriodStr = days ? ('Serving notice period (' + days + ')') : 'Serving notice period';
-        }
-
-        var visaVal = ($('#visastatu').val() || '').trim();
-        var visaSelectedText = ($('#visastatu option:selected').text() || '').trim();
-        var workAuthStr = 'Right-to-work verified and compliant';
-        if (visaVal && visaSelectedText && !visaSelectedText.toLowerCase().includes('select work authorization')) {
-            workAuthStr = visaSelectedText + ' - Verified & Compliant';
-        } else if (visaVal) {
-            workAuthStr = visaVal + ' - Verified & Compliant';
-        }
-
-        var relReq = '';
         if (skillsList.length > 0) {
-            relReq = skillsList[0] + (skillsList.length > 1 ? (' and ' + skillsList[1]) : '') + ' hands-on delivery';
-        } else if (designation && designation !== 'the required role' && designation !== 'their professional domain') {
-            relReq = designation + ' deliverables';
+            skillsStr = skillsList.join(', ');
         } else {
-            relReq = 'the core position requirements';
+            skillsStr = '(Mentioned all the skills in job)';
         }
 
-        var curSalVal = ($('#pay_annual').val() || $('#pay_monthly').val() || $('#ctc').val() || '').trim();
-        var curSalCur = ($('#current_ctc_cur option:selected').data('code') || $('#current_ctc_cur option:selected').text() || 'INR').trim();
-        var curSalaryStr = curSalVal ? (curSalCur + ' ' + Number(curSalVal).toLocaleString()) : 'Disclosed during screening';
-
-        var expSalVal = ($('#bill_annual').val() || $('#bill_monthly').val() || $('#ectc').val() || '').trim();
-        var expSalaryStr = expSalVal ? (curSalCur + ' ' + Number(expSalVal).toLocaleString()) : 'As per organization budget / Market standards';
-
-        var expYears = ($('#total_exp_year').val() || '').trim();
-        var expMonths = ($('#total_exp_month').val() || '').trim();
-        var totalExpStr = '';
-        if (expYears !== '' && expYears !== null) {
-            if (expYears === '0') totalExpStr = 'Fresher';
-            else totalExpStr = expYears + ' yr' + (expYears > 1 ? 's' : '') + (expMonths && expMonths !== '0' ? (' ' + expMonths + ' mos') : '');
+        // Relevant Experience
+        var relExpYear = ($('#rel_exp_year').val() || '').trim();
+        var relevantExpStr = '5+ years';
+        if (relExpYear !== '' && relExpYear !== null && relExpYear !== '0') {
+            var yNum = parseInt(relExpYear, 10);
+            if (!isNaN(yNum) && yNum > 0) {
+                relevantExpStr = yNum + '+ years';
+            }
         } else {
-            totalExpStr = 'Relevant experience verified';
+            var totExpYear = ($('#total_exp_year').val() || '').trim();
+            if (totExpYear !== '' && totExpYear !== null && totExpYear !== '0') {
+                var tyNum = parseInt(totExpYear, 10);
+                if (!isNaN(tyNum) && tyNum > 0) {
+                    relevantExpStr = tyNum + '+ years';
+                }
+            }
+        }
+
+        // Notice Period / Availability / Last Working Day
+        var snp = $('#serving_notice_period').val();
+        var joiningTimeline = '2–3 days';
+        var lastWorkingDay = '25 Oct 2026';
+
+        var rawDateVal = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
+        if (rawDateVal) {
+            var parsedDate = new Date(rawDateVal.replace(/-/g, '/'));
+            if (!isNaN(parsedDate.getTime())) {
+                var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                lastWorkingDay = parsedDate.getDate() + ' ' + months[parsedDate.getMonth()] + ' ' + parsedDate.getFullYear();
+            } else {
+                lastWorkingDay = rawDateVal;
+            }
+        }
+
+        if (snp === '2') {
+            joiningTimeline = '2–3 days';
+        } else if (snp === '1') {
+            if (lastWorkingDay && lastWorkingDay !== '25 Oct 2026') {
+                joiningTimeline = 'post LWD (' + lastWorkingDay + ')';
+            }
+        } else if (snp === '0') {
+            var daysText = ($('#ddl_np_id option:selected').text() || '').trim();
+            if (daysText && !daysText.toLowerCase().includes('select notice period')) {
+                joiningTimeline = daysText.toLowerCase();
+                lastWorkingDay = 'within ' + daysText;
+            }
+        }
+
+        // Reason for job change
+        var reason = ($('#reason_for_job_change').val() || '').trim();
+        var reasonStr = reason || 'project closure';
+
+        // Product company context
+        var companyContext = '';
+        if (company && designation) {
+            companyContext = ' at ' + company + ' as ' + designation;
+        } else if (company) {
+            companyContext = ' at ' + company;
         }
 
         return {
-            designation: designation,
+            designation: designation || 'the required role',
+            company: company,
+            companyContext: companyContext,
             skills: skillsStr,
-            availability: availStr,
-            noticePeriod: noticePeriodStr,
-            workAuth: workAuthStr,
-            requirement: relReq,
-            currentSalary: curSalaryStr,
-            expectedSalary: expSalaryStr,
-            totalExp: totalExpStr,
-            name: ($('#full_name').val() || '').trim()
+            relevantExp: relevantExpStr,
+            joiningTimeline: joiningTimeline,
+            lastWorkingDay: lastWorkingDay,
+            reason: reasonStr
         };
     }
 
+    // Dynamic variable interpolation
     function interpolateTemplateVariables(text, customVars) {
         if (!text) return '';
         var vars = customVars || getCandidateFormVariables();
-        text = text.replace(/(\*\*|\[)?\[current designation\](\*\*|\])?/gi, vars.designation);
+
+        // 1. Skills
+        text = text.replace(/\[all skills in job\]/gi, vars.skills);
+        if (vars.skills !== '(Mentioned all the skills in job)') {
+            text = text.replace(/\(Mentioned all the skills in job\)/gi, vars.skills);
+            text = text.replace(/\[Mentioned all the skills in job\]/gi, vars.skills);
+        }
         text = text.replace(/(\*\*|\[)?\[3\s+skills\](\*\*|\])?/gi, vars.skills);
         text = text.replace(/(\*\*|\[)?\[skills\](\*\*|\])?/gi, vars.skills);
-        text = text.replace(/(\*\*|\[)?\[most relevant requirement\](\*\*|\])?/gi, vars.requirement);
-        text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\s*\/\s*Available from date\]/gi, vars.availability);
-        text = text.replace(/\[Immediate\s*\/\s*X days\s*\/\s*Serving notice\]/gi, vars.availability);
-        text = text.replace(/\[Availability\]/gi, vars.availability);
-        text = text.replace(/\[Availability\s*\/\s*Notice Period\]/gi, vars.noticePeriod);
-        text = text.replace(/\[Notice Period\s*\/\s*Availability\]/gi, vars.noticePeriod);
-        text = text.replace(/\[Notice Period\]/gi, vars.noticePeriod);
-        text = text.replace(/\[NOTICE PERIOD\]/g, vars.noticePeriod);
-        text = text.replace(/\[Work Authorization\s*\/\s*Visa Status\]/gi, vars.workAuth);
-        text = text.replace(/\[Work Authorization\s*\/\s*Visa\]/gi, vars.workAuth);
-        text = text.replace(/\[Work Authorization\]/gi, vars.workAuth);
-        text = text.replace(/\[Visa Status\]/gi, vars.workAuth);
-        text = text.replace(/\[current salary\]/gi, vars.currentSalary);
-        text = text.replace(/\[CURRENT CTC\]/g, vars.currentSalary);
-        text = text.replace(/\[expected salary\]/gi, vars.expectedSalary);
-        text = text.replace(/\[EXPECTED CTC\]/g, vars.expectedSalary);
-        text = text.replace(/\[total experience\]/gi, vars.totalExp);
-        if (vars.name) text = text.replace(/\[(candidate name|candidate_name)\]/gi, vars.name);
+
+        // 2. Relevant Experience
+        text = text.replace(/\[relevant experience\]/gi, vars.relevantExp);
+        if (vars.relevantExp && vars.relevantExp !== '5+ years') {
+            text = text.replace(/5\+\s*years/gi, vars.relevantExp);
+        }
+
+        // 3. Joining Timeline
+        text = text.replace(/\[joining timeline\]/gi, vars.joiningTimeline);
+
+        // 4. Reason for Job Change
+        text = text.replace(/\[reason for job change\]/gi, vars.reason);
+        if (vars.reason && vars.reason !== 'project closure') {
+            text = text.replace(/project closure/gi, vars.reason);
+        }
+
+        // 5. Last Working Day
+        text = text.replace(/\[last working day\]/gi, vars.lastWorkingDay);
+        if (vars.lastWorkingDay && vars.lastWorkingDay !== '25 Oct 2026') {
+            text = text.replace(/25\s+Oct\s+2026/gi, vars.lastWorkingDay);
+        }
+
+        // 6. Company & Role
+        text = text.replace(/\[current company context\]/gi, vars.companyContext);
+        text = text.replace(/\[current company\]/gi, vars.company || 'a leading organization');
+        text = text.replace(/\[current designation\]/gi, vars.designation);
+
         return text;
     }
 
@@ -7959,14 +7998,16 @@ $(document).ready(function() {
         var $rn = $('#recruiter_note');
         if (!$rn.length) return;
         var currentVal = ($rn.val() || '').trim();
+        // ID 101 is Strong Fit (Explicit User Default)
+        var defaultTpl = masterTemplatesData[101] || Object.values(masterTemplatesData)[0];
+
         if (!currentVal) {
-            var matchTpl = masterTemplatesData[201] || Object.values(masterTemplatesData)[0];
-            if (matchTpl && matchTpl.content) {
-                $('#recruiter_note_template_select').val(matchTpl.id);
+            if (defaultTpl && defaultTpl.content) {
+                $('#recruiter_note_template_select').val(defaultTpl.id);
                 $('.tpl-card-item').removeClass('is-selected');
-                $('.tpl-card-item[data-template-id="' + matchTpl.id + '"]').addClass('is-selected');
-                $('#selected_template_label').text(matchTpl.title).removeClass('is-placeholder');
-                var formatted = formatTemplateToPlainText(matchTpl.content);
+                $('.tpl-card-item[data-template-id="' + defaultTpl.id + '"]').addClass('is-selected');
+                $('#selected_template_label').text(defaultTpl.title).removeClass('is-placeholder');
+                var formatted = formatTemplateToPlainText(defaultTpl.content);
                 var interpolated = interpolateTemplateVariables(formatted);
                 $rn.val(truncateToMaxWords(interpolated, 100));
                 updateRmCommentsCounter(false);
@@ -7975,9 +8016,48 @@ $(document).ready(function() {
             $rn.val(truncateToMaxWords(formatTemplateToPlainText(currentVal), 100));
             updateRmCommentsCounter(false);
         } else {
+            // If already filled, ensure correct item is highlighted
+            var selectedId = $('#recruiter_note_template_select').val() || 101;
+            if (masterTemplatesData[selectedId]) {
+                $('.tpl-card-item').removeClass('is-selected');
+                $('.tpl-card-item[data-template-id="' + selectedId + '"]').addClass('is-selected');
+                $('#selected_template_label').text(masterTemplatesData[selectedId].title).removeClass('is-placeholder');
+            }
             updateRmCommentsCounter(false);
         }
     }
+
+    // Live sync when upper candidate form fields change
+    var _rcSyncTimer = null;
+    function triggerLiveRecruiterCommentsSync() {
+        clearTimeout(_rcSyncTimer);
+        _rcSyncTimer = setTimeout(function () {
+            var selectedId = $('#recruiter_note_template_select').val() || 101;
+            if (!selectedId || !masterTemplatesData[selectedId]) return;
+
+            var $rn = $('#recruiter_note');
+            var currentVal = ($rn.val() || '').trim();
+            var isTemplateText = !currentVal
+                || currentVal.includes('Strong match for the requirement')
+                || currentVal.includes('Immediate joiner and available to start')
+                || currentVal.includes('Currently serving notice period with last working day')
+                || currentVal.includes('in a product-based environment with responsibilities very similar');
+
+            if (isTemplateText) {
+                var rawTpl = formatTemplateToPlainText(masterTemplatesData[selectedId].content);
+                var updated = interpolateTemplateVariables(rawTpl);
+                $rn.val(truncateToMaxWords(updated, 100));
+                updateRmCommentsCounter(false);
+            }
+        }, 400);
+    }
+
+    // Attach live listeners to form fields
+    $(document).on('input blur', '#current_designation, #current_company, #rel_exp_year, #total_exp_year, #reason_for_job_change', triggerLiveRecruiterCommentsSync);
+    $(document).on('change', '#serving_notice_period, #np_id, #np_id_display, #ddl_np_id', triggerLiveRecruiterCommentsSync);
+    $(document).on('click', '.candidate-notice-option', function () {
+        setTimeout(triggerLiveRecruiterCommentsSync, 120);
+    });
 
     // Dropdown toggle
     $(document).on('click', '#custom_template_trigger', function (e) {
@@ -8035,7 +8115,7 @@ $(document).ready(function() {
     // Sync button click
     $(document).on('click', '#btn_sync_rm_template', function (e) {
         e.preventDefault();
-        var selectedId = $('#recruiter_note_template_select').val() || 201;
+        var selectedId = $('#recruiter_note_template_select').val() || 101;
         var baseText = (masterTemplatesData[selectedId] && masterTemplatesData[selectedId].content) ? formatTemplateToPlainText(masterTemplatesData[selectedId].content) : $('#recruiter_note').val();
         var interpolated = interpolateTemplateVariables(baseText);
         var $rn = $('#recruiter_note');
@@ -8043,7 +8123,7 @@ $(document).ready(function() {
         setTimeout(function () { $rn.removeClass('field-attention-highlight'); }, 700);
         updateRmCommentsCounter(false);
         if (typeof toastr !== 'undefined') {
-            toastr.success('Comments synchronized with Current Designation, Skills, and Availability!');
+            toastr.success('Recruiter comments synchronized with Candidate Skills, Experience, and Availability!');
         }
     });
 
@@ -8067,7 +8147,6 @@ $(document).ready(function() {
             }
         }
     });
-
     // Compatibility dummies so external submit buttons work without errors
     window.compileEvaluationMatrix = function () {};
     window.syncRecruiterEvaluationMatrix = function () {};
@@ -8075,6 +8154,120 @@ $(document).ready(function() {
     $(document).ready(function () {
         applyDefaultRecruiterNotePrefill();
         updateRmCommentsCounter(false);
+    });
+})();
+
+// ============================================================================
+// ENTERPRISE CANDIDATE PROFILE: FULL NAME & EMAIL POLISH (CLIENT-FIRST)
+// ============================================================================
+(function () {
+    'use strict';
+
+    // 1. Cultural-Preserving Title-Caser (Preserves O'Connor, Jean-Luc, Al-Mansoor)
+    window.formatCandidateTitleCase = function (str) {
+        if (!str) return '';
+        return String(str)
+            .trim()
+            .toLowerCase()
+            .replace(/(^|[\s\-\'])([a-z])/g, function (_, sep, chr) {
+                return sep + chr.toUpperCase();
+            });
+    };
+
+    // 2. Client-Side Fast Domain Typo Detector (Zero Server Overhead)
+    window.detectDomainTypo = function (email) {
+        var commonDomains = {
+            'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com'
+        };
+        var parts = String(email || '').split('@');
+        if (parts.length === 2 && commonDomains[parts[1].toLowerCase()]) {
+            return parts[0] + '@' + commonDomains[parts[1].toLowerCase()];
+        }
+        return null;
+    };
+
+    // 3. Clear Button State Synchronization
+    function syncClearButton($input) {
+        var $clearBtn = $input.siblings('.candidate-field-clear');
+        if (($input.val() || '').trim().length > 0) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
+        }
+    }
+
+    $(document).on('input paste keyup change', '#full_name, #email, #secondrary_email', function () {
+        syncClearButton($(this));
+    });
+
+    $(document).on('click', '.candidate-field-clear', function (e) {
+        e.preventDefault();
+        var $input = $(this).siblings('input');
+        $input.val('').trigger('input').trigger('change').focus();
+        $(this).hide();
+        if ($input.attr('id') === 'email') {
+            $('#email-typo-hint').hide().empty();
+        }
+    });
+
+    // 4. Name Field Normalization
+    $(document).on('blur change', '#full_name', function () {
+        var val = $(this).val();
+        if (val) {
+            var formatted = window.formatCandidateTitleCase(val);
+            if (formatted !== val) {
+                $(this).val(formatted);
+            }
+        }
+    });
+
+    $(document).on('paste', '#full_name', function () {
+        var self = this;
+        setTimeout(function () {
+            var val = $(self).val();
+            if (val) {
+                $(self).val(window.formatCandidateTitleCase(val));
+            }
+        }, 15);
+    });
+
+    // 5. Email Normalization & Inline Typo Assistance
+    $(document).on('blur change', '#email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+
+        var fix = window.detectDomainTypo(raw);
+        var $hint = $('#email-typo-hint');
+        if (fix && fix !== raw) {
+            $hint.html('<i class="fa-solid fa-lightbulb text-warning" aria-hidden="true"></i> Did you mean <strong><a href="javascript:void(0);" class="apply-email-fix">' + fix + '</a></strong>?').show();
+        } else {
+            $hint.hide().empty();
+        }
+    });
+
+    $(document).on('click', '.apply-email-fix', function (e) {
+        e.preventDefault();
+        var fixed = $(this).text();
+        $('#email').val(fixed).trigger('change');
+        $('#email-typo-hint').hide().empty();
+        if (window.benchFormValidator && typeof window.benchFormValidator.revalidateField === 'function') {
+            window.benchFormValidator.revalidateField('email');
+        }
+    });
+
+    $(document).on('blur change', '#secondrary_email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+    });
+
+    // Initial check on page load
+    $(document).ready(function () {
+        $('#full_name, #email, #secondrary_email').each(function () {
+            syncClearButton($(this));
+        });
     });
 })();
 
