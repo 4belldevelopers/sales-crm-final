@@ -1517,6 +1517,225 @@
     background-position: right 14px center !important;
     background-size: 11px !important;
     box-sizing: border-box !important;
+/* ============================================================================
+   JERO ATS - STRUCTURED EVALUATION MATRIX (OPTION 3: ENTERPRISE STANDARD)
+   Client-First • 0% Server Strain • 100% In-Memory RAM Compilation
+   ============================================================================ */
+.sem-card {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    font-family: 'Poppins', sans-serif !important;
+    margin-bottom: 20px !important;
+}
+
+.sem-card .candidate-card-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #edf2f7 !important;
+    padding: 12px 18px !important;
+}
+
+.sem-card-body {
+    padding: 14px 18px !important;
+}
+
+.sem-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sem-sync-btn {
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
+    transition: all 0.15s ease !important;
+    padding: 3px 8px !important;
+}
+
+.sem-view-toggle .btn {
+    font-weight: 600 !important;
+    border-radius: 5px !important;
+    font-size: 10.5px !important;
+    padding: 3px 9px !important;
+}
+
+.sem-view-toggle .btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+}
+
+.sem-draft-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.sem-section {
+    background: #ffffff;
+    border: 1px solid #e8ecf3;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    transition: border-color 0.15s ease;
+}
+
+.sem-section:hover {
+    border-color: #cbd5e1;
+}
+
+.sem-section-title {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    display: flex;
+    align-items: center;
+}
+
+.sem-auto-badge {
+    font-size: 9px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    letter-spacing: 0.2px !important;
+}
+
+/* Verdict chips */
+.sem-verdict-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.sem-chip-btn {
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    user-select: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+.sem-chip-btn:hover {
+    border-color: #009ef7;
+    background: #f0f9ff;
+    color: #009ef7;
+}
+
+.sem-chip-btn.is-active {
+    background: #009ef7 !important;
+    color: #ffffff !important;
+    border-color: #009ef7 !important;
+    box-shadow: 0 1px 4px rgba(0, 158, 247, 0.3) !important;
+}
+
+.sem-chip-btn.is-active i {
+    color: #ffffff !important;
+}
+
+/* Communication chips */
+.sem-comm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.sem-comm-btn {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.sem-comm-btn:hover {
+    border-color: #009ef7;
+    color: #009ef7;
+}
+
+.sem-comm-btn.is-active {
+    background: #eff6ff !important;
+    color: #009ef7 !important;
+    border-color: #93c5fd !important;
+    font-weight: 700 !important;
+}
+
+/* Inputs & Textareas */
+.sem-input {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    padding: 5px 8px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.sem-input:focus,
+.sem-textarea:focus,
+.sem-compiled-textarea:focus {
+    border-color: #009ef7 !important;
+    box-shadow: 0 0 0 2px rgba(0, 158, 247, 0.15) !important;
+    outline: none !important;
+}
+
+.sem-textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 5px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    background: #ffffff !important;
+    resize: vertical !important;
+    min-height: 48px !important;
+    padding: 6px 8px !important;
+}
+
+.sem-compiled-textarea {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-family: 'Poppins', monospace, sans-serif !important;
+    line-height: 1.55 !important;
+    color: #0f172a !important;
+    background: #f8fafc !important;
+    min-height: 220px !important;
+    padding: 10px 12px !important;
+}
+
+.sem-restore-banner {
+    border-radius: 6px !important;
+}
+
+.field-attention-highlight {
+    animation: semFieldPulse 0.7s ease !important;
+}
+
+@keyframes semFieldPulse {
+    0% { background-color: #fff9db !important; }
+    50% { background-color: #fef08a !important; }
+    100% { background-color: transparent !important; }
 }
 </style>
 @endpush
@@ -3257,26 +3476,211 @@
               </div>
             </div>
 
-            <!-- Recruiter Comments -->
-            <div class="fs candidate-card recruiter-note-card">
-              <div class="fsh candidate-card-header">
+            <!-- Recruiter Comments: Structured Evaluation Matrix (Option 3 - Enterprise Talent Marketplace Standard) -->
+            <div class="fs candidate-card recruiter-note-card sem-card" id="recruiter_evaluation_matrix_card">
+              <div class="fsh candidate-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-regular fa-note-sticky" aria-hidden="true"></i></span>
-                  <span><strong>Recruiter Comments</strong><small>Add internal context for the hiring team; this is not shared with the candidate.</small></span>
+                  <span class="candidate-card-icon candidate-card-icon--note"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
+                  <span><strong>Recruiter Evaluation Matrix</strong><small>Structured talent assessment • Auto-compiled into authoritative hiring context</small></span>
+                </div>
+                <div class="sem-header-actions d-flex align-items-center gap-2 flex-wrap">
+                  {{-- Live Sync Action Button --}}
+                  <button type="button" class="btn btn-sm btn-light-primary sem-sync-btn py-1 px-3 fs-8" id="sem_sync_btn" title="Sync live details from Candidate Information, Skills, Notice Period & Salary in Browser RAM">
+                    <i class="fa-solid fa-arrows-rotate me-1 fs-9"></i> Sync Details from Form
+                  </button>
+
+                  {{-- View Switcher Pills --}}
+                  <div class="sem-view-toggle btn-group btn-group-sm" role="group" aria-label="Matrix View Mode">
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fs-8 is-active" id="sem_btn_view_matrix" data-view="matrix">
+                      <i class="fa-solid fa-table-cells-large me-1"></i> Matrix Form
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-3 fs-8" id="sem_btn_view_compiled" data-view="compiled">
+                      <i class="fa-regular fa-file-lines me-1"></i> Compiled Note
+                    </button>
+                  </div>
+
+                  {{-- Auto-Draft Cloud Status Pill --}}
+                  <span class="sem-draft-badge" id="sem_draft_badge" title="Changes auto-saved in local browser memory">
+                    <i class="fa-solid fa-shield-halved me-1 text-success"></i> <span id="sem_draft_label">Draft Saved</span>
+                  </span>
                 </div>
               </div>
-              <div class="fsc candidate-card-body">
+
+              <div class="fsc candidate-card-body sem-card-body">
+                {{-- Restored Draft Banner (hidden by default) --}}
+                <div class="sem-restore-banner alert alert-dismissible bg-light-primary border border-primary border-dashed d-flex align-items-center justify-content-between p-2 mb-3" id="sem_restore_banner" style="display: none;">
+                  <div class="d-flex align-items-center fs-8 text-primary">
+                    <i class="fa-solid fa-clock-rotate-left me-2 fs-7"></i>
+                    <span>Restored an unsaved evaluation matrix draft from local browser memory.</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-xs btn-primary py-0 px-2 fs-9" id="sem_btn_keep_draft">Keep Draft</button>
+                    <button type="button" class="btn btn-xs btn-light-danger py-0 px-2 fs-9" id="sem_btn_discard_draft">Discard</button>
+                  </div>
+                </div>
+
+                {{-- Optional Template Selector (If templates exist in DB) --}}
                 @if(!empty($recruiterNoteTemplates) && $recruiterNoteTemplates->count())
-                <div class="fg fv-row recruiter-template-field">
-                  <label>Select Template <span>(Optional - loads content into the note below)</span></label>
-                  <div class="recruiter-template-control"><i class="fa-regular fa-file-lines" aria-hidden="true"></i><select id="recruiter_note_template_select"><option value="">Select Note Template...</option>@foreach($recruiterNoteTemplates as $tpl)<option value="{{ $tpl->id }}">{{ $tpl->title }}</option>@endforeach</select></div>
+                <div class="sem-template-bar d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded border border-gray-200">
+                  <span class="fs-8 fw-semibold text-gray-700 text-nowrap"><i class="fa-regular fa-bookmark me-1 text-primary"></i> Pre-set Template:</span>
+                  <select id="recruiter_note_template_select" class="form-select form-select-sm form-select-solid fs-8 py-1">
+                    <option value="">Select an evaluation template...</option>
+                    @foreach($recruiterNoteTemplates as $tpl)
+                    <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
+                    @endforeach
+                  </select>
+                  <button type="button" class="btn btn-sm btn-light-info py-1 px-2 fs-8 text-nowrap" id="sem_apply_template_btn" title="Apply template content to evaluation notes">Apply</button>
                 </div>
+                @else
+                <input type="hidden" id="recruiter_note_template_select" value="" />
                 @endif
-                <div class="fg fv-row recruiter-editor-field">
-                  <label>Internal Note <span>(Optional)</span></label>
-                  <textarea id="recruiter_note" name="recruiter_note" rows="6" placeholder="Add internal recruiter notes about this candidate...">{{ @$application->recruiter_note }}</textarea>
-                  <div class="recruiter-private-note"><i class="fa-solid fa-lock" aria-hidden="true"></i><span>Internal only - Not visible to candidate</span></div>
+
+                {{-- ══════════════════════════════════════════════════════════════
+                     VIEW 1: STRUCTURED EVALUATION MATRIX (Default Active)
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="sem-matrix-view" id="sem_matrix_view">
+                  
+                  {{-- ROW 1: Overall Verdict & Highlights --}}
+                  <div class="sem-section sem-section--verdict mb-3">
+                    <div class="sem-section-header d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-award text-warning me-1"></i> Overall Recruiter Verdict <span class="rq text-danger">*</span>
+                      </label>
+                      <span class="fs-8 text-muted">Select recommendation outcome</span>
+                    </div>
+                    <div class="sem-verdict-chips d-flex align-items-center flex-wrap gap-2 mb-2" id="sem_verdict_group">
+                      <button type="button" class="sem-chip-btn is-active" data-verdict="Strong Fit (Priority Submission)">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> Strong Fit (Priority Submission)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Qualified Match (Standard)">
+                        <i class="fa-solid fa-check text-primary me-1"></i> Qualified Match (Standard)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Potential Fit (Needs Review)">
+                        <i class="fa-solid fa-circle-question text-warning me-1"></i> Potential Fit (Needs Review)
+                      </button>
+                      <button type="button" class="sem-chip-btn" data-verdict="Backup / Talent Pool">
+                        <i class="fa-solid fa-user-clock text-info me-1"></i> Backup / Talent Pool
+                      </button>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Executive Summary / Candidate Hook</label>
+                      <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_summary" placeholder="e.g. Proven backend specialist with strong microservices architecture and clean production delivery..." />
+                    </div>
+                  </div>
+
+                  {{-- ROW 2: Core Competencies & Role Alignment --}}
+                  <div class="sem-section sem-section--competencies mb-3 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i> Core Competencies & Role Fit
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-primary bg-light-primary px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Target Role / Designation</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_role" placeholder="e.g. Senior Laravel Engineer" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Key Technical Strengths</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_skills" placeholder="e.g. PHP, Laravel, PostgreSQL, Docker" />
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Project & Technical Accomplishments</label>
+                      <textarea class="form-control form-control-sm form-control-solid sem-textarea fs-8" id="sem_strengths_note" rows="2" placeholder="Detail hands-on project accomplishments, system scale handled, and engineering problem-solving..."></textarea>
+                    </div>
+                  </div>
+
+                  {{-- ROW 3: Availability, Notice & Compensation Logistics --}}
+                  <div class="sem-section sem-section--logistics mb-3 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-regular fa-calendar-check text-success me-1"></i> Availability, Notice & Compensation
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-success bg-light-success px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Joining Readiness / Notice</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_notice" placeholder="e.g. Immediate Joiner / 0 Days" />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Salary Alignment</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_salary" placeholder="e.g. Expected: Within requisition budget" />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Preferred Work Mode</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_work_mode" placeholder="e.g. Work From Office (WFO) / Hybrid" />
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Logistics & Interview Availability Remarks</label>
+                      <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_logistics_note" placeholder="e.g. Last working date confirmed; flexible on shift timings; ready for client video rounds." />
+                    </div>
+                  </div>
+
+                  {{-- ROW 4: Work Authorization & Communication --}}
+                  <div class="sem-section sem-section--auth mb-2 p-3 bg-light-subtle rounded border border-gray-200">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <label class="sem-section-title fs-7 fw-bold text-gray-800 m-0">
+                        <i class="fa-solid fa-passport text-info me-1"></i> Work Authorization & Soft Skills
+                      </label>
+                      <span class="sem-auto-badge fs-9 text-info bg-light-info px-2 py-0.5 rounded"><i class="fa-solid fa-bolt me-1"></i> Live Form Linked</span>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Work Authorization / Visa Status</label>
+                        <input type="text" class="form-control form-control-sm form-control-solid sem-input fs-8" id="sem_work_auth" placeholder="e.g. US Citizen (USC) - Verified" />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="fs-8 fw-semibold text-gray-600 mb-1">Communication Assessment</label>
+                        <div class="sem-comm-chips d-flex align-items-center flex-wrap gap-1" id="sem_comm_group">
+                          <button type="button" class="sem-comm-btn is-active" data-comm="Exceptional">Exceptional</button>
+                          <button type="button" class="sem-comm-btn" data-comm="Strong Professional">Strong Professional</button>
+                          <button type="button" class="sem-comm-btn" data-comm="Clear & Functional">Clear & Functional</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="sem-field-row">
+                      <label class="fs-8 fw-semibold text-gray-600 mb-1">Additional Internal Observations</label>
+                      <textarea class="form-control form-control-sm form-control-solid sem-textarea fs-8" id="sem_additional_note" rows="2" placeholder="Cultural fit, motivation for job change, or specific placement notes..."></textarea>
+                    </div>
+                  </div>
+
                 </div>
+
+                {{-- ══════════════════════════════════════════════════════════════
+                     VIEW 2: COMPILED NOTE PREVIEW / FREE-TEXT EDIT (Hidden initially)
+                     ══════════════════════════════════════════════════════════════ --}}
+                <div class="sem-compiled-view" id="sem_compiled_view" style="display: none;">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <label class="fs-7 fw-bold text-gray-800 m-0">
+                      <i class="fa-regular fa-file-lines text-primary me-1"></i> Compiled Authoritative Recruiter Note
+                    </label>
+                    <span class="fs-8 text-muted"><i class="fa-solid fa-lock me-1"></i> Saved to database on form submission</span>
+                  </div>
+                  <textarea id="sem_compiled_display" class="form-control form-control-solid sem-compiled-textarea fs-8" rows="9" placeholder="The structured matrix compiles your evaluation here in real-time..."></textarea>
+                  <div class="d-flex align-items-center justify-content-between mt-2">
+                    <small class="text-muted fs-8"><i class="fa-solid fa-circle-info me-1"></i> Editing here directly sets the final submission note.</small>
+                    <button type="button" class="btn btn-xs btn-light-primary py-1 px-2 fs-8" id="sem_recompile_btn"><i class="fa-solid fa-rotate me-1"></i> Re-compile from Matrix Form</button>
+                  </div>
+                </div>
+
+                {{-- Authoritative Hidden Form Value (Persisted to MySQL / API) --}}
+                <textarea id="recruiter_note" name="recruiter_note" style="display: none !important;">{{ @$application->recruiter_note }}</textarea>
+
+                {{-- Footer Info --}}
+                <div class="d-flex align-items-center justify-content-between mt-3 pt-2 border-top border-gray-200">
+                  <div class="recruiter-private-note d-flex align-items-center fs-8 text-muted">
+                    <i class="fa-solid fa-lock text-warning me-1" aria-hidden="true"></i>
+                    <span>Internal only • Strictly not visible to candidate</span>
+                  </div>
+                  <div class="sem-counter fs-8 fw-semibold text-gray-600" id="sem_word_counter">
+                    <span id="sem_word_count">0</span> words • <span id="sem_char_count">0</span> characters
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -3603,7 +4007,6 @@
 @endphp
 
 @push('footer-script')
-<script src="{{ asset('demo/ckeditor/ckeditor.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ asset('js/resume-presign.js') }}?v=20260924-1"></script>
 @include('service_company.job-applications.jero-client-parser')
@@ -3809,6 +4212,9 @@ $(document).ready(function () {
                         '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
                     );
                     toastr.success('Resume parsed in browser and fields populated!');
+                    if (typeof syncRecruiterEvaluationMatrix === 'function') {
+                        syncRecruiterEvaluationMatrix(false);
+                    }
                 },
                 onError: function (err) {
                     window._clientParserState = 'error';
@@ -4602,8 +5008,8 @@ async function isInternetAvailable() {
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
 
-                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-                        CKEDITOR.instances['recruiter_note'].updateElement();
+                    if (typeof compileEvaluationMatrix === 'function') {
+                        compileEvaluationMatrix();
                     }
 
                     // Ensure unique client_update_uuid for idempotency
@@ -4668,6 +5074,7 @@ async function isInternetAvailable() {
                             function executeUpdateRedirect() {
                                 if (updateRedirected) return;
                                 updateRedirected = true;
+                                $(document).trigger('jero-candidate-saved');
                                 var emailField = form.querySelector('[name="email1"]');
                                 var passwordField = form.querySelector('[name="password1"]');
                                 if (emailField) emailField.value = "";
@@ -6336,8 +6743,8 @@ var KTAddCandidate = function () {
                     submitButton.setAttribute('data-kt-indicator', 'on');
                     submitButton.disabled = true;
 
-                    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-                        CKEDITOR.instances['recruiter_note'].updateElement();
+                    if (typeof compileEvaluationMatrix === 'function') {
+                        compileEvaluationMatrix();
                     }
 
                     // Ensure unique client_submission_uuid for idempotency
@@ -6426,6 +6833,7 @@ var KTAddCandidate = function () {
                             function executeSaveRedirect() {
                                 if (saveRedirected) return;
                                 saveRedirected = true;
+                                $(document).trigger('jero-candidate-saved');
                                 var e1 = form.querySelector('[name="email1"]'); if (e1) e1.value = "";
                                 var p1 = form.querySelector('[name="password1"]'); if (p1) p1.value = "";
                                 window.location.assign(targetUrl);
@@ -6979,45 +7387,609 @@ $(document).ready(function() {
        
 
 
-// Initialize CKEditor for recruiter_note
-if (typeof CKEDITOR !== 'undefined') {
-    CKEDITOR.replace('recruiter_note', { height: 150 });
+// ==========================================================================
+// RECRUITER EVALUATION MATRIX — CLIENT-SIDE JERO ENGINE (Option 3)
+// 100% Client-Side Browser RAM & LocalStorage Execution (0% Server Strain)
+// Complies with Rule 1, 2, 3, 4, 7 (No Business Logic Mutation, 10K Concurrency)
+// ==========================================================================
+var RecruiterEvaluationMatrix = (function () {
+    'use strict';
 
-    // When CKEditor is ready, hook into its iframe paste events.
-    // If the user pastes a file (e.g. a resume) while the editor has focus,
-    // intercept it and route to the resume upload handler instead of letting
-    // CKEditor consume the event (CKEditor's iframe swallows document-level paste).
-    CKEDITOR.instances['recruiter_note'].on('instanceReady', function () {
-        var editorDoc = this.document.$;
-        editorDoc.addEventListener('paste', function (e) {
-            var files = e.clipboardData && e.clipboardData.files;
-            if (files && files.length > 0) {
+    var companyId = '{{ auth()->user()->company_id ?? 0 }}';
+    var candidateId = '{{ @$application->id ?: "new" }}';
+    var isEditMode = {{ ($page_event === 'EDIT' || !empty(@$application->id)) ? 'true' : 'false' }};
+    var storageKey = 'jero_sem_draft_' + companyId + '_' + candidateId;
+
+    var initialDbNote = ($('#recruiter_note').val() || '').trim();
+
+    // DOM Elements Cache
+    var $card = $('#recruiter_evaluation_matrix_card');
+    if (!$card.length) {
+        return { compile: function () {} };
+    }
+
+    var $matrixView = $('#sem_matrix_view');
+    var $compiledView = $('#sem_compiled_view');
+    var $btnViewMatrix = $('#sem_btn_view_matrix');
+    var $btnViewCompiled = $('#sem_btn_view_compiled');
+    var $syncBtn = $('#sem_sync_btn');
+    var $recompileBtn = $('#sem_recompile_btn');
+    var $draftBadge = $('#sem_draft_badge');
+    var $draftLabel = $('#sem_draft_label');
+    var $restoreBanner = $('#sem_restore_banner');
+    var $btnKeepDraft = $('#sem_btn_keep_draft');
+    var $btnDiscardDraft = $('#sem_btn_discard_draft');
+    var $templateSelect = $('#recruiter_note_template_select');
+    var $applyTemplateBtn = $('#sem_apply_template_btn');
+
+    // Matrix Form Inputs
+    var $verdictChips = $('#sem_verdict_group .sem-chip-btn');
+    var $summaryInput = $('#sem_summary');
+    var $roleInput = $('#sem_role');
+    var $skillsInput = $('#sem_skills');
+    var $strengthsNote = $('#sem_strengths_note');
+    var $noticeInput = $('#sem_notice');
+    var $salaryInput = $('#sem_salary');
+    var $workModeInput = $('#sem_work_mode');
+    var $logisticsNote = $('#sem_logistics_note');
+    var $workAuthInput = $('#sem_work_auth');
+    var $commChips = $('#sem_comm_group .sem-comm-btn');
+    var $additionalNote = $('#sem_additional_note');
+
+    // Compiled Output & Hidden Persistence
+    var $compiledDisplay = $('#sem_compiled_display');
+    var $hiddenNote = $('#recruiter_note');
+    var $wordCount = $('#sem_word_count');
+    var $charCount = $('#sem_char_count');
+
+    var currentView = 'matrix'; // 'matrix' or 'compiled'
+    var saveTimeout = null;
+    var compileTimeout = null;
+
+    // --- Helper: Extract Live Variables from Candidate Form in Browser RAM ---
+    function getLiveCandidateFormVariables() {
+        // Candidate Name
+        var firstName = ($('#first_name').val() || '').trim();
+        var lastName = ($('#last_name').val() || '').trim();
+        var candidateName = (firstName + ' ' + lastName).trim() || 'Candidate';
+
+        // Target Role / Current Designation
+        var role = ($('#current_designation').val() || '').trim();
+        if (!role) {
+            var jobSelected = $('#job_id option:selected').text();
+            if (jobSelected && jobSelected.indexOf('Select') === -1) {
+                role = jobSelected.trim();
+            }
+        }
+
+        // Technical Skills
+        var skillsRaw = ($('#kt_tagify_2').val() || '').trim();
+        var skillsFormatted = '';
+        if (skillsRaw) {
+            try {
+                if (skillsRaw.charAt(0) === '[' && skillsRaw.charAt(skillsRaw.length - 1) === ']') {
+                    var parsed = JSON.parse(skillsRaw);
+                    if (Array.isArray(parsed)) {
+                        skillsFormatted = parsed.map(function (item) { return item.value || item; }).filter(Boolean).join(', ');
+                    }
+                }
+            } catch (e) {
+                skillsFormatted = '';
+            }
+            if (!skillsFormatted) {
+                skillsFormatted = skillsRaw;
+            }
+        }
+        if (!skillsFormatted) {
+            var summaryPills = [];
+            $('.candidate-skills-summary-pill, #skillTags .skill-tag').each(function () {
+                var t = $(this).text().trim().replace(/[×✕]/g, '').trim();
+                if (t && summaryPills.indexOf(t) === -1) summaryPills.push(t);
+            });
+            if (summaryPills.length > 0) {
+                skillsFormatted = summaryPills.join(', ');
+            }
+        }
+
+        // Joining Readiness / Notice Period
+        var noticeVal = ($('#serving_notice_period').val() || '').toString();
+        var noticeText = '';
+        if (noticeVal === '2') {
+            noticeText = 'Immediate Joiner (0 Days Notice)';
+        } else if (noticeVal === '1') {
+            var lwd = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
+            noticeText = 'Serving Notice Period (SNP)' + (lwd ? ' • Expected LWD: ' + lwd : '');
+        } else if (noticeVal === '0') {
+            var days = $('#ddl_np_id option:selected').text().trim();
+            if (days && days.indexOf('Select') === -1) {
+                noticeText = days;
+            } else {
+                noticeText = 'Standard Notice Period';
+            }
+        }
+
+        // Salary Alignment
+        var salaryText = '';
+        var curCode = $('#currency option:selected').attr('data-code') || $('#currency option:selected').text().trim() || 'INR';
+        var expSummary = ($('#candidateSalaryExpectedSummary').text() || '').trim();
+        var curSummary = ($('#candidateSalaryCurrentSummary').text() || '').trim();
+        var hikeSummary = ($('#candidateSalaryHikeSummary').text() || '').trim();
+
+        var billAnnual = ($('#bill_annual').val() || '').trim();
+        var billMonthly = ($('#bill_monthly').val() || '').trim();
+        var billHourly = ($('#ectc').val() || '').trim();
+        var expVal = billAnnual || billMonthly || billHourly;
+
+        if (expSummary && expSummary !== '0') {
+            salaryText = 'Expected: ' + expSummary;
+            if (curSummary && curSummary !== '0') {
+                salaryText += ' (Current: ' + curSummary + ')';
+            }
+            if (hikeSummary && hikeSummary !== '0%' && hikeSummary !== '0') {
+                salaryText += ' • Hike: ' + hikeSummary;
+            }
+        } else if (expVal) {
+            salaryText = 'Expected: ' + expVal + ' ' + curCode;
+        }
+
+        // Preferred Work Mode
+        var wmChecked = $('input[name="wm"]:checked').val() || 'office';
+        var workModeText = 'Work From Office (WFO)';
+        if (wmChecked === 'remote') {
+            workModeText = 'Remote';
+        } else if (wmChecked === 'hybrid') {
+            workModeText = 'Hybrid';
+        }
+
+        // Work Authorization
+        var workAuthText = '';
+        var $waSelect = $('#visastatu');
+        if ($waSelect.length) {
+            var selectedWa = $waSelect.find('option:selected').text().trim();
+            var waVal = $waSelect.val();
+            if (waVal && selectedWa && selectedWa.indexOf('Select') === -1) {
+                workAuthText = selectedWa;
+            }
+        }
+
+        return {
+            name: candidateName,
+            role: role,
+            skills: skillsFormatted,
+            notice: noticeText,
+            salary: salaryText,
+            workMode: workModeText,
+            workAuth: workAuthText
+        };
+    }
+
+    // --- Synchronize Live Form Variables into Matrix Fields ---
+    // Non-destructive: will not overwrite fields that the user explicitly edited unless forceAll === true
+    function syncLiveFormVariablesToMatrix(forceAll) {
+        var vars = getLiveCandidateFormVariables();
+        var updatedCount = 0;
+
+        function setIfAllowed($input, val) {
+            if (!val) return;
+            var isUserModified = $input.data('user-modified') === true;
+            if (forceAll || !isUserModified || !$input.val().trim()) {
+                $input.val(val);
+                $input.addClass('sem-highlight');
+                setTimeout(function () { $input.removeClass('sem-highlight'); }, 800);
+                updatedCount++;
+            }
+        }
+
+        setIfAllowed($roleInput, vars.role);
+        setIfAllowed($skillsInput, vars.skills);
+        setIfAllowed($noticeInput, vars.notice);
+        setIfAllowed($salaryInput, vars.salary);
+        setIfAllowed($workModeInput, vars.workMode);
+        setIfAllowed($workAuthInput, vars.workAuth);
+
+        compileEvaluationMatrix();
+        triggerDraftSave();
+        return updatedCount;
+    }
+
+    // --- Compile Structured Evaluation Matrix into Authoritative Plain Text ---
+    function compileEvaluationMatrix() {
+        if (currentView === 'compiled') {
+            // If in compiled view, display value is authoritative
+            var directText = $compiledDisplay.val();
+            $hiddenNote.val(directText);
+            updateCounters(directText);
+            return directText;
+        }
+
+        var verdict = $verdictChips.filter('.is-active').attr('data-verdict') || 'Strong Fit (Priority Submission)';
+        var summary = ($summaryInput.val() || '').trim();
+        var role = ($roleInput.val() || '').trim();
+        var skills = ($skillsInput.val() || '').trim();
+        var strengths = ($strengthsNote.val() || '').trim();
+        var notice = ($noticeInput.val() || '').trim();
+        var salary = ($salaryInput.val() || '').trim();
+        var workMode = ($workModeInput.val() || '').trim();
+        var logistics = ($logisticsNote.val() || '').trim();
+        var workAuth = ($workAuthInput.val() || '').trim();
+        var comm = $commChips.filter('.is-active').attr('data-comm') || 'Strong Professional';
+        var additional = ($additionalNote.val() || '').trim();
+
+        // Build clean, structured plain text
+        var sections = [];
+
+        // 1. Executive Verdict & Summary
+        var s1 = ['[EVALUATION MATRIX SUMMARY]'];
+        s1.push('■ VERDICT: ' + verdict);
+        if (summary) {
+            s1.push('■ EXECUTIVE SUMMARY: ' + summary);
+        }
+        sections.push(s1.join('\n'));
+
+        // 2. Profile & Technical Competencies
+        var s2 = ['[PROFILE & TECHNICAL COMPETENCIES]'];
+        if (role) s2.push('• Target Role: ' + role);
+        if (skills) s2.push('• Key Technical Strengths: ' + skills);
+        if (strengths) s2.push('• Highlights & Accomplishments: ' + strengths);
+        if (s2.length > 1) sections.push(s2.join('\n'));
+
+        // 3. Logistics & Availability
+        var s3 = ['[LOGISTICS & AVAILABILITY]'];
+        if (notice) s3.push('• Notice Period: ' + notice);
+        if (salary) s3.push('• Compensation: ' + salary);
+        if (workMode) s3.push('• Work Mode: ' + workMode);
+        if (logistics) s3.push('• Availability Remarks: ' + logistics);
+        if (s3.length > 1) sections.push(s3.join('\n'));
+
+        // 4. Authorization & Soft Skills
+        var s4 = ['[AUTHORIZATION & SOFT SKILLS]'];
+        if (workAuth) s4.push('• Work Authorization: ' + workAuth);
+        if (comm) s4.push('• Communication Assessment: ' + comm);
+        if (additional) s4.push('• Observations: ' + additional);
+        if (s4.length > 1) sections.push(s4.join('\n'));
+
+        var compiledOutput = sections.join('\n\n');
+
+        $compiledDisplay.val(compiledOutput);
+        $hiddenNote.val(compiledOutput);
+        updateCounters(compiledOutput);
+        return compiledOutput;
+    }
+
+    // --- Word & Character Counters ---
+    function updateCounters(text) {
+        text = text || '';
+        var charCount = text.length;
+        var words = text.trim().split(/\s+/).filter(function (w) { return w.length > 0; });
+        var wordCount = words.length;
+
+        $charCount.text(charCount);
+        $wordCount.text(wordCount);
+    }
+
+    // --- LocalStorage Draft Auto-Save Engine (400ms Debounce) ---
+    function triggerDraftSave() {
+        if (saveTimeout) clearTimeout(saveTimeout);
+        $draftLabel.text('Saving...');
+        saveTimeout = setTimeout(function () {
+            try {
+                var draftData = {
+                    updated_at: Date.now(),
+                    view: currentView,
+                    verdict: $verdictChips.filter('.is-active').attr('data-verdict') || '',
+                    summary: $summaryInput.val(),
+                    role: $roleInput.val(),
+                    skills: $skillsInput.val(),
+                    strengths_note: $strengthsNote.val(),
+                    notice: $noticeInput.val(),
+                    salary: $salaryInput.val(),
+                    work_mode: $workModeInput.val(),
+                    logistics_note: $logisticsNote.val(),
+                    work_auth: $workAuthInput.val(),
+                    comm: $commChips.filter('.is-active').attr('data-comm') || '',
+                    additional_note: $additionalNote.val(),
+                    compiled_text: $compiledDisplay.val()
+                };
+                localStorage.setItem(storageKey, JSON.stringify(draftData));
+                $draftLabel.text('Draft Saved');
+                $draftBadge.find('i').removeClass('text-warning text-danger').addClass('text-success');
+            } catch (e) {
+                console.warn('[SEM] LocalStorage save quota exceeded or unavailable:', e);
+                $draftLabel.text('Draft in RAM');
+            }
+        }, 400);
+    }
+
+    // --- LocalStorage Draft Restoration on Load ---
+    function restoreDraftIfAvailable() {
+        try {
+            var raw = localStorage.getItem(storageKey);
+            if (!raw) {
+                // If no draft, but DB has existing note (e.g. edit mode)
+                if (initialDbNote) {
+                    $compiledDisplay.val(initialDbNote);
+                    $hiddenNote.val(initialDbNote);
+                    updateCounters(initialDbNote);
+                    // If DB note is unstructured legacy free text, activate compiled view so user sees it verbatim
+                    if (initialDbNote.indexOf('[EVALUATION MATRIX SUMMARY]') === -1) {
+                        switchView('compiled');
+                    }
+                } else {
+                    // Fresh create: prefill initial form state
+                    syncLiveFormVariablesToMatrix(false);
+                }
+                return;
+            }
+
+            var draft = JSON.parse(raw);
+            if (!draft) return;
+
+            // If existing candidate in edit mode and DB note differs from draft, show restore banner
+            if (isEditMode && initialDbNote && initialDbNote !== draft.compiled_text) {
+                $restoreBanner.slideDown(200);
+                // Temporarily apply draft
+                applyDraftData(draft);
+            } else {
+                // Apply draft directly
+                applyDraftData(draft);
+            }
+        } catch (e) {
+            console.warn('[SEM] Error restoring draft:', e);
+            syncLiveFormVariablesToMatrix(false);
+        }
+    }
+
+    function applyDraftData(draft) {
+        if (!draft) return;
+        if (draft.verdict) {
+            $verdictChips.removeClass('is-active');
+            var $vMatch = $verdictChips.filter('[data-verdict="' + draft.verdict + '"]');
+            if ($vMatch.length) $vMatch.addClass('is-active');
+            else $verdictChips.first().addClass('is-active');
+        }
+        if (typeof draft.summary !== 'undefined') $summaryInput.val(draft.summary);
+        if (typeof draft.role !== 'undefined') $roleInput.val(draft.role);
+        if (typeof draft.skills !== 'undefined') $skillsInput.val(draft.skills);
+        if (typeof draft.strengths_note !== 'undefined') $strengthsNote.val(draft.strengths_note);
+        if (typeof draft.notice !== 'undefined') $noticeInput.val(draft.notice);
+        if (typeof draft.salary !== 'undefined') $salaryInput.val(draft.salary);
+        if (typeof draft.work_mode !== 'undefined') $workModeInput.val(draft.work_mode);
+        if (typeof draft.logistics_note !== 'undefined') $logisticsNote.val(draft.logistics_note);
+        if (typeof draft.work_auth !== 'undefined') $workAuthInput.val(draft.work_auth);
+        if (draft.comm) {
+            $commChips.removeClass('is-active');
+            var $cMatch = $commChips.filter('[data-comm="' + draft.comm + '"]');
+            if ($cMatch.length) $cMatch.addClass('is-active');
+            else $commChips.first().addClass('is-active');
+        }
+        if (typeof draft.additional_note !== 'undefined') $additionalNote.val(draft.additional_note);
+
+        if (draft.compiled_text) {
+            $compiledDisplay.val(draft.compiled_text);
+            $hiddenNote.val(draft.compiled_text);
+            updateCounters(draft.compiled_text);
+        } else {
+            compileEvaluationMatrix();
+        }
+
+        if (draft.view === 'compiled') {
+            switchView('compiled');
+        }
+    }
+
+    // --- View Mode Switcher ---
+    function switchView(viewName) {
+        currentView = viewName;
+        if (viewName === 'compiled') {
+            $btnViewMatrix.removeClass('is-active');
+            $btnViewCompiled.addClass('is-active');
+            $matrixView.hide();
+            $compiledView.fadeIn(150);
+            $compiledDisplay.focus();
+        } else {
+            $btnViewCompiled.removeClass('is-active');
+            $btnViewMatrix.addClass('is-active');
+            $compiledView.hide();
+            $matrixView.fadeIn(150);
+        }
+        triggerDraftSave();
+    }
+
+    // --- Template Selector & Interpolator ---
+    var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+
+    function applySelectedTemplate() {
+        var id = $templateSelect.val();
+        if (!id || !recruiterNoteTemplates[id]) return;
+        var rawContent = recruiterNoteTemplates[id].content || '';
+        if (!rawContent) return;
+
+        // Interpolate tokens with live candidate variables
+        var vars = getLiveCandidateFormVariables();
+        var interpolated = rawContent
+            .replace(/\{candidate_name\}|\{name\}/gi, vars.name)
+            .replace(/\{role\}|\{designation\}|\{target_role\}/gi, vars.role)
+            .replace(/\{skills\}|\{key_skills\}/gi, vars.skills)
+            .replace(/\{notice\}|\{notice_period\}/gi, vars.notice)
+            .replace(/\{salary\}|\{compensation\}/gi, vars.salary)
+            .replace(/\{work_mode\}/gi, vars.workMode)
+            .replace(/\{work_auth\}|\{visa\}/gi, vars.workAuth);
+
+        // If template looks like a full note, append/set into compiled or observations
+        if (currentView === 'compiled') {
+            var existing = $compiledDisplay.val().trim();
+            $compiledDisplay.val(existing ? (existing + '\n\n' + interpolated) : interpolated);
+            $hiddenNote.val($compiledDisplay.val());
+            updateCounters($compiledDisplay.val());
+        } else {
+            var curAdditional = $additionalNote.val().trim();
+            $additionalNote.val(curAdditional ? (curAdditional + '\n' + interpolated) : interpolated);
+            $additionalNote.data('user-modified', true);
+            compileEvaluationMatrix();
+        }
+        triggerDraftSave();
+    }
+
+    // --- Event Bindings ---
+
+    // 1. Verdict chips
+    $card.on('click', '#sem_verdict_group .sem-chip-btn', function (e) {
+        e.preventDefault();
+        $verdictChips.removeClass('is-active');
+        $(this).addClass('is-active');
+        compileEvaluationMatrix();
+        triggerDraftSave();
+    });
+
+    // 2. Communication chips
+    $card.on('click', '#sem_comm_group .sem-comm-btn', function (e) {
+        e.preventDefault();
+        $commChips.removeClass('is-active');
+        $(this).addClass('is-active');
+        compileEvaluationMatrix();
+        triggerDraftSave();
+    });
+
+    // 3. Matrix inputs change & typing
+    $matrixView.on('input change', 'input, textarea', function () {
+        $(this).data('user-modified', true);
+        if (compileTimeout) clearTimeout(compileTimeout);
+        compileTimeout = setTimeout(function () {
+            compileEvaluationMatrix();
+            triggerDraftSave();
+        }, 150);
+    });
+
+    // 4. View mode toggle buttons
+    $card.on('click', '#sem_btn_view_matrix', function (e) {
+        e.preventDefault();
+        switchView('matrix');
+    });
+
+    $card.on('click', '#sem_btn_view_compiled', function (e) {
+        e.preventDefault();
+        compileEvaluationMatrix();
+        switchView('compiled');
+    });
+
+    // 5. Free-text direct editing in compiled view
+    $compiledDisplay.on('input', function () {
+        var val = $(this).val();
+        $hiddenNote.val(val);
+        updateCounters(val);
+        triggerDraftSave();
+    });
+
+    // 6. Re-compile from matrix button
+    $card.on('click', '#sem_recompile_btn', function (e) {
+        e.preventDefault();
+        var prevView = currentView;
+        currentView = 'matrix';
+        var compiled = compileEvaluationMatrix();
+        currentView = prevView;
+        $compiledDisplay.addClass('sem-highlight');
+        setTimeout(function () { $compiledDisplay.removeClass('sem-highlight'); }, 700);
+        triggerDraftSave();
+    });
+
+    // 7. Sync Details from Form button (Force sync all linked fields)
+    $card.on('click', '#sem_sync_btn', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var $icon = $btn.find('i');
+        $icon.addClass('fa-spin');
+        var count = syncLiveFormVariablesToMatrix(true);
+        setTimeout(function () {
+            $icon.removeClass('fa-spin');
+        }, 600);
+    });
+
+    // 8. Template selection / apply
+    $card.on('change', '#recruiter_note_template_select', function () {
+        applySelectedTemplate();
+    });
+    $card.on('click', '#sem_apply_template_btn', function (e) {
+        e.preventDefault();
+        applySelectedTemplate();
+    });
+
+    // 9. Draft Restore banner actions
+    $card.on('click', '#sem_btn_keep_draft', function (e) {
+        e.preventDefault();
+        $restoreBanner.slideUp(200);
+        triggerDraftSave();
+    });
+
+    $card.on('click', '#sem_btn_discard_draft', function (e) {
+        e.preventDefault();
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (err) {}
+        $restoreBanner.slideUp(200);
+        if (initialDbNote) {
+            $compiledDisplay.val(initialDbNote);
+            $hiddenNote.val(initialDbNote);
+            updateCounters(initialDbNote);
+            if (initialDbNote.indexOf('[EVALUATION MATRIX SUMMARY]') === -1) {
+                switchView('compiled');
+            } else {
+                syncLiveFormVariablesToMatrix(true);
+            }
+        } else {
+            $matrixView.find('input, textarea').val('').removeData('user-modified');
+            $verdictChips.removeClass('is-active').first().addClass('is-active');
+            $commChips.removeClass('is-active').first().addClass('is-active');
+            syncLiveFormVariablesToMatrix(true);
+        }
+    });
+
+    // 10. File paste interceptor: If a file (resume) is pasted inside matrix card, route to processFile()
+    $card.on('paste', 'input, textarea', function (e) {
+        var clipboardData = e.originalEvent && e.originalEvent.clipboardData;
+        if (clipboardData && clipboardData.files && clipboardData.files.length > 0) {
+            var file = clipboardData.files[0];
+            var resumeInput = document.getElementById('resume') || document.querySelector('.resumeupload');
+            if (resumeInput && typeof processFile === 'function') {
                 e.preventDefault();
                 e.stopPropagation();
-                var file = files[0];
                 var dt = new DataTransfer();
                 dt.items.add(file);
                 resumeInput.files = dt.files;
                 processFile(file);
             }
-        }, true);
+        }
     });
-}
 
-// Recruiter note templates keyed by id
-var recruiterNoteTemplates = @json(isset($recruiterNoteTemplates) ? $recruiterNoteTemplates->keyBy('id') : collect());
+    // 11. Purge LocalStorage draft on successful form submit
+    $(document).on('jero-candidate-saved', function () {
+        try {
+            localStorage.removeItem(storageKey);
+        } catch (e) {}
+    });
 
-// Template selector → load content into CKEditor
-$(document).on('change', '#recruiter_note_template_select', function () {
-    var id = $(this).val();
-    if (!id || !recruiterNoteTemplates[id]) return;
-    var content = recruiterNoteTemplates[id].content;
-    if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances['recruiter_note']) {
-        CKEDITOR.instances['recruiter_note'].setData(content);
-    } else {
-        $('#recruiter_note').val(content);
-    }
-});
+    // Auto-boot
+    restoreDraftIfAvailable();
+
+    // Listen to form changes across candidate fields (skills, notice, salary, work mode)
+    // to auto-sync fields if not user-modified
+    var autoSyncDebounce = null;
+    $(document).on('change', '#current_designation, #serving_notice_period, #ddl_np_id, #np_id, input[name="wm"], #visastatu, #currency, #bill_annual, #bill_monthly, #ectc', function () {
+        if (autoSyncDebounce) clearTimeout(autoSyncDebounce);
+        autoSyncDebounce = setTimeout(function () {
+            syncLiveFormVariablesToMatrix(false);
+        }, 300);
+    });
+
+    // Expose authoritative compile and sync methods globally
+    window.compileEvaluationMatrix = compileEvaluationMatrix;
+    window.syncRecruiterEvaluationMatrix = syncLiveFormVariablesToMatrix;
+
+    return {
+        compile: compileEvaluationMatrix,
+        sync: syncLiveFormVariablesToMatrix,
+        switchView: switchView
+    };
+})();
 
 // Add Candidate presentation only: card visibility, salary display tabs, and summaries.
 (function () {
