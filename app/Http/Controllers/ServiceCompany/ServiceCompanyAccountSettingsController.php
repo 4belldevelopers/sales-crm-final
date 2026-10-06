@@ -1266,7 +1266,13 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         }
 
         \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency_key:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency_symbol:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant_currency_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_timezone:{$company_id}");
         \Illuminate\Support\Facades\Cache::forget("tenant:{$company_id}:currency_bench_show_mode");
         $this->accountSettingsService->flushAccountCache($company_id);
 
@@ -1321,6 +1327,12 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
                     ];
 
                     DB::table('client_location')->insert($values);
+
+                    $company_id = auth()->user()->company_id;
+                    \Illuminate\Support\Facades\Cache::forget("tenant_country_code:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_default_country_id:{$company_id}");
+                    \Illuminate\Support\Facades\Cache::forget("tenant_default_calling_code:{$company_id}");
+                    $this->accountSettingsService->flushAccountCache($company_id);
 
                     return Reply::dataOnly(['status' => 'success']);
 

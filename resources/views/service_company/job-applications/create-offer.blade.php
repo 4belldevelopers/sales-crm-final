@@ -1261,13 +1261,17 @@
                                                     <div class="row co-field-grid">
                                                         <div class="col-lg-4 co-field">
                                                             <label class="form-label required co-flabel"><span class="co-ic co-ic--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1.1 2 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2.5 0 0 1 9.5 15M12 6v1.5M12 16.5V18"/></svg></span> Currency</label>
+                                                            @php
+                                                                $defaultTenantCurrencyKey = GeneralMethod::defaultCurrencyKey();
+                                                                $selectedCurrency = ($currency !== '' && $currency !== null) ? (int)$currency : $defaultTenantCurrencyKey;
+                                                            @endphp
                                                             <select class="form-select form-select-solid" arial-label="Select Currency" id="current_ctc_cur" name="current_ctc_cur">
-                                                                <option value="0" {{ $currency == 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
-                                                                <option value="1" {{ $currency == 1 ? 'selected' : '' }}>EUR</option>
-                                                                <option value="2" {{ $currency == 2 ? 'selected' : '' }}>JPY</option>
-                                                                <option value="3" {{ $currency == 3 ? 'selected' : '' }}>GBP</option>
-                                                                <option value="4" {{ $currency == 4 ? 'selected' : '' }}>USD</option>
-                                                                <option value="5" {{ $currency == 5 ? 'selected' : '' }}>AED</option>
+                                                                <option value="0" {{ $selectedCurrency === 0 ? 'selected' : '' }}>INR - Indian Rupee</option>
+                                                                <option value="1" {{ $selectedCurrency === 1 ? 'selected' : '' }}>EUR</option>
+                                                                <option value="2" {{ $selectedCurrency === 2 ? 'selected' : '' }}>JPY</option>
+                                                                <option value="3" {{ $selectedCurrency === 3 ? 'selected' : '' }}>GBP</option>
+                                                                <option value="4" {{ $selectedCurrency === 4 ? 'selected' : '' }}>USD</option>
+                                                                <option value="5" {{ $selectedCurrency === 5 ? 'selected' : '' }}>AED</option>
                                                             </select>
                                                         </div>
                                                         <div class="col-lg-4 co-field">

@@ -326,7 +326,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                                     <optgroup label="Popular Time Zones">
                                         @foreach($timezone as $tval)
                                             @if($tval->priority)
-                                                @php $sel = ($defaultTimeZone === $tval->time_zone) ? 'selected="selected"' : ''; @endphp
+                                                @php $sel = ($defaultTimeZone === $tval->time_zone || $defaultTimeZone === $tval->timezone_abbreviation) ? 'selected="selected"' : ''; @endphp
                                                 {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
                                             @endif
                                         @endforeach
@@ -334,7 +334,7 @@ $country_code =  GeneralMethod::countryCodeFun();
                                     <optgroup label="All Time Zones">
                                         @foreach($timezone as $tval)
                                             @if(!$tval->priority)
-                                                @php $sel = ($defaultTimeZone === $tval->time_zone) ? 'selected="selected"' : ''; @endphp
+                                                @php $sel = ($defaultTimeZone === $tval->time_zone || $defaultTimeZone === $tval->timezone_abbreviation) ? 'selected="selected"' : ''; @endphp
                                                 {!! '<option value="'.$tval->timezone_abbreviation.'" '.$sel.'>('.$tval->gmt_offse.') '.$tval->country_name.' - '.$tval->timezone_abbreviation.'</option>' !!}
                                             @endif
                                         @endforeach

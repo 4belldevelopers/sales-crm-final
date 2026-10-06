@@ -19,7 +19,7 @@
 
 @php
     $resolvedCountryCodeId = $countryCodeId ?: ($id . '_country_code');
-    $tenantHqIso = strtoupper($defaultIso ?: (auth()->check() && auth()->user()->company ? (auth()->user()->company->headquarter_country_code ?? 'IN') : 'IN'));
+    $tenantHqIso = strtoupper($defaultIso ?: \App\Helper\GeneralMethod::countryCodeFun());
 
     // Comprehensive ISO-2 to Dial Code mapping
     $isoToDial = [

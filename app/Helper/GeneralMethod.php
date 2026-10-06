@@ -7203,22 +7203,114 @@ END:VCALENDAR";
 
     }
 
-    public static function countryCodeFun()
+    public static function countryCodeFun($company_id = null)
     {
-        $company_id = auth()->user()->company_id;
-        $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
-        $client_location = DB::table('client_location')
-            ->join('countries', 'countries.id', '=', 'client_location.country_id')
-            ->select('countries.country_code', 'countries.country_name')
-            ->where('client_location.client_id', @$client->id)
-            ->first();
-        $country_code = 'in';
-        if ($client_location) {
-            $country_code = strtolower($client_location->country_code);
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        if (empty($company_id)) {
+            return 'in';
         }
 
-        return $country_code;
+        return Cache::remember("tenant_country_code:{$company_id}", 86400, function () use ($company_id) {
+            $client = Client::select('clients.id', 'clients.tags')->where('clients.company_id', '=', $company_id)->where('clients.self_company', '=', 1)->first();
+            $client_location = null;
+            if ($client) {
+                $client_location = DB::table('client_location')
+                    ->join('countries', 'countries.id', '=', 'client_location.country_id')
+                    ->select('countries.country_code', 'countries.country_name')
+                    ->where('client_location.client_id', $client->id)
+                    ->first();
+            }
 
+            if ($client_location && ! empty($client_location->country_code)) {
+                return strtolower(trim($client_location->country_code));
+            }
+
+            // HQ / Country auto-detection fallback from companies.calling_code
+            $company = DB::table('companies')->select('calling_code')->where('id', $company_id)->first();
+            if ($company && ! empty($company->calling_code)) {
+                $rawCode = ltrim(trim((string) $company->calling_code), '+');
+                $matchedCountry = DB::table('countries')->where('phonecode', $rawCode)->value('country_code');
+                if ($matchedCountry) {
+                    return strtolower(trim($matchedCountry));
+                }
+            }
+
+            return 'in';
+        });
+    }
+
+    public static function defaultCountryId($company_id = null): int
+    {
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        if (empty($company_id)) {
+            return 101; // India default
+        }
+
+        return (int) Cache::remember("tenant_default_country_id:{$company_id}", 86400, function () use ($company_id) {
+            $client = Client::select('clients.id')
+                ->where('clients.company_id', '=', $company_id)
+                ->where('clients.self_company', '=', 1)
+                ->first();
+
+            if ($client) {
+                $countryId = DB::table('client_location')
+                    ->where('client_id', $client->id)
+                    ->whereNotNull('country_id')
+                    ->where('country_id', '>', 0)
+                    ->value('country_id');
+
+                if ($countryId) {
+                    return (int) $countryId;
+                }
+            }
+
+            // Fallback from companies.calling_code
+            $company = DB::table('companies')->select('calling_code')->where('id', $company_id)->first();
+            if ($company && ! empty($company->calling_code)) {
+                $rawCode = ltrim(trim((string) $company->calling_code), '+');
+                $matchedId = DB::table('countries')->where('phonecode', $rawCode)->value('id');
+                if ($matchedId) {
+                    return (int) $matchedId;
+                }
+            }
+
+            return 101;
+        });
+    }
+
+    public static function defaultCallingCode($company_id = null): string
+    {
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        if (empty($company_id)) {
+            return '91';
+        }
+
+        return Cache::remember("tenant_default_calling_code:{$company_id}", 86400, function () use ($company_id) {
+            $company = DB::table('companies')->select('calling_code')->where('id', $company_id)->first();
+            if ($company && ! empty($company->calling_code)) {
+                return ltrim(trim((string) $company->calling_code), '+');
+            }
+
+            $countryId = self::defaultCountryId($company_id);
+            $phoneCode = DB::table('countries')->where('id', $countryId)->value('phonecode');
+            if ($phoneCode) {
+                return ltrim(trim((string) $phoneCode), '+');
+            }
+
+            return '91';
+        });
     }
 
     public static function defaultCurrency($company_id = null)
@@ -7297,27 +7389,51 @@ END:VCALENDAR";
                 return (int) $k;
             }
         }
+
         return 0; // Default to 0 (INR) if not found in list
     }
 
-    public static function defaultTimeZone()
+    public static function defaultCurrencySymbol($company_id = null): string
     {
-        $company_id = auth()->user()->company_id;
+        $code = self::defaultCurrency($company_id);
+        $symbols = [
+            'INR' => '₹',
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'AED' => 'AED',
+            'JPY' => '¥',
+            'CAD' => 'C$',
+            'AUD' => 'A$',
+            'SGD' => 'S$',
+        ];
 
-        $defaultTimeZone = DB::table('companies')
-            ->select('companies.timezone')
-            ->where('companies.id', $company_id)
-            ->first();
+        return $symbols[strtoupper($code)] ?? $code;
+    }
 
-        // dd($defaultTimeZone );
-
-        $timezone = 'Asia/Kolkata';
-        if ($defaultTimeZone) {
-            $timezone = ($defaultTimeZone->timezone);
+    public static function defaultTimeZone($company_id = null)
+    {
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        if (empty($company_id)) {
+            return 'Asia/Kolkata';
         }
 
-        return $timezone;
+        return Cache::remember("tenant_default_timezone:{$company_id}", 86400, function () use ($company_id) {
+            $defaultTimeZone = DB::table('companies')
+                ->select('companies.timezone')
+                ->where('companies.id', $company_id)
+                ->first();
 
+            if ($defaultTimeZone && ! empty($defaultTimeZone->timezone)) {
+                return trim($defaultTimeZone->timezone);
+            }
+
+            return 'Asia/Kolkata';
+        });
     }
 
     public static function defaultTimeFormat($companyId = null)

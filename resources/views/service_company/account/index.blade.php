@@ -1686,9 +1686,9 @@ input[type="radio"]:checked {
         // Derived defaults — kept here at the include site so the partial stays pure
         // (the previous inline drawer body computed these inline; the agency_commercials_drawer
         // partial expects them as already-resolved values).
-        $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
-        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? 4);
-        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? 4);
+        $defaultTenantCurrencyKey = \App\Helper\GeneralMethod::defaultCurrencyKey();
+        $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? $defaultTenantCurrencyKey);
+        $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? $defaultTenantCurrencyKey);
         $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
         $aatReplacementPeriodDays = (int) (@$aatTerms->fulltime_replacement_period_days ?? 90);
         $aatFulltimePaymentTermsDays = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
