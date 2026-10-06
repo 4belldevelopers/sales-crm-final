@@ -576,85 +576,24 @@
 
 @push('footer-script')
 
-<script src="//cdn.datatables.net/fixedheader/3.1.5/js/dataTables.fixedHeader.min.js"></script>
-<script src="//cdn.datatables.net/responsive/2.2.3/js/dataTables.responsive.min.js"></script>
-<script src="//cdn.datatables.net/responsive/2.2.3/js/responsive.bootstrap.min.js"></script>
-<script src="{{ asset('assets/node_modules/moment/moment.js') }}{{ TM_VERSION }}" type="text/javascript"></script>
-<script src="{{ asset('assets/node_modules/bootstrap-datepicker/bootstrap-datepicker.min.js') }}{{ TM_VERSION }}" type="text/javascript"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.css" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
-
 <script>
+// ── Debounced Search & Filter Triggers ──────────────────────────────────────
+var itSearchDebounceTimer = null;
+
 $(document).ready(function() {
-    $('#kt_tagify_2').keyup(function() {
-        fetchCandidates();
+    $('#kt_tagify_2').on('input', function() {
+        clearTimeout(itSearchDebounceTimer);
+        itSearchDebounceTimer = setTimeout(function() {
+            itCurrentPage = 1;
+            fetchCandidates(1);
+        }, 350);
     });
 
-    $('#sortingfilter').change(function() {
-        fetchCandidates();
+    $('#sortingfilter').on('change', function() {
+        itCurrentPage = 1;
+        fetchCandidates(1);
     });
 });
-
-var table;
-
-function loadTable(){
-    var startDate = $('#start-date').val();
-    if (startDate == '') { startDate = null; }
-    var endDate = $('#end-date').val();
-    if (endDate == '') { endDate = null; }
-    startDate = null;
-    endDate = null;
-    var status = $('#status').val();
-    var applicationID = $('#applicationID').val();
-    var inputSearch = $('#inputSearch').val();
-    var sortingfilter = $('#sortingfilter').val();
-    var country = $('#country').val();
-    var cus_search = $('#kt_tagify_2').val();
-
-    table = $('#myTable').dataTable({
-        responsive: true,
-        processing: true,
-        serverSide: true,
-        destroy: true,
-        ordering: false,
-        "bLengthChange": false,
-        sDom: 'lrtip',
-        oLanguage: { sLengthMenu: "_MENU_",},
-        ajax: {'url' : '{!! route('service_company.interview-schedule.data') !!}', "data": function ( d ) {
-            d.search = $('#inputSearch').val();
-            d.sortingfilter = $('#sortingfilter').val();
-            d.country = $('#country').val();
-            d.cus_search = $('#kt_tagify_2').val();
-        }},
-        "fnDrawCallback": function( settings, start, end, max, total, pre ) {
-            var total_record = this.fnSettings().fnRecordsTotal();
-            $('#total_record').html(total_record);
-            $("body").tooltip({ selector: '[data-toggle="tooltip"]' });
-        },
-        "columnDefs": [
-            {"targets": 0 },
-            {"targets": 1, "class":"align-items-center" },
-            {"targets": 2 },
-            { "targets": 3 },
-            { "targets": 4 },
-            { "targets": 5 },
-            { "targets": 6 },
-            { "targets": 7 }
-        ],
-        columns: [
-            { data: 'chkbox', name:'chkbox',width: '1%', searchable : false, orderable: false},
-            { data: 'Name', name: 'Name',width: '15%', searchable : false, orderable: false},
-            { data: 'Requisitions', name: 'Requisitions',width: '10%', searchable : false, orderable: false},
-            { data: 'InterviewDate', name: 'InterviewDate',width: '10%', searchable : false, orderable: false},
-            { data: 'Interviewers', name: 'Interviewers',width: '10%', searchable : false, orderable: false},
-            { data: 'Source', name: 'Source',width: '10%', searchable : false, orderable: false},
-            { data: 'Feedback', name: 'Feedback',width: '10%', searchable : false, orderable: false},
-            { data: 'Stage', name: 'Stage',width: '10%', searchable : false, orderable: false}
-        ],
-        async: false
-    });
-    new $.fn.dataTable.FixedHeader( table );
-}
 
 $(document).on('click', '.notAllow-feedback', function () {
     Swal.fire({
@@ -744,9 +683,19 @@ $(document).on('click', '.interview_mention_link', function(){
     });
 });
 
-// ── Pagination state ────────────────────────────────────────────────────────
+// ── Pagination & UI Preference State (Phase 2 Local Storage Rule) ────────────
 var itCurrentPage = 1;
 var itCurrentSize = 10;
+
+// Restore non-authoritative UI preferences safely
+try {
+    var itSavedSize = parseInt(localStorage.getItem('it_pref_page_size'), 10);
+    if (itSavedSize && [10, 20, 50, 100].indexOf(itSavedSize) !== -1) {
+        itCurrentSize = itSavedSize;
+    }
+} catch (e) {
+    itCurrentSize = 10;
+}
 
 $(document).ready(function() {
     fetchCandidates(1);
@@ -764,6 +713,9 @@ $(document).ready(function() {
     // "Rows per page" select rendered inside #pagination by the partial.
     $(document).on('change', '#pagination [data-perpage]', function() {
         itCurrentSize = parseInt($(this).val(), 10) || 10;
+        try {
+            localStorage.setItem('it_pref_page_size', itCurrentSize);
+        } catch (e) {}
         itCurrentPage = 1;
         fetchCandidates(itCurrentPage);
     });
@@ -861,6 +813,10 @@ function selectSort(el, value) {
 }
 
 function resetFilters() {
+    itRamCache.clear();
+    if (window.JeroInterviewScheduleLocalStore) {
+        window.JeroInterviewScheduleLocalStore.purge();
+    }
     $('#sortingfilter').val('');
     var sortMenu = document.getElementById('filter-menu-sort');
     if (sortMenu) {
@@ -887,8 +843,337 @@ function toggleFollowUp(btn) {
     if (!isOpen) menu.classList.add('open');
 }
 
+// ── Browser-RAM LRU Cache for Loaded Views ─────────────────────────────────
+var itRamCache = new Map();
+var IT_MAX_RAM_CACHE = 25; // Keep memory strictly bounded
+var itCurrentXhr = null;
+
+// ── JeroInterviewScheduleLocalStore — Native Browser IndexedDB Engine ────────
+const JeroInterviewScheduleLocalStore = (function() {
+    const DB_NAME = 'jero_interview_schedule_db';
+    const DB_VERSION = 1;
+    const CURRENT_TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+    const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+    const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+
+    let dbPromise = null;
+
+    function getDB() {
+        if (!window.indexedDB) return Promise.resolve(null);
+        if (dbPromise) return dbPromise;
+
+        dbPromise = new Promise((resolve) => {
+            try {
+                const req = window.indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = function(e) {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('schedule_cache')) {
+                        db.createObjectStore('schedule_cache', { keyPath: 'cache_key' });
+                    }
+                    if (!db.objectStoreNames.contains('meta')) {
+                        db.createObjectStore('meta', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = function(e) {
+                    const db = e.target.result;
+                    try {
+                        const tx = db.transaction(['meta'], 'readonly');
+                        const metaStore = tx.objectStore('meta');
+                        const metaReq = metaStore.get('current_context');
+                        metaReq.onsuccess = function() {
+                            const meta = metaReq.result;
+                            if (meta && (meta.tenant_id !== CURRENT_TENANT_ID || meta.user_id !== CURRENT_USER_ID)) {
+                                // Cross-tenant partition wipe: purge immediately to prevent cross-company data leakage
+                                const wipeTx = db.transaction(['schedule_cache', 'meta'], 'readwrite');
+                                wipeTx.objectStore('schedule_cache').clear();
+                                wipeTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_TENANT_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                            } else if (!meta) {
+                                const setTx = db.transaction(['meta'], 'readwrite');
+                                setTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_TENANT_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                            }
+                        };
+                    } catch (err) {
+                        console.warn('JeroInterviewScheduleLocalStore tenancy check warning:', err);
+                    }
+                    resolve(db);
+                };
+                req.onerror = function() { resolve(null); };
+            } catch (err) {
+                resolve(null);
+            }
+        });
+
+        return dbPromise;
+    }
+
+    return {
+        get: async function(key) {
+            const db = await getDB();
+            if (!db || !key) return null;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(['schedule_cache'], 'readonly');
+                    const store = tx.objectStore('schedule_cache');
+                    const req = store.get(key);
+                    req.onsuccess = function() {
+                        const res = req.result;
+                        if (res && (Date.now() - res.timestamp < CACHE_TTL_MS)) {
+                            resolve(res.payload);
+                        } else {
+                            resolve(null);
+                        }
+                    };
+                    req.onerror = function() { resolve(null); };
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        },
+        set: async function(key, payload) {
+            const db = await getDB();
+            if (!db || !key || !payload) return;
+            try {
+                const tx = db.transaction(['schedule_cache'], 'readwrite');
+                const store = tx.objectStore('schedule_cache');
+                store.put({
+                    cache_key: key,
+                    payload: payload,
+                    timestamp: Date.now()
+                });
+            } catch (e) {
+                // Non-fatal if storage quota exceeded
+            }
+        },
+        purge: async function() {
+            const db = await getDB();
+            if (!db) return;
+            try {
+                const tx = db.transaction(['schedule_cache'], 'readwrite');
+                tx.objectStore('schedule_cache').clear();
+            } catch (e) {
+                // Non-fatal
+            }
+        }
+    };
+})();
+window.JeroInterviewScheduleLocalStore = JeroInterviewScheduleLocalStore;
+
+// ── Realtime Delta DOM Patcher (Targeted DOM Update without Full Reload) ───
+function patchInterviewRowDelta(interviewId, delta) {
+    if (!interviewId || !delta) return false;
+    var $row = $('tr[data-interview-id="' + interviewId + '"]');
+    if (!$row.length) return false;
+
+    // Follow-up status delta patch
+    if (delta.followup_status) {
+        var trigger = $row.find('.it-followup-trigger');
+        var labels = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
+        var colors = { 'confirmed': 'var(--it-success)', 'no-response': 'var(--it-danger)', 'rescheduled': 'var(--it-primary)' };
+        if (trigger.length) {
+            var lbl = trigger.find('.fu-label');
+            if (lbl.length) lbl.text(labels[delta.followup_status] || 'Follow Up');
+            trigger.css({ color: colors[delta.followup_status] || '', borderColor: colors[delta.followup_status] || '' });
+            trigger.find('.fu-cta-icon').remove();
+        }
+    }
+
+    // Stage delta patch
+    if (delta.stage) {
+        var $stageCell = $row.find('.it-stage-cell .it-badge');
+        if ($stageCell.length) {
+            $stageCell.text(delta.stage);
+        }
+    }
+
+    // Feedback delta patch (Immediate 0ms row update upon feedback submission)
+    if (delta.feedback) {
+        var fb = delta.feedback;
+        var attId = parseInt(fb.available_status, 10) || 0;
+        var $fbCell = $row.find('.it-feedback-cell');
+        if ($fbCell.length) {
+            var attLabelMap = {
+                1: 'Attended',
+                2: 'No Show',
+                3: 'Rescheduled',
+                4: 'Cancelled by Company',
+                6: 'Other Reason',
+                7: 'Cancelled by Candidate'
+            };
+            var resultLabels = {
+                'selected': 'Selected',
+                'hold': 'Hold',
+                'rejected': 'Rejected',
+                'fake_proxy': 'Fake / Proxy',
+                'feedback_pending': 'Feedback Pending'
+            };
+            var recLabels = {
+                'strong_hire': 'Strong Hire',
+                'hire': 'Hire',
+                'consider': 'Consider',
+                'no_hire': 'No Hire',
+                'strong_no_hire': 'Strong No Hire'
+            };
+            var recStyles = {
+                'strong_hire': { bg: '#dcfce7', color: '#16a34a' },
+                'hire': { bg: '#dcfce7', color: '#16a34a' },
+                'consider': { bg: '#fef3c7', color: '#d97706' },
+                'no_hire': { bg: '#fee2e2', color: '#dc2626' },
+                'strong_no_hire': { bg: '#fee2e2', color: '#dc2626' }
+            };
+
+            var html = '';
+            if (attId === 1) {
+                var resKey = fb.interview_result || '';
+                var resText = resultLabels[resKey] || (resKey ? resKey : 'Feedback Pending');
+                var resColor = 'var(--it-success)';
+                if (resKey === 'rejected' || resKey === 'fake_proxy') {
+                    resColor = 'var(--it-danger)';
+                } else if (resKey === 'hold' || resKey === 'feedback_pending') {
+                    resColor = 'var(--it-warning)';
+                }
+
+                html += '<span style="font-size: 10px; font-weight: 600; color: ' + resColor + '; display: inline-flex; align-items: center; gap: 3px;">' +
+                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ' +
+                    $('<div>').text(resText).html() +
+                    '</span>';
+
+                var recKey = fb.overall_recommendation || '';
+                if (recKey && recLabels[recKey]) {
+                    var rStyle = recStyles[recKey] || { bg: '#eef2ff', color: '#4f46e5' };
+                    html += '<span style="display:inline-flex;align-items:center;width:fit-content;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:600;background:' + rStyle.bg + ';color:' + rStyle.color + ';">' +
+                        $('<div>').text(recLabels[recKey]).html() +
+                        '</span>';
+                }
+
+                html += '<button type="button" class="it-feedback-btn it-feedback-btn-outline-green show-feedback" data-row-id="' + interviewId + '">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="10" r="3"/></svg> ' +
+                    'View Feedback' +
+                    '</button>';
+            } else if (attId > 1) {
+                var attText = attLabelMap[attId] || 'Not Attended';
+                html += '<span style="font-size: 10px; font-weight: 600; color: var(--it-warning); display: inline-flex; align-items: center; gap: 3px;">' +
+                    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ' +
+                    $('<div>').text(attText).html() +
+                    '</span>';
+                html += '<button type="button" class="it-feedback-btn show-feedback" data-row-id="' + interviewId + '" style="border:1px solid var(--it-border);color:var(--it-text-muted);background:#fff;">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> ' +
+                    'No Feedback' +
+                    '</button>';
+            }
+
+            if (html) {
+                $fbCell.html(html);
+            }
+        }
+    }
+
+    return true;
+}
+window.patchInterviewRowDelta = patchInterviewRowDelta;
+
+function renderInterviewData(response) {
+    $('.loadingMessage').css({ display: 'none' });
+    $('.loader_search').css({ display: 'none' });
+    $('.page-loader').css('display', 'none');
+    $('#Interview-trackers').html(response.html);
+    $('#pagination').html(response.pagination);
+
+    // Update the "showing" text
+    if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
+        $('#showingText').text(
+            'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' records'
+        );
+    } else if (response.total) {
+        $('#showingText').text('Showing ' + response.total + ' records');
+    }
+
+    // Update stats if provided
+    if (response.stats) {
+        $('#stat-interview-month').text(response.stats.interview_month ?? 0);
+        $('#stat-today').text(response.stats.today ?? 0);
+        $('#stat-upcoming').text(response.stats.upcoming ?? 0);
+        $('#stat-feedback-pending').text(response.stats.feedback_pending ?? 0);
+    }
+
+    // Update tab counts if provided
+    if (response.tab_counts) {
+        if (response.tab_counts.all)              $('#tab-count-all').text(response.tab_counts.all);
+        if (response.tab_counts.today)            $('#tab-count-today').text(response.tab_counts.today);
+        if (response.tab_counts.upcoming)         $('#tab-count-upcoming').text(response.tab_counts.upcoming);
+        if (response.tab_counts.pending_feedback) $('#tab-count-pending').text(response.tab_counts.pending_feedback);
+        if (response.tab_counts.selected)         $('#tab-count-selected').text(response.tab_counts.selected);
+        if (response.tab_counts.rejected)         $('#tab-count-rejected').text(response.tab_counts.rejected);
+        if (response.tab_counts.rescheduled)      $('#tab-count-rescheduled').text(response.tab_counts.rescheduled);
+    }
+}
+
+// ── Phase 5: Failure Matrix & Concurrency Safety ────────────────────────────
+var itPendingFollowUps = new Set();
+
+function itHandleAjaxFailure(xhr, defaultMsg) {
+    var status = xhr ? xhr.status : 0;
+    if (status === 401) {
+        Swal.fire({
+            title: "Session Expired",
+            text: "Your session has timed out. Please log in again.",
+            icon: "warning",
+            confirmButtonText: "Log In",
+            customClass: { confirmButton: "btn btn-primary" }
+        }).then(function() {
+            window.location.reload();
+        });
+        return;
+    }
+    if (status === 419) {
+        Swal.fire({
+            title: "Security Token Expired",
+            text: "Your session token has expired. Page will refresh to renew security credentials.",
+            icon: "info",
+            confirmButtonText: "Refresh Now",
+            customClass: { confirmButton: "btn btn-primary" }
+        }).then(function() {
+            window.location.reload();
+        });
+        return;
+    }
+    if (status === 403) {
+        Swal.fire({
+            title: "Access Denied",
+            text: "You do not have permission to perform this action.",
+            icon: "error",
+            confirmButtonText: "Ok",
+            customClass: { confirmButton: "btn btn-primary" }
+        });
+        return;
+    }
+    if (status === 429) {
+        Swal.fire({
+            title: "Too Many Requests",
+            text: "Please wait a few seconds before trying again.",
+            icon: "warning",
+            confirmButtonText: "Ok",
+            customClass: { confirmButton: "btn btn-primary" }
+        });
+        return;
+    }
+    var msg = (xhr && xhr.responseJSON && xhr.responseJSON.msg) ? xhr.responseJSON.msg : (defaultMsg || "An unexpected error occurred. Please try again.");
+    Swal.fire({
+        text: msg,
+        icon: "error",
+        confirmButtonText: "Ok",
+        customClass: { confirmButton: "btn btn-primary" }
+    });
+}
+
 function setFollowUpStatus(el, id, status) {
     document.querySelectorAll('.it-followup-menu.open').forEach(m => m.classList.remove('open'));
+    
+    // Double-click / rapid-click mutex
+    if (itPendingFollowUps.has(id)) {
+        return;
+    }
+    itPendingFollowUps.add(id);
+
     var dropdown = el.closest('.it-followup-dropdown');
     var trigger = dropdown ? dropdown.querySelector('.it-followup-trigger') : null;
     var labels = { 'confirmed': 'Confirmed', 'no-response': 'No Response', 'rescheduled': 'Rescheduled' };
@@ -899,14 +1184,16 @@ function setFollowUpStatus(el, id, status) {
         type: 'POST',
         data: { _token: '{{ csrf_token() }}', id: id, status: status },
         success: function (resp) {
+            itPendingFollowUps.delete(id);
             if (resp && resp.status === 'success') {
-                // Update the control inline (best-effort; not required for success)
+                itRamCache.clear();
+                JeroInterviewScheduleLocalStore.purge();
+                patchInterviewRowDelta(id, { followup_status: status });
                 if (trigger) {
                     var lbl = trigger.querySelector('.fu-label');
                     if (lbl) lbl.textContent = labels[status] || 'Follow Up';
                     trigger.style.color = colors[status] || '';
                     trigger.style.borderColor = colors[status] || '';
-                    // Once a status is chosen, drop the "Follow Up" CTA icon so it reads as a status
                     var ctaIcon = trigger.querySelector('.fu-cta-icon');
                     if (ctaIcon) ctaIcon.remove();
                 }
@@ -914,19 +1201,59 @@ function setFollowUpStatus(el, id, status) {
                 Swal.fire({ text: (resp && resp.msg) ? resp.msg : 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
             }
         },
-        error: function () {
-            Swal.fire({ text: 'Could not update follow-up status.', icon: 'error', confirmButtonText: 'Ok' });
+        error: function (xhr) {
+            itPendingFollowUps.delete(id);
+            itHandleAjaxFailure(xhr, 'Could not update follow-up status.');
         }
     });
 }
 
-// Update fetchCandidates to include new filters and update stats.
-// Page is driven by itCurrentPage; size is driven by itCurrentSize.
-function fetchCandidates(page, search) {
-    // Accept an explicit page argument (e.g. from resetFilters) but always
-    // keep itCurrentPage in sync so the pagination handler stays coherent.
+// Update fetchCandidates to include 3-Layer Caching: RAM -> IndexedDB -> Server
+async function fetchCandidates(page, search, forceRefresh) {
     if (page !== undefined) { itCurrentPage = page; }
-    if (search !== undefined) { /* search arg ignored; read from DOM below */ }
+
+    var payload = {
+        page:               itCurrentPage,
+        size:               itCurrentSize,
+        custom_status:      $('#status').val() || '',
+        search:             $('#inputSearch').val() || '',
+        custom_hiringtype:  $('#sortingfilter').val() || '',
+        custom_search:      $('#kt_tagify_2').val() || '',
+        tab:                activeTab,
+        stage_filter:       filterValues.stage,
+        status_filter:      filterValues.status,
+        owner_filter:       filterValues.owner,
+        vendor_filter:      filterValues.vendor,
+        mode_filter:        filterValues.mode
+    };
+
+    var cacheKey = JSON.stringify(payload);
+
+    if (forceRefresh) {
+        itRamCache.clear();
+        if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
+            await window.JeroInterviewScheduleLocalStore.purge();
+        }
+    } else {
+        // 1. Layer 1: Browser RAM lookup first (0ms instantaneous page turn / tab switch)
+        if (itRamCache.has(cacheKey)) {
+            renderInterviewData(itRamCache.get(cacheKey));
+            return;
+        }
+
+        // 2. Layer 2: Native IndexedDB lookup (< 15ms instant render on refresh / back navigation)
+        var idbCached = await JeroInterviewScheduleLocalStore.get(cacheKey);
+        if (idbCached) {
+            itRamCache.set(cacheKey, idbCached);
+            renderInterviewData(idbCached);
+            return;
+        }
+    }
+
+    // 3. Layer 3: Server API (only when hitting server)
+    if (itCurrentXhr && itCurrentXhr.readyState !== 4) {
+        itCurrentXhr.abort();
+    }
 
     if ($('#kt_tagify_2').val() !== '') {
         $('.loader_search').css({ display: 'block' });
@@ -934,61 +1261,41 @@ function fetchCandidates(page, search) {
         $('.page-loader').css('display', 'flex');
     }
 
-    $.ajax({
+    itCurrentXhr = $.ajax({
         url: '{!! route('service_company.interview-schedule.data_ajax') !!}',
         type: 'GET',
-        data: {
-            page:               itCurrentPage,
-            size:               itCurrentSize,
-            custom_status:      $('#status').val(),
-            search:             $('#inputSearch').val(),
-            custom_hiringtype:  $('#sortingfilter').val(),
-            custom_search:      $('#kt_tagify_2').val(),
-            tab:                activeTab,
-            stage_filter:       filterValues.stage,
-            status_filter:      filterValues.status,
-            owner_filter:       filterValues.owner,
-            vendor_filter:      filterValues.vendor,
-            mode_filter:        filterValues.mode
-        },
+        data: payload,
         success: function(response) {
+            // Save in bounded RAM cache (Layer 1)
+            if (itRamCache.size >= IT_MAX_RAM_CACHE) {
+                var oldestKey = itRamCache.keys().next().value;
+                itRamCache.delete(oldestKey);
+            }
+            itRamCache.set(cacheKey, response);
+
+            // Save in IndexedDB (Layer 2)
+            JeroInterviewScheduleLocalStore.set(cacheKey, response);
+
+            renderInterviewData(response);
+        },
+        error: function(xhr, status) {
+            if (status === 'abort') {
+                return; // Handled safely; intentionally aborted for newer request
+            }
             $('.loadingMessage').css({ display: 'none' });
             $('.loader_search').css({ display: 'none' });
             $('.page-loader').css('display', 'none');
-            $('#Interview-trackers').html(response.html);
-            $('#pagination').html(response.pagination);
 
-            // Update the "showing" text – prefer the richer from/to info if
-            // the server returned it, otherwise fall back to a simple total.
-            if (response.from !== undefined && response.to !== undefined && response.total !== undefined) {
-                $('#showingText').text(
-                    'Showing ' + response.from + ' to ' + response.to + ' of ' + response.total + ' records'
-                );
-            } else if (response.total) {
-                $('#showingText').text('Showing ' + response.total + ' records');
-            }
-
-            // Update stats if provided (set unconditionally so 0 shows correctly)
-            if (response.stats) {
-                $('#stat-interview-month').text(response.stats.interview_month ?? 0);
-                $('#stat-today').text(response.stats.today ?? 0);
-                $('#stat-upcoming').text(response.stats.upcoming ?? 0);
-                $('#stat-feedback-pending').text(response.stats.feedback_pending ?? 0);
-            }
-
-            // Update tab counts if provided
-            if (response.tab_counts) {
-                if (response.tab_counts.all)             $('#tab-count-all').text(response.tab_counts.all);
-                if (response.tab_counts.today)           $('#tab-count-today').text(response.tab_counts.today);
-                if (response.tab_counts.upcoming)        $('#tab-count-upcoming').text(response.tab_counts.upcoming);
-                if (response.tab_counts.pending_feedback)$('#tab-count-pending').text(response.tab_counts.pending_feedback);
-                if (response.tab_counts.selected)        $('#tab-count-selected').text(response.tab_counts.selected);
-                if (response.tab_counts.rejected)        $('#tab-count-rejected').text(response.tab_counts.rejected);
-                if (response.tab_counts.rescheduled)     $('#tab-count-rescheduled').text(response.tab_counts.rescheduled);
+            if (xhr.status === 419) {
+                itHandleAjaxFailure(xhr);
+            } else if (!navigator.onLine || xhr.status === 0) {
+                $('#Interview-trackers').html('<tr><td colspan="8" style="text-align:center;padding:40px;color:#ef4444;"><div style="font-weight:600;margin-bottom:6px;">Network Connection Lost</div><div style="font-size:11px;color:#64748b;">You are currently offline. Check your internet connection.</div></td></tr>');
             }
         }
     });
 }
+window.fetchCandidates = fetchCandidates;
+window.itRamCache = itRamCache;
 
 // Close filter menus and followup menus when clicking outside
 document.addEventListener('click', function(e) {
@@ -1042,6 +1349,7 @@ $(document).on('click', '#ilOpenBtn', function () {
 $(document).on('click', '#ilEmailBtn', function () {
     if (!ilCurrent.id) return;
     var $btn = $(this);
+    if ($btn.prop('disabled')) return; // double-click protection
     $btn.prop('disabled', true);
     $('.il-email-label').addClass('d-none');
     $('.il-email-loading').removeClass('d-none');
@@ -1054,16 +1362,20 @@ $(document).on('click', '#ilEmailBtn', function () {
             $('.il-email-label').removeClass('d-none');
             $('.il-email-loading').addClass('d-none');
             if (resp && resp.status === 'success') {
+                itRamCache.clear();
+                if (window.JeroInterviewScheduleLocalStore) {
+                    window.JeroInterviewScheduleLocalStore.purge();
+                }
                 Swal.fire({ text: 'Emailed to ' + (resp.count || 0) + ' recipient(s).', icon: 'success', confirmButtonText: 'Ok' });
             } else {
                 Swal.fire({ text: (resp && resp.msg) ? resp.msg : 'Could not send the email.', icon: 'error', confirmButtonText: 'Ok' });
             }
         },
-        error: function () {
+        error: function (xhr) {
             $btn.prop('disabled', false);
             $('.il-email-label').removeClass('d-none');
             $('.il-email-loading').addClass('d-none');
-            Swal.fire({ text: 'Could not send the email.', icon: 'error', confirmButtonText: 'Ok' });
+            itHandleAjaxFailure(xhr, 'Could not send the email.');
         }
     });
 });
@@ -1071,6 +1383,89 @@ $(document).on('click', '#ilEmailBtn', function () {
 // Close on click outside the box, and on Escape
 $(document).on('click', '#ilOverlay', function (e) { if (e.target === this) closeInterviewLink(); });
 $(document).on('keydown', function (e) { if (e.key === 'Escape') closeInterviewLink(); });
+
+// ── Network Connectivity Watchers (Failure Matrix Rule 20) ─────────────────
+window.addEventListener('offline', function() {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'warning',
+        title: 'You are currently offline',
+        showConfirmButton: false,
+        timer: 4000
+    });
+});
+
+window.addEventListener('online', function() {
+    itRamCache.clear();
+    if (window.JeroInterviewScheduleLocalStore) {
+        window.JeroInterviewScheduleLocalStore.purge();
+    }
+    fetchCandidates(itCurrentPage);
+});
+
+// ── Phase 4: Real-time Reverb / Echo Synchronization & Reconnect Reconciliation ──
+@if(auth()->check() && auth()->user()->company_id)
+$(document).ready(function() {
+    if (typeof window.Echo !== 'undefined') {
+        var companyChannel = 'company.{{ (int) auth()->user()->company_id }}';
+
+        // 1. Listen for interview scheduled/updated events on company channel
+        window.Echo.private(companyChannel)
+            .listen('.interview.updated', function(e) {
+                itRamCache.clear();
+                if (window.JeroInterviewScheduleLocalStore) {
+                    window.JeroInterviewScheduleLocalStore.purge();
+                }
+                // Targeted Delta DOM Update
+                if (e && e.interview_id) {
+                    var patched = patchInterviewRowDelta(e.interview_id, e);
+                    if (!patched) {
+                        fetchCandidates(itCurrentPage);
+                    }
+                } else {
+                    fetchCandidates(itCurrentPage);
+                }
+            })
+            .listen('InterviewScheduled', function(e) {
+                itRamCache.clear();
+                if (window.JeroInterviewScheduleLocalStore) {
+                    window.JeroInterviewScheduleLocalStore.purge();
+                }
+                // Realtime delta stat counter update
+                var curUpcoming = parseInt($('#stat-upcoming').text(), 10) || 0;
+                $('#stat-upcoming').text(curUpcoming + 1);
+                fetchCandidates(itCurrentPage);
+            })
+            .listen('.candidate.drawer.updated', function(e) {
+                itRamCache.clear();
+                if (window.JeroInterviewScheduleLocalStore) {
+                    window.JeroInterviewScheduleLocalStore.purge();
+                }
+                fetchCandidates(itCurrentPage);
+            });
+
+        // 2. Disconnect / Reconnect State Machine (Section 12 Compliance)
+        try {
+            var connector = window.Echo.connector;
+            if (connector && connector.pusher && connector.pusher.connection) {
+                connector.pusher.connection.bind('state_change', function(states) {
+                    // When recovering from disconnected/unavailable back to connected
+                    if (states.current === 'connected' && (states.previous === 'disconnected' || states.previous === 'unavailable')) {
+                        itRamCache.clear();
+                        if (window.JeroInterviewScheduleLocalStore) {
+                            window.JeroInterviewScheduleLocalStore.purge();
+                        }
+                        fetchCandidates(itCurrentPage);
+                    }
+                });
+            }
+        } catch (err) {
+            // Graceful fallback if connector internals differ
+        }
+    }
+});
+@endif
 </script>
 
 @endpush

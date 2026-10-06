@@ -1372,8 +1372,9 @@
 
     function closeInterviewersModal() {
         $('#interviewersModal').removeClass('active');
-        // also close the outer Bootstrap feedback modal so nothing empty is left behind
-        $('#interview_feedback .data-bs-dismiss').first().trigger('click');
+        $('#interview_feedback').modal('hide');
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
     }
 
     function enterFeedbackForm() {
@@ -1565,16 +1566,50 @@
         var url = "{{ route('service_company.interview-schedule.updateInterview',':id') }}";
         url = url.replace(':id', id);
         var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+
+        // Capture submitted feedback form values for instantaneous 0ms DOM delta patching
+        var submittedAtt = parseInt(form.find('input[name="app_int_status"]:checked').val(), 10) || 1;
+        var submittedResult = form.find('input[name="interview_result"]:checked').val() || '';
+        var submittedRec = form.find('input[name="overall_recommendation"]:checked').val() || '';
+
         $.ajax({
             type: 'POST', url: url,
             data: formData,
-            success: function (response) {
+            success: async function (response) {
                 if (response.status == "success") {
-                    // Sidebar notification styled like the "Job published successfully!" toast
                     showFeedbackSuccessToast('Interview feedback submitted successfully! 🎉');
-                    var page = $('#pagination .active_disabled').data('page');
-                    if (typeof fetchCandidates === 'function') fetchCandidates(page);
-                    $(".data-bs-dismiss").click(); // close the popup
+
+                    var fbDelta = (response && response.feedback) ? response.feedback : {
+                        interview_id: id,
+                        available_status: submittedAtt,
+                        interview_result: submittedResult,
+                        overall_recommendation: submittedRec
+                    };
+
+                    // 1. Instantaneous 0ms DOM row update on the table
+                    if (typeof window.patchInterviewRowDelta === 'function') {
+                        window.patchInterviewRowDelta(id, { feedback: fbDelta });
+                    }
+
+                    // 2. Clear RAM and IndexedDB caches so stale cached state is never shown
+                    if (typeof itRamCache !== 'undefined' && itRamCache.clear) {
+                        itRamCache.clear();
+                    }
+                    if (window.JeroInterviewScheduleLocalStore && window.JeroInterviewScheduleLocalStore.purge) {
+                        await window.JeroInterviewScheduleLocalStore.purge();
+                    }
+
+                    // 3. Close the modal cleanly
+                    $('#interview_feedback').modal('hide');
+                    $('.modal-backdrop').remove();
+                    $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+
+                    // 4. Authoritatively refresh table data, tab counters, and dashboard stats from server
+                    if (typeof fetchCandidates === 'function') {
+                        var targetPage = (typeof itCurrentPage !== 'undefined' && itCurrentPage) ? itCurrentPage : 1;
+                        fetchCandidates(targetPage, null, true);
+                    }
+
                     setSubmitLoading(false);
                 } else {
                     setSubmitLoading(false);

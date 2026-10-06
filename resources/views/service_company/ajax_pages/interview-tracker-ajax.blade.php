@@ -21,7 +21,7 @@
     $row = (object) $rowArr;
     @endphp
 
-        <tr>
+        <tr data-interview-id="{{ $row->id }}">
             {{-- Checkbox --}}
             <td>
                 <div class="it-checkbox" data-row-check onclick="toggleRowSelect(this, {{ $row->id }})">

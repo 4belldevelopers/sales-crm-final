@@ -48,13 +48,7 @@ class InterviewScheduleController extends ServiceCompanyBaseController
             return redirect()->route('service_company.dashboard')->with('message_paid', 'This is a paid featute');
         }
 
-        $query = JobApplication::query();
-
-        if (! $this->user->hasRole('admin')) {
-            $query->where('submitted_by', $this->user->id);
-        }
-
-        $this->candidates = $query->limit(2)->get();
+        $this->candidates = [];
 
         return view('service_company.interview-schedule.table', $this->data);
     }
@@ -402,7 +396,10 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $toEntry = $total > 0 ? min($page * $size, $total) : 0;
 
         $userPermissions = $this->userPermissions;
-        $stats = $this->dashboardStats($company_id, $chkAdminRole, $page);
+        $statsCacheKey = 'ats:interview_stats:'.$this->user->id.':'.$version;
+        $stats = cache()->remember($statsCacheKey, now()->addMinutes(10), function () use ($company_id, $chkAdminRole, $page) {
+            return $this->dashboardStats($company_id, $chkAdminRole, $page);
+        });
 
         // Batch pre-fetch all relational lookup maps to eliminate Blade N+1 queries
         $maps = $this->prepareViewMaps($data, $company_id, $this->user->id);
@@ -452,52 +449,45 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $interviewIds = array_values(array_filter(array_column($data, 'id')));
         $jobIds = array_values(array_unique(array_filter(array_column($data, 'jobId'))));
 
-        // Query 1: Follow-up status map
+        // Query 1: Follow-up status map (specific required columns)
         $followupMap = collect();
-        if (! empty($interviewIds) && \Illuminate\Support\Facades\Schema::hasColumn('interview_schedules', 'followup_status')) {
+        if (! empty($interviewIds)) {
             $followupMap = DB::table('interview_schedules')
                 ->whereIn('id', $interviewIds)
                 ->get(['id', 'followup_status', 'followup_status_at'])
                 ->keyBy('id');
         }
 
-        // Query 2: Feedback map (latest interview_feedback row per interview)
+        // Query 2: Feedback map (specific required columns only, no SELECT *)
         $feedbackMap = collect();
         if (! empty($interviewIds)) {
             $feedbackRows = DB::table('interview_feedback')
                 ->whereIn('interview_id', $interviewIds)
                 ->orderBy('id', 'desc')
-                ->get();
+                ->get(['id', 'interview_id', 'available_status', 'interview_result', 'overall_recommendation']);
 
             $feedbackMap = $feedbackRows->unique('interview_id')->keyBy('interview_id');
         }
 
-        // Query 3: SPOC / source person map for third party client jobs
+        // Query 3: SPOC / source person map AND captain permissions (Merged into a single query)
         $spokpersonMap = collect();
+        $userCaptainJobIds = [];
         if (! empty($jobIds)) {
             $spokRows = DB::table('job_assign')
                 ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
                 ->whereIn('job_assign.job_id', $jobIds)
-                ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                ->select('job_assign.job_id', 'job_assign.company_id', 'job_assign.spok_user_id', 'users.name')
                 ->get();
 
             foreach ($spokRows as $spok) {
                 $spokpersonMap->put($spok->job_id.'_'.$spok->company_id, $spok->name);
+                if ((int) $spok->spok_user_id === $userId) {
+                    $userCaptainJobIds[$spok->job_id] = true;
+                }
             }
         }
 
-        // Query 4: Captain permissions for current user
-        $userCaptainJobIds = [];
-        if (! empty($jobIds)) {
-            $userCaptainJobIds = DB::table('job_assign')
-                ->whereIn('job_id', $jobIds)
-                ->where('spok_user_id', $userId)
-                ->pluck('job_id')
-                ->flip()
-                ->all();
-        }
-
-        // Query 5: Client Company Names
+        // Query 4: Client Company Names (specific columns)
         $clientCompanyMap = [];
         if (! empty($jobIds)) {
             $clientCompanyMap = DB::table('jobs')
@@ -2183,14 +2173,24 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         $allowed = ['confirmed', 'no-response', 'rescheduled'];
         if ($id <= 0 || ! in_array($status, $allowed, true)) {
             return Reply::dataOnly(['status' => 'error', 'msg' => 'Invalid follow-up status.']);
-        } 		$cols = \Illuminate\Support\Facades\Schema::getColumnListing('interview_schedules');
-        $update = ['followup_status' => $status];
-        if (in_array('followup_status_at', $cols, true)) {
-            $update['followup_status_at'] = now();
-        } 		$update = array_intersect_key($update, array_flip($cols));
-        if (! empty($update)) {
-            DB::table('interview_schedules')->where('id', $id)->update($update);
-        } 		GeneralMethod::cacheClean('allinterviewschedule_version_user_'.$this->user->id);
+        }
+
+        $companyId = (int) auth()->user()->company_id;
+
+        // Tenancy-scoped update with timestamp
+        $affected = DB::table('interview_schedules')
+            ->where('id', $id)
+            ->where('company_id', $companyId)
+            ->update([
+                'followup_status' => $status,
+                'followup_status_at' => now(),
+            ]);
+
+        if ($affected === 0) {
+            return Reply::dataOnly(['status' => 'error', 'msg' => 'Interview not found or unauthorized.']);
+        }
+
+        GeneralMethod::cacheClean('allinterviewschedule_version_user_'.$this->user->id);
 
         return Reply::dataOnly(['status' => 'success', 'followup' => $status]);
     }
@@ -2712,7 +2712,16 @@ class InterviewScheduleController extends ServiceCompanyBaseController
         }
         //   dd("hi");
 
-        return Reply::dataOnly(['status' => 'success', 'msg' => 'Interview feedback update successfully.']);
+        return Reply::dataOnly([
+            'status' => 'success',
+            'msg' => 'Interview feedback update successfully.',
+            'feedback' => [
+                'interview_id' => (int) $interview_id,
+                'available_status' => (int) $app_int_status,
+                'interview_result' => $request->interview_result ?? null,
+                'overall_recommendation' => $request->overall_recommendation ?? null,
+            ],
+        ]);
 
     }
 
