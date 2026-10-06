@@ -877,7 +877,7 @@ if ($page_event == 'EDIT') {
 
   $(document).ready(function () {
     // Initialize intl-tel-input for existing contact number fields
-      function initializeIntlTelInput(inputElement,initialCountry='in') {
+      function initializeIntlTelInput(inputElement,initialCountry='{{ $country_code }}') {
           if (!inputElement || typeof window.intlTelInput !== 'function') return null;
           return window.intlTelInput(inputElement, {
               separateDialCode: true,
