@@ -43,6 +43,60 @@ body{overflow-x:hidden;}
 #np_id::-webkit-inner-spin-button,
 #np_id::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none;}
 
+/* Candidate Full Name & Email Field Wrap & Clear Button */
+.candidate-field-wrap {
+    position: relative;
+    width: 100%;
+}
+.candidate-field-wrap > input {
+    padding-right: 34px !important;
+}
+.candidate-field-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 50%;
+    background: #e4e6ef;
+    color: #7e8299;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 4;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.candidate-field-clear:hover {
+    background: #f1416c;
+    color: #ffffff;
+}
+.candidate-email-typo-hint {
+    margin-top: 5px;
+    font-size: 11.5px;
+    font-family: 'Poppins', sans-serif;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 5px 10px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+.candidate-email-typo-hint a {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .br-currency-select2-dropdown {
     font-family: 'Poppins', sans-serif;
     font-size: 13px;
@@ -2121,9 +2175,12 @@ $currencySymbole = GeneralMethod::currencySymbole();
               <div class="fsc">
                 <div class="g4">
                   <div class="fg fv-row">
-                    <label>Full Name <span class="rq">*</span></label>
-                    <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
-                      placeholder="Enter full name" />
+                    <label for="full_name">Full Name <span class="rq">*</span></label>
+                    <div class="candidate-field-wrap">
+                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
+                        placeholder="Enter full name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" />
+                      <button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button>
+                    </div>
                   </div>
                   <div class="fg fv-row">
                     <label>Gender</label>
@@ -2237,13 +2294,20 @@ $currencySymbole = GeneralMethod::currencySymbole();
                 </div>
                 <div class="g4">
                   <div class="fg fv-row">
-                    <label>Enter Primary Email ID <span class="rq">*</span></label>
-                    <input type="email" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" />
+                    <label for="email">Enter Primary Email ID <span class="rq">*</span></label>
+                    <div class="candidate-field-wrap">
+                      <input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" maxlength="191" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" />
+                      <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
+                    </div>
+                    <div id="career-email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Enter Secondary Email ID</label>
-                    <input type="email" name="secondrary_email" id="secondrary_email"
-                      value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" />
+                    <label for="secondrary_email">Enter Secondary Email ID</label>
+                    <div class="candidate-field-wrap">
+                      <input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email"
+                        value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" maxlength="55" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
+                      <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
+                    </div>
                   </div>
                   <div class="fg fv-row">
                     <label>Enter Primary Number <span class="rq">*</span></label>
@@ -6061,16 +6125,41 @@ var KTAddCandidate = function () {
                   //         }
                   //       }
                   // },
-                  'full_name':{ validators:{notEmpty:{message: "Full name is required"}}},
+                  'full_name':{
+                      validators:{
+                          notEmpty:{message: "Full name is required"},
+                          stringLength:{min: 2, max: 191, message: "Full name must be between 2 and 191 characters"},
+                          regexp:{
+                              regexp: /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s\.\'\-]+$/,
+                              message: 'Full name can only contain letters, spaces, hyphens, dots and apostrophes'
+                          }
+                      }
+                  },
                   'current_designation':{validators:{notEmpty:{ message: "Current designation is required"}}},
                   'phone': {validators: {notEmpty:{message: "Primary number is required"},
                             digits:{ message: "Primary number must contain only digits"},
                             stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}}},
                   'secondary_mobile':{validators:{digits:{ message: "Secondary number must contain only digits"},
                             stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}}},
-                  'email':{validators:{notEmpty:{message: "Primary Email is required"},
-                            emailAddress:{message: 'The value is not a valid email address'}}},
-                  'secondrary_email':{validators:{emailAddress:{message: 'The value is not a valid email address'}}},
+                  'email':{
+                      validators:{
+                          notEmpty:{message: "Primary Email is required"},
+                          emailAddress:{message: 'The value is not a valid email address'},
+                          stringLength:{max: 191, message: "Email must not exceed 191 characters"}
+                      }
+                  },
+                  'secondrary_email':{
+                      validators:{
+                          emailAddress:{message: 'The value is not a valid email address'},
+                          stringLength:{max: 55, message: "Secondary email must not exceed 55 characters"},
+                          different:{
+                              compare: function() {
+                                  return form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '';
+                              },
+                              message: 'Secondary email cannot be the same as primary email'
+                          }
+                      }
+                  },
                   'qualification': { validators: {notEmpty:{message: 'Qualification Name is required'} }},
                   'total_exp':{validators:{
                             // notEmpty:{message:"Total Experience is required"},                           
@@ -6427,7 +6516,11 @@ function re_test(text){
                     }
 
                       if(page_event_check != 'EDIT'){
-                      $('#full_name').val(response.name);
+                      var parsedName = (response.name || '').replace(/^(resume|curriculum\s*vitae|cv)[\s:\-_]*/i, '').trim();
+                      if (parsedName) {
+                          var formattedName = typeof window.formatCandidateTitleCase === 'function' ? window.formatCandidateTitleCase(parsedName) : parsedName;
+                          $('#full_name').val(formattedName).trigger('input').trigger('change');
+                      }
                       if (response.number) {
                           if (window.JeroPhoneBox && typeof window.JeroPhoneBox.setPhone === 'function') {
                               window.JeroPhoneBox.setPhone('phone', response.number);
@@ -6435,7 +6528,10 @@ function re_test(text){
                               $('#phone').val(response.number).trigger('input');
                           }
                       }
-                      $('#email').val(response.email);
+                      var parsedEmail = (response.email || '').replace(/^mailto:\s*/i, '').replace(/[,\.;]+$/, '').trim().toLowerCase();
+                      if (parsedEmail) {
+                          $('#email').val(parsedEmail).trigger('input').trigger('change');
+                      }
                       $('#dob').val(response.dob);
                       $('#current_company').val(response.currentjob);
                       $('#qualification').val(response.qualification).change();
@@ -8033,4 +8129,118 @@ $(document).ready(function () {
     // Initial boot
     initWorkAuthorizationEngine();
 });
+
+// ============================================================================
+// ENTERPRISE CANDIDATE PROFILE: FULL NAME & EMAIL POLISH (CLIENT-FIRST)
+// ============================================================================
+(function () {
+    'use strict';
+
+    // 1. Cultural-Preserving Title-Caser (Preserves O'Connor, Jean-Luc, Al-Mansoor)
+    window.formatCandidateTitleCase = function (str) {
+        if (!str) return '';
+        return String(str)
+            .trim()
+            .toLowerCase()
+            .replace(/(^|[\s\-\'])([a-z])/g, function (_, sep, chr) {
+                return sep + chr.toUpperCase();
+            });
+    };
+
+    // 2. Client-Side Fast Domain Typo Detector (Zero Server Overhead)
+    window.detectDomainTypo = function (email) {
+        var commonDomains = {
+            'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com',
+            'hotmial.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+            'outlok.com': 'outlook.com', 'outloo.com': 'outlook.com'
+        };
+        var parts = String(email || '').split('@');
+        if (parts.length === 2 && commonDomains[parts[1].toLowerCase()]) {
+            return parts[0] + '@' + commonDomains[parts[1].toLowerCase()];
+        }
+        return null;
+    };
+
+    // 3. Clear Button State Synchronization
+    function syncClearButton($input) {
+        var $clearBtn = $input.siblings('.candidate-field-clear');
+        if (($input.val() || '').trim().length > 0) {
+            $clearBtn.show();
+        } else {
+            $clearBtn.hide();
+        }
+    }
+
+    $(document).on('input paste keyup change', '#full_name, #email, #secondrary_email', function () {
+        syncClearButton($(this));
+    });
+
+    $(document).on('click', '.candidate-field-clear', function (e) {
+        e.preventDefault();
+        var $input = $(this).siblings('input');
+        $input.val('').trigger('input').trigger('change').focus();
+        $(this).hide();
+        if ($input.attr('id') === 'email') {
+            $('#career-email-typo-hint').hide().empty();
+        }
+    });
+
+    // 4. Name Field Normalization
+    $(document).on('blur change', '#full_name', function () {
+        var val = $(this).val();
+        if (val) {
+            var formatted = window.formatCandidateTitleCase(val);
+            if (formatted !== val) {
+                $(this).val(formatted);
+            }
+        }
+    });
+
+    $(document).on('paste', '#full_name', function () {
+        var self = this;
+        setTimeout(function () {
+            var val = $(self).val();
+            if (val) {
+                $(self).val(window.formatCandidateTitleCase(val));
+            }
+        }, 15);
+    });
+
+    // 5. Email Normalization & Inline Typo Assistance
+    $(document).on('blur change', '#email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+
+        var fix = window.detectDomainTypo(raw);
+        var $hint = $('#career-email-typo-hint');
+        if (fix && fix !== raw) {
+            $hint.html('<i class="fa-solid fa-lightbulb text-warning" aria-hidden="true"></i> Did you mean <strong><a href="javascript:void(0);" class="apply-email-fix">' + fix + '</a></strong>?').show();
+        } else {
+            $hint.hide().empty();
+        }
+    });
+
+    $(document).on('click', '#career-email-typo-hint .apply-email-fix', function (e) {
+        e.preventDefault();
+        var fixed = $(this).text();
+        $('#email').val(fixed).trigger('change');
+        $('#career-email-typo-hint').hide().empty();
+        if (typeof validator !== 'undefined' && validator && typeof validator.revalidateField === 'function') {
+            validator.revalidateField('email');
+        }
+    });
+
+    $(document).on('blur change', '#secondrary_email', function () {
+        var raw = ($(this).val() || '').trim().toLowerCase();
+        $(this).val(raw);
+    });
+
+    // Initial check on page load
+    $(document).ready(function () {
+        $('#full_name, #email, #secondrary_email').each(function () {
+            syncClearButton($(this));
+        });
+    });
+})();
 </script>
