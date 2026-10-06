@@ -7221,12 +7221,16 @@ END:VCALENDAR";
 
     }
 
-    public static function defaultCurrency()
+    public static function defaultCurrency($company_id = null)
     {
-        if (! auth()->check()) {
+        if (empty($company_id)) {
+            if (auth()->check()) {
+                $company_id = auth()->user()->company_id;
+            }
+        }
+        if (empty($company_id)) {
             return 'USD';
         }
-        $company_id = auth()->user()->company_id;
 
         return Cache::remember("tenant_default_currency:{$company_id}", 3600, function () use ($company_id) {
             $company = DB::table('companies')
@@ -7244,9 +7248,19 @@ END:VCALENDAR";
                     if ($code) {
                         return strtoupper(trim($code));
                     }
+                    $code = DB::table('currencies')->where('id', (int) $company->currency)->value('currency_code');
+                    if ($code) {
+                        return strtoupper(trim($code));
+                    }
                 } else {
                     return strtoupper(trim($company->currency));
                 }
+            }
+
+            // Check company_career_settings table as fallback
+            $careerCurrency = DB::table('company_career_settings')->where('company_id', $company_id)->value('currency');
+            if (! empty($careerCurrency)) {
+                return strtoupper(trim($careerCurrency));
             }
 
             // HQ / Country Auto-Detection from calling code
@@ -7268,6 +7282,22 @@ END:VCALENDAR";
 
             return 'USD'; // Safe global default for all other international accounts
         });
+    }
+
+    public static function defaultCurrencyKey($company_id = null): int
+    {
+        $code = self::defaultCurrency($company_id);
+        $currencies = self::currency();
+        $key = array_search($code, $currencies, true);
+        if ($key !== false) {
+            return (int) $key;
+        }
+        foreach ($currencies as $k => $c) {
+            if (strcasecmp($c, $code) === 0) {
+                return (int) $k;
+            }
+        }
+        return 0; // Default to 0 (INR) if not found in list
     }
 
     public static function defaultTimeZone()

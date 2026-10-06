@@ -1857,6 +1857,8 @@ class HomeController extends Controller
 
         $page_event = 'ADD';
         $currency = GeneralMethod::currency();
+        $tenant_currency = GeneralMethod::defaultCurrency($company_id);
+        $tenant_currency_key = GeneralMethod::defaultCurrencyKey($company_id);
         $salaryMode = GeneralMethod::salaryMode();
 
         /* Intent: Cache static interview mode reference master data for 24h */
@@ -1875,7 +1877,7 @@ class HomeController extends Controller
         $currentPage = 1;
         $this->currencyConverter = GeneralMethod::currencyConverter();
 
-        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'cityListArr', 'currentPage', 'company_id'));
+        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'tenant_currency', 'tenant_currency_key', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'cityListArr', 'currentPage', 'company_id'));
     }
 
     public function jobDetails($jobId = null, $company_id = null)

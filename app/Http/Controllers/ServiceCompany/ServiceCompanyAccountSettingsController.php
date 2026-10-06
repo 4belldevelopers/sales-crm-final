@@ -1265,6 +1265,11 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
             GeneralMethod::cacheClean($key);
         }
 
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_currency_code:{$company_id}");
+        \Illuminate\Support\Facades\Cache::forget("tenant:{$company_id}:currency_bench_show_mode");
+        $this->accountSettingsService->flushAccountCache($company_id);
+
         return Reply::dataOnly(['status' => 'success']);
 
     }
@@ -1497,6 +1502,7 @@ class ServiceCompanyAccountSettingsController extends ServiceCompanyBaseControll
         );
 
         /* Intent: Invalidate tenant career metadata and settings Redis caches when updated */
+        \Illuminate\Support\Facades\Cache::forget("tenant_default_currency:{$company_id}");
         $this->accountSettingsService->flushCareerCache($company_id);
 
         return Reply::success('Career page settings saved successfully.');

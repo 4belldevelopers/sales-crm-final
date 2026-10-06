@@ -2955,7 +2955,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ->first();
 
         $this->page_event = 'ADD';
+        $this->company_id = $company_id;
         $this->currency = GeneralMethod::currency();
+        $this->tenant_currency = GeneralMethod::defaultCurrency($company_id);
+        $this->tenant_currency_key = GeneralMethod::defaultCurrencyKey($company_id);
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->interview_mode = ReferenceDataCache::interviewModes();
         $this->statelist = GeneralMethod::statelist(101);
@@ -11305,7 +11308,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $client_company_id = $this->jobDetail->company_id;
 
         $this->page_event = 'ADD';
+        $targetCompanyId = $client_company_id ?: (auth()->check() ? auth()->user()->company_id : null);
+        $this->company_id = $targetCompanyId;
         $this->currency = GeneralMethod::currency();
+        $this->tenant_currency = GeneralMethod::defaultCurrency($targetCompanyId);
+        $this->tenant_currency_key = GeneralMethod::defaultCurrencyKey($targetCompanyId);
+        $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
+            return GeneralMethod::currencyConverter();
+        });
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->interview_mode = ReferenceDataCache::interviewModes();
         // $this->countries = Country::all();
