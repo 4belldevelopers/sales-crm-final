@@ -4927,18 +4927,12 @@ var cities = @json($cities);
 </script>
 
 <script>
-// Internet connectivity check used by both save and update handlers.
+// Reliable in-browser network connectivity check without external 3rd-party latency/blocking
 async function isInternetAvailable() {
-    try {
-        await fetch("https://www.gstatic.com/generate_204", {
-            method: "GET",
-            cache: "no-cache",
-            mode: "no-cors"
-        });
-        return true;
-    } catch (error) {
-        return false;
+    if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+        return Boolean(navigator.onLine);
     }
+    return true;
 }
 </script>
 
@@ -5135,13 +5129,6 @@ async function isInternetAvailable() {
                         {
                             // notEmpty:{ message: 'Skills is required'}
                           
-                        }
-                    },
-                    'specialties':
-                    {
-                        validators:
-                        { notEmpty:{message: "Specialties is required"}
-                           
                         }
                     }
                 },
@@ -7087,13 +7074,6 @@ var KTAddCandidate = function () {
                             // notEmpty:{ message: 'Skills is required'}
                           
                         }
-                    },
-                    'specialties':
-                    {
-                        validators:
-                        { notEmpty:{message: "Specialties is required"}
-                           
-                        }
                     }
                 },
                 plugins: {
@@ -8111,44 +8091,45 @@ $(document).ready(function() {
         setTimeout(triggerLiveRecruiterCommentsSync, 120);
     });
 
-    // Dropdown toggle
-    $(document).on('click', '#custom_template_trigger', function (e) {
-        e.stopPropagation();
+    // Global functions for native HTML triggers and external invocation
+    window.toggleRecruiterTemplateDropdown = function (e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        }
         var $dd = $('#custom_template_dropdown');
-        var $card = $(this).closest('.rm-note-card');
+        var $card = $dd.closest('.rm-note-card');
+        var $trigger = $('#custom_template_trigger');
         var $menu = $('#custom_template_menu');
-        var isOpen = $dd.hasClass('is-open');
-        if (isOpen) {
-            $dd.removeClass('is-open');
-            $card.removeClass('has-open-dropdown');
-            $menu.hide();
-            $(this).attr('aria-expanded', 'false');
-        } else {
+        var willOpen = !$dd.hasClass('is-open');
+
+        if (willOpen) {
             $dd.addClass('is-open');
             $card.addClass('has-open-dropdown');
+            $trigger.attr('aria-expanded', 'true');
             $menu.show();
-            $(this).attr('aria-expanded', 'true');
+        } else {
+            $dd.removeClass('is-open');
+            $card.removeClass('has-open-dropdown');
+            $trigger.attr('aria-expanded', 'false');
+            $menu.hide();
         }
-    });
+    };
 
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('#custom_template_dropdown').length) {
-            $('#custom_template_dropdown').removeClass('is-open');
-            $('.rm-note-card').removeClass('has-open-dropdown');
-            $('#custom_template_menu').hide();
-            $('#custom_template_trigger').attr('aria-expanded', 'false');
+    window.selectRecruiterTemplate = function (el, e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         }
-    });
-
-    // Dropdown option select
-    $(document).on('click', '.tpl-card-item', function (e) {
-        e.stopPropagation();
-        var id = $(this).data('template-id');
-        var title = $(this).data('template-title') || $(this).find('.tpl-card-title').text();
+        var $item = $(el);
+        var id = $item.data('template-id');
+        var title = $item.data('template-title') || $item.find('.tpl-card-title').text();
         if (!id || !masterTemplatesData[id]) return;
 
         $('.tpl-card-item').removeClass('is-selected');
-        $(this).addClass('is-selected');
+        $item.addClass('is-selected');
         $('#recruiter_note_template_select').val(id);
         $('#selected_template_label').text(title).removeClass('is-placeholder');
 
@@ -8157,11 +8138,49 @@ $(document).ready(function() {
         $('#custom_template_menu').hide();
         $('#custom_template_trigger').attr('aria-expanded', 'false');
 
-        var raw = masterTemplatesData[id].content || '';
+        var raw = (masterTemplatesData[id] && masterTemplatesData[id].content) || '';
         var formatted = formatTemplateToPlainText(raw);
         var interpolated = interpolateTemplateVariables(formatted);
         $('#recruiter_note').val(truncateToMaxWords(interpolated, 100));
         updateRmCommentsCounter(false);
+    };
+
+    // Dropdown toggle via jQuery event
+    $(document).on('click', '#custom_template_trigger', function (e) {
+        window.toggleRecruiterTemplateDropdown(e);
+    });
+
+    // Keyboard support on trigger
+    $(document).on('keydown', '#custom_template_trigger', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            window.toggleRecruiterTemplateDropdown(e);
+        } else if (e.key === 'Escape') {
+            $('#custom_template_dropdown').removeClass('is-open');
+            $('#custom_template_menu').hide();
+            $(this).attr('aria-expanded', 'false');
+        }
+    });
+
+    // Clicks inside the menu should not bubble to outside-click close handler
+    $(document).on('click', '#custom_template_menu', function (e) {
+        e.stopPropagation();
+    });
+
+    // Outside click closes dropdown
+    $(document).on('click', function (e) {
+        var target = e.target;
+        if (!$(target).closest('#custom_template_dropdown').length) {
+            $('#custom_template_dropdown').removeClass('is-open');
+            $('.rm-note-card').removeClass('has-open-dropdown');
+            $('#custom_template_trigger').attr('aria-expanded', 'false');
+            $('#custom_template_menu').hide();
+        }
+    });
+
+    // Dropdown option select via jQuery delegation as well
+    $(document).on('click', '.tpl-card-item', function (e) {
+        window.selectRecruiterTemplate(this, e);
     });
 
     // Sync button click
@@ -8203,10 +8222,16 @@ $(document).ready(function() {
     window.compileEvaluationMatrix = function () {};
     window.syncRecruiterEvaluationMatrix = function () {};
 
+    applyDefaultRecruiterNotePrefill();
     $(document).ready(function () {
         applyDefaultRecruiterNotePrefill();
         updateRmCommentsCounter(false);
     });
+    window.addEventListener('load', function () {
+        applyDefaultRecruiterNotePrefill();
+    });
+    setTimeout(applyDefaultRecruiterNotePrefill, 200);
+    setTimeout(applyDefaultRecruiterNotePrefill, 600);
 })();
 
 // ============================================================================

@@ -1798,11 +1798,15 @@ select#gender {
     flex-shrink: 0;
     margin-left: 8px;
 }
+.custom-template-trigger * {
+    pointer-events: none;
+}
 .custom-template-dropdown.is-open .custom-template-trigger .trigger-arrow {
     transform: rotate(180deg);
     color: #d97706;
 }
 .custom-template-menu {
+    display: none;
     position: absolute;
     top: calc(100% + 6px);
     left: 0;
@@ -1817,6 +1821,9 @@ select#gender {
     overflow-y: auto !important;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
+}
+.custom-template-dropdown.is-open .custom-template-menu {
+    display: block !important;
 }
 .custom-template-menu::-webkit-scrollbar {
     width: 6px;
@@ -3715,7 +3722,7 @@ select#gender {
                     Select Template <span class="text-muted fw-normal fs-8">(Click dropdown to select categorized template)</span>
                   </label>
                   <div class="custom-template-dropdown" id="custom_template_dropdown">
-                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="if(window.toggleRecruiterTemplateDropdown) window.toggleRecruiterTemplateDropdown(event);">
                       <div class="trigger-left">
                         <i class="fa-solid fa-award trigger-icon"></i>
                         <span class="trigger-label" id="selected_template_label">Strong Fit</span>
@@ -3723,7 +3730,7 @@ select#gender {
                       <i class="fa-solid fa-chevron-down trigger-arrow"></i>
                     </div>
 
-                    <div class="custom-template-menu" id="custom_template_menu" style="display: none;" role="listbox">
+                    <div class="custom-template-menu" id="custom_template_menu" role="listbox">
                       {{-- 1. Candidate Fit & Experience --}}
                       @if(count($catFit) > 0)
                       <div class="tpl-category-section">
@@ -3731,7 +3738,7 @@ select#gender {
                           <span>Candidate Fit &amp; Experience</span>
                         </div>
                         @foreach($catFit as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3754,7 +3761,7 @@ select#gender {
                           <span>Availability &amp; Notice Period</span>
                         </div>
                         @foreach($catAvailability as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -7363,7 +7370,53 @@ $.ajax({
 (function () {
     'use strict';
 
-    var masterTemplatesData = @json(collect($masterTemplatesList)->keyBy('id'));
+    var fallbackMasterTemplates = {
+        101: {
+            id: 101,
+            cat: 'fit',
+            icon: 'fa-solid fa-award',
+            title: 'Strong Fit',
+            subtitle: 'Strong match with 5+ years relevant experience & product alignment.',
+            order: 1,
+            content: "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role."
+        },
+        104: {
+            id: 104,
+            cat: 'fit',
+            icon: 'fa-solid fa-building-user',
+            title: 'Similar Company / Product Experience',
+            subtitle: 'Product-based background with Agile and cross-functional delivery.',
+            order: 2,
+            content: "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration."
+        },
+        102: {
+            id: 102,
+            cat: 'availability',
+            icon: 'fa-solid fa-bolt-lightning',
+            title: '🟢 Immediate Joiner',
+            subtitle: 'Immediate joiner available within 2–3 days with matching relevant experience.',
+            order: 1,
+            content: "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change]."
+        },
+        103: {
+            id: 103,
+            cat: 'availability',
+            icon: 'fa-regular fa-calendar-check',
+            title: '🟢 Serving Notice Period',
+            subtitle: 'Currently serving notice with confirmed last working day & fast onboarding.',
+            order: 2,
+            content: "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week."
+        }
+    };
+
+    var serverTemplates = {};
+    try {
+        serverTemplates = @json(collect($masterTemplatesList)->keyBy('id')) || {};
+    } catch (e) {
+        serverTemplates = {};
+    }
+
+    var masterTemplatesData = Object.assign({}, fallbackMasterTemplates, serverTemplates);
 
     // Format HTML templates cleanly to readable plain text
     function formatTemplateToPlainText(html) {
@@ -7631,44 +7684,45 @@ $.ajax({
         setTimeout(triggerLiveRecruiterCommentsSync, 120);
     });
 
-    // Dropdown toggle
-    $(document).on('click', '#custom_template_trigger', function (e) {
-        e.stopPropagation();
+    // Global functions for native HTML triggers and external invocation
+    window.toggleRecruiterTemplateDropdown = function (e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        }
         var $dd = $('#custom_template_dropdown');
-        var $card = $(this).closest('.rm-note-card');
+        var $card = $dd.closest('.rm-note-card');
+        var $trigger = $('#custom_template_trigger');
         var $menu = $('#custom_template_menu');
-        var isOpen = $dd.hasClass('is-open');
-        if (isOpen) {
-            $dd.removeClass('is-open');
-            $card.removeClass('has-open-dropdown');
-            $menu.hide();
-            $(this).attr('aria-expanded', 'false');
-        } else {
+        var willOpen = !$dd.hasClass('is-open');
+
+        if (willOpen) {
             $dd.addClass('is-open');
             $card.addClass('has-open-dropdown');
+            $trigger.attr('aria-expanded', 'true');
             $menu.show();
-            $(this).attr('aria-expanded', 'true');
+        } else {
+            $dd.removeClass('is-open');
+            $card.removeClass('has-open-dropdown');
+            $trigger.attr('aria-expanded', 'false');
+            $menu.hide();
         }
-    });
+    };
 
-    $(document).on('click', function (e) {
-        if (!$(e.target).closest('#custom_template_dropdown').length) {
-            $('#custom_template_dropdown').removeClass('is-open');
-            $('.rm-note-card').removeClass('has-open-dropdown');
-            $('#custom_template_menu').hide();
-            $('#custom_template_trigger').attr('aria-expanded', 'false');
+    window.selectRecruiterTemplate = function (el, e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         }
-    });
-
-    // Dropdown option select
-    $(document).on('click', '.tpl-card-item', function (e) {
-        e.stopPropagation();
-        var id = $(this).data('template-id');
-        var title = $(this).data('template-title') || $(this).find('.tpl-card-title').text();
+        var $item = $(el);
+        var id = $item.data('template-id');
+        var title = $item.data('template-title') || $item.find('.tpl-card-title').text();
         if (!id || !masterTemplatesData[id]) return;
 
         $('.tpl-card-item').removeClass('is-selected');
-        $(this).addClass('is-selected');
+        $item.addClass('is-selected');
         $('#recruiter_note_template_select').val(id);
         $('#selected_template_label').text(title).removeClass('is-placeholder');
 
@@ -7677,11 +7731,49 @@ $.ajax({
         $('#custom_template_menu').hide();
         $('#custom_template_trigger').attr('aria-expanded', 'false');
 
-        var raw = masterTemplatesData[id].content || '';
+        var raw = (masterTemplatesData[id] && masterTemplatesData[id].content) || '';
         var formatted = formatTemplateToPlainText(raw);
         var interpolated = interpolateTemplateVariables(formatted);
         $('#recruiter_note').val(truncateToMaxWords(interpolated, 100));
         updateRmCommentsCounter(false);
+    };
+
+    // Dropdown toggle via jQuery event
+    $(document).on('click', '#custom_template_trigger', function (e) {
+        window.toggleRecruiterTemplateDropdown(e);
+    });
+
+    // Keyboard support on trigger
+    $(document).on('keydown', '#custom_template_trigger', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            window.toggleRecruiterTemplateDropdown(e);
+        } else if (e.key === 'Escape') {
+            $('#custom_template_dropdown').removeClass('is-open');
+            $('#custom_template_menu').hide();
+            $(this).attr('aria-expanded', 'false');
+        }
+    });
+
+    // Clicks inside the menu should not bubble to outside-click close handler
+    $(document).on('click', '#custom_template_menu', function (e) {
+        e.stopPropagation();
+    });
+
+    // Outside click closes dropdown
+    $(document).on('click', function (e) {
+        var target = e.target;
+        if (!$(target).closest('#custom_template_dropdown').length) {
+            $('#custom_template_dropdown').removeClass('is-open');
+            $('.rm-note-card').removeClass('has-open-dropdown');
+            $('#custom_template_trigger').attr('aria-expanded', 'false');
+            $('#custom_template_menu').hide();
+        }
+    });
+
+    // Dropdown option select via jQuery delegation as well
+    $(document).on('click', '.tpl-card-item', function (e) {
+        window.selectRecruiterTemplate(this, e);
     });
 
     // Sync button click
@@ -7724,10 +7816,16 @@ $.ajax({
     window.compileEvaluationMatrix = function () {};
     window.syncRecruiterEvaluationMatrix = function () {};
 
+    applyDefaultRecruiterNotePrefill();
     $(document).ready(function () {
         applyDefaultRecruiterNotePrefill();
         updateRmCommentsCounter(false);
     });
+    window.addEventListener('load', function () {
+        applyDefaultRecruiterNotePrefill();
+    });
+    setTimeout(applyDefaultRecruiterNotePrefill, 200);
+    setTimeout(applyDefaultRecruiterNotePrefill, 600);
 })();
 </script>
 
