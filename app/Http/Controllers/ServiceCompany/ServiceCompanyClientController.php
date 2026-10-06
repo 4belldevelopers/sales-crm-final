@@ -63,6 +63,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return DB::table('countries')->get();
         });
 
+        // ── Phase 1 God-Level Optimization: Bootstrap Page 1 data directly into view ──
+        // Eliminates duplicate initial HTTP roundtrip (GET /clients -> GET /clients_ajax)
+        try {
+            $initialRequest = new Request([
+                'tab' => 'all',
+                'page' => 1,
+                'per_page' => 10,
+                'size' => 10,
+            ]);
+            $initialResponse = $this->all_clients_data_ajax($initialRequest);
+            $initialData = $initialResponse->getData(true);
+            $this->initialHtml = $initialData['html'] ?? '';
+            $this->initialTotal = $initialData['total'] ?? 0;
+            $this->initialPagination = $initialData['pagination'] ?? '';
+        } catch (\Throwable $e) {
+            $this->initialHtml = '';
+            $this->initialTotal = 0;
+            $this->initialPagination = '';
+        }
+
         return view('service_company.client.index', $this->data);
     }
 
@@ -1281,7 +1301,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ];
 
         $versionKey = 'clientsviewmore_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, time());
+        $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:clientsviewmore:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
@@ -1296,12 +1316,23 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return response()->json(cache()->get($cacheKeySet));
         }
 
-        $this->countries = Country::all();
-        $this->categories = JobCategory::all();
+        // ── Phase 3 God-Level Optimization: Cache static lookups in Redis (0 MySQL reads) ──
+        $this->countries = cache()->remember('global_countries_list', 86400, function () {
+            return DB::table('countries')->get();
+        });
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return DB::table('job_categories')->get();
+        });
         $this->companyType = GeneralMethod::companyType();
-        $this->department = GeneralMethod::industries();
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
+        $this->department = cache()->remember('global_td_industries_all', 86400, function () {
+            return GeneralMethod::industries();
+        });
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
+        $this->statelist = cache()->remember('global_state_list_101', 86400, function () {
+            return GeneralMethod::statelist(101);
+        });
 
         // $this->client = Client::find($id);
         if ($id) {
@@ -2048,7 +2079,7 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         ];
 
         $versionKey = 'clientsdviewmore_version_user_'.$this->user->id;
-        $version = cache()->get($versionKey, time());
+        $version = cache()->get($versionKey, 1);
         $cacheKeySet = 'ats:clientsdviewmore_v4:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first
@@ -2057,13 +2088,26 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             return response()->json(cache()->get($cacheKeySet));
         }
 
-        $this->countries = Country::all();
-        $this->categories = JobCategory::all();
+        // ── Phase 3 God-Level Optimization: Cache static lookups in Redis (0 MySQL reads) ──
+        $this->countries = cache()->remember('global_countries_list', 86400, function () {
+            return DB::table('countries')->get();
+        });
+        $this->categories = cache()->remember('global_job_categories_all', 86400, function () {
+            return DB::table('job_categories')->get();
+        });
         $this->companyType = GeneralMethod::industries_type_arr(); // GeneralMethod::accountCompanyType();
-        $this->department = GeneralMethod::department();
-        $this->industries = GeneralMethod::industries();
-        $this->countryArr = GeneralMethod::getAllCountryList();
-        $this->statelist = GeneralMethod::statelist(101);
+        $this->department = cache()->remember('global_departments_all', 86400, function () {
+            return GeneralMethod::department();
+        });
+        $this->industries = cache()->remember('global_td_industries_all', 86400, function () {
+            return GeneralMethod::industries();
+        });
+        $this->countryArr = cache()->remember('global_country_arr_list', 86400, function () {
+            return GeneralMethod::getAllCountryList();
+        });
+        $this->statelist = cache()->remember('global_state_list_101', 86400, function () {
+            return GeneralMethod::statelist(101);
+        });
 
         $this->directClientDetail = null;
 
@@ -3227,10 +3271,46 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $user_id = $this->user->id;
 
-        $invitation_id = $event_id = $from_company = '';
-        $event_id = $_REQUEST['event_id'];
-        $from_company = $_REQUEST['from_company'];
-        $invitation_id = $_REQUEST['invitation_id'];
+        $event_id = $request->input('event_id', $_REQUEST['event_id'] ?? null);
+        $from_company = $request->input('from_company', $_REQUEST['from_company'] ?? null);
+        $invitation_id = $request->input('invitation_id', $_REQUEST['invitation_id'] ?? null);
+
+        if (!$invitation_id || !$event_id) {
+            return Reply::dataOnly(['status' => 'error', 'message' => 'Invalid parameters']);
+        }
+
+        // ── Phase 4 God-Level Concurrency: Redis Atomic Distributed Lock ──
+        // Prevents double-clicks, concurrent tabs, or simultaneous requests from executing twice
+        $lockKey = "lock:client_req_update:{$company_id}:{$invitation_id}";
+        $lock = Cache::lock($lockKey, 8);
+
+        if (!$lock->get()) {
+            return Reply::dataOnly([
+                'status' => 'success',
+                'clientDataCnt' => $this->commonclient(),
+                'message' => 'Request is already being processed.',
+            ]);
+        }
+
+        try {
+            // Tenancy & Current State verification (Idempotency Check)
+            $invitationRow = DB::table('staffing_company_invitation')
+                ->where('id', $invitation_id)
+                ->where('to_company_id', $company_id)
+                ->first();
+
+            if (!$invitationRow) {
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Invitation not found or access denied.']);
+            }
+
+            // If already resolved to -1 or 1, return idempotent success immediately
+            if (in_array((int)$invitationRow->to_invitation_status, [-1, 1])) {
+                return Reply::dataOnly([
+                    'status' => 'success',
+                    'clientDataCnt' => $this->commonclient(),
+                    'message' => ((int)$invitationRow->to_invitation_status === 1) ? 'Request has already been Accepted' : 'Request has already been Ignored',
+                ]);
+            }
 
         if ($event_id == -1) {
             // CLIENT INVIDATION IGNORE
@@ -3363,9 +3443,22 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
                 'created_at' => date('Y-m-d'),
                 'updated_at' => date('Y-m-d'),
             ];
-            DB::table('staffing_company_relation')->insert($values);
-            $relationId = DB::getPdo()->lastInsertId();
-            GeneralMethod::appendClientNestedData($relationId);
+
+            // ── Phase 4 Idempotency Protection: Ensure relationship is not duplicated ──
+            $existingRel = DB::table('staffing_company_relation')
+                ->where('from_company_id', $from_company_id)
+                ->where('to_company_id', $company_id)
+                ->first();
+
+            if (!$existingRel) {
+                DB::table('staffing_company_relation')->insert($values);
+                $relationId = DB::getPdo()->lastInsertId();
+                GeneralMethod::appendClientNestedData($relationId);
+            } else {
+                DB::table('staffing_company_relation')
+                    ->where('id', $existingRel->id)
+                    ->update(['final_status' => 1, 'updated_at' => date('Y-m-d')]);
+            }
 
             $job = Job::withoutGlobalScopes()->find($invitationRow->job_id);
             if ($job) {
@@ -3428,6 +3521,10 @@ class ServiceCompanyClientController extends ServiceCompanyBaseController
             }
 
             return Reply::dataOnly(['status' => 'success', 'clientDataCnt' => $clientDataCnt, 'message' => 'Request has been Accepted']);
+        }
+
+        } finally {
+            $lock->release();
         }
 
     }
