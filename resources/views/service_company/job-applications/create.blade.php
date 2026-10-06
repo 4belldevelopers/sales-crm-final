@@ -1757,6 +1757,7 @@
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
 }
+#custom_template_dropdown.is-open #custom_template_menu,
 .custom-template-dropdown.is-open .custom-template-menu {
     display: block !important;
 }
@@ -1803,6 +1804,9 @@
 .tpl-cat--purple {
     background: #f5f3ff;
     color: #6d28d9;
+}
+.tpl-card-item * {
+    pointer-events: none;
 }
 .tpl-card-item {
     display: flex;
@@ -3779,7 +3783,7 @@
                     Select Template <span class="text-muted fw-normal fs-8">(Click dropdown to select categorized template)</span>
                   </label>
                   <div class="custom-template-dropdown" id="custom_template_dropdown">
-                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="if(window.toggleRecruiterTemplateDropdown) window.toggleRecruiterTemplateDropdown(event);">
+                    <div class="custom-template-trigger" id="custom_template_trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox" onclick="window.toggleRecruiterTemplateDropdown(event);">
                       <div class="trigger-left">
                         <i class="fa-solid fa-award trigger-icon"></i>
                         <span class="trigger-label" id="selected_template_label">Strong Fit</span>
@@ -3795,7 +3799,7 @@
                           <span>Candidate Fit &amp; Experience</span>
                         </div>
                         @foreach($catFit as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3818,7 +3822,7 @@
                           <span>Availability &amp; Notice Period</span>
                         </div>
                         @foreach($catAvailability as $item)
-                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="if(window.selectRecruiterTemplate) window.selectRecruiterTemplate(this, event);">
+                        <div class="tpl-card-item {{ $item['id'] === 101 ? 'is-selected' : '' }}" data-template-id="{{ $item['id'] }}" data-template-title="{{ $item['title'] }}" role="option" tabindex="0" onclick="window.selectRecruiterTemplate(this, event);">
                           <div class="tpl-card-left">
                             <span class="tpl-card-icon"><i class="{{ $item['icon'] }}"></i></span>
                             <div class="tpl-card-text">
@@ -3855,6 +3859,471 @@
                 </div>
               </div>
             </div>
+
+<script id="jero_recruiter_comments_isolated_engine">
+(function () {
+    'use strict';
+
+    var fallbackMasterTemplates = {
+        101: {
+            id: 101,
+            cat: 'fit',
+            icon: 'fa-solid fa-award',
+            title: 'Strong Fit',
+            subtitle: 'Strong match with 5+ years relevant experience & product alignment.',
+            order: 1,
+            content: "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role."
+        },
+        104: {
+            id: 104,
+            cat: 'fit',
+            icon: 'fa-solid fa-building-user',
+            title: 'Similar Company / Product Experience',
+            subtitle: 'Product-based background with Agile and cross-functional delivery.',
+            order: 2,
+            content: "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration."
+        },
+        102: {
+            id: 102,
+            cat: 'availability',
+            icon: 'fa-solid fa-bolt-lightning',
+            title: '🟢 Immediate Joiner',
+            subtitle: 'Immediate joiner available within 2–3 days with matching relevant experience.',
+            order: 1,
+            content: "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change]."
+        },
+        103: {
+            id: 103,
+            cat: 'availability',
+            icon: 'fa-regular fa-calendar-check',
+            title: '🟢 Serving Notice Period',
+            subtitle: 'Currently serving notice with confirmed last working day & fast onboarding.',
+            order: 2,
+            content: "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week."
+        }
+    };
+
+    var serverTemplates = {};
+    try {
+        serverTemplates = @json(collect($masterTemplatesList)->keyBy('id')) || {};
+    } catch (e) {
+        serverTemplates = {};
+    }
+
+    var masterTemplatesData = Object.assign({}, fallbackMasterTemplates, serverTemplates);
+
+    function formatTemplateToPlainText(html) {
+        if (!html) return '';
+        var temp = document.createElement('div');
+        temp.innerHTML = html;
+        var brs = temp.querySelectorAll('br');
+        for (var b = 0; b < brs.length; b++) { brs[b].replaceWith('\n'); }
+        var lis = temp.querySelectorAll('li');
+        for (var l = 0; l < lis.length; l++) {
+            var bullet = document.createTextNode('• ');
+            lis[l].insertBefore(bullet, lis[l].firstChild);
+            lis[l].after('\n');
+        }
+        var ps = temp.querySelectorAll('p, div, tr');
+        for (var p = 0; p < ps.length; p++) {
+            ps[p].after('\n');
+        }
+        var text = temp.textContent || temp.innerText || '';
+        return text.replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
+    }
+
+    function countWords(str) {
+        if (!str) return 0;
+        var clean = String(str).trim().replace(/\s+/g, ' ');
+        if (!clean) return 0;
+        return clean.split(' ').filter(function (w) { return w.length > 0; }).length;
+    }
+
+    function truncateToMaxWords(str, maxWords) {
+        if (!str) return '';
+        var words = String(str).trim().replace(/\s+/g, ' ').split(' ').filter(function (w) { return w.length > 0; });
+        if (words.length <= maxWords) return str;
+        return words.slice(0, maxWords).join(' ');
+    }
+
+    function updateRmCommentsCounter(enforceLimit) {
+        var rn = document.getElementById('recruiter_note');
+        var counter = document.getElementById('rm_comments_counter');
+        if (!rn || !counter) return;
+
+        var val = rn.value || '';
+        var wordsCount = countWords(val);
+
+        if (enforceLimit && wordsCount > 100) {
+            rn.value = truncateToMaxWords(val, 100);
+            wordsCount = 100;
+        }
+
+        counter.textContent = wordsCount + ' / 100 words';
+        if (wordsCount >= 100) {
+            counter.classList.add('is-limit-reached');
+            counter.classList.remove('is-warning');
+        } else if (wordsCount >= 90) {
+            counter.classList.add('is-warning');
+            counter.classList.remove('is-limit-reached');
+        } else {
+            counter.classList.remove('is-warning', 'is-limit-reached');
+        }
+    }
+
+    function getCandidateFormVariables() {
+        var vars = {};
+
+        // 1. Relevant experience: search experience inputs
+        var expVal = '';
+        var expEl = document.getElementById('total_experience') || document.querySelector('[name="total_experience"]') || document.querySelector('[name="experience"]') || document.getElementById('experience');
+        if (expEl && expEl.value && String(expEl.value).trim()) {
+            var rawExp = String(expEl.value).trim();
+            if (!isNaN(rawExp) && parseFloat(rawExp) > 0) {
+                expVal = rawExp + '+ years';
+            } else {
+                expVal = rawExp;
+                if (!/year/i.test(expVal)) expVal += ' years';
+            }
+        }
+        vars.relevantExperience = expVal || '5+ years';
+
+        // 2. Job skills / Candidate skills
+        var skillsArr = [];
+        var skillInputs = document.querySelectorAll('#skills, [name="skills"], [name="skills[]"], [name="skill[]"], input[name*="skill"]');
+        skillInputs.forEach(function (el) {
+            if (el.value) {
+                try {
+                    var parsed = JSON.parse(el.value);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(function (p) {
+                            if (p && p.value) skillsArr.push(p.value);
+                            else if (typeof p === 'string') skillsArr.push(p);
+                        });
+                    }
+                } catch (e) {
+                    var splitted = el.value.split(',');
+                    splitted.forEach(function (s) {
+                        var trimmed = s.trim();
+                        if (trimmed && trimmed.length > 1) skillsArr.push(trimmed);
+                    });
+                }
+            }
+        });
+        if (skillsArr.length === 0) {
+            var tagifyTags = document.querySelectorAll('.tagify__tag-text, .badge-skill, .skill-badge');
+            tagifyTags.forEach(function (t) {
+                var txt = t.textContent.trim();
+                if (txt && skillsArr.indexOf(txt) === -1) skillsArr.push(txt);
+            });
+        }
+        vars.allSkills = skillsArr.length > 0 ? skillsArr.slice(0, 5).join(', ') : '(Mentioned all the skills in job)';
+
+        // 3. Current company
+        var currCompanyEl = document.getElementById('current_company') || document.querySelector('[name="current_company"]') || document.getElementById('company_name');
+        vars.currentCompany = (currCompanyEl && currCompanyEl.value && currCompanyEl.value.trim()) ? currCompanyEl.value.trim() : '';
+
+        // 4. Joining timeline
+        var noticeEl = document.getElementById('notice_period') || document.querySelector('[name="notice_period"]') || document.querySelector('[name="notice_period_days"]') || document.getElementById('notice_period_days');
+        var noticeVal = noticeEl ? String(noticeEl.value).trim() : '';
+        if (noticeVal === '0' || /immediate/i.test(noticeVal)) {
+            vars.joiningTimeline = '2–3 days';
+        } else if (noticeVal && !isNaN(noticeVal) && parseInt(noticeVal) > 0) {
+            vars.joiningTimeline = parseInt(noticeVal) + ' days';
+        } else if (noticeVal) {
+            vars.joiningTimeline = noticeVal;
+        } else {
+            vars.joiningTimeline = '2–3 days';
+        }
+
+        // 5. Reason for job change
+        var reasonEl = document.getElementById('reason_for_change') || document.querySelector('[name="reason_for_change"]') || document.querySelector('[name="job_change_reason"]');
+        vars.jobChangeReason = (reasonEl && reasonEl.value && reasonEl.value.trim()) ? reasonEl.value.trim() : 'project closure';
+
+        // 6. Last working day
+        var lwdEl = document.getElementById('last_working_day') || document.querySelector('[name="last_working_day"]') || document.getElementById('lwd');
+        var lwdVal = lwdEl ? String(lwdEl.value).trim() : '';
+        if (lwdVal) {
+            vars.lastWorkingDay = lwdVal;
+        } else {
+            vars.lastWorkingDay = '25 Oct 2026';
+        }
+
+        return vars;
+    }
+
+    function interpolateTemplateVariables(str) {
+        if (!str) return '';
+        var v = getCandidateFormVariables();
+        var out = str;
+
+        out = out.replace(/\[relevant experience\]/gi, v.relevantExperience);
+        out = out.replace(/\[all skills in job\]/gi, v.allSkills);
+        out = out.replace(/\(Mentioned all the skills in job\)/gi, v.allSkills);
+
+        if (v.currentCompany) {
+            out = out.replace(/\[current company context\]/gi, ' at ' + v.currentCompany);
+        } else {
+            out = out.replace(/\[current company context\]/gi, '');
+        }
+
+        out = out.replace(/\[joining timeline\]/gi, v.joiningTimeline);
+        out = out.replace(/\[reason for job change\]/gi, v.jobChangeReason);
+        out = out.replace(/\[last working day\]/gi, v.lastWorkingDay);
+
+        return out.replace(/[ \t]{2,}/g, ' ').trim();
+    }
+
+    // Authoritative global dropdown toggle
+    window.toggleRecruiterTemplateDropdown = function (e) {
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        }
+        var dd = document.getElementById('custom_template_dropdown');
+        var menu = document.getElementById('custom_template_menu');
+        var trigger = document.getElementById('custom_template_trigger');
+        var card = document.getElementById('recruiter_comments_section') || (dd && dd.closest ? dd.closest('.rm-note-card') : null);
+        if (!dd || !menu) return;
+
+        var isOpen = dd.classList.contains('is-open') || menu.style.display === 'block';
+        if (isOpen) {
+            dd.classList.remove('is-open');
+            if (card) card.classList.remove('has-open-dropdown');
+            menu.style.setProperty('display', 'none', 'important');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        } else {
+            dd.classList.add('is-open');
+            if (card) card.classList.add('has-open-dropdown');
+            menu.style.setProperty('display', 'block', 'important');
+            menu.style.setProperty('visibility', 'visible', 'important');
+            menu.style.setProperty('opacity', '1', 'important');
+            if (trigger) trigger.setAttribute('aria-expanded', 'true');
+        }
+    };
+
+    // Authoritative global template selection
+    window.selectRecruiterTemplate = function (el, e) {
+        if (e) {
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        }
+        var item = el || (e && (e.currentTarget || (e.target && e.target.closest && e.target.closest('.tpl-card-item'))));
+        if (!item) return;
+
+        var id = item.getAttribute('data-template-id');
+        var title = item.getAttribute('data-template-title') || (item.querySelector('.tpl-card-title') ? item.querySelector('.tpl-card-title').textContent.trim() : '');
+        if (!id || !masterTemplatesData[id]) return;
+
+        var allItems = document.querySelectorAll('.tpl-card-item');
+        for (var i = 0; i < allItems.length; i++) {
+            allItems[i].classList.remove('is-selected');
+        }
+        item.classList.add('is-selected');
+
+        var hiddenInput = document.getElementById('recruiter_note_template_select');
+        if (hiddenInput) hiddenInput.value = id;
+
+        var labelEl = document.getElementById('selected_template_label');
+        if (labelEl) {
+            labelEl.textContent = title;
+            labelEl.classList.remove('is-placeholder');
+        }
+
+        var dd = document.getElementById('custom_template_dropdown');
+        var menu = document.getElementById('custom_template_menu');
+        var trigger = document.getElementById('custom_template_trigger');
+        var card = document.getElementById('recruiter_comments_section') || (dd && dd.closest ? dd.closest('.rm-note-card') : null);
+        if (dd) dd.classList.remove('is-open');
+        if (menu) menu.style.setProperty('display', 'none', 'important');
+        if (card) card.classList.remove('has-open-dropdown');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+
+        var raw = (masterTemplatesData[id] && masterTemplatesData[id].content) || '';
+        var formatted = formatTemplateToPlainText(raw);
+        var interpolated = interpolateTemplateVariables(formatted);
+        var rn = document.getElementById('recruiter_note');
+        if (rn) {
+            rn.value = truncateToMaxWords(interpolated, 100);
+            updateRmCommentsCounter(false);
+        }
+    };
+
+    // Outside click closes dropdown safely without triggering when clicking inside
+    document.addEventListener('click', function (e) {
+        var dd = document.getElementById('custom_template_dropdown');
+        var menu = document.getElementById('custom_template_menu');
+        var trigger = document.getElementById('custom_template_trigger');
+        var card = document.getElementById('recruiter_comments_section') || (dd && dd.closest ? dd.closest('.rm-note-card') : null);
+        if (!dd || !menu) return;
+
+        if (dd.contains(e.target)) return;
+
+        if (dd.classList.contains('is-open') || menu.style.display === 'block') {
+            dd.classList.remove('is-open');
+            if (card) card.classList.remove('has-open-dropdown');
+            menu.style.setProperty('display', 'none', 'important');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+    }, false);
+
+    // Keyboard support on trigger
+    var triggerEl = document.getElementById('custom_template_trigger');
+    if (triggerEl) {
+        triggerEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                window.toggleRecruiterTemplateDropdown(e);
+            } else if (e.key === 'Escape') {
+                var dd = document.getElementById('custom_template_dropdown');
+                var menu = document.getElementById('custom_template_menu');
+                var card = document.getElementById('recruiter_comments_section');
+                if (dd) dd.classList.remove('is-open');
+                if (menu) menu.style.setProperty('display', 'none', 'important');
+                if (card) card.classList.remove('has-open-dropdown');
+                this.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    // Sync button click
+    var syncBtn = document.getElementById('btn_sync_rm_template');
+    if (syncBtn) {
+        syncBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var hiddenInput = document.getElementById('recruiter_note_template_select');
+            var selectedId = (hiddenInput && hiddenInput.value) || 101;
+            var rn = document.getElementById('recruiter_note');
+            var baseText = (masterTemplatesData[selectedId] && masterTemplatesData[selectedId].content) ? formatTemplateToPlainText(masterTemplatesData[selectedId].content) : (rn ? rn.value : '');
+            var interpolated = interpolateTemplateVariables(baseText);
+            if (rn) {
+                rn.value = truncateToMaxWords(interpolated, 100);
+                rn.classList.add('field-attention-highlight');
+                setTimeout(function () { rn.classList.remove('field-attention-highlight'); }, 700);
+            }
+            updateRmCommentsCounter(false);
+            if (typeof toastr !== 'undefined') {
+                toastr.success('Recruiter comments synchronized with Candidate Skills, Experience, and Availability!');
+            }
+        });
+    }
+
+    // Real-time word counter on textarea input
+    var rnEl = document.getElementById('recruiter_note');
+    if (rnEl) {
+        ['input', 'paste', 'keyup', 'change'].forEach(function (evt) {
+            rnEl.addEventListener(evt, function () {
+                updateRmCommentsCounter(true);
+            });
+        });
+
+        // Intercept clipboard paste if user pastes a file (e.g. resume)
+        rnEl.addEventListener('paste', function (e) {
+            var clipboardData = e.clipboardData || (window.clipboardData);
+            if (clipboardData && clipboardData.files && clipboardData.files.length > 0) {
+                var file = clipboardData.files[0];
+                var resumeInput = document.getElementById('resume') || document.querySelector('.resumeupload');
+                if (resumeInput && typeof processFile === 'function') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    resumeInput.files = dt.files;
+                    processFile(file);
+                }
+            }
+        });
+    }
+
+    // Form inputs auto-synchronization (debounced)
+    var syncTimeout = null;
+    function triggerDebouncedTemplateSync() {
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(function () {
+            var rn = document.getElementById('recruiter_note');
+            if (!rn) return;
+            var curText = rn.value.trim();
+            var hiddenInput = document.getElementById('recruiter_note_template_select');
+            var selectedId = (hiddenInput && hiddenInput.value) || 101;
+            var tpl = masterTemplatesData[selectedId];
+            if (!tpl) return;
+
+            var rawTpl = formatTemplateToPlainText(tpl.content);
+            var isRecognizedTemplate = (curText.length === 0)
+                || curText.indexOf('Strong match for the requirement') !== -1
+                || curText.indexOf('Immediate joiner and available to start') !== -1
+                || curText.indexOf('Currently serving notice period with last working day') !== -1
+                || curText.indexOf('product-based environment with responsibilities very similar') !== -1;
+
+            if (isRecognizedTemplate) {
+                var interpolated = interpolateTemplateVariables(rawTpl);
+                rn.value = truncateToMaxWords(interpolated, 100);
+                updateRmCommentsCounter(false);
+            }
+        }, 350);
+    }
+
+    var watchedFields = [
+        '#total_experience', '[name="total_experience"]', '[name="experience"]',
+        '#current_company', '[name="current_company"]',
+        '#notice_period', '[name="notice_period"]', '[name="notice_period_days"]',
+        '#last_working_day', '[name="last_working_day"]',
+        '#skills', '[name="skills"]', '[name="skills[]"]'
+    ];
+    watchedFields.forEach(function (sel) {
+        var el = document.querySelector(sel);
+        if (el) {
+            el.addEventListener('change', triggerDebouncedTemplateSync);
+            el.addEventListener('input', triggerDebouncedTemplateSync);
+        }
+    });
+
+    // Default prefill: Strong Fit (ID 101)
+    function applyDefaultRecruiterNotePrefill() {
+        var rn = document.getElementById('recruiter_note');
+        if (!rn) return;
+        var existingVal = (rn.value || '').trim();
+        if (!existingVal) {
+            var defaultTpl = masterTemplatesData[101] || fallbackMasterTemplates[101];
+            if (defaultTpl && defaultTpl.content) {
+                var formatted = formatTemplateToPlainText(defaultTpl.content);
+                var interpolated = interpolateTemplateVariables(formatted);
+                rn.value = truncateToMaxWords(interpolated, 100);
+            }
+        }
+        updateRmCommentsCounter(false);
+    }
+
+    // Compatibility dummies so external callers work without errors
+    window.compileEvaluationMatrix = function () {};
+    window.syncRecruiterEvaluationMatrix = function () {};
+
+    // Run prefill immediately upon script parsing
+    applyDefaultRecruiterNotePrefill();
+
+    // Also run on DOM ready and window load to guarantee execution
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+            applyDefaultRecruiterNotePrefill();
+            updateRmCommentsCounter(false);
+        });
+    } else {
+        applyDefaultRecruiterNotePrefill();
+        updateRmCommentsCounter(false);
+    }
+
+    window.addEventListener('load', function () {
+        applyDefaultRecruiterNotePrefill();
+    });
+
+    setTimeout(applyDefaultRecruiterNotePrefill, 100);
+    setTimeout(applyDefaultRecruiterNotePrefill, 400);
+    setTimeout(applyDefaultRecruiterNotePrefill, 1200);
+})();
+</script>
+
           </form>
         </main>
 
@@ -7767,472 +8236,9 @@ $(document).ready(function() {
 
 
 // ==========================================================================
-// RECRUITER EVALUATION MATRIX — CLIENT-SIDE JERO ENGINE (Option 3)
-// 100% Client-Side Browser RAM & LocalStorage Execution (0% Server Strain)
-// Complies with Rule 1, 2, 3, 4, 7 (No Business Logic Mutation, 10K Concurrency)
-// ==========================================================================
-// ==========================================================================
-// RECRUITER COMMENTS — CLIENT-SIDE CATEGORIZED TEMPLATE ENGINE
-// 100% Client-Side Browser RAM Execution (0% Server Strain)
-(function () {
-    'use strict';
-
-    var fallbackMasterTemplates = {
-        101: {
-            id: 101,
-            cat: 'fit',
-            icon: 'fa-solid fa-award',
-            title: 'Strong Fit',
-            subtitle: 'Strong match with 5+ years relevant experience & product alignment.',
-            order: 1,
-            content: "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role."
-        },
-        104: {
-            id: 104,
-            cat: 'fit',
-            icon: 'fa-solid fa-building-user',
-            title: 'Similar Company / Product Experience',
-            subtitle: 'Product-based background with Agile and cross-functional delivery.',
-            order: 2,
-            content: "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration."
-        },
-        102: {
-            id: 102,
-            cat: 'availability',
-            icon: 'fa-solid fa-bolt-lightning',
-            title: '🟢 Immediate Joiner',
-            subtitle: 'Immediate joiner available within 2–3 days with matching relevant experience.',
-            order: 1,
-            content: "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change]."
-        },
-        103: {
-            id: 103,
-            cat: 'availability',
-            icon: 'fa-regular fa-calendar-check',
-            title: '🟢 Serving Notice Period',
-            subtitle: 'Currently serving notice with confirmed last working day & fast onboarding.',
-            order: 2,
-            content: "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week."
-        }
-    };
-
-    var serverTemplates = {};
-    try {
-        serverTemplates = @json(collect($masterTemplatesList)->keyBy('id')) || {};
-    } catch (e) {
-        serverTemplates = {};
-    }
-
-    var masterTemplatesData = Object.assign({}, fallbackMasterTemplates, serverTemplates);
-
-    // Format HTML templates cleanly to readable plain text
-    function formatTemplateToPlainText(html) {
-        if (!html) return '';
-        var temp = document.createElement('div');
-        temp.innerHTML = html;
-        temp.querySelectorAll('br').forEach(function (el) { el.replaceWith('\n'); });
-        temp.querySelectorAll('li').forEach(function (el) {
-            var bullet = document.createTextNode('• ');
-            el.insertBefore(bullet, el.firstChild);
-            el.after('\n');
-        });
-        temp.querySelectorAll('p, div, tr').forEach(function (el) { el.after('\n'); });
-        var text = temp.textContent || temp.innerText || '';
-        return text.replace(/\n\s*\n\s*\n+/g, '\n\n').trim();
-    }
-
-    // Extract form variables from live browser RAM
-    function getCandidateFormVariables() {
-        var designation = ($('#current_designation').val() || '').trim();
-        var company = ($('#current_company').val() || '').trim();
-
-        // Collect all skills present in candidate form / job
-        var skillsList = [];
-        if (typeof candidateSelectedSkills === 'function') {
-            try {
-                candidateSelectedSkills().forEach(function (s) {
-                    var sName = (s && (s.name || s.value) ? (s.name || s.value) : String(s)).trim();
-                    if (sName && !skillsList.includes(sName)) skillsList.push(sName);
-                });
-            } catch (e) {}
-        }
-        if (skillsList.length === 0 && window.tagifyskill && Array.isArray(tagifyskill.value)) {
-            tagifyskill.value.forEach(function (tag) {
-                var sVal = (tag.value || tag.name || '').trim();
-                if (sVal && !skillsList.includes(sVal)) skillsList.push(sVal);
-            });
-        }
-        if (skillsList.length === 0) {
-            $('#skillExperienceWrapper tr input[name="skills[]"]').each(function () {
-                var s = (this.value || '').trim();
-                if (s && !skillsList.includes(s)) skillsList.push(s);
-            });
-        }
-        if (skillsList.length === 0 && typeof candidateRequiredSkills !== 'undefined' && Array.isArray(candidateRequiredSkills)) {
-            candidateRequiredSkills.forEach(function (r) {
-                var rName = (r.name || r.skill_name || r.value || '').trim();
-                if (rName && !skillsList.includes(rName)) skillsList.push(rName);
-            });
-        }
-
-        var skillsStr = '';
-        if (skillsList.length > 0) {
-            skillsStr = skillsList.join(', ');
-        } else {
-            skillsStr = '(Mentioned all the skills in job)';
-        }
-
-        // Relevant Experience
-        var relExpYear = ($('#rel_exp_year').val() || '').trim();
-        var relevantExpStr = '5+ years';
-        if (relExpYear !== '' && relExpYear !== null && relExpYear !== '0') {
-            var yNum = parseInt(relExpYear, 10);
-            if (!isNaN(yNum) && yNum > 0) {
-                relevantExpStr = yNum + '+ years';
-            }
-        } else {
-            var totExpYear = ($('#total_exp_year').val() || '').trim();
-            if (totExpYear !== '' && totExpYear !== null && totExpYear !== '0') {
-                var tyNum = parseInt(totExpYear, 10);
-                if (!isNaN(tyNum) && tyNum > 0) {
-                    relevantExpStr = tyNum + '+ years';
-                }
-            }
-        }
-
-        // Notice Period / Availability / Last Working Day
-        var snp = $('#serving_notice_period').val();
-        var joiningTimeline = '2–3 days';
-        var lastWorkingDay = '25 Oct 2026';
-
-        var rawDateVal = ($('#np_id_display').val() || $('#np_id').val() || '').trim();
-        if (rawDateVal) {
-            var parsedDate = new Date(rawDateVal.replace(/-/g, '/'));
-            if (!isNaN(parsedDate.getTime())) {
-                var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                lastWorkingDay = parsedDate.getDate() + ' ' + months[parsedDate.getMonth()] + ' ' + parsedDate.getFullYear();
-            } else {
-                lastWorkingDay = rawDateVal;
-            }
-        }
-
-        if (snp === '2') {
-            joiningTimeline = '2–3 days';
-        } else if (snp === '1') {
-            if (lastWorkingDay && lastWorkingDay !== '25 Oct 2026') {
-                joiningTimeline = 'post LWD (' + lastWorkingDay + ')';
-            }
-        } else if (snp === '0') {
-            var daysText = ($('#ddl_np_id option:selected').text() || '').trim();
-            if (daysText && !daysText.toLowerCase().includes('select notice period')) {
-                joiningTimeline = daysText.toLowerCase();
-                lastWorkingDay = 'within ' + daysText;
-            }
-        }
-
-        // Reason for job change
-        var reason = ($('#reason_for_job_change').val() || '').trim();
-        var reasonStr = reason || 'project closure';
-
-        // Product company context
-        var companyContext = '';
-        if (company && designation) {
-            companyContext = ' at ' + company + ' as ' + designation;
-        } else if (company) {
-            companyContext = ' at ' + company;
-        }
-
-        return {
-            designation: designation || 'the required role',
-            company: company,
-            companyContext: companyContext,
-            skills: skillsStr,
-            relevantExp: relevantExpStr,
-            joiningTimeline: joiningTimeline,
-            lastWorkingDay: lastWorkingDay,
-            reason: reasonStr
-        };
-    }
-
-    // Dynamic variable interpolation
-    function interpolateTemplateVariables(text, customVars) {
-        if (!text) return '';
-        var vars = customVars || getCandidateFormVariables();
-
-        // 1. Skills
-        text = text.replace(/\[all skills in job\]/gi, vars.skills);
-        if (vars.skills !== '(Mentioned all the skills in job)') {
-            text = text.replace(/\(Mentioned all the skills in job\)/gi, vars.skills);
-            text = text.replace(/\[Mentioned all the skills in job\]/gi, vars.skills);
-        }
-        text = text.replace(/(\*\*|\[)?\[3\s+skills\](\*\*|\])?/gi, vars.skills);
-        text = text.replace(/(\*\*|\[)?\[skills\](\*\*|\])?/gi, vars.skills);
-
-        // 2. Relevant Experience
-        text = text.replace(/\[relevant experience\]/gi, vars.relevantExp);
-        if (vars.relevantExp && vars.relevantExp !== '5+ years') {
-            text = text.replace(/5\+\s*years/gi, vars.relevantExp);
-        }
-
-        // 3. Joining Timeline
-        text = text.replace(/\[joining timeline\]/gi, vars.joiningTimeline);
-
-        // 4. Reason for Job Change
-        text = text.replace(/\[reason for job change\]/gi, vars.reason);
-        if (vars.reason && vars.reason !== 'project closure') {
-            text = text.replace(/project closure/gi, vars.reason);
-        }
-
-        // 5. Last Working Day
-        text = text.replace(/\[last working day\]/gi, vars.lastWorkingDay);
-        if (vars.lastWorkingDay && vars.lastWorkingDay !== '25 Oct 2026') {
-            text = text.replace(/25\s+Oct\s+2026/gi, vars.lastWorkingDay);
-        }
-
-        // 6. Company & Role
-        text = text.replace(/\[current company context\]/gi, vars.companyContext);
-        text = text.replace(/\[current company\]/gi, vars.company || 'a leading organization');
-        text = text.replace(/\[current designation\]/gi, vars.designation);
-
-        return text;
-    }
-
-    function truncateToMaxWords(text, maxWords) {
-        if (!text) return '';
-        var words = text.trim().split(/\s+/).filter(Boolean);
-        if (words.length <= maxWords) return text;
-        return words.slice(0, maxWords).join(' ');
-    }
-
-    function updateRmCommentsCounter(enforceLimit) {
-        var $el = $('#recruiter_note');
-        if (!$el.length) return;
-        var text = $el.val() || '';
-        var words = text.trim().split(/\s+/).filter(Boolean);
-        var count = words.length;
-
-        if (count > 100) {
-            var clamped = words.slice(0, 100).join(' ');
-            $el.val(clamped);
-            count = 100;
-        }
-
-        var $counter = $('#rm_comments_counter');
-        if ($counter.length) {
-            $counter.text(count + ' / 100 words');
-            if (count >= 100) $counter.css({ 'color': '#f1416c', 'font-weight': '600' });
-            else if (count >= 90) $counter.css({ 'color': '#f59e0b', 'font-weight': '600' });
-            else $counter.css({ 'color': '#8790AC', 'font-weight': '500' });
-        }
-    }
-
-    function applyDefaultRecruiterNotePrefill() {
-        var $rn = $('#recruiter_note');
-        if (!$rn.length) return;
-        var currentVal = ($rn.val() || '').trim();
-        // ID 101 is Strong Fit (Explicit User Default)
-        var defaultTpl = masterTemplatesData[101] || Object.values(masterTemplatesData)[0];
-
-        if (!currentVal) {
-            if (defaultTpl && defaultTpl.content) {
-                $('#recruiter_note_template_select').val(defaultTpl.id);
-                $('.tpl-card-item').removeClass('is-selected');
-                $('.tpl-card-item[data-template-id="' + defaultTpl.id + '"]').addClass('is-selected');
-                $('#selected_template_label').text(defaultTpl.title).removeClass('is-placeholder');
-                var formatted = formatTemplateToPlainText(defaultTpl.content);
-                var interpolated = interpolateTemplateVariables(formatted);
-                $rn.val(truncateToMaxWords(interpolated, 100));
-                updateRmCommentsCounter(false);
-            }
-        } else if (/<[a-z][\s\S]*>/i.test(currentVal)) {
-            $rn.val(truncateToMaxWords(formatTemplateToPlainText(currentVal), 100));
-            updateRmCommentsCounter(false);
-        } else {
-            // If already filled, ensure correct item is highlighted
-            var selectedId = $('#recruiter_note_template_select').val() || 101;
-            if (masterTemplatesData[selectedId]) {
-                $('.tpl-card-item').removeClass('is-selected');
-                $('.tpl-card-item[data-template-id="' + selectedId + '"]').addClass('is-selected');
-                $('#selected_template_label').text(masterTemplatesData[selectedId].title).removeClass('is-placeholder');
-            }
-            updateRmCommentsCounter(false);
-        }
-    }
-
-    // Live sync when upper candidate form fields change
-    var _rcSyncTimer = null;
-    function triggerLiveRecruiterCommentsSync() {
-        clearTimeout(_rcSyncTimer);
-        _rcSyncTimer = setTimeout(function () {
-            var selectedId = $('#recruiter_note_template_select').val() || 101;
-            if (!selectedId || !masterTemplatesData[selectedId]) return;
-
-            var $rn = $('#recruiter_note');
-            var currentVal = ($rn.val() || '').trim();
-            var isTemplateText = !currentVal
-                || currentVal.includes('Strong match for the requirement')
-                || currentVal.includes('Immediate joiner and available to start')
-                || currentVal.includes('Currently serving notice period with last working day')
-                || currentVal.includes('in a product-based environment with responsibilities very similar');
-
-            if (isTemplateText) {
-                var rawTpl = formatTemplateToPlainText(masterTemplatesData[selectedId].content);
-                var updated = interpolateTemplateVariables(rawTpl);
-                $rn.val(truncateToMaxWords(updated, 100));
-                updateRmCommentsCounter(false);
-            }
-        }, 400);
-    }
-
-    // Attach live listeners to form fields
-    $(document).on('input blur', '#current_designation, #current_company, #rel_exp_year, #total_exp_year, #reason_for_job_change', triggerLiveRecruiterCommentsSync);
-    $(document).on('change', '#serving_notice_period, #np_id, #np_id_display, #ddl_np_id', triggerLiveRecruiterCommentsSync);
-    $(document).on('click', '.candidate-notice-option', function () {
-        setTimeout(triggerLiveRecruiterCommentsSync, 120);
-    });
-
-    // Global functions for native HTML triggers and external invocation
-    window.toggleRecruiterTemplateDropdown = function (e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-        }
-        var $dd = $('#custom_template_dropdown');
-        var $card = $dd.closest('.rm-note-card');
-        var $trigger = $('#custom_template_trigger');
-        var $menu = $('#custom_template_menu');
-        var willOpen = !$dd.hasClass('is-open');
-
-        if (willOpen) {
-            $dd.addClass('is-open');
-            $card.addClass('has-open-dropdown');
-            $trigger.attr('aria-expanded', 'true');
-            $menu.show();
-        } else {
-            $dd.removeClass('is-open');
-            $card.removeClass('has-open-dropdown');
-            $trigger.attr('aria-expanded', 'false');
-            $menu.hide();
-        }
-    };
-
-    window.selectRecruiterTemplate = function (el, e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-        }
-        var $item = $(el);
-        var id = $item.data('template-id');
-        var title = $item.data('template-title') || $item.find('.tpl-card-title').text();
-        if (!id || !masterTemplatesData[id]) return;
-
-        $('.tpl-card-item').removeClass('is-selected');
-        $item.addClass('is-selected');
-        $('#recruiter_note_template_select').val(id);
-        $('#selected_template_label').text(title).removeClass('is-placeholder');
-
-        $('#custom_template_dropdown').removeClass('is-open');
-        $('.rm-note-card').removeClass('has-open-dropdown');
-        $('#custom_template_menu').hide();
-        $('#custom_template_trigger').attr('aria-expanded', 'false');
-
-        var raw = (masterTemplatesData[id] && masterTemplatesData[id].content) || '';
-        var formatted = formatTemplateToPlainText(raw);
-        var interpolated = interpolateTemplateVariables(formatted);
-        $('#recruiter_note').val(truncateToMaxWords(interpolated, 100));
-        updateRmCommentsCounter(false);
-    };
-
-    // Dropdown toggle via jQuery event
-    $(document).on('click', '#custom_template_trigger', function (e) {
-        window.toggleRecruiterTemplateDropdown(e);
-    });
-
-    // Keyboard support on trigger
-    $(document).on('keydown', '#custom_template_trigger', function (e) {
-        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            window.toggleRecruiterTemplateDropdown(e);
-        } else if (e.key === 'Escape') {
-            $('#custom_template_dropdown').removeClass('is-open');
-            $('#custom_template_menu').hide();
-            $(this).attr('aria-expanded', 'false');
-        }
-    });
-
-    // Clicks inside the menu should not bubble to outside-click close handler
-    $(document).on('click', '#custom_template_menu', function (e) {
-        e.stopPropagation();
-    });
-
-    // Outside click closes dropdown
-    $(document).on('click', function (e) {
-        var target = e.target;
-        if (!$(target).closest('#custom_template_dropdown').length) {
-            $('#custom_template_dropdown').removeClass('is-open');
-            $('.rm-note-card').removeClass('has-open-dropdown');
-            $('#custom_template_trigger').attr('aria-expanded', 'false');
-            $('#custom_template_menu').hide();
-        }
-    });
-
-    // Dropdown option select via jQuery delegation as well
-    $(document).on('click', '.tpl-card-item', function (e) {
-        window.selectRecruiterTemplate(this, e);
-    });
-
-    // Sync button click
-    $(document).on('click', '#btn_sync_rm_template', function (e) {
-        e.preventDefault();
-        var selectedId = $('#recruiter_note_template_select').val() || 101;
-        var baseText = (masterTemplatesData[selectedId] && masterTemplatesData[selectedId].content) ? formatTemplateToPlainText(masterTemplatesData[selectedId].content) : $('#recruiter_note').val();
-        var interpolated = interpolateTemplateVariables(baseText);
-        var $rn = $('#recruiter_note');
-        $rn.val(truncateToMaxWords(interpolated, 100)).addClass('field-attention-highlight');
-        setTimeout(function () { $rn.removeClass('field-attention-highlight'); }, 700);
-        updateRmCommentsCounter(false);
-        if (typeof toastr !== 'undefined') {
-            toastr.success('Recruiter comments synchronized with Candidate Skills, Experience, and Availability!');
-        }
-    });
-
-    $(document).on('input paste keyup change', '#recruiter_note', function () {
-        updateRmCommentsCounter(true);
-    });
-
-    // Intercept clipboard paste if user pastes a file (e.g. resume) inside the comments box
-    $('#recruiter_note').on('paste', function (e) {
-        var clipboardData = e.originalEvent && e.originalEvent.clipboardData;
-        if (clipboardData && clipboardData.files && clipboardData.files.length > 0) {
-            var file = clipboardData.files[0];
-            var resumeInput = document.getElementById('resume') || document.querySelector('.resumeupload');
-            if (resumeInput && typeof processFile === 'function') {
-                e.preventDefault();
-                e.stopPropagation();
-                var dt = new DataTransfer();
-                dt.items.add(file);
-                resumeInput.files = dt.files;
-                processFile(file);
-            }
-        }
-    });
-    // Compatibility dummies so external submit buttons work without errors
+// Compatibility dummies
     window.compileEvaluationMatrix = function () {};
     window.syncRecruiterEvaluationMatrix = function () {};
-
-    applyDefaultRecruiterNotePrefill();
-    $(document).ready(function () {
-        applyDefaultRecruiterNotePrefill();
-        updateRmCommentsCounter(false);
-    });
-    window.addEventListener('load', function () {
-        applyDefaultRecruiterNotePrefill();
-    });
-    setTimeout(applyDefaultRecruiterNotePrefill, 200);
-    setTimeout(applyDefaultRecruiterNotePrefill, 600);
-})();
 
 // ============================================================================
 // ENTERPRISE CANDIDATE PROFILE: FULL NAME & EMAIL POLISH (CLIENT-FIRST)
