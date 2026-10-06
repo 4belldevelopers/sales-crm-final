@@ -470,11 +470,11 @@ $currencySymbole = GeneralMethod::currencySymbole();
                                     </svg>
                                     Replace
                                 </button>
-                                <button type="button" id="upRemoveBtn" class="up-remove">
+                                <button type="button" id="upRemoveBtn" class="up-remove" title="Delete Resume">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
                                     </svg>
-                                    Remove
+                                    Delete
                                 </button>
                             </div>
                             <div class="up-details">
@@ -1554,9 +1554,23 @@ $(document).ready(function () {
         $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
         var now = new Date();
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var tz = '';
+        var tzMatch = now.toTimeString().match(/\(([A-Za-z\s]+)\)$/);
+        if (tzMatch && tzMatch[1]) {
+            var tzWords = tzMatch[1].trim().split(/\s+/);
+            tz = tzWords.length > 1 ? tzWords.map(function (w) { return w[0]; }).join('') : tzMatch[1];
+        }
+        if (!tz) {
+            try {
+                var tzParts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(now);
+                var tzFound = tzParts.find(function (p) { return p.type === 'timeZoneName'; });
+                if (tzFound && tzFound.value) tz = tzFound.value;
+            } catch (e) {}
+        }
+        var tzSuffix = tz ? (' ' + tz) : '';
         $('#upDetailUploadedOn').text(
             String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear()+
-            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')
+            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0') + tzSuffix
         );
         $('#upDetailParserStatus').text('Ready ✓').css('color','');
         $('#uploadBox').hide();

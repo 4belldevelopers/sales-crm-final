@@ -425,7 +425,7 @@ if($snp_mode== 1){
                                         </span>
                                         <div>
                                             <div class="up-detail-lbl">Uploaded On</div>
-                                            <div class="up-detail-val" id="upDetailUploadedOn">{{ $hasExistingResume ? (!empty($application->updated_at) ? \Carbon\Carbon::parse($application->updated_at)->format('d M Y, H:i') : (!empty($application->created_at) ? \Carbon\Carbon::parse($application->created_at)->format('d M Y, H:i') : 'Attached')) : '&nbsp;' }}</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">{{ $hasExistingResume ? (!empty($application->updated_at) ? \Carbon\Carbon::parse($application->updated_at)->format('d M Y, H:i T') : (!empty($application->created_at) ? \Carbon\Carbon::parse($application->created_at)->format('d M Y, H:i T') : 'Attached')) : '&nbsp;' }}</div>
                                         </div>
                                     </div>
                                     <div class="up-detail-tile">
@@ -2765,9 +2765,23 @@ $(document).ready(function () {
         $('#upFileSub').text(fmtSize(file.size) + ' &middot; ' + ext);
         var now = new Date();
         var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var tz = '';
+        var tzMatch = now.toTimeString().match(/\(([A-Za-z\s]+)\)$/);
+        if (tzMatch && tzMatch[1]) {
+            var tzWords = tzMatch[1].trim().split(/\s+/);
+            tz = tzWords.length > 1 ? tzWords.map(function (w) { return w[0]; }).join('') : tzMatch[1];
+        }
+        if (!tz) {
+            try {
+                var tzParts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(now);
+                var tzFound = tzParts.find(function (p) { return p.type === 'timeZoneName'; });
+                if (tzFound && tzFound.value) tz = tzFound.value;
+            } catch (e) {}
+        }
+        var tzSuffix = tz ? (' ' + tz) : '';
         $('#upDetailUploadedOn').text(
             String(now.getDate()).padStart(2,'0')+' '+months[now.getMonth()]+' '+now.getFullYear()+
-            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')
+            ', '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0') + tzSuffix
         );
         var currentParseStatus = $('#upDetailParserStatus').text();
         if (!currentParseStatus || currentParseStatus === 'Pending') {
