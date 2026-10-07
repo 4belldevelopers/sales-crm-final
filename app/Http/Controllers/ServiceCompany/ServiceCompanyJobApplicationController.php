@@ -3781,6 +3781,41 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 cache()->increment('allapptracker_version_company_'.$company_id);
             } catch (\Throwable) {
             }
+
+            // Step 5: Atomically increment job-scoped dataset version and broadcast Reverb event
+            $rawJobId = (int) (GeneralMethod::value_decrypt($request->job_id) ?: $jobApplication->job_id);
+            $newJobDatasetVersion = 1;
+            if ($rawJobId > 0) {
+                try {
+                    $newJobDatasetVersion = (int) cache()->increment("ats:version:job:{$company_id}:{$rawJobId}");
+                } catch (\Throwable $e) {
+                    \Log::critical("ats:version:job increment failed: {$e->getMessage()}", [
+                        'company_id' => $company_id,
+                        'job_id' => $rawJobId,
+                    ]);
+                    $newJobDatasetVersion = 1;
+                }
+                try {
+                    broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(
+                        tenantId: (int) $company_id,
+                        jobId: (int) $rawJobId,
+                        version: $newJobDatasetVersion,
+                        candidateId: (int) $jobApplication->id,
+                        wiseId: (int) $jobApplication->id,
+                        masterStatusId: (int) ($jobApplication->status_id ?: 8),
+                        metadata: [
+                            'candidate_name' => (string) $jobApplication->full_name,
+                            'email' => (string) $jobApplication->email,
+                            'phone' => (string) $jobApplication->phone,
+                            'source' => 'ATS_SUBMIT',
+                            'added_count' => 1,
+                        ]
+                    ));
+                } catch (\Throwable $e) {
+                    \Log::warning('store(): AppTrackerCandidateAssignedEvent broadcast warning: '.$e->getMessage());
+                }
+            }
+
             $this->currencyConverter = GeneralMethod::currencyConverter();
 
             // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
@@ -3819,7 +3854,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 \Log::warning('store(): secondary job dispatch warning: '.$qe->getMessage());
             }
 
-            $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             $currentSlug = (string) ($request->input('currentSlug') ?: $request->input('slug') ?: '');
             if ($currentSlug === 'cvtracker' || empty($rawJobId)) {
                 $redirectUrl = route('service_company.cvtracker.index');
@@ -12357,6 +12391,40 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             } catch (\Throwable) {
             }
 
+            // Step 5: Atomically increment job-scoped dataset version and broadcast Reverb event
+            $rawJobId = (int) (GeneralMethod::value_decrypt($request->job_id) ?: ($jobRow->id ?? 0));
+            $newJobDatasetVersion = 1;
+            if ($rawJobId > 0) {
+                try {
+                    $newJobDatasetVersion = (int) cache()->increment("ats:version:job:{$company_id}:{$rawJobId}");
+                } catch (\Throwable $e) {
+                    \Log::critical("clientappstore: ats:version:job increment failed: {$e->getMessage()}", [
+                        'company_id' => $company_id,
+                        'job_id' => $rawJobId,
+                    ]);
+                    $newJobDatasetVersion = 1;
+                }
+                try {
+                    broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(
+                        tenantId: (int) $company_id,
+                        jobId: (int) $rawJobId,
+                        version: $newJobDatasetVersion,
+                        candidateId: (int) $application_id,
+                        wiseId: (int) $application_id,
+                        masterStatusId: 8,
+                        metadata: [
+                            'candidate_name' => (string) ($job_application_arr['full_name'] ?? $request->full_name),
+                            'email' => (string) ($job_application_arr['email'] ?? $request->email),
+                            'phone' => (string) ($job_application_arr['phone'] ?? $request->phone),
+                            'source' => 'ATS_CLIENT_SUBMIT',
+                            'added_count' => 1,
+                        ]
+                    ));
+                } catch (\Throwable $e) {
+                    \Log::warning('clientappstore: AppTrackerCandidateAssignedEvent broadcast warning: '.$e->getMessage());
+                }
+            }
+
             $this->currencyConverter = GeneralMethod::currencyConverter();
             $submittedByEmail = auth()->user()->email;
 
@@ -12393,7 +12461,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             )->onConnection('emails');
             // ─────────────────────────────────────────────────────────────────────────────
 
-            $rawJobId = GeneralMethod::value_decrypt($request->job_id);
             if (! empty($rawJobId)) {
                 $redirectUrl = route('service_company.apptracker.clientapp', [
                     'id' => GeneralMethod::value_encrypt($rawJobId),

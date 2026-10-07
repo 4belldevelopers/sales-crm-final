@@ -538,6 +538,7 @@
                 <input type="hidden" name="jobid" id="jobid" value="{{ @$job->id }}" />
                 <input type="hidden" name="mstatus_id" id="mstatus_id" value="{{ @$mstatus_id }}" />
                 <input type="hidden" name="pipeline_version" id="pipeline_version" value="{{ (int) (@$job->pipeline_version ?? 0) }}" />
+                <input type="hidden" name="apptracker_job_dataset_version" id="apptracker_job_dataset_version" value="{{ (int) (@$job_dataset_version ?? 1) }}" />
                 <input type="hidden" name="tenant_id" id="tenant_id" value="{{ (int) (auth()->user()->company_id ?? 0) }}" />
 
                 <!--begin::Actions-->
@@ -2124,18 +2125,29 @@
         var _aptkReqSeq = 0;
 
         /**
-         * Isolated Browser RAM + sessionStorage store for AppTracker candidate pipeline listing.
-         * Intent: Serves repeat stage tab switches and pagination in <2ms from user RAM with 0 server strain,
-         * while enforcing strict version & TTL validation so stale candidate data is never served (Rule 3, 5, 6, 17).
+         * Isolated Browser In-Memory RAM store for AppTracker candidate pipeline listing.
+         * Intent: Serves repeat stage tab switches and pagination in <2ms from ephemeral user RAM with 0 server strain.
+         * CQRS & Cache Consistency Rule: Server-rendered candidate HTML is strictly NEVER written to persistent
+         * browser storage (sessionStorage/localStorage). Ephemeral in-memory Map only (maxEntries=30, bounded TTL).
          */
         var AppTrackerRamStore = (function() {
             var tenantId = $('#tenant_id').val() || '{{ (int) (auth()->user()->company_id ?? 0) }}';
             var jobId = $('#jobid').val() || '{{ (int) ($job->id ?? 0) }}';
-            var storagePrefix = 'jero_apptracker_v1_' + tenantId + '_' + jobId + '_';
             var ramMap = new Map();
             var maxEntries = 30;
             var ttlMs = 60000;
-            var latestCacheVersion = null;
+            var currentJobVersion = parseInt($('#apptracker_job_dataset_version').val() || '1', 10);
+
+            // Sanitize: Purge any legacy sessionStorage fragments from older code revisions
+            try {
+                var legacyPrefix = 'jero_apptracker_v1_' + tenantId + '_' + jobId + '_';
+                for (var i = sessionStorage.length - 1; i >= 0; i--) {
+                    var k = sessionStorage.key(i);
+                    if (k && k.indexOf(legacyPrefix) === 0) {
+                        sessionStorage.removeItem(k);
+                    }
+                }
+            } catch (e) {}
 
             return {
                 buildKey: function(page, params) {
@@ -2150,65 +2162,55 @@
                         params.size || 10
                     ].join('|');
                 },
+                getJobVersion: function() {
+                    return currentJobVersion;
+                },
+                setJobVersion: function(newVer) {
+                    var parsed = parseInt(newVer, 10);
+                    if (!isNaN(parsed) && parsed > currentJobVersion) {
+                        currentJobVersion = parsed;
+                        this.invalidate();
+                    }
+                },
                 get: function(key) {
                     var now = Date.now();
                     var entry = ramMap.get(key);
-                    if (!entry) {
-                        try {
-                            var raw = sessionStorage.getItem(storagePrefix + key);
-                            if (raw) {
-                                entry = JSON.parse(raw);
-                                ramMap.set(key, entry);
-                            }
-                        } catch (e) {}
-                    }
                     if (!entry) return null;
                     if ((now - (entry.ts || 0)) > ttlMs) {
-                        this.remove(key);
+                        ramMap.delete(key);
                         return null;
                     }
-                    if (latestCacheVersion && entry.cache_version && entry.cache_version !== latestCacheVersion) {
-                        this.invalidate();
+                    if (entry.job_version && entry.job_version !== currentJobVersion) {
+                        ramMap.delete(key);
                         return null;
                     }
                     return entry.data;
                 },
                 set: function(key, response) {
                     if (!response || !response.html) return;
-                    if (response.cache_version) {
-                        if (latestCacheVersion && latestCacheVersion !== response.cache_version) {
-                            this.invalidate();
+                    if (response.job_dataset_version) {
+                        var respJobVer = parseInt(response.job_dataset_version, 10);
+                        if (!isNaN(respJobVer) && respJobVer > currentJobVersion) {
+                            currentJobVersion = respJobVer;
+                            ramMap.clear();
                         }
-                        latestCacheVersion = response.cache_version;
                     }
                     if (ramMap.size >= maxEntries) {
                         var oldestKey = ramMap.keys().next().value;
-                        this.remove(oldestKey);
+                        ramMap.delete(oldestKey);
                     }
-                    var record = {
+                    ramMap.set(key, {
                         ts: Date.now(),
+                        job_version: currentJobVersion,
                         cache_version: response.cache_version || null,
                         data: response
-                    };
-                    ramMap.set(key, record);
-                    try {
-                        sessionStorage.setItem(storagePrefix + key, JSON.stringify(record));
-                    } catch (e) {}
+                    });
                 },
                 remove: function(key) {
                     ramMap.delete(key);
-                    try { sessionStorage.removeItem(storagePrefix + key); } catch (e) {}
                 },
                 invalidate: function() {
                     ramMap.clear();
-                    try {
-                        for (var i = sessionStorage.length - 1; i >= 0; i--) {
-                            var k = sessionStorage.key(i);
-                            if (k && k.indexOf(storagePrefix) === 0) {
-                                sessionStorage.removeItem(k);
-                            }
-                        }
-                    } catch (e) {}
                 }
             };
         })();
@@ -2217,8 +2219,61 @@
             AppTrackerRamStore.invalidate();
         });
 
+        function highlightNewCandidateRow(candidateId, attempt) {
+            attempt = attempt || 1;
+            var maxAttempts = 3;
+            var backoffs = [1000, 2000, 4000];
+
+            var $targetRow = $('tr[data-candidate-id="' + candidateId + '"]');
+            if ($targetRow.length > 0) {
+                try {
+                    $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } catch (e) {}
+                $targetRow.addClass('bg-light-success border border-success');
+                setTimeout(function() {
+                    $targetRow.removeClass('bg-light-success border border-success');
+                }, 3500);
+
+                var currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.delete('new_candidate_id');
+                window.history.replaceState({}, document.title, currentUrl.pathname + (currentUrl.searchParams.toString() ? '?' + currentUrl.searchParams.toString() : '') + currentUrl.hash);
+                return;
+            }
+
+            if (attempt <= maxAttempts) {
+                var delay = backoffs[attempt - 1] || 2000;
+                setTimeout(function() {
+                    fetchCandidates(1, '', true).always(function() {
+                        highlightNewCandidateRow(candidateId, attempt + 1);
+                    });
+                }, delay);
+            } else {
+                var currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.delete('new_candidate_id');
+                window.history.replaceState({}, document.title, currentUrl.pathname + (currentUrl.searchParams.toString() ? '?' + currentUrl.searchParams.toString() : '') + currentUrl.hash);
+            }
+        }
+
         $(document).ready(function() {
-            fetchCandidates();
+            var urlParams = new URLSearchParams(window.location.search);
+            var urlNewCandidateId = urlParams.get('new_candidate_id');
+            var urlMstatus = urlParams.get('mstatus_id');
+
+            if (urlNewCandidateId || urlMstatus) {
+                var effectiveStatus = urlMstatus || 'all';
+                $('#mstatus_id').val(effectiveStatus);
+                localStorage.setItem('mstatusValueSet', JSON.stringify(effectiveStatus));
+                localStorage.setItem('currentPage', 1);
+                page_no = 1;
+            }
+
+            if (urlNewCandidateId) {
+                fetchCandidates(1, '', true).always(function() {
+                    highlightNewCandidateRow(urlNewCandidateId, 1);
+                });
+            } else {
+                fetchCandidates();
+            }
 
             var aptkPaginationLoading = false;
             $(document).on('click', '#paginationcandidate .pagi-page, #paginationcandidate .pagi-arrow', function(e) {
@@ -2607,9 +2662,24 @@
             try {
                 window.Echo.private(channelName)
                     .listen('.candidate.assigned', function(event) {
-                        if (!event || !event.version) return;
+                        if (!event || typeof event.version === 'undefined') return;
 
                         var eventVersion = parseInt(event.version, 10);
+                        var currentJobDatasetVersion = parseInt($('#apptracker_job_dataset_version').val() || '1', 10);
+
+                        // Mandatory Client Invariant:
+                        // If event.version <= currentJobDatasetVersion, IGNORE event completely
+                        if (eventVersion <= currentJobDatasetVersion) {
+                            return;
+                        }
+
+                        // Monotonic upgrade & RAM invalidation
+                        currentJobDatasetVersion = eventVersion;
+                        $('#apptracker_job_dataset_version').val(currentJobDatasetVersion);
+                        if (typeof AppTrackerRamStore !== 'undefined') {
+                            AppTrackerRamStore.setJobVersion(currentJobDatasetVersion);
+                            AppTrackerRamStore.invalidate();
+                        }
 
                         // 1. Idempotency Check: Ignore duplicate or stale events
                         if (eventVersion <= currentVersion) {
@@ -2652,6 +2722,20 @@
                 console.warn('[Reverb AppTracker] Echo subscription failed:', err);
             }
         })();
+
+        // Window focus reconciliation: check if candidate counts changed while tab was hidden (debounced 15s)
+        var _lastFocusCheckTs = Date.now();
+        window.addEventListener('focus', function() {
+            var now = Date.now();
+            if ((now - _lastFocusCheckTs) < 15000) return;
+            _lastFocusCheckTs = now;
+            var currentJobId = $('#jobid').val();
+            if (!currentJobId) return;
+
+            if (typeof countder === 'function') {
+                countder();
+            }
+        });
 
     </script>
 

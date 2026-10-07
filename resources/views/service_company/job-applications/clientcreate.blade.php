@@ -7849,7 +7849,17 @@ var KTAddCandidate = function () {
                         if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
                         if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
                         $(document).trigger('jero-candidate-saved');
-                        window.location.assign(targetUrl);
+                        var finalRedirectUrl = targetUrl;
+                        if (candidateId) {
+                            try {
+                                var parsedUrl = new URL(finalRedirectUrl, window.location.origin);
+                                parsedUrl.searchParams.set('new_candidate_id', candidateId);
+                                finalRedirectUrl = parsedUrl.toString();
+                            } catch (e) {
+                                finalRedirectUrl += (finalRedirectUrl.indexOf('?') !== -1 ? '&' : '?') + 'new_candidate_id=' + encodeURIComponent(candidateId);
+                            }
+                        }
+                        window.location.assign(finalRedirectUrl);
                     }
 
                     if (!candidateId) {
@@ -7893,12 +7903,31 @@ var KTAddCandidate = function () {
                         allowOutsideClick: false,
                         allowEscapeKey: false,
                         showConfirmButton: true,
-                        confirmButtonText: "Go to Tracker Now",
-                        customClass: { confirmButton: "btn btn-sm btn-light-primary mt-2" }
+                        confirmButtonText: "Preparing index...",
+                        customClass: { confirmButton: "btn btn-sm btn-light-primary mt-2" },
+                        didOpen: function () {
+                            var btn = Swal.getConfirmButton();
+                            if (btn) {
+                                btn.disabled = true;
+                                btn.classList.add('disabled');
+                            }
+                        }
                     }).then(function () {
                         cleanupTimers();
                         executeFormRedirect();
                     });
+
+                    // Unlock button after 3 seconds so recruiter is never blocked permanently
+                    setTimeout(function () {
+                        if (!formRedirected) {
+                            var btn = Swal.getConfirmButton();
+                            if (btn) {
+                                btn.disabled = false;
+                                btn.classList.remove('disabled');
+                                btn.innerText = "Go to Tracker Now";
+                            }
+                        }
+                    }, 3000);
 
                     var countdownInterval = setInterval(function () {
                         secondsRemaining--;
@@ -7915,7 +7944,19 @@ var KTAddCandidate = function () {
                     stopTimerTimeout = setTimeout(function () {
                         cleanupTimers();
                         clearInterval(countdownInterval);
-                        executeFormRedirect();
+                        var btn = Swal.getConfirmButton();
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.classList.remove('disabled');
+                            btn.innerText = "Go to Tracker Now";
+                        }
+                        Swal.update({
+                            title: "Candidate Saved!",
+                            html: '<div class="fs-6 fw-semibold text-gray-700 py-2"><i class="fa-solid fa-clock-rotate-left text-warning fs-3 me-2"></i>Candidate saved! Search index is updating in the background.</div>',
+                            icon: "info",
+                            showConfirmButton: true
+                        });
+                        setTimeout(executeFormRedirect, 1500);
                     }, 10000);
 
                     function pollSearchIndex() {
