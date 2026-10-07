@@ -3,11 +3,101 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ asset('css/apptracker/_skeleton.css') }}{{ TM_VERSION }}">
     <style>
+        /* ==========================================================================
+           ENTERPRISE CANDIDATE ROW HIGHLIGHT & INTENT GLOW (LINEAR / STRIPE STYLE)
+           ========================================================================== */
+        @keyframes aptkRowPulseGlow {
+            0% {
+                box-shadow: inset 4px 0 0 0 #10b981, 0 2px 14px rgba(16, 185, 129, 0.12);
+            }
+            50% {
+                box-shadow: inset 5px 0 0 0 #059669, 0 4px 22px rgba(16, 185, 129, 0.24);
+            }
+            100% {
+                box-shadow: inset 4px 0 0 0 #10b981, 0 2px 14px rgba(16, 185, 129, 0.12);
+            }
+        }
 
-       
+        @keyframes aptkBadgeGlow {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
 
+        tr.aptk-enterprise-highlight {
+            position: relative !important;
+            z-index: 2 !important;
+            animation: aptkRowPulseGlow 2.5s ease-in-out infinite !important;
+        }
 
-        #send_email .modal-dialog {
+        tr.aptk-enterprise-highlight > td {
+            background: linear-gradient(90deg, rgba(236, 253, 245, 0.95) 0%, rgba(240, 253, 244, 0.75) 45%, rgba(255, 255, 255, 0.85) 100%) !important;
+            border-top: 1.5px solid #a7f3d0 !important;
+            border-bottom: 1.5px solid #a7f3d0 !important;
+            border-left: none !important;
+            border-right: none !important;
+            transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 1.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        tr.aptk-enterprise-highlight > td:first-child {
+            border-left: 4px solid #10b981 !important;
+            border-top-left-radius: 8px !important;
+            border-bottom-left-radius: 8px !important;
+        }
+
+        tr.aptk-enterprise-highlight > td:last-child {
+            border-right: 1.5px solid #a7f3d0 !important;
+            border-top-right-radius: 8px !important;
+            border-bottom-right-radius: 8px !important;
+        }
+
+        /* Smooth fade-out state */
+        tr.aptk-enterprise-highlight.aptk-highlight-fadeout {
+            animation: none !important;
+            box-shadow: none !important;
+        }
+
+        tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td {
+            background: transparent !important;
+            border-color: #eff2f5 !important;
+        }
+
+        tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td:first-child {
+            border-left-color: #eff2f5 !important;
+        }
+
+        /* Enterprise Micro-Badge: "Just Added" with animated pulse dot */
+        .aptk-just-added-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2.5px 7px;
+            margin-left: 8px;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
+            animation: aptkBadgeGlow 2.2s ease-in-out infinite;
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+
+        .aptk-just-added-badge .aptk-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #059669;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+        }
             margin: .3rem auto !important;
         }
 
@@ -2229,9 +2319,32 @@
                 try {
                     $targetRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } catch (e) {}
-                $targetRow.addClass('bg-light-success border border-success');
+
+                // Clean up any stale highlights or badges
+                $('.aptk-just-added-badge').remove();
+                $('tr.aptk-enterprise-highlight').removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
+
+                // Apply sleek enterprise highlight
+                $targetRow.addClass('aptk-enterprise-highlight');
+
+                // Attach refined "Just Added" micro-badge next to candidate name
+                var $badge = $('<span class="aptk-just-added-badge"><span class="aptk-badge-dot"></span>Just Added</span>');
+                var $nameContainer = $targetRow.find('td:nth-child(2) .d-flex.flex-column a:first');
+                if ($nameContainer.length > 0) {
+                    $nameContainer.append($badge);
+                }
+
+                // Phase 1: Keep luminous highlight active for 3.5 seconds
                 setTimeout(function() {
-                    $targetRow.removeClass('bg-light-success border border-success');
+                    // Phase 2: Smooth 1.5s CSS fade-out transition
+                    $targetRow.addClass('aptk-highlight-fadeout');
+                    $badge.css({ opacity: 0, transform: 'scale(0.85)' });
+
+                    // Phase 3: Cleanup classes and DOM badge after transition completes
+                    setTimeout(function() {
+                        $targetRow.removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
+                        $badge.remove();
+                    }, 1600);
                 }, 3500);
 
                 var currentUrl = new URL(window.location.href);
