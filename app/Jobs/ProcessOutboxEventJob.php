@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Helper\GeneralMethod;
-use App\Models\CandidateOutboxEvent;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,7 +21,9 @@ class ProcessOutboxEventJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 5;
+
     public int $backoff = 30;
+
     public int $timeout = 120;
 
     public function __construct(
@@ -34,10 +35,11 @@ class ProcessOutboxEventJob implements ShouldQueue
 
     public function handle(): void
     {
-        $worker = $this->workerId ?: ('worker_' . getmypid() . '_' . Str::random(8));
+        $worker = $this->workerId ?: ('worker_'.getmypid().'_'.Str::random(8));
 
         if ($this->specificEventId !== null) {
             $this->processSingleEventById($this->specificEventId, $worker);
+
             return;
         }
 
@@ -77,9 +79,9 @@ class ProcessOutboxEventJob implements ShouldQueue
                 DB::table('candidate_outbox_events')
                     ->whereIn('id', $events)
                     ->update([
-                        'status'     => 'processing',
-                        'locked_at'  => now(),
-                        'locked_by'  => $worker,
+                        'status' => 'processing',
+                        'locked_at' => now(),
+                        'locked_by' => $worker,
                         'lock_token' => $lockToken,
                         'updated_at' => now(),
                     ]);
@@ -115,9 +117,9 @@ class ProcessOutboxEventJob implements ShouldQueue
                     });
             })
             ->update([
-                'status'     => 'processing',
-                'locked_at'  => now(),
-                'locked_by'  => $worker,
+                'status' => 'processing',
+                'locked_at' => now(),
+                'locked_by' => $worker,
                 'lock_token' => $lockToken,
                 'updated_at' => now(),
             ]);
@@ -156,7 +158,7 @@ class ProcessOutboxEventJob implements ShouldQueue
                             ->value('id');
 
                         if ($wiseCandidateId) {
-                            GeneralMethod::JobApplicationsAddEditUpload((int) $wiseCandidateId);
+                            GeneralMethod::JobApplicationsAddEditUpload((int) $wiseCandidateId, null, true);
                         }
 
                         // Tenancy-safe cache invalidation
@@ -241,7 +243,7 @@ class ProcessOutboxEventJob implements ShouldQueue
                 ->where('locked_by', $worker)
                 ->where('lock_token', $lockToken)
                 ->update([
-                    'status'     => 'completed',
+                    'status' => 'completed',
                     'updated_at' => now(),
                 ]);
 
@@ -273,14 +275,14 @@ class ProcessOutboxEventJob implements ShouldQueue
                 ->where('locked_by', $worker)
                 ->where('lock_token', $lockToken)
                 ->update([
-                    'status'       => $newStatus,
-                    'retry_count'  => $retryCount,
+                    'status' => $newStatus,
+                    'retry_count' => $retryCount,
                     'available_at' => now()->addSeconds($backoffSeconds),
-                    'locked_at'    => null,
-                    'locked_by'    => null,
-                    'lock_token'   => null,
-                    'last_error'   => substr($e->getMessage(), 0, 1000),
-                    'updated_at'   => now(),
+                    'locked_at' => null,
+                    'locked_by' => null,
+                    'lock_token' => null,
+                    'last_error' => substr($e->getMessage(), 0, 1000),
+                    'updated_at' => now(),
                 ]);
         }
     }
@@ -288,13 +290,22 @@ class ProcessOutboxEventJob implements ShouldQueue
     private function invalidateCandidateCaches(int $candidateId, int $companyId, array $payload): void
     {
         try {
-            GeneralMethod::cacheClean("candidate:{$candidateId}");
-            GeneralMethod::cacheClean("candidate:{$candidateId}:resume");
+            GeneralMethod::cacheClean("candidate:{$candidateId}", $companyId);
+            GeneralMethod::cacheClean("candidate:{$candidateId}:resume", $companyId);
 
             $submittedBy = (int) ($payload['submitted_by'] ?? 0);
             if ($submittedBy > 0) {
-                GeneralMethod::cacheClean("allcvtracker_version_user_{$submittedBy}");
-                GeneralMethod::cacheClean("allapptracker_version_user_{$submittedBy}");
+                GeneralMethod::cacheClean("allcvtracker_version_user_{$submittedBy}", $companyId);
+                GeneralMethod::cacheClean("allapptracker_version_user_{$submittedBy}", $companyId);
+            }
+            if ($companyId > 0) {
+                GeneralMethod::cacheClean("allcvtracker_version_company_{$companyId}", $companyId);
+                GeneralMethod::cacheClean("allapptracker_version_company_{$companyId}", $companyId);
+                try {
+                    cache()->increment("allcvtracker_version_company_{$companyId}");
+                    cache()->increment("allapptracker_version_company_{$companyId}");
+                } catch (\Throwable) {
+                }
             }
         } catch (\Throwable $e) {
             Log::warning('ProcessOutboxEventJob: Cache invalidation warning', ['error' => $e->getMessage()]);

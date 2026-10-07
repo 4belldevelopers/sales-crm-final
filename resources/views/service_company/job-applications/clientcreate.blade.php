@@ -7840,6 +7840,8 @@ var KTAddCandidate = function () {
 
                     var fallbackUrl = '{{ route("service_company.cvtracker.index") }}';
                     var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
+                    var candidateId = (response && (response.candidate_id || (response.candidate && response.candidate.id))) || null;
+
                     var formRedirected = false;
                     function executeFormRedirect() {
                         if (formRedirected) return;
@@ -7850,19 +7852,107 @@ var KTAddCandidate = function () {
                         window.location.assign(targetUrl);
                     }
 
+                    if (!candidateId) {
+                        Swal.fire({
+                            text: "Candidate successfully saved.",
+                            icon: "success",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, got it!",
+                            customClass: { confirmButton: "btn btn-primary" },
+                            timer: 2000,
+                            timerProgressBar: true
+                        }).then(function () {
+                            executeFormRedirect();
+                        });
+                        setTimeout(executeFormRedirect, 2200);
+                        return;
+                    }
+
+                    var checkIndexUrlTemplate = '{{ route("service_company.job-applications.check-index-status", ["id" => ":id"]) }}';
+                    var checkIndexUrl = checkIndexUrlTemplate.replace(':id', candidateId);
+                    var pollInterval = null;
+                    var stopTimerTimeout = null;
+                    var secondsRemaining = 10;
+                    var pollAttempt = 0;
+
+                    function cleanupTimers() {
+                        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+                        if (stopTimerTimeout) { clearTimeout(stopTimerTimeout); stopTimerTimeout = null; }
+                    }
+
                     Swal.fire({
-                        text: "Candidate successfully saved.",
-                        icon: "success",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: { confirmButton: "btn btn-primary" },
-                        timer: 2000,
-                        timerProgressBar: true
+                        title: "Candidate Saved!",
+                        html: '<div class="d-flex flex-column align-items-center py-2">' +
+                              '  <div class="spinner-border text-primary mb-3" role="status" style="width: 2.2rem; height: 2.2rem;">' +
+                              '    <span class="visually-hidden">Syncing...</span>' +
+                              '  </div>' +
+                              '  <div class="fs-6 fw-semibold text-gray-700 mb-2">Syncing candidate to search index for instant listing...</div>' +
+                              '  <div class="badge badge-light-primary fs-7 fw-bold" id="client-candidate-index-countdown">Preparing index (max 10s)...</div>' +
+                              '</div>',
+                        icon: "info",
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: true,
+                        confirmButtonText: "Go to Tracker Now",
+                        customClass: { confirmButton: "btn btn-sm btn-light-primary mt-2" }
                     }).then(function () {
+                        cleanupTimers();
                         executeFormRedirect();
                     });
 
-                    setTimeout(executeFormRedirect, 2200);
+                    var countdownInterval = setInterval(function () {
+                        secondsRemaining--;
+                        var badge = document.getElementById('client-candidate-index-countdown');
+                        if (badge) {
+                            badge.innerText = 'Syncing search index (' + Math.max(0, secondsRemaining) + 's)...';
+                        }
+                        if (secondsRemaining <= 0) {
+                            clearInterval(countdownInterval);
+                        }
+                    }, 1000);
+
+                    // 10s Stop Timer fallback
+                    stopTimerTimeout = setTimeout(function () {
+                        cleanupTimers();
+                        clearInterval(countdownInterval);
+                        executeFormRedirect();
+                    }, 10000);
+
+                    function pollSearchIndex() {
+                        if (formRedirected) return;
+                        pollAttempt++;
+                        $.ajax({
+                            url: checkIndexUrl,
+                            type: 'GET',
+                            data: { attempt: pollAttempt },
+                            dataType: 'json',
+                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                            success: function (res) {
+                                if (res && res.indexed === true) {
+                                    cleanupTimers();
+                                    clearInterval(countdownInterval);
+                                    Swal.update({
+                                        title: "Candidate Ready!",
+                                        html: '<div class="fs-6 fw-bold text-success py-2"><i class="fa-solid fa-circle-check text-success fs-2 me-2"></i>Candidate indexed & verified live in listing!</div>',
+                                        icon: "success",
+                                        showConfirmButton: false
+                                    });
+                                    setTimeout(executeFormRedirect, 600);
+                                }
+                            },
+                            error: function () {
+                                // Silently continue polling; 10s stop timer will handle graceful redirect
+                            }
+                        });
+                    }
+
+                    // Initial poll at 600ms, followed by 800ms intervals
+                    setTimeout(function () {
+                        pollSearchIndex();
+                        if (!formRedirected) {
+                            pollInterval = setInterval(pollSearchIndex, 800);
+                        }
+                    }, 600);
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     window.__candidateIsSubmitting = false;

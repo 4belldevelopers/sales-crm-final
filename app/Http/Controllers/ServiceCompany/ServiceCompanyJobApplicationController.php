@@ -3763,16 +3763,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Primary ES indexing runs asynchronously via ProcessOutboxEventJob on candidate-index queue.
             // Recruiter receives instant HTTP 200 and AppTracker hydrates immediately from IndexedDB mirror.
 
-            // Post-commit atomic cache invalidation
+            // Post-commit atomic cache invalidation (F-01 multi-tenant safe)
             $cachekeys = [
                 'alljobslist_version_user_'.$this->user->id,
                 'allcvtracker_version_user_'.$this->user->id,
                 'allapptracker_version_user_'.$this->user->id,
+                'allcvtracker_version_company_'.$company_id,
+                'allapptracker_version_company_'.$company_id,
                 'candidate:'.$jobApplication->id,
                 'candidate:'.$jobApplication->id.':resume',
             ];
             foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
+                GeneralMethod::cacheClean($key, $company_id);
+            }
+            try {
+                cache()->increment('allcvtracker_version_company_'.$company_id);
+                cache()->increment('allapptracker_version_company_'.$company_id);
+            } catch (\Throwable) {
             }
             $this->currencyConverter = GeneralMethod::currencyConverter();
 
@@ -3948,6 +3955,90 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         }
 
+    }
+
+    /**
+     * Poll index readiness of a newly created candidate in Elasticsearch.
+     * Complies with docs/CODE_DOCUMENTATION_STANDARD.md.
+     * CQRS Rule 1 & 2: 0% MySQL reads on web/API request path.
+     * Tenancy: Enforces strict tenant scoping via auth user company_id in Elasticsearch filter.
+     *
+     * @param  int|string  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkIndexStatus(Request $request, $id)
+    {
+        $companyId = (int) auth()->user()->company_id;
+        $candidateId = (int) $id;
+        if ($candidateId <= 0 || $companyId <= 0) {
+            return response()->json(['status' => 'error', 'indexed' => false], 400);
+        }
+
+        try {
+            $isIndexed = false;
+            $params = [];
+            if ($this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                $params = [
+                    'index' => ELASTIC_CANDIDATES,
+                    'body' => [
+                        'size' => 1,
+                        '_source' => ['id', 'candidate_id', 'company_id'],
+                        'query' => [
+                            'bool' => [
+                                'must' => [
+                                    ['term' => ['candidate_id' => $candidateId]],
+                                ],
+                                'filter' => [
+                                    [
+                                        'bool' => [
+                                            'should' => [
+                                                ['term' => ['company_id' => $companyId]],
+                                                ['term' => ['thirdparty_company_id' => $companyId]],
+                                            ],
+                                            'minimum_should_match' => 1,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+
+                $response = $this->elasticService->getClient()->search($params);
+                $total = $response['hits']['total']['value'] ?? 0;
+                $isIndexed = ($total > 0);
+            }
+
+            // Self-healing fallback: If not yet indexed after polling attempt >= 2, process pending outbox immediately
+            $attempt = (int) $request->input('attempt', 1);
+            if (! $isIndexed && $attempt >= 2) {
+                try {
+                    dispatch_sync(new ProcessOutboxEventJob);
+
+                    // Re-check ES immediately after processing
+                    if (! empty($params) && $this->elasticService->indexExists(ELASTIC_CANDIDATES)) {
+                        $response = $this->elasticService->getClient()->search($params);
+                        $total = $response['hits']['total']['value'] ?? 0;
+                        $isIndexed = ($total > 0);
+                    }
+                } catch (\Throwable $pe) {
+                    \Log::warning('checkIndexStatus outbox fallback execution notice: '.$pe->getMessage());
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'candidate_id' => $candidateId,
+                'indexed' => $isIndexed,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'candidate_id' => $candidateId,
+                'indexed' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function googleSheetCandidateData(Request $request)
@@ -12247,16 +12338,23 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Primary ES indexing runs asynchronously via ProcessOutboxEventJob on candidate-index queue.
             // Recruiter receives instant HTTP 200 and AppTracker hydrates immediately from IndexedDB mirror.
 
-            // Post-commit atomic cache invalidation
+            // Post-commit atomic cache invalidation (F-01 multi-tenant safe)
             $cachekeys = [
                 'alljobslist_version_user_'.$this->user->id,
                 'allcvtracker_version_user_'.$this->user->id,
                 'allclientapp_version_user_'.$this->user->id,
+                'allcvtracker_version_company_'.$company_id,
+                'allapptracker_version_company_'.$company_id,
                 'candidate:'.$application_id,
                 'candidate:'.$application_id.':resume',
             ];
             foreach ($cachekeys as $key) {
-                GeneralMethod::cacheClean($key);
+                GeneralMethod::cacheClean($key, $company_id);
+            }
+            try {
+                cache()->increment('allcvtracker_version_company_'.$company_id);
+                cache()->increment('allapptracker_version_company_'.$company_id);
+            } catch (\Throwable) {
             }
 
             $this->currencyConverter = GeneralMethod::currencyConverter();

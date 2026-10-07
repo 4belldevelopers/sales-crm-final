@@ -220,6 +220,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('job-applications/question/{jobID?}/{applicationId?}', [ServiceCompanyJobApplicationController::class, 'jobQuestion'])->name('job-applications.question');
                 Route::get('job-applications/getAdditionalDetail/{job_id?}', [ServiceCompanyJobApplicationController::class, 'getAdditionalDetail'])->name('job-applications.getAdditionalDetail');
 
+                Route::get('job-applications/check-index-status/{id}', [ServiceCompanyJobApplicationController::class, 'checkIndexStatus'])->name('job-applications.check-index-status');
                 Route::resource('job-applications', ServiceCompanyJobApplicationController::class);
                 Route::post('job-applications/update/{id}', [ServiceCompanyJobApplicationController::class, 'update'])->name('job-applications.update');
                 Route::post('uploadresume', [ServiceCompanyJobApplicationController::class, 'uploadresume'])->name('job-applications.uploadresume');

@@ -229,7 +229,7 @@ return [
         // ES indexing — network-bound, isolated supervisor
         'supervisor-indexing' => [
             'connection' => 'redis',
-            'queue' => ['indexing', 'es-index', 'elasticsearch'],
+            'queue' => ['candidate-index', 'indexing', 'es-index', 'elasticsearch'],
             'balance' => 'simple',
             'maxProcesses' => 8,
             'minProcesses' => 2,
