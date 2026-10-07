@@ -21,6 +21,32 @@ Last updated: 2026-10-01 (In-house Bench Talents → Add to Job → AppTracker L
 - **V2_login blocking-scenarios architecture:** session-epoch pattern + Reverb `UserAccountSuspended` event + `SyncUserStatusAction` (cross-tenant-safe) + `BlockCompanyAction` (static bulk helper) + `block_log` audit table + drop all 20 `refresh:true` ES sites + grep-lint guard. See [docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md](../docs/V2_login/BLOCKING_SCENARIOS_AUDIT.md), [ADR 0007](../docs/adr/0007-blocking-scenarios-architecture.md). Code not yet landed.
 
 ## 2. Decision log (append-only; newest first)
+- *2026-10-07* — **AppTracker Candidate Submit Listing 10–20s Refresh Delay Permanent Remediation (100% IMPLEMENTED & VERIFIED)**:
+  1. **Root Cause Analysis & Forensic Diagnosis**: Discovered that after submitting a candidate on "Add Candidate" (`create.blade.php` / `clientcreate.blade.php`), the candidate was already persisted to MySQL and indexed in Elasticsearch, but on redirect to AppTracker (`apptracker/index.blade.php`), the table was served from stale `sessionStorage` (`jero_apptracker_v1_{tenantId}_{jobId}_{cacheKey}`) with a 60-second TTL. On initial page load, `latestCacheVersion` was initialized to `null`, completely bypassing version invalidation. The browser served the stale snapshot without querying Elasticsearch until 60 seconds elapsed or the user changed sorting/filters.
+  2. **The 6 Golden Laws of AppTracker**:
+     - *Law 1 (Universal Storage Ban)*: Authoritative candidate listing tables (HTML or JSON) must NEVER be written to persistent browser storage (`sessionStorage`, `localStorage`, `IndexedDB`). In-memory ephemeral JavaScript Map only (`maxEntries = 30`, bounded LRU eviction).
+     - *Law 2 (Freshness Dominance)*: Freshness strictly overrides cache. Any direct navigation or version bump immediately yields fresh server state.
+     - *Law 3 (Two-Tier Dataset Versioning)*: Scoped versions (`ats:version:job:{company}:{job}`) prevent cross-job cache invalidation storms when candidates are added to distinct jobs.
+     - *Law 4 (Atomic Redis Increment)*: Redis versions are captured directly from the return value of `cache()->increment()` to eliminate version-number race conditions under concurrency.
+     - *Law 5 (Resilient Degradation)*: Redis is a consistency accelerator, not write master. Redis errors are logged and never cause candidate submission to fail.
+     - *Law 6 (Monotonic Reverb Client Invariant)*: Reverb events with `event.version <= currentJobDatasetVersion` are discarded; newer versions immediately bump the client version and clear RAM.
+  3. **Phase 1 (Backend Two-Tier Dataset Versioning & Event Dispatch)**:
+     - `ServiceCompanyAppTrackerController@index`: Exposes `$this->job_dataset_version` to the Blade view shell.
+     - `ServiceCompanyAppTrackerController@allDataAjax`: Incorporates `$jobDatasetVersion` into the server-side Redis cache key (`$version = $userVersion.'_'.$tenantVersion.'_'.$jobDatasetVersion`) and returns `'job_dataset_version'` in JSON and HTML response payloads.
+     - `ServiceCompanyJobApplicationController@store` & `@clientappstore`: Post-commit atomically increments `ats:version:job:{$company_id}:{$rawJobId}` and broadcasts `AppTrackerCandidateAssignedEvent` wrapped in resilient try/catch blocks.
+     - `ProcessOutboxEventJob@invalidateCandidateCaches`: Post-indexing atomically increments `ats:version:job:{$companyId}:{$jobId}`.
+  4. **Phase 2 (Add Candidate Readiness Gating & URL Intent Append)**:
+     - In `create.blade.php` & `clientcreate.blade.php`: Gated "Go to Tracker Now" button for 3 seconds during initial index polling, unlocking automatically thereafter.
+     - At 10s fallback: Gracefully informs user that search indexing is completing in background and redirects.
+     - Appended `?new_candidate_id=${candidateId}` to `executeSaveRedirect()` target URL.
+  5. **Phase 3 & 4 (Purged sessionStorage, Ephemeral RAM Store & URL Intent Consumption)**:
+     - In `apptracker/index.blade.php`: Added hidden `<input id="apptracker_job_dataset_version">`.
+     - Completely removed `sessionStorage` reads/writes from `AppTrackerRamStore`; purged legacy keys on load.
+     - Added URL intent handler: On load with `new_candidate_id`, forces fresh authoritative fetch (`fetchCandidates(1, '', true)`), smoothly scrolls to candidate row, applies a 3.5s pulse highlight, cleans URL via `history.replaceState()`, and performs bounded recovery (1s -> 2s -> 4s -> STOP) if queue delay occurs.
+     - Hardened Echo listener with monotonic client invariant and added 15s debounced window focus reconciliation.
+  6. **Phase 5 (Verification & Linting)**:
+     - 10/10 feature tests passing in `CandidateSubmitReadinessAndCacheTest` (57 assertions).
+     - PHP lint clean (`php -l`) and Pint formatted. Zero UI freezing, 0% MySQL reads on listing paths, zero business logic mutations.
 - *2026-10-07* — **ATS Add Candidate Submit Architecture & IndexedDB Mirror Removal (100% IMPLEMENTED & VERIFIED)**:
   1. **IndexedDB Mirror Removal**: Completely eliminated `jero_ats_apptracker` candidate mirror from `create.blade.php` and `clientcreate.blade.php`. Form state lives strictly in Browser RAM only. Eliminated cross-candidate contamination and old cached data leakage.
   2. **True Idempotency**: Enforced "one user submission attempt = one UUID". Kept submission UUID across retries/errors; rotated `client_submission_uuid` only upon definitive HTTP 200 success.

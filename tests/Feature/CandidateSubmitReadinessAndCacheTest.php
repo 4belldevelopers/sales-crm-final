@@ -84,6 +84,8 @@ class CandidateSubmitReadinessAndCacheTest extends TestCase
         $this->assertStringContainsString('pollSearchIndex', $blade);
         $this->assertStringContainsString('candidate-index-countdown', $blade);
         $this->assertStringContainsString('10000', $blade);
+        $this->assertStringContainsString('new_candidate_id', $blade);
+        $this->assertStringContainsString('Preparing index...', $blade);
     }
 
     public function test_clientcreate_blade_contains_readiness_polling_and_stop_timer(): void
@@ -95,5 +97,53 @@ class CandidateSubmitReadinessAndCacheTest extends TestCase
         $this->assertStringContainsString('pollSearchIndex', $blade);
         $this->assertStringContainsString('client-candidate-index-countdown', $blade);
         $this->assertStringContainsString('10000', $blade);
+        $this->assertStringContainsString('new_candidate_id', $blade);
+        $this->assertStringContainsString('Preparing index...', $blade);
+    }
+
+    public function test_job_dataset_versioning_and_reverb_event_dispatched_in_controllers(): void
+    {
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyJobApplicationController.php');
+
+        // Store method job-scoped atomic version increment & Reverb dispatch
+        $this->assertStringContainsString('ats:version:job:{$company_id}:{$rawJobId}', $controller);
+        $this->assertStringContainsString('broadcast(new \App\Events\AppTrackerCandidateAssignedEvent(', $controller);
+
+        // ProcessOutboxEventJob job-scoped version bump
+        $jobSource = $this->source('app/Jobs/ProcessOutboxEventJob.php');
+        $this->assertStringContainsString('ats:version:job:{$companyId}:{$jobId}', $jobSource);
+    }
+
+    public function test_apptracker_controller_exposes_and_incorporates_job_dataset_version(): void
+    {
+        $controller = $this->source('app/Http/Controllers/ServiceCompany/ServiceCompanyAppTrackerController.php');
+
+        // index method exposes job_dataset_version
+        $this->assertStringContainsString('$this->job_dataset_version = $jobDatasetVersion;', $controller);
+
+        // allDataAjax incorporates job_dataset_version in cache key and returns it in json & html response payloads
+        $this->assertStringContainsString('$jobDatasetVersion = (int) cache()->get("ats:version:job:{$company_id}:{$jobid}", 1);', $controller);
+        $this->assertStringContainsString("'job_dataset_version' => (int) \$jobDatasetVersion,", $controller);
+    }
+
+    public function test_apptracker_blade_ram_store_purges_session_storage_and_handles_new_candidate_intent(): void
+    {
+        $blade = $this->source('resources/views/service_company/apptracker/index.blade.php');
+
+        // Blade view renders hidden job dataset version
+        $this->assertStringContainsString('id="apptracker_job_dataset_version"', $blade);
+
+        // AppTrackerRamStore enforces in-memory Map only and purges legacy sessionStorage
+        $this->assertStringContainsString('var ramMap = new Map();', $blade);
+        $this->assertStringNotContainsString('sessionStorage.setItem(storagePrefix + key', $blade);
+
+        // URL intent consumption & bounded recovery check
+        $this->assertStringContainsString('highlightNewCandidateRow', $blade);
+        $this->assertStringContainsString('new_candidate_id', $blade);
+        $this->assertStringContainsString('history.replaceState', $blade);
+
+        // Reverb monotonic invariant check
+        $this->assertStringContainsString('eventVersion <= currentJobDatasetVersion', $blade);
+        $this->assertStringContainsString('AppTrackerRamStore.setJobVersion', $blade);
     }
 }

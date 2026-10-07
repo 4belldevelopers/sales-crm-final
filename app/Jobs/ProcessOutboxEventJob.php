@@ -307,6 +307,14 @@ class ProcessOutboxEventJob implements ShouldQueue
                 } catch (\Throwable) {
                 }
             }
+
+            $jobId = (int) ($payload['job_id'] ?? 0);
+            if ($jobId > 0 && $companyId > 0) {
+                try {
+                    cache()->increment("ats:version:job:{$companyId}:{$jobId}");
+                } catch (\Throwable) {
+                }
+            }
         } catch (\Throwable $e) {
             Log::warning('ProcessOutboxEventJob: Cache invalidation warning', ['error' => $e->getMessage()]);
         }

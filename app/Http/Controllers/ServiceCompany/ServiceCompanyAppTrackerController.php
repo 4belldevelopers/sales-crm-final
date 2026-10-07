@@ -98,6 +98,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $company_id = auth()->user()->company_id;
         $this->job = $this->job ?? Job::withoutGlobalScopes()->findOrFail($id);
 
+        $jobDatasetVersion = 1;
+        try {
+            $jobDatasetVersion = (int) cache()->get("ats:version:job:{$company_id}:{$id}", 1);
+        } catch (\Throwable) {
+            $jobDatasetVersion = 1;
+        }
+        $this->job_dataset_version = $jobDatasetVersion;
+        $this->tenant_dataset_version = (int) cache()->get("allapptracker_version_company_{$company_id}", 1);
+
         $return_data = GeneralMethod::custome_count_all($id);
         $this->custome_count = $return_data->public_bench_counter ?? 0;
         $this->pool_counter = $return_data->pool_counter;
@@ -771,7 +780,15 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
         $tenantVersion = cache()->get('allapptracker_version_company_'.$company_id, 1);
-        $version = $userVersion.'_'.$tenantVersion;
+        $jobDatasetVersion = 1;
+        if (!empty($jobid)) {
+            try {
+                $jobDatasetVersion = (int) cache()->get("ats:version:job:{$company_id}:{$jobid}", 1);
+            } catch (\Throwable) {
+                $jobDatasetVersion = 1;
+            }
+        }
+        $version = $userVersion.'_'.$tenantVersion.'_'.$jobDatasetVersion;
         $cacheKeySet = 'ats:allapptracker:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
         /* ----------------------------
         ⚡ Check DragonflyDB first (0 DB queries on cache hit)
@@ -1300,6 +1317,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'total' => $total,
                 'counts' => $pipelineCounts,
                 'tenant_version' => (int) $tenantVersion,
+                'job_dataset_version' => (int) $jobDatasetVersion,
                 'cache_version' => $version,
             ];
             cache()->put($cacheKeySet, $jsonResponse, now()->addMinutes(ALL_APPTRACKER_TIME));
@@ -1314,6 +1332,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'total' => $total,
             'counts' => $pipelineCounts,
             'tenant_version' => (int) $tenantVersion,
+            'job_dataset_version' => (int) $jobDatasetVersion,
             'cache_version' => $version,
         ];
 
