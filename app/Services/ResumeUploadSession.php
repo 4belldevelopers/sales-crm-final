@@ -274,7 +274,7 @@ class ResumeUploadSession
     {
         $disk   = Storage::disk('r2');
         $path   = 'resumes/' . $uuid;
-        $ttl    = config('resumes.r2.presign_ttl', 900);
+        $ttl    = config('resumes.r2.presign_ttl', 600);
         // temporaryUploadUrl returns ['url' => ..., 'headers' => ...] in Flysystem 3.x
         $result = $disk->temporaryUploadUrl($path, now()->addSeconds($ttl));
 

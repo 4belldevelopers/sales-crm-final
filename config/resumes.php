@@ -32,7 +32,7 @@ return [
     'r2' => [
         'temp_bucket'     => env('CLOUDFLARE_R2_BUCKET', 'jero-resume-uploads-temp'),
         'temp_prefix'     => sprintf('resumes/%s/', date('Y/m/d')),
-        'presign_ttl'     => (int) env('RESUMES_R2_PRESIGN_TTL', 900),        // 15 min
+        'presign_ttl'     => (int) env('RESUMES_R2_PRESIGN_TTL', 600),        // 10 min
         'presign_ttl_min' => 60,   // minimum acceptable TTL before rotation
         'endpoint'        => env('CLOUDFLARE_R2_ENDPOINT'),
         'account_id'      => env('CLOUDFLARE_R2_ACCOUNT_ID'),

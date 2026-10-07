@@ -2,7 +2,7 @@
 
 > Mandatory rules for every screen. Goal: **clean, professional, data-dense** screens that
 > **perfectly fit a standard 15.6" laptop screen (1366×768 & 1920×1080) and smaller screens** without page-level horizontal scrolling.
-> Font: **Poppins**. Max font size: **14px** (strictly enforced). Theme: **Metronic**. Server load: **near zero**.
+> Font: **Poppins**. Theme: **Metronic**. Server load: **near zero**.
 
 ---
 
@@ -13,23 +13,26 @@ Reuse Metronic cards, tables, forms, modals, buttons, toolbars, tabs, drawers, b
 
 ---
 
-## 2. Font: Poppins everywhere (Strict 14px Cap)
+## 2. Typography: Poppins Enterprise Hierarchy (Standard SaaS Scale)
 
-| Element | Size | Weight |
-|---|---|---|
-| Page title / primary heading | **14px** (the max cap) | 700 |
-| Section / card header | 14px | 600 |
-| Body text, table cells, form values | 13px | 400 |
-| Field labels, table headers, secondary text | 12px | 500 |
-| Captions, timestamps, chips, hints | 11px | 400 |
-| Dense badges / counters (sparingly) | 10.5px | 600 |
+Standard enterprise B2B SaaS typography scale aligned with the Metronic design system:
+
+| Element | Size | Weight | Line Height |
+|---|---|---|---|
+| Page title / Primary modal header | 18px–20px | 600 / 700 | 1.25 |
+| Section / Card header | 15px–16px | 600 | 1.3 |
+| Subheadings / Group titles | 14px | 600 | 1.35 |
+| Form inputs, selects, buttons, body text | 13px–14px | 400 / 500 | 1.4 |
+| Field labels, table headers, secondary text | 12px–13px | 500 / 600 | 1.35 |
+| Captions, timestamps, chips, helper text | 11px–12px | 400 / 500 | 1.3 |
+| Dense micro-badges / counters | 10px–11px | 600 | 1.2 |
 
 Rules:
-- **Nothing renders above 14px** — including h1-h6, table headers, badges, and inputs.
-- Visual hierarchy comes from **font-weight and colour**, never size jumps.
-- Poppins weights **400 / 500 / 600 / 700** only.
+- Standard enterprise typographic hierarchy with clear visual contrast.
+- Visual hierarchy driven by scale, font-weight, and color.
+- Poppins weights: **400 / 500 / 600 / 700**.
 - Numeric columns: `font-variant-numeric: tabular-nums` for aligned figures.
-- Line-height: 1.35-1.45 body, 1.25 table rows.
+- Clean line-heights (1.35–1.45 body, 1.25 table rows).
 
 ---
 

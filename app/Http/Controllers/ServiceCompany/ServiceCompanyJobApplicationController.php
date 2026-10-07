@@ -2920,22 +2920,36 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $company_id = auth()->user()->company_id;
 
         abort_if(Gate::denies('add_job_applications'), 403);
-        $candidateCount = JobApplication::count();
-        // if ($candidateCount > 0 && $this->activePackage->package->no_of_candidate_access !== null && $this->activePackage->package->no_of_candidate_access <= $candidateCount) {
-        // 	$this->message = __('modules.subscription.candidatePurchase');
-        // 	return view('service_company.subscription.ask_purchase', $this->data);
-        // }
 
-        $this->jobs = Job::activeJobs();
-        $this->gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
         $chkAdminRole = $this->user->hasRole('admin');
-        if ($chkAdminRole > 0) {
-            $this->jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->join('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('jobs.company_id', '=', $this->user->company_id)->groupBy('jobs.id')->get();
-        } else {
-            $this->jobs = Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')->join('job_assign', 'job_assign.job_id', 'jobs.id')->join('clients', 'clients.id', 'jobs.client_id')->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')->where('jobs.status', '=', 'active')->where('job_assign.user_id', '=', $this->user->id)->where('jobs.company_id', '=', $this->user->company_id)->groupBy('jobs.id')->get();
-        }
+        $currentUserId = (int) $this->user->id;
+        $this->jobs = Cache::remember("active_jobs_create_{$company_id}_{$currentUserId}_{$chkAdminRole}", 300, function () use ($chkAdminRole, $company_id, $currentUserId) {
+            if ($chkAdminRole > 0) {
+                return Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+                    ->join('clients', 'clients.id', 'jobs.client_id')
+                    ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                    ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                    ->where('jobs.status', '=', 'active')
+                    ->where('jobs.company_id', '=', $company_id)
+                    ->groupBy('jobs.id')
+                    ->get();
+            } else {
+                return Job::select('jobs.id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city')
+                    ->join('job_assign', 'job_assign.job_id', 'jobs.id')
+                    ->join('clients', 'clients.id', 'jobs.client_id')
+                    ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                    ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                    ->where('jobs.status', '=', 'active')
+                    ->where('job_assign.user_id', '=', $currentUserId)
+                    ->where('jobs.company_id', '=', $company_id)
+                    ->groupBy('jobs.id')
+                    ->get();
+            }
+        });
 
-        $this->qualification = Cache::rememberForever('qualification_master_list', function () {
+        $this->gender = ['male' => __('modules.front.male'), 'female' => __('modules.front.female'), 'others' => __('modules.front.others')];
+
+        $this->qualification = Cache::remember('qualification_master_list', 86400, function () {
             return DB::table('qualification_master')->select('*')->whereNotIn('id', [57, 58, 59])->orderBy('qualification_master.display_order', 'ASC')->get();
         });
         $this->jobId = $jobId;
@@ -2946,13 +2960,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->application = JobApplication::withoutGlobalScopes()->find($appId);
         }
 
-        $this->jobDetail = Job::withoutGlobalScopes()
-            ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
-            ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-            ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
-            ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('jobs.id', '=', $jobId)
-            ->first();
+        $this->jobDetail = ! empty($jobId) ? Cache::remember("job_detail_create_{$jobId}", 300, function () use ($jobId) {
+            return Job::withoutGlobalScopes()
+                ->select('jobs.id', 'jobs.company_id', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'jobs.total_positions', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+                ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
+                ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->where('jobs.id', '=', $jobId)
+                ->first();
+        }) : null;
 
         $this->page_event = 'ADD';
         $this->company_id = $company_id;
@@ -2962,22 +2978,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->salaryMode = GeneralMethod::salaryMode();
         $this->interview_mode = ReferenceDataCache::interviewModes();
         $this->statelist = GeneralMethod::statelist(101);
-        $this->job_additional_detail = '';
-        $this->job_additional_detail = DB::table('job_additional_detail')
-            ->select('*')
-            ->where('job_additional_detail.company_id', '=', $company_id)
-            ->where('job_additional_detail.job_id', '=', $this->jobId)
-            ->orderBy('job_additional_detail.id', 'ASC')
-            ->get();
+        $this->job_additional_detail = ! empty($this->jobId) ? Cache::remember("job_add_detail_{$company_id}_{$this->jobId}", 300, function () use ($company_id) {
+            return DB::table('job_additional_detail')
+                ->select('*')
+                ->where('job_additional_detail.company_id', '=', $company_id)
+                ->where('job_additional_detail.job_id', '=', $this->jobId)
+                ->orderBy('job_additional_detail.id', 'ASC')
+                ->get();
+        }) : collect();
 
-        $this->jobLocation = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
-            ->where('client_location_jobs.job_id', $this->jobId)
-            ->orderBy('client_location_jobs.id', 'DESC')
-            ->first();
+        $this->jobLocation = ! empty($this->jobId) ? Cache::remember("job_location_{$this->jobId}", 300, function () {
+            return DB::table('client_location_jobs')
+                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
+                ->where('client_location_jobs.job_id', $this->jobId)
+                ->orderBy('client_location_jobs.id', 'DESC')
+                ->first();
+        }) : null;
 
         $this->cities = [];
 
@@ -3015,12 +3034,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->currencyConverter = Cache::remember('currency_converter_rates', 3600, function () {
             return GeneralMethod::currencyConverter();
         });
-        $this->recruiterNoteTemplates = DB::table('recruiter_note_master')
-            ->where('status', 1)
-            ->where(function ($q) {
-                $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id);
-            })
-            ->orderBy('id')->get();
+        $this->recruiterNoteTemplates = Cache::remember("recruiter_note_templates_{$company_id}", 3600, function () use ($company_id) {
+            return DB::table('recruiter_note_master')
+                ->where('status', 1)
+                ->where(function ($q) use ($company_id) {
+                    $q->whereNull('company_id')->orWhere('company_id', $company_id);
+                })
+                ->orderBy('id')->get();
+        });
 
         return response()->view('service_company.job-applications.create', $this->data)
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -3097,6 +3118,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $company_id = (int) auth()->user()->company_id;
+        abort_if($company_id !== (int) $this->user->company_id, 403, 'Unauthorized company access');
+
+        $correlationId = $request->header('X-Correlation-ID') ?: (string) Str::uuid();
+        Log::withContext(['correlation_id' => $correlationId]);
 
         $clientSubmissionUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: null);
         $requestPayloadForHash = $request->except(['_token', 'resume', 'client_submission_uuid', '_idempotency_token']);
@@ -3236,7 +3261,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $jobApplication->ctc_yearly,
             $jobApplication->ectc_yearly
         );
-        $jobApplication->comment = $request->comment;
+        $jobApplication->comment = $request->filled('comment') ? strip_tags((string) $request->comment, '<p><br><b><strong><i><em><u><ul><ol><li>') : $request->comment;
         $jobApplication->pincode = $experienceGet;
 
         // $jobApplication->current_location 	=	$request->current_location;
@@ -3249,7 +3274,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->oh = $request->oh;
         $jobApplication->visastatu = $request->visastatu;
         $jobApplication->referencename = $request->referencename;
-        $jobApplication->recruiter_note = $request->recruiter_note;
+        $jobApplication->recruiter_note = $request->filled('recruiter_note') ? strip_tags((string) $request->recruiter_note, '<p><br><b><strong><i><em><u><ul><ol><li>') : $request->recruiter_note;
         $jobApplication->reason_for_job_change = $request->reason_for_job_change;
 
         $parsedSkillList = [];
@@ -3721,6 +3746,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'company_id' => (int) $company_id,
                         'submitted_by' => (int) $submitted_by,
                         'resume_asset_id' => $resumeAssetId,
+                        'correlation_id' => $correlationId,
                     ]),
                     'status' => 'pending',
                     'created_at' => now(),
@@ -3733,13 +3759,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             // Commit MySQL transaction — pure local database writes with zero remote network calls
             DB::commit();
 
-            // ── Post-Commit Operations (0% DB lock holding time) ──────────────────────
-            // Primary ES indexing runs post-commit: guarantees ES failures never rollback MySQL candidate
-            try {
-                GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
-            } catch (\Throwable $e) {
-                \Log::warning('store(): Post-commit primary ES indexing failed: '.$e->getMessage());
-            }
+            // ── Post-Commit Operations (0% DB lock holding time, CQRS Compliant) ──────
+            // Primary ES indexing runs asynchronously via ProcessOutboxEventJob on candidate-index queue.
+            // Recruiter receives instant HTTP 200 and AppTracker hydrates immediately from IndexedDB mirror.
 
             // Post-commit atomic cache invalidation
             $cachekeys = [
@@ -3756,7 +3778,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
             // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
             try {
-                ProcessOutboxEventJob::dispatch()->onQueue('candidate-index');
+                ProcessOutboxEventJob::dispatch()->onQueue('candidate-index')->afterCommit();
             } catch (\Throwable $e) {
                 \Log::warning('store(): ProcessOutboxEventJob dispatch warning: '.$e->getMessage());
             }
@@ -3810,6 +3832,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'action' => 'redirect',
                 'url' => $redirectUrl,
                 'candidate_id' => (int) $jobApplication->id,
+                'candidate' => [
+                    'id' => (int) $jobApplication->id,
+                    'job_id' => (int) ($rawJobId ?: $jobApplication->job_id),
+                    'full_name' => (string) $jobApplication->full_name,
+                    'email' => (string) $jobApplication->email,
+                    'phone' => (string) $jobApplication->phone,
+                    'current_designation' => (string) $jobApplication->current_designation,
+                    'current_company' => (string) $jobApplication->current_company,
+                    'ctc' => (string) $jobApplication->ctc,
+                    'search_index_status' => 'PENDING',
+                ],
                 'resume' => (string) ($jobApplication->resume ?? ''),
             ];
 
@@ -11364,17 +11397,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->jobId = $jobId;
         $this->appId = $appId;
 
-        $this->jobDetail = DB::table('jobs')
-            ->select('jobs.id', 'jobs.company_id', 'jobs.total_positions', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
-            // ->join('job_assign', 'job_assign.job_id', 'jobs.id')
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
-            ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->where('jobs.id', '=', $jobId)
-            // ->where('jobs.company_id', '=', $this->user->company_id)
-            ->first();
+        $this->jobDetail = ! empty($jobId) ? Cache::remember("client_job_detail_{$jobId}", 300, function () use ($jobId) {
+            return DB::table('jobs')
+                ->select('jobs.id', 'jobs.company_id', 'jobs.total_positions', 'jobs.title', 'jobs.min_salary', 'jobs.max_salary', 'jobs.created_at', 'jobs.min_exp', 'jobs.max_exp', 'jobs.status', 'clients.name as client_name', 'client_location.city', 'client_location.postcode', 'client_location.city as location_city', 'jobs.min_sal_mode', 'jobs.max_sal_mode', 'jobs.min_salary_currency', 'jobs.max_salary_currency')
+                ->join('clients', 'clients.id', 'jobs.client_id')
+                ->leftJoin('client_location_jobs', 'client_location_jobs.job_id', '=', 'jobs.id')
+                ->leftJoin('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->where('jobs.id', '=', $jobId)
+                ->first();
+        }) : null;
 
-        $client_company_id = $this->jobDetail->company_id;
+        $client_company_id = $this->jobDetail ? $this->jobDetail->company_id : 0;
 
         $this->page_event = 'ADD';
         $targetCompanyId = $client_company_id ?: (auth()->check() ? auth()->user()->company_id : null);
@@ -11392,22 +11425,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->statelist = GeneralMethod::statelist(101);
         // echo '<pre>'; print_r($this->statelist); exit;
 
-        $this->job_additional_detail = '';
-        $this->job_additional_detail = DB::table('job_additional_detail')
-            ->select('*')
-            ->where('job_additional_detail.company_id', '=', $client_company_id)
-            ->where('job_additional_detail.job_id', '=', $this->jobId)
-            ->orderBy('job_additional_detail.id', 'ASC')
-            ->get();
+        $this->job_additional_detail = ! empty($this->jobId) ? Cache::remember("client_job_add_detail_{$client_company_id}_{$this->jobId}", 300, function () use ($client_company_id) {
+            return DB::table('job_additional_detail')
+                ->select('*')
+                ->where('job_additional_detail.company_id', '=', $client_company_id)
+                ->where('job_additional_detail.job_id', '=', $this->jobId)
+                ->orderBy('job_additional_detail.id', 'ASC')
+                ->get();
+        }) : collect();
 
-        $this->jobLocation = DB::table('client_location_jobs')
-            ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-            ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-            ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
-            ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
-            ->where('client_location_jobs.job_id', $this->jobId)
-            ->orderBy('client_location_jobs.id', 'DESC')
-            ->first();
+        $this->jobLocation = ! empty($this->jobId) ? Cache::remember("client_job_location_{$this->jobId}", 300, function () {
+            return DB::table('client_location_jobs')
+                ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
+                ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
+                ->leftJoin('state_list', 'state_list.id', '=', 'client_location.state')
+                ->select('client_location.city', 'client_location.address', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name', 'state_list.state as state_name')
+                ->where('client_location_jobs.job_id', $this->jobId)
+                ->orderBy('client_location_jobs.id', 'DESC')
+                ->first();
+        }) : null;
 
         // $this->jobSkill = DB::table('job_metronics_skills')
         // 	->leftJoin('candidate_job_skill_exp', function($join) {
@@ -11542,19 +11578,84 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
         }
 
-        $company_id = '';
-        $company_id = auth()->user()->company_id;
-        //   dd($this->user->company_id);
+        $company_id = (int) auth()->user()->company_id;
+        abort_if($company_id !== (int) $this->user->company_id, 403, 'Unauthorized company access');
+
+        $correlationId = $request->header('X-Correlation-ID') ?: (string) Str::uuid();
+        Log::withContext(['correlation_id' => $correlationId]);
+
+        $clientSubmissionUuid = $request->input('client_submission_uuid') ?: ($request->header('X-Idempotency-Key') ?: null);
+        $requestPayloadForHash = $request->except(['_token', 'resume', 'client_submission_uuid', '_idempotency_token']);
+        $requestHash = hash('xxh128', json_encode($requestPayloadForHash));
+        $redisLockKey = null;
+        $redisLockAcquired = false;
+
+        if (! empty($clientSubmissionUuid)) {
+            $redisLockKey = "idemp:cand:{$company_id}:{$clientSubmissionUuid}";
+            try {
+                $acquired = Redis::set($redisLockKey, 'PROCESSING', 'EX', 120, 'NX');
+                if ($acquired) {
+                    $redisLockAcquired = true;
+                } else {
+                    $existingRecord = SysIdempotencyKey::where('tenant_id', $company_id)
+                        ->where('idempotency_key', $clientSubmissionUuid)
+                        ->first();
+
+                    if ($existingRecord && $existingRecord->request_hash !== $requestHash) {
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IDEMPOTENCY_KEY_REUSE',
+                            'message' => 'Idempotency key has already been used for a conflicting payload.',
+                        ], 409);
+                    }
+
+                    if ($existingRecord && $existingRecord->status === 'COMPLETED') {
+                        $body = json_decode($existingRecord->response_body, true) ?? [];
+
+                        return response()->json($body, $existingRecord->response_status ?? 200);
+                    }
+
+                    if ($existingRecord && $existingRecord->status === 'PROCESSING' && $existingRecord->processing_until < now()) {
+                        // Lease expired -> allow recovery
+                    } else {
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IN_FLIGHT',
+                            'message' => 'Candidate submission is currently processing. Please wait...',
+                        ], 409);
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('clientappstore(): Redis idempotency lock failed open: '.$e->getMessage());
+            }
+        }
 
         $eventId = 4;
         $coinsDeductions = GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $this->user->company_id, '', '');
-        // dd($coinsDeductions);
         if ($coinsDeductions->status) {
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)->where('idempotency_key', $clientSubmissionUuid)->delete();
+            }
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
+            }
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
         $applicationStatus = ApplicationStatus::first();
         $jobRow = DB::table('jobs')->select('jobs.id', 'jobs.company_id')->where('jobs.id', '=', $request->job_id)->first();
+        if (! $jobRow) {
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
+            }
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Job not found.']);
+        }
         $job_application_arr = [];
 
         if (! empty($request->full_name)) {
@@ -11644,7 +11745,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $job_application_arr['percentage_hike'] = $request->percentage_hike;
         }
         if ($request->has('comment')) {
-            $job_application_arr['comment'] = $request->input('comment');
+            $rawComment = (string) $request->input('comment');
+            $job_application_arr['comment'] = strip_tags($rawComment, '<p><br><b><strong><i><em><u><ul><ol><li>');
         }
         if (! empty($request->pincode)) {
             $experienceGet = (@$request->total_exp_year == 0) ? 1 : 0;
@@ -11681,7 +11783,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $job_application_arr['referencename'] = $request->referencename;
         }
         if ($request->has('recruiter_note')) {
-            $job_application_arr['recruiter_note'] = $request->input('recruiter_note');
+            $rawNote = (string) $request->input('recruiter_note');
+            $job_application_arr['recruiter_note'] = strip_tags($rawNote, '<p><br><b><strong><i><em><u><ul><ol><li>');
         }
         if (! empty($request->reason_for_job_change)) {
             $job_application_arr['reason_for_job_change'] = $request->reason_for_job_change;
@@ -11884,6 +11987,57 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         DB::beginTransaction();
         try {
+            if (! empty($clientSubmissionUuid)) {
+                $idempotencyRow = SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($idempotencyRow) {
+                    if ($idempotencyRow->request_hash !== $requestHash) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IDEMPOTENCY_KEY_REUSE',
+                            'message' => 'Idempotency key has already been used for a conflicting payload.',
+                        ], 409);
+                    }
+
+                    if ($idempotencyRow->status === 'COMPLETED') {
+                        DB::rollBack();
+                        $cachedBody = json_decode($idempotencyRow->response_body, true) ?? [];
+
+                        return response()->json($cachedBody, $idempotencyRow->response_status ?? 200);
+                    }
+
+                    if ($idempotencyRow->status === 'PROCESSING' && $idempotencyRow->processing_until < now()) {
+                        // Gate G-52: Lease recovery
+                        $idempotencyRow->update([
+                            'processing_until' => now()->addSeconds(60),
+                        ]);
+                    } else {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'status' => 'conflict',
+                            'error' => 'IN_FLIGHT',
+                            'message' => 'A submission with this UUID is currently being processed. Please wait.',
+                        ], 409);
+                    }
+                } else {
+                    SysIdempotencyKey::create([
+                        'tenant_id' => $company_id,
+                        'idempotency_key' => $clientSubmissionUuid,
+                        'request_hash' => $requestHash,
+                        'status' => 'PROCESSING',
+                        'processing_until' => now()->addSeconds(60),
+                    ]);
+                }
+            }
+
+            $job_application_arr['client_submission_uuid'] = $clientSubmissionUuid ?: null;
+            $job_application_arr['resume_version'] = 1;
 
             DB::table('job_applications')->insert($job_application_arr);
             $application_id = DB::getPdo()->lastInsertId();
@@ -12058,18 +12212,45 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 GeneralMethod::cacheClean($key);
             }
 
-            // Skills ES indexing, candidate_job_skill_exp, teamRankElastic, answers,
-            // job_additional_detail+ES, and packageRedeem are all handled by
-            // ProcessCandidateSubmissionJob dispatched after commit.
+            // ── Transactional Outbox: candidate.created event ─────────────────────────
+            try {
+                DB::table('candidate_outbox_events')->insert([
+                    'company_id' => (int) $company_id,
+                    'dedupe_key' => "candidate:{$application_id}:created",
+                    'aggregate_type' => 'Candidate',
+                    'aggregate_id' => (int) $application_id,
+                    'event_type' => 'candidate.created',
+                    'event_version' => 1,
+                    'payload' => json_encode([
+                        'candidate_id' => (int) $application_id,
+                        'job_id' => (int) $request->job_id,
+                        'company_id' => (int) $company_id,
+                        'submitted_by' => (int) $submitted_by,
+                        'resume_asset_id' => $resumeAssetId ?? null,
+                        'correlation_id' => $correlationId,
+                    ]),
+                    'status' => 'pending',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Throwable $oe) {
+                \Log::warning('clientappstore(): candidate_outbox_events insert fallback: '.$oe->getMessage());
+            }
 
-            // Primary ES indexing kept synchronous — guarantees the candidate row is
-            // visible on the AppTracker grid the moment the HTTP redirect fires.
-            GeneralMethod::JobApplicationsAddEditUpload($lastInsertedId);
+            // Commit MySQL transaction — pure local database writes with zero remote network calls
+            DB::commit();
 
+            // ── Post-Commit Operations (0% DB lock holding time, CQRS Compliant) ──────
+            // Primary ES indexing runs asynchronously via ProcessOutboxEventJob on candidate-index queue.
+            // Recruiter receives instant HTTP 200 and AppTracker hydrates immediately from IndexedDB mirror.
+
+            // Post-commit atomic cache invalidation
             $cachekeys = [
                 'alljobslist_version_user_'.$this->user->id,
                 'allcvtracker_version_user_'.$this->user->id,
                 'allclientapp_version_user_'.$this->user->id,
+                'candidate:'.$application_id,
+                'candidate:'.$application_id.':resume',
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
@@ -12078,7 +12259,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $this->currencyConverter = GeneralMethod::currencyConverter();
             $submittedByEmail = auth()->user()->email;
 
-            DB::commit();
+            // Dispatch ProcessOutboxEventJob to dedicated candidate-index queue
+            try {
+                ProcessOutboxEventJob::dispatch()->onQueue('candidate-index')->afterCommit();
+            } catch (\Throwable $e) {
+                \Log::warning('clientappstore(): ProcessOutboxEventJob dispatch warning: '.$e->getMessage());
+            }
 
             // ── V2 async secondary jobs — dispatched after commit so MySQL rows are visible ──
             $requestData = array_filter(
@@ -12116,15 +12302,84 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $redirectUrl = route('service_company.cvtracker.index');
             }
 
-            return Reply::successWithData(__('messages.createdSuccessfully'), [
+            $responseData = [
                 'action' => 'redirect',
                 'url' => $redirectUrl,
                 'candidate_id' => (int) $application_id,
+                'candidate' => [
+                    'id' => (int) $application_id,
+                    'job_id' => (int) ($rawJobId ?: $request->job_id),
+                    'full_name' => (string) ($job_application_arr['full_name'] ?? $request->full_name),
+                    'email' => (string) ($job_application_arr['email'] ?? $request->email),
+                    'phone' => (string) ($job_application_arr['phone'] ?? $request->phone),
+                    'current_designation' => (string) ($job_application_arr['current_designation'] ?? $request->current_designation),
+                    'current_company' => (string) ($job_application_arr['current_company'] ?? $request->current_company),
+                    'ctc' => (string) ($job_application_arr['ctc'] ?? $request->ctc),
+                    'search_index_status' => 'PENDING',
+                ],
                 'resume' => (string) ($jobApplicationGet->resume ?? ''),
-            ]);
+            ];
 
+            if (! empty($clientSubmissionUuid)) {
+                SysIdempotencyKey::where('tenant_id', $company_id)
+                    ->where('idempotency_key', $clientSubmissionUuid)
+                    ->update([
+                        'status' => 'COMPLETED',
+                        'response_status' => 200,
+                        'response_body' => json_encode($responseData),
+                    ]);
+            }
+
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::set($redisLockKey, 'COMPLETED:'.json_encode($responseData), 'EX', 300);
+                } catch (\Throwable) {
+                }
+            }
+
+            return Reply::successWithData(__('messages.createdSuccessfully'), $responseData);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
+            }
+
+            // Layer 3 Idempotent replay on duplicate submission UUID (MySQL error 1062)
+            if ((isset($e->errorInfo[1]) && $e->errorInfo[1] == 1062) || str_contains($e->getMessage(), '1062 Duplicate entry')) {
+                if (! empty($clientSubmissionUuid)) {
+                    $completedRecord = SysIdempotencyKey::where('tenant_id', $company_id)
+                        ->where('idempotency_key', $clientSubmissionUuid)
+                        ->first();
+
+                    if ($completedRecord && $completedRecord->status === 'COMPLETED') {
+                        $cachedBody = json_decode($completedRecord->response_body, true) ?? [];
+
+                        return response()->json($cachedBody, $completedRecord->response_status ?? 200);
+                    }
+
+                    return response()->json([
+                        'status' => 'conflict',
+                        'error' => 'IN_FLIGHT',
+                        'message' => 'Candidate submission is currently processing. Please wait...',
+                    ], 409);
+                }
+            }
+
+            \Log::error('clientappstore() QueryException: '.$e->getMessage(), ['exception' => $e]);
+
+            return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);
         } catch (\Throwable $e) {
             DB::rollBack();
+            if ($redisLockKey && $redisLockAcquired) {
+                try {
+                    Redis::del($redisLockKey);
+                } catch (\Throwable) {
+                }
+            }
             \Log::error('clientappstore() transaction failed: '.$e->getMessage(), ['exception' => $e]);
 
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'danger', 'message' => 'Submission failed. Please try again.']);

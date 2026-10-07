@@ -14,7 +14,7 @@
 
 <link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
 <link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
-<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&remaining_candidate_cards_yellow=20260925&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926&required_fields_modal=20261006_v2" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926&required_fields_modal=20261006_v2" rel="stylesheet" type="text/css" />
 <style>
 /* Scoped Enterprise Currency Select2 Dropdown on Add Candidate Page */
 .job-candidate-create .candidate-salary-header-currency {
@@ -3461,7 +3461,7 @@
             <div class="fs candidate-card additional-details-card addl-card addl-card--details">
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title">
-                  <span class="candidate-card-icon candidate-card-icon--additional" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: #FFFFFF;"><i class="fa-solid fa-passport"></i></span>
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-passport" aria-hidden="true"></i></span>
                   <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for client submissions.</small></span>
                 </div>
               </div>
@@ -6733,6 +6733,9 @@ KTUtil.onDOMContentLoaded(function () {
       var $inputCanonicalLabel = $('#location_canonical_label');
       var $inputSig = $('#location_sig');
       var $inputTagifyLegacy = $('#kt_tagify_work_location');
+      var _candidateSkillCache = window._candidateSkillCache || {};
+      var _candidateLocationCache = window._candidateLocationCache || {};
+      function getCandidateLocationSuggestions() { return _candidateLocationCache; }
 
       // Current Active Location Object
       var activeCanonicalLocation = null;
@@ -7233,37 +7236,7 @@ KTUtil.onDOMContentLoaded(function () {
 			document.getElementById("current_ectc_mode").value = current_ctc_mode;
    });
   
-      setTimeout(() => {
 
-        $('#state option:eq({{ @$state }})').prop('selected', true);
-       
-      }, 1000);
-	
-	$(document).on('change', '.change_state', function() { 
-   				
-				  var country				=	$('#country').val(); 
-   				var state_id			=	this.value;				
-   								
-				if(country == 101){
-					$('#city_id').show();	
-					$('#city').hide();	
-				}else{
-					$('#city').hide();	
-					$('#city_id').show();	
-				}
-								
-				var url 			=	"{{ route('service_company.clients.citylist',':state_id') }}";
-				url 				=	url.replace(':state_id', state_id);
-				$.ajax({
-								type	: 'GET',
-								url		: url,
-								success	: function (response) {		
-																	$('#city_id').html(response.data);
-															   }		
-									   
-				});	
-   								
-   	});
 
         function numberToIndianWords(num, currCode) {
             num = Math.floor(Number(num));
@@ -7608,6 +7581,9 @@ var KTAddCandidate = function () {
                     $.ajax({
                         url         : '{{route('service_company.job-applications.store')}}'+'?_token=' + '{{ csrf_token() }}',
                         type        : 'POST',
+                        headers     : {
+                            'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
+                        },
                         data        : formData,
                         processData : false,
                         contentType : false,
@@ -7677,6 +7653,46 @@ var KTAddCandidate = function () {
                                 }));
                             } catch (e) {}
 
+                            // Post-Success IndexedDB Mirror (0ms AppTracker Local Mirror)
+                            if (window.indexedDB) {
+                                try {
+                                    var idbReq = window.indexedDB.open('jero_ats_apptracker', 1);
+                                    idbReq.onupgradeneeded = function(e) {
+                                        var db = e.target.result;
+                                        if (!db.objectStoreNames.contains('candidates')) {
+                                            var store = db.createObjectStore('candidates', { keyPath: 'id' });
+                                            store.createIndex('job_id', 'job_id', { unique: false });
+                                            store.createIndex('search_index_status', 'search_index_status', { unique: false });
+                                        }
+                                    };
+                                    idbReq.onsuccess = function(e) {
+                                        var db = e.target.result;
+                                        if (db.objectStoreNames.contains('candidates')) {
+                                            var tx = db.transaction('candidates', 'readwrite');
+                                            var store = tx.objectStore('candidates');
+                                            var candId = response.candidate_id || (response.candidate ? response.candidate.id : null);
+                                            if (candId) {
+                                                store.put({
+                                                    id: parseInt(candId, 10),
+                                                    job_id: parseInt('{{ $jobId }}', 10) || (response.candidate ? response.candidate.job_id : null),
+                                                    full_name: response.candidate ? response.candidate.full_name : ($('input[name="full_name"]').val() || ''),
+                                                    email: response.candidate ? response.candidate.email : ($('input[name="email"]').val() || ''),
+                                                    phone: response.candidate ? response.candidate.phone : ($('input[name="phone"]').val() || ''),
+                                                    current_designation: response.candidate ? response.candidate.current_designation : ($('input[name="current_designation"]').val() || ''),
+                                                    current_company: response.candidate ? response.candidate.current_company : ($('input[name="current_company"]').val() || ''),
+                                                    ctc: response.candidate ? response.candidate.ctc : ($('input[name="ctc"]').val() || ''),
+                                                    search_index_status: 'PENDING',
+                                                    created_at: new Date().toISOString(),
+                                                    is_local_mirror: true
+                                                });
+                                            }
+                                        }
+                                    };
+                                } catch(idbErr) {
+                                    console.warn('IndexedDB mirror write skipped:', idbErr);
+                                }
+                            }
+
                             var saveRedirected = false;
                             function executeSaveRedirect() {
                                 if (saveRedirected) return;
@@ -7688,7 +7704,7 @@ var KTAddCandidate = function () {
                             }
 
                             Swal.fire({
-                                text: "You have successfully Submitted",
+                                text: "Candidate successfully submitted",
                                 icon: "success",
                                 buttonsStyling: false,
                                 confirmButtonText: "Ok, got it!",
@@ -8185,44 +8201,6 @@ $(document).ready(function() {
             return $(span);
         }
 
-        $('#city_id').select2({
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-
-        $('#country').select2({
-            templateSelection: optionFormat,
-            templateResult: optionFormat
-        });
-
-        $('#country').change(function(){  
-   				var cid				=	$(this).val() ;
-          var cityId				=	"{{ (@$application->city_id) ? @$application->city_id : 0 }}"; 
-            if(cid == 101){
-              $('#city_id').show();	
-              $('#city').hide();	
-            }else{
-              $('#city').hide();	
-              $('#city_id').show();	
-            }
-              //route('service_company.job-applications.statelist',':cid') 
-              var url 			=	"{{ route('countrycitylist',':cid') }}";
-              url 				=	url.replace(':cid', cid);
-              $.ajax({
-                      type	: 'GET',
-                      url		: url,
-                      success	: function (response) {																		
-                                        $('#city_id').html(response.data);
-                                        setTimeout(() => {
-                                        if(cityId	>=1){
-                                          $('#city_id').val(cityId).change();
-                                        }
-                                      
-                                      }, 500);
-                                      }		
-              });
-        });
-        $('#country').trigger('change');
 			
    
    });

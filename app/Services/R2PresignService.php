@@ -35,10 +35,10 @@ class R2PresignService
     /**
      * @param  string $filename      Original filename from the browser
      * @param  string $contentType   MIME type (e.g. application/pdf)
-     * @param  int    $expirySeconds How long the URL stays valid (default 15 min)
+     * @param  int    $expirySeconds How long the URL stays valid (default 10 min)
      * @return array{upload_url: string, object_key: string, public_url: string, expires_in: int}
      */
-    public function generateUploadUrl(string $filename, string $contentType, int $expirySeconds = 900): array
+    public function generateUploadUrl(string $filename, string $contentType, int $expirySeconds = 600): array
     {
         $ext       = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
         $objectKey = 'temp/' . Str::uuid() . '.' . $ext;
