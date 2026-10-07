@@ -2786,7 +2786,6 @@ $(document).ready(function () {
         var currentParseStatus = $('#upDetailParserStatus').text();
         if (!currentParseStatus || currentParseStatus === 'Pending') {
             $('#upDetailParserStatus').html(
-                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
                 '<span>Parsing in Browser&hellip;</span>'
             );
         }
@@ -2853,20 +2852,21 @@ $(document).ready(function () {
         // PIPELINE 1: 100% In-Browser RAM / WASM Resume Parsing via parser.jero.works
         if (window.JeroBenchClientParser && typeof window.JeroBenchClientParser.parseAndPopulate === 'function') {
             $('#upDetailParserStatus').html(
-                '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
                 '<span>Parsing in Browser&hellip;</span>'
             );
             window.JeroBenchClientParser.parseAndPopulate(selectedFile, {
                 isEditMode: String(@json($page_event ?? '')).toUpperCase() === 'EDIT',
                 onProgress: function(stage, pct) {
+                    var display = (stage === 'Completed' || (stage && stage.indexOf('Building ATS JSON') !== -1) || pct >= 100)
+                        ? 'Completed'
+                        : ($('<div>').text(stage).html() + ' (' + pct + '%)');
                     $('#upDetailParserStatus').html(
-                        '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
-                        '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
+                        '<span>' + display + '</span>'
                     );
                 },
                 onSuccess: function(result, totalMs) {
                     $('#upDetailParserStatus').html(
-                        '<span style="color: #059669; font-weight: 700;">✓ Parsed in Browser (' + totalMs + 'ms)</span>'
+                        '<span style="color: #059669; font-weight: 700;">Completed</span>'
                     );
                     $('#upRetryWrap').hide();
                 },

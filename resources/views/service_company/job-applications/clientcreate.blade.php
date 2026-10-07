@@ -4920,7 +4920,6 @@ $(document).ready(function () {
         showUploadedCard(selectedFile, null);
 
         $('#upDetailParserStatus').html(
-            '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
             '<span>Parsing in browser&hellip;</span>'
         );
 
@@ -4935,15 +4934,17 @@ $(document).ready(function () {
                 isEditMode: IS_EDIT_MODE,
                 requiredSkills: reqSkills,
                 onProgress: function (stage, pct) {
+                    var display = (stage === 'Completed' || (stage && stage.indexOf('Building ATS JSON') !== -1) || pct >= 100)
+                        ? 'Completed'
+                        : ($('<div>').text(stage).html() + ' (' + pct + '%)');
                     $('#upDetailParserStatus').html(
-                        '<span class="spinner-border spinner-border-sm text-primary me-1" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>' +
-                        '<span>' + $('<div>').text(stage).html() + ' (' + pct + '%)</span>'
+                        '<span>' + display + '</span>'
                     );
                 },
                 onSuccess: function (result, totalMs) {
                     window._clientParserState = 'completed';
                     $('#upDetailParserStatus').html(
-                        '<span style="color: #41c08e; font-weight: 600;">✓ Parsed in ' + totalMs + 'ms</span>'
+                        '<span style="color: #41c08e; font-weight: 600;">Completed</span>'
                     );
                     toastr.success('Resume parsed in browser and fields populated!');
                 },
