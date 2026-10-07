@@ -520,7 +520,8 @@
             return parseResumeFn(selectedFile, {
                 requiredSkills: requiredSkills,
                 onProgress: function (stage, pct) {
-                    onProgress(stage, pct);
+                    var mappedStage = (stage && stage.indexOf('Building ATS JSON') !== -1) ? 'Completed' : stage;
+                    onProgress(mappedStage, pct);
                 }
             });
         })()

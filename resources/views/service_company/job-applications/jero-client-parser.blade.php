@@ -620,7 +620,8 @@
                 requiredSkills: requiredSkills,
                 onProgress: function (stage, pct) {
                     if (thisRunId === _currentParserRunId) {
-                        onProgress(stage, pct);
+                        var mappedStage = (stage && stage.indexOf('Building ATS JSON') !== -1) ? 'Completed' : stage;
+                        onProgress(mappedStage, pct);
                     }
                 }
             });
