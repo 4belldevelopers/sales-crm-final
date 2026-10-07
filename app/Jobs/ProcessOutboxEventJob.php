@@ -139,6 +139,10 @@ class ProcessOutboxEventJob implements ShouldQueue
 
         $payload = is_string($event->payload) ? json_decode($event->payload, true) : (array) $event->payload;
         $candidateId = (int) ($payload['candidate_id'] ?? $event->aggregate_id);
+        $correlationId = $payload['correlation_id'] ?? null;
+        if (! empty($correlationId)) {
+            Log::withContext(['correlation_id' => $correlationId]);
+        }
 
         try {
             switch ($event->event_type) {

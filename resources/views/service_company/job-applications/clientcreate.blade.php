@@ -3400,7 +3400,7 @@ select#gender {
             <div class="fs candidate-card additional-details-card addl-card addl-card--details">
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title d-flex align-items-center gap-2">
-                  <span class="candidate-card-icon candidate-card-icon--additional d-inline-flex align-items-center justify-content-center rounded-circle text-white" style="width: 28px; height: 28px; background: linear-gradient(135deg, #3B82F6, #1D4ED8); font-size: 13px;"><i class="fa-solid fa-passport"></i></span>
+                  <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-passport" aria-hidden="true"></i></span>
                   <div>
                     <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Visa Status & Work Authorization (Optional)</h3>
                     <small style="color: #64748b; font-size: 11.5px; font-weight: 400;">Specify legal right-to-work status and visa category for client submissions.</small>
@@ -7235,13 +7235,6 @@ var KTAddCandidate = function () {
                             // notEmpty:{ message: 'Skills is required'}
                           
                         }
-                    },
-                    'specialties':
-                    {
-                        validators:
-                        { notEmpty:{message: "Specialties is required"}
-                           
-                        }
                     }
                 },
                 plugins: {
@@ -7300,6 +7293,9 @@ var KTAddCandidate = function () {
                     $.ajax({
                         url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',
                         type 			: 'POST',
+                        headers     : {
+                            'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
+                        },
                         data 			: formData,
                         processData		: false,  	// tell jQuery not to process the data
                         contentType		: false,  	// tell jQuery not to set contentType
@@ -7355,8 +7351,48 @@ var KTAddCandidate = function () {
                             // Rotate client_submission_uuid for any subsequent submission
                             $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
 
+                            // Post-Success IndexedDB Mirror (0ms AppTracker Local Mirror)
+                            if (window.indexedDB) {
+                                try {
+                                    var idbReq = window.indexedDB.open('jero_ats_apptracker', 1);
+                                    idbReq.onupgradeneeded = function(e) {
+                                        var db = e.target.result;
+                                        if (!db.objectStoreNames.contains('candidates')) {
+                                            var store = db.createObjectStore('candidates', { keyPath: 'id' });
+                                            store.createIndex('job_id', 'job_id', { unique: false });
+                                            store.createIndex('search_index_status', 'search_index_status', { unique: false });
+                                        }
+                                    };
+                                    idbReq.onsuccess = function(e) {
+                                        var db = e.target.result;
+                                        if (db.objectStoreNames.contains('candidates')) {
+                                            var tx = db.transaction('candidates', 'readwrite');
+                                            var store = tx.objectStore('candidates');
+                                            var candId = response.candidate_id || (response.candidate ? response.candidate.id : null);
+                                            if (candId) {
+                                                store.put({
+                                                    id: parseInt(candId, 10),
+                                                    job_id: parseInt('{{ $jobId }}', 10) || (response.candidate ? response.candidate.job_id : null),
+                                                    full_name: response.candidate ? response.candidate.full_name : ($('input[name="full_name"]').val() || ''),
+                                                    email: response.candidate ? response.candidate.email : ($('input[name="email"]').val() || ''),
+                                                    phone: response.candidate ? response.candidate.phone : ($('input[name="phone"]').val() || ''),
+                                                    current_designation: response.candidate ? response.candidate.current_designation : ($('input[name="current_designation"]').val() || ''),
+                                                    current_company: response.candidate ? response.candidate.current_company : ($('input[name="current_company"]').val() || ''),
+                                                    ctc: response.candidate ? response.candidate.ctc : ($('input[name="ctc"]').val() || ''),
+                                                    search_index_status: 'PENDING',
+                                                    created_at: new Date().toISOString(),
+                                                    is_local_mirror: true
+                                                });
+                                            }
+                                        }
+                                    };
+                                } catch(idbErr) {
+                                    console.warn('IndexedDB mirror write skipped:', idbErr);
+                                }
+                            }
+
                             Swal.fire({
-                                text: "You have successfully Submitted",
+                                text: "Candidate successfully submitted",
                                 icon: "success",
                                 buttonsStyling: false,
                                 confirmButtonText: "Ok, got it!",

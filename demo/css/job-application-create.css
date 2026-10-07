@@ -2201,8 +2201,8 @@
 .job-candidate-create .recruiter-note-card .candidate-card-header {
     min-height: 76px !important;
     padding: 12px 20px !important;
-    border-bottom: 1px solid #f1dda0 !important;
-    background: linear-gradient(100deg, #fff9df 0%, #fffdf5 68%, #fff7d5 100%) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
 }
 
 .job-candidate-create .professional-links-card .candidate-card-icon,
@@ -2419,7 +2419,7 @@
     min-height: 38px !important;
     max-height: 38px !important;
     padding: 0 7px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 6px !important;
     color: #0f172a !important;
     background: #ffffff !important;
@@ -2560,7 +2560,7 @@
     height: 40px !important;
     min-height: 40px !important;
     padding-left: 35px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     background: #ffffff !important;
     font-size: 11px !important;
@@ -2597,7 +2597,7 @@
     align-items: stretch;
     width: 100%;
     overflow: hidden;
-    border: 1px solid #e3d69f;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     background: #ffffff;
 }
@@ -2708,7 +2708,7 @@
     height: 42px;
     min-height: 42px;
     padding: 0 36px 0 38px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     color: #071434 !important;
     background: #ffffff !important;
@@ -2721,7 +2721,7 @@
 .job-candidate-create .recruiter-note-card textarea#recruiter_note {
     min-height: 150px !important;
     padding: 12px !important;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     font-size: 11px !important;
     line-height: 1.55;
@@ -2729,15 +2729,15 @@
 
 .job-candidate-create .recruiter-note-card .cke {
     overflow: hidden;
-    border: 1px solid #e3d69f !important;
+    border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     box-shadow: none !important;
 }
 
 .job-candidate-create .recruiter-note-card .cke_top {
     padding: 6px 8px !important;
-    border-bottom: 1px solid #f0dda0 !important;
-    background: #fffaf0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
 }
 
 .job-candidate-create .recruiter-note-card .cke_contents {
@@ -2832,9 +2832,9 @@
     min-height: 70px;
     padding: 8px 14px !important;
     overflow: hidden;
-    border: 1px solid #f0e3b6;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    background: #fffdf5;
+    background: #ffffff;
     box-shadow: 0 5px 16px rgba(64, 72, 96, .06);
 }
 
