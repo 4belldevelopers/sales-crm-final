@@ -384,9 +384,10 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'stage_tab' => request('stage_tab'),
             ];
 
-            $versionKey = 'allcvtracker_version_user_'.$this->user->id;
-            $version = cache()->get($versionKey, 1);
-            $cacheKeySet = 'ats:allcvtracker:'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+            $userVersion = cache()->get('allcvtracker_version_user_'.$this->user->id, 1);
+            $tenantVersion = cache()->get('allcvtracker_version_company_'.$company_id, 1);
+            $version = $userVersion.'_'.$tenantVersion;
+            $cacheKeySet = 'ats:allcvtracker:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
             /* ----------------------------
             ⚡ Check DragonflyDB first
             ----------------------------- */
@@ -3589,6 +3590,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     now()->addMinutes(30),
                     ['ResponseContentDisposition' => 'attachment; filename="'.$customName.'"']
                 );
+
                 return redirect()->away($temporaryUrl);
             } catch (\Throwable $e) {
                 return redirect()->away('https://file.jero.works/'.$r2Key);
@@ -3597,7 +3599,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         if (file_exists(public_path($resume))) {
             return response()->file(public_path($resume), [
-                'Content-Disposition' => ($request->boolean('preview') ? 'inline' : 'attachment').'; filename="'.$customName.'"'
+                'Content-Disposition' => ($request->boolean('preview') ? 'inline' : 'attachment').'; filename="'.$customName.'"',
             ]);
         }
 
@@ -7326,7 +7328,6 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
         ]);
 
     }
-
 
     public function mass_mail_send(Request $request)
     {
