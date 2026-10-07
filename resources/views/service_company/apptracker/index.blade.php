@@ -4,100 +4,129 @@
     <link rel="stylesheet" href="{{ asset('css/apptracker/_skeleton.css') }}{{ TM_VERSION }}">
     <style>
         /* ==========================================================================
-           ENTERPRISE CANDIDATE ROW HIGHLIGHT & INTENT GLOW (LINEAR / STRIPE STYLE)
+           JERO ATS — JUST ADDED CANDIDATE HIGHLIGHT (YELLOW/AMBER ENTERPRISE DESIGN)
+           Semantic meaning: "NEW / RECENTLY ADDED"
+           Strictly separated from Success (Green), Warning (Amber/Orange system),
+           Error (Red), and Selected (Jero primary brand color).
            ========================================================================== */
-        @keyframes aptkRowPulseGlow {
-            0% {
-                box-shadow: inset 4px 0 0 0 #10b981, 0 2px 14px rgba(16, 185, 129, 0.12);
-            }
-            50% {
-                box-shadow: inset 5px 0 0 0 #059669, 0 4px 22px rgba(16, 185, 129, 0.24);
-            }
-            100% {
-                box-shadow: inset 4px 0 0 0 #10b981, 0 2px 14px rgba(16, 185, 129, 0.12);
-            }
+
+        /* 3. ROW HIGHLIGHT & 13. ZERO LAYOUT SHIFT:
+           Reserve 3px transparent left rail on all table rows so applying the
+           accent border causes zero pixel movement or layout shift. */
+        .table-custom-class tbody tr > td:first-child {
+            border-left: 3px solid transparent;
+            transition: border-left-color 0.8s ease-out;
         }
 
-        @keyframes aptkBadgeGlow {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
+        /* Row-level indicator:
+           - 3px solid #F4B400 left edge ONLY (no top, right, or bottom yellow borders)
+           - Extremely subtle warm-yellow tint: rgba(244, 180, 0, 0.025) (row still looks almost white)
+           - No glow, no pulse, no shimmer, no 3D, no gradients */
         tr.aptk-enterprise-highlight {
             position: relative !important;
             z-index: 2 !important;
-            animation: aptkRowPulseGlow 2.5s ease-in-out infinite !important;
         }
 
         tr.aptk-enterprise-highlight > td {
-            background: linear-gradient(90deg, rgba(236, 253, 245, 0.95) 0%, rgba(240, 253, 244, 0.75) 45%, rgba(255, 255, 255, 0.85) 100%) !important;
-            border-top: 1.5px solid #a7f3d0 !important;
-            border-bottom: 1.5px solid #a7f3d0 !important;
-            border-left: none !important;
-            border-right: none !important;
-            transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 1.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            background-color: rgba(244, 180, 0, 0.025) !important;
+            transition: background-color 0.8s ease-out, border-left-color 0.8s ease-out !important;
         }
 
         tr.aptk-enterprise-highlight > td:first-child {
-            border-left: 4px solid #10b981 !important;
-            border-top-left-radius: 8px !important;
-            border-bottom-left-radius: 8px !important;
+            border-left: 3px solid #F4B400 !important;
         }
 
-        tr.aptk-enterprise-highlight > td:last-child {
-            border-right: 1.5px solid #a7f3d0 !important;
-            border-top-right-radius: 8px !important;
-            border-bottom-right-radius: 8px !important;
+        /* 10. HOVER STATE:
+           Keep hover separate from JUST ADDED.
+           Normal hover: subtle neutral Jero hover (#f5f8fa).
+           Just Added + Hover: normal hover background + retain 3px yellow left rail.
+           Never create a stronger yellow background on hover. */
+        tr.aptk-enterprise-highlight:hover > td {
+            background-color: #f5f8fa !important;
         }
 
-        /* Smooth fade-out state */
-        tr.aptk-enterprise-highlight.aptk-highlight-fadeout {
-            animation: none !important;
-            box-shadow: none !important;
+        tr.aptk-enterprise-highlight:hover > td:first-child {
+            border-left: 3px solid #F4B400 !important;
         }
 
+        /* 11. SELECTED STATE:
+           Selected candidate must NOT use yellow.
+           Selected state takes precedence with Jero primary brand color. */
+        tr:has(.chk_list_item:checked) > td,
+        tr.selected > td {
+            background-color: #f1faff !important;
+        }
+
+        tr:has(.chk_list_item:checked) > td:first-child,
+        tr.selected > td:first-child {
+            border-left-color: #009ef7 !important;
+        }
+
+        /* 14. TEMPORARY STATE:
+           Smooth fade-out returning to normal candidate row. */
         tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td {
-            background: transparent !important;
-            border-color: #eff2f5 !important;
+            background-color: transparent !important;
         }
 
         tr.aptk-enterprise-highlight.aptk-highlight-fadeout > td:first-child {
-            border-left-color: #eff2f5 !important;
+            border-left-color: transparent !important;
         }
 
-        /* Enterprise Micro-Badge: "Just Added" with animated pulse dot */
+        /* 5. JUST ADDED BADGE & 15. TYPOGRAPHY:
+           Display: ● JUST ADDED next to the candidate name.
+           Background: #FFF8E1
+           Text: #9A6700
+           Border: 1px solid #F5D77A
+           Font: Poppins 10.5px, font-weight: 600, uppercase
+           Border radius: 11px
+           Padding: 3px 8px
+           Dot: 5px solid circle #F4B400
+           Compact, accessible (WCAG AA), non-intrusive */
+        @keyframes aptkBadgeFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-1px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .aptk-just-added-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
+            background: #FFF8E1;
+            color: #9A6700;
+            border: 1px solid #F5D77A;
+            border-radius: 11px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 10.5px;
+            font-weight: 600;
             line-height: 1;
-            padding: 2.5px 7px;
+            padding: 3px 8px;
             margin-left: 8px;
             vertical-align: middle;
             letter-spacing: 0.3px;
             text-transform: uppercase;
-            box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
-            animation: aptkBadgeGlow 2.2s ease-in-out infinite;
-            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+            box-shadow: none;
+            white-space: nowrap;
+            user-select: none;
+            animation: aptkBadgeFadeIn 0.25s ease-out;
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
 
         .aptk-just-added-badge .aptk-badge-dot {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
-            background-color: #059669;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+            background-color: #F4B400;
+            display: inline-block;
+            flex-shrink: 0;
         }
+
+        #send_email .modal-dialog {
             margin: .3rem auto !important;
         }
 
@@ -2324,28 +2353,49 @@
                 $('.aptk-just-added-badge').remove();
                 $('tr.aptk-enterprise-highlight').removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
 
-                // Apply sleek enterprise highlight
+                // Apply sleek yellow/amber enterprise highlight (3px left rail + subtle warm tint)
                 $targetRow.addClass('aptk-enterprise-highlight');
 
-                // Attach refined "Just Added" micro-badge next to candidate name
-                var $badge = $('<span class="aptk-just-added-badge"><span class="aptk-badge-dot"></span>Just Added</span>');
+                // Attach compact "● JUST ADDED" badge next to candidate name
+                var $badge = $('<span class="aptk-just-added-badge" role="status" aria-label="Just Added Candidate"><span class="aptk-badge-dot" aria-hidden="true"></span>JUST ADDED</span>');
                 var $nameContainer = $targetRow.find('td:nth-child(2) .d-flex.flex-column a:first');
                 if ($nameContainer.length > 0) {
                     $nameContainer.append($badge);
                 }
 
-                // Phase 1: Keep luminous highlight active for 3.5 seconds
-                setTimeout(function() {
-                    // Phase 2: Smooth 1.5s CSS fade-out transition
-                    $targetRow.addClass('aptk-highlight-fadeout');
-                    $badge.css({ opacity: 0, transform: 'scale(0.85)' });
+                // Section 12: Submission confirmation SUCCESS toast remains green
+                var rawCandName = $nameContainer.clone().children().remove().end().text().trim();
+                var displayCandName = rawCandName || 'Candidate';
+                if (typeof poolToast !== 'undefined' && poolToast.fire) {
+                    poolToast.fire({
+                        icon: 'success',
+                        title: 'Candidate submitted successfully',
+                        html: '<span class="text-gray-600 fs-7">' + $('<div>').text(displayCandName + ' has been added to the candidate list.').html() + '</span>'
+                    });
+                }
 
-                    // Phase 3: Cleanup classes and DOM badge after transition completes
+                // Section 14: Temporary state — dismiss when viewed/clicked or after short period (4s)
+                var highlightDismissed = false;
+                function dismissHighlight() {
+                    if (highlightDismissed) return;
+                    highlightDismissed = true;
+                    $targetRow.addClass('aptk-highlight-fadeout');
+                    $badge.css({ opacity: 0, transform: 'scale(0.95)' });
                     setTimeout(function() {
                         $targetRow.removeClass('aptk-enterprise-highlight aptk-highlight-fadeout');
                         $badge.remove();
-                    }, 1600);
-                }, 3500);
+                    }, 850);
+                }
+
+                // If candidate row is viewed/clicked, smoothly return to normal candidate row
+                $targetRow.one('click', function() {
+                    dismissHighlight();
+                });
+
+                // Auto-fadeout after short 4-second period
+                setTimeout(function() {
+                    dismissHighlight();
+                }, 4000);
 
                 var currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.delete('new_candidate_id');
