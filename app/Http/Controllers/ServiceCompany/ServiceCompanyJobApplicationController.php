@@ -3832,6 +3832,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'action' => 'redirect',
                 'url' => $redirectUrl,
                 'candidate_id' => (int) $jobApplication->id,
+                'search_index_status' => 'PENDING',
                 'candidate' => [
                     'id' => (int) $jobApplication->id,
                     'job_id' => (int) ($rawJobId ?: $jobApplication->job_id),
@@ -11642,6 +11643,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 } catch (\Throwable) {
                 }
             }
+
             return Reply::dataOnly(['status' => 'coinCheck', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
         }
 
@@ -11654,6 +11656,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 } catch (\Throwable) {
                 }
             }
+
             return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning', 'message' => 'Job not found.']);
         }
         $job_application_arr = [];
@@ -12306,6 +12309,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'action' => 'redirect',
                 'url' => $redirectUrl,
                 'candidate_id' => (int) $application_id,
+                'search_index_status' => 'PENDING',
                 'candidate' => [
                     'id' => (int) $application_id,
                     'job_id' => (int) ($rawJobId ?: $request->job_id),

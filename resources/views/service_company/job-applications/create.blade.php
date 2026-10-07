@@ -7720,7 +7720,7 @@ var KTAddCandidate = function () {
             closeCandidateRequiredFieldsModal();
             var $btn = $('#save-form');
             $btn.prop('disabled', true).addClass('disabled');
-            $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
+            $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving Candidate...');
             if (submitButton) {
                 submitButton.setAttribute('data-kt-indicator', 'on');
                 submitButton.disabled = true;
@@ -7780,45 +7780,19 @@ var KTAddCandidate = function () {
 
                     submitButton && submitButton.removeAttribute('data-kt-indicator');
 
-                    // Post-Success IndexedDB Mirror
-                    if (window.indexedDB) {
+                    // Definitive success: rotate client_submission_uuid for subsequent submissions
+                    $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+
+                    // Clear resume upload session & form state
+                    if (window.ResumePresign && typeof window.ResumePresign.cancelUpload === 'function') {
                         try {
-                            var idbReq = window.indexedDB.open('jero_ats_apptracker', 1);
-                            idbReq.onupgradeneeded = function(e) {
-                                var db = e.target.result;
-                                if (!db.objectStoreNames.contains('candidates')) {
-                                    var store = db.createObjectStore('candidates', { keyPath: 'id' });
-                                    store.createIndex('job_id', 'job_id', { unique: false });
-                                    store.createIndex('search_index_status', 'search_index_status', { unique: false });
-                                }
-                            };
-                            idbReq.onsuccess = function(e) {
-                                var db = e.target.result;
-                                if (db.objectStoreNames.contains('candidates')) {
-                                    var tx = db.transaction('candidates', 'readwrite');
-                                    var store = tx.objectStore('candidates');
-                                    var candId = response.candidate_id || (response.candidate ? response.candidate.id : null);
-                                    if (candId) {
-                                        store.put({
-                                            id: parseInt(candId, 10),
-                                            job_id: parseInt('{{ $jobId }}', 10) || (response.candidate ? response.candidate.job_id : null),
-                                            full_name: response.candidate ? response.candidate.full_name : ($('input[name="full_name"]').val() || ''),
-                                            email: response.candidate ? response.candidate.email : ($('input[name="email"]').val() || ''),
-                                            phone: response.candidate ? response.candidate.phone : ($('input[name="phone"]').val() || ''),
-                                            current_designation: response.candidate ? response.candidate.current_designation : ($('input[name="current_designation"]').val() || ''),
-                                            current_company: response.candidate ? response.candidate.current_company : ($('input[name="current_company"]').val() || ''),
-                                            ctc: response.candidate ? response.candidate.ctc : ($('input[name="ctc"]').val() || ''),
-                                            search_index_status: 'PENDING',
-                                            created_at: new Date().toISOString(),
-                                            is_local_mirror: true
-                                        });
-                                    }
-                                }
-                            };
-                        } catch(idbErr) {
-                            console.warn('IndexedDB mirror write skipped:', idbErr);
-                        }
+                            var ctxKey = typeof getUpContextKey === 'function' ? getUpContextKey() : undefined;
+                            window.ResumePresign.cancelUpload(ctxKey);
+                        } catch (e) {}
                     }
+                    $('#resume_session_uuid').val('');
+                    $('#uploaded_file_path').val('');
+                    $('#resume_original_name').val('');
 
                     var fallbackUrl = '{{ route('service_company.cvtracker.index') }}';
                     var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
@@ -7834,7 +7808,7 @@ var KTAddCandidate = function () {
                     }
 
                     Swal.fire({
-                        text: "Candidate successfully submitted",
+                        text: "Candidate successfully saved.",
                         icon: "success",
                         buttonsStyling: false,
                         confirmButtonText: "Ok, got it!",

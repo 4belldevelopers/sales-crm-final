@@ -2780,106 +2780,106 @@ END:VCALENDAR";
         /* Intent: Redis cache for job company logo (TTL 300s) to eliminate repeated joins and aggregations */
         return Cache::remember("job_company_details_logo:{$jobid}:{$company_id}", 300, function () use ($jobid, $company_id) {
             $logos = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.title',
-                'jobs.work_type',
-                'jobs.show_vendor',
-                'jobs.total_positions',
-                'jobs.priority',
-                'jobs.status',
-                'jobs.min_exp',
-                'jobs.max_exp',
-                'jobs.created_at',
-                'jobs.start_date',
-                'jobs.end_date',
-                'jobs.min_salary',
-                'jobs.max_salary',
-                'jobs.min_sal_mode',
-                'jobs.max_sal_mode',
-                'jobs.min_salary_currency',
-                'jobs.max_salary_currency',
-                'clients.name as clients_name',
-                'clients.logo_logical_path',
-                'clients.self_company',
-                'clients.company_id as client_company_id',
-                'companies.company_name',
-                'companies.logo',
-                DB::raw('COUNT(job_applications.id) as allCandidate'),
+                ->select(
+                    'jobs.id',
+                    'jobs.title',
+                    'jobs.work_type',
+                    'jobs.show_vendor',
+                    'jobs.total_positions',
+                    'jobs.priority',
+                    'jobs.status',
+                    'jobs.min_exp',
+                    'jobs.max_exp',
+                    'jobs.created_at',
+                    'jobs.start_date',
+                    'jobs.end_date',
+                    'jobs.min_salary',
+                    'jobs.max_salary',
+                    'jobs.min_sal_mode',
+                    'jobs.max_sal_mode',
+                    'jobs.min_salary_currency',
+                    'jobs.max_salary_currency',
+                    'clients.name as clients_name',
+                    'clients.logo_logical_path',
+                    'clients.self_company',
+                    'clients.company_id as client_company_id',
+                    'companies.company_name',
+                    'companies.logo',
+                    DB::raw('COUNT(job_applications.id) as allCandidate'),
 
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),       // MEANS COMPANY OWN UPLOAD APP
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
-                DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS Sourcing'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS Screening'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS Interview'),       // MEANS COMPANY OWN UPLOAD APP
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS Negotiation'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS Offered'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS Joined'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 7 THEN 1 ELSE 0 END) AS Rejected'),
+                    DB::raw('SUM(CASE WHEN job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS InReview'),
 
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
-                DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' THEN 1 ELSE 0 END) AS thirdparty_counter'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 8 THEN 1 ELSE 0 END) AS thirdparty_InReview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 1 THEN 1 ELSE 0 END) AS thirdparty_Sourcing'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 2 THEN 1 ELSE 0 END) AS thirdparty_Screening'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 3 THEN 1 ELSE 0 END) AS thirdparty_Interview'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 4 THEN 1 ELSE 0 END) AS thirdparty_Negotiation'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 5 THEN 1 ELSE 0 END) AS thirdparty_Offered'),
+                    DB::raw('SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 6 THEN 1 ELSE 0 END) AS thirdparty_Joined'),
 
-                DB::raw('SUM(
+                    DB::raw('SUM(
 				CASE 
 						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 7 THEN 1 
 						WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = '.$company_id.' AND job_applications.master_status_id = 9 THEN 1
 						ELSE 0 END
 			 ) AS thirdparty_Rejected'
-                ),
-                // DB::raw("SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = ".$company_id." AND job_applications.master_status_id = 9 THEN 1 ELSE 0 END) AS thirdparty_InReview_Rejected"),
+                    ),
+                    // DB::raw("SUM(CASE WHEN recommendation_relation.id > 0 AND job_applications.thirdparty_company_id = ".$company_id." AND job_applications.master_status_id = 9 THEN 1 ELSE 0 END) AS thirdparty_InReview_Rejected"),
 
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.from_company_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.to_company_id'
-            )
-            ->join('clients', 'clients.id', 'jobs.client_id')
-            ->join('companies', 'companies.id', 'jobs.company_id')
-            ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('jobs.id', '>', '0');
-        $row = $logos->where('jobs.id', $jobid)->first();
+                    'recommendation_relation.id as recommendation_id',
+                    'recommendation_relation.from_company_id',
+                    'recommendation_relation.final_status',
+                    'recommendation_relation.to_company_id'
+                )
+                ->join('clients', 'clients.id', 'jobs.client_id')
+                ->join('companies', 'companies.id', 'jobs.company_id')
+                ->leftJoin('add_job_wise_condidates as job_applications', 'job_applications.job_id', '=', 'jobs.id')
+                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                ->where('jobs.id', '>', '0');
+            $row = $logos->where('jobs.id', $jobid)->first();
 
-        $recommendation_id = '';
-        $recommendation_id = $row->recommendation_id;
-        $recommendation_text = '&nbsp;<i class="bi bi-house" style="color:#00CC00"></i>';
+            $recommendation_id = '';
+            $recommendation_id = $row->recommendation_id;
+            $recommendation_text = '&nbsp;<i class="bi bi-house" style="color:#00CC00"></i>';
 
-        $logo_path = '';
-        // $logo_path				=	url('img/client-default.png');
-        if (! empty($row->logo_logical_path)) {
-            $logo_path = @$row->logo_logical_path;
-            if (@$row->to_company_id == $company_id) {
-                $logo_path = @$row->logo;
+            $logo_path = '';
+            // $logo_path				=	url('img/client-default.png');
+            if (! empty($row->logo_logical_path)) {
+                $logo_path = @$row->logo_logical_path;
+                if (@$row->to_company_id == $company_id) {
+                    $logo_path = @$row->logo;
+                }
+
+                if ($row->thirdparty_counter > 0 && $recommendation_id > 0 && @$row->to_company_id == $company_id) {
+                    $logo_path = @$row->logo;
+                }
             }
 
-            if ($row->thirdparty_counter > 0 && $recommendation_id > 0 && @$row->to_company_id == $company_id) {
-                $logo_path = @$row->logo;
+            if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
+                $recommendation_text = '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
+                $profile_detail_class = 'client-show-detail';
+                $clients_name = ucwords(substr(@$row->company_name, 0, 15));
+
+                if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                    $logo_path = @$row->logo;
+                }
             }
-        }
 
-        if ($recommendation_id > 0 && @$row->to_company_id == $company_id) {
-            $recommendation_text = '&nbsp;<i style="color: #FF0000; font-weight:bold" class="fa fa-users" aria-hidden="true"></i>';
-            $profile_detail_class = 'client-show-detail';
-            $clients_name = ucwords(substr(@$row->company_name, 0, 15));
-
-            if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                $logo_path = @$row->logo;
+            if (@$row->self_company == 1) {
+                if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
+                    $logo_path = @$row->logo;
+                }
             }
-        }
 
-        if (@$row->self_company == 1) {
-            if (! empty(@$row->logo) && strlen(@$row->logo) > 10) {
-                $logo_path = @$row->logo;
-            }
-        }
-
-        return $logo_path;
+            return $logo_path;
         });
     }
 
@@ -4273,7 +4273,7 @@ END:VCALENDAR";
             $array = [];
             foreach ($currencies as $curr) {
                 $code = strtoupper(trim($curr->currency_code));
-                $html = $iconMap[$code] ?? ('<span class="fw-bold">' . e($curr->currency_symbol ?: $code) . ' </span>');
+                $html = $iconMap[$code] ?? ('<span class="fw-bold">'.e($curr->currency_symbol ?: $code).' </span>');
                 $array[$curr->getKey] = $html;
                 $array[$code] = $html;
             }
@@ -4312,9 +4312,6 @@ END:VCALENDAR";
      * Returns structured descriptive details for all global ATS trading currencies:
      * ISO code, full descriptive name, symbol, enterprise label (e.g. 'INR — Indian Rupee (₹)', 'USD — US Dollar ($)'),
      * and search keywords for Select2 instant autocomplete.
-     *
-     * @param string|null $code
-     * @return array
      */
     public static function currencyEnterpriseMeta(?string $code = null): array
     {
@@ -4663,13 +4660,11 @@ END:VCALENDAR";
 
     /**
      * Get enterprise formatted label for a currency code (e.g. 'USD — US Dollar ($)').
-     *
-     * @param string|null $code
-     * @return string
      */
     public static function currencyEnterpriseLabel(?string $code): string
     {
         $meta = self::currencyEnterpriseMeta($code);
+
         return $meta['label'] ?? ($code ?: 'INR');
     }
 
@@ -7464,8 +7459,7 @@ END:VCALENDAR";
      * Tenancy: Scoped strictly to the specified or authenticated company_id.
      * Scale: 0% MySQL/Elasticsearch read strain on warm page requests via 24h Redis caching.
      *
-     * @param int|null $company_id
-     * @return array
+     * @param  int|null  $company_id
      */
     public static function getTenantDefaultsPayload($company_id = null): array
     {
@@ -7529,7 +7523,7 @@ END:VCALENDAR";
                 'phone' => [
                     'iso' => $countryIso,
                     'calling_code' => (string) $callingCode,
-                    'dial_code' => '+' . ltrim((string) $callingCode, '+'),
+                    'dial_code' => '+'.ltrim((string) $callingCode, '+'),
                 ],
                 'country' => [
                     'id' => (int) $countryId,
@@ -8275,7 +8269,7 @@ END:VCALENDAR";
         // return ($totalCount) ? $totalCount : 0;
     }
 
-    public static function JobApplicationsAddEditUpload($getId, $companyIdOverride = null)
+    public static function JobApplicationsAddEditUpload($getId, $companyIdOverride = null, $refresh = false)
     {
         $response = '';
         $elasticService = app(ElasticService::class);
@@ -8696,7 +8690,7 @@ END:VCALENDAR";
             // }
 
             try {
-                $response = $elasticService->getClient()->update([
+                $updateParams = [
                     'index' => ELASTIC_CANDIDATES,
                     'id' => $wiseId,
                     'retry_on_conflict' => 5,
@@ -8854,7 +8848,11 @@ END:VCALENDAR";
                         'doc_as_upsert' => true,
                         'detect_noop' => false,
                     ],
-                ]);
+                ];
+                if (! empty($refresh)) {
+                    $updateParams['refresh'] = true;
+                }
+                $response = $elasticService->getClient()->update($updateParams);
 
                 self::addCompanyCandidate($application->company_id, $wiseId);
 
