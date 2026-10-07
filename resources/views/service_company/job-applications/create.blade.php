@@ -3086,7 +3086,6 @@
                         <strong id="candidateSalaryUsdEquivalentSummary">$0.00 / yr</strong>
                       </div>
                     </div>
-                    <input type="hidden" value="{{ @$application->percentage_hike }}" name="percentage_hike" id="percentage_hike" />
                     <div class="candidate-offer-field">
                       <strong>Offer in Hand</strong>
                       <div class="rg">
