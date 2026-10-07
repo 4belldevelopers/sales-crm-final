@@ -4286,7 +4286,302 @@ select#gender {
 <div class="mb-0">
     <label class="form-label">Solid background style</label>
     <input class="form-control form-control-solid" value="tag1, tag2, tag3" id="kt_tagify_2"/>
-</div>-->
+<!-- Enterprise Complete Required Fields Modal (Self-Contained Isolation) -->
+<style>
+.rf-modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 999999 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    animation: rfFadeIn 0.18s ease-out;
+}
+
+@keyframes rfFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes rfScaleIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.rf-modal-box {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 480px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    padding: 32px 30px 26px !important;
+    position: relative !important;
+    font-family: 'Poppins', sans-serif !important;
+    animation: rfScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-sizing: border-box !important;
+    margin: auto !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.rf-modal-close {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    border: none !important;
+    color: #64748b !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+    padding: 0 !important;
+}
+
+.rf-modal-close:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+.rf-modal-close svg {
+    stroke: currentColor !important;
+    transition: transform 0.15s ease !important;
+}
+
+.rf-modal-close:hover svg {
+    transform: rotate(90deg) !important;
+}
+
+.rf-warning-icon-wrap {
+    width: 64px !important;
+    height: 64px !important;
+    border-radius: 50% !important;
+    background: #fef9c3 !important;
+    border: 2px solid #facc15 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 auto 16px !important;
+}
+
+.rf-warning-icon {
+    font-size: 30px !important;
+    font-weight: 700 !important;
+    color: #ca8a04 !important;
+    line-height: 1 !important;
+    font-family: 'Poppins', sans-serif !important;
+}
+
+.rf-modal-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    text-align: center !important;
+    margin: 0 0 8px 0 !important;
+    line-height: 1.25 !important;
+}
+
+.rf-modal-desc {
+    font-size: 13.5px !important;
+    color: #64748b !important;
+    text-align: center !important;
+    line-height: 1.45 !important;
+    margin: 0 auto 22px !important;
+    max-width: 360px !important;
+}
+
+.rf-section-header {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.6px !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    text-align: left !important;
+    margin-bottom: 10px !important;
+}
+
+.rf-fields-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    max-height: 240px !important;
+    overflow-y: auto !important;
+    padding-right: 4px !important;
+    margin-bottom: 12px !important;
+}
+
+.rf-field-row {
+    background: #fef2f2 !important;
+    border: 1px solid #fee2e2 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
+.rf-field-row:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+    transform: translateY(-1px) !important;
+}
+
+.rf-field-row-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-width: 0 !important;
+}
+
+.rf-field-badge {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+}
+
+.rf-field-name {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.rf-field-chevron {
+    color: #64748b !important;
+    font-size: 12px !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
+    stroke: currentColor !important;
+    transition: transform 0.15s ease, color 0.15s ease !important;
+}
+
+.rf-field-row:hover .rf-field-chevron {
+    color: #0f172a !important;
+    transform: translateX(2px) !important;
+}
+
+.rf-helper-text {
+    font-size: 12px !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 20px !important;
+    text-align: left !important;
+}
+
+.rf-helper-text svg {
+    font-size: 13px !important;
+    color: #64748b !important;
+    stroke: currentColor !important;
+    flex-shrink: 0 !important;
+}
+
+.rf-cta-btn {
+    width: 100% !important;
+    height: 44px !important;
+    background: #1b84ff !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, transform 0.1s ease !important;
+}
+
+.rf-cta-btn:hover {
+    background: #1570ef !important;
+}
+
+.rf-cta-btn:active {
+    transform: scale(0.99) !important;
+}
+
+.field-attention-highlight {
+    outline: 2px solid #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease-in-out !important;
+    background-color: rgba(239, 246, 255, 0.4) !important;
+}
+</style>
+
+<div id="requiredFieldsModal" class="rf-modal-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:999999;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;" role="dialog" aria-modal="true" aria-labelledby="rfModalTitle">
+    <div class="rf-modal-box" style="background:#ffffff;border-radius:16px;width:100%;max-width:480px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25),0 10px 15px -3px rgba(0,0,0,0.1);padding:32px 30px 26px;position:relative;font-family:'Poppins',sans-serif;box-sizing:border-box;margin:auto;border:1px solid #e2e8f0;">
+        <button type="button" class="rf-modal-close" id="rfModalClose" aria-label="Close modal" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:#f1f5f9;border:none;color:#64748b;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <!-- Warning Icon -->
+        <div class="rf-warning-icon-wrap" aria-hidden="true" style="width:64px;height:64px;border-radius:50%;background:#fef9c3;border:2px solid #facc15;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <span class="rf-warning-icon" style="font-size:30px;font-weight:700;color:#ca8a04;line-height:1;font-family:'Poppins',sans-serif;">!</span>
+        </div>
+
+        <!-- Title -->
+        <h3 class="rf-modal-title" id="rfModalTitle" style="font-size:20px;font-weight:700;color:#0f172a;text-align:center;margin:0 0 8px 0;line-height:1.25;">Complete Required Fields</h3>
+
+        <!-- Description -->
+        <p class="rf-modal-desc" id="rfModalDesc" style="font-size:13.5px;color:#64748b;text-align:center;line-height:1.45;margin:0 auto 22px;max-width:360px;">
+            <span id="rfMissingCountText">3 required fields</span> need your attention before you can submit this candidate.
+        </p>
+
+        <!-- Section Heading -->
+        <div class="rf-section-header" style="font-size:11px;font-weight:700;letter-spacing:0.6px;color:#64748b;text-transform:uppercase;text-align:left;margin-bottom:10px;">REQUIRED FIELDS</div>
+
+        <!-- Interactive Fields List -->
+        <div class="rf-fields-list" id="rfFieldsList" style="display:flex;flex-direction:column;gap:8px;max-height:240px;overflow-y:auto;padding-right:4px;margin-bottom:12px;">
+        </div>
+
+        <!-- Helper text -->
+        <div class="rf-helper-text" style="font-size:12px;color:#64748b;display:flex;align-items:center;gap:6px;margin-bottom:20px;text-align:left;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Click a field above to jump directly to it.</span>
+        </div>
+
+        <!-- Primary CTA -->
+        <button type="button" class="rf-cta-btn" id="rfPrimaryCta" style="width:100%;height:44px;background:#1b84ff;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:'Poppins',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+            <span>Review Required Fields</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+    </div>
+</div>
+
 @endsection
 
 @php
@@ -7045,195 +7340,396 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 @endif
 
 <script>
-   $(document).ready(function(){
+// Reliable in-browser network connectivity check without external 3rd-party latency/blocking
+async function isInternetAvailable() {
+    if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+        return Boolean(navigator.onLine);
+    }
+    return true;
+}
+
+// Candidate Required Fields Config and Modal Navigation (Global Scope for Add & Edit)
+var candidateFieldConfigMap = {
+    'resume': {
+        label: 'Upload Resume',
+        selector: '#uploadBox',
+        message: 'Please upload a resume file (PDF or Word).'
+    },
+    'full_name': {
+        label: 'Full Name',
+        selector: '#full_name',
+        message: 'Candidate full name is required.'
+    },
+    'email': {
+        label: 'Primary Email',
+        selector: '#email',
+        message: 'A valid primary email address is required.'
+    },
+    'phone': {
+        label: 'Primary Contact Number',
+        selector: '#phone',
+        message: 'A valid primary mobile number is required.'
+    },
+    'kt_tagify_work_location': {
+        label: 'Current Location',
+        selector: '#jero-cs-location',
+        message: 'Current location is required.'
+    },
+    'qualification': {
+        label: 'Highest Qualification',
+        selector: '#qualification',
+        message: 'Highest qualification is required.'
+    },
+    'nationality': {
+        label: 'Nationality',
+        selector: '#nationality',
+        message: 'Nationality is required.'
+    },
+    'gender': {
+        label: 'Gender',
+        selector: '#gender',
+        message: 'Gender is required.'
+    },
+    'current_company': {
+        label: 'Current Company',
+        selector: '#current_company',
+        message: 'Current company is required.'
+    },
+    'current_designation': {
+        label: 'Current Designation',
+        selector: '#current_designation',
+        message: 'Current designation is required.'
+    },
+    'employmentType': {
+        label: 'Employment Type',
+        selector: '#EmploymentType',
+        message: 'Employment type is required.'
+    },
+    'total_exp': {
+        label: 'Total Experience',
+        selector: '#total_exp_year',
+        message: 'Total experience is required.'
+    },
+    'rel_exp': {
+        label: 'Relevant Experience',
+        selector: '#rel_exp_year',
+        message: 'Relevant experience is required.'
+    },
+    'skills': {
+        label: 'Primary Skills',
+        selector: '#kt_tagify_2',
+        message: 'Primary skills are required.'
+    }
+};
+
+function detectCandidateMissingFields(formEl, validatorInstance) {
+    var missing = [];
+    var seenKeys = {};
+
+    function addMissing(key, customLabel, customSelector, customMessage) {
+        if (!seenKeys[key]) {
+            seenKeys[key] = true;
+            var cfg = candidateFieldConfigMap[key] || {};
+            missing.push({
+                key: key,
+                label: customLabel || cfg.label || key,
+                selector: customSelector || cfg.selector || ('#' + key),
+                message: customMessage || cfg.message || ((customLabel || cfg.label || key) + ' is required.')
+            });
+        }
+    }
+
+    // 1. Resume check
+    var hasResume = false;
+    if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
+        ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
+        ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
+        hasResume = true;
+    } else {
+        var ri = document.getElementById('resume');
+        if (ri && ri.files && ri.files.length > 0) {
+            hasResume = true;
+        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+            hasResume = true;
+        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+            hasResume = true;
+        }
+    }
+    if (!hasResume) {
+        addMissing('resume');
+    }
+
+    // 2. Full Name
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn || fn.length < 2) addMissing('full_name');
+
+    // 3. Email
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
+
+    // 4. Phone
+    var ph = ($('#phone').val() || '').trim();
+    if (!ph || ph.length < 6) addMissing('phone');
+
+    // 5. Current Location
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    var canonLoc = ($('#location_canonical_label').val() || '').trim();
+    var cityId = ($('#location_city_id').val() || '').trim();
+    if (!loc && !canonLoc && !cityId) {
+        addMissing('kt_tagify_work_location');
+        $('#jero-cs-location').addClass('has-validation-error');
+        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
+    }
+
+    // 6. Current Designation
+    var cd = ($('#current_designation').val() || '').trim();
+    if (!cd) addMissing('current_designation');
+
+    // 7. Current Company
+    var cc = ($('#current_company').val() || '').trim();
+    if (!cc) addMissing('current_company');
+
+    // 8. Employment Type
+    var et = ($('#EmploymentType').val() || '').trim();
+    if (!et) addMissing('employmentType');
+
+    // 9. Total Exp
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp');
+
+    // 10. Rel Exp
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
+
+    // 11. Highest Qualification
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification');
+
+    // 12. Primary Skills
+    var sk = ($('#kt_tagify_2').val() || '').trim();
+    if (!sk) addMissing('skills');
+
+    // 13. Nationality
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality');
+
+    // 14. Gender
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender');
+
+    return missing;
+}
+
+function jumpToCandidateField(fieldKey) {
+    closeCandidateRequiredFieldsModal();
+
+    var cfg = candidateFieldConfigMap[fieldKey];
+    var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
+    if (!targetEl) {
+        targetEl = document.querySelector('[name="' + fieldKey + '"]');
+    }
+
+    if (targetEl) {
+        var parentDetails = targetEl.closest('details');
+        if (parentDetails && !parentDetails.open) {
+            parentDetails.open = true;
+        }
+
+        var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs, .candidate-card') || targetEl;
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .candidate-card, .candidate-field-control') || targetEl;
+        $(highlightEl).addClass('field-attention-highlight');
+        setTimeout(function () {
+            $(highlightEl).removeClass('field-attention-highlight');
+        }, 3000);
+
+        setTimeout(function () {
+            if (fieldKey === 'resume') {
+                var btn = document.querySelector('#chooseFileBtn') || targetEl;
+                if (btn && typeof btn.focus === 'function') btn.focus();
+            } else if (fieldKey === 'kt_tagify_work_location') {
+                var csLocTrigger = document.querySelector('#jero-cs-location .jero-cs-trigger');
+                if (csLocTrigger && typeof csLocTrigger.focus === 'function') {
+                    csLocTrigger.focus();
+                    csLocTrigger.click();
+                } else if (typeof targetEl.focus === 'function') {
+                    targetEl.focus();
+                }
+            } else if (fieldKey === 'skills') {
+                var container = targetEl.closest('.candidate-field-control, .candidate-card-body');
+                var tagifyInput = container ? container.querySelector('.tagify__input') : null;
+                if (tagifyInput && typeof tagifyInput.focus === 'function') tagifyInput.focus();
+            } else if (fieldKey === 'qualification') {
+                var csTrigger = document.querySelector('#jero-cs-qualification .jero-cs-trigger');
+                if (csTrigger && typeof csTrigger.focus === 'function') {
+                    csTrigger.focus();
+                } else if (typeof targetEl.focus === 'function') {
+                    targetEl.focus();
+                }
+            } else if (fieldKey === 'nationality') {
+                var csNatTrigger = document.querySelector('#jero-cs-nationality .jero-cs-trigger');
+                if (csNatTrigger && typeof csNatTrigger.focus === 'function') {
+                    csNatTrigger.focus();
+                } else if (typeof targetEl.focus === 'function') {
+                    targetEl.focus();
+                }
+            } else if (typeof targetEl.focus === 'function') {
+                targetEl.focus();
+            }
+        }, 350);
+    }
+}
+
+function showCandidateRequiredFieldsModal(missingFields) {
+    if (!missingFields || !missingFields.length) {
+        missingFields = [
+            { key: 'full_name', label: 'Full Name' },
+            { key: 'kt_tagify_work_location', label: 'Current Location' }
+        ];
+    }
+
+    window.__currentMissingFields = missingFields;
+
+    var count = missingFields.length;
+    var countText = count === 1 ? '1 required field' : (count + ' required fields');
+    var descText = countText + ' need' + (count === 1 ? 's' : '') + ' your attention before you can submit this candidate.';
+
+    $('#rfMissingCountText').text(countText);
+    $('#rfModalDesc').text(descText);
+
+    var $list = $('#rfFieldsList');
+    $list.empty();
+
+    missingFields.forEach(function (f) {
+        var rowHtml = '<div class="rf-field-row" role="button" tabindex="0" data-field-key="' + f.key + '" aria-label="Go to ' + f.label + '" style="background:#fef2f2;border:1px solid #fee2e2;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px;">'
+            + '<div class="rf-field-row-left" style="display:flex;align-items:center;gap:12px;min-width:0;">'
+            + '<span class="rf-field-badge" aria-hidden="true" style="width:20px;height:20px;border-radius:50%;background:#ef4444;color:#ffffff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">!</span>'
+            + '<span class="rf-field-name" style="font-size:13.5px;font-weight:600;color:#0f172a;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + $('<div>').text(f.label).html() + '</span>'
+            + '</div>'
+            + '<svg class="rf-field-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+            + '</div>';
+        $list.append(rowHtml);
+    });
+
+    var $modal = $('#requiredFieldsModal');
+    $modal.css('display', 'flex').hide().fadeIn(150, function () {
+        $('#rfPrimaryCta').focus();
+    });
+}
+
+function closeCandidateRequiredFieldsModal() {
+    $('#requiredFieldsModal').fadeOut(120, function () {
+        $(this).css('display', 'none');
+    });
+}
+
+// Modal event listeners
+$(document).off('click', '#rfModalClose').on('click', '#rfModalClose', function (e) {
+    e.preventDefault();
+    closeCandidateRequiredFieldsModal();
+});
+
+$(document).off('click', '#requiredFieldsModal').on('click', '#requiredFieldsModal', function (e) {
+    if (e.target === this) {
+        closeCandidateRequiredFieldsModal();
+    }
+});
+
+$(document).off('keydown.rfModal').on('keydown.rfModal', function (e) {
+    if (e.key === 'Escape' && $('#requiredFieldsModal').is(':visible')) {
+        closeCandidateRequiredFieldsModal();
+    }
+});
+
+$(document).off('click', '.rf-field-row').on('click', '.rf-field-row', function (e) {
+    e.preventDefault();
+    var key = $(this).data('field-key');
+    if (key) {
+        jumpToCandidateField(key);
+    }
+});
+
+$(document).off('keydown', '.rf-field-row').on('keydown', '.rf-field-row', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var key = $(this).data('field-key');
+        if (key) {
+            jumpToCandidateField(key);
+        }
+    }
+});
+
+$(document).off('click', '#rfPrimaryCta').on('click', '#rfPrimaryCta', function (e) {
+    e.preventDefault();
+    if (window.__currentMissingFields && window.__currentMissingFields.length > 0) {
+        jumpToCandidateField(window.__currentMissingFields[0].key);
+    } else {
+        closeCandidateRequiredFieldsModal();
+    }
+});
 
 var KTAddCandidate = function () {
     var form;
     var submitButton;
     var validator;
+    var isInitialized = false;
 
-    
-    var handleForm = function (e) {
-       
+    var handleForm = function () {
         validator = FormValidation.formValidation(
             form,
             {
                 fields: {
-                    
-					'resume':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: "Resume is required"}
-                            
-                        }
-                    },
-					
-                    'full_name':
-                    {
-                        validators:
-                        {
-                            notEmpty:{message: "Full name is required"},
-                            stringLength:{min: 2, max: 191, message: "Full name must be between 2 and 191 characters"},
-                            regexp:{
+                    'full_name': {
+                        validators: {
+                            notEmpty: { message: "Full name is required" },
+                            stringLength: { min: 2, max: 191, message: "Full name must be between 2 and 191 characters" },
+                            regexp: {
                                 regexp: /^[a-zA-Z\u00C0-\u024F\u1E00-\u1EFF\s\.\'\-]+$/,
                                 message: 'Full name can only contain letters, spaces, hyphens, dots and apostrophes'
                             }
                         }
                     },
-					
-                    'current_designation':
-                    {
-                        validators:
-                        {
-                            notEmpty:{ message: "Current designation is required"}
-                           
+                    'current_designation': {
+                        validators: {
+                            notEmpty: { message: "Current designation is required" }
                         }
                     },
-					
-                    'current_company':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{ message: "Current company is required"}
-                            
+                    'current_company': {
+                        validators: {
+                            notEmpty: { message: "Current company is required" }
                         }
                     },
-					
-                    'phone':
-                    {
-                        validators:
-                        {
-                            notEmpty:{message: "Primary number is required"},
-                            digits:{ message: "Primary number must contain only digits"},
-                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
-                            
+                    'phone': {
+                        validators: {
+                            notEmpty: { message: "Primary number is required" },
+                            digits: { message: "Primary number must contain only digits" },
+                            stringLength: { min: 6, max: 15, message: "Please enter a valid mobile number" }
                         }
                     },
-                    
-                    'secondary_mobile':
-                    {
-                        validators:
-                        {
-                            digits:{ message: "Secondary number must contain only digits"},
-                            stringLength:{ min: 6, max: 15, message: "Please enter a valid mobile number"}
-                            
+                    'secondary_mobile': {
+                        validators: {
+                            digits: { message: "Secondary number must contain only digits" },
+                            stringLength: { min: 6, max: 15, message: "Please enter a valid mobile number" }
                         }
                     },
-					
-                    'email':
-                    {
-                        validators:
-                        {
-                            notEmpty:{message: "Primary Email is required"},
-                            emailAddress:{message: 'The value is not a valid email address'},
-                            stringLength:{max: 191, message: "Email must not exceed 191 characters"}
+                    'email': {
+                        validators: {
+                            notEmpty: { message: "Primary Email is required" },
+                            emailAddress: { message: 'The value is not a valid email address' },
+                            stringLength: { max: 191, message: "Email must not exceed 191 characters" }
                         }
                     },
-                    
-                    'secondrary_email':
-                    {
-                        validators:
-                        {
-                            emailAddress:{message: 'The value is not a valid email address'},
-                            stringLength:{max: 55, message: "Secondary email must not exceed 55 characters"},
-                            different:{
+                    'secondrary_email': {
+                        validators: {
+                            emailAddress: { message: 'The value is not a valid email address' },
+                            stringLength: { max: 55, message: "Secondary email must not exceed 55 characters" },
+                            different: {
                                 compare: function() {
                                     return form.querySelector('[name="email"]') ? form.querySelector('[name="email"]').value : '';
                                 },
                                 message: 'Secondary email cannot be the same as primary email'
                             }
-                        }
-                    },
-					
-                    'qualification':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: 'Qualification Name is required'}
-                           
-                        }
-                    },
-					
-                    'total_exp':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message:"Total Experience is required"},                           
-                        }
-                    },
-					
-                    'rel_exp':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{ message:"Relevant Experience is required"}
-                           
-                        }
-                    },
-					
-                    'ctc':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{ message: "Current CTC is required"}
-                            
-                        }
-                    },
-					
-                    'ectc':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: "Exp. CTC is required"}
-                            
-                        }
-                    },
-					
-                    // 'percentage_hike':
-                    // {
-                    //     validators:
-                    //     {
-                    //         // notEmpty:{ message: "Hike is required"},                          
-                    //         digits:{message: "Hike must contain digits"}
-                    //         // stringLength:{ min: 1,	max: 2,	message: "Hike contain 2 digit"}
-                          
-                    //     }
-                    // },
-					
-                    'country':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: "Country is required"}
-                        }
-                    },
-					
-                    'state':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: "State is required"}
-                           
-                        }
-                    },
-					
-                    'pincode':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{message: "Pincode is required"},                           
-                            digits:{message: "Pincode must contain digits"},
-                            stringLength:{ min: 1,	max: 1,	message: ""}
-                           
-                        }    
-                    },                    
-                    'skills':
-                    {
-                        validators:
-                        {
-                            // notEmpty:{ message: 'Skills is required'}
-                          
                         }
                     }
                 },
@@ -7246,241 +7742,319 @@ var KTAddCandidate = function () {
             }
         );
 
-       
-        submitButton.addEventListener('click', async function (e) {
-           
-            e.preventDefault();
-            if (submitButton.disabled) {
-                return; // Prevent duplicate submission
-            }
-            
-             const connected = await isInternetAvailable();
-              if (!connected) {
-                  Swal.fire({
-                      title: "No Internet",
-                      text: "You are currently offline or the server is unreachable.",
-                      icon: "warning",
-                      confirmButtonText: "Ok, got it!",
-                      customClass: {
-                          confirmButton: "btn btn-warning"
-                      }
-                  });
-                  return; // ⛔ STOP EXECUTION
-              }
+        window.benchFormValidator = validator;
 
-            validator.validate().then(function (status) {
-                if (status == 'Valid') {
-                    // Ensure unique client_submission_uuid for idempotency
-                    if (!$('#client_submission_uuid').val()) {
-                        $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+        var executeCandidateSubmit = function () {
+            window.__candidateIsSubmitting = true;
+            closeCandidateRequiredFieldsModal();
+            var $btn = $('#save-form, #update-form');
+            $btn.prop('disabled', true).addClass('disabled');
+            $btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Waiting...');
+            if (submitButton) {
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+            }
+
+            if (typeof compileEvaluationMatrix === 'function') {
+                compileEvaluationMatrix();
+            }
+
+            // Ensure unique client_submission_uuid for idempotency
+            if (!$('#client_submission_uuid').val()) {
+                $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+            }
+
+            var formData = new FormData($('#createForm')[0]);
+            // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
+            if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
+                if (formData.delete) { formData.delete('resume'); }
+            }
+
+            $.ajax({
+                url: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',
+                type: 'POST',
+                headers: {
+                    'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                redirect: true,
+                success: function (response) {
+                    if (typeof response === 'string') {
+                        try { response = JSON.parse(response); } catch (e) {}
                     }
 
-                    $("#save-form, #update-form").prop("disabled", true);
-                    $("#save-form, #update-form").html(
-                        `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...`
-                    );
+                    if (response.status == 'coinCheck') {
+                        window.__candidateIsSubmitting = false;
+                        $btn.prop("disabled", false).removeClass('disabled').html("Submit Candidate");
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
+                        Swal.fire("Notice", response.message , "warning");
+                        return false;
+                    }
+
+                    if (response.status == 'mailcheck') {
+                        window.__candidateIsSubmitting = false;
+                        $btn.prop("disabled", false).removeClass('disabled').html("Submit Candidate");
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
+                        Swal.fire("Warning", response.message , "warning");
+                        return false;
+                    }
+
+                    if (response.status && response.status !== 'success' && response.status !== 'mailcheck' && response.status !== 'coinCheck' && response.status !== true) {
+                        window.__candidateIsSubmitting = false;
+                        $btn.prop("disabled", false).removeClass('disabled').html("Submit Candidate");
+                        if (submitButton) {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+                        }
+                        Swal.fire("Submission Failed", response.message || "The candidate could not be saved. Please try again.", "error");
+                        return false;
+                    }
+
                     if (submitButton) {
-                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.removeAttribute('data-kt-indicator');
                         submitButton.disabled = true;
                     }
 
-                    if (typeof compileEvaluationMatrix === 'function') { compileEvaluationMatrix(); }
-                    var formData = new FormData($('#createForm')[0]);
-                    // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
-                    if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
-                        if (formData.delete) { formData.delete('resume'); }
-                    }
-                    $.ajax({
-                        url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',
-                        type 			: 'POST',
-                        headers     : {
-                            'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
-                        },
-                        data 			: formData,
-                        processData		: false,  	// tell jQuery not to process the data
-                        contentType		: false,  	// tell jQuery not to set contentType
-                        redirect			: true,
-                        success			: function (response) {
-                            if(response.status == 'coinCheck'){
-                                $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
-                                if (submitButton) {
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                }
-                                Swal.fire("Success", response.message , "warning");
-                                return false;
-                            }
+                    // Rotate client_submission_uuid for any subsequent submission
+                    $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
 
-                            if(response.status == 'mailcheck'){
-                                if (!navigator.onLine) {
-                                    Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                    $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
-                                    if (submitButton) {
-                                        submitButton.removeAttribute('data-kt-indicator');
-                                        submitButton.disabled = false;
+                    // Post-Success IndexedDB Mirror (0ms AppTracker Local Mirror)
+                    if (window.indexedDB) {
+                        try {
+                            var idbReq = window.indexedDB.open('jero_ats_apptracker', 1);
+                            idbReq.onupgradeneeded = function(e) {
+                                var db = e.target.result;
+                                if (!db.objectStoreNames.contains('candidates')) {
+                                    var store = db.createObjectStore('candidates', { keyPath: 'id' });
+                                    store.createIndex('job_id', 'job_id', { unique: false });
+                                    store.createIndex('search_index_status', 'search_index_status', { unique: false });
+                                }
+                            };
+                            idbReq.onsuccess = function(e) {
+                                var db = e.target.result;
+                                if (db.objectStoreNames.contains('candidates')) {
+                                    var tx = db.transaction('candidates', 'readwrite');
+                                    var store = tx.objectStore('candidates');
+                                    var candId = response.candidate_id || (response.candidate ? response.candidate.id : null);
+                                    if (candId) {
+                                        store.put({
+                                            id: parseInt(candId, 10),
+                                            job_id: parseInt('{{ $jobId }}', 10) || (response.candidate ? response.candidate.job_id : null),
+                                            full_name: response.candidate ? response.candidate.full_name : ($('input[name="full_name"]').val() || ''),
+                                            email: response.candidate ? response.candidate.email : ($('input[name="email"]').val() || ''),
+                                            phone: response.candidate ? response.candidate.phone : ($('input[name="phone"]').val() || ''),
+                                            current_designation: response.candidate ? response.candidate.current_designation : ($('input[name="current_designation"]').val() || ''),
+                                            current_company: response.candidate ? response.candidate.current_company : ($('input[name="current_company"]').val() || ''),
+                                            ctc: response.candidate ? response.candidate.ctc : ($('input[name="ctc"]').val() || ''),
+                                            search_index_status: 'PENDING',
+                                            created_at: new Date().toISOString(),
+                                            is_local_mirror: true
+                                        });
                                     }
-                                    return;
                                 }
-
-                                $("#save-form, #update-form").prop("disabled", false).html(`Submit Candidate`);
-                                if (submitButton) {
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                }
-                                Swal.fire("Success", response.message , "warning");
-                                return false;
-                            }
-
-                            if (submitButton) {
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = true;
-                            }
-
-                            var fallbackUrl = '{{ route("service_company.cvtracker.index") }}';
-                            var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
-                            var formRedirected = false;
-                            function executeFormRedirect() {
-                                if (formRedirected) return;
-                                formRedirected = true;
-                                if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
-                                if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
-                                $(document).trigger('jero-candidate-saved');
-                                window.location.assign(targetUrl);
-                            }
-
-                            // Rotate client_submission_uuid for any subsequent submission
-                            $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
-
-                            // Post-Success IndexedDB Mirror (0ms AppTracker Local Mirror)
-                            if (window.indexedDB) {
-                                try {
-                                    var idbReq = window.indexedDB.open('jero_ats_apptracker', 1);
-                                    idbReq.onupgradeneeded = function(e) {
-                                        var db = e.target.result;
-                                        if (!db.objectStoreNames.contains('candidates')) {
-                                            var store = db.createObjectStore('candidates', { keyPath: 'id' });
-                                            store.createIndex('job_id', 'job_id', { unique: false });
-                                            store.createIndex('search_index_status', 'search_index_status', { unique: false });
-                                        }
-                                    };
-                                    idbReq.onsuccess = function(e) {
-                                        var db = e.target.result;
-                                        if (db.objectStoreNames.contains('candidates')) {
-                                            var tx = db.transaction('candidates', 'readwrite');
-                                            var store = tx.objectStore('candidates');
-                                            var candId = response.candidate_id || (response.candidate ? response.candidate.id : null);
-                                            if (candId) {
-                                                store.put({
-                                                    id: parseInt(candId, 10),
-                                                    job_id: parseInt('{{ $jobId }}', 10) || (response.candidate ? response.candidate.job_id : null),
-                                                    full_name: response.candidate ? response.candidate.full_name : ($('input[name="full_name"]').val() || ''),
-                                                    email: response.candidate ? response.candidate.email : ($('input[name="email"]').val() || ''),
-                                                    phone: response.candidate ? response.candidate.phone : ($('input[name="phone"]').val() || ''),
-                                                    current_designation: response.candidate ? response.candidate.current_designation : ($('input[name="current_designation"]').val() || ''),
-                                                    current_company: response.candidate ? response.candidate.current_company : ($('input[name="current_company"]').val() || ''),
-                                                    ctc: response.candidate ? response.candidate.ctc : ($('input[name="ctc"]').val() || ''),
-                                                    search_index_status: 'PENDING',
-                                                    created_at: new Date().toISOString(),
-                                                    is_local_mirror: true
-                                                });
-                                            }
-                                        }
-                                    };
-                                } catch(idbErr) {
-                                    console.warn('IndexedDB mirror write skipped:', idbErr);
-                                }
-                            }
-
-                            Swal.fire({
-                                text: "Candidate successfully submitted",
-                                icon: "success",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, got it!",
-                                customClass: { confirmButton: "btn btn-primary" },
-                                timer: 2000,
-                                timerProgressBar: true
-                            }).then(function () {
-                                executeFormRedirect();
-                            });
-
-                            setTimeout(executeFormRedirect, 2200);
-                        },
-                        error			: function (response) {
-                            if (!navigator.onLine) {
-                                Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                                $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
-                                if (submitButton) {
-                                    submitButton.removeAttribute('data-kt-indicator');
-                                    submitButton.disabled = false;
-                                }
-                                return;
-                            }
-
-                            $("#save-form, #update-form").prop("disabled", false).html("Submit Candidate");
-                            if (submitButton) {
-                                submitButton.removeAttribute('data-kt-indicator');
-                                submitButton.disabled = false;
-                            }
-                            var errMsg = (response.responseJSON && response.responseJSON.message) ? response.responseJSON.message : "Submission failed. Please try again.";
-                            Swal.fire("Error", errMsg, "error");
+                            };
+                        } catch(idbErr) {
+                            console.warn('IndexedDB mirror write skipped:', idbErr);
                         }
-                    });
-                } 
-				else 
-				{
-                 if (!navigator.onLine) {
-                      Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
-                      $("#save-form").prop("disabled", false).html("Submit");
-                      submitButton.removeAttribute('data-kt-indicator');
-                      submitButton.disabled = false;
-                      return;
-                  }
+                    }
+
+                    var fallbackUrl = '{{ route("service_company.cvtracker.index") }}';
+                    var targetUrl = (response && typeof response.url === 'string' && response.url.trim() !== '') ? response.url : fallbackUrl;
+                    var formRedirected = false;
+                    function executeFormRedirect() {
+                        if (formRedirected) return;
+                        formRedirected = true;
+                        if (form.querySelector('[name="email1"]')) form.querySelector('[name="email1"]').value = "";
+                        if (form.querySelector('[name="password1"]')) form.querySelector('[name="password1"]').value = "";
+                        $(document).trigger('jero-candidate-saved');
+                        window.location.assign(targetUrl);
+                    }
 
                     Swal.fire({
-									text				: "Sorry, looks like there are some errors detected, please try again.",
-									icon				: "error",
-									buttonsStyling		: false,
-									confirmButtonText	: "Ok, got it!",
-									customClass			: {
-																confirmButton: "btn btn-primary"
-														  }
+                        text: "Candidate successfully submitted",
+                        icon: "success",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, got it!",
+                        customClass: { confirmButton: "btn btn-primary" },
+                        timer: 2000,
+                        timerProgressBar: true
+                    }).then(function () {
+                        executeFormRedirect();
                     });
+
+                    setTimeout(executeFormRedirect, 2200);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    window.__candidateIsSubmitting = false;
+                    $btn.prop("disabled", false).removeClass('disabled').html("Submit Candidate");
+                    if (submitButton) {
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+                    }
+
+                    if (xhr.status === 0 || !navigator.onLine) {
+                        Swal.fire({ title: "No Internet", text: "You are currently offline or the server is unreachable.", icon: "warning", confirmButtonText: "Ok, got it!", customClass: { confirmButton: "btn btn-warning" } });
+                        return;
+                    }
+
+                    var serverMsg = '';
+                    try {
+                        var body = xhr.responseText || '';
+                        var jsonStart = body.indexOf('{');
+                        if (jsonStart >= 0) {
+                            var parsed = JSON.parse(body.substring(jsonStart));
+                            serverMsg = parsed.message || parsed.error || '';
+                        }
+                    } catch (e) {}
+
+                    if (xhr.status === 409) {
+                        Swal.fire("Concurrent Submission", serverMsg || "This candidate submission is already being processed. Please wait a moment.", "warning");
+                        return;
+                    }
+
+                    var display = serverMsg || (xhr.status ? ('HTTP ' + xhr.status + ' ' + xhr.statusText) : textStatus);
+                    Swal.fire("Error (" + (xhr.status || '?') + ")", display || "Something went wrong. Please try again.", "error");
                 }
             });
+        };
+
+        var handleCandidateSubmit = async function (e) {
+            if (e) {
+                e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
+
+            if (window.__candidateIsSubmitting) {
+                return false;
+            }
+
+            var $btn = $('#save-form, #update-form');
+            if ($btn.length && $btn.prop('disabled')) {
+                return false;
+            }
+
+            var connected = true;
+            try {
+                if (typeof isInternetAvailable === 'function') {
+                    connected = await isInternetAvailable();
+                } else if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+                    connected = Boolean(navigator.onLine);
+                }
+            } catch (netErr) {
+                connected = (typeof navigator !== 'undefined') ? navigator.onLine : true;
+            }
+
+            if (!connected) {
+                Swal.fire({
+                    title: "No Internet",
+                    text: "You are currently offline or the server is unreachable.",
+                    icon: "warning",
+                    confirmButtonText: "Ok, got it!",
+                    customClass: { confirmButton: "btn btn-warning" }
+                });
+                return false;
+            }
+
+            // 1. RAM Validation for Missing Required Fields FIRST!
+            var missing = detectCandidateMissingFields(form, validator);
+            if (missing && missing.length > 0) {
+                showCandidateRequiredFieldsModal(missing);
+                return false;
+            }
+
+            // 2. Format / Pattern Validation (FormValidation)
+            if (validator && typeof validator.validate === 'function') {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        executeCandidateSubmit();
+                    } else {
+                        var missingNow = detectCandidateMissingFields(form, validator);
+                        if (missingNow && missingNow.length > 0) {
+                            showCandidateRequiredFieldsModal(missingNow);
+                        } else {
+                            Swal.fire({
+                                text: "Please check the highlighted fields with formatting errors.",
+                                icon: "error",
+                                confirmButtonText: "Ok, got it!",
+                                customClass: { confirmButton: "btn btn-primary" }
+                            });
+                        }
+                    }
+                }).catch(function (valErr) {
+                    console.warn('[Add Candidate Client] FormValidation error, falling back:', valErr);
+                    var fallbackMissing = detectCandidateMissingFields(form, null);
+                    if (fallbackMissing && fallbackMissing.length > 0) {
+                        showCandidateRequiredFieldsModal(fallbackMissing);
+                    } else {
+                        executeCandidateSubmit();
+                    }
+                });
+            } else {
+                executeCandidateSubmit();
+            }
+        };
+
+        // Delegated click listener
+        $(document).off('click', '#save-form, #update-form').on('click', '#save-form, #update-form', function (e) {
+            handleCandidateSubmit(e);
         });
-    }
+
+        // Form submit interception
+        $(document).off('submit', '#createForm').on('submit', '#createForm', function (e) {
+            if (e) {
+                e.preventDefault();
+                if (typeof e.stopPropagation === 'function') e.stopPropagation();
+            }
+            handleCandidateSubmit(e);
+            return false;
+        });
+    };
 
     return {
-				init: function () {
-										form 			=	document.querySelector('#createForm');
-										submitButton 	=	document.querySelector('#save-form');
-										handleForm();
-									}
+        init: function () {
+            if (isInitialized) return;
+            isInitialized = true;
+            form = document.querySelector('#createForm');
+            submitButton = document.querySelector('#save-form') || document.querySelector('#update-form');
+            handleForm();
+        }
     };
 }();
 
-KTUtil.onDOMContentLoaded(function () {
-    KTAddCandidate.init();
-});
+var ktAddCandidateInitialized = false;
+function initKTAddCandidate() {
+    if (ktAddCandidateInitialized) return;
+    if (typeof KTAddCandidate !== 'undefined' && KTAddCandidate.init) {
+        ktAddCandidateInitialized = true;
+        KTAddCandidate.init();
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKTAddCandidate);
+} else {
+    initKTAddCandidate();
+}
+$(document).ready(initKTAddCandidate);
 
-   	// 	$('#save-form').click(function () {
-   	// 					var formData = new FormData($('#createForm')[0]);							
-   	// 					$.ajax({
-   	// 							   url 				: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',								   
-   	// 							   type 			: 'POST',
-   	// 							   data 			: formData,
-   	// 							   processData		: false,  	// tell jQuery not to process the data
-   	// 							   contentType		: false,  	// tell jQuery not to set contentType
-   	// 							   redirect			: true,
-   	// 							    success			: function (response) {
-   	// 													window.location = response.url; 
-   	// 												},
-   	// 							  	error			: function (response) {
-   	// 																		//handleFails(response);
-   	// 											  	}
-   	// 						});
-    //  });    
-}); 
+// Phase 6: Keyboard Shortcut Ctrl+S / Cmd+S for rapid candidate submission
+document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        var submitBtn = document.getElementById('save-form') || document.getElementById('update-form');
+        if (submitBtn && !submitBtn.disabled) {
+            submitBtn.click();
+        }
+    }
+});
 </script>
 
 <script>
