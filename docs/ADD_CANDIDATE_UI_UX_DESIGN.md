@@ -2,10 +2,15 @@
 
 > **System:** JERO ATS & Talent Marketplace  
 > **Source Reference Page:** `resources/views/service_company/job-applications/create.blade.php` (Internal / Regular Candidate Flow)  
-> **Target Replica Page:** `resources/views/service_company/job-applications/clientcreate.blade.php` (Direct Client Candidate Flow)  
+> **Target Replica Pages:**  
+> - `resources/views/service_company/job-applications/clientcreate.blade.php` (Direct Client Candidate Flow)  
+> - `resources/views/career-apply.blade.php` (Public Career Portal Candidate Application)  
 > **Baseline Resolution:** 15.6" Laptop Screens (**1366×768** & **1920×1080**) with zero page-level horizontal scroll  
 > **Design Foundation:** Metronic Component Architecture, Poppins Typography Hierarchy, Client-First Browser RAM Execution  
-> **Theme Differentiation:** Regular Flow = Enterprise Corporate Blue; Direct Client Flow = Enterprise Light Green (Emerald / Mint)
+> **Theme Differentiation:**  
+> - Regular ATS Flow: Enterprise Corporate Blue (`#245bff` / `#1b84ff`)  
+> - Direct Client Flow: Enterprise Light Green (`#059669` / Emerald)  
+> - Career Page Flow: Enterprise Light Orange (`#F59E0B` / Amber / Warm Gold)
 
 ---
 
@@ -55,9 +60,27 @@ The Direct Client flow is intentionally differentiated by an **Enterprise Light 
 | Attention Highlight | `rgba(236, 253, 245, 0.6)` | Soft green pulse background on jumped/highlighted fields |
 | Toolbar Background | `#f0fdf4` | Light green contextual header fill |
 | Toolbar Border | `#d1fae5` | Soft emerald separator line under toolbar |
-| Modal Primary CTA | `#059669` (hover `#047857`) | Complete Required Fields modal action button |
+### 2.3 Enterprise Light Orange Theme (`career-apply.blade.php` — Public Candidate Flow)
 
-### 2.3 Universal Semantic Accents (Shared Across Both Flows)
+The candidate-facing Career Page application is styled with an **Enterprise Light Orange Theme** to deliver a warm, modern, and engaging applicant journey while preserving the pristine white/neutral foundation of the enterprise ATS.
+
+| Token Name | Hex / RGBA | Role / Usage in UI |
+|---|---|---|
+| `--jac-primary` | `#F59E0B` | Primary Apply/Submit buttons, active tabs, header action accents, focus rings |
+| `--jac-primary-hover` | `#D97706` | Button hover and pressed active states |
+| `--jac-soft` | `#FFF7ED` | Card header icon backgrounds, selection chip tints, table hovers |
+| `--jac-highlight` | `#FFEDD5` | Soft highlights, active chip tints, attention pulse background |
+| `--jac-border` | `#FED7AA` | Accent borders, contextual toolbar bottom border, active input border |
+| `--jac-text` | `#0b1545` / `#0f172a` | Identical high-contrast enterprise text hierarchy |
+| `--jac-muted` | `#5e6a95` / `#64748b` | Secondary labels, helper descriptions, placeholder text |
+| Focus Ring | `rgba(245, 158, 11, 0.25)` | 4px amber/orange focus outline on interactive controls |
+| Focus Border | `#F59E0B` | 2px solid border on focused inputs and active combobox triggers |
+| Attention Highlight | `rgba(255, 237, 213, 0.6)` | Soft orange pulse background on jumped/highlighted fields |
+| Toolbar Background | `#FFF7ED` | Light orange contextual header fill |
+| Toolbar Border | `#FED7AA` | Soft orange separator line under toolbar |
+| Modal Primary CTA | `#F59E0B` (hover `#D97706`) | Complete Required Fields modal action button |
+
+### 2.4 Universal Semantic Accents (Shared Across All Flows)
 
 - **Success / Positive:** `#0ca866` / `#10b981` (Completed parsing status, serving notice positive badge).
 - **Warning / Amber:** `#f59e0b` / `#d97706` / `#fef9c3` (Parsing in progress, required fields warning modal shield, notice period buyout).
@@ -138,7 +161,11 @@ The entire candidate form is composed of **15 self-contained cards**. Every card
 | **12** | **Availability for Next 3 Days** | `.interview-card` | 3 interview date/time slot windows (Flatpickr datepicker + JERO Enterprise Time Clock Popover), Preferred Interview Mode dropdown (Video Call, Telephonic, In-Person). |
 | **13** | **Professional Links** | `.professional-links-card` / `.addl-card` | LinkedIn URL, GitHub URL, Portfolio / Website URL with brand leading icons. |
 | **14** | **Visa Status & Work Authorization** | `.additional-details-card` / `.addl-card--details` | Citizenship Country dropdown, Visa Status dropdown (Citizen, Green Card, H-1B, EAD, TN, etc.), popular visa chips, Work Authorization expiry datepicker. |
-| **15** | **Recruiter Comments** | `.recruiter-note-card` / `.rm-note-card` | Categorized template dropdown (Fit, Strong Fit, Screening, Technical), Sync details from form action button, Recruiter comments textarea, live word counter (0 / 100 words), internal privacy disclaimer badge. |
+| **15** | **Recruiter Comments** | `.recruiter-note-card` / `.rm-note-card` | Categorized template dropdown (Fit, Strong Fit, Screening, Technical), Sync details from form action button, Recruiter comments textarea, live word counter (0 / 100 words), internal privacy disclaimer badge. *(Internal & Direct Client flows only; strictly omitted on Career Page).* |
+
+> [!IMPORTANT]
+> **Candidate-Facing Flow Scope Isolation (`career-apply.blade.php`):**  
+> On the public Career Page candidate application (`career-apply.blade.php`), **Card 15 (Recruiter Comments) is strictly omitted/hidden**. Candidates must never view or interact with internal recruiter evaluation templates or confidential hiring notes. The candidate application form consists of Cards 1 through 14. Cards 1 through 14 are 100% identical in UI, layout, typography, box sizes, and interaction models across all flows.
 
 ---
 
@@ -351,6 +378,43 @@ To achieve **100% pixel-perfect UI/UX identity** between `create.blade.php` and 
    - Update toolbar background to `#f0fdf4` with border `#d1fae5`.
    - Update focus rings and interactive states to emerald `#10b981` / `#059669`.
    - Update Required Fields Modal primary CTA to `#059669` (hover `#047857`).
+
+---
+
+## 12. Replication Roadmap for Career Page (`career-apply.blade.php`)
+
+To achieve **100% pixel-perfect UI/UX identity** between `create.blade.php` and `career-apply.blade.php`:
+1. **100% Structural & Component Replication**:
+   - Replicate the exact HTML structure, widths, heights, margins, padding, spacing, alignment, card layouts, field orderings, and responsive behavior for Cards 1 through 14.
+   - Header design and height strictly match `create.blade.php`, integrating `@include('sections.service_company.open-toolbar', ...)` with public context and the primary submit button `#save-form`.
+   - Standalone public HTML page layout loading Metronic CSS/JS bundles, Poppins typography, FontAwesome 6, Tagify, Flatpickr, Select2, and SweetAlert2.
+2. **Candidate-Facing Scope Isolation (Omit Recruiter Comments)**:
+   - **Card 15 (Recruiter Comments) is completely removed** from `career-apply.blade.php`.
+   - Recruiter evaluation templates and internal note JS engines are omitted.
+   - Existing candidate data models, recruiter workflows, and backend storage structures remain 100% untouched.
+3. **Enterprise Light Orange Theme Applied**:
+   - Primary: `#F59E0B`, Hover/Active: `#D97706`, Light Background: `#FFF7ED`, Soft Highlight: `#FFEDD5`, Border: `#FED7AA`.
+   - Clean white/neutral surfaces preserved for all card bodies, inputs, and general canvas.
+   - Selective light orange styling applied to top contextual header toolbar, primary buttons, input/select focus rings, combobox active triggers, chip selections, time clock presets, and Required Fields Modal CTA.
+4. **Complete Page-Level Validation Before Submission**:
+   - Candidates are **strictly blocked from submitting incomplete forms**.
+   - Pre-flight `validateAllMandatoryCandidateFields()` validates 100% of required fields across all cards:
+     - Card 1: Resume Upload (uploaded file path or session)
+     - Card 2: Career Summary (non-empty summary text)
+     - Card 3: Candidate Profile (Full Name ≥ 2 chars, Primary Email valid format, Primary Contact ≥ 6 digits, Current Location, Gender)
+     - Card 4: Primary Skills (minimum 1 Tagify skill)
+     - Card 5: Experience Details (Total Exp & Relevant Exp years)
+     - Card 6: Professional Profile (Highest Qualification; plus Current Designation, Company, and Employment Type if non-fresher)
+     - Card 7: Salary Details (Current CTC & Expected CTC if non-fresher)
+     - Card 8: Notice Period & Joining Details (Notice period selection if non-fresher)
+     - Card 9: Preferred Work Mode (Work from Office, Hybrid, or Remote selected)
+     - Card 10: Job Skills Matrix (proficiency rating selected for all required requisition skills)
+     - Card 11: Screening Questions (answers completed for all requisition screening questions)
+   - Pre-flight `#requiredFieldsModal` intercepts invalid submissions, displays missing field count, and guides the candidate directly to the first incomplete field with smooth scroll, auto-focus, and a 2-second orange visual pulse highlight (`.field-attention-highlight`).
+5. **Robust Public Submission Flow**:
+   - Submission endpoint routes strictly to `route("get.careerStore")` with FormData and atomic `submission_token`.
+   - Direct R2 / presign upload pipeline with fallback to `route("get.uploadresume")`.
+   - Integrated client-side draft autosave powered by `CareerApplyDraftManager` (scoped to `company_id` and `job_id`).
 
 ---
 *Document authoritatively verified against production AST, database schemas, and Metronic component registry.*

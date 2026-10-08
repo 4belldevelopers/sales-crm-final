@@ -2138,6 +2138,7 @@
             <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
             <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus }}" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
+            <input type="hidden" name="percentage_hike" id="percentage_hike" value="{{ @$application->percentage_hike }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
             <input type="hidden" name="resume_upload_method" id="resume_upload_method" value="">
