@@ -1,4 +1,4 @@
-﻿@extends('layouts.metronic_front_app')
+@extends('layouts.metronic_front_app')
 @php 
    use App\Helper\GeneralMethod;
 @endphp
@@ -72,9 +72,11 @@ else
           <!--begin::Heading-->
           <div class="text-center mb-10">
            
-            <div class="alert alert-{{ @$class }} alert-dismissible fade show" role="alert">
-              <strong> {{@$class }}</strong>  {{ @$messsage }}
+            @if(@$class && @$messsage)
+            <div class="alert alert-{{ in_array(strtolower(trim(@$class)), ['error', 'danger']) ? 'danger' : 'success' }} alert-dismissible fade show" role="alert">
+              <strong> {{ rtrim(ucfirst(@$class), '!') }}!</strong>  {{ @$messsage }}
             </div>
+            @endif
             <h1 class="text-dark mb-3">Sign In to JERO</h1>
             
           </div>

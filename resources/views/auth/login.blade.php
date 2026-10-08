@@ -338,7 +338,11 @@ body { color: var(--jw-navy); background: var(--jw-soft); }
     font-size: 12px;
     line-height: 1.5;
 }
-.jw-alert-ok { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+.jw-alert-ok,
+.jw-alert-success { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+.jw-alert-err,
+.jw-alert-error,
+.jw-alert-danger { color: #991b1b; background: #fef2f2; border-color: #fee2e2; }
 .jw-field { margin-bottom: 18px; }
 .jw-field-row {
     display: flex;
@@ -795,8 +799,10 @@ if (session('status')) {
                     @csrf
                     <h2>Welcome Back! 👋</h2>
                     <p class="sub">Sign in to continue to your Jero.works account</p>
-                    @if(@$class && @$messsage)<div class="jw-alert"><strong>{{ @$class }}</strong> {!! @$messsage !!}</div>@endif
-                    @if(session('accountnotverify'))<div class="jw-alert">{{ session('accountnotverify') }}</div>@endif
+                    @if(@$class && @$messsage)<div class="jw-alert {{ in_array(strtolower(trim(@$class)), ['success', 'ok']) ? 'jw-alert-ok jw-alert-success' : '' }}"><strong>{{ rtrim(ucfirst(@$class), '!') }}!</strong> {!! @$messsage !!}</div>@endif
+                    @if(session('success'))<div class="jw-alert jw-alert-ok jw-alert-success"><strong>Success!</strong> {{ session('success') }}</div>@endif
+                    @if(session('error'))<div class="jw-alert"><strong>Error!</strong> {{ session('error') }}</div>@endif
+                    @if(!session('error') && session('accountnotverify'))<div class="jw-alert">{{ session('accountnotverify') }}</div>@endif
                     @if($errors->has('device_message'))<div class="jw-alert">{{ $errors->first('device_message') }}</div>@endif
 
                     <div class="jw-field">
