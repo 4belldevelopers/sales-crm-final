@@ -1916,6 +1916,7 @@
       $max_salary_currency = $currencySymbole[@$jobDetail->max_salary_currency] ?? '';
       $max_salary = !empty($jobDetail->max_salary) ? GeneralMethod::thousandsCurrencyFormat($jobDetail->max_salary) : '0';
       $salary_currency = @$jobDetail->max_salary_currency ?? 0;
+      $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
 @endphp
 <!--begin::Toolbar-->
 <div class="toolbar candidate-top-toolbar" id="kt_toolbar">
@@ -1953,7 +1954,7 @@
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
-            <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus }}" />
+            <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus ?? 8 }}" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
             <input type="hidden" name="percentage_hike" id="percentage_hike" value="{{ @$application->percentage_hike }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
