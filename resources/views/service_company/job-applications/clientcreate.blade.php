@@ -12,6 +12,9 @@
        });
    });	
 </script>
+<link href="{{ asset('demo/css/filterStyle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/candidate-form.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('demo/css/job-application-create.css') }}{{ TM_VERSION }}&candidate_header_compact_icons=20260925&candidate_design_repair=20260926&candidate_header_harmonize=20260926&candidate_rating_view=20260926&resume_card_design=20260926&resume_card_clean=20260926&required_fields_modal=20261006_v2" rel="stylesheet" type="text/css" />
 <style>
 body {overflow-x:hidden; }
 .dropzone { padding: 1.8rem 1.75rem!important; border: 2px dashed #e6e7e8!important; background:transparent!important; text-align: inherit!important; }
@@ -726,8 +729,18 @@ body {overflow-x:hidden; }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Disambiguation Ribbon for NEEDS_CONFIRMATION State */
+/* Disambiguation Ribbon for NEEDS_CONFIRMATION State (Border Strictly Removed) */
 .jero-disambiguation-bar {
+    display: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.jero-disambiguation-bar.is-visible,
+.jero-disambiguation-bar:not(:empty) {
     display: flex !important;
     flex-wrap: wrap !important;
     align-items: center !important;
@@ -735,9 +748,16 @@ body {overflow-x:hidden; }
     margin-top: 6px !important;
     padding: 6px 10px !important;
     background: #f8fafc !important;
-    border: 1px dashed #cbd5e1 !important;
+    border: none !important;
     border-radius: 6px !important;
     font-family: 'Poppins', sans-serif !important;
+}
+
+.jero-disambiguation-bar:empty {
+    display: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .jero-disambiguation-badge {
@@ -2089,10 +2109,18 @@ select#gender {
                 <div class="form-row row fv-row">
                   <div class="col-12 text-center py-10">
                   @php 
+                      $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
                       if($page_event == 'EDIT'){ 
-                        echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary">Update Candidate</button>';
+                        echo '<div class="d-flex align-items-center me-3 candidate-stage-picker-wrap" style="background:#f1f5f9; border-radius:6px; padding:3px 10px;">';
+                        echo '<label for="master_status_id" class="me-2 mb-0 fw-bold fs-7 text-gray-700"><i class="fa-solid fa-flag me-1 text-primary"></i>Stage:</label>';
+                        echo '<select name="master_status_id" id="master_status_id" class="form-select form-select-sm form-select-solid py-1 px-3 fw-bold" style="width:auto; min-width:130px; font-size:12px; height:32px;">';
+                        echo '<option value="8" ' . ($currentAppMasterStatus == 8 ? 'selected' : '') . '>In Review</option>';
+                        echo '<option value="1" ' . ($currentAppMasterStatus != 8 ? 'selected' : '') . '>Sourcing</option>';
+                        echo '</select>';
+                        echo '</div>';
+                        echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>';
                       }else{
-                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary">Submit Candidate</button>';	
+                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>';	
                       }
                   @endphp
                     {{-- <a href="javascript:void(0);" class="btn btn-secondary">Cancel</a>  --}}
@@ -2107,7 +2135,7 @@ select#gender {
 </div>
 <!--end::Toolbar-->
 <!--begin::Content-->
-<div class="content d-flex flex-column flex-column-fluid pt-4" id="kt_content">
+<div class="content d-flex flex-column flex-column-fluid pt-4 job-candidate-create" id="kt_content">
   <!--begin::Post-->
   <div class="post d-flex flex-column-fluid" id="kt_post">
     <!--begin::Container-->
@@ -2128,6 +2156,7 @@ select#gender {
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
+            <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
             {{-- V4 Remediation hidden fields --}}
             <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
@@ -2308,150 +2337,27 @@ select#gender {
             </div>
             <!--end::Upload Photo & Resume/CV-->
 
-            <!-- Basic Details -->
-            <div class="fs">
-              <div class="fsh">
-                <h3>Basic Details</h3>
+            <!-- Candidate Profile -->
+            <div class="fs bd-card candidate-card candidate-profile-card">
+              <div class="fsh candidate-card-header bd-hero">
+                <div class="candidate-card-title bd-hero-title">
+                  <span class="candidate-card-icon bd-hero-icon"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
+                  <span><strong>Candidate Profile</strong><small>Basic information to identify and contact this candidate.</small></span>
+                </div>
               </div>
-              <div class="fsc">
-                <div class="g4">
+              <div class="fsc candidate-card-body bd-body">
+                <div class="candidate-profile-grid">
                   <div class="fg fv-row">
                     <label for="full_name">Full Name <span class="rq">*</span></label>
-                    <div class="candidate-field-wrap">
-                      <input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}"
-                        placeholder="Enter full name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" />
-                      <button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button>
-                    </div>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-user" aria-hidden="true"></i><input type="text" class="form-control form-control-solid" name="full_name" id="full_name" value="{{ @$application->full_name }}" placeholder="Enter full name" maxlength="191" autocomplete="name" autocapitalize="words" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear name" tabindex="-1" style="display: none;">&times;</button></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Gender</label>
-                    <select name="gender" id="gender">
-                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather
-                        Not Say</option>
-                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                    </select>
+                    <label for="email">Primary Email <span class="rq">*</span></label>
+                    <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email address" maxlength="191" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
+                    <div id="email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Nationality</label>
-                    @php
-                      // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
-                      $countryToDemonym = [
-                          'in' => 'Indian',
-                          'us' => 'American',
-                          'gb' => 'British',
-                          'uk' => 'British',
-                          'ca' => 'Canadian',
-                          'au' => 'Australian',
-                          'ae' => 'Emirati',
-                          'sg' => 'Singaporean',
-                          'de' => 'German',
-                          'fr' => 'French',
-                          'nl' => 'Dutch',
-                          'ie' => 'Irish',
-                          'sa' => 'Saudi',
-                      ];
-                      $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
-                      $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
-
-                      // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
-                      $topPopularNationalities = [
-                          'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
-                          'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
-                          'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
-                          'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
-                          'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
-                          'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
-                          'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
-                          'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
-                          'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
-                          'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
-                          'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
-                          'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
-                          'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
-                      ];
-
-                      // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
-                      $allNationalities = [
-                          'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
-                          'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
-                          'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
-                          'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
-                          'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
-                          'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
-                          'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
-                          'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
-                          'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
-                          'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
-                          'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
-                          'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
-                          'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
-                          'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
-                          'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
-                          'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
-                          'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
-                          'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
-                          'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
-                          'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
-                          'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
-                          'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
-                          'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
-                          'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
-                          'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
-                          'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
-                          'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
-                          'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
-                          'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
-                          'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
-                          'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
-                          'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
-                          'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
-                          'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
-                          'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
-                          'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
-                          'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
-                          'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
-                      ];
-                    @endphp
-                    <select name="nationality" id="nationality">
-                      <option value="">Select nationality</option>
-                      <optgroup label="⭐ Top 10 Popular Nationalities">
-                        @foreach($topPopularNationalities as $natKey => $natItem)
-                          <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
-                        @endforeach
-                      </optgroup>
-                      <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
-                        @foreach($allNationalities as $demonym => $countrySynonyms)
-                          <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
-                        @endforeach
-                      </optgroup>
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()"
-                      placeholder="Select date" />
-                  </div>
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row">
-                    <label for="email">Enter Primary Email ID <span class="rq">*</span></label>
-                    <div class="candidate-field-wrap">
-                      <input type="email" class="form-control form-control-solid" name="email" id="email" value="{{ @$application->email }}" placeholder="Enter primary email" maxlength="191" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" aria-required="true" />
-                      <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
-                    </div>
-                    <div id="client-email-typo-hint" class="candidate-email-typo-hint" style="display: none;"></div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label for="secondrary_email">Enter Secondary Email ID</label>
-                    <div class="candidate-field-wrap">
-                      <input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email"
-                        value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" maxlength="55" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" />
-                      <button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button>
-                    </div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Enter Primary Number <span class="rq">*</span></label>
+                    <label>Primary Contact Number <span class="rq">*</span></label>
                     <x-jero-phone-input
                         id="phone"
                         name="phone"
@@ -2465,22 +2371,116 @@ select#gender {
                         placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
-                    <label>Enter Secondary Number</label>
-                    <x-jero-phone-input
-                        id="secondary_mobile"
-                        name="secondary_mobile"
-                        countryCodeName="secondary_country_code"
-                        countryCodeId="secondary_country_code"
-                        :value="@$application->secondary_mobile"
-                        :countryCode="@$second_phone_code"
-                        :defaultIso="@$country_code"
-                        label=""
-                        :required="false"
-                        placeholder="Enter secondary number" />
+                    <label>Nationality</label>
+                    <div class="candidate-field-control">
+                      <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                      @php
+                        // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
+                        $countryToDemonym = [
+                            'in' => 'Indian',
+                            'us' => 'American',
+                            'gb' => 'British',
+                            'uk' => 'British',
+                            'ca' => 'Canadian',
+                            'au' => 'Australian',
+                            'ae' => 'Emirati',
+                            'sg' => 'Singaporean',
+                            'de' => 'German',
+                            'fr' => 'French',
+                            'nl' => 'Dutch',
+                            'ie' => 'Irish',
+                            'sa' => 'Saudi',
+                        ];
+                        $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
+                        $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
+
+                        // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
+                        $topPopularNationalities = [
+                            'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
+                            'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
+                            'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
+                            'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
+                            'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
+                            'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
+                            'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
+                            'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
+                            'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
+                            'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
+                            'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
+                            'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
+                            'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
+                        ];
+
+                        // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
+                        $allNationalities = [
+                            'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
+                            'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
+                            'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
+                            'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
+                            'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
+                            'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
+                            'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
+                            'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
+                            'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
+                            'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
+                            'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
+                            'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
+                            'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
+                            'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
+                            'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
+                            'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
+                            'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
+                            'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
+                            'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
+                            'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
+                            'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
+                            'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
+                            'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
+                            'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
+                            'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
+                            'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
+                            'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
+                            'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
+                            'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
+                            'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
+                            'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
+                            'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
+                            'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
+                            'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
+                            'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
+                            'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
+                            'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
+                            'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
+                        ];
+                      @endphp
+                      <select name="nationality" id="nationality">
+                        <option value="">Select nationality</option>
+                        <optgroup label="⭐ Top 10 Popular Nationalities">
+                          @foreach($topPopularNationalities as $natKey => $natItem)
+                            <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
+                          @endforeach
+                        </optgroup>
+                        <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
+                          @foreach($allNationalities as $demonym => $countrySynonyms)
+                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
+                          @endforeach
+                        </optgroup>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <div class="g4">
-                  <div class="fg fv-row bd-field" style="grid-column: span 2">
+                  <div class="fg fv-row">
+                    <label>Gender</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
+                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Date of Birth <span class="text-muted fw-normal" style="font-size:11px;font-weight:400;">(Optional)</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
+                  </div>
+                  <div class="fg fv-row bd-field">
                     <label>Current Location <span class="rq">*</span></label>
                     <div class="candidate-field-control bd-control bd-control--has-combobox">
                       <i class="fa-solid fa-location-dot"></i>
@@ -2518,157 +2518,188 @@ select#gender {
                         </div>
                       </div>
                     </div>
-                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State --}}
-                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none;"></div>
+                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State (Border Strictly Removed) --}}
+                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none !important; border:none !important;"></div>
                   </div>
-                  <div class="fg fv-row">
+                  <div class="fg fv-row bd-field">
                     <label>Highest Qualification <span class="rq">*</span></label>
-                    <select name="qualification" id="qualification">
-                      <option value="">Select qualification</option>
-                      @php
-                        // Map incoming database qualification records by ID
-                        $qualMap = [];
-                        if (!empty($qualification)) {
-                            foreach ($qualification as $qItem) {
-                                $qualMap[$qItem->id] = $qItem;
-                            }
-                        }
+                    <div class="candidate-field-control bd-control bd-control--select">
+                      <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+                      <select name="qualification" id="qualification">
+                        <option value="">Select qualification</option>
+                        @php
+                          // Map incoming database qualification records by ID
+                          $qualMap = [];
+                          if (!empty($qualification)) {
+                              foreach ($qualification as $qItem) {
+                                  $qualMap[$qItem->id] = $qItem;
+                              }
+                          }
 
-                        // 7-Category Global Education Standard with Regional Prov & Global Alias Taxonomy
-                        $educationCategories = [
-                            "🎓 Bachelor's / Undergraduate Degrees" => [
-                                13 => ['label' => 'B.Tech / B.E (Engineering & Technology)', 'badge' => 'Engineering / Tech', 'regions' => 'Indian,Commonwealth,Global', 'aliases' => 'btech,b.tech,b tech,be,b.e,bachelor of technology,bachelor of engineering,beng,b.eng,bse,bs engineering,diplome ingenieur,diplom ingenieur,software engineer,computer science engineering,cse,mechanical,electrical,civil'],
-                                12 => ['label' => 'B.S. / B.Sc (Science, IT & Computing / Licence)', 'badge' => 'USA / Global / EU', 'regions' => 'American,Canadian,British,Australian,European,Indian,Global', 'aliases' => 'bs,b.s.,bsc,b.sc,bachelor of science,bachelor science,bs cs,bsc cs,b sc,bsc it,bs it,information technology,computer science,data science,cybersecurity,cyber security,cloud computing,artificial intelligence,software development,licence,licenciatura,bac+3,grado'],
-                                16 => ['label' => 'BCA (Computer Applications / Software)', 'badge' => 'IT / Software', 'regions' => 'Indian,Global', 'aliases' => 'bca,b.c.a.,bachelor of computer applications,bachelor computer applications,computer programming,web development'],
-                                5  => ['label' => 'BBA / BMS (Business Administration)', 'badge' => 'Business / Global', 'regions' => 'Indian,American,Canadian,British,Australian,Global', 'aliases' => 'bba,b.b.a.,bms,b.m.s.,bachelor of business administration,bachelor business,management studies,business management,bba marketing,bba finance'],
-                                6  => ['label' => 'B.Com (Commerce, Accounting & Finance)', 'badge' => 'Commerce / Finance', 'regions' => 'Indian,British,Canadian,Australian,Commonwealth,Global', 'aliases' => 'bcom,b.com,bachelor of commerce,bachelor commerce,commerce,accounting,finance,banking'],
-                                3  => ['label' => 'B.A (Arts, Humanities & Social Sciences)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ba,b.a.,bachelor of arts,bachelor arts,humanities,economics,psychology,english,journalism,mass communication,history'],
-                                7  => ['label' => 'B.Des (Design & UX/UI)', 'badge' => 'Design / Global', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bdes,b.des,bachelor of design,bachelor design,ui ux,product design,graphic design,fashion design,industrial design'],
-                                18 => ['label' => 'BFA (Fine Arts & Digital Media)', 'badge' => 'Arts / Media', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bfa,b.f.a.,bachelor of fine arts,visual arts,animation,digital media,illustration'],
-                                4  => ['label' => 'B.Arch (Architecture & Urban Planning)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'barch,b.arch,bachelor of architecture,architectural design,urban planning'],
-                                11 => ['label' => 'B.Pharma / Nursing / Allied Health (Healthcare & Pharma)', 'badge' => 'Healthcare / Pharma', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bpharma,b.pharma,b pharm,b.pharm,bachelor of pharmacy,pharmacy,nursing,b.sc nursing,bsc nursing,rn,registered nurse,bpt,physiotherapy,bachelor of physiotherapy,allied health,paramedical,pharm d,pharm.d'],
-                                19 => ['label' => 'BHM (Hotel & Hospitality Management)', 'badge' => 'Hospitality', 'regions' => 'Indian,Global', 'aliases' => 'bhm,b.h.m.,bachelor of hotel management,hospitality,tourism,culinary arts'],
-                                8  => ['label' => 'B.Ed (Education & Pedagogy)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'bed,b.ed,bachelor of education,teaching,pedagogy'],
-                                9  => ['label' => 'B.El.Ed (Elementary Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'beled,b.el.ed,bachelor of elementary education,primary teaching'],
-                                10 => ['label' => 'B.P.Ed (Physical Education & Sports)', 'badge' => 'Sports Science', 'regions' => 'Indian,Global', 'aliases' => 'bped,b.p.ed,bachelor of physical education,sports science,kinesiology'],
-                                21 => ['label' => 'BVSC / DVM (Veterinary Science & Medicine)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'bvsc,b.v.sc,bachelor of veterinary science,dvm,veterinary medicine,veterinarian'],
-                                61 => ['label' => 'Other Bachelor\'s / Undergraduate Degree', 'badge' => 'Bachelor\'s / Other', 'regions' => 'Global', 'aliases' => 'other bachelor,other bachelors,other undergraduate,bachelors other,custom bachelor,unlisted bachelor'],
-                            ],
-                            "🎓 Master's / Postgraduate Degrees" => [
-                                39 => ['label' => 'M.S. / M.Sc / M.Eng (Science, IT & Engineering / Master 2)', 'badge' => 'USA / Global / EU', 'regions' => 'American,Canadian,British,Australian,European,Indian,Global', 'aliases' => 'ms,m.s.,msc,m.sc,master of science,master science,ms cs,msc cs,m s,m sc,meng,m.eng,master of engineering,data science,ai,artificial intelligence,machine learning,deep learning,cybersecurity,cloud architecture,big data,bioinformatics,master 2,bac+5,magister'],
-                                40 => ['label' => 'M.Tech / M.E (Engineering & Advanced Tech)', 'badge' => 'Engineering / Postgrad', 'regions' => 'Indian,Global', 'aliases' => 'mtech,m.tech,m tech,me,m.e,master of technology,master of engineering,meng,m.eng,postgraduate engineering,vlsi,embedded,robotics'],
-                                41 => ['label' => 'MBA / PGDM (Business Administration & Strategy)', 'badge' => 'Management / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'mba,m.b.a.,pgdm,p.g.d.m.,master of business administration,master business administration,executive mba,emba,insead,wharton,hbs,iim,post graduate diploma in management,business management,strategy,consulting'],
-                                42 => ['label' => 'MCA (Master of Computer Applications)', 'badge' => 'IT / Software', 'regions' => 'Indian,Global', 'aliases' => 'mca,m.c.a.,master of computer applications,master computer applications,software engineering,computer science'],
-                                43 => ['label' => 'MCM (Master of Computer Management)', 'badge' => 'Management & IT', 'regions' => 'Indian', 'aliases' => 'mcm,m.c.m.,master of computer management,it management'],
-                                35 => ['label' => 'M.Com (Commerce, Economics & Finance)', 'badge' => 'Commerce / Finance', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mcom,m.com,master of commerce,economics,financial management,accounting'],
-                                32 => ['label' => 'M.A (Arts, Humanities & Social Sciences)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ma,m.a.,master of arts,humanities,sociology,psychology,political science,international relations,literature'],
-                                36 => ['label' => 'M.Des (Master of Design / UX)', 'badge' => 'Design / Postgrad', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mdes,m.des,master of design,interaction design,ux design,product design'],
-                                45 => ['label' => 'MFA (Fine Arts & Creative Media)', 'badge' => 'Fine Arts / Media', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mfa,m.f.a.,master of fine arts,creative media,visual arts,cinematography'],
-                                33 => ['label' => 'M.Arch (Master of Architecture)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'march,m.arch,master of architecture,landscape architecture,urban design'],
-                                38 => ['label' => 'M.Pharma / Pharm.D / MPT (Advanced Healthcare & Pharma)', 'badge' => 'Healthcare / Pharma', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mpharma,m.pharma,m pharm,m.pharm,master of pharmacy,pharm d,pharm.d,doctor of pharmacy,mpt,master of physiotherapy,pharmacology,clinical research'],
-                                37 => ['label' => 'M.Ed (Master of Education)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'med,m.ed,master of education,educational leadership,curriculum'],
-                                47 => ['label' => 'MVSC (Master of Veterinary Science)', 'badge' => 'Veterinary Postgrad', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mvsc,m.v.sc,master of veterinary science,veterinary surgery'],
-                                30 => ['label' => 'Integrated PG / Dual Degree (B.Tech+M.Tech / BS+MS)', 'badge' => 'Integrated / Dual', 'regions' => 'Indian,European,American,Global', 'aliases' => 'integrated pg,dual degree,integrated mtech,integrated btech mtech,5 year integrated,bs ms,b.s. m.s.,btech mtech'],
-                                62 => ['label' => 'Other Master\'s / Postgraduate Degree', 'badge' => 'Master\'s / Other', 'regions' => 'Global', 'aliases' => 'other master,other masters,other postgraduate,masters other,custom master,unlisted master,mph,msw,mphil,m.phil'],
-                            ],
-                            "🏛️ Doctorate & Research Degrees" => [
-                                52 => ['label' => 'Ph.D. / Doctorate / Post-Doc (Doctor of Philosophy)', 'badge' => 'Doctorate / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'phd,ph.d.,ph.d,doctorate,doctor of philosophy,dphil,d.phil,postdoc,post doc,post doctoral,fellowship,research scholar,promotion,dr'],
-                                64 => ['label' => 'Other Doctorate / Post-Doctoral Degree', 'badge' => 'Doctorate / Other', 'regions' => 'Global', 'aliases' => 'other doctorate,other phd,postdoc,post-doctoral,dba,d.sc,doctor of business administration,research fellow'],
-                            ],
-                            "📜 Associate Degrees & Diplomas" => [
-                                22 => ['label' => 'Associate Degree / Polytechnic Diploma (A.A. / A.S. / Diploma)', 'badge' => 'Polytechnic / Assoc', 'regions' => 'Indian,American,Canadian,Australian,European,Global', 'aliases' => 'diploma,polytechnic,associate degree,associate of science,associate of arts,aa,a.a.,as,a.s.,aas,a.a.s.,community college,2 year degree,bts,dut,fachhochschule'],
-                                48 => ['label' => 'PG Diploma (Post Graduate Diploma / Certificate)', 'badge' => 'PG Diploma', 'regions' => 'Indian,Canadian,British,Commonwealth,Global', 'aliases' => 'pg diploma,pgd,pgdiploma,post graduate diploma,postgraduate certificate,post-degree diploma,canadian pg diploma'],
-                                25 => ['label' => 'HND / HNC (Higher National Diploma / Certificate)', 'badge' => 'UK / Commonwealth', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'hnd,hnc,higher national diploma,higher national certificate,vocational qualification,btec'],
-                                63 => ['label' => 'Other Associate / Diploma / Vocational Degree', 'badge' => 'Diploma / Other', 'regions' => 'Global', 'aliases' => 'other diploma,other associate,vocational diploma,technical certificate,custom diploma,unlisted diploma'],
-                            ],
-                            "⚖️ Professional, Legal & Medical Degrees" => [
-                                26 => ['label' => 'CA / CPA / CFA / ACCA (Finance & Accounting)', 'badge' => 'Finance / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ca,cpa,cfa,acca,chartered accountant,chartered accountancy,certified public accountant,chartered financial analyst,cima,cost accountant,accounting,finance,audit'],
-                                27 => ['label' => 'CS (Company Secretary / Corporate Governance)', 'badge' => 'Corporate Law', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'cs,c.s.,company secretary,company secretaryship,corporate governance,icsi'],
-                                29 => ['label' => 'ICWA / CMA (Cost & Management Accounting)', 'badge' => 'Cost Accounting', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'icwa,cma,cost accountant,cost and management accountant,cma usa,icmai'],
-                                23 => ['label' => 'LLB / J.D. (Law Degree / Juris Doctor)', 'badge' => 'Legal / Global', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'llb,l.l.b.,bachelor of laws,jd,j.d.,juris doctor,law degree,bar admitted,attorney,lawyer,solicitor,advocate'],
-                                31 => ['label' => 'LLM (Master of Laws / Legal Postgrad)', 'badge' => 'Legal / Postgrad', 'regions' => 'Indian,American,Canadian,British,European,Commonwealth,Global', 'aliases' => 'llm,l.l.m.,master of laws,corporate law,international law,intellectual property'],
-                                24 => ['label' => 'MBBS / M.D. / D.O. (General Medicine & Surgery)', 'badge' => 'Medical / Surgery', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'mbbs,m.b.b.s.,bachelor of medicine,md,m.d.,doctor of medicine,do,d.o.,doctor of osteopathic medicine,physician'],
-                                46 => ['label' => 'MD / MS (Medical Specialty / Master of Surgery)', 'badge' => 'Medical Specialty', 'regions' => 'Indian,American,Canadian,British,Commonwealth,Global', 'aliases' => 'md,m.d.,ms general surgery,master of surgery,doctor of medicine,residency,medical specialty'],
-                                28 => ['label' => 'DM (Doctor of Medicine - Medical Super Specialty)', 'badge' => 'Super Specialty', 'regions' => 'Indian,Global', 'aliases' => 'dm,d.m.,super specialty,cardiology,neurology,oncology'],
-                                34 => ['label' => 'M.Ch (Surgical Super Specialty)', 'badge' => 'Surgical Specialty', 'regions' => 'Indian,Global', 'aliases' => 'mch,m.ch,magister chirurgiae,neurosurgery,cardiothoracic'],
-                                17 => ['label' => 'BDS / DDS (Dental Surgery & Medicine)', 'badge' => 'Dental / Global', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'bds,b.d.s.,dds,d.d.s.,dmd,d.m.d.,dental surgery,dentist,oral surgery'],
-                                44 => ['label' => 'MDS (Master of Dental Surgery)', 'badge' => 'Dental Postgrad', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mds,m.d.s.,master dental surgery,orthodontics,prosthodontics'],
-                                15 => ['label' => 'BAMS (Ayurvedic Medicine & Surgery)', 'badge' => 'Ayurveda', 'regions' => 'Indian', 'aliases' => 'bums,b.a.m.s.,ayurveda,ayush'],
-                                20 => ['label' => 'BHMS (Homeopathic Medicine & Surgery)', 'badge' => 'Homeopathy', 'regions' => 'Indian', 'aliases' => 'bhms,b.h.m.s.,homeopathy,ayush'],
-                                14 => ['label' => 'B.U.M.S (Unani Medicine & Surgery)', 'badge' => 'Unani', 'regions' => 'Indian', 'aliases' => 'bums,b.u.m.s.,unani,ayush'],
-                            ],
-                            "🏫 Secondary & High School" => [
-                                2  => ['label' => '12th Standard / High School Diploma / A-Levels / GED', 'badge' => 'High School', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => '12th,12th standard,hsc,intermediate,high school,high school diploma,ged,abitur,baccalaureat,senior secondary'],
-                                1  => ['label' => '10th Standard / Matriculation / Secondary School', 'badge' => 'Secondary', 'regions' => 'Indian,Global', 'aliases' => '10th,10th standard,ssc,matric,matriculation,secondary school'],
-                                49 => ['label' => 'A Levels / Advanced Level (UK / International)', 'badge' => 'UK A-Levels', 'regions' => 'British,Commonwealth,European,Global', 'aliases' => 'a levels,a-levels,alevel,advanced level,gce a levels'],
-                                51 => ['label' => 'GCSE / O-Levels (UK / International)', 'badge' => 'UK GCSE', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gcse,o-levels,o levels,olevel,igcse,gce o level'],
-                                50 => ['label' => 'Vocational Secondary / GNVQ / Technical Certificate', 'badge' => 'Vocational', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gnvq,vocational secondary,nvq,btec level 2,technical certificate'],
-                            ],
-                            "🌐 Other Qualifications" => [
-                                60 => ['label' => 'Others / Intensive Bootcamp / Specialized Certification', 'badge' => 'Other / Bootcamp', 'regions' => 'Global,Indian,American,Canadian,British,Australian,European', 'aliases' => 'other,others,non disclosed,bootcamp,coding bootcamp,full stack,certifications,aws certified,pmp,scrum master'],
-                            ],
-                        ];
+                          // 7-Category Global Education Standard with Regional Prov & Global Alias Taxonomy
+                          $educationCategories = [
+                              "🎓 Bachelor's / Undergraduate Degrees" => [
+                                  13 => ['label' => 'B.Tech / B.E (Engineering & Technology)', 'badge' => 'Engineering / Tech', 'regions' => 'Indian,Commonwealth,Global', 'aliases' => 'btech,b.tech,b tech,be,b.e,bachelor of technology,bachelor of engineering,beng,b.eng,bse,bs engineering,diplome ingenieur,diplom ingenieur,software engineer,computer science engineering,cse,mechanical,electrical,civil'],
+                                  12 => ['label' => 'B.S. / B.Sc (Science, IT & Computing / Licence)', 'badge' => 'USA / Global / EU', 'regions' => 'American,Canadian,British,Australian,European,Indian,Global', 'aliases' => 'bs,b.s.,bsc,b.sc,bachelor of science,bachelor science,bs cs,bsc cs,b sc,bsc it,bs it,information technology,computer science,data science,cybersecurity,cyber security,cloud computing,artificial intelligence,software development,licence,licenciatura,bac+3,grado'],
+                                  16 => ['label' => 'BCA (Computer Applications / Software)', 'badge' => 'IT / Software', 'regions' => 'Indian,Global', 'aliases' => 'bca,b.c.a.,bachelor of computer applications,bachelor computer applications,computer programming,web development'],
+                                  5  => ['label' => 'BBA / BMS (Business Administration)', 'badge' => 'Business / Global', 'regions' => 'Indian,American,Canadian,British,Australian,Global', 'aliases' => 'bba,b.b.a.,bms,b.m.s.,bachelor of business administration,bachelor business,management studies,business management,bba marketing,bba finance'],
+                                  6  => ['label' => 'B.Com (Commerce, Accounting & Finance)', 'badge' => 'Commerce / Finance', 'regions' => 'Indian,British,Canadian,Australian,Commonwealth,Global', 'aliases' => 'bcom,b.com,bachelor of commerce,bachelor commerce,commerce,accounting,finance,banking'],
+                                  3  => ['label' => 'B.A (Arts, Humanities & Social Sciences)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ba,b.a.,bachelor of arts,bachelor arts,humanities,economics,psychology,english,journalism,mass communication,history'],
+                                  7  => ['label' => 'B.Des (Design & UX/UI)', 'badge' => 'Design / Global', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bdes,b.des,bachelor of design,bachelor design,ui ux,product design,graphic design,fashion design,industrial design'],
+                                  18 => ['label' => 'BFA (Fine Arts & Digital Media)', 'badge' => 'Arts / Media', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bfa,b.f.a.,bachelor of fine arts,visual arts,animation,digital media,illustration'],
+                                  4  => ['label' => 'B.Arch (Architecture & Urban Planning)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'barch,b.arch,bachelor of architecture,architectural design,urban planning'],
+                                  11 => ['label' => 'B.Pharma / Nursing / Allied Health (Healthcare & Pharma)', 'badge' => 'Healthcare / Pharma', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'bpharma,b.pharma,b pharm,b.pharm,bachelor of pharmacy,pharmacy,nursing,b.sc nursing,bsc nursing,rn,registered nurse,bpt,physiotherapy,bachelor of physiotherapy,allied health,paramedical,pharm d,pharm.d'],
+                                  19 => ['label' => 'BHM (Hotel & Hospitality Management)', 'badge' => 'Hospitality', 'regions' => 'Indian,Global', 'aliases' => 'bhm,b.h.m.,bachelor of hotel management,hospitality,tourism,culinary arts'],
+                                  8  => ['label' => 'B.Ed (Education & Pedagogy)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'bed,b.ed,bachelor of education,teaching,pedagogy'],
+                                  9  => ['label' => 'B.El.Ed (Elementary Education)', 'badge' => 'Education', 'regions' => 'Indian', 'aliases' => 'beled,b.el.ed,bachelor of elementary education,primary teaching'],
+                                  10 => ['label' => 'B.P.Ed (Physical Education & Sports)', 'badge' => 'Sports Science', 'regions' => 'Indian,Global', 'aliases' => 'bped,b.p.ed,bachelor of physical education,sports science,kinesiology'],
+                                  21 => ['label' => 'BVSC / DVM (Veterinary Science & Medicine)', 'badge' => 'Veterinary', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'bvsc,b.v.sc,bachelor of veterinary science,dvm,veterinary medicine,veterinarian'],
+                                  61 => ['label' => 'Other Bachelor\'s / Undergraduate Degree', 'badge' => 'Bachelor\'s / Other', 'regions' => 'Global', 'aliases' => 'other bachelor,other bachelors,other undergraduate,bachelors other,custom bachelor,unlisted bachelor'],
+                              ],
+                              "🎓 Master's / Postgraduate Degrees" => [
+                                  39 => ['label' => 'M.S. / M.Sc / M.Eng (Science, IT & Engineering / Master 2)', 'badge' => 'USA / Global / EU', 'regions' => 'American,Canadian,British,Australian,European,Indian,Global', 'aliases' => 'ms,m.s.,msc,m.sc,master of science,master science,ms cs,msc cs,m s,m sc,meng,m.eng,master of engineering,data science,ai,artificial intelligence,machine learning,deep learning,cybersecurity,cloud architecture,big data,bioinformatics,master 2,bac+5,magister'],
+                                  40 => ['label' => 'M.Tech / M.E (Engineering & Advanced Tech)', 'badge' => 'Engineering / Postgrad', 'regions' => 'Indian,Global', 'aliases' => 'mtech,m.tech,m tech,me,m.e,master of technology,master of engineering,meng,m.eng,postgraduate engineering,vlsi,embedded,robotics'],
+                                  41 => ['label' => 'MBA / PGDM (Business Administration & Strategy)', 'badge' => 'Management / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'mba,m.b.a.,pgdm,p.g.d.m.,master of business administration,master business administration,executive mba,emba,insead,wharton,hbs,iim,post graduate diploma in management,business management,strategy,consulting'],
+                                  42 => ['label' => 'MCA (Master of Computer Applications)', 'badge' => 'IT / Software', 'regions' => 'Indian,Global', 'aliases' => 'mca,m.c.a.,master of computer applications,master computer applications,software engineering,computer science'],
+                                  43 => ['label' => 'MCM (Master of Computer Management)', 'badge' => 'Management & IT', 'regions' => 'Indian', 'aliases' => 'mcm,m.c.m.,master of computer management,it management'],
+                                  35 => ['label' => 'M.Com (Commerce, Economics & Finance)', 'badge' => 'Commerce / Finance', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mcom,m.com,master of commerce,economics,financial management,accounting'],
+                                  32 => ['label' => 'M.A (Arts, Humanities & Social Sciences)', 'badge' => 'Humanities / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ma,m.a.,master of arts,humanities,sociology,psychology,political science,international relations,literature'],
+                                  36 => ['label' => 'M.Des (Master of Design / UX)', 'badge' => 'Design / Postgrad', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mdes,m.des,master of design,interaction design,ux design,product design'],
+                                  45 => ['label' => 'MFA (Fine Arts & Creative Media)', 'badge' => 'Fine Arts / Media', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mfa,m.f.a.,master of fine arts,creative media,visual arts,cinematography'],
+                                  33 => ['label' => 'M.Arch (Master of Architecture)', 'badge' => 'Architecture', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'march,m.arch,master of architecture,landscape architecture,urban design'],
+                                  38 => ['label' => 'M.Pharma / Pharm.D / MPT (Advanced Healthcare & Pharma)', 'badge' => 'Healthcare / Pharma', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => 'mpharma,m.pharma,m pharm,m.pharm,master of pharmacy,pharm d,pharm.d,doctor of pharmacy,mpt,master of physiotherapy,pharmacology,clinical research'],
+                                  37 => ['label' => 'M.Ed (Master of Education)', 'badge' => 'Education', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'med,m.ed,master of education,educational leadership,curriculum'],
+                                  47 => ['label' => 'MVSC (Master of Veterinary Science)', 'badge' => 'Veterinary Postgrad', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mvsc,m.v.sc,master of veterinary science,veterinary surgery'],
+                                  30 => ['label' => 'Integrated PG / Dual Degree (B.Tech+M.Tech / BS+MS)', 'badge' => 'Integrated / Dual', 'regions' => 'Indian,European,American,Global', 'aliases' => 'integrated pg,dual degree,integrated mtech,integrated btech mtech,5 year integrated,bs ms,b.s. m.s.,btech mtech'],
+                                  62 => ['label' => 'Other Master\'s / Postgraduate Degree', 'badge' => 'Master\'s / Other', 'regions' => 'Global', 'aliases' => 'other master,other masters,other postgraduate,masters other,custom master,unlisted master,mph,msw,mphil,m.phil'],
+                              ],
+                              "🏛️ Doctorate & Research Degrees" => [
+                                  52 => ['label' => 'Ph.D. / Doctorate / Post-Doc (Doctor of Philosophy)', 'badge' => 'Doctorate / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'phd,ph.d.,ph.d,doctorate,doctor of philosophy,dphil,d.phil,postdoc,post doc,post doctoral,fellowship,research scholar,promotion,dr'],
+                                  64 => ['label' => 'Other Doctorate / Post-Doctoral Degree', 'badge' => 'Doctorate / Other', 'regions' => 'Global', 'aliases' => 'other doctorate,other phd,postdoc,post-doctoral,dba,d.sc,doctor of business administration,research fellow'],
+                              ],
+                              "📜 Associate Degrees & Diplomas" => [
+                                  22 => ['label' => 'Associate Degree / Polytechnic Diploma (A.A. / A.S. / Diploma)', 'badge' => 'Polytechnic / Assoc', 'regions' => 'Indian,American,Canadian,Australian,European,Global', 'aliases' => 'diploma,polytechnic,associate degree,associate of science,associate of arts,aa,a.a.,as,a.s.,aas,a.a.s.,community college,2 year degree,bts,dut,fachhochschule'],
+                                  48 => ['label' => 'PG Diploma (Post Graduate Diploma / Certificate)', 'badge' => 'PG Diploma', 'regions' => 'Indian,Canadian,British,Commonwealth,Global', 'aliases' => 'pg diploma,pgd,pgdiploma,post graduate diploma,postgraduate certificate,post-degree diploma,canadian pg diploma'],
+                                  25 => ['label' => 'HND / HNC (Higher National Diploma / Certificate)', 'badge' => 'UK / Commonwealth', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'hnd,hnc,higher national diploma,higher national certificate,vocational qualification,btec'],
+                                  63 => ['label' => 'Other Associate / Diploma / Vocational Degree', 'badge' => 'Diploma / Other', 'regions' => 'Global', 'aliases' => 'other diploma,other associate,vocational diploma,technical certificate,custom diploma,unlisted diploma'],
+                              ],
+                              "⚖️ Professional, Legal & Medical Degrees" => [
+                                  26 => ['label' => 'CA / CPA / CFA / ACCA (Finance & Accounting)', 'badge' => 'Finance / Global', 'regions' => 'Indian,American,Canadian,British,Australian,European,Global', 'aliases' => 'ca,cpa,cfa,acca,chartered accountant,chartered accountancy,certified public accountant,chartered financial analyst,cima,cost accountant,accounting,finance,audit'],
+                                  27 => ['label' => 'CS (Company Secretary / Corporate Governance)', 'badge' => 'Corporate Law', 'regions' => 'Indian,British,Commonwealth', 'aliases' => 'cs,c.s.,company secretary,company secretaryship,corporate governance,icsi'],
+                                  29 => ['label' => 'ICWA / CMA (Cost & Management Accounting)', 'badge' => 'Cost Accounting', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'icwa,cma,cost accountant,cost and management accountant,cma usa,icmai'],
+                                  23 => ['label' => 'LLB / J.D. (Law Degree / Juris Doctor)', 'badge' => 'Legal / Global', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'llb,l.l.b.,bachelor of laws,jd,j.d.,juris doctor,law degree,bar admitted,attorney,lawyer,solicitor,advocate'],
+                                  31 => ['label' => 'LLM (Master of Laws / Legal Postgrad)', 'badge' => 'Legal / Postgrad', 'regions' => 'Indian,American,Canadian,British,European,Commonwealth,Global', 'aliases' => 'llm,l.l.m.,master of laws,corporate law,international law,intellectual property'],
+                                  24 => ['label' => 'MBBS / M.D. / D.O. (General Medicine & Surgery)', 'badge' => 'Medical / Surgery', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'mbbs,m.b.b.s.,bachelor of medicine,md,m.d.,doctor of medicine,do,d.o.,doctor of osteopathic medicine,physician'],
+                                  46 => ['label' => 'MD / MS (Medical Specialty / Master of Surgery)', 'badge' => 'Medical Specialty', 'regions' => 'Indian,American,Canadian,British,Commonwealth,Global', 'aliases' => 'md,m.d.,ms general surgery,master of surgery,doctor of medicine,residency,medical specialty'],
+                                  28 => ['label' => 'DM (Doctor of Medicine - Medical Super Specialty)', 'badge' => 'Super Specialty', 'regions' => 'Indian,Global', 'aliases' => 'dm,d.m.,super specialty,cardiology,neurology,oncology'],
+                                  34 => ['label' => 'M.Ch (Surgical Super Specialty)', 'badge' => 'Surgical Specialty', 'regions' => 'Indian,Global', 'aliases' => 'mch,m.ch,magister chirurgiae,neurosurgery,cardiothoracic'],
+                                  17 => ['label' => 'BDS / DDS (Dental Surgery & Medicine)', 'badge' => 'Dental / Global', 'regions' => 'Indian,British,American,Commonwealth,Global', 'aliases' => 'bds,b.d.s.,dds,d.d.s.,dmd,d.m.d.,dental surgery,dentist,oral surgery'],
+                                  44 => ['label' => 'MDS (Master of Dental Surgery)', 'badge' => 'Dental Postgrad', 'regions' => 'Indian,British,Commonwealth,Global', 'aliases' => 'mds,m.d.s.,master dental surgery,orthodontics,prosthodontics'],
+                                  15 => ['label' => 'BAMS (Ayurvedic Medicine & Surgery)', 'badge' => 'Ayurveda', 'regions' => 'Indian', 'aliases' => 'bams,b.a.m.s.,ayurveda,ayush'],
+                                  20 => ['label' => 'BHMS (Homeopathic Medicine & Surgery)', 'badge' => 'Homeopathy', 'regions' => 'Indian', 'aliases' => 'bhms,b.h.m.s.,homeopathy,ayush'],
+                                  14 => ['label' => 'B.U.M.S (Unani Medicine & Surgery)', 'badge' => 'Unani', 'regions' => 'Indian', 'aliases' => 'bums,b.u.m.s.,unani,ayush'],
+                              ],
+                              "🏫 Secondary & High School" => [
+                                  2  => ['label' => '12th Standard / High School Diploma / A-Levels / GED', 'badge' => 'High School', 'regions' => 'Indian,American,Canadian,British,Global', 'aliases' => '12th,12th standard,hsc,intermediate,high school,high school diploma,ged,abitur,baccalaureat,senior secondary'],
+                                  1  => ['label' => '10th Standard / Matriculation / Secondary School', 'badge' => 'Secondary', 'regions' => 'Indian,Global', 'aliases' => '10th,10th standard,ssc,matric,matriculation,secondary school'],
+                                  49 => ['label' => 'A Levels / Advanced Level (UK / International)', 'badge' => 'UK A-Levels', 'regions' => 'British,Commonwealth,European,Global', 'aliases' => 'a levels,a-levels,alevel,advanced level,gce a levels'],
+                                  51 => ['label' => 'GCSE / O-Levels (UK / International)', 'badge' => 'UK GCSE', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gcse,o-levels,o levels,olevel,igcse,gce o level'],
+                                  50 => ['label' => 'Vocational Secondary / GNVQ / Technical Certificate', 'badge' => 'Vocational', 'regions' => 'British,Commonwealth,Global', 'aliases' => 'gnvq,vocational secondary,nvq,btec level 2,technical certificate'],
+                              ],
+                              "🌐 Other Qualifications" => [
+                                  60 => ['label' => 'Others / Intensive Bootcamp / Specialized Certification', 'badge' => 'Other / Bootcamp', 'regions' => 'Global,Indian,American,Canadian,British,Australian,European', 'aliases' => 'other,others,non disclosed,bootcamp,coding bootcamp,full stack,certifications,aws certified,pmp,scrum master'],
+                              ],
+                          ];
 
-                        $selectedQualId = @$application->qualification;
-                        $renderedIds = [];
-                      @endphp
+                          $selectedQualId = @$application->qualification;
+                          $renderedIds = [];
+                        @endphp
 
-                      @foreach($educationCategories as $categoryLabel => $catItems)
-                        <optgroup label="{{ $categoryLabel }}">
-                          @foreach($catItems as $qId => $itemMeta)
-                            @if(isset($qualMap[$qId]))
-                              @php
-                                $renderedIds[] = $qId;
-                                $isSelected = ((string)$selectedQualId === (string)$qId);
-                              @endphp
-                              <option value="{{ $qId }}" 
-                                      data-regions="{{ $itemMeta['regions'] }}"
-                                      data-aliases="{{ $itemMeta['aliases'] }}"
-                                      data-badge="{{ $itemMeta['badge'] }}"
-                                      {{ $isSelected ? 'selected="selected"' : '' }}>
-                                {{ $itemMeta['label'] }}
+                        @foreach($educationCategories as $categoryLabel => $catItems)
+                          <optgroup label="{{ $categoryLabel }}">
+                            @foreach($catItems as $qId => $itemMeta)
+                              @if(isset($qualMap[$qId]))
+                                @php
+                                  $renderedIds[] = $qId;
+                                  $isSelected = ((string)$selectedQualId === (string)$qId);
+                                @endphp
+                                <option value="{{ $qId }}" 
+                                        data-regions="{{ $itemMeta['regions'] }}"
+                                        data-aliases="{{ $itemMeta['aliases'] }}"
+                                        data-badge="{{ $itemMeta['badge'] }}"
+                                        {{ $isSelected ? 'selected="selected"' : '' }}>
+                                  {{ $itemMeta['label'] }}
+                                </option>
+                              @endif
+                            @endforeach
+                          </optgroup>
+                        @endforeach
+
+                        {{-- Fallback safety for any unmapped database record --}}
+                        @php
+                          $remainingItems = [];
+                          foreach ($qualMap as $qId => $qObj) {
+                              if (!in_array($qId, $renderedIds)) {
+                                  $remainingItems[] = $qObj;
+                              }
+                          }
+                        @endphp
+                        @if(count($remainingItems) > 0)
+                          <optgroup label="Additional Qualifications">
+                            @foreach($remainingItems as $remItem)
+                              <option value="{{ $remItem->id }}" data-regions="Global" data-aliases="" data-badge="Other" {{ ((string)$selectedQualId === (string)$remItem->id) ? 'selected="selected"' : '' }}>
+                                {{ $remItem->name }}
                               </option>
-                            @endif
-                          @endforeach
-                        </optgroup>
-                      @endforeach
-
-                      {{-- Fallback safety for any unmapped database record --}}
-                      @php
-                        $remainingItems = [];
-                        foreach ($qualMap as $qId => $qObj) {
-                            if (!in_array($qId, $renderedIds)) {
-                                $remainingItems[] = $qObj;
-                            }
-                        }
-                      @endphp
-                      @if(count($remainingItems) > 0)
-                        <optgroup label="Additional Qualifications">
-                          @foreach($remainingItems as $remItem)
-                            <option value="{{ $remItem->id }}" data-regions="Global" data-aliases="" data-badge="Other" {{ ((string)$selectedQualId === (string)$remItem->id) ? 'selected="selected"' : '' }}>
-                              {{ $remItem->name }}
-                            </option>
-                          @endforeach
-                        </optgroup>
-                      @endif
-                    </select>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Preferred Work Mode <span class="rq">*</span></label>
-                    <div class="rg">
-                      <div class="ri"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" />
-                        <label for="wr">Remote</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wh" {{ (@$application->wm == 'hybrid' || empty(@$application->wm)) ? 'checked' : '' }} value="hybrid" checked />
-                        <label for="wh">Hybrid</label>
-                      </div>
-                      <div class="ri">
-                        <input type="radio" name="wm" id="wo" {{ @$application->wm == 'office' ? 'checked' : '' }} value="office" />
-                        <label for="wo">Work From Office (WFO)</label>
-                      </div>
+                            @endforeach
+                          </optgroup>
+                        @endif
+                      </select>
                     </div>
                   </div>
+                </div>
+
+                <details class="candidate-secondary-details" {{ (!empty(@$application->secondrary_email) || !empty(@$application->secondary_mobile)) ? 'open' : '' }}>
+                  <summary>
+                    <span class="candidate-secondary-summary"><span class="candidate-secondary-icon"><i class="fa-solid fa-ellipsis" aria-hidden="true"></i></span><span><strong>Additional Secondary Contact</strong><small>Optional secondary email and contact number.</small></span></span>
+                    <span class="candidate-secondary-toggle"><span class="candidate-secondary-show">Show Details</span><span class="candidate-secondary-hide">Hide Details</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>
+                  </summary>
+                  <div class="candidate-secondary-grid">
+                    <div class="fg fv-row">
+                      <label for="secondrary_email">Secondary Email</label>
+                      <div class="candidate-field-control candidate-field-control--interactive"><i class="fa-regular fa-envelope" aria-hidden="true"></i><input type="email" class="form-control form-control-solid" name="secondrary_email" id="secondrary_email" value="{{ @$application->secondrary_email }}" placeholder="Enter secondary email" maxlength="55" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" /><button type="button" class="candidate-field-clear" title="Clear email" tabindex="-1" style="display: none;">&times;</button></div>
+                    </div>
+                    <div class="fg fv-row">
+                      <label>Secondary Contact Number</label>
+                      <x-jero-phone-input
+                          id="secondary_mobile"
+                          name="secondary_mobile"
+                          countryCodeName="secondary_country_code"
+                          countryCodeId="secondary_country_code"
+                          :value="@$application->secondary_mobile"
+                          :countryCode="@$second_phone_code"
+                          :defaultIso="@$country_code"
+                          label=""
+                          :required="false"
+                          placeholder="Enter secondary number" />
+                    </div>
+                  </div>
+                </details>
+              </div>
+            </div>
+
+            <!-- Preferred Work Mode -->
+            <div class="fs candidate-card preferred-work-mode-card">
+              <div class="fsh candidate-card-header">
+                <div class="candidate-card-title">
+                  <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                </div>
+              </div>
+              <div class="fsc candidate-card-body">
+                <div class="candidate-work-mode-grid">
+                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -6977,11 +7008,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 <script src="{{ asset('assets/node_modules/select2/dist/js/select2.full.min.js') }}"></script>
 <script src="{{ asset('front/assets/js/location.js') }}"></script>
 
-@if($page_event == 'EDIT')
-<script src="{{ asset('demo/v7/js/edit-applicant.js') }}"></script>
-@else
-{{-- <script src="{{ asset('demo/v7/js/add-applicant.js') }}"></script> --}}
-@endif
+{{-- Modern unified clientcreate handles both ADD and EDIT with stage-aware validation --}}
 
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -7310,35 +7337,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
    
 </script>
 
- 
-@if($page_event == 'EDIT') 
-<script>
-   $('#update-form').click(function () {				
-   		  if (typeof compileEvaluationMatrix === 'function') { compileEvaluationMatrix(); }
-   		  var formData 					=	new FormData($('#createForm')[0]);
-   		  // 0% Server Strain & 10K Concurrency Guard: Strip redundant binary file if already in R2
-   		  if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
-   		      if (formData.delete) { formData.delete('resume'); }
-   		  }
-          $.ajax({
-              		  url				:	'{{route('service_company.job-applications.update', @$application->id)}}'+'?_token=' + '{{ csrf_token() }}',	
-   					  type				:	"POST",
-   					  data 				:	formData,
-   					  processData		:	false,  	// tell jQuery not to process the data
-   					  contentType		:	false,  	// tell jQuery not to set contentType
-   					  redirect			:	true,
-   					  file				:	true,
-   					  success			:	function (response) {
-   					  							$(document).trigger('jero-candidate-saved');
-   					  							window.location = response.url;
-   					  						},
-              			error			:	function (response) {
-                  										handleFails(response);
-              										}
-          		})
-      });
-</script>
-@endif
+
 
 <script>
 // Reliable in-browser network connectivity check without external 3rd-party latency/blocking
@@ -7354,7 +7353,12 @@ var candidateFieldConfigMap = {
     'resume': {
         label: 'Upload Resume',
         selector: '#uploadBox',
-        message: 'Please upload a resume file (PDF or Word).'
+        message: 'Please upload a resume file (PDF or Word, max 2MB).'
+    },
+    'careersummary': {
+        label: 'Career Summary',
+        selector: '#careersummary',
+        message: 'Career summary is required.'
     },
     'full_name': {
         label: 'Full Name',
@@ -7391,6 +7395,21 @@ var candidateFieldConfigMap = {
         selector: '#gender',
         message: 'Gender is required.'
     },
+    'skills': {
+        label: 'Primary Skills',
+        selector: '#kt_tagify_2',
+        message: 'Primary skills are required (minimum 1 skill).'
+    },
+    'total_exp': {
+        label: 'Total Experience',
+        selector: '#total_exp_year',
+        message: 'Total experience is required.'
+    },
+    'rel_exp': {
+        label: 'Relevant Experience',
+        selector: '#rel_exp_year',
+        message: 'Relevant experience is required.'
+    },
     'current_company': {
         label: 'Current Company',
         selector: '#current_company',
@@ -7406,20 +7425,40 @@ var candidateFieldConfigMap = {
         selector: '#EmploymentType',
         message: 'Employment type is required.'
     },
-    'total_exp': {
-        label: 'Total Experience',
-        selector: '#total_exp_year',
-        message: 'Total experience is required.'
+    'ctc': {
+        label: 'Current CTC (Salary Details)',
+        selector: '#ctc',
+        message: 'Current salary details are required.'
     },
-    'rel_exp': {
-        label: 'Relevant Experience',
-        selector: '#rel_exp_year',
-        message: 'Relevant experience is required.'
+    'ectc': {
+        label: 'Expected CTC (Salary Details)',
+        selector: '#ectc',
+        message: 'Expected salary details are required.'
     },
-    'skills': {
-        label: 'Primary Skills',
-        selector: '#kt_tagify_2',
-        message: 'Primary skills are required.'
+    'np_id': {
+        label: 'Notice Period & Joining Details',
+        selector: '#np_id',
+        message: 'Notice period is required.'
+    },
+    'wm': {
+        label: 'Preferred Work Mode',
+        selector: 'input[name="wm"]',
+        message: 'Preferred work mode is required.'
+    },
+    'job_skills': {
+        label: 'Job Skills Details',
+        selector: '.candidate-job-skills-scroll table',
+        message: 'Job skills experience and ratings are required.'
+    },
+    'screening_questions': {
+        label: 'Screening Questions',
+        selector: '.candidate-card-icon--questions',
+        message: 'Please answer all required screening questions.'
+    },
+    'recruiter_note': {
+        label: 'Recruiter Comments',
+        selector: '#recruiter_note',
+        message: 'Recruiter comments are required.'
     }
 };
 
@@ -7440,7 +7479,143 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         }
     }
 
-    // 1. Resume check
+    // Determine target stage:
+    // If user changed stage selector on page (#master_status_id), use that value.
+    // Otherwise check hidden #current_master_status_id or window.__candidateMasterStatusId.
+    // On Add Candidate, default is 8 (In Review).
+    var targetStageEl = document.getElementById('master_status_id') || document.getElementById('current_master_status_id');
+    var activeStageId = targetStageEl ? parseInt(targetStageEl.value, 10) : (window.__candidateMasterStatusId || 8);
+
+    // =========================================================================
+    // MANDATORY FOR IN REVIEW STAGE (master_status_id == 8):
+    // Only Full Name * and Primary Contact Number * are mandatory.
+    // All other fields remain optional and do NOT block submission.
+    // =========================================================================
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn || fn.length < 2) addMissing('full_name');
+
+    var ph = ($('#phone').val() || '').trim();
+    if (!ph || ph.length < 6) addMissing('phone');
+
+    // If candidate is in "In Review" stage (8), stop here — all other fields are optional!
+    if (activeStageId === 8) {
+        return missing;
+    }
+
+    // =========================================================================
+    // 100% VALIDATION WHEN CHANGING STAGE FROM In Review -> Sourcing (or Stage 1+):
+    // =========================================================================
+
+    // 1. Primary Email *
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
+
+    // 2. Current Location *
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    var canonLoc = ($('#location_canonical_label').val() || '').trim();
+    var cityId = ($('#location_city_id').val() || '').trim();
+    if (!loc && !canonLoc && !cityId) {
+        addMissing('kt_tagify_work_location');
+        $('#jero-cs-location').addClass('has-validation-error');
+        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
+    }
+
+    // 3. Highest Qualification *
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification');
+
+    // 4. Nationality
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality');
+
+    // 5. Gender
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender');
+
+    // 6. Primary Skills — minimum 1 skill required
+    var sk = ($('#kt_tagify_2').val() || '').trim();
+    if (!sk) {
+        addMissing('skills');
+    } else {
+        try {
+            var parsedSkills = JSON.parse(sk);
+            if (Array.isArray(parsedSkills) && parsedSkills.length === 0) {
+                addMissing('skills');
+            }
+        } catch (e) {
+            if (sk.length < 1) addMissing('skills');
+        }
+    }
+
+    // 7. Experience Details
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp');
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
+
+    // Check if Fresher (Total Experience is 0)
+    var isFresher = (te === '0' || te === 0);
+
+    // Fields NOT mandatory for Freshers:
+    if (!isFresher) {
+        // Professional Profile: Current Designation, Current Company, Employment Type
+        var cd = ($('#current_designation').val() || '').trim();
+        if (!cd) addMissing('current_designation');
+
+        var cc = ($('#current_company').val() || '').trim();
+        if (!cc) addMissing('current_company');
+
+        var et = ($('#EmploymentType').val() || '').trim();
+        if (!et) addMissing('employmentType');
+
+        // Salary Details: Current CTC, Expected CTC
+        var ctc = ($('#ctc').val() || '').trim();
+        if (!ctc) addMissing('ctc');
+
+        var ectc = ($('#ectc').val() || '').trim();
+        if (!ectc) addMissing('ectc');
+
+        // Notice Period & Joining Details
+        var np = ($('#np_id').val() || '').trim();
+        if (!np) addMissing('np_id');
+    }
+
+    // 8. Preferred Work Mode
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm');
+
+    // 9. Job Skills Details (if job has skills)
+    var $jobSkillYears = $('select[name^="YearskillId"]');
+    if ($jobSkillYears.length > 0) {
+        var missingJobSkills = false;
+        $jobSkillYears.each(function() {
+            var val = $(this).val();
+            if (!val || val === '0') {
+                missingJobSkills = true;
+            }
+        });
+        if (missingJobSkills) addMissing('job_skills');
+    }
+
+    // 10. Screening Questions (if job has questions)
+    var $questions = $('.screening-question-input, [name^="answer["]');
+    if ($questions.length > 0) {
+        var missingQuestions = false;
+        $questions.each(function() {
+            var qVal = $(this).val();
+            if (!qVal || !String(qVal).trim()) {
+                missingQuestions = true;
+            }
+        });
+        if (missingQuestions) addMissing('screening_questions');
+    }
+
+    // 11. Recruiter Comments
+    var rn = ($('#recruiter_note').val() || '').trim();
+    if (!rn) addMissing('recruiter_note');
+
+    // 12. Upload Resume
     var hasResume = false;
     if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
         ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
@@ -7456,67 +7631,11 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
             hasResume = true;
         }
     }
-    if (!hasResume) {
-        addMissing('resume');
-    }
+    if (!hasResume) addMissing('resume');
 
-    // 2. Full Name
-    var fn = ($('#full_name').val() || '').trim();
-    if (!fn || fn.length < 2) addMissing('full_name');
-
-    // 3. Email
-    var em = ($('#email').val() || '').trim();
-    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
-
-    // 4. Phone
-    var ph = ($('#phone').val() || '').trim();
-    if (!ph || ph.length < 6) addMissing('phone');
-
-    // 5. Current Location
-    var loc = ($('#kt_tagify_work_location').val() || '').trim();
-    var canonLoc = ($('#location_canonical_label').val() || '').trim();
-    var cityId = ($('#location_city_id').val() || '').trim();
-    if (!loc && !canonLoc && !cityId) {
-        addMissing('kt_tagify_work_location');
-        $('#jero-cs-location').addClass('has-validation-error');
-        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
-    }
-
-    // 6. Current Designation
-    var cd = ($('#current_designation').val() || '').trim();
-    if (!cd) addMissing('current_designation');
-
-    // 7. Current Company
-    var cc = ($('#current_company').val() || '').trim();
-    if (!cc) addMissing('current_company');
-
-    // 8. Employment Type
-    var et = ($('#EmploymentType').val() || '').trim();
-    if (!et) addMissing('employmentType');
-
-    // 9. Total Exp
-    var te = $('#total_exp_year').val();
-    if (te === '' || te === null || te === undefined) addMissing('total_exp');
-
-    // 10. Rel Exp
-    var re = $('#rel_exp_year').val();
-    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
-
-    // 11. Highest Qualification
-    var qual = ($('#qualification').val() || '').trim();
-    if (!qual) addMissing('qualification');
-
-    // 12. Primary Skills
-    var sk = ($('#kt_tagify_2').val() || '').trim();
-    if (!sk) addMissing('skills');
-
-    // 13. Nationality
-    var nat = ($('#nationality').val() || '').trim();
-    if (!nat) addMissing('nationality');
-
-    // 14. Gender
-    var gen = ($('#gender').val() || '').trim();
-    if (!gen) addMissing('gender');
+    // 13. Career Summary *
+    var cs = ($('#careersummary').val() || '').trim();
+    if (!cs) addMissing('careersummary');
 
     return missing;
 }
@@ -7691,16 +7810,6 @@ var KTAddCandidate = function () {
                             }
                         }
                     },
-                    'current_designation': {
-                        validators: {
-                            notEmpty: { message: "Current designation is required" }
-                        }
-                    },
-                    'current_company': {
-                        validators: {
-                            notEmpty: { message: "Current company is required" }
-                        }
-                    },
                     'phone': {
                         validators: {
                             notEmpty: { message: "Primary number is required" },
@@ -7716,8 +7825,14 @@ var KTAddCandidate = function () {
                     },
                     'email': {
                         validators: {
-                            notEmpty: { message: "Primary Email is required" },
-                            emailAddress: { message: 'The value is not a valid email address' },
+                            callback: {
+                                message: "The value is not a valid email address",
+                                callback: function(input) {
+                                    var val = (input.value || '').trim();
+                                    if (!val) return true; // Optional in In Review stage
+                                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                                }
+                            },
                             stringLength: { max: 191, message: "Email must not exceed 191 characters" }
                         }
                     },
@@ -7760,9 +7875,12 @@ var KTAddCandidate = function () {
                 compileEvaluationMatrix();
             }
 
-            // Ensure unique client_submission_uuid for idempotency
+            // Ensure unique client_submission_uuid and client_update_uuid for idempotency
             if (!$('#client_submission_uuid').val()) {
                 $('#client_submission_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('sub_' + Math.random().toString(36).slice(2) + Date.now()));
+            }
+            if (!$('#client_update_uuid').val()) {
+                $('#client_update_uuid').val(window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('upd_' + Math.random().toString(36).slice(2) + Date.now()));
             }
 
             var formData = new FormData($('#createForm')[0]);
@@ -7771,8 +7889,13 @@ var KTAddCandidate = function () {
                 if (formData.delete) { formData.delete('resume'); }
             }
 
+            var isEditMode = ('{{ $page_event }}' === 'EDIT') && parseInt('{{ @$application->id ?: @$appId ?: 0 }}', 10) > 0;
+            var submitUrl = isEditMode
+                ? '{{ route("service_company.job-applications.update", @$application->id ?: (@$appId ?: 0)) }}' + '?_token=' + '{{ csrf_token() }}'
+                : '{{ route("service_company.job-applications.clientappstore") }}' + '?_token=' + '{{ csrf_token() }}';
+
             $.ajax({
-                url: '{{route('service_company.job-applications.clientappstore')}}'+'?_token=' + '{{ csrf_token() }}',
+                url: submitUrl,
                 type: 'POST',
                 headers: {
                     'X-Correlation-ID': window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : ('cid-' + Date.now() + '-' + Math.random().toString(36).slice(2))
