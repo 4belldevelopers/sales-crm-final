@@ -13074,18 +13074,21 @@ END:VCALENDAR";
 
         $q2 = DB::table('rec_candidate_assign')
             ->where('source_jobid', $jobId)
+            ->where('ac_status', 1)
             ->whereNotNull('source_from_id')
             ->where('source_from_id', '>', 0)
             ->select('source_from_id as candidate_id');
 
         $q3 = DB::table('rec_candidate_assign')
             ->where('source_jobid', $jobId)
+            ->where('ac_status', 1)
             ->whereNotNull('source_application_id')
             ->where('source_application_id', '>', 0)
             ->select('source_application_id as candidate_id');
 
         $q4 = DB::table('rec_candidate_assign')
             ->where('source_jobid', $jobId)
+            ->where('ac_status', 1)
             ->whereNotNull('parent_id')
             ->where('parent_id', '>', 0)
             ->select('parent_id as candidate_id');
@@ -13096,6 +13099,9 @@ END:VCALENDAR";
 
         if ($companyId) {
             $q1->where('company_id', $companyId);
+            $q2->where('source_company_id', $companyId);
+            $q3->where('source_company_id', $companyId);
+            $q4->where('source_company_id', $companyId);
             $q5->where('company_id', $companyId);
         }
 
@@ -13107,6 +13113,54 @@ END:VCALENDAR";
             ->unique()
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Get candidate IDs that have a pending Bench Talent Request (ac_status = 0)
+     * for the specified job.
+     *
+     * @return int[]
+     */
+    public static function getJobRequestedCandidateIds(int $jobId, ?int $companyId = null): array
+    {
+        if ($jobId <= 0) {
+            return [];
+        }
+
+        $q = DB::table('rec_candidate_assign')
+            ->where('source_jobid', $jobId)
+            ->where('ac_status', 0);
+
+        if ($companyId) {
+            $q->where('source_company_id', $companyId);
+        }
+
+        $fromIds = (clone $q)->whereNotNull('source_from_id')->where('source_from_id', '>', 0)->pluck('source_from_id')->toArray();
+        $appIds = (clone $q)->whereNotNull('source_application_id')->where('source_application_id', '>', 0)->pluck('source_application_id')->toArray();
+
+        return array_values(array_unique(array_map('intval', array_merge($fromIds, $appIds))));
+    }
+
+    /**
+     * Invalidate cached job counters across v3 and legacy keys for given companies.
+     */
+    public static function invalidateJobCounters(int $jobId, array $companyIds = []): void
+    {
+        if ($jobId <= 0) {
+            return;
+        }
+
+        $cIds = array_filter(array_unique(array_map('intval', $companyIds)));
+        if (auth()->check()) {
+            $cIds[] = (int) auth()->user()->company_id;
+        }
+
+        foreach ($cIds as $cId) {
+            if ($cId > 0) {
+                Cache::forget("custome_count_all:v3:{$cId}:{$jobId}");
+                Cache::forget("custome_count_all:{$cId}:{$jobId}");
+            }
+        }
     }
 
     /**

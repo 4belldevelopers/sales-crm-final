@@ -259,11 +259,12 @@
                 @php
                     $pay_rate_currency = $bill_rate_currency = $pay_rate_amount = $bill_rate_amount = $pay_rate_mode = $bill_rate_mode =
                         '';
-                    $pay_rate_currency = $currencySymbole[@$min_salary_currency];
-                    $bill_rate_currency = $currencySymbole[@$min_salary_currency];
+                    $safeCurrencyKey = (int) (@$min_salary_currency ?? 0);
+                    $pay_rate_currency = $currencySymbole[$safeCurrencyKey] ?? '₹';
+                    $bill_rate_currency = $currencySymbole[$safeCurrencyKey] ?? '₹';
 
                     $currencymain = GeneralMethod::currency(); // Currency code
-                    $currency = $currencymain[@$min_salary_currency];
+                    $currency = $currencymain[$safeCurrencyKey] ?? 'INR';
                     $convertedAmounEctc = GeneralMethod::conversionRates($currency, $row->ectc_yearly, 0);
                     $convertedAmounCtc = GeneralMethod::conversionRates($currency, $row->ctc_yearly, 0);
                     $bill_rate_amount = $convertedAmounEctc[$sal_mode];
@@ -368,6 +369,7 @@
                             ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
                         $isAdded = ($existingCandidatesQuery > 0);
                     }
+                    $isRequested = (isset($requestedCandidateIds) && in_array((int) @$row->id, $requestedCandidateIds, true));
 
                     if ($row->status == 2) {
                         if ($isAdded) {
@@ -379,7 +381,7 @@
                         } else {
                             $html =
                                 '<div class="d-flex flex-column"> 
-                                    <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="2" data-row-id="' .
+                                    <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-source_from_type="2" data-row-requested="' . ($isRequested ? '1' : '0') . '" data-row-id="' .
                                 @$row->id .
                                 '" data-row-jobid="' .
                                 @$jobid .

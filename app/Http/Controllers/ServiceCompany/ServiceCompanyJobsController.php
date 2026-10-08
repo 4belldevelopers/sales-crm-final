@@ -14173,6 +14173,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$this->user->id);
             GeneralMethod::cacheClean('allapptracker_version_user_'.$this->user->id);
             Cache::forget('custome_count_all:'.$company_id.':'.$jobId);
+            GeneralMethod::invalidateJobCounters((int) $jobId, array_filter([(int) $company_id, (int) ($rec_candidate_assign->source_company_id ?? 0), (int) ($rec_candidate_assign->source_from_company_id ?? 0)]));
 
             return Reply::dataOnly(['status' => 'success', 'message' => 'Candidate is already added to this job']);
         }
@@ -14244,6 +14245,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             GeneralMethod::cacheClean($key);
             Cache::forget($key);
         }
+        GeneralMethod::invalidateJobCounters((int) $jobId, array_filter([(int) $company_id, (int) $jobsCompanyId, (int) $sourceCompanyId, (int) $sourceFromCompanyId]));
 
         if ($lastWiseIs > 0) {
             app(\App\Services\CandidateJobAlignmentService::class)->alignCandidateToJob(

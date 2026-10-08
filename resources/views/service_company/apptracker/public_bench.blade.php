@@ -2387,16 +2387,20 @@
         // (pagination, filter, sort, or a real page reload).
         function abfMarkCandidateRowAdded($btn) {
             $btn.closest('div.d-flex.flex-column').html(
-                '<a href="javascript:void(0);" class="text-dark fw-bolder fs-6">Added</a>'
+                '<button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button>'
             );
         }
 
-        function abfIncrementBenchReqCounter(delta) {
-            var $counter = $('#benchTalentReq_counter');
+        function abfIncrementCounter(selector, delta) {
+            var $counter = $(selector);
             if (!$counter.length) return;
             var cur = parseInt(String($counter.first().text() || '0').replace(/[^0-9-]/g, ''), 10);
             if (isNaN(cur)) cur = 0;
-            $counter.text(Math.max(0, cur + (delta || 1)));
+            $counter.text(Math.max(0, cur + (delta || 0)));
+        }
+
+        function abfIncrementBenchReqCounter(delta) {
+            abfIncrementCounter('#benchTalentReq_counter', delta);
         }
 
         $(document).on('click', '.add_to_inreview', function(e) {
@@ -2466,9 +2470,13 @@
 
                                 if (response.status == 'success') {
                                     abfMarkCandidateRowAdded($btn);
-                                    abfIncrementBenchReqCounter(1);
+                                    if (response.request_auto_accepted) {
+                                        abfIncrementCounter('#benchTalentReq_counter', -1);
+                                    }
+                                    abfIncrementCounter('#pool_counter', 1);
                                     AgencyBenchStore.markCandidateAdded(id, source_jobid);
-                                    abfToast.fire({ icon: 'success', title: 'Selected request has been In-Review' });
+                                    AgencyBenchStore.invalidate();
+                                    abfToast.fire({ icon: 'success', title: response.message || 'Selected request has been In-Review' });
                                 } else {
                                     restoreButton();
                                 }

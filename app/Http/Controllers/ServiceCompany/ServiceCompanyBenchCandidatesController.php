@@ -7364,6 +7364,12 @@ class ServiceCompanyBenchCandidatesController extends ServiceCompanyBaseControll
                  * Tenancy Note: Tenant-scoped by rec_candidate_assign_id.
                  */
                 \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $rec_id);
+                app()->terminating(function () use ($rec_id) {
+                    try {
+                        GeneralMethod::candidateRequestIndexElastic((int) $rec_id);
+                    } catch (\Throwable $e) {}
+                });
+                GeneralMethod::invalidateJobCounters((int) $source_jobid, [(int) $source_company_id, (int) $source_from_company_id]);
                 \App\Services\MarketJobV2Service::invalidateCacheForCompany((int) $source_from_company_id);
                 \Illuminate\Support\Facades\Cache::increment("pipeline_v2:{$source_from_company_id}:epoch");
                 if ((int) $source_company_id !== (int) $source_from_company_id) {
