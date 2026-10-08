@@ -1,6 +1,4 @@
-<div data-kt-swapper="true" data-kt-swapper-mode="prepend"
-                data-kt-swapper-parent="{default: '#kt_content_container', 'lg': '#kt_toolbar_container'}"
-                class="page-title d-flex align-items-center flex-wrap me-3 mb-5 mb-lg-0" style="position: relative;">
+<div class="page-title d-flex align-items-center flex-nowrap me-3 my-0" style="position: relative;">
                 @php
                     use App\Helper\GeneralMethod;
                     
@@ -44,16 +42,14 @@
                             $statusClass = 'hold-bg';
                     }
 
+                    /* Intent: Never disclose client logo on public career page - strictly company logo */
+                    $raw_logo = !empty($account->logo) ? $account->logo : (!empty($logos->logo) ? $logos->logo : '');
                     $logo_path = '';
-                    // dd($account);
-
-
-                    if (!empty($account->logo)) {
-                        $logo_path = $account->logo;
+                    if (!empty($raw_logo)) {
+                        $logo_path = (str_starts_with($raw_logo, 'http://') || str_starts_with($raw_logo, 'https://') || str_starts_with($raw_logo, '/'))
+                            ? $raw_logo
+                            : url('public/user-uploads/company-logo/' . $raw_logo);
                     }
-                    $company_or_client = GeneralMethod::openCompanyDetailsByClient($id,$company_id);
-
-
 
                     $Jobcities = GeneralMethod::openJobcities($id,$company_id);
                     $firstJobcities = GeneralMethod::openFirstJobcities($id,$company_id);	
@@ -76,35 +72,27 @@
                         ->first();
 
                     $jobCompId = (int) ($jobClientInfo->company_id ?? @$job->company_id ?? 0);
-                    $selfCompVal = (int) ($jobClientInfo->self_company ?? @$job->self_company ?? 0);
                     $viewerCompId = (int) ($company_id ?? 0);
 
-                    $isDirectClientJob = ($viewerCompId > 0 && $jobCompId > 0 && $viewerCompId !== $jobCompId);
-                    if ($isDirectClientJob) {
-                        $tagsType = 'Direct Client';
-                    } elseif ($selfCompVal === 1) {
-                        $tagsType = __('messages.internal_tag');
-                    } else {
-                        $tagsType = 'Internal Client';
-                    }
+                    /* Intent: Never disclose client details - use Internal tag */
+                    $tagsType = 'Internal';
 
-                    /* Intent: Always display Parent/Main Company Name under job title on open-toolbar */
-                    $parent_company_name = ! empty($account->company_name) ? $account->company_name : '';
+                    /* Intent: Strictly display Company Name - never disclose confidential client name */
+                    $parent_company_name = ! empty($account->company_name) ? $account->company_name : (! empty($logos->company_name) ? $logos->company_name : '');
                     if (empty($parent_company_name)) {
                         $targetCompanyId = ($viewerCompId > 0) ? $viewerCompId : ($jobCompId > 0 ? $jobCompId : 0);
                         if ($targetCompanyId > 0) {
                             $parent_company_name = \DB::table('companies')->where('id', $targetCompanyId)->value('company_name');
                         }
                     }
-                    $toolbar_display_company = ! empty($parent_company_name) ? $parent_company_name : $company_or_client;
+                    $toolbar_display_company = ! empty($parent_company_name) ? $parent_company_name : 'Company';
 
                 @endphp
                 <!--begin::Requisitions=-->
                 
 
                     <?php if (! empty($logo_path)) { ?>
-                    <div data-row-id="' . $row->id . '"
-                        class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2  ' . $profile_detail_class . ' border-radius-5" data-id="{{$id}}">
+                    <div class="symbol show-detail-open symbol-circle symbol-40px overflow-hidden me-2 border-radius-5" data-id="{{$id}}">
                         <a href="javascript:void(0);">
                             <div class="symbol-label border-radius-5">
                                 <img src="{{ str_replace('index.php', '', @$logo_path) }}" alt="Company Logo"
