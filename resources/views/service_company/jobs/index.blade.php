@@ -1077,10 +1077,153 @@ $(document).on('click', '.client-hm-listing', function ()
                   }else{
                     $('#light_logo_company').addClass('d-none');
                   }
-   						}
-   	  			});
-   	});
-	
+    						}
+    	  			});
+    	});
+
+    // Accept Job Request handler
+    $(document).on('click', '.request_approval', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+
+        var jobId = $btn.attr('data-row-id') || $btn.data('row-id');
+        var recommendation_relation_id = $btn.attr('data-row-recommendation_relation_id') || $btn.data('row-recommendation_relation_id');
+        var status = $btn.attr('data-row-status') || $btn.data('row-status') || 'accept';
+        var originalHtml = $btn.html();
+
+        $btn.prop('disabled', true)
+            .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Please wait...');
+
+        $.ajax({
+            type: 'GET',
+            url: "{{ route('service_company.jobs.requestapproval') }}",
+            data: {
+                jobId: jobId,
+                rec_relation_id: recommendation_relation_id,
+                status: status
+            },
+            success: function (response) {
+                if (response.status === 'success' || response.status === 'accept') {
+                    if (window.JeroJobsLocalStore) {
+                        window.JeroJobsLocalStore.purge();
+                    }
+                    if (response.dataCnt) {
+                        $('#top_card_all_jobs_count').text(response.dataCnt.allRequisition ?? response.dataCnt.allTabCount ?? 0);
+                        $('#top_card_client_requisition_count').text(response.dataCnt.clientRequisition ?? 0);
+                        $('#top_card_custom_requisition_count').text(response.dataCnt.customRequisition ?? 0);
+                        $('#top_card_job_request_count').text(response.dataCnt.jobRequest ?? 0);
+                    }
+                    Swal.fire({
+                        text: 'Job request accepted successfully.',
+                        icon: 'success',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok, got it!',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                    fetchCandidates(1);
+                } else if (response.status === 'ignoreClient') {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    Swal.fire({
+                        text: 'Client details could not be verified for this company.',
+                        icon: 'warning',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                } else {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    Swal.fire({
+                        text: response.message || 'Unable to accept job request.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                }
+            },
+            error: function () {
+                $btn.prop('disabled', false).html(originalHtml);
+                Swal.fire({
+                    text: 'Something went wrong while accepting the job request. Please try again.',
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
+            }
+        });
+    });
+
+    // Reject Job Request handler
+    $(document).on('click', '.request_reject', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.prop('disabled')) return;
+
+        var jobId = $btn.attr('data-row-id') || $btn.data('row-id');
+        var recommendation_relation_id = $btn.attr('data-row-recommendation_relation_id') || $btn.data('row-recommendation_relation_id');
+        var status = $btn.attr('data-row-status') || $btn.data('row-status') || 'ignore';
+
+        const swalWithBootstrapButtons = Swal.mixin({
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-light'
+            },
+            buttonsStyling: false
+        });
+
+        swalWithBootstrapButtons.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Reject',
+            cancelButtonText: 'No, cancel!',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var originalHtml = $btn.html();
+                $btn.prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Please wait...');
+
+                $.ajax({
+                    type: 'GET',
+                    url: "{{ route('service_company.jobs.requestapproval') }}",
+                    data: {
+                        jobId: jobId,
+                        rec_relation_id: recommendation_relation_id,
+                        status: status
+                    },
+                    success: function (response) {
+                        if (window.JeroJobsLocalStore) {
+                            window.JeroJobsLocalStore.purge();
+                        }
+                        if (response.dataCnt) {
+                            $('#top_card_all_jobs_count').text(response.dataCnt.allRequisition ?? response.dataCnt.allTabCount ?? 0);
+                            $('#top_card_client_requisition_count').text(response.dataCnt.clientRequisition ?? 0);
+                            $('#top_card_custom_requisition_count').text(response.dataCnt.customRequisition ?? 0);
+                            $('#top_card_job_request_count').text(response.dataCnt.jobRequest ?? 0);
+                        }
+                        swalWithBootstrapButtons.fire('Rejected!', 'Selected request has been rejected.', 'success');
+                        fetchCandidates(1);
+                    },
+                    error: function () {
+                        $btn.prop('disabled', false).html(originalHtml);
+                        swalWithBootstrapButtons.fire('Error', 'Something went wrong while rejecting the request.', 'error');
+                    }
+                });
+            }
+        });
+    });
 </script>
 <script>
 
