@@ -37,12 +37,247 @@
 }
 
 .candidate-top-toolbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    z-index: 1000 !important;
     background: #FFF7ED !important;
     border-bottom: 1px solid #FED7AA !important;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08) !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+body.career-apply-page {
+    padding-top: 0 !important;
+    margin: 0 !important;
+}
+
+body.career-apply-page .toolbar {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
 }
 
 .candidate-top-toolbar .candidate-toolbar-container {
     background: transparent !important;
+}
+
+/* ALL 14 Card Header Squircle Icons — 100% Unified Enterprise Orange */
+.job-candidate-create .candidate-card-icon,
+.job-candidate-create .resume-card-icon,
+.job-candidate-create .summary-card-icon,
+.job-candidate-create .bd-hero-icon,
+.job-candidate-create .pd-hero-icon,
+.job-candidate-create .pd-experience-hero-icon,
+.job-candidate-create .br-hero-icon,
+.job-candidate-create .aw-hero-icon,
+.job-candidate-create .se-icon,
+.job-candidate-create .candidate-card-icon--work-mode,
+.job-candidate-create .candidate-card-icon--questions,
+.job-candidate-create .candidate-card-icon--interview,
+.job-candidate-create .candidate-card-icon--note,
+.job-candidate-create .candidate-card-icon--additional,
+.job-candidate-create .addl-hero-icon,
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .candidate-profile-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .professional-profile-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .primary-skills-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .experience-details-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .job-skills-card > .candidate-card-header .candidate-card-icon,
+.job-candidate-create .salary-card .candidate-card-icon,
+.job-candidate-create .preferred-work-mode-card .candidate-card-icon,
+.job-candidate-create .notice-joining-card .candidate-card-icon,
+.job-candidate-create .interview-card .candidate-card-icon,
+.job-candidate-create .professional-links-card .candidate-card-icon,
+.job-candidate-create .additional-details-card .candidate-card-icon {
+    background: linear-gradient(135deg, #F59E0B, #D97706) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28) !important;
+    border: none !important;
+}
+
+.job-candidate-create .candidate-card-icon i,
+.job-candidate-create .candidate-card > .candidate-card-header .candidate-card-icon i {
+    color: #ffffff !important;
+}
+
+/* Dropzone Orange Theme */
+.job-candidate-create .resume-card .ui svg,
+.resume-card .ui svg {
+    stroke: #F59E0B !important;
+    color: #F59E0B !important;
+}
+
+.job-candidate-create .resume-card .ub,
+.resume-card .ub,
+#chooseFileBtn {
+    background-color: #F59E0B !important;
+    border-color: #F59E0B !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25) !important;
+}
+
+.job-candidate-create .resume-card .ub:hover,
+.resume-card .ub:hover,
+#chooseFileBtn:hover {
+    background-color: #D97706 !important;
+    border-color: #D97706 !important;
+    box-shadow: 0 6px 14px rgba(217, 119, 6, 0.3) !important;
+}
+
+.job-candidate-create .resume-card .ua:hover,
+.job-candidate-create .resume-card .ua.dragover,
+.resume-card .ua:hover,
+.resume-card .ua.dragover {
+    border-color: #F59E0B !important;
+    background: #FFF7ED !important;
+}
+
+/* Card Sub-icons & Interactive Elements */
+.job-candidate-create .candidate-field-control > i,
+.job-candidate-create .candidate-notice-input-shell > i {
+    color: #D97706 !important;
+}
+
+.job-candidate-create .candidate-field-control:focus-within > i,
+.job-candidate-create .candidate-notice-input-shell:focus-within > i {
+    color: #F59E0B !important;
+}
+
+.job-candidate-create .tip svg {
+    color: #F59E0B !important;
+    stroke: #F59E0B !important;
+}
+
+.job-candidate-create .jero-cs-icon i,
+.job-candidate-create .jero-cs-search-icon {
+    color: #F59E0B !important;
+}
+.job-candidate-create .candidate-secondary-icon {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+    border: 1px solid #FED7AA !important;
+}
+.job-candidate-create .candidate-secondary-toggle {
+    color: #D97706 !important;
+}
+
+#candidatePrimarySkillAdd {
+    background-color: #F59E0B !important;
+    border-color: #F59E0B !important;
+    color: #ffffff !important;
+}
+#candidatePrimarySkillAdd:hover {
+    background-color: #D97706 !important;
+    border-color: #D97706 !important;
+}
+.job-candidate-create .candidate-suggested-skills-title > i {
+    color: #F59E0B !important;
+}
+.job-candidate-create .candidate-suggested-skills-count {
+    background: #FFF7ED !important;
+    color: #D97706 !important;
+    border: 1px solid #FED7AA !important;
+}
+.job-candidate-create .candidate-primary-skill-chip {
+    border: 1px solid #FED7AA !important;
+    background: #FFF7ED !important;
+    color: #9A3412 !important;
+}
+.job-candidate-create .candidate-primary-skill-chip button {
+    background: #FFEDD5 !important;
+    color: #C2410C !important;
+}
+.job-candidate-create .candidate-suggested-skill:hover {
+    border-color: #F59E0B !important;
+    background: #FFF7ED !important;
+    color: #D97706 !important;
+}
+.job-candidate-create .candidate-suggested-skill:hover .candidate-suggested-skill-icon {
+    background: #FFEDD5 !important;
+    color: #D97706 !important;
+}
+
+.job-candidate-create .candidate-panel-title > span:first-child,
+.job-candidate-create .candidate-experience-tip > span,
+.job-candidate-create .experience-details-card .candidate-panel-title > span:first-child,
+.job-candidate-create .experience-details-card .candidate-experience-panel--relevant .candidate-panel-title > span:first-child {
+    background: linear-gradient(135deg, #F59E0B, #D97706) !important;
+    color: #ffffff !important;
+}
+.job-candidate-create .candidate-experience-note i,
+.job-candidate-create .candidate-experience-tip i {
+    color: #F59E0B !important;
+}
+
+.job-candidate-create .salary-card .candidate-salary-panel--current .candidate-salary-panel-head > span,
+.job-candidate-create .salary-card .candidate-salary-panel--expected .candidate-salary-panel-head > span,
+.job-candidate-create .salary-card .candidate-salary-summary .candidate-salary-panel-head > span,
+.job-candidate-create .salary-card .candidate-salary-comments-head > span:first-child,
+.job-candidate-create .candidate-salary-panel-head > span,
+.job-candidate-create .candidate-salary-comments-head > span:first-child {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+    border: 1px solid #FED7AA !important;
+}
+
+.job-candidate-create .candidate-notice-option.is-selected {
+    background: #FFF7ED !important;
+    box-shadow: inset 0 0 0 2px #F59E0B !important;
+}
+.job-candidate-create .candidate-notice-option.is-selected .candidate-notice-option-radio {
+    border-color: #F59E0B !important;
+    background: #F59E0B !important;
+}
+.job-candidate-create .candidate-notice-option-icon--immediate {
+    color: #D97706 !important;
+    background: #FEF3C7 !important;
+}
+.job-candidate-create .candidate-notice-option-icon--serving {
+    color: #EA580C !important;
+    background: #FFEDD5 !important;
+}
+.job-candidate-create .candidate-notice-option-icon--select {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+}
+
+.job-candidate-create .candidate-work-mode-icon--remote,
+.job-candidate-create .candidate-work-mode-icon--hybrid,
+.job-candidate-create .candidate-work-mode-icon--office {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+}
+.job-candidate-create .candidate-work-mode-option:has(input:checked) {
+    border-color: #F59E0B !important;
+    background-color: #FFF7ED !important;
+}
+.job-candidate-create .candidate-work-mode-option:has(input:checked) .candidate-work-mode-radio {
+    border-color: #F59E0B !important;
+    background: #F59E0B !important;
+}
+
+.job-candidate-create .candidate-slot--one .candidate-slot-number,
+.job-candidate-create .candidate-slot--two .candidate-slot-number,
+.job-candidate-create .candidate-slot--three .candidate-slot-number {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+    border: 1px solid #FED7AA !important;
+}
+.job-candidate-create .candidate-slot-field > span:first-child i {
+    color: #F59E0B !important;
+}
+
+.job-candidate-create .candidate-link-brand--website {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
+}
+.job-candidate-create .candidate-detail-control > span {
+    color: #D97706 !important;
+    background: #FFF7ED !important;
 }
 
 /* Primary Topbar Action Button & Buttons with .btn-primary */
@@ -1810,7 +2045,7 @@
 }
 </style>
 </head>
-<body class="header-fixed header-tablet-and-mobile-fixed toolbar-enabled toolbar-fixed aside-enabled aside-fixed">
+<body class="career-apply-page bg-light" style="background-color: #f8fafc !important;">
 @php 
       use App\Helper\GeneralMethod;
       $company_id = (int) (@$company_id ?: (auth()->check() ? auth()->user()->company_id : 0));
@@ -1895,17 +2130,18 @@
         $snp_last_working = @$application->last_working_date;
       }
 
+      /* Intent: Strictly show company logo and company name - never disclose confidential client details */
       $jobDetailId = @$jobDetail->id ?? (@$jobId ?? 0);
       $logos = $jobDetailId ? GeneralMethod::openCompanyDetails($jobDetailId, $company_id) : null;
-      $logo_path = is_string($logos) ? $logos : '';
-      if (empty($logo_path) && !empty($logos->logo)) {
-        $logo_path = url('public/user-uploads/company-logo/' . $logos->logo);
-      }
-      if (!empty($logos->logo_logical_path)) {
-        $logo_path = url('public/' . $logos->logo_logical_path);
+      $raw_company_logo = !empty($account->logo) ? $account->logo : (!empty($logos->logo) ? $logos->logo : '');
+      $logo_path = '';
+      if (!empty($raw_company_logo)) {
+        $logo_path = (str_starts_with($raw_company_logo, 'http://') || str_starts_with($raw_company_logo, 'https://') || str_starts_with($raw_company_logo, '/'))
+            ? $raw_company_logo
+            : url('public/user-uploads/company-logo/' . $raw_company_logo);
       }
         
-      $company_or_client = $jobDetailId ? GeneralMethod::openCompanyDetailsByClient($jobDetailId, $company_id) : null;	
+      $company_or_client = !empty($account->company_name) ? $account->company_name : (!empty($logos->company_name) ? $logos->company_name : 'Company');	
       $Jobcities = $jobDetailId ? GeneralMethod::openJobcities($jobDetailId, $company_id) : '';	
       $locations  = explode('`,`',$Jobcities);
       $salaryModeSelect = GeneralMethod::salaryMode();
@@ -2169,8 +2405,8 @@
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg><span>Tip: A good summary helps the client
-                        understand the candidate quickly.</span></div>
+                      </svg><span>Tip: A good summary helps the hiring team
+                        understand your strengths quickly.</span></div>
                   </div>
                 </div>
             </div>
@@ -3292,7 +3528,7 @@
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title">
                   <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
-                  <span><strong>Professional Links</strong><small>Add online profiles that help clients evaluate this candidate.</small></span>
+                  <span><strong>Professional Links</strong><small>Add online profiles that help the hiring team evaluate your application.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body addl-body">
@@ -3330,7 +3566,7 @@
               <div class="fsh candidate-card-header addl-hero">
                 <div class="candidate-card-title addl-hero-title">
                   <span class="candidate-card-icon addl-hero-icon"><i class="fa-solid fa-passport" aria-hidden="true"></i></span>
-                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for client submissions.</small></span>
+                  <span><strong>Visa Status & Work Authorization (Optional)</strong><small>Specify legal right-to-work status and visa category for your application.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body addl-body">
@@ -3551,10 +3787,6 @@
 
           </div><!-- end .fc -->
 
-          <!-- Bottom Action Row -->
-          <div class="d-flex align-items-center justify-content-end mt-6 mb-8 pt-4 border-top">
-            <button type="button" name="save_bottom" id="save-form-bottom" class="btn btn-primary talent-topbar-primary candidate-submit-action px-8 py-3"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i><span>Submit Application</span></button>
-          </div>
 
         </form>
       </main>
@@ -6755,7 +6987,7 @@ var KTAddCandidate = function () {
             if (!$btn.length) { $btn = $('#save-form, #update-form').first(); }
             var resetBtnHtml = isEdit
                 ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Application</span>'
-                : '<i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i><span>Submit Application</span>';
+                : '<i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i><span>Apply Now</span>';
             var savingBtnHtml = isEdit
                 ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating Application...'
                 : '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting Application...';
