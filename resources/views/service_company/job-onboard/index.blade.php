@@ -364,24 +364,260 @@
 
 @push('footer-script')
 <script>
+/**
+ * Joining Tracker Client Engine (Phase 1 & Phase 2 Optimization)
+ *
+ * Intent:
+ * Provides user RAM-first state management (L1), IndexedDB persistence (L2),
+ * Stale-While-Revalidate rehydration, in-flight request deduplication/abort,
+ * and high-responsiveness client-side tab switching for the Service Company Joining Tracker.
+ * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
+ */
 (function () {
     'use strict';
 
-    /* ── state ── */
-    var state = { page: 1, size: parseInt(localStorage.getItem('candidatePerPage'), 10) || 10, search: '', country: '', sort: '12', tab: 'all' };
+    /* ── State & Limits ── */
+    var TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+
+    var state = {
+        page: 1,
+        size: parseInt(localStorage.getItem('candidatePerPage'), 10) || 10,
+        search: '',
+        country: '',
+        sort: '12',
+        tab: 'all'
+    };
 
     var URL_CANDIDATES = '{!! route('service_company.cvtracker.allcandidates') !!}';
+
+    // In-flight XHR tracker to cancel stale requests and eliminate race conditions
+    var activeXhr = null;
+
+    /* ── L1 RAM Snapshot Cache ── */
+    var JoiningTrackerCache = {
+        MAX_ENTRIES: 20,
+        TTL_MS: 120000, // 2 minutes TTL
+        store: new Map(),
+
+        makeKey: function (s) {
+            return [TENANT_ID, s.page, s.size, s.search.trim().toLowerCase(), s.country, s.sort, s.tab].join('|');
+        },
+
+        get: function (s) {
+            var key = this.makeKey(s);
+            var entry = this.store.get(key);
+            if (!entry) return null;
+            if (Date.now() - entry.time > this.TTL_MS) {
+                this.store.delete(key);
+                return null;
+            }
+            return entry.data;
+        },
+
+        set: function (s, data) {
+            var key = this.makeKey(s);
+            if (this.store.size >= this.MAX_ENTRIES) {
+                var oldestKey = this.store.keys().next().value;
+                this.store.delete(oldestKey);
+            }
+            this.store.set(key, { data: data, time: Date.now() });
+        },
+
+        clear: function () {
+            this.store.clear();
+        }
+    };
+
+    /* ── L2 IndexedDB Persistence Layer (Phase 2) ── */
+    var JoiningTrackerIDB = {
+        DB_NAME: 'JeroJoiningTrackerDB',
+        DB_VERSION: 1,
+        STORE_NAME: 'snapshots',
+        TTL_MS: 300000, // 5 minutes TTL
+        MAX_ENTRIES: 30,
+        db: null,
+
+        open: function () {
+            var self = this;
+            if (self.db) return Promise.resolve(self.db);
+            if (!window.indexedDB) return Promise.resolve(null);
+
+            return new Promise(function (resolve) {
+                try {
+                    var req = window.indexedDB.open(self.DB_NAME, self.DB_VERSION);
+                    req.onupgradeneeded = function (e) {
+                        var db = e.target.result;
+                        if (!db.objectStoreNames.contains(self.STORE_NAME)) {
+                            var store = db.createObjectStore(self.STORE_NAME, { keyPath: 'key' });
+                            store.createIndex('time', 'time', { unique: false });
+                        }
+                    };
+                    req.onsuccess = function (e) {
+                        self.db = e.target.result;
+                        resolve(self.db);
+                    };
+                    req.onerror = function () {
+                        resolve(null);
+                    };
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+        },
+
+        get: function (key) {
+            var self = this;
+            return self.open().then(function (db) {
+                if (!db) return null;
+                return new Promise(function (resolve) {
+                    try {
+                        var tx = db.transaction(self.STORE_NAME, 'readonly');
+                        var store = tx.objectStore(self.STORE_NAME);
+                        var req = store.get(key);
+                        req.onsuccess = function (e) {
+                            var record = e.target.result;
+                            if (!record) return resolve(null);
+                            if (Date.now() - record.time > self.TTL_MS) {
+                                self.delete(key);
+                                return resolve(null);
+                            }
+                            resolve(record.data);
+                        };
+                        req.onerror = function () {
+                            resolve(null);
+                        };
+                    } catch (err) {
+                        resolve(null);
+                    }
+                });
+            });
+        },
+
+        set: function (key, data) {
+            var self = this;
+            return self.open().then(function (db) {
+                if (!db) return;
+                try {
+                    var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                    var store = tx.objectStore(self.STORE_NAME);
+                    store.put({ key: key, data: data, time: Date.now() });
+                    self.trim(store);
+                } catch (err) {}
+            });
+        },
+
+        delete: function (key) {
+            var self = this;
+            return self.open().then(function (db) {
+                if (!db) return;
+                try {
+                    var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                    tx.objectStore(self.STORE_NAME).delete(key);
+                } catch (err) {}
+            });
+        },
+
+        clear: function () {
+            var self = this;
+            return self.open().then(function (db) {
+                if (!db) return;
+                try {
+                    var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                    tx.objectStore(self.STORE_NAME).clear();
+                } catch (err) {}
+            });
+        },
+
+        trim: function (store) {
+            try {
+                var countReq = store.count();
+                var self = this;
+                countReq.onsuccess = function () {
+                    if (countReq.result > self.MAX_ENTRIES) {
+                        var index = store.index('time');
+                        var cursorReq = index.openCursor();
+                        cursorReq.onsuccess = function (e) {
+                            var cursor = e.target.result;
+                            if (cursor) {
+                                cursor.delete();
+                            }
+                        };
+                    }
+                };
+            } catch (e) {}
+        }
+    };
+
+    /* ── Cached DOM Elements ── */
+    var els = {
+        tbody: document.getElementById('joining-tracker'),
+        pagination: document.getElementById('jt_pagination'),
+        search: document.getElementById('jt_search'),
+        country: document.getElementById('jt_country'),
+        sort: document.getElementById('jt_sort'),
+        tabs: document.getElementById('jt_tabs')
+    };
 
     function loaderRow() {
         return '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px;"><img src="{{ asset('assets/images/Loading2.gif') }}" height="32" alt=""> &nbsp; Loading...</td></tr>';
     }
 
-    /* ── fetch table (one request also returns every KPI/tab count) ── */
+    /* ── Render View from Data (Memory or Server) ── */
+    function renderData(resp) {
+        if (!els.tbody) return;
+        els.tbody.innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No joining records found</td></tr>';
+        if (els.pagination) {
+            els.pagination.innerHTML = resp.pagination || '';
+        }
+        if (resp.joiningCounts) {
+            updateCounts(resp.joiningCounts);
+        }
+    }
+
+    /* ── Fetch Table with L1 RAM Cache, L2 IndexedDB Stale-While-Revalidate & Stale Request Abort ── */
     function fetchTable(resetPage) {
         if (resetPage) state.page = 1;
-        document.getElementById('joining-tracker').innerHTML = loaderRow();
 
-        $.ajax({
+        // 1. Check L1 RAM cache first (instant sub-millisecond render)
+        var ramCached = JoiningTrackerCache.get(state);
+        if (ramCached) {
+            renderData(ramCached);
+            return;
+        }
+
+        var key = JoiningTrackerCache.makeKey(state);
+
+        // 2. Check L2 IndexedDB cache (instant offline/rehydrate render)
+        JoiningTrackerIDB.get(key).then(function (idbCached) {
+            if (idbCached) {
+                // Instantly render from IndexedDB
+                JoiningTrackerCache.set(state, idbCached);
+                renderData(idbCached);
+                // Background revalidate silently without clearing DOM or showing spinner
+                executeNetworkFetch(true);
+            } else {
+                // Cache miss: show spinner row and perform network fetch
+                if (els.tbody) {
+                    els.tbody.innerHTML = loaderRow();
+                }
+                executeNetworkFetch(false);
+            }
+        }).catch(function () {
+            if (els.tbody) {
+                els.tbody.innerHTML = loaderRow();
+            }
+            executeNetworkFetch(false);
+        });
+    }
+
+    function executeNetworkFetch(isBackgroundRevalidate) {
+        // Abort previous pending request to prevent out-of-order state overwrites
+        if (activeXhr && activeXhr.readyState !== 4) {
+            activeXhr.abort();
+            activeXhr = null;
+        }
+
+        activeXhr = $.ajax({
             url  : URL_CANDIDATES + '?page=' + state.page,
             type : 'GET',
             data : {
@@ -394,17 +630,26 @@
                 joining_tab_filter : state.tab,
             },
             success: function (resp) {
-                document.getElementById('joining-tracker').innerHTML = resp.html || '<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">No joining records found</td></tr>';
-                document.getElementById('jt_pagination').innerHTML = resp.pagination || '';
-                if (resp.joiningCounts) updateCounts(resp.joiningCounts);
+                activeXhr = null;
+                // Update L1 RAM cache
+                JoiningTrackerCache.set(state, resp);
+                // Update L2 IndexedDB persistence
+                var key = JoiningTrackerCache.makeKey(state);
+                JoiningTrackerIDB.set(key, resp);
+                // Render view
+                renderData(resp);
             },
-            error: function () {
-                document.getElementById('joining-tracker').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+            error: function (xhr, status) {
+                activeXhr = null;
+                if (status === 'abort') return;
+                if (!isBackgroundRevalidate && els.tbody) {
+                    els.tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#ef4444;">Error loading data. Please refresh.</td></tr>';
+                }
             }
         });
     }
 
-    /* ── Sync KPI cards + tab badges from the single ES aggregation ── */
+    /* ── Sync KPI cards + tab badges ── */
     function updateCounts(c) {
         if (!c) return;
         var n = function (v) { return (v != null ? v : 0); };
@@ -430,98 +675,119 @@
         });
     }
 
-    /* ── events ── */
+    /* ── Event Handlers ── */
     var searchTimer;
-    document.getElementById('jt_search').addEventListener('input', function () {
-        clearTimeout(searchTimer);
-        var val = this.value;
-        searchTimer = setTimeout(function () { state.search = val; fetchTable(true); }, 380);
-    });
+    if (els.search) {
+        els.search.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            var val = this.value;
+            searchTimer = setTimeout(function () {
+                state.search = val;
+                fetchTable(true);
+            }, 350);
+        });
+    }
 
-    document.getElementById('jt_country').addEventListener('change', function () {
-        state.country = this.value; fetchTable(true);
-    });
+    if (els.country) {
+        els.country.addEventListener('change', function () {
+            state.country = this.value;
+            fetchTable(true);
+        });
+    }
 
-    document.getElementById('jt_sort').addEventListener('change', function () {
-        var v = this.value;
-        if (v === 'onboarded' || v === 'backed_out') {
-            // Status views: filter the table to those candidates, drop the tab-bar highlight,
-            // and fall back to the latest-joining-date order.
-            setTabsInactive();
-            state.tab  = v;
-            state.sort = '12';
-        } else {
-            state.sort = v;
-        }
-        clearHeaderSort();
-        fetchTable(true);
-    });
+    if (els.sort) {
+        els.sort.addEventListener('change', function () {
+            var v = this.value;
+            if (v === 'onboarded' || v === 'backed_out') {
+                setTabsInactive();
+                state.tab  = v;
+                state.sort = '12';
+            } else {
+                state.sort = v;
+            }
+            clearHeaderSort();
+            fetchTable(true);
+        });
+    }
 
-    /* Column-header sort (mirrors the Sort-by dropdown) */
+    /* Column-header sort */
     function clearHeaderSort() {
         document.querySelectorAll('.jt-th-sort').forEach(function (th) {
             th.classList.remove('active');
-            var ico = th.querySelector('.jt-sort-ico'); if (ico) ico.textContent = '⇵';
+            var ico = th.querySelector('.jt-sort-ico');
+            if (ico) ico.textContent = '⇵';
         });
     }
+
     document.querySelectorAll('.jt-th-sort').forEach(function (th) {
         th.addEventListener('click', function () {
             var goAsc = this.dataset.dir !== 'asc';
             clearHeaderSort();
             this.dataset.dir = goAsc ? 'asc' : 'desc';
             this.classList.add('active');
-            var ico = this.querySelector('.jt-sort-ico'); if (ico) ico.textContent = goAsc ? '↑' : '↓';
+            var ico = this.querySelector('.jt-sort-ico');
+            if (ico) ico.textContent = goAsc ? '↑' : '↓';
             state.sort = goAsc ? this.dataset.asc : this.dataset.desc;
-            var sel = document.getElementById('jt_sort'); if (sel) sel.value = state.sort;
+            if (els.sort) els.sort.value = state.sort;
             fetchTable(true);
         });
     });
 
-    /* tab clicks */
+    /* Tab clicks */
     function setTabsInactive() {
-        document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) { t.classList.remove('active'); });
+        document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) {
+            t.classList.remove('active');
+        });
     }
+
     function activateTab(filter) {
         document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (t) {
             t.classList.toggle('active', t.dataset.filter === filter);
         });
         state.tab = filter;
-        // A real tab supersedes the Sort dropdown's status views — revert it to "Latest".
-        var sel = document.getElementById('jt_sort');
-        if (sel && (sel.value === 'onboarded' || sel.value === 'backed_out')) { sel.value = '12'; state.sort = '12'; }
+        if (els.sort && (els.sort.value === 'onboarded' || els.sort.value === 'backed_out')) {
+            els.sort.value = '12';
+            state.sort = '12';
+        }
         fetchTable(true);
     }
+
     document.querySelectorAll('#jt_tabs .jt-tab').forEach(function (tab) {
-        tab.addEventListener('click', function () { activateTab(this.dataset.filter); });
+        tab.addEventListener('click', function () {
+            activateTab(this.dataset.filter);
+        });
     });
+
     /* "View Today's List" card link jumps to the Joining Today tab */
     document.querySelectorAll('[data-jump-tab]').forEach(function (el) {
-        el.addEventListener('click', function () { activateTab(this.dataset.jumpTab); });
+        el.addEventListener('click', function () {
+            activateTab(this.dataset.jumpTab);
+        });
     });
 
-    /* pagination (delegated) — the pagination partial (ajax_pages/
-       pagination.blade.php) renders buttons with class .pagi-page/
-       .pagi-arrow, not .page-link, so this was never matching anything. */
-    document.getElementById('jt_pagination').addEventListener('click', function (e) {
-        var link = e.target.closest('.pagi-page, .pagi-arrow');
-        if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
-        e.preventDefault();
-        var pg = parseInt(link.dataset.page, 10);
-        if (!pg) return;
-        state.page = pg;
-        fetchTable(false);
-    });
+    /* Pagination (delegated) */
+    if (els.pagination) {
+        els.pagination.addEventListener('click', function (e) {
+            var link = e.target.closest('.pagi-page, .pagi-arrow');
+            if (!link || link.classList.contains('pagi-disabled') || link.classList.contains('pagi-active-disabled')) return;
+            e.preventDefault();
+            var pg = parseInt(link.dataset.page, 10);
+            if (!pg) return;
+            state.page = pg;
+            fetchTable(false);
+        });
 
-    document.getElementById('jt_pagination').addEventListener('change', function (e) {
-        if (e.target.classList.contains('pagi-perpage')) {
-            var selectedPerPage = parseInt(e.target.value, 10);
-            if (selectedPerPage) {
-                state.size = selectedPerPage;
-                localStorage.setItem('candidatePerPage', selectedPerPage);
-                fetchTable(true);
+        els.pagination.addEventListener('change', function (e) {
+            if (e.target.classList.contains('pagi-perpage')) {
+                var selectedPerPage = parseInt(e.target.value, 10);
+                if (selectedPerPage) {
+                    state.size = selectedPerPage;
+                    localStorage.setItem('candidatePerPage', selectedPerPage);
+                    fetchTable(true);
+                }
             }
-        }
-    });
+        });
+    }
 
     /* Stage sub-stage drawer */
     $(document).on('click', '#stage_sub_stage_close', function () {
@@ -533,35 +799,103 @@
         $('#csd_drawer_toggle').trigger('click');
         var id  = $(this).data('row-id');
         var url = '{{ route('service_company.job-applications.stage_body_content', ':id') }}'.replace(':id', id);
-        $.ajax({ type:'GET', url:url, success:function(r){
-            if(r.status=='success') {
-                $('#stage_body_content').html(r.view);
-                $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
+        $.ajax({
+            type: 'GET',
+            url: url,
+            success: function (r) {
+                if (r.status === 'success') {
+                    $('#stage_body_content').html(r.view);
+                    $('#csd_drawer_subtitle').text($('#stage_body_content .csd-info-name').first().text());
+                }
             }
-        } });
+        });
     });
+
+    /**
+     * Helper: Cryptographically secure UUIDv4 generator for request idempotency
+     */
+    function generateIdempotencyUUID() {
+        if (window.crypto && window.crypto.getRandomValues) {
+            return 'jt_' + TENANT_ID + '_' + ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, function(c) {
+                return (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16);
+            });
+        }
+        return 'jt_' + TENANT_ID + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+    }
 
     $(document).on('click', '#custom_stage_submit', function (e) {
         e.preventDefault();
         var ms = $('input[name="master_status"]:checked').val();
         var cm = $('#comment').val();
-        if (ms == 8 && !cm) { Swal.fire("Warning",'InReview Comment Required!',"info"); return; }
-        if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) { Swal.fire("Warning",'Please select a sub stage to continue.',"info"); return; }
-        $(this).prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
+        if (ms == 8 && !cm) {
+            Swal.fire("Warning", 'InReview Comment Required!', "info");
+            return;
+        }
+        if ($('#main_substage').is(':visible') && $('input[name="sub_stages"]:checked').length === 0) {
+            Swal.fire("Warning", 'Please select a sub stage to continue.', "info");
+            return;
+        }
+        var $btn = $(this);
+        if ($btn.data('submitting')) {
+            return;
+        }
+        $btn.data('submitting', true);
+        $btn.prop("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Waiting...');
+
+        // RFC4122 v4 unique mutation key per submission intent
+        var idempotencyKey = generateIdempotencyUUID();
+        var serializedData = $('#status_frm').serialize();
+        serializedData += '&idempotency_key=' + encodeURIComponent(idempotencyKey);
+
         $.ajax({
-            url:'{{ route('service_company.job-applications.stage_submit') }}', type:'POST',
-            data: $('#status_frm').serialize(),
-            success:function(r){
-                $('#custom_stage_submit').prop("disabled",false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>');
-                csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
-                if(r.status=='success'){
-                    Swal.fire("Success",'Application stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
-                    fetchTable(false);
-                } else if (r.status == 'cvpending') {
-                    Swal.fire("Warning",'Resume pending this job application.',"warning").then(function(){ $("#stage_sub_stage_close").click(); });
-                } else if (r.status == 'candidatevalidation') {
-                    Swal.fire("Warning", r.message, "warning").then(function(){ $("#stage_sub_stage_close").click(); });
+            url: '{{ route('service_company.job-applications.stage_submit') }}',
+            type: 'POST',
+            data: serializedData,
+            headers: {
+                'X-Idempotency-Key': idempotencyKey,
+                'Idempotency-Key': idempotencyKey
+            },
+            success: function (r) {
+                $btn.data('submitting', false);
+                $btn.prop("disabled", false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>');
+                if (typeof csdUpdateSubmitButton === 'function') {
+                    csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
                 }
+                if (r.status === 'success') {
+                    JoiningTrackerCache.clear();
+                    JoiningTrackerIDB.clear();
+                    if (jtBroadcastChannel) {
+                        try {
+                            jtBroadcastChannel.postMessage({ type: 'INVALIDATE_CACHE' });
+                        } catch (err) {}
+                    }
+                    Swal.fire("Success", 'Application stage updated!', "success").then(function () {
+                        $("#stage_sub_stage_close").click();
+                    });
+                    fetchTable(false);
+                } else if (r.status === 'processing') {
+                    Swal.fire("Info", r.message || 'Request is currently processing. Please wait...', "info");
+                } else if (r.status === 'conflict') {
+                    Swal.fire("Notice", r.message || 'Candidate stage was modified by another user. Refreshing...', "warning").then(function () {
+                        $("#stage_sub_stage_close").click();
+                    });
+                    JoiningTrackerCache.clear();
+                    JoiningTrackerIDB.clear();
+                    fetchTable(false);
+                } else if (r.status === 'cvpending') {
+                    Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function () {
+                        $("#stage_sub_stage_close").click();
+                    });
+                } else if (r.status === 'candidatevalidation') {
+                    Swal.fire("Warning", r.message, "warning").then(function () {
+                        $("#stage_sub_stage_close").click();
+                    });
+                }
+            },
+            error: function () {
+                $btn.data('submitting', false);
+                $btn.prop("disabled", false).html('<span class="indicator-label"><span class="csdChangeLabel">Submit</span> <i class="fa fa-arrow-right"></i></span>');
+                Swal.fire("Error", 'Unable to update stage. Please try again.', "error");
             }
         });
     });
@@ -569,15 +903,138 @@
     /* Export (print-to-PDF, no server round-trip) */
     window.exportJoining = function () {
         var prev = document.title;
-        document.title = 'Joining-Tracker-' + new Date().toISOString().slice(0,10);
-        var done = function(){ document.title = prev; window.removeEventListener('afterprint', done); };
+        document.title = 'Joining-Tracker-' + new Date().toISOString().slice(0, 10);
+        var done = function () {
+            document.title = prev;
+            window.removeEventListener('afterprint', done);
+        };
         window.addEventListener('afterprint', done);
         window.print();
         setTimeout(done, 1500);
     };
 
-    /* ── init ── */
+    /* ── Phase 4: Multi-Tab Coordination & Realtime Reverb Synchronization ── */
+    var jtBroadcastChannel = null;
+    if ('BroadcastChannel' in window) {
+        try {
+            jtBroadcastChannel = new BroadcastChannel('jero_joining_tracker_' + TENANT_ID);
+            jtBroadcastChannel.onmessage = function (ev) {
+                if (!ev || !ev.data) return;
+                var msg = ev.data;
+                if (msg.type === 'STAGE_UPDATED' || msg.type === 'INVALIDATE_CACHE') {
+                    JoiningTrackerCache.clear();
+                    JoiningTrackerIDB.clear();
+                    if (msg.payload) {
+                        applyRealtimeDelta(msg.payload, false);
+                    }
+                }
+            };
+        } catch (e) {}
+    }
+
+    var recentEventKeys = new Set();
+    var MAX_EVENT_BUFFER = 50;
+
+    function applyRealtimeDelta(e, broadcastToTabs) {
+        if (!e) return;
+
+        var eventKey = e.event_id || (e.candidate_id + '_' + (e.entity_version || Date.now()) + '_' + (e.stage_id || 0));
+        if (recentEventKeys.has(eventKey)) return;
+        recentEventKeys.add(eventKey);
+        if (recentEventKeys.size > MAX_EVENT_BUFFER) {
+            var oldest = recentEventKeys.values().next().value;
+            recentEventKeys.delete(oldest);
+        }
+
+        // Invalidate local memory and storage caches so stale data isn't preserved
+        JoiningTrackerCache.clear();
+        JoiningTrackerIDB.clear();
+
+        // Broadcast to peer tabs if requested
+        if (broadcastToTabs && jtBroadcastChannel) {
+            try {
+                jtBroadcastChannel.postMessage({ type: 'STAGE_UPDATED', payload: e });
+            } catch (err) {}
+        }
+
+        // Locate matching row in the visible table
+        var targetWiseIds = Array.isArray(e.wise_ids) ? e.wise_ids : (e.wise_id ? [e.wise_id] : []);
+        var matchedRow = null;
+
+        for (var i = 0; i < targetWiseIds.length; i++) {
+            var $el = $('a[data-row-id="' + targetWiseIds[i] + '"]');
+            if ($el.length) {
+                matchedRow = $el.closest('tr');
+                break;
+            }
+        }
+
+        if (matchedRow && matchedRow.length) {
+            var newStageId = parseInt(e.stage_id, 10);
+            if (newStageId === 6) {
+                // Candidate remains in or moved into Joined stage: update stage badge in place
+                var pill = matchedRow.find('.jt-stage-pill');
+                if (pill.length) {
+                    pill.text(e.stage_name || 'Joined');
+                    pill.attr('style', 'background:#dcfce7;color:#16a34a;');
+                }
+                var sub = matchedRow.find('.jt-stage-sub');
+                if (sub.length && e.sub_stage_name) {
+                    sub.text(e.sub_stage_name);
+                }
+                // Visual feedback pulse
+                matchedRow.css('transition', 'background-color 0.4s ease');
+                matchedRow.css('background-color', '#ecfdf5');
+                setTimeout(function () {
+                    matchedRow.css('background-color', '');
+                }, 1800);
+            } else {
+                // Candidate transitioned out of Joined stage: animate fade out
+                matchedRow.css('transition', 'all 0.5s ease');
+                matchedRow.css('opacity', '0.3');
+                matchedRow.css('background-color', '#fef2f2');
+                setTimeout(function () {
+                    matchedRow.remove();
+                }, 600);
+            }
+        } else {
+            // Candidate not in visible viewport: background revalidate silently to keep counts fresh
+            executeNetworkFetch(true);
+        }
+    }
+
+    function initRealtime() {
+        if (typeof window.Echo !== 'undefined' && TENANT_ID > 0) {
+            try {
+                window.Echo.private('company.' + TENANT_ID)
+                    .listen('.candidate.drawer.updated', function (e) {
+                        applyRealtimeDelta(e, true);
+                    });
+
+                // Reconnect state machine
+                var connector = window.Echo.connector;
+                if (connector && connector.pusher && connector.pusher.connection) {
+                    connector.pusher.connection.bind('state_change', function (states) {
+                        if (states.current === 'connected' && (states.previous === 'disconnected' || states.previous === 'unavailable')) {
+                            JoiningTrackerCache.clear();
+                            JoiningTrackerIDB.clear();
+                            executeNetworkFetch(true);
+                        }
+                    });
+                }
+            } catch (e) {}
+        }
+    }
+
+    /* Expose cache clear method for external triggers */
+    window.invalidateJoiningTrackerCache = function () {
+        JoiningTrackerCache.clear();
+        JoiningTrackerIDB.clear();
+    };
+
+    /* ── Initial Fetch & Realtime Boot ── */
     fetchTable(false);
+    initRealtime();
 })();
 </script>
 @endpush
