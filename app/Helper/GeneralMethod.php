@@ -3304,58 +3304,67 @@ END:VCALENDAR";
 
     public static function companyDetailsByClient($jobid)
     {
+        static $companyDetailsCache = [];
         $company_id = auth()->user()->company_id ?? 0;
+        $cacheKey = $company_id.'_'.$jobid;
 
-        $row = DB::table('jobs')
-            ->select(
-                'jobs.id',
-                'jobs.company_id',
-                'clients.name as clients_name',
-                'clients.self_company',
-                'companies.company_name',
-                'recommendation_relation.id as recommendation_id',
-                'recommendation_relation.from_company_id',
-                'recommendation_relation.final_status',
-                'recommendation_relation.to_company_id'
-            )
-            ->leftJoin('clients', 'clients.id', 'jobs.client_id')
-            ->leftJoin('companies', 'companies.id', 'jobs.company_id')
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('jobs.id', $jobid)
-            ->first();
-
-        if (! $row) {
-            return '';
+        if (array_key_exists($cacheKey, $companyDetailsCache)) {
+            return $companyDetailsCache[$cacheKey];
         }
 
-        /**
-         * Tenancy / Intent Note: Format client/company name for job headers and drawers.
-         * - If direct client job (recommendation_id > 0 & to_company_id == company_id): display Parent/Main Company Name (company_name).
-         * - If internal client job (self_company == 1): display client name and main company (e.g. "Client Name / Main Company").
-         * - If standard agency client job: display client name.
-         */
-        $client_name = trim((string) ($row->clients_name ?? ''));
-        $company_name = trim((string) ($row->company_name ?? ''));
-        $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
-        $recommendation_id = (int) ($row->recommendation_id ?? 0);
-        $to_company_id = (int) ($row->to_company_id ?? 0);
-        $from_company_id = (int) ($row->from_company_id ?? 0);
+        /* Intent: Tenant-scoped 24h caching for job client/company display name, eliminating 4-table join on candidate listings */
+        return $companyDetailsCache[$cacheKey] = Cache::remember("ref_job_client_comp:{$cacheKey}", 86400, function () use ($jobid, $company_id) {
+            $row = DB::table('jobs')
+                ->select(
+                    'jobs.id',
+                    'jobs.company_id',
+                    'clients.name as clients_name',
+                    'clients.self_company',
+                    'companies.company_name',
+                    'recommendation_relation.id as recommendation_id',
+                    'recommendation_relation.from_company_id',
+                    'recommendation_relation.final_status',
+                    'recommendation_relation.to_company_id'
+                )
+                ->leftJoin('clients', 'clients.id', 'jobs.client_id')
+                ->leftJoin('companies', 'companies.id', 'jobs.company_id')
+                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                ->where('jobs.id', $jobid)
+                ->first();
 
-        $job_company_id = (int) ($row->company_id ?? 0);
-        $is_direct_client = ($recommendation_id > 0 && ($to_company_id === (int) $company_id || $from_company_id > 0)) || ((int) $company_id > 0 && $job_company_id > 0 && (int) $company_id !== $job_company_id);
-
-        if ($is_direct_client) {
-            if (empty($company_name) && $from_company_id > 0) {
-                $company_name = (string) DB::table('companies')->where('id', $from_company_id)->value('company_name');
+            if (! $row) {
+                return '';
             }
-            $displayName = ! empty($company_name) ? $company_name : $client_name;
-        } elseif ($is_self_company) {
-            $displayName = ! empty($company_name) ? $company_name : $client_name;
-        } else {
-            $displayName = ! empty($client_name) ? $client_name : $company_name;
-        }
 
-        return ucwords(substr((string) $displayName, 0, 50));
+            /**
+             * Tenancy / Intent Note: Format client/company name for job headers and drawers.
+             * - If direct client job (recommendation_id > 0 & to_company_id == company_id): display Parent/Main Company Name (company_name).
+             * - If internal client job (self_company == 1): display client name and main company (e.g. "Client Name / Main Company").
+             * - If standard agency client job: display client name.
+             */
+            $client_name = trim((string) ($row->clients_name ?? ''));
+            $company_name = trim((string) ($row->company_name ?? ''));
+            $is_self_company = ((int) ($row->self_company ?? 0)) === 1;
+            $recommendation_id = (int) ($row->recommendation_id ?? 0);
+            $to_company_id = (int) ($row->to_company_id ?? 0);
+            $from_company_id = (int) ($row->from_company_id ?? 0);
+
+            $job_company_id = (int) ($row->company_id ?? 0);
+            $is_direct_client = ($recommendation_id > 0 && ($to_company_id === (int) $company_id || $from_company_id > 0)) || ((int) $company_id > 0 && $job_company_id > 0 && (int) $company_id !== $job_company_id);
+
+            if ($is_direct_client) {
+                if (empty($company_name) && $from_company_id > 0) {
+                    $company_name = (string) DB::table('companies')->where('id', $from_company_id)->value('company_name');
+                }
+                $displayName = ! empty($company_name) ? $company_name : $client_name;
+            } elseif ($is_self_company) {
+                $displayName = ! empty($company_name) ? $company_name : $client_name;
+            } else {
+                $displayName = ! empty($client_name) ? $client_name : $company_name;
+            }
+
+            return ucwords(substr((string) $displayName, 0, 50));
+        });
     }
 
     /**
@@ -5364,20 +5373,18 @@ END:VCALENDAR";
 
     public static function allCities()
     {
-        $cities = DB::table('city_list')
+        return DB::table('city_list')
             ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
             ->join('countries', 'countries.id', '=', 'state_list.country_id')
             ->select('city_list.city as city_name', 'state_list.state as state_name', 'countries.country_name')
             ->where('city_list.city_id', '=', '1')
             ->orderBy('city_list.city')
             ->limit(10)
-            ->cursor()
+            ->get()
             ->map(function ($city) {
                 return $city->city_name.' | '.$city->state_name.' | '.$city->country_name;
-            });
-
-        return ($cities) ? $cities : '';
-
+            })
+            ->all();
     }
 
     public static function allCitiesSelected($cityID)

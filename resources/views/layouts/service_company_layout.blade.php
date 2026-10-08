@@ -3789,11 +3789,12 @@ $( document ).ready(function() {
           }
       },
 
-      updateTrackerStage: function(candidateId, wiseIds, newStageId, oldStageId, jobId, broadcast) {
+      updateTrackerStage: function(candidateId, wiseIds, newStageId, oldStageId, jobId, broadcast, extra) {
           var cid = candidateId ? String(candidateId) : null;
           var wids = Array.isArray(wiseIds) ? wiseIds.map(String) : (wiseIds ? [String(wiseIds)] : []);
           var nStage = parseInt(newStageId, 10);
           var oStage = parseInt(oldStageId, 10);
+          extra = extra || {};
 
           // 1. If on App Tracker: refresh counters
           if (typeof window.countder === 'function') {
@@ -3814,9 +3815,17 @@ $( document ).ready(function() {
               }
           }
 
-          // 3. If on CV Tracker: refresh hero stats
+          // 3. If on CV Tracker: refresh hero stats & patch row stage
           if (typeof window.updateCvHeroStats === 'function' && typeof window.fetchCvHeroStats === 'function') {
               window.fetchCvHeroStats();
+          }
+          if (typeof window.patchCandidateRowStage === 'function') {
+              wids.forEach(function(wid) {
+                  window.patchCandidateRowStage(wid, nStage, extra.master_status_name, extra.css_style, extra.sub_stage_name, oStage);
+              });
+              if (!wids.length && cid) {
+                  window.patchCandidateRowStage(null, nStage, extra.master_status_name, extra.css_style, extra.sub_stage_name, oStage, cid);
+              }
           }
 
           // 4. Invalidate drawer cache for candidate & wise IDs
@@ -3834,7 +3843,8 @@ $( document ).ready(function() {
                       wise_ids: wids,
                       new_stage_id: nStage,
                       old_stage_id: oStage,
-                      job_id: jobId
+                      job_id: jobId,
+                      extra: extra
                   });
               } catch(e) {}
           }
@@ -3863,7 +3873,7 @@ $( document ).ready(function() {
                       window.JWRealtimeSync.updateRecruiterNote(e.candidate_id, e.recruiter_note, false);
                   }
                   if (e.stage_id !== null && e.stage_id !== undefined && window.JWRealtimeSync) {
-                      window.JWRealtimeSync.updateTrackerStage(e.candidate_id, e.wise_ids, e.stage_id, e.old_stage_id, e.job_id, false);
+                      window.JWRealtimeSync.updateTrackerStage(e.candidate_id, e.wise_ids, e.stage_id, e.old_stage_id, e.job_id, false, e.extra || {});
                   }
               })
               .listen('.job.skills.updated', function(e) {
