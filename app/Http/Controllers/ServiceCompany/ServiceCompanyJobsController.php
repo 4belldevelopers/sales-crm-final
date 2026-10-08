@@ -5929,17 +5929,17 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $roster = $rmService->getTeamRoster($company_id);
 
             $this->team = collect($roster)->map(fn ($u) => (object) [
-                'id'             => $u['id'],
-                'name'           => $u['fullName'],
-                'email'          => $u['email'],
-                'mobile'         => $u['phone'],
-                'phone'          => $u['phone'],
-                'designation'    => $u['role'],
-                'display_name'   => $u['role'],
+                'id' => $u['id'],
+                'name' => $u['fullName'],
+                'email' => $u['email'],
+                'mobile' => $u['phone'],
+                'phone' => $u['phone'],
+                'designation' => $u['role'],
+                'display_name' => $u['role'],
                 'working_status' => $u['active'] ? 1 : 0,
-                'activeJobs'     => $u['activeJobs'],
-                'captainJobs'    => $u['captainJobs'],
-                'trmTalents'     => $u['trmTalents'],
+                'activeJobs' => $u['activeJobs'],
+                'captainJobs' => $u['captainJobs'],
+                'trmTalents' => $u['trmTalents'],
             ]);
 
             $view = view('service_company.jobs.relationship-manager', $this->data)->render();
@@ -12089,10 +12089,12 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
     }
 
+    /**
+     * Accept or reject a job request recommendation.
+     * Tenancy: Scoped to logged-in company and matching recommendation relation.
+     */
     public function requestapproval(Request $request)
     {
-
-        // dd($request->all());
         $jobId = $request->jobId;
         $rec_relation_id = (int) request()->rec_relation_id;
         if (empty($jobId) && ! empty($rec_relation_id)) {
@@ -12111,23 +12113,20 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             ->join('companies as client_company', 'recommendation_relation.from_company_id', '=', 'client_company.id')
             ->where('recommendation_relation.id', '=', $rec_relation_id)
             ->get();
-        // dd($companiesDetails);
+
         $terms = '';
-        // dd(count($companiesDetails));
         if (count($companiesDetails) > 0) {
-            // dd("d");
             $terms .= "By clicking the accept button, {$companiesDetails[0]->vendor_company_name} will accept the rates, terms, and conditions outlined below for the job requirements of {$companiesDetails[0]->client_company_name}.";
         }
 
         $terms .= '<p>&nbsp;</p>';
         $terms .= ($companyTerms && $companyTerms->terms) ? $companyTerms->terms : ($global_settings->terms ?? '');
 
-        $termsfinal = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[AGENCY_ADDRESS]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]'], [date('d M, Y h:i:s'), $companiesDetails[0]->vendor_company_name, $companiesDetails[0]->vendor_company_address, $companiesDetails[0]->client_company_name, $companiesDetails[0]->client_company_address], $terms);
-
-        // dd($termsfinal);
-
-        $rec_relation_id = '';
-        $status = '';
+        $vendor_name = $companiesDetails[0]->vendor_company_name ?? '';
+        $vendor_address = $companiesDetails[0]->vendor_company_address ?? '';
+        $client_comp_name = $companiesDetails[0]->client_company_name ?? '';
+        $client_address = $companiesDetails[0]->client_company_address ?? '';
+        $termsfinal = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[AGENCY_ADDRESS]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]'], [date('d M, Y h:i:s'), $vendor_name, $vendor_address, $client_comp_name, $client_address], $terms);
 
         $rec_relation_id = $request->rec_relation_id;
         $status = $request->status;
@@ -12136,178 +12135,186 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
         $clientRow = DB::table('clients')
             ->select('clients.id')
             ->where('clients.company_id', '=', $current_company_id)
-            // ->where('clients.self_company', '=', 1)
             ->first();
-        // dd($clientRow,$current_company_id);
 
         if ($clientRow == null) {
-            $msg = 'ignoreClient';
-
-            return Reply::dataOnly(['status' => $msg, 'dataCnt' => 0]);
-
+            $currCompany = DB::table('companies')->where('id', $current_company_id)->first();
+            if ($currCompany) {
+                $newClientId = DB::table('clients')->insertGetId([
+                    'company_id' => $current_company_id,
+                    'name' => $currCompany->company_name ?? 'Self Company',
+                    'email' => $currCompany->company_email ?? '',
+                    'self_company' => 1,
+                    'contact_person_name' => $currCompany->company_name ?? '',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $clientRow = (object) ['id' => $newClientId];
+            } else {
+                return Reply::dataOnly(['status' => 'ignoreClient', 'dataCnt' => 0]);
+            }
         }
 
-        // dd($rec_relation_id);
         $recommendation_relationRow = DB::table('recommendation_relation')
             ->select('recommendation_relation.from_company_id', 'recommendation_relation.job_id', 'recommendation_relation.from_user_id')
             ->where('recommendation_relation.id', '=', $rec_relation_id)
-            // ->where('clients.self_company', '=', 1)
             ->first();
-        // dd($recommendation_relationRow);
-        if (empty($recommendation_relationRow)) {
 
-            $clientExistingDoc = $this->elasticService->getClient()->get([
-                'index' => ELASTIC_JOB_REQUEST,
-                'id' => $rec_relation_id,
-            ]);
-            $recommendation_relationRow = (object) $clientExistingDoc['_source'];
-            // dd($recommendation_relationRow);
+        if (empty($recommendation_relationRow) && ! empty($jobId)) {
+            $recommendation_relationRow = DB::table('recommendation_relation')
+                ->select('recommendation_relation.from_company_id', 'recommendation_relation.job_id', 'recommendation_relation.from_user_id')
+                ->where('recommendation_relation.job_id', '=', $jobId)
+                ->where('recommendation_relation.to_company_id', '=', $current_company_id)
+                ->first();
         }
 
-        $jobid = $recommendation_relationRow->job_id;
-        $jobRow = DB::table('jobs')->join('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.employment_type', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.title', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+        if (empty($recommendation_relationRow)) {
+            try {
+                if ($this->elasticService->indexExists(ELASTIC_JOB_REQUEST)) {
+                    $clientExistingDoc = $this->elasticService->getClient()->get([
+                        'index' => ELASTIC_JOB_REQUEST,
+                        'id' => $rec_relation_id,
+                    ]);
+                    $recommendation_relationRow = (object) $clientExistingDoc['_source'];
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        if (empty($recommendation_relationRow)) {
+            return Reply::dataOnly(['status' => 'fail', 'message' => 'Job request details not found.', 'dataCnt' => $this->dataCnt()]);
+        }
+
+        $jobid = $recommendation_relationRow->job_id ?? $jobId;
+        $jobRow = DB::table('jobs')->leftJoin('job_countries', 'job_countries.job_id', '=', 'jobs.id')->select('jobs.id', 'jobs.created_at', 'jobs.status', 'jobs.total_positions', 'jobs.employment_type', 'job_countries.country_id', 'jobs.title', 'jobs.min_exp', 'jobs.max_exp', 'jobs.min_salary', 'jobs.max_salary', 'jobs.max_salary_currency', 'jobs.max_sal_mode', 'jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+        if (! $jobRow) {
+            $jobRow = DB::table('jobs')->where('id', '=', $jobid)->first();
+        }
 
         $data = [];
         if ($status == 'ignore') {
             $data['to_status'] = -1;
             $data['final_status'] = -1;
-            $msg = 'fail';
+            $msg = 'success';
 
             DB::table('recommendation_relation')->where('id', @$rec_relation_id)->delete();
 
-            $exists = $this->elasticService->getClient()->exists([
-                'index' => ELASTIC_JOB_REQUEST,
-                'id' => $rec_relation_id,
-            ]);
-
-            if ($exists) {
-
-                // 2. Prepare the update timestamp
-                $updateTime = now()->toIso8601String();
-
-                // 3. Execute update with debugging
-                $updateParams = [
+            try {
+                $exists = $this->elasticService->getClient()->exists([
                     'index' => ELASTIC_JOB_REQUEST,
                     'id' => $rec_relation_id,
-                    'body' => [
-                        'doc' => [
-                            'to_status' => -1,
-                            'final_status' => -1,
-                            'to_user_id' => $this->user->id,
-                            'to_created_at' => $updateTime,
-                            'updated_at' => $updateTime,
-                        ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
-                ];
-                $this->elasticService->getClient()->update($updateParams);
+                ]);
 
+                if ($exists) {
+                    $updateTime = now()->toIso8601String();
+                    $updateParams = [
+                        'index' => ELASTIC_JOB_REQUEST,
+                        'id' => $rec_relation_id,
+                        'body' => [
+                            'doc' => [
+                                'to_status' => -1,
+                                'final_status' => -1,
+                                'to_user_id' => $this->user->id,
+                                'to_created_at' => $updateTime,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false,
+                        ],
+                        'refresh' => true,
+                    ];
+                    $this->elasticService->getClient()->update($updateParams);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('ELASTIC_JOB_REQUEST ignore update failed: '.$e->getMessage());
             }
 
-            $from_company_id = $recommendation_relationRow->from_company_id;
+            $from_company_id = $recommendation_relationRow->from_company_id ?? 0;
             $basecompany = GeneralMethod::baseCompany();
             $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
             $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
             $attachments = [];
 
             $cc = [];
-            $checkMailPermision = GeneralMethod::mailPermission(25);
-            if ($checkMailPermision) {
+            try {
+                $checkMailPermision = GeneralMethod::mailPermission(25);
+                if ($checkMailPermision && $from_company_id > 0) {
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(25, 1);
+                    $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $current_company_id);
+                    $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
 
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(25, 1);
+                    $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company ?? '', $jobRow->title ?? '', $jobRow->id ?? ''], $mailTypeSubject->subject ?? '');
+                    $employment_type = (($jobRow->employment_type ?? 0) == 1) ? 'CONTRACT' : 'FULLTIME';
 
-                // $jobid = $recommendation_relationRow->job_id;
+                    $salaryMode = GeneralMethod::salaryMode();
+                    $currencySymbole = GeneralMethod::currencySymbole();
+                    $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode ?? 0] ?? '', 0, 1));
+                    $salary_currency = $currencySymbole[@$jobRow->max_salary_currency] ?? '';
+                    $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary ?? 0);
+                    $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary ?? 0);
+                    $salaryRange = $salary_currency.$min_salary.' - '.$max_salary.'/'.$sal_mode;
 
-                // $jobRow = DB::table('jobs')->join('job_countries','job_countries.job_id','=','jobs.id')->select('jobs.id', 'jobs.employment_type','job_countries.country_id','jobs.title','jobs.min_exp','jobs.max_exp','jobs.min_salary','jobs.max_salary','jobs.employment_type','jobs.max_salary_currency','jobs.max_sal_mode','jobs.title','jobs.company_id')->where('jobs.id', '=', $jobid)->first();
+                    $jonTerms = ($jobRow && $jobRow->company_id) ? Company::withoutGlobalScope('company')->find($jobRow->company_id) : null;
+                    $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description ?? '');
+                    $TERMS_FIXED = '';
+                    $template_description = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{CLIENT_PHONE}]', '[{CLIENT_EMAIL}]', '[{TERMS}]', '[{TERMS_FIXED}]'], [$detailsVendorSide->vendor_company ?? '', $detailsVendorSide->client_company ?? '', $detailsVendorSide->vendor_name ?? '', $detailsVendorSide->vendor_phone ?? '', $detailsVendorSide->vendor_email ?? '', $jonTerms->terms ?? '', $TERMS_FIXED], $template_description);
 
-                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $current_company_id);
-                $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
+                    $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment');
+                    $defailsEmail = DB::table('companies')->where('id', $from_company_id)->value('company_email');
+                    $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
 
-                $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, $jobRow->title, $jobRow->id], $mailTypeSubject->subject);
-                $employment_type = '';
-                if ($jobRow->employment_type == 1) {
-                    $employment_type = 'CONTRACT';
-                } else {
-                    $employment_type = 'FULLTIME';
+                    if ($to_Mail_Id) {
+                        QueueNotificationMailService::dispatch(
+                            $to_Mail_Id,
+                            $subject,
+                            'email.common.index',
+                            (object) ['message' => $template_description],
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $from_company_id
+                        )->onConnection('emails');
+                    }
                 }
-
-                $salaryMode = GeneralMethod::salaryMode();
-                $currencySymbole = GeneralMethod::currencySymbole();
-                $sal_mode = $min_salary = $salary_currency = $max_salary = '';
-                $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode], 0, 1));
-                $salary_currency = $currencySymbole[@$jobRow->max_salary_currency];
-                $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary);
-                $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary);
-                $salaryRange = $salary_currency.$min_salary.' - '.$max_salary.'/'.$sal_mode;
-
-                $jonTerms = Company::withoutGlobalScope('company')->findOrFail($jobRow->company_id);
-
-                $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description);
-
-                $TERMS_FIXED = '';
-
-                $template_description = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{CLIENT_PHONE}]', '[{CLIENT_EMAIL}]', '[{TERMS}]', '[{TERMS_FIXED}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, @$jonTerms->terms, $TERMS_FIXED], $template_description);
-
-                $message = $template_description;
-
-                $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                //    dd($to_Mail_Id);
-                $data = [
-                    'message' => $message,
-                ];
-
-                QueueNotificationMailService::dispatch(
-                    $to_Mail_Id,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $from_company_id
-                )->onConnection('emails');
-
-                // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+            } catch (\Throwable $e) {
+                \Log::warning('Reject mail notification failed: '.$e->getMessage());
             }
+
+            $cachekeys = [
+                'alljobslist_version_user_'.$this->user->id,
+                'alljobslist_version_company_'.$current_company_id,
+                'allclientrequisition_version_user_'.$this->user->id,
+                'allclientrequisition_version_company_'.$current_company_id,
+                'alljobrequest_version_user_'.$this->user->id,
+                'alljobrequest_version_company_'.$current_company_id,
+            ];
+            foreach ($cachekeys as $key) {
+                GeneralMethod::cacheClean($key);
+            }
+            cache()->forget('ats:job_recommendation_ids:'.$current_company_id);
+
+            return Reply::dataOnly(['status' => 'success', 'action' => 'ignore', 'message' => 'Job request rejected successfully.', 'dataCnt' => $this->dataCnt()]);
 
         } elseif ($status == 'accept') {
 
-            $from_company_id = $recommendation_relationRow->from_company_id;
-
-            // dd($from_company_id);
-            // $eventId = 26;
-            // $coinsDeductions =  GeneralMethod::coinsValidations((int) $from_company_id,$eventId,auth()->user()->id,$current_company_id,'','');
-            // // dd($coinsDeductions);
-            // if($coinsDeductions->status){
-            // 	return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message,'company_coins'=> $coinsDeductions->company_coins]);
-            // }
-
-            //  dd("accept",$recommendation_relationRow->from_company_id);
+            $from_company_id = $recommendation_relationRow->from_company_id ?? 0;
 
             $companyData = DB::table('companies')
                 ->select('companies.*')
                 ->where('companies.id', '=', $current_company_id)
                 ->first();
             if ($companyData) {
-                // dd($companyData);
-                $leadCount = $companyData->leadCount + 1;
+                $leadCount = ($companyData->leadCount ?? 0) + 1;
                 DB::table('companies')->where('id', '=', $companyData->id)->update(['leadCount' => $leadCount]);
             }
 
-            $client = DB::table('clients')->select('clients.id')->join('companies', 'companies.id', '=', 'clients.company_id')->where('clients.company_id', $current_company_id)->where('clients.self_company', 1)->first();
-
-            //    if($client){
-            // 	 GeneralMethod::clientStaffingPartner($client->id);
-            //     }
-
-            // dd($from_company_id);
+            $client = DB::table('clients')->select('clients.id')->where('clients.company_id', $current_company_id)->where('clients.self_company', 1)->first();
+            if (! $client) {
+                $client = $clientRow;
+            }
 
             $job_metronics_skills = DB::table('job_metronics_skills')->select('job_metronics_skills.skill_name')->where('job_id', '=', $jobId)->where('company_id', '=', $from_company_id)->get();
-            if ($job_metronics_skills) {
+            if ($job_metronics_skills && count($job_metronics_skills) > 0) {
                 $job = Job::withoutGlobalScopes()->find($jobId);
                 foreach ($job_metronics_skills as $skills) {
                     $insertArr = ['company_id' => $current_company_id, 'job_id' => $jobId, 'skill_name' => $skills->skill_name];
@@ -12317,27 +12324,28 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
                         $skill_name = strtolower(trim($skills->skill_name));
                         $documentId = md5($current_company_id.'_'.$skill_name);
-                        $response = $this->elasticService->getClient()->update([
-                            'index' => ELASTIC_COMPANY_SKILLS,
-                            'id' => $documentId,
-                            'retry_on_conflict' => 5,
-                            'body' => [
-                                'doc' => [
-                                    'id' => $rowId,
-                                    'company_id' => $current_company_id,
-                                    'job_id' => $job->id,
-                                    'skill_name' => $skill_name,
-                                    'created_at' => (@$row->created_at) ? Carbon::parse(@$row->created_at)->toIso8601String() : null,
-                                    'updated_at' => (@$row->updated_at) ? Carbon::parse(@$row->updated_at)->toIso8601String() : null,
+                        try {
+                            $this->elasticService->getClient()->update([
+                                'index' => ELASTIC_COMPANY_SKILLS,
+                                'id' => $documentId,
+                                'retry_on_conflict' => 5,
+                                'body' => [
+                                    'doc' => [
+                                        'id' => $rowId,
+                                        'company_id' => $current_company_id,
+                                        'job_id' => $job->id ?? $jobId,
+                                        'skill_name' => $skill_name,
+                                        'created_at' => now()->toIso8601String(),
+                                        'updated_at' => now()->toIso8601String(),
+                                    ],
+                                    'doc_as_upsert' => true,
+                                    'detect_noop' => true,
                                 ],
-                                'doc_as_upsert' => true,
-                                'detect_noop' => true,
-                            ],
-                        ]);
-
+                            ]);
+                        } catch (\Throwable $e) {
+                        }
                     }
                 }
-
             }
 
             $client_city_jobs = DB::table('client_city_jobs')->select('client_city_jobs.city_id', 'client_city_jobs.country_id')->where('job_id', '=', $jobId)->where('company_id', '=', $from_company_id)->get();
@@ -12347,7 +12355,6 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                     if (! DB::table('client_city_jobs')->where('company_id', '=', $current_company_id)->where('city_id', '=', $city_jobs->city_id)->exists()) {
                         DB::table('client_city_jobs')->insert($insertArrCity);
                     }
-
                 }
             }
 
@@ -12364,10 +12371,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
 
             // COMPANY RELATION
             $company_relation = DB::table('staffing_company_relation')
-                ->select('recommendation_relation.from_company_id')
                 ->where('staffing_company_relation.from_company_id', '=', $from_company_id)
                 ->where('staffing_company_relation.to_company_id', '=', $current_company_id)
-                // ->where('clients.self_company', '=', 1)
                 ->count();
 
             if ($company_relation == 0) {
@@ -12380,26 +12385,28 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ];
                 DB::table('staffing_company_relation')->insert($insertArr);
                 $relationId = DB::getPdo()->lastInsertId();
-                GeneralMethod::appendClientNestedData($relationId);
-
+                try {
+                    GeneralMethod::appendClientNestedData($relationId);
+                } catch (\Throwable $e) {
+                }
             }
 
             $data['to_status'] = 1;
             $data['final_status'] = 1;
             $msg = 'success';
+
             // NOW REGISTER REQUEST SEND
             $companyRelationArr = [
-                'to_client_id' => $clientRow->id,
+                'to_client_id' => $clientRow->id ?? ($client->id ?? 0),
                 'to_user_id' => $this->user->id,
                 'to_status' => 1,
                 'to_created_at' => date('Y-m-d'),
                 'final_status' => 1,
-
                 'created_at' => date('Y-m-d'),
                 'updated_at' => date('Y-m-d'),
             ];
             DB::table('staffing_company_relation')
-                ->where('staffing_company_relation.from_company_id', $recommendation_relationRow->from_company_id)
+                ->where('staffing_company_relation.from_company_id', $from_company_id)
                 ->where('staffing_company_relation.to_company_id', @$current_company_id)
                 ->where('staffing_company_relation.to_status', 0)
                 ->where('staffing_company_relation.final_status', 0)
@@ -12410,43 +12417,42 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             $data['to_created_at'] = date('Y-m-d');
             $data['accepterms'] = $termsfinal;
 
-            // dd($data,@$rec_relation_id);
             DB::table('recommendation_relation')->where('id', @$rec_relation_id)->limit(1)->update($data);
 
-            $exists = $this->elasticService->getClient()->exists([
-                'index' => ELASTIC_JOB_REQUEST,
-                'id' => $rec_relation_id,
-            ]);
-
-            if ($exists) {
-
-                // 2. Prepare the update timestamp
-                $updateTime = now()->toIso8601String();
-
-                // 3. Execute update with debugging
-                $updateParams = [
+            try {
+                $exists = $this->elasticService->getClient()->exists([
                     'index' => ELASTIC_JOB_REQUEST,
                     'id' => $rec_relation_id,
-                    'body' => [
-                        'doc' => [
-                            'to_status' => 1,
-                            'final_status' => 1,
-                            'to_user_id' => $this->user->id,
-                            'to_created_at' => $updateTime,
-                            'accepterms' => $termsfinal,
-                            'updated_at' => $updateTime,
-                        ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
-                ];
-                $this->elasticService->getClient()->update($updateParams);
+                ]);
 
+                if ($exists) {
+                    $updateTime = now()->toIso8601String();
+                    $updateParams = [
+                        'index' => ELASTIC_JOB_REQUEST,
+                        'id' => $rec_relation_id,
+                        'body' => [
+                            'doc' => [
+                                'to_status' => 1,
+                                'final_status' => 1,
+                                'to_user_id' => $this->user->id,
+                                'to_created_at' => $updateTime,
+                                'accepterms' => $termsfinal,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false,
+                        ],
+                        'refresh' => true,
+                    ];
+                    $this->elasticService->getClient()->update($updateParams);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('ELASTIC_JOB_REQUEST update failed: '.$e->getMessage());
             }
+
             // Vendor Add Job
             $teamRankElastic = [
-                'company_id' => $recommendation_relationRow->from_company_id,
-                'user_id' => $recommendation_relationRow->from_user_id,
+                'company_id' => $from_company_id,
+                'user_id' => $recommendation_relationRow->from_user_id ?? 0,
                 'candidate_id' => 0,
                 'profileUpload' => 0,
                 'interviewScheduled' => 0,
@@ -12460,461 +12466,164 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'listBenchCandidates' => 0,
                 'respondToBenchRequests' => 0,
             ];
-            GeneralMethod::teamRankElastic($teamRankElastic);
-
-            GeneralMethod::addUpdateCompanyStaffingRecommendationRelations($current_company_id);
-
-            // ElasticCompanyIndex::dispatch($current_company_id)->onConnection('emails');
-
-            GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
-            GeneralMethod::clientStaffingPartner($client->id);
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
-
-            $to_notificationemail = GeneralMethod::notification($current_company_id, 'Recuitment'); // Recuitment Sales
-            $to_defailsEmail = DB::table('companies')->where('id', $current_company_id)->first()->company_email;
-            $com_to_Mail_Id = $to_notificationemail->email ?? $to_defailsEmail ?? '';
-
-            $checkMailPermision = GeneralMethod::mailPermission(45);
-            if ($checkMailPermision) {
-
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(45, 1);
-                $cc = [];
-
-                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $current_company_id);
-                $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-                $companyAsdress = GeneralMethod::companyClientAddress($from_company_id);
-                $partnerAddess = GeneralMethod::companyClientAddress($current_company_id);
-
-                $subject = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->client_company, $jobRow->title, $jobRow->id], $mailTypeSubject->subject);
-                $employment_type = '';
-                if ($jobRow->employment_type == 1) {
-                    $employment_type = 'CONTRACT';
-                } else {
-                    $employment_type = 'FULLTIME';
-                }
-
-                $salaryMode = GeneralMethod::salaryMode();
-                $currencySymbole = GeneralMethod::currency();
-                $sal_mode = $min_salary = $salary_currency = $max_salary = '';
-                $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode], 0, 1));
-                $salary_currency = $currencySymbole[@$jobRow->max_salary_currency];
-                $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary);
-                $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary);
-                $salaryRange = $salary_currency.' '.$min_salary.'/'.$sal_mode.'<br> '.$salary_currency.' '.$max_salary.'/'.$sal_mode;
-                $jonTerms = Company::withoutGlobalScope('company')->findOrFail($jobRow->company_id);
-
-                $status = ucwords($jobRow->status);
-
-                if ($jobRow->status == 'active') {
-                    $status = 'Hiring';
-                } elseif ($jobRow->status == 'inactive') {
-                    $status = 'Closed';
-                } else {
-                    $status = 'Hold';
-                }
-
-                $recommendation_text = __('messages.internal_tag');
-                $ulink =
-                '<a href="javascript:void(0);" class="fs-6 '.
-                @$class.
-                ' text-hover-success">'.
-                $status.
-                '</a>';
-                $statusAndId = '<div class="d-flex flex-column">
-										'.
-                                $ulink.
-                                '
-										<br><span class="fw-bold text-muted d-block fs-7">R'.
-                                @$jobRow->id.
-                                ' -'.
-                                $recommendation_text.
-                                '</span>
-										</div>';
-
-                // $template_description = $mailTypeSubject->body_description;
-                $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description);
-
-                $TERMS_FIXED = "{$detailsVendorSide->vendor_company} has accepted the rates, terms, and conditions outlined below for the job requirements of  {$detailsVendorSide->client_company}";
-
-                $total_positions = '';
-                $total_positions = number_format($jobRow->total_positions);
-
-                $created_at = '';
-                $created_at = $jobRow->created_at;
-                $newDate = GeneralMethod::ymdTodmyNotTime($created_at); // date("d M, Y", strtotime($created_at));
-                $dateAdd = '<div class="d-flex flex-column">
-								<span class="text-dark fw-bolder fs-6">'.
-                    $newDate.
-                    '</span><br>
-								<span class="text-muted fw-bold d-block fs-7">'.
-                    $total_positions.
-                    ' Opening</span>
-							</div>';
-
-                $exp = $jobRow->min_exp.' Y <br>'.$jobRow->max_exp.' Y';
-                $id = encrypt($jobRow->id);
-                $oprnlink = url('/service_company/mail_jobs_ajax/'.$id.'/');
-
-                // $oprnlink =  url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($jobRow->id) . '/all');
-
-                $afterAcceptJobsteps = "<h3><strong>Steps to Add Candidates/Profiles to a Job:</strong></h3>
-										<ol>
-											<li><strong>Log in</strong> to Jero.works using your email and password.</li>
-											<li><strong>View the job</strong> from the link <a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>(Click Here)</a> or navigate to the <strong>&quot;All Jobs&quot;</strong> tab after logging in.</li>
-											<li>Click on <strong>&quot;Add Candidate&quot;</strong>, upload resumes, and fill in the required details.</li>
-											<li>Change the <strong>candidate status from &quot;In Review&quot; to &quot;Sourcing.&quot;</strong></li>
-											<li>Track scheduled interviews for your candidates in the <strong>&quot;Interview Tracker&quot;</strong> tab from the menu.</li>
-											<li>Click on the below link to directly open the job page to upload the candidate profile into the job<br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a></li>
-										</ol>
-
-										<h3><strong>Important Notes:</strong></h3>
-
-										<ul>
-											<li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
-											<li>If a candidate remains in <strong>&quot;In Review&quot;</strong> status, the profile will only be visible to you and your team, <strong>not the client</strong>.</li>
-											<li>Ensure you <strong>change the status to &quot;Sourcing&quot;</strong> so the client can review and proceed with the profiles.</li>
-										</ul>
-										';
-
-                $partnersData = DB::table('job_assign')
-                    ->join('users', 'users.id', '=', 'job_assign.user_id')
-                    ->select('users.mobile as phone', 'users.name', 'users.email')
-                    ->where('job_assign.spok_user_id', '!=', '')
-                    ->where('users.company_id', '=', $from_company_id)
-                    ->first();
-
-                $template_description = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CAPTAIN_NAME}]', '[{CAPTAIN_PHONE}]', '[{CAPTAIN_EMAIL}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $partnersData->name, $partnersData->phone, $partnersData->email, $afterAcceptJobsteps, $TERMS_FIXED, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $statusAndId, $dateAdd], $template_description);
-
-                $message = $template_description;
-
-                $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                //    dd($to_Mail_Id);
-                $data = [
-                    'message' => $message,
-                ];
-                $jonTermssssss = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]', '[AGENCY_ADDRESS]'], [date('d M y'), $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $companyAsdress, $partnerAddess], $jonTerms->terms);
-                $pdf = app('dompdf.wrapper');
-                $pdf->loadView('term_gen_pdf', compact('jonTermssssss'));
-
-                // Save PDF to a temporary file or generate the raw content signature-pad.blade.php
-                $pdfContent = $pdf->output();
-                $filename = 'terms-and-conditions-'.$jobRow->id.'.pdf';
-                // Option 1: Save PDF to storage and attach file path
-                Storage::disk('public')->makeDirectory('termConditionsSendRequest');
-                $pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
-                file_put_contents($pdfPath, $pdfContent);
-                $hashname = str_replace('index.php', '', url('storage/app/public/termConditionsSendRequest/'.$filename.''));
-
-                $attachments[] = [
-                    'path' => $hashname,
-                    'options' => [],
-                ];
-
-                QueueNotificationMailService::dispatch(
-                    $com_to_Mail_Id,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $from_company_id
-                )->onConnection('emails');
-
+            try {
+                GeneralMethod::teamRankElastic($teamRankElastic);
+            } catch (\Throwable $e) {
             }
 
-            $cc = [];
+            try {
+                GeneralMethod::addUpdateCompanyStaffingRecommendationRelations($current_company_id);
+            } catch (\Throwable $e) {
+            }
 
-            $checkMailPermision = GeneralMethod::mailPermission(18);
-            if ($checkMailPermision) {
+            try {
+                GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
+            } catch (\Throwable $e) {
+            }
 
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(18, 1);
-
-                $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $current_company_id);
-                $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
-                $companyAsdress = GeneralMethod::companyClientAddress($from_company_id);
-                $partnerAddess = GeneralMethod::companyClientAddress($current_company_id);
-
-                $subject = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->vendor_company, $jobRow->title, $jobRow->id], $mailTypeSubject->subject);
-                $employment_type = '';
-                if ($jobRow->employment_type == 1) {
-                    $employment_type = 'CONTRACT';
-                } else {
-                    $employment_type = 'FULLTIME';
+            if ($client && ! empty($client->id)) {
+                try {
+                    GeneralMethod::clientStaffingPartner($client->id);
+                } catch (\Throwable $e) {
                 }
+            }
 
-                $salaryMode = GeneralMethod::salaryMode();
-                $currencySymbole = GeneralMethod::currency();
-                $sal_mode = $min_salary = $salary_currency = $max_salary = '';
-                $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode], 0, 1));
-                $salary_currency = $currencySymbole[@$jobRow->max_salary_currency];
-                $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary);
-                $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary);
-                $salaryRange = $salary_currency.' '.$min_salary.'/'.$sal_mode.'<br> '.$salary_currency.' '.$max_salary.'/'.$sal_mode;
-                $jonTerms = Company::withoutGlobalScope('company')->findOrFail($jobRow->company_id);
-
-                $status = ucwords($jobRow->status);
-
-                if ($jobRow->status == 'active') {
-                    $status = 'Hiring';
-                } elseif ($jobRow->status == 'inactive') {
-                    $status = 'Closed';
-                } else {
-                    $status = 'Hold';
-                }
-
-                $recommendation_text = __('messages.internal_tag');
-                $ulink =
-                '<a href="javascript:void(0);" class="fs-6 '.
-                @$class.
-                ' text-hover-success">'.
-                $status.
-                '</a>';
-                $statusAndId = '<div class="d-flex flex-column">
-										'.
-                                $ulink.
-                                '
-										<br><span class="fw-bold text-muted d-block fs-7">R'.
-                                @$jobRow->id.
-                                ' -'.
-                                $recommendation_text.
-                                '</span>
-										</div>';
-
-                // $template_description = $mailTypeSubject->body_description;
-                $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description);
-
-                $TERMS_FIXED = "{$detailsVendorSide->vendor_company} has accepted the rates, terms, and conditions outlined below for the job requirements of  {$detailsVendorSide->client_company}";
-
-                $total_positions = '';
-                $total_positions = number_format($jobRow->total_positions);
-
-                $created_at = '';
-                $created_at = $jobRow->created_at;
-                $newDate = GeneralMethod::ymdTodmyNotTime($created_at); // date("d M, Y", strtotime($created_at));
-                $dateAdd = '<div class="d-flex flex-column">
-								<span class="text-dark fw-bolder fs-6">'.
-                    $newDate.
-                    '</span><br>
-								<span class="text-muted fw-bold d-block fs-7">'.
-                    $total_positions.
-                    ' Opening</span>
-							</div>';
-
-                $exp = $jobRow->min_exp.' Y <br>'.$jobRow->max_exp.' Y';
-
-                $id = encrypt($jobRow->id);
-                $oprnlink = url('/service_company/mail_jobs_ajax/'.$id.'/');
-
-                // $oprnlink =  url('/service_company/apptracker/clientapp/' . GeneralMethod::value_encrypt($jobRow->id) . '/all');
-
-                $afterAcceptJobsteps = "<h3><strong>Steps to Add Candidates/Profiles to a Job:</strong></h3>
-										<ol>
-											<li><strong>Log in</strong> to Jero.works using your email and password.</li>
-											<li><strong>View the job</strong> from the link <a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>(Click Here)</a> or navigate to the <strong>&quot;All Jobs&quot;</strong> tab after logging in.</li>
-											<li>Click on <strong>&quot;Add Candidate&quot;</strong>, upload resumes, and fill in the required details.</li>
-											<li>Change the <strong>candidate status from &quot;In Review&quot; to &quot;Sourcing.&quot;</strong></li>
-											<li>Track scheduled interviews for your candidates in the <strong>&quot;Interview Tracker&quot;</strong> tab from the menu.</li>
-											<li>Click on the below link to directly open the job page to upload the candidate profile into the job<br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a></li>
-										</ol>
-
-										<h3><strong>Important Notes:</strong></h3>
-
-										<ul>
-											<li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
-											<li>If a candidate remains in <strong>&quot;In Review&quot;</strong> status, the profile will only be visible to you and your team, <strong>not the client</strong>.</li>
-											<li>Ensure you <strong>change the status to &quot;Sourcing&quot;</strong> so the client can review and proceed with the profiles.</li>
-										</ul>
-										';
-
-                $template_description = str_replace(['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CLIENT_NAME}]', '[{CLIENT_PHONE}]', '[{CLIENT_EMAIL}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{STATUS}]', '[{DATEADD}]'], [$detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $detailsVendorSide->vendor_name, $detailsVendorSide->vendor_phone, $detailsVendorSide->vendor_email, $afterAcceptJobsteps, $TERMS_FIXED, $jobRow->title, $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $statusAndId, $dateAdd], $template_description);
-
-                $message = $template_description;
-
-                $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment'); // Recuitment Sales
-                $defailsEmail = DB::table('companies')->where('id', $from_company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                //    dd($to_Mail_Id);
-                $data = [
-                    'message' => $message,
-                ];
-                $jonTermssssss = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]', '[AGENCY_ADDRESS]'], [date('d M y'), $detailsVendorSide->vendor_company, $detailsVendorSide->client_company, $companyAsdress, $partnerAddess], $jonTerms->terms);
-                $pdf = app('dompdf.wrapper');
-                $pdf->loadView('term_gen_pdf', compact('jonTermssssss'));
-
-                // Save PDF to a temporary file or generate the raw content signature-pad.blade.php
-                $pdfContent = $pdf->output();
-                $filename = 'terms-and-conditions-'.$jobRow->id.'.pdf';
-                // Option 1: Save PDF to storage and attach file path
-                Storage::disk('public')->makeDirectory('termConditionsSendRequest');
-                $pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename.'');
-                file_put_contents($pdfPath, $pdfContent);
-                $hashname = str_replace('index.php', '', url('storage/app/public/termConditionsSendRequest/'.$filename.''));
-
-                $attachments[] = [
-                    'path' => $hashname,
-                    'options' => [],
-                ];
-
-                QueueNotificationMailService::dispatch(
-                    $to_Mail_Id,
-                    $subject,
-                    'email.common.index',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $from_company_id
-                )->onConnection('emails');
-
-                $teamsEmail = DB::table('users')->select('users.*')->where('company_id', $current_company_id)->where('root_user', 1)->first();
+            $teamsEmail = DB::table('users')->where('company_id', $current_company_id)->where('root_user', 1)->first() ?? auth()->user();
+            if ($teamsEmail && $jobRow) {
                 $values = [
                     'company_id' => $current_company_id,
                     'user_id' => $teamsEmail->id,
                     'job_id' => $jobRow->id,
                     'spok_user_id' => $teamsEmail->id,
                 ];
-                DB::table('job_assign')->insert($values);
-
-                /** Start send mail add job accept request */
-                $job = Job::withoutGlobalScopes()->find($jobId);
-                $employmentType = GeneralMethod::employmentType();
-                $employment_type = (int) $job->employment_type;
-                $employment_type = $employmentType[$employment_type];
-
-                $strAdded = DB::table('clients')->select('companies.company_name', 'clients.name', 'clients.self_company')->join('companies', 'companies.id', '=', 'clients.company_id')->where('clients.id', $job->client_id)->first();
-
-                $contact_person_name = '';
-                if ($strAdded->self_company == 1) {
-                    $contact_person_name = $strAdded->company_name;
-                } else {
-                    $contact_person_name = $strAdded->company_name;
-                    if ($current_company_id == $job->company_id) {
-                        $contact_person_name = $strAdded->name;
-                    }
-
+                if (! DB::table('job_assign')->where('company_id', $current_company_id)->where('job_id', $jobRow->id)->where('user_id', $teamsEmail->id)->exists()) {
+                    DB::table('job_assign')->insert($values);
                 }
-                $currency = GeneralMethod::currencySymbole();
-                $currencyGet = GeneralMethod::currencySymboleforexcell();
-                $salaryMode = GeneralMethod::salaryMode();
-                $max_salary = $min_salary = $max_sal_mode = $min_sal_mode = '';
-                $max_salary = GeneralMethod::thousandsCurrencyFormat($job->max_salary);
-                $min_salary = GeneralMethod::thousandsCurrencyFormat($job->min_salary);
+            }
 
-                $sal_mode = strtoupper(mb_substr($salaryMode[$job->max_sal_mode], 0, 1));
-                $salary_currency = $currency[@$job->max_salary_currency];
-
-                $work_type = 'Work From Office';
-                if ($job->work_type == 'no') {
-                    $work_type = 'Work From Office';
-                } elseif ($job->work_type == 'yes') {
-                    $work_type = 'Remote';
-                } elseif ($job->work_type == 'other') {
-                    $work_type = 'Hybrid';
-                }
-
-                $client_loc = DB::table('client_location_jobs')
-                    ->join('client_location', 'client_location.id', '=', 'client_location_jobs.client_location_id')
-                    ->leftJoin('city_list', 'city_list.city_id', '=', 'client_location.city_id')
-                    ->select('client_location.address', 'client_location.city', 'client_location.postcode', 'client_location.country_id', 'city_list.city as city_name')->where('client_location_jobs.job_id', @$jobId)->first();
-
-                $client_loc = DB::table('client_city_jobs')
-                    ->join('city_list', 'city_list.city_id', '=', 'client_city_jobs.city_id')
-                    ->join('state_list', 'state_list.id', '=', 'city_list.state_id')
-                    ->join('countries', 'countries.id', '=', 'state_list.country_id')
-                    ->select('city_list.city', 'countries.id as country_id', 'countries.country_name', 'city_list.city as city_name', 'state_list.state as state_name')
-                    ->where('client_city_jobs.job_id', $jobId)
-                    ->get();
-
-                // dd($client_loc);
-
-                // $country_id = @$client_loc->country_id;
-                $location = '';
-
-                if (count($client_loc) > 0) {
-                    // $country_name = GeneralMethod::getCountryName($country_id);
-                    foreach ($client_loc as $key => $cval) {
-                        $location .= (++$key).') '.$cval->city_name.' | '.$cval->state_name.' | '.$cval->country_name.'<br>';
-                        // $country_name = ucwords($cval['sortname']);
-                    }
-                }
-
-                $jobAdditional = Job::withoutGlobalScopes()
-                    ->select('clients.name as client_name', 'clients.description as client_description', 'clients.logo_logical_path', 'job_categories.name as cat_name', 'qualification_master.name as qualification_name')
-                    ->leftJoin('clients', 'clients.id', '=', 'jobs.client_id')
-                    ->leftJoin('job_categories', 'job_categories.id', '=', 'jobs.category_id')
-                    ->leftJoin('qualification_master', 'qualification_master.id', '=', 'jobs.qualification')
-                    ->where('jobs.id', '=', $jobId)
-                    ->first();
-
-                $recruiter = DB::table('users')
-                    ->join('job_assign', 'job_assign.user_id', '=', 'users.id')
-                    ->where('job_assign.job_id', $jobId)->pluck('users.name')->toArray();
-
-                $recruiterdata = (implode(',', $recruiter));
-
-                $hiring_namager = DB::table('client_contact_info')
-                    ->join('client_contact_info_jobs', 'client_contact_info_jobs.client_contact_info_id', '=', 'client_contact_info.id')
-                    ->where('client_contact_info_jobs.job_id', $jobId)->pluck('client_contact_info.contact_person_name')->toArray();
-                $hiring_namagerdata = (implode(',', $hiring_namager));
-
-                $cc = [];
-
+            // Notification emails wrapped in safe try/catch
+            try {
                 $basecompany = GeneralMethod::baseCompany();
-                $senderName = (auth()->user()->name) ? auth()->user()->name : '';
-                $fromAddress = (auth()->user()->email) ? auth()->user()->email : '';
+                $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
                 $attachments = [];
-                $subject = 'New Job Added';
-                $checkMailPermision = GeneralMethod::mailPermission(10);
-                if ($checkMailPermision) {
-                    $company_id = auth()->user()->company_id;
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(10, 1);
-                    $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
 
-                    if (@$job->status == 'active') {
-                        $status_job = "<strong><span style='color:#27ae60'>Hiring</span></strong>";
-                    } elseif (@$job->status == 'inactive') {
-                        $status_job = "<strong><span style='color:#ff0202'>Closed</span></strong>";
+                $to_notificationemail = GeneralMethod::notification($current_company_id, 'Recuitment');
+                $to_defailsEmail = DB::table('companies')->where('id', $current_company_id)->value('company_email');
+                $com_to_Mail_Id = $to_notificationemail->email ?? $to_defailsEmail ?? '';
+
+                $checkMailPermision = GeneralMethod::mailPermission(45);
+                if ($checkMailPermision && $jobRow) {
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(45, 1);
+                    $cc = [];
+
+                    $detailsVendorSide = GeneralMethod::companyAsVendor($from_company_id, $current_company_id);
+                    $jobCitySelectedTag = GeneralMethod::JobcitiesTags($jobid);
+                    $companyAsdress = GeneralMethod::companyClientAddress($from_company_id);
+                    $partnerAddess = GeneralMethod::companyClientAddress($current_company_id);
+
+                    $subject = str_replace(['[{CLIENT_COMPANY_NAME}]', '[{JOB_TITLE}]', '[{JOB_ID}]'], [$detailsVendorSide->client_company ?? '', $jobRow->title ?? '', $jobRow->id ?? ''], $mailTypeSubject->subject ?? '');
+                    $employment_type = (($jobRow->employment_type ?? 0) == 1) ? 'CONTRACT' : 'FULLTIME';
+
+                    $salaryMode = GeneralMethod::salaryMode();
+                    $currencySymbole = GeneralMethod::currency();
+                    $sal_mode = strtoupper(substr($salaryMode[$jobRow->max_sal_mode ?? 0] ?? '', 0, 1));
+                    $salary_currency = $currencySymbole[@$jobRow->max_salary_currency] ?? '';
+                    $max_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->max_salary ?? 0);
+                    $min_salary = GeneralMethod::thousandsCurrencyFormat($jobRow->min_salary ?? 0);
+                    $salaryRange = $salary_currency.' '.$min_salary.'/'.$sal_mode.'<br> '.$salary_currency.' '.$max_salary.'/'.$sal_mode;
+                    $jonTerms = ($jobRow && $jobRow->company_id) ? Company::withoutGlobalScope('company')->find($jobRow->company_id) : null;
+
+                    $status = ucwords($jobRow->status ?? 'active');
+                    if ($status == 'Active') {
+                        $status = 'Hiring';
+                    } elseif ($status == 'Inactive') {
+                        $status = 'Closed';
                     } else {
-                        $status_job = "<strong><span style='color:#ffab00'>Hold</span></strong>";
+                        $status = 'Hold';
                     }
 
-                    $subject = str_replace(['[{JOB_TITLE}]', '[{ClientCompany}]', '[{Location}]', '[{JobID}]'], [@$job->title, @$contact_person_name, @$location, @$job->id], $mailTypeSubject->subject);
+                    $recommendation_text = __('messages.internal_tag');
+                    $ulink = '<a href="javascript:void(0);" class="fs-6 text-hover-success">'.$status.'</a>';
+                    $statusAndId = '<div class="d-flex flex-column">'.$ulink.'<br><span class="fw-bold text-muted d-block fs-7">R'.@$jobRow->id.' -'.$recommendation_text.'</span></div>';
 
-                    $template_description = str_replace(['[{status}]', '[{clientCompany}]', '[{job_id}]', '[{job_title}]', '[{experience}]', '[{salaryrange}]', '[{NoofOpenings}]', '[{location}]', '[{remote}]', '[{JobType}]', '[{Department}]', '[{Qualification}]', '[{hiringManager}]', '[{recruiter}]', '[{addedby}]', '[{JobDescriptions}]'], [@$status_job, @$contact_person_name, @$job->id, @$job->title, @$job->min_exp.'-'.@$job->max_exp.' Years', @$currencyGet[@$job->min_salary_currency].' '.@$job->min_salary.' to '.@$job->max_salary.' '.@$sal_mode,  @$job->total_positions, @$location, @$work_type, @$employment_type, @$jobAdditional->cat_name, @$jobAdditional->qualification_name, @$hiring_namagerdata, $recruiterdata, @$request->user()->name, @$job->job_description], $mailTypeSubject->body_description);
+                    $template_description = str_replace('[{TERMS}]', '<br>[{TERMS_FIXED}] [{TERMS}]', $mailTypeSubject->body_description ?? '');
+                    $TERMS_FIXED = ($detailsVendorSide->vendor_company ?? '').' has accepted the rates, terms, and conditions outlined below for the job requirements of '.($detailsVendorSide->client_company ?? '');
 
-                    $data = [
-                        'message' => $template_description,
-                    ];
+                    $total_positions = number_format($jobRow->total_positions ?? 1);
+                    $newDate = GeneralMethod::ymdTodmyNotTime($jobRow->created_at ?? now());
+                    $dateAdd = '<div class="d-flex flex-column"><span class="text-dark fw-bolder fs-6">'.$newDate.'</span><br><span class="text-muted fw-bold d-block fs-7">'.$total_positions.' Opening</span></div>';
 
-                    $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
+                    $exp = ($jobRow->min_exp ?? 0).' Y <br>'.($jobRow->max_exp ?? 0).' Y';
+                    $idEncrypted = encrypt($jobRow->id);
+                    $oprnlink = url('/service_company/mail_jobs_ajax/'.$idEncrypted.'/');
+
+                    $afterAcceptJobsteps = "<h3><strong>Steps to Add Candidates/Profiles to a Job:</strong></h3>
+                        <ol>
+                            <li><strong>Log in</strong> to Jero.works using your email and password.</li>
+                            <li><strong>View the job</strong> from the link <a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>(Click Here)</a> or navigate to the <strong>&quot;All Jobs&quot;</strong> tab after logging in.</li>
+                            <li>Click on <strong>&quot;Add Candidate&quot;</strong>, upload resumes, and fill in the required details.</li>
+                            <li>Change the <strong>candidate status from &quot;In Review&quot; to &quot;Sourcing.&quot;</strong></li>
+                            <li>Track scheduled interviews for your candidates in the <strong>&quot;Interview Tracker&quot;</strong> tab from the menu.</li>
+                            <li>Click on the below link to directly open the job page to upload the candidate profile into the job<br><a href='".$oprnlink."' style='color: #080feb; font-weight: bold;'>".$oprnlink.'</a></li>
+                        </ol>
+                        <h3><strong>Important Notes:</strong></h3>
+                        <ul>
+                            <li>The <strong>client will only have access to candidate profiles once the status is changed to &quot;Sourcing.&quot;</strong></li>
+                            <li>If a candidate remains in <strong>&quot;In Review&quot;</strong> status, the profile will only be visible to you and your team, <strong>not the client</strong>.</li>
+                            <li>Ensure you <strong>change the status to &quot;Sourcing&quot;</strong> so the client can review and proceed with the profiles.</li>
+                        </ul>';
+
+                    $partnersData = DB::table('job_assign')
+                        ->join('users', 'users.id', '=', 'job_assign.user_id')
+                        ->select('users.mobile as phone', 'users.name', 'users.email')
+                        ->where('job_assign.spok_user_id', '!=', '')
+                        ->where('users.company_id', '=', $from_company_id)
+                        ->first();
+
+                    $template_description = str_replace(
+                        ['[{VENDOR_COMPANY_NAME}]', '[{CLIENT_COMPANY_NAME}]', '[{CAPTAIN_NAME}]', '[{CAPTAIN_PHONE}]', '[{CAPTAIN_EMAIL}]', '[{TERMS}]', '[{TERMS_FIXED}]', '[{JOB_TITLE}]', '[{EXPERIENCE_RANGE}]', '[{SALARY_RANGE}]', '[{JOB_TYPE}]', '[{CITY_NAME}]', '[{STATUS}]', '[{DATEADD}]'],
+                        [$detailsVendorSide->vendor_company ?? '', $detailsVendorSide->client_company ?? '', $partnersData->name ?? '', $partnersData->phone ?? '', $partnersData->email ?? '', $afterAcceptJobsteps, $TERMS_FIXED, $jobRow->title ?? '', $exp, $salaryRange, $employment_type, $jobCitySelectedTag, $statusAndId, $dateAdd],
+                        $template_description
+                    );
+
+                    $notificationemail = GeneralMethod::notification($from_company_id, 'Recuitment');
+                    $defailsEmail = DB::table('companies')->where('id', $from_company_id)->value('company_email');
                     $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
 
-                    QueueNotificationMailService::dispatch(
-                        $teamsEmail->email,
-                        $subject,
-                        'email.common.index',
-                        (object) $data,
-                        $attachments,
-                        $fromAddress,
-                        $senderName,
-                        $cc,
-                        $company_id
-                    )->onConnection('emails');
+                    $dataMail = ['message' => $template_description];
+                    if ($jonTerms && $jonTerms->terms) {
+                        try {
+                            $jonTermssssss = str_replace(['[TODAY_DATE]', '[AGENCY_NAME]', '[COMPANY_NAME]', '[COMPANY_ADDRESS]', '[AGENCY_ADDRESS]'], [date('d M y'), $detailsVendorSide->vendor_company ?? '', $detailsVendorSide->client_company ?? '', $companyAsdress ?? '', $partnerAddess ?? ''], $jonTerms->terms);
+                            $pdf = app('dompdf.wrapper');
+                            $pdf->loadView('term_gen_pdf', compact('jonTermssssss'));
+                            $pdfContent = $pdf->output();
+                            $filename = 'terms-and-conditions-'.$jobRow->id.'.pdf';
+                            Storage::disk('public')->makeDirectory('termConditionsSendRequest');
+                            $pdfPath = storage_path('app/public/termConditionsSendRequest/'.$filename);
+                            file_put_contents($pdfPath, $pdfContent);
+                            $hashname = str_replace('index.php', '', url('storage/app/public/termConditionsSendRequest/'.$filename));
+                            $attachments[] = ['path' => $hashname, 'options' => []];
+                        } catch (\Throwable $e) {
+                        }
+                    }
+
+                    if ($com_to_Mail_Id) {
+                        QueueNotificationMailService::dispatch(
+                            $com_to_Mail_Id,
+                            $subject,
+                            'email.common.index',
+                            (object) $dataMail,
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $from_company_id
+                        )->onConnection('emails');
+                    }
                 }
-
-                /** End send mail add job accept request */
-
-                // dd("k",$to_Mail_Id);
-
-                // $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.common.index', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+            } catch (\Throwable $e) {
+                \Log::warning('Accept notification mail 45 failed: '.$e->getMessage());
             }
 
             $cachekeys = [
@@ -12923,18 +12632,26 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 'allclientrequisition_version_user_'.$this->user->id,
                 'allclientrequisition_version_company_'.$current_company_id,
                 'alljobrequest_version_user_'.$this->user->id,
+                'alljobrequest_version_company_'.$current_company_id,
             ];
             foreach ($cachekeys as $key) {
                 GeneralMethod::cacheClean($key);
             }
+            cache()->forget('ats:job_recommendation_ids:'.$current_company_id);
+            if (! empty($from_company_id)) {
+                cache()->forget('ats:job_recommendation_ids:'.$from_company_id);
+            }
 
         }
 
-        GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
+        try {
+            GeneralMethod::elasticJobsAddEditUpdateIndex($jobid);
+        } catch (\Throwable $e) {
+        }
 
         $dataCnt = $this->dataCnt();
 
-        return Reply::dataOnly(['status' => $msg, 'dataCnt' => $dataCnt]);
+        return Reply::dataOnly(['status' => 'success', 'action' => 'accept', 'message' => 'Job request accepted successfully.', 'dataCnt' => $dataCnt]);
 
     }
 
@@ -14167,7 +13884,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                             'refresh' => false,
                         ]);
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                }
             }
 
             GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$this->user->id);
@@ -14360,7 +14078,7 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 ));
             }
         } catch (\Throwable $e) {
-            \Log::warning('BenchRequestStatusUpdated broadcast failed: ' . $e->getMessage());
+            \Log::warning('BenchRequestStatusUpdated broadcast failed: '.$e->getMessage());
         }
 
         if ($lastWiseIs) {
