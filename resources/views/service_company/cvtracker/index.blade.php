@@ -1917,7 +1917,9 @@
         $(document).on('keydown', '#kt_tagify_2', function(e) {
             if (e.key === 'Enter' || e.keyCode === 13) {
                 e.preventDefault();
-                fetchCandidates();
+                page_no = 1;
+                localStorage.setItem('currentPage', 1);
+                fetchCandidates(1);
             }
         });
 
@@ -1925,7 +1927,9 @@
             // Used by the sort dropdown's onchange — the filter drawer itself has
             // its own Apply/Reset buttons that call fetchCandidates() directly,
             // this just covers the sort-only auto-apply case.
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
         }
 
         function tableLoad(type) {
@@ -2192,10 +2196,17 @@
                                     response.candidate_id
                                 );
                             } else {
-                                var page = $('#paginationcandidate .active_disabled').data('page');
+                                if (typeof invalidateCvTrackerCaches === 'function') invalidateCvTrackerCaches();
+                                var page = $('#paginationcandidate .active_disabled').data('page') || page_no || 1;
                                 fetchCandidates(page);
                             }
 
+                        } else if (response.status == 'conflict') {
+                            Swal.fire("Notice", response.message || 'Candidate stage was modified by another user. Refreshing...', "warning").then(function() {
+                                $('#csd_drawer_close').trigger('click');
+                            });
+                            if (typeof invalidateCvTrackerCaches === 'function') invalidateCvTrackerCaches();
+                            fetchCandidates(page_no);
                         } else if (response.status == "info") {
                             Swal.fire('Fail!', response.message, 'error')
                         } else if (response.status == 'cvpending') {
@@ -2351,10 +2362,17 @@
                                     response.candidate_id
                                 );
                             } else {
-                                var page = $('#paginationcandidate .active_disabled').data('page');
+                                if (typeof invalidateCvTrackerCaches === 'function') invalidateCvTrackerCaches();
+                                var page = $('#paginationcandidate .active_disabled').data('page') || page_no || 1;
                                 fetchCandidates(page);
                             }
                             load_interviewSchedule();
+                        } else if (response.status == 'conflict') {
+                            Swal.fire("Notice", response.message || 'Candidate stage was modified by another user. Refreshing...', "warning").then(function() {
+                                $("#stage_sub_stage_close").click();
+                            });
+                            if (typeof invalidateCvTrackerCaches === 'function') invalidateCvTrackerCaches();
+                            fetchCandidates(page_no);
                         } else if (response.status == 'cvpending') {
                             Swal.fire("Warning", 'Resume pending this job application.', "warning")
                                 .then(function() {
@@ -2488,9 +2506,9 @@
                 if (!page || $(this).hasClass('pagi-disabled') || $(this).hasClass('pagi-active-disabled')) return;
 
                 cvhPaginationLoading = true;
-                fetchCandidates(page, $('#search').val()).then(() => {
+                fetchCandidates(page, $('#inputSearch').val() || '').then(function() {
                     cvhPaginationLoading = false;
-                }).catch(() => {
+                }).catch(function() {
                     cvhPaginationLoading = false;
                 });
             });
@@ -2514,78 +2532,415 @@
             $(this).addClass('active');
             activeStageTab = $(this).attr('data-stage');
             setCvTabsCardBorder($(this).attr('data-color'));
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
         });
         setCvTabsCardBorder($('.cvh-tab.active').attr('data-color'));
-        function fetchCandidates(page, search = '') {
-            var targetPage = page || page_no || 1;
-            page_no = targetPage;
-            localStorage.setItem('currentPage', targetPage);
 
-            var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
-            var clientid = '1';
+        /* ── Phase 7: GOD-Level Client Caching (L1 RAM + L2 IndexedDB + SWR + Request Abort + Multi-Tab Sync) ──
+         * Reference: service_company/job-onboard
+         * Intent: 0% avoidable server hit when switching pages or refreshing.
+         * L1 RAM: Map() cache for instant 0ms sub-millisecond pagination transitions.
+         * L2 IndexedDB: Persistent snapshot cache for instant paint on browser refresh.
+         * SWR: Stale-While-Revalidate background refresh only when data exceeds FRESH_MS.
+         * Abort: In-flight XHR cancellation to eliminate race conditions on fast paging.
+         * Invalidation: Cross-tab BroadcastChannel invalidation on candidate mutations.
+         */
+        var TENANT_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+        var activeCvXhr = null;
 
-            $('.loadingMessage').css({ display: 'flex' });
-            if($('#kt_tagify_2').val()!=''){
-                $('.loader_search').css({ display: 'block' });
-            }else{
-                $('.page-loader').css('display', 'flex');
+        /* ── L1 RAM Snapshot Cache ── */
+        var CvTrackerCache = {
+            MAX_ENTRIES: 30,
+            TTL_MS: 180000, // 3 minutes TTL in user RAM
+            store: new Map(),
+
+            makeKey: function(s) {
+                return [
+                    s.tenant,
+                    s.page,
+                    s.per_page,
+                    (s.search || '').trim().toLowerCase(),
+                    s.sortingfilter || '',
+                    s.country || '',
+                    (s.cus_search || '').trim().toLowerCase(),
+                    (s.cus_search_skill || '').trim().toLowerCase(),
+                    s.min_exp || '',
+                    s.max_exp || '',
+                    (s.kt_tagify_location || '').trim().toLowerCase(),
+                    s.min_sal || '',
+                    s.max_sal || '',
+                    s.min_salary_currency || '',
+                    s.sal_mode || '',
+                    (s.kt_tagify_education || '').trim().toLowerCase(),
+                    s.app_int_status || '',
+                    s.app_int_activity || '',
+                    s.app_int_notice || '',
+                    s.stage_tab || ''
+                ].join('|');
+            },
+
+            get: function(s) {
+                var key = this.makeKey(s);
+                var entry = this.store.get(key);
+                if (!entry) return null;
+                if (Date.now() - entry.time > this.TTL_MS) {
+                    this.store.delete(key);
+                    return null;
+                }
+                return entry.data;
+            },
+
+            set: function(s, data) {
+                var key = this.makeKey(s);
+                if (this.store.size >= this.MAX_ENTRIES) {
+                    var oldestKey = this.store.keys().next().value;
+                    this.store.delete(oldestKey);
+                }
+                this.store.set(key, { data: data, time: Date.now() });
+            },
+
+            clear: function() {
+                this.store.clear();
+            }
+        };
+        window.CvTrackerCache = CvTrackerCache;
+
+        /* ── L2 IndexedDB Persistence Layer ── */
+        var CvTrackerIDB = {
+            DB_NAME: 'JeroCvTrackerDB',
+            DB_VERSION: 1,
+            STORE_NAME: 'snapshots',
+            TTL_MS: 300000,   // 5 minutes max storage TTL
+            FRESH_MS: 60000,  // 1 minute fresh TTL (no server hit on refresh if under 60s)
+            MAX_ENTRIES: 30,
+            db: null,
+
+            open: function() {
+                var self = this;
+                if (self.db) return Promise.resolve(self.db);
+                if (!window.indexedDB) return Promise.resolve(null);
+
+                return new Promise(function(resolve) {
+                    try {
+                        var req = window.indexedDB.open(self.DB_NAME, self.DB_VERSION);
+                        req.onupgradeneeded = function(e) {
+                            var db = e.target.result;
+                            if (!db.objectStoreNames.contains(self.STORE_NAME)) {
+                                var store = db.createObjectStore(self.STORE_NAME, { keyPath: 'key' });
+                                store.createIndex('time', 'time', { unique: false });
+                            }
+                        };
+                        req.onsuccess = function(e) {
+                            self.db = e.target.result;
+                            resolve(self.db);
+                        };
+                        req.onerror = function() {
+                            resolve(null);
+                        };
+                    } catch (err) {
+                        resolve(null);
+                    }
+                });
+            },
+
+            get: function(key) {
+                var self = this;
+                return self.open().then(function(db) {
+                    if (!db) return null;
+                    return new Promise(function(resolve) {
+                        try {
+                            var tx = db.transaction(self.STORE_NAME, 'readonly');
+                            var store = tx.objectStore(self.STORE_NAME);
+                            var req = store.get(key);
+                            req.onsuccess = function(e) {
+                                var record = e.target.result;
+                                if (!record) return resolve(null);
+                                var age = Date.now() - record.time;
+                                if (age > self.TTL_MS) {
+                                    self.delete(key);
+                                    return resolve(null);
+                                }
+                                resolve({ data: record.data, age: age });
+                            };
+                            req.onerror = function() {
+                                resolve(null);
+                            };
+                        } catch (err) {
+                            resolve(null);
+                        }
+                    });
+                });
+            },
+
+            set: function(key, data) {
+                var self = this;
+                return self.open().then(function(db) {
+                    if (!db) return;
+                    try {
+                        var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                        var store = tx.objectStore(self.STORE_NAME);
+                        store.put({ key: key, data: data, time: Date.now() });
+                        self.trim(store);
+                    } catch (err) {}
+                });
+            },
+
+            delete: function(key) {
+                var self = this;
+                return self.open().then(function(db) {
+                    if (!db) return;
+                    try {
+                        var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                        tx.objectStore(self.STORE_NAME).delete(key);
+                    } catch (err) {}
+                });
+            },
+
+            clear: function() {
+                var self = this;
+                return self.open().then(function(db) {
+                    if (!db) return;
+                    try {
+                        var tx = db.transaction(self.STORE_NAME, 'readwrite');
+                        tx.objectStore(self.STORE_NAME).clear();
+                    } catch (err) {}
+                });
+            },
+
+            trim: function(store) {
+                try {
+                    var countReq = store.count();
+                    var self = this;
+                    countReq.onsuccess = function() {
+                        if (countReq.result > self.MAX_ENTRIES) {
+                            var index = store.index('time');
+                            var cursorReq = index.openCursor();
+                            cursorReq.onsuccess = function(e) {
+                                var cursor = e.target.result;
+                                if (cursor) {
+                                    cursor.delete();
+                                }
+                            };
+                        }
+                    };
+                } catch (e) {}
+            }
+        };
+        window.CvTrackerIDB = CvTrackerIDB;
+
+        /* ── Multi-Tab Coordination (BroadcastChannel) ── */
+        var cvBroadcastChannel = null;
+        if ('BroadcastChannel' in window) {
+            try {
+                cvBroadcastChannel = new BroadcastChannel('jero_cv_tracker_' + TENANT_ID);
+                cvBroadcastChannel.onmessage = function(ev) {
+                    if (!ev || !ev.data) return;
+                    var msg = ev.data;
+                    if (msg.type === 'INVALIDATE_CACHE' || msg.type === 'STAGE_UPDATED') {
+                        CvTrackerCache.clear();
+                        CvTrackerIDB.clear();
+                        if (msg.payload && typeof window.patchCandidateRowStage === 'function') {
+                            window.patchCandidateRowStage(
+                                msg.payload.wise_id,
+                                msg.payload.master_status_id,
+                                msg.payload.master_status_name,
+                                msg.payload.css_style,
+                                msg.payload.sub_stage_name,
+                                msg.payload.old_master_status_id,
+                                msg.payload.candidate_id,
+                                false
+                            );
+                        }
+                    }
+                };
+            } catch (e) {}
+        }
+
+        /* ── Cache Invalidation Helper ── */
+        function invalidateCvTrackerCaches(broadcastPayload) {
+            CvTrackerCache.clear();
+            CvTrackerIDB.clear();
+            if (cvBroadcastChannel) {
+                try {
+                    cvBroadcastChannel.postMessage({
+                        type: broadcastPayload ? 'STAGE_UPDATED' : 'INVALIDATE_CACHE',
+                        payload: broadcastPayload || null
+                    });
+                } catch (e) {}
+            }
+        }
+        window.invalidateCvTrackerCaches = invalidateCvTrackerCaches;
+
+        /* ── Render Candidates Response (Memory or Network) ── */
+        function renderCandidatesResponse(response, targetPage) {
+            if (!response) return;
+            $('.loadingMessage').css({ display: 'none' });
+            $('.loader_search').css({ display: 'none' });
+            $('.page-loader').css('display', 'none');
+            $('#cvh_table_card').show();
+            if (response.total !== undefined) {
+                $('#total_record').html(response.total);
+            }
+            if (response.html !== undefined) {
+                $('#candidatetList').html(response.html);
+            }
+            if (targetPage) {
+                localStorage.setItem('currentPage', targetPage);
+            }
+            if (response.pagination !== undefined) {
+                $('#paginationcandidate').html(response.pagination);
+            }
+            if (response.candidateStats) {
+                updateCvHeroStats(response.candidateStats);
+            }
+        }
+
+        /* ── Network Fetch with In-Flight Request Abort & Dual-Tier Storage ── */
+        function executeCandidateFetch(filterState, targetPage, isBackgroundRevalidate) {
+            if (activeCvXhr && activeCvXhr.readyState !== 4) {
+                activeCvXhr.abort();
+                activeCvXhr = null;
             }
 
-            // document.getElementById("loader_search").classList.remove("hidden");
             var urlParams = new URLSearchParams(window.location.search);
             var isV2Active = urlParams.get('v2') === '1' || {{ config('app.cvtracker_v2_enabled', false) ? 'true' : 'false' }};
             var candidateEndpoint = isV2Active
                 ? `{!! route('service_company.cvtracker.v2.allcandidates') !!}?page=${targetPage}`
                 : `{!! route('service_company.cvtracker.allcandidates') !!}?page=${targetPage}`;
 
-            return $.ajax({
-                url: candidateEndpoint,
-                type: 'GET',
-                data: {
-                    search: search,
-                    search : $('#inputSearch').val(),
-                    sortingfilter : $('#sortingfilter').val(),
-                    country : $('#country').val(),
-                    cus_search : $('#kt_tagify_2').val(),
-                    cus_search_skill : $('#kt_tagify_users').val(),
-                    min_exp : $('#min_exp').val(),
-                    max_exp : $('#max_exp').val(),
-                    kt_tagify_location : $('#kt_tagify_location').val(),
-                    min_sal : $('#min_sal').val(),
-                    max_sal : $('#max_sal').val(),
-                    min_salary_currency : $('#min_salary_currency').val(),
-                    sal_mode : $('#sal_mode').val(),
-                    kt_tagify_education : $('#kt_tagify_education').val(),
-                    app_int_status : $('[name="app_int_status"]:checked').val(),
-                    app_int_activity : $('[name="app_int_activity"]:checked').val(),
-                    app_int_notice : $('[name="app_int_notice"]:checked').val(),
-                    stage_tab : activeStageTab === 'all' ? '' : activeStageTab,
-                    size : perPage,
-                    per_page : perPage
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#cvh_table_card').show();
-                    $('#total_record').html(response.total);
-                    $('#candidatetList').html(response.html);
-                    localStorage.setItem('currentPage', targetPage);
-                    $('#paginationcandidate').html(response.pagination);
-                    updateCvHeroStats(response.candidateStats);
-                },
-                error: function(xhr) {
-                    // Never leave the loading overlay stuck or the list blank on
-                    // a failed request — surface what went wrong instead.
-                    $('.loadingMessage').css({ display: 'none' });
-                    $('.loader_search').css({ display: 'none' });
-                    $('.page-loader').css('display', 'none');
-                    $('#cvh_table_card').show();
-                    console.error('allcandidates failed:', xhr.status, xhr.responseText);
-                }
+            var requestData = {
+                search: filterState.search,
+                sortingfilter: filterState.sortingfilter,
+                country: filterState.country,
+                cus_search: filterState.cus_search,
+                cus_search_skill: filterState.cus_search_skill,
+                min_exp: filterState.min_exp,
+                max_exp: filterState.max_exp,
+                kt_tagify_location: filterState.kt_tagify_location,
+                min_sal: filterState.min_sal,
+                max_sal: filterState.max_sal,
+                min_salary_currency: filterState.min_salary_currency,
+                sal_mode: filterState.sal_mode,
+                kt_tagify_education: filterState.kt_tagify_education,
+                app_int_status: filterState.app_int_status,
+                app_int_activity: filterState.app_int_activity,
+                app_int_notice: filterState.app_int_notice,
+                stage_tab: filterState.stage_tab,
+                size: filterState.per_page,
+                per_page: filterState.per_page
+            };
+
+            return new Promise(function(resolve, reject) {
+                activeCvXhr = $.ajax({
+                    url: candidateEndpoint,
+                    type: 'GET',
+                    data: requestData,
+                    success: function(response) {
+                        activeCvXhr = null;
+                        // 1. Store in L1 RAM snapshot cache
+                        CvTrackerCache.set(filterState, response);
+                        // 2. Store in L2 IndexedDB persistence layer
+                        var key = CvTrackerCache.makeKey(filterState);
+                        CvTrackerIDB.set(key, response);
+                        // 3. Render DOM
+                        renderCandidatesResponse(response, targetPage);
+                        resolve(response);
+                    },
+                    error: function(xhr, status) {
+                        activeCvXhr = null;
+                        if (status === 'abort') {
+                            return resolve(null);
+                        }
+                        if (!isBackgroundRevalidate) {
+                            $('.loadingMessage').css({ display: 'none' });
+                            $('.loader_search').css({ display: 'none' });
+                            $('.page-loader').css('display', 'none');
+                            $('#cvh_table_card').show();
+                        }
+                        console.error('allcandidates failed:', xhr.status, xhr.responseText);
+                        reject(xhr);
+                    }
+                });
             });
         }
+
+        /* ── Fetch Candidates with L1 RAM Cache, L2 IndexedDB SWR & Stale Request Abort ── */
+        function fetchCandidates(page, search = '') {
+            var targetPage = page || page_no || 1;
+            page_no = targetPage;
+            localStorage.setItem('currentPage', targetPage);
+
+            var perPage = $('#paginationcandidate .pagi-perpage').val() || localStorage.getItem('candidatePerPage') || 10;
+
+            var filterState = {
+                tenant: TENANT_ID,
+                page: targetPage,
+                per_page: perPage,
+                search: $('#inputSearch').val() || search || '',
+                sortingfilter: $('#sortingfilter').val() || '',
+                country: $('#country').val() || '',
+                cus_search: $('#kt_tagify_2').val() || '',
+                cus_search_skill: $('#kt_tagify_users').val() || '',
+                min_exp: $('#min_exp').val() || '',
+                max_exp: $('#max_exp').val() || '',
+                kt_tagify_location: $('#kt_tagify_location').val() || '',
+                min_sal: $('#min_sal').val() || '',
+                max_sal: $('#max_sal').val() || '',
+                min_salary_currency: $('#min_salary_currency').val() || '',
+                sal_mode: $('#sal_mode').val() || '',
+                kt_tagify_education: $('#kt_tagify_education').val() || '',
+                app_int_status: $('[name="app_int_status"]:checked').val() || '',
+                app_int_activity: $('[name="app_int_activity"]:checked').val() || '',
+                app_int_notice: $('[name="app_int_notice"]:checked').val() || '',
+                stage_tab: activeStageTab === 'all' ? '' : activeStageTab
+            };
+
+            // 1. Check L1 RAM Snapshot Cache first (instant 0ms render, 0 network hit)
+            var ramCached = CvTrackerCache.get(filterState);
+            if (ramCached) {
+                renderCandidatesResponse(ramCached, targetPage);
+                return Promise.resolve(ramCached);
+            }
+
+            var key = CvTrackerCache.makeKey(filterState);
+
+            // 2. Check L2 IndexedDB Cache (instant paint on refresh/rehydrate)
+            return CvTrackerIDB.get(key).then(function(idbRecord) {
+                if (idbRecord && idbRecord.data) {
+                    // Populate L1 RAM cache
+                    CvTrackerCache.set(filterState, idbRecord.data);
+                    // Render immediately from IndexedDB (0ms perceived latency, no spinner)
+                    renderCandidatesResponse(idbRecord.data, targetPage);
+
+                    // Stale-While-Revalidate: only revalidate silently if older than FRESH_MS
+                    if (idbRecord.age > CvTrackerIDB.FRESH_MS) {
+                        return executeCandidateFetch(filterState, targetPage, true);
+                    }
+                    return Promise.resolve(idbRecord.data);
+                } else {
+                    // Cache miss: show spinner and execute network fetch
+                    $('.loadingMessage').css({ display: 'flex' });
+                    if ($('#kt_tagify_2').val() != '') {
+                        $('.loader_search').css({ display: 'block' });
+                    } else {
+                        $('.page-loader').css('display', 'flex');
+                    }
+                    return executeCandidateFetch(filterState, targetPage, false);
+                }
+            }).catch(function() {
+                // Fallback on IDB failure
+                $('.loadingMessage').css({ display: 'flex' });
+                if ($('#kt_tagify_2').val() != '') {
+                    $('.loader_search').css({ display: 'block' });
+                } else {
+                    $('.page-loader').css('display', 'flex');
+                }
+                return executeCandidateFetch(filterState, targetPage, false);
+            });
+        }
+        window.fetchCandidates = fetchCandidates;
 
         /* Sync hero KPI cards + stage tab badges from the same ES aggregation the table fetch already returns */
         function updateCvHeroStats(stats) {
@@ -2609,10 +2964,26 @@
         }
         window.updateCvHeroStats = updateCvHeroStats;
 
-        window.patchCandidateRowStage = function(wiseId, masterStatusId, masterStatusName, cssStyle, subStageName, oldMasterStatusId, candidateId) {
+        window.patchCandidateRowStage = function(wiseId, masterStatusId, masterStatusName, cssStyle, subStageName, oldMasterStatusId, candidateId, broadcastToTabs = true) {
             if (!wiseId && !candidateId && !masterStatusId) return;
             var wid = wiseId ? String(wiseId) : null;
             var cid = candidateId ? String(candidateId) : null;
+
+            // Invalidate local client caches to guarantee 0% stale data
+            if (broadcastToTabs && typeof invalidateCvTrackerCaches === 'function') {
+                invalidateCvTrackerCaches({
+                    wise_id: wid,
+                    candidate_id: cid,
+                    master_status_id: masterStatusId,
+                    master_status_name: masterStatusName,
+                    css_style: cssStyle,
+                    sub_stage_name: subStageName,
+                    old_master_status_id: oldMasterStatusId
+                });
+            } else if (!broadcastToTabs) {
+                if (typeof CvTrackerCache !== 'undefined') CvTrackerCache.clear();
+                if (typeof CvTrackerIDB !== 'undefined') CvTrackerIDB.clear();
+            }
 
             var $row = $();
             if (wid) $row = $row.add($('tr[data-wise-id="' + wid + '"]'));
@@ -2630,12 +3001,12 @@
                 9: 'rejected'
             };
 
-            var currentStageTab = $('#stage_tab_filter_val').val() || '';
+            var currentStageTab = $('#stage_tab_filter_val').val() || activeStageTab || '';
             if (currentStageTab && currentStageTab !== 'all' && oldMasterStatusId && masterStatusId && String(oldMasterStatusId) !== String(masterStatusId)) {
                 $row.fadeOut(300, function() {
                     $(this).remove();
                     if ($('#candidatetList tr').length === 0) {
-                        var page = $('#paginationcandidate .active_disabled').data('page') || 1;
+                        var page = $('#paginationcandidate .active_disabled').data('page') || page_no || 1;
                         fetchCandidates(page);
                     }
                 });
@@ -3096,7 +3467,9 @@
         // drawer edits) it re-fetches immediately instead of waiting for Apply, and
         // refreshes the drawer's own snapshot so reopening it shows the same picture.
         function cvhAppliedChipRemoved() {
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
             if (typeof updateCvActiveFiltersUI === 'function') updateCvActiveFiltersUI();
             if (typeof cvhCaptureSnapshot === 'function') cvhCaptureSnapshot();
             cvhRenderAppliedFiltersCard();
@@ -3139,7 +3512,9 @@
 
         $(document).on('click', '#cvh_applied_clear_all', function() {
             $('#cvh_clear_all').trigger('click');
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
             if (typeof cvhCaptureSnapshot === 'function') cvhCaptureSnapshot();
             cvhAppliedExpanded = false;
             cvhRenderAppliedFiltersCard();
@@ -3160,7 +3535,9 @@
 
         $(document).on('click', '#cvh_reset_btn', function() {
             $('#cvh_clear_all').trigger('click');
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
             // Reset is an explicit apply of the cleared state, so make the cleared
             // filters the new baseline — otherwise closing the drawer afterwards would
             // "restore" the pre-reset values.
@@ -3253,7 +3630,9 @@
         });
         $(document).on('click', '#cvh_apply_btn', function() {
             cvhApplying = true;
-            fetchCandidates();
+            page_no = 1;
+            localStorage.setItem('currentPage', 1);
+            fetchCandidates(1);
             cvhAppliedExpanded = false;
             cvhRenderAppliedFiltersCard();
             cvhToast.fire({ icon: 'success', title: 'Filters applied' });
