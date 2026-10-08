@@ -3016,35 +3016,50 @@
 }
 
 /* Candidate Header Stage Column (Enterprise Metronic ATS Standard) */
-.candidate-top-toolbar .page-title > .candidate-header-stage-col {
+.candidate-top-toolbar .page-title > .candidate-header-stage-col,
+.candidate-header-stage-col {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 9px;
     min-width: 140px;
     min-height: 46px;
-    padding-left: 39px !important;
+    padding-left: 0 !important;
     margin-right: 0 !important;
 }
 
-.candidate-top-toolbar .page-title > .candidate-header-stage-col::before {
-    content: '\f024' !important; /* FontAwesome fa-flag icon */
-    position: absolute;
-    top: 50%;
-    left: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
+/* Explicitly disable pseudo-elements on stage col to prevent Metronic sibling selector collision */
+.candidate-top-toolbar .page-title > .candidate-header-stage-col::before,
+.candidate-top-toolbar .page-title > span.border-start + .candidate-header-stage-col::before,
+.candidate-top-toolbar .page-title > span.border-start:nth-of-type(2) + .candidate-header-stage-col::before,
+.candidate-header-stage-col::before {
+    display: none !important;
+    content: none !important;
+}
+
+.candidate-header-stage-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
     border: 1px solid #f0dda0;
     border-radius: 7px;
-    color: #8f6700;
-    background: #fff6d3;
-    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome";
-    font-size: 11px;
-    font-weight: 900;
-    transform: translateY(-50%);
+    font-size: 11px !important;
+    flex-shrink: 0 !important;
+}
+
+.candidate-header-stage-icon i {
+    font-size: 11px !important;
+    line-height: 1 !important;
+}
+
+.candidate-header-stage-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .candidate-header-stage-lbl {

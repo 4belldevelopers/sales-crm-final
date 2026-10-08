@@ -186,15 +186,20 @@
                     $currentStageInfo = $headerStageMetaMap[$headerStageId] ?? $headerStageMetaMap[8];
                 @endphp
                 <span class="h-20px border-gray-200 border-start mx-4 toolbar-stage-divider"></span>
-                <div class="d-flex flex-column candidate-header-stage-col" data-stage-id="{{ $headerStageId }}">
-                    <span class="candidate-header-stage-lbl">STAGE</span>
-                    <div class="d-flex align-items-center">
-                        <span class="candidate-header-stage-pill candidate-header-stage-pill--{{ $currentStageInfo['key'] }}"
-                              style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};"
-                              title="Current Pipeline Stage: {{ $currentStageInfo['name'] }}">
-                            <span class="candidate-header-stage-dot" style="background: {{ $currentStageInfo['dot'] }};"></span>
-                            <span class="candidate-header-stage-name">{{ $currentStageInfo['name'] }}</span>
-                        </span>
+                <div class="candidate-header-stage-col" data-stage-id="{{ $headerStageId }}">
+                    <span class="candidate-header-stage-icon" style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};">
+                        <i class="fa-solid fa-flag" aria-hidden="true" style="color: {{ $currentStageInfo['color'] }};"></i>
+                    </span>
+                    <div class="candidate-header-stage-content d-flex flex-column">
+                        <span class="candidate-header-stage-lbl">STAGE</span>
+                        <div class="d-flex align-items-center">
+                            <span class="candidate-header-stage-pill candidate-header-stage-pill--{{ $currentStageInfo['key'] }}"
+                                  style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};"
+                                  title="Current Pipeline Stage: {{ $currentStageInfo['name'] }}">
+                                <span class="candidate-header-stage-dot" style="background: {{ $currentStageInfo['dot'] }};"></span>
+                                <span class="candidate-header-stage-name">{{ $currentStageInfo['name'] }}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 @endif

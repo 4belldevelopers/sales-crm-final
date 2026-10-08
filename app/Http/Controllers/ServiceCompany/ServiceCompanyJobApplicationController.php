@@ -3335,7 +3335,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $jobApplication->qualification = $request->qualification;
         }
         $jobApplication->company_id = $this->user->company_id;
-        $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
+        $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         if ($request->has('gender')) {
             $jobApplication->gender = $request->gender;
         }
@@ -6105,6 +6105,29 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
+        $this->resumeFileSize = null;
+        if (! empty($this->application->current_resume_id)) {
+            $this->resumeFileSize = DB::table('resume_assets')
+                ->where('id', $this->application->current_resume_id)
+                ->value('file_size');
+        }
+        if (empty($this->resumeFileSize) && ! empty($this->application->id)) {
+            $this->resumeFileSize = DB::table('resume_assets')
+                ->where('candidate_id', $this->application->id)
+                ->where('status', 'ACTIVE')
+                ->orderByDesc('id')
+                ->value('file_size');
+        }
+        if (empty($this->resumeFileSize) && ! empty($this->application->resume)) {
+            $path = str_replace('https://file.jero.works/', '', $this->application->resume);
+            try {
+                if (Storage::disk('r2')->exists($path)) {
+                    $this->resumeFileSize = Storage::disk('r2')->size($path);
+                }
+            } catch (\Throwable) {
+            }
+        }
+
         $this->currentPage = 1;
         if (isset($_GET['currentPage'])) {
             $currentPage = GeneralMethod::value_decrypt($_GET['currentPage']);
@@ -7547,7 +7570,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $noticePeriodState = CandidateNoticePeriodState::fromRequest($request);
         $jobApplication->np_id = $noticePeriodState['np_id'];
         $jobApplication->last_working_date = $noticePeriodState['last_working_date'];
-        $jobApplication->serving_notice_period_mode = $noticePeriodState['serving_notice_period_mode'];
+        $jobApplication->serving_notice_period_mode = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         $salaryMode = $this->normalizedCandidateSalaryMode($request->input('current_ctc_mode'));
         $jobApplication->current_ctc_cur = $request->current_ctc_cur;
         if (! empty($request->ctc)) {
@@ -12392,7 +12415,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $job_application_arr['thirdparty_company_id'] = $this->user->company_id;
         $job_application_arr['company_id'] = $jobRow->company_id;
-        $job_application_arr['serving_notice_period_mode'] = $noticePeriodState['serving_notice_period_mode'];
+        $job_application_arr['serving_notice_period_mode'] = (int) ($noticePeriodState['serving_notice_period_mode'] ?? 0);
         if ($request->has('gender')) {
             $job_application_arr['gender'] = $request->gender;
         }
