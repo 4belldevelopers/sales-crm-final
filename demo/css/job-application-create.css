@@ -2844,9 +2844,10 @@
     flex: 1 1 auto;
     flex-wrap: nowrap !important;
     min-width: 0;
+    min-height: 48px;
     margin: 0 !important;
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible !important;
     scrollbar-width: none;
 }
 
@@ -3016,24 +3017,43 @@
 }
 
 /* Candidate Header Stage Column (Enterprise Metronic ATS Standard) */
+.candidate-header-stage-sep {
+    display: inline-block !important;
+    width: 1px !important;
+    height: 36px !important;
+    min-width: 1px !important;
+    background: #e8dfc5 !important;
+    margin: 0 14px 0 10px !important;
+    flex-shrink: 0 !important;
+}
+
 .candidate-top-toolbar .page-title > .candidate-header-stage-col,
 .candidate-header-stage-col {
     position: relative;
-    display: flex !important;
+    display: inline-flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 9px;
-    min-width: 140px;
-    min-height: 46px;
-    padding-left: 0 !important;
-    margin-right: 0 !important;
+    gap: 9px !important;
+    min-width: 125px;
+    min-height: 42px !important;
+    padding: 0 !important;
+    margin: 0 10px 0 0 !important;
+    flex-shrink: 0 !important;
 }
 
-/* Explicitly disable pseudo-elements on stage col to prevent Metronic sibling selector collision */
+/* Explicitly disable pseudo-elements on stage elements to prevent Metronic sibling selector collision */
 .candidate-top-toolbar .page-title > .candidate-header-stage-col::before,
+.candidate-top-toolbar .page-title > .candidate-header-stage-col::after,
 .candidate-top-toolbar .page-title > span.border-start + .candidate-header-stage-col::before,
+.candidate-top-toolbar .page-title > span.border-start + .candidate-header-stage-col::after,
 .candidate-top-toolbar .page-title > span.border-start:nth-of-type(2) + .candidate-header-stage-col::before,
-.candidate-header-stage-col::before {
+.candidate-top-toolbar .page-title > span.border-start:nth-of-type(2) + .candidate-header-stage-col::after,
+.candidate-header-stage-col::before,
+.candidate-header-stage-col::after,
+.candidate-header-stage-icon::before,
+.candidate-header-stage-icon::after,
+.candidate-header-stage-content::before,
+.candidate-header-stage-content::after {
     display: none !important;
     content: none !important;
 }
@@ -3045,62 +3065,68 @@
     width: 30px !important;
     height: 30px !important;
     min-width: 30px !important;
-    border: 1px solid #f0dda0;
-    border-radius: 7px;
+    max-width: 30px !important;
+    border-radius: 7px !important;
     font-size: 11px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
     flex-shrink: 0 !important;
 }
 
 .candidate-header-stage-icon i {
     font-size: 11px !important;
     line-height: 1 !important;
+    display: inline-block !important;
 }
 
 .candidate-header-stage-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    display: inline-flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .candidate-header-stage-lbl {
-    display: block;
+    display: block !important;
     color: #7882a0 !important;
     font-size: 9px !important;
     font-weight: 700 !important;
-    line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 3px;
-    user-select: none;
+    line-height: 1.2 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    user-select: none !important;
 }
 
 .candidate-header-stage-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 2.5px 9px;
-    border-radius: 12px;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 2.5px 9px !important;
+    border-radius: 12px !important;
     font-size: 10.5px !important;
     font-weight: 700 !important;
-    line-height: 1.2;
-    border-width: 1px;
-    border-style: solid;
-    white-space: nowrap;
-    user-select: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    line-height: 1.2 !important;
+    border-width: 1px !important;
+    border-style: solid !important;
+    white-space: nowrap !important;
+    user-select: none !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
 }
 
 .candidate-header-stage-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
 }
 
 .candidate-header-stage-name {
-    display: inline-block;
-    white-space: nowrap;
+    display: inline-block !important;
+    white-space: nowrap !important;
 }
 
 .candidate-top-toolbar .page-title > span.border-start + .d-flex.flex-column > .text-dark {
