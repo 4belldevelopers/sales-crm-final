@@ -781,7 +781,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $userVersion = cache()->get('allapptracker_version_user_'.$this->user->id, 1);
         $tenantVersion = cache()->get('allapptracker_version_company_'.$company_id, 1);
         $jobDatasetVersion = 1;
-        if (!empty($jobid)) {
+        if (! empty($jobid)) {
             try {
                 $jobDatasetVersion = (int) cache()->get("ats:version:job:{$company_id}:{$jobid}", 1);
             } catch (\Throwable) {
@@ -3399,8 +3399,10 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         $source_company_id = auth()->user()->company_id;
         $source_user_id = auth()->user()->id;
+        $this->user = $this->user ?? auth()->user();
 
         $applicationsInsertedId = 0;
+        $requestAutoAccepted = false;
 
         $id = @$request->id;
         $source_jobid = @$request->source_jobid;
@@ -3478,7 +3480,63 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->first();
 
         if ($alreadyAssigned) {
-            $res = ['status' => 'success', 'already_assigned' => true, 'message' => 'Candidate already added to Job — In-Review stage'];
+            $autoAccepted = false;
+            // Edge Case 3: Candidate already added to this job, but an unaccepted request exists.
+            // Safely reconcile pending request(s) without creating duplicate assignments.
+            $pendingRequests = DB::table('rec_candidate_assign')
+                ->where('source_jobid', $source_jobid)
+                ->where(function ($q) use ($id) {
+                    $q->where('source_application_id', $id)
+                        ->orWhere('source_from_id', $id);
+                })
+                ->where('ac_status', 0)
+                ->get();
+
+            if ($pendingRequests->isNotEmpty()) {
+                DB::table('rec_candidate_assign')
+                    ->whereIn('id', $pendingRequests->pluck('id')->toArray())
+                    ->update([
+                        'ac_status' => 1,
+                        'updated_at' => now(),
+                    ]);
+                $autoAccepted = true;
+
+                foreach ($pendingRequests as $pReq) {
+                    try {
+                        $exists = $this->elasticService->getClient()->exists([
+                            'index' => ELASTIC_CANDIDATES_REQUEST,
+                            'id' => (string) $pReq->id,
+                        ]);
+                        if ($exists) {
+                            $this->elasticService->getClient()->update([
+                                'index' => ELASTIC_CANDIDATES_REQUEST,
+                                'id' => (string) $pReq->id,
+                                'body' => [
+                                    'doc' => [
+                                        'ac_status' => 1,
+                                        'updated_at' => now()->toIso8601String(),
+                                    ],
+                                    'doc_as_upsert' => false,
+                                ],
+                                'refresh' => false,
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                    }
+                    \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $pReq->id);
+                }
+
+                GeneralMethod::invalidateJobCounters((int) $source_jobid, array_filter([(int) $source_company_id, (int) ($jobRow->company_id ?? 0), (int) ($pendingRequests->first()->source_from_company_id ?? 0)]));
+                GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$this->user->id);
+                GeneralMethod::cacheClean('allapptracker_version_user_'.$this->user->id);
+            }
+
+            $res = [
+                'status' => 'success',
+                'already_assigned' => true,
+                'request_auto_accepted' => $autoAccepted,
+                'message' => 'Candidate already added to Job — In-Review stage',
+            ];
             DB::table('sys_idempotency_keys')
                 ->where('tenant_id', $source_company_id)
                 ->where('idempotency_key', $idempotencyKey)
@@ -3805,30 +3863,116 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::UpdateTimeline($timelineArr);
 
-            $values = [
-                'source_from_company_id' => @$source_from_company_id,
-                'source_from_user_id' => @$source_from_user_id,
-                'source_from_id' => @$source_from_id,
-                'source_from_type' => @$source_from_type,
+            $existingRequest1 = DB::table('rec_candidate_assign')
+                ->where('source_jobid', $source_jobid)
+                ->where(function ($q) use ($application_id) {
+                    $q->where('source_application_id', $application_id)
+                        ->orWhere('source_from_id', $application_id);
+                })
+                ->where(function ($q) use ($source_company_id, $jobRow) {
+                    $q->where('source_company_id', $source_company_id);
+                    if ($jobRow && ! empty($jobRow->company_id)) {
+                        $q->orWhere('source_company_id', $jobRow->company_id);
+                    }
+                })
+                ->orderByRaw('CASE WHEN ac_status = 0 THEN 0 ELSE 1 END')
+                ->first();
 
-                'parent_id' => $parent_id,
-                'source_company_id' => @$source_company_id,
-                'source_user_id' => @$source_user_id,
-                'source_application_id' => @$application_id,
-                'ac_status' => 1,
-                'source_jobid' => @$source_jobid,
-            ];
-            DB::table('rec_candidate_assign')->insert($values);
-            $recCandidateAssignId = DB::getPdo()->lastInsertId();
+            DB::beginTransaction();
+            try {
+                if ($existingRequest1) {
+                    $recCandidateAssignId = (int) $existingRequest1->id;
+                    $requestAutoAccepted = true;
+                    DB::table('rec_candidate_assign')
+                        ->where('id', $recCandidateAssignId)
+                        ->update([
+                            'ac_status' => 1,
+                            'source_user_id' => $source_user_id,
+                            'updated_at' => now(),
+                        ]);
 
-            $skillArr = explode(',', @$row_data->skills);
-            $percentage = GeneralMethod::skill_match_percentage(@$source_jobid, $skillArr);
+                    DB::table('rec_candidate_assign')
+                        ->where('source_jobid', $source_jobid)
+                        ->where('id', '!=', $recCandidateAssignId)
+                        ->where(function ($q) use ($application_id) {
+                            $q->where('source_application_id', $application_id)
+                                ->orWhere('source_from_id', $application_id);
+                        })
+                        ->where('ac_status', 0)
+                        ->update([
+                            'ac_status' => 1,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    $values = [
+                        'source_from_company_id' => @$source_from_company_id,
+                        'source_from_user_id' => @$source_from_user_id,
+                        'source_from_id' => @$source_from_id,
+                        'source_from_type' => @$source_from_type,
 
-            $now = now();
-            $insertArr = ['job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
+                        'parent_id' => $parent_id,
+                        'source_company_id' => @$source_company_id,
+                        'source_user_id' => @$source_user_id,
+                        'source_application_id' => @$application_id,
+                        'ac_status' => 1,
+                        'source_jobid' => @$source_jobid,
+                    ];
+                    DB::table('rec_candidate_assign')->insert($values);
+                    $recCandidateAssignId = DB::getPdo()->lastInsertId();
+                }
 
-            DB::table('add_job_wise_condidates')->insert($insertArr);
-            $lastWiseIs = DB::getPdo()->lastInsertId();
+                $skillArr = explode(',', @$row_data->skills);
+                $percentage = GeneralMethod::skill_match_percentage(@$source_jobid, $skillArr);
+
+                $now = now();
+                $insertArr = ['job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
+
+                DB::table('add_job_wise_condidates')->insert($insertArr);
+                $lastWiseIs = DB::getPdo()->lastInsertId();
+
+                DB::commit();
+            } catch (\Throwable $trxErr) {
+                DB::rollBack();
+                \Log::error('rec_candidate_assign internal bench transaction failed: '.$trxErr->getMessage(), [
+                    'exception' => $trxErr,
+                    'job_id' => $source_jobid,
+                    'candidate_id' => $application_id,
+                ]);
+
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to assign candidate to job. Please try again.']);
+            }
+
+            if ($requestAutoAccepted && ! empty($recCandidateAssignId)) {
+                try {
+                    $exists = $this->elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES_REQUEST,
+                        'id' => (string) $recCandidateAssignId,
+                    ]);
+                    if ($exists) {
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CANDIDATES_REQUEST,
+                            'id' => (string) $recCandidateAssignId,
+                            'body' => [
+                                'doc' => [
+                                    'ac_status' => 1,
+                                    'updated_at' => now()->toIso8601String(),
+                                ],
+                                'doc_as_upsert' => false,
+                            ],
+                            'refresh' => false,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                }
+
+                \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $recCandidateAssignId);
+                app()->terminating(function () use ($recCandidateAssignId) {
+                    try {
+                        GeneralMethod::candidateRequestIndexElastic((int) $recCandidateAssignId);
+                    } catch (\Throwable $e) {
+                    }
+                });
+            }
 
             $teamRankElastic = [
                 'company_id' => $jobRow->company_id,
@@ -3980,54 +4124,143 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ];
             GeneralMethod::UpdateTimeline($timelineArr);
 
-            $values = [
-                'source_from_company_id' => @$source_from_company_id,
-                'source_from_user_id' => @$source_from_user_id,
-                'source_from_id' => @$source_from_id,
-                'source_from_type' => @$source_from_type,
+            $requestAutoAccepted = false;
+            // Authoritative check: does an agency request already exist for this candidate + current job?
+            $existingRequest = DB::table('rec_candidate_assign')
+                ->where('source_jobid', $source_jobid)
+                ->where(function ($q) use ($application_id) {
+                    $q->where('source_application_id', $application_id)
+                        ->orWhere('source_from_id', $application_id);
+                })
+                ->where(function ($q) use ($source_company_id, $jobRow) {
+                    $q->where('source_company_id', $source_company_id);
+                    if ($jobRow && ! empty($jobRow->company_id)) {
+                        $q->orWhere('source_company_id', $jobRow->company_id);
+                    }
+                })
+                ->orderByRaw('CASE WHEN ac_status = 0 THEN 0 ELSE 1 END')
+                ->first();
 
-                'parent_id' => $parent_id,
-                'source_company_id' => @$source_company_id,
-                'source_user_id' => @$source_user_id,
-                'source_application_id' => @$application_id,
-                'ac_status' => 1,
-                'source_jobid' => @$source_jobid,
-            ];
-            DB::table('rec_candidate_assign')->insert($values);
-            $recCandidateAssignId = DB::getPdo()->lastInsertId();
+            DB::beginTransaction();
+            try {
+                if ($existingRequest) {
+                    $recCandidateAssignId = (int) $existingRequest->id;
+                    $requestAutoAccepted = true;
+                    DB::table('rec_candidate_assign')
+                        ->where('id', $recCandidateAssignId)
+                        ->update([
+                            'ac_status' => 1,
+                            'source_user_id' => $source_user_id,
+                            'updated_at' => now(),
+                        ]);
 
-            $skillArr = explode(',', @$row_data->skills);
-            $percentage = GeneralMethod::skill_match_percentage(@$source_jobid, $skillArr);
-            $now = now();
-            $insertArr = ['job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
+                    // Safely reconcile any duplicate pending requests for this same job + candidate
+                    DB::table('rec_candidate_assign')
+                        ->where('source_jobid', $source_jobid)
+                        ->where('id', '!=', $recCandidateAssignId)
+                        ->where(function ($q) use ($application_id) {
+                            $q->where('source_application_id', $application_id)
+                                ->orWhere('source_from_id', $application_id);
+                        })
+                        ->where('ac_status', 0)
+                        ->update([
+                            'ac_status' => 1,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    $values = [
+                        'source_from_company_id' => @$source_from_company_id,
+                        'source_from_user_id' => @$source_from_user_id,
+                        'source_from_id' => @$source_from_id,
+                        'source_from_type' => @$source_from_type,
 
-            DB::table('add_job_wise_condidates')->insert($insertArr);
-            $lastWiseIs = DB::getPdo()->lastInsertId();
+                        'parent_id' => $parent_id,
+                        'source_company_id' => @$source_company_id,
+                        'source_user_id' => @$source_user_id,
+                        'source_application_id' => @$application_id,
+                        'ac_status' => 1,
+                        'source_jobid' => @$source_jobid,
+                    ];
+                    DB::table('rec_candidate_assign')->insert($values);
+                    $recCandidateAssignId = DB::getPdo()->lastInsertId();
+                }
 
-            $teamRankElastic = [
-                'company_id' => $jobRow->company_id,
-                'user_id' => $this->user->id,
-                'candidate_id' => @$application_id,
-                'profileUpload' => 1,
-                'interviewScheduled' => 0,
-                'interviewNoShow' => 0,
-                'offerReleased' => 0,
-                'candidateJoined' => 0,
-                'jobsPosted' => 0,
-                'feedbackGivenOnCVs' => 0,
-                'postJobToVendorMarket' => 0,
-                'outsourceJobsToVendors' => 0,
-                'listBenchCandidates' => 0,
-                'respondToBenchRequests' => 0,
-            ];
-            GeneralMethod::teamRankElastic($teamRankElastic);
+                $skillArr = explode(',', @$row_data->skills);
+                $percentage = GeneralMethod::skill_match_percentage(@$source_jobid, $skillArr);
+                $now = now();
+                $insertArr = ['job_id' => @$source_jobid, 'rec_candidate_assign_id' => $recCandidateAssignId, 'job_application_id' => @$application_id, 'master_status_id' => 8, 'company_id' => @$jobRow->company_id, 'submitted_by' => @$this->user->id, 'thirdparty_company_id' => @$thirdparty_company_id, 'existing' => 1, 'skill_match' => $percentage, 'created_at' => $now, 'updated_at' => $now];
 
-            $countforadd = ((int) ($row_data->countforadd ?? 0)) + 1;
-            $dataupdate = ['countforadd' => $countforadd];
-            if ($countforadd >= 3) {
-                $dataupdate['status'] = 1;
+                DB::table('add_job_wise_condidates')->insert($insertArr);
+                $lastWiseIs = DB::getPdo()->lastInsertId();
+
+                $teamRankElastic = [
+                    'company_id' => $jobRow->company_id,
+                    'user_id' => $this->user->id,
+                    'candidate_id' => @$application_id,
+                    'profileUpload' => 1,
+                    'interviewScheduled' => 0,
+                    'interviewNoShow' => 0,
+                    'offerReleased' => 0,
+                    'candidateJoined' => 0,
+                    'jobsPosted' => 0,
+                    'feedbackGivenOnCVs' => 0,
+                    'postJobToVendorMarket' => 0,
+                    'outsourceJobsToVendors' => 0,
+                    'listBenchCandidates' => 0,
+                    'respondToBenchRequests' => 0,
+                ];
+                GeneralMethod::teamRankElastic($teamRankElastic);
+
+                $countforadd = ((int) ($row_data->countforadd ?? 0)) + 1;
+                $dataupdate = ['countforadd' => $countforadd];
+                if ($countforadd >= 3) {
+                    $dataupdate['status'] = 1;
+                }
+                DB::table('job_applications')->where('id', '=', $row_data->id)->update($dataupdate);
+
+                DB::commit();
+            } catch (\Throwable $trxErr) {
+                DB::rollBack();
+                \Log::error('rec_candidate_assign transaction failed: '.$trxErr->getMessage(), [
+                    'exception' => $trxErr,
+                    'job_id' => $source_jobid,
+                    'candidate_id' => $application_id,
+                ]);
+
+                return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to assign candidate to job. Please try again.']);
             }
-            DB::table('job_applications')->where('id', '=', $row_data->id)->update($dataupdate);
+
+            if ($requestAutoAccepted && ! empty($recCandidateAssignId)) {
+                try {
+                    $exists = $this->elasticService->getClient()->exists([
+                        'index' => ELASTIC_CANDIDATES_REQUEST,
+                        'id' => (string) $recCandidateAssignId,
+                    ]);
+                    if ($exists) {
+                        $this->elasticService->getClient()->update([
+                            'index' => ELASTIC_CANDIDATES_REQUEST,
+                            'id' => (string) $recCandidateAssignId,
+                            'body' => [
+                                'doc' => [
+                                    'ac_status' => 1,
+                                    'updated_at' => now()->toIso8601String(),
+                                ],
+                                'doc_as_upsert' => false,
+                            ],
+                            'refresh' => false,
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                }
+
+                \App\Jobs\SyncCandidateRequestToElasticJob::dispatch((int) $recCandidateAssignId);
+                app()->terminating(function () use ($recCandidateAssignId) {
+                    try {
+                        GeneralMethod::candidateRequestIndexElastic((int) $recCandidateAssignId);
+                    } catch (\Throwable $e) {
+                    }
+                });
+            }
 
             // Phase 4: Mutate in-memory $row_data instead of re-querying job_applications SELECT *
             $row_data->countforadd = $countforadd;
@@ -4439,6 +4672,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             GeneralMethod::JobApplicationsAddEditUpload($lastWiseIs);
         }
 
+        GeneralMethod::invalidateJobCounters((int) $source_jobid, array_filter([(int) $source_company_id, (int) ($jobRow->company_id ?? 0), (int) ($source_from_company_id ?? 0)]));
+        GeneralMethod::cacheClean('allcandidatesrequest_version_user_'.$this->user->id);
+        GeneralMethod::cacheClean('allapptracker_version_user_'.$this->user->id);
+        GeneralMethod::cacheClean('allcandidates_version_user_'.$this->user->id);
+        GeneralMethod::cacheClean('alljobslist_version_user_'.$this->user->id);
+        Cache::forget('custome_count_all:'.$source_company_id.':'.$source_jobid);
+
         $successResponse = [
             'status' => 'success',
             'wise_id' => (int) ($lastWiseIs ?? 0),
@@ -4446,6 +4686,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             'job_id' => (int) $source_jobid,
             'countforadd' => (int) ($row_data->countforadd ?? 0),
             'candidate_status' => (int) ($row_data->status ?? 0),
+            'request_auto_accepted' => (bool) ($requestAutoAccepted ?? false),
+            'rec_candidate_assign_id' => (int) ($recCandidateAssignId ?? 0),
         ];
 
         // Phase 2: Mark Idempotency Record COMPLETED
@@ -7797,6 +8039,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
 
         // "Add to Job" (0) before "Added" (1) grouping strictly for the current job.
         $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $requestedCandidateIds = GeneralMethod::getJobRequestedCandidateIds((int) $jobid, (int) $company_id);
         $assignmentSortScript = [
             '_script' => [
                 'type' => 'number',
@@ -8250,12 +8493,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $app_int_activity = request('app_int_activity');
         $app_int_status = request('app_int_status');
         $app_int_notice = request('app_int_notice');
-        $sal_mode = request('sal_mode');
-        $min_salary_currency = request('min_salary_currency');
+        $sal_mode = request('sal_mode') ?? $sal_mode;
+        $min_salary_currency = request('min_salary_currency') ?? $min_salary_currency;
         $app_int_outsource = request('app_int_outsource');
         $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0), (int) $jobid);
         $responseData = [
-            'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'boostbenchApplications', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
+            'html' => view('service_company.ajax_pages.public_bench_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'boostbenchApplications', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds', 'requestedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
             'tenant_version' => $version,

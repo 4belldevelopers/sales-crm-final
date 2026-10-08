@@ -1458,7 +1458,7 @@
         // actually disappears once the list is genuinely re-fetched
         // (pagination, filter, sort, or a real page reload).
         function benchReqMarkCandidateRowAdded($btn) {
-            $btn.replaceWith('<a href="javascript:void(0);" class="btn btn-sm btn-success">Added</a>');
+            $btn.replaceWith('<button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button>');
         }
 
         $(document).ready(function() {

@@ -458,15 +458,15 @@
                                 <a href="javascript:void(0);" class="btn btn-sm btn-danger">Expired</a>
                                 <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
                         </div>';
-                    } elseif ($isAdded) {
-                        echo '<div class="d-flex flex-column">
-                                <button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button>
-                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
-                        </div>';
                     } elseif ($row->ac_status == 0) {
                         echo '<div class="d-flex flex-column">
                             <a href="javascript:void(0);" data-row-id="' . $targetJobId .'" data-recomnded-id="' . @$row->rec_candidate_assign_id .'" data-condidate-id="' .@$row->id .'" class="btn btn-sm btn-primary add_to_list">Add to job</a>
                             <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
+                        </div>';
+                    } elseif ($isAdded) {
+                        echo '<div class="d-flex flex-column">
+                                <button class="btn btn-sm" disabled style="background-color: #059669; color: #fff; opacity: 1; cursor: default; border: none; font-weight: 600;">Added</button>
+                                <span class="fw-bold d-block fs-7 mt-1 text-center" style="color:' . $expireColor . ';" title="Request expires ' . $benchExpireDays . ' days after being sent">Exp: ' . $expireDate . '</span>
                         </div>';
                     } else {
                         echo '<div class="d-flex flex-column">
