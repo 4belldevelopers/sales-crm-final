@@ -35,7 +35,7 @@ final class CandidateNoticePeriodState
         $modeValue = is_scalar($mode) ? trim((string) $mode) : '';
         if ($modeValue === '' || ! in_array((int) $modeValue, [self::SELECT_PERIOD, self::SERVING_NOTICE, self::IMMEDIATE_JOINER], true)) {
             return [
-                'serving_notice_period_mode' => null,
+                'serving_notice_period_mode' => self::SELECT_PERIOD,
                 'np_id' => null,
                 'last_working_date' => null,
             ];
