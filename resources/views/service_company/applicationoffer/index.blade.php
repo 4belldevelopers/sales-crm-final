@@ -1105,6 +1105,18 @@ a:hover .ot-comp-change { text-decoration: underline; }
                     Swal.fire("Success",'Stage updated!',"success").then(function(){ $("#stage_sub_stage_close").click(); });
                     invalidateClientCache();
                     fetchTable(false);
+                } else if (r.status == 'cvpending') {
+                    Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function() {
+                        $("#stage_sub_stage_close").click();
+                    });
+                } else if (r.status == 'candidatevalidation') {
+                    if (typeof window.showStageRequiredFieldsModal === 'function') {
+                        window.showStageRequiredFieldsModal(r);
+                    } else {
+                        Swal.fire("Warning", r.message, "warning").then(function() {
+                            $("#stage_sub_stage_close").click();
+                        });
+                    }
                 }
             }
         });

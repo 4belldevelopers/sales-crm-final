@@ -1797,10 +1797,13 @@
                                     $("#stage_sub_stage_close").click();
                                 });
                             } else if (response.status == 'candidatevalidation') {
-                                Swal.fire("Warning", response.message, "warning").then(
-                                function() {
-                                    $("#stage_sub_stage_close").click();
-                                });
+                                if (typeof window.showStageRequiredFieldsModal === 'function') {
+                                    window.showStageRequiredFieldsModal(response);
+                                } else {
+                                    Swal.fire("Warning", response.message, "warning").then(function() {
+                                        $("#stage_sub_stage_close").click();
+                                    });
+                                }
                             }
                         }
                     })

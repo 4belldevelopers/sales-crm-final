@@ -2198,6 +2198,18 @@
 
                         } else if (response.status == "info") {
                             Swal.fire('Fail!', response.message, 'error')
+                        } else if (response.status == 'cvpending') {
+                            Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function() {
+                                $('#csd_drawer_close').trigger('click');
+                            });
+                        } else if (response.status == 'candidatevalidation') {
+                            if (typeof window.showStageRequiredFieldsModal === 'function') {
+                                window.showStageRequiredFieldsModal(response);
+                            } else {
+                                Swal.fire("Warning", response.message, "warning").then(function() {
+                                    $('#csd_drawer_close').trigger('click');
+                                });
+                            }
                         }
 
                     }
@@ -2349,9 +2361,13 @@
                                     $("#stage_sub_stage_close").click();
                                 });
                         } else if (response.status == 'candidatevalidation') {
-                            Swal.fire("Warning", response.message, "warning").then(function() {
-                                $("#stage_sub_stage_close").click();
-                            });
+                            if (typeof window.showStageRequiredFieldsModal === 'function') {
+                                window.showStageRequiredFieldsModal(response);
+                            } else {
+                                Swal.fire("Warning", response.message, "warning").then(function() {
+                                    $("#stage_sub_stage_close").click();
+                                });
+                            }
                         }
                     }
                 })

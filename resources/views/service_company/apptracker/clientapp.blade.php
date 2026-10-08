@@ -2096,9 +2096,13 @@ if( ($final_status_job == 1) && ($job->status == 'active') )
                                                                                     $('#csd_drawer_close').trigger('click');
 																					});	
 																				}else if (response.status == 'candidatevalidation'){ 																					 
-																					 Swal.fire("Warning", response.message, "warning").then(function(){ 
-                                                                                    $('#csd_drawer_close').trigger('click');
-																					});	
+																					 if (typeof window.showStageRequiredFieldsModal === 'function') {
+																						 window.showStageRequiredFieldsModal(response);
+																					 } else {
+																						 Swal.fire("Warning", response.message, "warning").then(function(){ 
+																							 $('#csd_drawer_close').trigger('click');
+																						 });
+																					 }
 																				}
 															}
    									})  

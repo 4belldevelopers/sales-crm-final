@@ -2048,18 +2048,34 @@ select#gender {
 
         $snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
         $snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
-        $snp_mode = isset($application->serving_notice_period_mode) ? (int)$application->serving_notice_period_mode : 2;
-        if($snp_mode == 1){
+        $snp_mode = null;
+        if (isset($application) && !empty($application->id)) {
+          if (isset($application->serving_notice_period_mode) && $application->serving_notice_period_mode !== null && $application->serving_notice_period_mode !== '') {
+            $stored_snp_mode = (int) $application->serving_notice_period_mode;
+            if (in_array($stored_snp_mode, [0, 1, 2], true)) {
+              $snp_mode = $stored_snp_mode;
+            }
+          } elseif (!empty($application->np_id)) {
+            if (is_numeric($application->np_id)) {
+              $snp_mode = 0;
+            } elseif (strtolower((string) $application->np_id) === 'immediate') {
+              $snp_mode = 2;
+            } else {
+              $snp_mode = 1;
+            }
+          }
+        }
+        if($snp_mode === 1){
           $snp_one		=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
           $snp_text_dummy = 'Serving Notice Period (SNP)';   
           $snp_last_working = @$application->np_id;                                 	
-        }else if($snp_mode == 2){
+        }else if($snp_mode === 2){
           $snp_two	=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
           $snp_text_dummy = 'Immediate Joiner';  
           $snp_last_working = @$application->last_working_date;   
-        }else{
+        }else if($snp_mode === 0){
           $snp_zero		=	'checked="checked"';	
           $snp_text_zero	=	'display:block';
         } 
@@ -2068,7 +2084,7 @@ select#gender {
 @endphp
 
 <!--begin::Toolbar-->
-<div class="toolbar" id="kt_toolbar">
+<div class="toolbar candidate-top-toolbar" id="kt_toolbar">
 
 @php 
       $resume_url				=	'';
@@ -2100,37 +2116,26 @@ select#gender {
 @endphp
 
   <!--begin::Container-->
-  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack">
+  <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack candidate-toolbar-container">
     <!--begin::Page title-->
-     @include('sections.service_company.toolbar',['id' => $jobDetail->id])
-      <div class="d-flex align-items-center py-1">
-          <div class="before-event d-flex align-items-center position-relative my-1 me-3">
-            <!--begin::Buttons-->
-                <div class="form-row row fv-row">
-                  <div class="col-12 text-center py-10">
-                  @php 
-                      $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
-                      if($page_event == 'EDIT'){ 
-                        echo '<div class="d-flex align-items-center me-3 candidate-stage-picker-wrap" style="background:#f1f5f9; border-radius:6px; padding:3px 10px;">';
-                        echo '<label for="master_status_id" class="me-2 mb-0 fw-bold fs-7 text-gray-700"><i class="fa-solid fa-flag me-1 text-primary"></i>Stage:</label>';
-                        echo '<select name="master_status_id" id="master_status_id" class="form-select form-select-sm form-select-solid py-1 px-3 fw-bold" style="width:auto; min-width:130px; font-size:12px; height:32px;">';
-                        echo '<option value="8" ' . ($currentAppMasterStatus == 8 ? 'selected' : '') . '>In Review</option>';
-                        echo '<option value="1" ' . ($currentAppMasterStatus != 8 ? 'selected' : '') . '>Sourcing</option>';
-                        echo '</select>';
-                        echo '</div>';
-                        echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>';
-                      }else{
-                        echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>';	
-                      }
-                  @endphp
-                    {{-- <a href="javascript:void(0);" class="btn btn-secondary">Cancel</a>  --}}
-                  
-                  </div>
-                </div>
-          </div>
-      </div>
+    @php 
+        $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
+    @endphp
+    @include('sections.service_company.toolbar', [
+        'id' => $jobDetail->id,
+        'hideLocationDate' => true,
+        'showStage' => true,
+        'stageId' => $currentAppMasterStatus,
+    ])
+    <div class="d-flex align-items-center py-1 candidate-header-actions">
+        @if($page_event == 'EDIT')
+            <button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>
+        @else
+            <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>
+        @endif
+    </div>
     <!--end::Page title-->
-</div>
+  </div>
   <!--end::Container-->
 </div>
 <!--end::Toolbar-->
@@ -2157,6 +2162,7 @@ select#gender {
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
             <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
+            <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus }}" />
             {{-- V4 Remediation hidden fields --}}
             <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
@@ -2165,15 +2171,35 @@ select#gender {
             <input type="hidden" name="resume_upload_method" id="resume_upload_method" value="">
           <div class="fc">
             <!-- Upload + Career Summary -->
-            <div class="g2" style="margin-bottom:16px">
+            <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
-                <div class="fs fv-row" style="margin-bottom:0">
-                    <div class="fsh">
-                        <h3>Upload Resume <span style="color:red">*</span></h3>
+                @php
+                    $displayResumeName = '';
+                    $hasExistingResume = false;
+                    if (!empty($application->resume)) {
+                        preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
+                        $displayResumeName = $_rm[1] ?? basename($application->resume);
+                        if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                            $displayResumeName = 'Resume (uploaded)';
+                        }
+                        $hasExistingResume = true;
+                    } elseif (!empty($resume_url)) {
+                        $hasExistingResume = true;
+                        $displayResumeName = 'Resume (uploaded)';
+                    }
+                    $displayResumeExt = strtoupper(pathinfo($displayResumeName, PATHINFO_EXTENSION) ?: 'PDF');
+                    $isWordDoc = in_array($displayResumeExt, ['DOC', 'DOCX']);
+                @endphp
+                <div class="fs fv-row resume-card candidate-card {{ $hasExistingResume ? 'has-uploaded-resume' : '' }}" style="margin-bottom:0">
+                    <div class="fsh resume-card-header candidate-card-header">
+                        <div class="candidate-card-title">
+                          <span class="resume-card-icon candidate-card-icon"><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></span>
+                          <span><strong>Upload Resume <span class="rq">*</span></strong><small>Upload a PDF or Word resume to parse candidate details.</small></span>
+                        </div>
                     </div>
 
-                    <div class="fsc">
-                        <div class="ua" id="uploadBox">
+                    <div class="fsc resume-card-body candidate-card-body">
+                        <div class="ua {{ $hasExistingResume ? 'd-none' : '' }}" id="uploadBox" style="{{ $hasExistingResume ? 'display:none !important;' : '' }}">
 
                             <div class="ui">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2199,27 +2225,6 @@ select#gender {
                                 Supports PDF, DOC, DOCX (Max 10MB)
                             </div>
 
-                            <!-- Selected File -->
-                            <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
-                                <span class="file-name" id="fileName">
-                                  {{ !empty($application->resume) ? basename($application->resume) : '' }}
-                                </span>
-                                @if(!empty($resume_url))
-                                <a href="{{ $resume_url }}"
-                                   target="_blank"
-                                   class="download-file"
-                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
-                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
-                                </a>
-                                @endif
-
-                                <button type="button"
-                                        class="remove-file"
-                                        id="removeFile">
-                                    Remove
-                                </button>
-                            </div>
-
                             <!-- Progress bar / pill / success banner -->
                             <div class="up-wrap" id="upWrap" style="display:none">
                                 <div class="up-row">
@@ -2238,57 +2243,118 @@ select#gender {
                                 </div>
                             </div>
 
+                            <!-- Hidden legacy fileInfo strip to avoid DOM errors in older scripts -->
+                            <div class="file-info" id="fileInfo" style="display:none !important;">
+                                <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
+                                <button type="button" class="remove-file" id="removeFile" style="display:none;">Remove</button>
+                            </div>
+
                         </div>
 
                         <!-- After-upload Resume Information card (outside #uploadBox) -->
-                        <div class="up-info" id="upInfo">
+                        <div class="up-info {{ $hasExistingResume ? 'show' : '' }}" id="upInfo" style="{{ $hasExistingResume ? 'display:flex !important;' : '' }}">
                             <div class="up-info-banner">
-                                <svg class="up-info-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 16 9"/>
-                                </svg>
-                                <span class="up-file-icon">PDF</span>
-                                <div class="up-file-meta">
-                                    <div class="up-file-name" id="upFileName">&nbsp;</div>
-                                    <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                <div class="up-info-banner-left">
+                                    <span class="up-info-banner-check">
+                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                    </span>
+                                    <div class="up-info-banner-text">
+                                        <strong id="upInfoBannerTitle">{{ $page_event == 'EDIT' ? 'Resume attached successfully' : 'Resume uploaded successfully!' }}</strong>
+                                        <small id="upInfoBannerSub">{{ $page_event == 'EDIT' ? 'Uploaded resume is attached and parsed.' : 'Your resume has been uploaded and parsed.' }}</small>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="up-actions">
-                                <button type="button" id="upReplaceBtn">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
-                                    </svg>
-                                    Replace
-                                </button>
-                                <button type="button" id="upRemoveBtn" class="up-remove" title="Delete Resume">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
-                                    </svg>
-                                    Delete
+                                <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
+                                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                                 </button>
                             </div>
-                            <div class="up-details">
-                                <div class="up-detail">
-                                    <span class="up-detail-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg></span>
-                                    <div><div class="up-detail-lbl">Parser Status</div><div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div></div>
+
+                            <div class="up-file-card">
+                                <div class="up-file-card-left">
+                                    <div class="up-file-badge" style="{{ $isWordDoc ? 'background:#dbeafe !important; color:#2563eb !important;' : 'background:#fee2e2 !important; color:#dc2626 !important;' }}">
+                                        <i class="{{ $isWordDoc ? 'fa-regular fa-file-word' : 'fa-regular fa-file-pdf' }}" aria-hidden="true" style="{{ $isWordDoc ? 'color:#2563eb !important;' : 'color:#dc2626 !important;' }}"></i>
+                                        <span class="up-file-badge-ext" id="upFileBadgeExt" style="{{ $isWordDoc ? 'color:#2563eb !important;' : 'color:#dc2626 !important;' }}">{{ $displayResumeExt }}</span>
+                                    </div>
+                                    <div class="up-file-meta">
+                                        <div class="up-file-name" id="upFileName" title="{{ $displayResumeName }}">{{ $displayResumeName ?: '&nbsp;' }}</div>
+                                        <div class="up-file-sub" id="upFileSub">{{ $hasExistingResume ? ('Uploaded Resume • ' . $displayResumeExt) : '&nbsp;' }}</div>
+                                    </div>
                                 </div>
-                                <div class="up-detail">
-                                    <span class="up-detail-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
-                                    <div><div class="up-detail-lbl">Uploaded On</div><div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div></div>
+                                <div class="up-file-actions">
+                                    @if(!empty($resume_url))
+                                    <a href="{{ $resume_url }}"
+                                       target="_blank"
+                                       class="up-btn up-btn-replace download-file"
+                                       id="upDownloadBtn"
+                                       title="Download Resume">
+                                        <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                        <span>Download</span>
+                                    </a>
+                                    @endif
+                                    <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn" title="Delete Resume">
+                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                        <span>Delete</span>
+                                    </button>
                                 </div>
-                                <div class="up-detail" id="upRetryWrap" style="display:none">
-                                    <button type="button" id="upRetryBtn" style="font-size:12px;padding:4px 12px;border:1px solid #f44336;color:#f44336;background:transparent;border-radius:4px;cursor:pointer;">Retry Parse</button>
+                            </div>
+
+                            <div class="up-details-card">
+                                <div class="up-details-grid">
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Uploaded On</div>
+                                            <div class="up-detail-val" id="upDetailUploadedOn">{{ !empty($application->created_at) ? \Carbon\Carbon::parse($application->created_at)->format('d M Y, H:i') : ($hasExistingResume ? now()->format('d M Y, H:i') : '&nbsp;') }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-square-check" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">Parser Status</div>
+                                            <div class="up-detail-val" id="upDetailParserStatus">
+                                                @if($hasExistingResume)
+                                                    <span style="color: #059669; font-weight: 700;">✓ Parsed</span>
+                                                @else
+                                                    &nbsp;
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-regular fa-file" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Type</div>
+                                            <div class="up-detail-val" id="upDetailFileType">{{ $hasExistingResume ? $displayResumeExt : '&nbsp;' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="up-detail-tile">
+                                        <span class="up-detail-icon">
+                                            <i class="fa-solid fa-database" aria-hidden="true"></i>
+                                        </span>
+                                        <div>
+                                            <div class="up-detail-lbl">File Size</div>
+                                            <div class="up-detail-val" id="upDetailFileSize">&mdash;</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                     </div>
                 </div>
-                <div class="fs fv-row" style="margin-bottom:0">
-                  <div class="fsh" style="justify-content:space-between">
-                    <h3>Career
-                      Summary <span style="color:var(--r)">*</span></h3>
+                <div class="fs fv-row candidate-card" style="margin-bottom:0">
+                  <div class="fsh candidate-card-header" style="justify-content:space-between">
+                    <div class="candidate-card-title">
+                      <span class="candidate-card-icon"><i class="fa-solid fa-bars-staggered" aria-hidden="true"></i></span>
+                      <span><strong>Career Summary <span class="rq">*</span></strong><small>Highlight the candidate's experience, strengths, and suitability.</small></span>
+                    </div>
                   </div>
-                  <div class="fsc">
+                  <div class="fsc candidate-card-body">
                     <textarea placeholder="Enter career summary..." id="careersummary" name="careersummary" rows="10">{{ @$application->careersummary }}</textarea>
                     <div class="cc">0 / 100</div>
                     <div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2918,9 +2984,10 @@ select#gender {
                   <div class="fg fv-row">
                     <label>Notice Period <span class="rq">*</span></label>
                     <select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode===0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                      <option value="" {{ ($snp_mode === null) ? 'selected' : '' }}>Select notice period</option>
+                      <option value="0" {{ ($snp_mode === 0) ? 'selected' : '' }}>Select Notice Period</option>
+                      <option value="1" {{ ($snp_mode === 1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                      <option value="2" {{ ($snp_mode === 2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                   </div>
 
@@ -4781,7 +4848,7 @@ $(document).ready(function () {
         $('#uploaded_file_path').val('');
         $('#resume_original_name').val('');
         $('.resume-card').removeClass('has-uploaded-resume');
-        $('#upInfo').removeClass('show');
+        $('#upInfo').removeClass('show').removeAttr('style').hide();
         $('#uploadBox').removeClass('d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
@@ -4789,7 +4856,7 @@ $(document).ready(function () {
         $('#resumeCheck').val('');
         var isEdit = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         $('#resume_intent').val(isEdit ? 'REMOVE' : 'NONE');
-        $('.download-file').addClass('d-none');
+        $('.download-file, #upDownloadBtn').addClass('d-none').hide();
         window.__upLoc = null;
     }
 
@@ -4831,11 +4898,23 @@ $(document).ready(function () {
         }
         var tzSuffix = tz ? (' ' + tz) : '';
         $('#upDetailUploadedOn').text(day + ' ' + month + ' ' + year + ', ' + hours + ':' + mins + tzSuffix);
-        $('#upDetailParserStatus').text('Pending').css('color','');
-        $('#upRetryWrap').hide();
-        $('#uploadBox').hide();
+
+        if (!window._clientParserState) {
+            $('#upDetailParserStatus').text('Pending');
+        }
+        $('#upDetailFileType').text(ext);
+        $('#upDetailFileSize').text(fmtSize(file.size));
+
+        if (parserResponse) {
+            window._clientParserState = 'completed';
+            $('#upDetailParserStatus').html('<span style="color: #059669; font-weight: 700;">✓ Parsed</span>');
+        }
+
+        $('#uploadBox').attr('style', 'display: none !important').addClass('d-none');
         $('#fileInfo').hide();
-        $info.addClass('show');
+        $('.resume-card').addClass('has-uploaded-resume');
+        $info.find('.up-info-banner').show();
+        $info.addClass('show').attr('style', 'display: flex !important;');
     }
 
     function _showUploadError(msg) {
@@ -7047,11 +7126,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 		//alert(cvalue); 
 		$('#np_id').val('');
 		$('#ddl_np_id').val('');
-		if(cvalue == 0){
+		if(cvalue === '0' || cvalue === 0){
 			$('#ddl_np_id').show();
 			$('#np_id').hide();		
       $('#snp-immediate').hide();
-		}else if(cvalue==1){
+		}else if(cvalue === '1' || cvalue === 1){
       $('#snp-immediate').show();
 			$('#ddl_np_id').hide();
 			$('#np_id').show();		
@@ -7063,7 +7142,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
       $('#text_display').val('Serving Notice Period');
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
-		}else if(cvalue ==2){
+		}else if(cvalue === '2' || cvalue === 2){
       $('#snp-immediate').show();
 			$('#ddl_np_id').hide();
 			$('#np_id').show();		
@@ -7072,6 +7151,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
       $('#text_display').val('Immediate');
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
+		}else{
+      $('#snp-immediate').hide();
+			$('#ddl_np_id').hide();
+			$('#np_id').hide();
+			$('#np_id').attr("disabled", true);
 		}	
     })
 
@@ -7577,8 +7661,16 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         if (!ectc) addMissing('ectc');
 
         // Notice Period & Joining Details
-        var np = ($('#np_id').val() || '').trim();
-        if (!np) addMissing('np_id');
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (!snpMode) {
+            addMissing('np_id');
+        } else if (snpMode === '0') {
+            var npDays = ($('#ddl_np_id').val() || '').trim();
+            if (!npDays) addMissing('np_id');
+        } else if (snpMode === '1' || snpMode === '2') {
+            var npDate = ($('#np_id').val() || '').trim();
+            if (!npDate) addMissing('np_id');
+        }
     }
 
     // 8. Preferred Work Mode

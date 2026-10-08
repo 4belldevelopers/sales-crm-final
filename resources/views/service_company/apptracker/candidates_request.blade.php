@@ -1881,6 +1881,18 @@
                                 fetchCandidates(page);
                                 // table._fnDraw();
                                 load_interviewSchedule();
+                            } else if (response.status == 'cvpending') {
+                                Swal.fire("Warning", 'Resume pending this job application.', "warning").then(function() {
+                                    $("#stage_sub_stage_close").click();
+                                });
+                            } else if (response.status == 'candidatevalidation') {
+                                if (typeof window.showStageRequiredFieldsModal === 'function') {
+                                    window.showStageRequiredFieldsModal(response);
+                                } else {
+                                    Swal.fire("Warning", response.message, "warning").then(function() {
+                                        $("#stage_sub_stage_close").click();
+                                    });
+                                }
                             }
                         }
                     })
