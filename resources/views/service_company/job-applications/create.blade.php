@@ -2097,23 +2097,21 @@
 <div class="toolbar candidate-top-toolbar" id="kt_toolbar">
   <!--begin::Container-->
   <div id="kt_toolbar_container" class="container-fluid d-flex flex-stack candidate-toolbar-container">
-    @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
+    @php
+        $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
+    @endphp
+    @include('sections.service_company.toolbar', [
+        'id' => @$jobDetail->id ?? 0,
+        'hideLocationDate' => true,
+        'showStage' => true,
+        'stageId' => $currentAppMasterStatus,
+    ])
     <div class="d-flex align-items-center py-1 candidate-header-actions">
-      @php
-          $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
-          if($page_event == 'EDIT'){
-            echo '<div class="d-flex align-items-center me-3 candidate-stage-picker-wrap" style="background:#f1f5f9; border-radius:6px; padding:3px 10px;">';
-            echo '<label for="master_status_id" class="me-2 mb-0 fw-bold fs-7 text-gray-700"><i class="fa-solid fa-flag me-1 text-primary"></i>Stage:</label>';
-            echo '<select name="master_status_id" id="master_status_id" class="form-select form-select-sm form-select-solid py-1 px-3 fw-bold" style="width:auto; min-width:130px; font-size:12px; height:32px;">';
-            echo '<option value="8" ' . ($currentAppMasterStatus == 8 ? 'selected' : '') . '>In Review</option>';
-            echo '<option value="1" ' . ($currentAppMasterStatus != 8 ? 'selected' : '') . '>Sourcing</option>';
-            echo '</select>';
-            echo '</div>';
-            echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>';
-          }else{
-            echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>';
-          }
-      @endphp
+      @if($page_event == 'EDIT')
+        <button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>
+      @else
+        <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>
+      @endif
     </div>
   </div>
   <!--end::Container-->
@@ -2138,6 +2136,7 @@
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
             <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
+            <input type="hidden" name="master_status_id" id="master_status_id" value="{{ $currentAppMasterStatus }}" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
@@ -2151,7 +2150,24 @@
             <!-- Upload + Career Summary -->
             <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
                 <!-- Resume Upload -->
-                <div class="fs fv-row resume-card candidate-card" style="margin-bottom:0">
+                @php
+                    $displayResumeName = '';
+                    $hasExistingResume = false;
+                    if (!empty($application->resume)) {
+                        preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
+                        $displayResumeName = $_rm[1] ?? basename($application->resume);
+                        if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
+                            $displayResumeName = 'Resume (uploaded)';
+                        }
+                        $hasExistingResume = true;
+                    } elseif (!empty($resume_url)) {
+                        $hasExistingResume = true;
+                        $displayResumeName = 'Resume (uploaded)';
+                    }
+                    $displayResumeExt = strtoupper(pathinfo($displayResumeName, PATHINFO_EXTENSION) ?: 'PDF');
+                    $isWordDoc = in_array($displayResumeExt, ['DOC', 'DOCX']);
+                @endphp
+                <div class="fs fv-row resume-card candidate-card {{ $hasExistingResume ? 'has-uploaded-resume' : '' }}" style="margin-bottom:0">
                     <div class="fsh resume-card-header candidate-card-header">
                         <div class="candidate-card-title">
                           <span class="resume-card-icon candidate-card-icon"><i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i></span>
@@ -2160,7 +2176,7 @@
                     </div>
 
                     <div class="fsc resume-card-body candidate-card-body">
-                        <div class="ua" id="uploadBox">
+                        <div class="ua {{ $hasExistingResume ? 'd-none' : '' }}" id="uploadBox" style="{{ $hasExistingResume ? 'display:none !important;' : '' }}">
 
                             <div class="ui">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2204,36 +2220,10 @@
                                 </div>
                             </div>
 
-                            <!-- Selected File -->
-                            @php
-                                // basename() can return just a number when the path uses date-based
-                                // directories (e.g. resumes/2024/07/candidatename.pdf → "07" is wrong).
-                                // Walk the path segments and pick the first one that has a valid extension.
-                                $displayResumeName = '';
-                                if (!empty($application->resume)) {
-                                    preg_match('/([^\/\\\\]+\.(pdf|doc|docx|htm|html))/i', $application->resume, $_rm);
-                                    $displayResumeName = $_rm[1] ?? basename($application->resume);
-                                    if (!$displayResumeName || !pathinfo($displayResumeName, PATHINFO_EXTENSION)) {
-                                        $displayResumeName = 'Resume (uploaded)';
-                                    }
-                                }
-                            @endphp
-                            <div class="file-info" id="fileInfo" style="{{ !empty($resume_url) ? 'display:flex' : 'display:none' }}">
+                            <!-- Hidden legacy fileInfo strip to avoid DOM errors in older scripts -->
+                            <div class="file-info" id="fileInfo" style="display:none !important;">
                                 <span class="file-name" id="fileName">{{ $displayResumeName }}</span>
-                                @if(!empty($resume_url))
-                                <a href="{{ $resume_url }}"
-                                   target="_blank"
-                                   class="download-file"
-                                   style="color:#fff;margin-left:250px;display:inline-flex;align-items:center;justify-content:center;">
-                                    <i class="fa fa-download" aria-hidden="true" style="color:#fff"></i>
-                                </a>
-                                @endif
-
-                                <button type="button"
-                                        class="remove-file"
-                                        id="removeFile">
-                                    Remove
-                                </button>
+                                <button type="button" class="remove-file" id="removeFile" style="display:none;">Remove</button>
                             </div>
 
                         </div>
@@ -2243,15 +2233,15 @@
                                  Outside #uploadBox so hiding the dropzone
                                  does not hide this card.
                                  ========================== -->
-                            <div class="up-info" id="upInfo">
+                            <div class="up-info {{ $hasExistingResume ? 'show' : '' }}" id="upInfo" style="{{ $hasExistingResume ? 'display:flex !important;' : '' }}">
                                 <div class="up-info-banner">
                                     <div class="up-info-banner-left">
                                         <span class="up-info-banner-check">
                                             <i class="fa-solid fa-check" aria-hidden="true"></i>
                                         </span>
                                         <div class="up-info-banner-text">
-                                            <strong id="upInfoBannerTitle">Resume uploaded successfully!</strong>
-                                            <small id="upInfoBannerSub">Your resume has been uploaded and parsed.</small>
+                                            <strong id="upInfoBannerTitle">{{ $page_event == 'EDIT' ? 'Resume attached successfully' : 'Resume uploaded successfully!' }}</strong>
+                                            <small id="upInfoBannerSub">{{ $page_event == 'EDIT' ? 'Uploaded resume is attached and parsed.' : 'Your resume has been uploaded and parsed.' }}</small>
                                         </div>
                                     </div>
                                     <button type="button" class="up-info-banner-close" aria-label="Dismiss banner">
@@ -2261,16 +2251,26 @@
 
                                 <div class="up-file-card">
                                     <div class="up-file-card-left">
-                                        <div class="up-file-badge">
-                                            <i class="fa-regular fa-file-pdf" aria-hidden="true"></i>
-                                            <span class="up-file-badge-ext" id="upFileBadgeExt">PDF</span>
+                                        <div class="up-file-badge" style="{{ $isWordDoc ? 'background:#dbeafe !important; color:#2563eb !important;' : 'background:#fee2e2 !important; color:#dc2626 !important;' }}">
+                                            <i class="{{ $isWordDoc ? 'fa-regular fa-file-word' : 'fa-regular fa-file-pdf' }}" aria-hidden="true" style="{{ $isWordDoc ? 'color:#2563eb !important;' : 'color:#dc2626 !important;' }}"></i>
+                                            <span class="up-file-badge-ext" id="upFileBadgeExt" style="{{ $isWordDoc ? 'color:#2563eb !important;' : 'color:#dc2626 !important;' }}">{{ $displayResumeExt }}</span>
                                         </div>
                                         <div class="up-file-meta">
-                                            <div class="up-file-name" id="upFileName">&nbsp;</div>
-                                            <div class="up-file-sub" id="upFileSub">&nbsp;</div>
+                                            <div class="up-file-name" id="upFileName" title="{{ $displayResumeName }}">{{ $displayResumeName ?: '&nbsp;' }}</div>
+                                            <div class="up-file-sub" id="upFileSub">{{ $hasExistingResume ? ('Uploaded Resume • ' . $displayResumeExt) : '&nbsp;' }}</div>
                                         </div>
                                     </div>
                                     <div class="up-file-actions">
+                                        @if(!empty($resume_url))
+                                        <a href="{{ $resume_url }}"
+                                           target="_blank"
+                                           class="up-btn up-btn-replace download-file"
+                                           id="upDownloadBtn"
+                                           title="Download Resume">
+                                            <i class="fa-solid fa-download" aria-hidden="true"></i>
+                                            <span>Download</span>
+                                        </a>
+                                        @endif
                                         <button type="button" class="up-btn up-btn-remove" id="upRemoveBtn" title="Delete Resume">
                                             <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
                                             <span>Delete</span>
@@ -2286,7 +2286,7 @@
                                             </span>
                                             <div>
                                                 <div class="up-detail-lbl">Uploaded On</div>
-                                                <div class="up-detail-val" id="upDetailUploadedOn">&nbsp;</div>
+                                                <div class="up-detail-val" id="upDetailUploadedOn">{{ !empty($application->created_at) ? \Carbon\Carbon::parse($application->created_at)->format('d M Y, H:i') : ($hasExistingResume ? now()->format('d M Y, H:i') : '&nbsp;') }}</div>
                                             </div>
                                         </div>
                                         <div class="up-detail-tile">
@@ -2295,7 +2295,13 @@
                                             </span>
                                             <div>
                                                 <div class="up-detail-lbl">Parser Status</div>
-                                                <div class="up-detail-val" id="upDetailParserStatus">&nbsp;</div>
+                                                <div class="up-detail-val" id="upDetailParserStatus">
+                                                    @if($hasExistingResume)
+                                                        <span style="color: #059669; font-weight: 700;">✓ Parsed</span>
+                                                    @else
+                                                        &nbsp;
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="up-detail-tile">
@@ -2304,7 +2310,7 @@
                                             </span>
                                             <div>
                                                 <div class="up-detail-lbl">File Type</div>
-                                                <div class="up-detail-val" id="upDetailFileType">&nbsp;</div>
+                                                <div class="up-detail-val" id="upDetailFileType">{{ $hasExistingResume ? $displayResumeExt : '&nbsp;' }}</div>
                                             </div>
                                         </div>
                                         <div class="up-detail-tile">
@@ -4979,7 +4985,7 @@ $(document).ready(function () {
         $('#resume_original_name').val('');
         $('#upInfoBannerTitle').text('Resume uploaded successfully!');
         $('.resume-card').removeClass('has-uploaded-resume');
-        $('#upInfo').removeClass('show');
+        $('#upInfo').removeClass('show').removeAttr('style').hide();
         $('#uploadBox').removeClass('d-none').attr('style', '').show();
         $('#fileInfo').hide();
         $('#fileName').text('');
@@ -4987,7 +4993,7 @@ $(document).ready(function () {
         $('#resumeCheck').val('');
         var isEdit = String(@json($page_event ?? '')).toUpperCase() === 'EDIT' && parseInt($('#appId').val() || '0', 10) > 0;
         $('#resume_intent').val(isEdit ? 'REMOVE' : 'NONE');
-        $('.download-file').addClass('d-none');
+        $('.download-file, #upDownloadBtn').addClass('d-none').hide();
         window.__upLoc = null;
     }
 
@@ -5050,7 +5056,7 @@ $(document).ready(function () {
         $('#fileInfo').hide();
         $('.resume-card').addClass('has-uploaded-resume');
         $info.find('.up-info-banner').show();
-        $info.addClass('show');
+        $info.addClass('show').attr('style', 'display: flex !important;');
     }
 
     // ─── Zero-temp upload pipeline ───────────────────────────────────────────
