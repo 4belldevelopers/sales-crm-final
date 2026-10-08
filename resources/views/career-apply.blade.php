@@ -37,32 +37,73 @@
 }
 
 .candidate-top-toolbar {
-    position: sticky !important;
-    top: 0 !important;
-    left: 0 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
     width: 100% !important;
-    z-index: 1000 !important;
-    background: #FFF7ED !important;
-    border-bottom: 1px solid #FED7AA !important;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08) !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+    z-index: 50 !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 body.career-apply-page {
     padding-top: 0 !important;
     margin: 0 !important;
+    background-color: #f8fafc !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    min-height: 100vh !important;
 }
 
 body.career-apply-page .toolbar {
-    position: sticky !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
 }
 
 .candidate-top-toolbar .candidate-toolbar-container {
     background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 12px 24px !important;
+    min-height: 64px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.candidate-top-toolbar::before,
+.candidate-top-toolbar::after,
+.candidate-top-toolbar .candidate-toolbar-container::before,
+.candidate-top-toolbar .candidate-toolbar-container::after {
+    display: none !important;
+    content: none !important;
+}
+
+.candidate-top-toolbar .page-title {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+@media (max-width: 991px) {
+    .candidate-top-toolbar .candidate-toolbar-container {
+        padding: 10px 16px !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+    .candidate-top-toolbar .candidate-header-actions {
+        width: 100% !important;
+        justify-content: flex-end !important;
+    }
 }
 
 /* ALL 14 Card Header Squircle Icons — 100% Unified Enterprise Orange */
@@ -201,15 +242,45 @@ body.career-apply-page .toolbar {
     color: #D97706 !important;
 }
 
-.job-candidate-create .candidate-panel-title > span:first-child,
-.job-candidate-create .candidate-experience-tip > span,
+/* Experience Details — Unified Enterprise Squircle Badges & Pure White Icons */
+.job-candidate-create .experience-details-card .candidate-card-icon,
+.job-candidate-create .experience-details-card .pd-experience-hero-icon,
 .job-candidate-create .experience-details-card .candidate-panel-title > span:first-child,
-.job-candidate-create .experience-details-card .candidate-experience-panel--relevant .candidate-panel-title > span:first-child {
+.job-candidate-create .experience-details-card .candidate-experience-tip > span:first-child,
+.job-candidate-create .candidate-experience-panel .candidate-panel-title > span:first-child,
+.job-candidate-create .candidate-experience-tip > span:first-child {
     background: linear-gradient(135deg, #F59E0B, #D97706) !important;
     color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    flex-shrink: 0 !important;
+    border: none !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
 }
-.job-candidate-create .candidate-experience-note i,
-.job-candidate-create .candidate-experience-tip i {
+
+.job-candidate-create .experience-details-card .candidate-card-icon i,
+.job-candidate-create .experience-details-card .pd-experience-hero-icon i,
+.job-candidate-create .experience-details-card .candidate-panel-title > span:first-child i,
+.job-candidate-create .experience-details-card .candidate-experience-tip > span:first-child i,
+.job-candidate-create .candidate-experience-panel .candidate-panel-title > span:first-child i,
+.job-candidate-create .candidate-experience-tip > span:first-child i,
+.job-candidate-create .experience-details-card .candidate-panel-title > span:first-child svg,
+.job-candidate-create .experience-details-card .candidate-experience-tip > span:first-child svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+}
+
+.job-candidate-create .candidate-experience-note i {
     color: #F59E0B !important;
 }
 
@@ -260,17 +331,6 @@ body.career-apply-page .toolbar {
     background: #F59E0B !important;
 }
 
-.job-candidate-create .candidate-slot--one .candidate-slot-number,
-.job-candidate-create .candidate-slot--two .candidate-slot-number,
-.job-candidate-create .candidate-slot--three .candidate-slot-number {
-    color: #D97706 !important;
-    background: #FFF7ED !important;
-    border: 1px solid #FED7AA !important;
-}
-.job-candidate-create .candidate-slot-field > span:first-child i {
-    color: #F59E0B !important;
-}
-
 .job-candidate-create .candidate-link-brand--website {
     color: #D97706 !important;
     background: #FFF7ED !important;
@@ -280,29 +340,80 @@ body.career-apply-page .toolbar {
     background: #FFF7ED !important;
 }
 
-/* Primary Topbar Action Button & Buttons with .btn-primary */
+/* Primary Topbar Action Button — Submit Application (Parity with Bench Candidate Standard) */
 .talent-topbar-primary,
 .candidate-topbar .talent-topbar-primary,
 .candidate-top-toolbar .talent-topbar-primary,
 .candidate-submit-action {
-    border-color: #F59E0B !important;
-    background: #F59E0B !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 20px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    border-radius: 6px !important;
+    background-color: #F59E0B !important;
+    border: 1px solid #F59E0B !important;
     color: #ffffff !important;
-    box-shadow: 0 6px 14px rgba(245, 158, 11, 0.22) !important;
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.28) !important;
+    transition: all 0.2s ease-in-out !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+}
+
+.talent-topbar-primary i,
+.talent-topbar-primary svg,
+.candidate-submit-action i,
+.candidate-submit-action svg,
+.candidate-top-toolbar .talent-topbar-primary i,
+.candidate-top-toolbar .talent-topbar-primary svg {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
 }
 
 .talent-topbar-primary:hover,
-.talent-topbar-primary:focus,
 .candidate-topbar .talent-topbar-primary:hover,
-.candidate-topbar .talent-topbar-primary:focus,
 .candidate-top-toolbar .talent-topbar-primary:hover,
-.candidate-top-toolbar .talent-topbar-primary:focus,
-.candidate-submit-action:hover,
-.candidate-submit-action:focus {
+.candidate-submit-action:hover {
+    background-color: #D97706 !important;
     border-color: #D97706 !important;
-    background: #D97706 !important;
     color: #ffffff !important;
-    box-shadow: 0 8px 18px rgba(217, 119, 6, 0.28) !important;
+    box-shadow: 0 6px 14px rgba(217, 119, 6, 0.32) !important;
+}
+
+.talent-topbar-primary:hover i,
+.candidate-submit-action:hover i {
+    color: #ffffff !important;
+}
+
+.talent-topbar-primary:focus,
+.talent-topbar-primary:active,
+.candidate-top-toolbar .talent-topbar-primary:focus,
+.candidate-top-toolbar .talent-topbar-primary:active,
+.candidate-submit-action:focus,
+.candidate-submit-action:active {
+    background-color: #B45309 !important;
+    border-color: #B45309 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25) !important;
+    outline: none !important;
+}
+
+.talent-topbar-primary:disabled,
+.talent-topbar-primary.disabled,
+.candidate-submit-action:disabled,
+.candidate-submit-action.disabled {
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
 }
 
 .job-candidate-create .btn-primary,
@@ -368,65 +479,6 @@ body.career-apply-page .toolbar {
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
 }
 
-/* Time Clock Popover */
-.jgtp-preset-chip:hover {
-    border-color: #F59E0B !important;
-    background: #FFF7ED !important;
-    color: #D97706 !important;
-}
-.jgtp-preset-chip.is-active {
-    border-color: #F59E0B !important;
-    background: #F59E0B !important;
-    color: #ffffff !important;
-    font-weight: 700 !important;
-}
-.jgtp-hour-btn:hover {
-    border-color: #F59E0B !important;
-    background: #FFF7ED !important;
-    color: #D97706 !important;
-}
-.jgtp-hour-btn.is-active {
-    background: #F59E0B !important;
-    color: #ffffff !important;
-    border-color: #F59E0B !important;
-    font-weight: 700 !important;
-}
-.jgtp-min-btn:hover {
-    border-color: #F59E0B !important;
-    background: #FFF7ED !important;
-    color: #D97706 !important;
-}
-.jgtp-min-btn.is-active {
-    background: #F59E0B !important;
-    color: #ffffff !important;
-    border-color: #F59E0B !important;
-    font-weight: 700 !important;
-}
-.jgtp-min-subchip:hover {
-    border-color: #F59E0B !important;
-    background: #FFF7ED !important;
-    color: #D97706 !important;
-}
-.jgtp-min-subchip.is-active {
-    background: #F59E0B !important;
-    color: #ffffff !important;
-    border-color: #F59E0B !important;
-    font-weight: 700 !important;
-}
-.jgtp-ampm-btn.is-active {
-    background: #F59E0B !important;
-    color: #ffffff !important;
-}
-.jgtp-btn-apply {
-    background: #F59E0B !important;
-    border-color: #F59E0B !important;
-    color: #ffffff !important;
-}
-.jgtp-btn-apply:hover {
-    background: #D97706 !important;
-    border-color: #D97706 !important;
-}
-
 /* Salary Pill active tabs */
 .br-pill-item.is-active {
     background: #F59E0B !important;
@@ -446,6 +498,90 @@ body.career-apply-page .toolbar {
     background-color: #FFF7ED !important;
 }
 
+/* ==========================================================================
+   ENTERPRISE VALIDATION ERROR HIGHLIGHTING (BENCH CANDIDATE PARITY)
+   ========================================================================== */
+.has-validation-error,
+input.has-validation-error,
+select.has-validation-error,
+textarea.has-validation-error,
+.form-control.has-validation-error,
+.form-select.has-validation-error,
+.tagify.has-validation-error,
+.candidate-field-control.has-validation-error,
+.candidate-field-control:has(.has-validation-error),
+.candidate-primary-skill-entry.has-validation-error,
+.candidate-salary-input-wrap.has-validation-error,
+.candidate-notice-options-grid.has-validation-error,
+.candidate-work-mode-grid.has-validation-error,
+.candidate-intro-grid .resume-card.has-validation-error,
+.resume-card.has-validation-error,
+#uploadBox.has-validation-error,
+.jero-custom-select.has-validation-error,
+.jero-custom-select.has-validation-error .jero-cs-trigger {
+    border: 1.5px solid #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    border-radius: 6px !important;
+}
+
+input.has-validation-error:focus,
+select.has-validation-error:focus,
+textarea.has-validation-error:focus,
+.form-control.has-validation-error:focus,
+.tagify.has-validation-error:focus-within,
+.candidate-field-control.has-validation-error:focus-within {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.20) !important;
+    outline: none !important;
+}
+
+.resume-card.has-validation-error,
+#uploadBox.has-validation-error {
+    border: 1.5px dashed #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    border-radius: 8px !important;
+}
+
+.field-error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: #ef4444;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    animation: fieldErrorFadeIn 0.2s ease-in-out;
+}
+
+.field-error-message svg,
+.field-error-message i {
+    color: #ef4444;
+    stroke: currentColor;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.field-error-message span {
+    color: #dc2626;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+@keyframes fieldErrorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Field Attention Pulse Highlight */
 .field-attention-highlight {
     outline: 2px solid #F59E0B !important;
@@ -453,6 +589,11 @@ body.career-apply-page .toolbar {
     border-radius: 6px !important;
     transition: all 0.2s ease-in-out !important;
     background-color: rgba(255, 237, 213, 0.5) !important;
+}
+
+/* Hide Skills Match Percentage UI Component */
+.candidate-skill-match {
+    display: none !important;
 }
 
 /* Required Fields Modal CTA */
@@ -2164,7 +2305,7 @@ body.career-apply-page .toolbar {
         'account' => @$account,
     ])
     <div class="d-flex align-items-center py-1 candidate-header-actions">
-      <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i><span>Apply Now</span></button>
+      <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true" style="color: #ffffff !important;"></i><span>Submit Application</span></button>
     </div>
   </div>
   <!--end::Container-->
@@ -2816,15 +2957,6 @@ body.career-apply-page .toolbar {
                   <span class="candidate-card-icon se-icon"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
                   <span><strong>Primary Skills <span class="rq">*</span></strong><small>Add the candidate's strongest skills and specializations.</small></span>
                 </div>
-                <div class="candidate-skill-match is-empty" id="candidateSkillMatch" aria-live="polite">
-                  <span class="candidate-skill-match-ring" id="candidateSkillMatchRing" style="--candidate-skill-match: 0%">
-                    <strong id="candidateSkillMatchPercentage">--</strong>
-                  </span>
-                  <span class="candidate-skill-match-copy">
-                    <strong>Job Skills Match</strong>
-                    <small id="candidateSkillMatchDetail">No job skills defined</small>
-                  </span>
-                </div>
               </div>
               <div class="fsc candidate-card-body candidate-primary-skills-body">
                 <div class="candidate-primary-skill-combobox">
@@ -2854,7 +2986,7 @@ body.career-apply-page .toolbar {
             <div class="fs pd-experience-section-card candidate-card experience-details-card">
               <div class="fsh candidate-card-header pd-experience-hero">
                 <div class="candidate-card-title pd-experience-hero-title">
-                  <span class="candidate-card-icon pd-experience-hero-icon"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                  <span class="candidate-card-icon pd-experience-hero-icon"><i class="fa-solid fa-chart-line" aria-hidden="true" style="color: #ffffff !important;"></i></span>
                   <span><strong>Experience Details</strong><small>Capture total and relevant experience for this job application.</small></span>
                 </div>
               </div>
@@ -2886,7 +3018,7 @@ body.career-apply-page .toolbar {
                 @endphp
                 <div class="candidate-experience-grid">
                   <div class="candidate-experience-panel">
-                    <div class="candidate-panel-title"><span><i class="fa-regular fa-clock" aria-hidden="true"></i></span><span><strong>Total Experience <em>*</em></strong><small>Your overall professional experience.</small></span></div>
+                    <div class="candidate-panel-title"><span style="background: linear-gradient(135deg, #F59E0B, #D97706); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); flex-shrink: 0;"><i class="fa-regular fa-clock" aria-hidden="true" style="color: #ffffff !important; font-size: 14px;"></i></span><span><strong>Total Experience <em>*</em></strong><small>Your overall professional experience.</small></span></div>
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="total_exp_year" name="total_exp_year">
                         <option value="">Years</option>
@@ -2932,7 +3064,7 @@ body.career-apply-page .toolbar {
                     </div>
                   </div>
                   <div class="candidate-experience-panel candidate-experience-panel--relevant">
-                    <div class="candidate-panel-title"><span><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span><span><strong>Relevant Experience <em>*</em></strong><small>Experience relevant to this job or required skills.</small></span></div>
+                    <div class="candidate-panel-title"><span style="background: linear-gradient(135deg, #F59E0B, #D97706); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); flex-shrink: 0;"><i class="fa-solid fa-briefcase" aria-hidden="true" style="color: #ffffff !important; font-size: 14px;"></i></span><span><strong>Relevant Experience <em>*</em></strong><small>Experience relevant to this job or required skills.</small></span></div>
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="rel_exp_year" name="rel_exp_year">
                         <option value="">Years</option>
@@ -2979,7 +3111,7 @@ body.career-apply-page .toolbar {
                     </div>
                   </div>
                   <div class="candidate-experience-tip">
-                    <span><i class="fa-solid fa-lightbulb" aria-hidden="true"></i></span>
+                    <span style="background: linear-gradient(135deg, #F59E0B, #D97706); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); flex-shrink: 0;"><i class="fa-solid fa-lightbulb" aria-hidden="true" style="color: #ffffff !important; font-size: 14px;"></i></span>
                     <div class="candidate-experience-tip-copy"><strong>Tip</strong><p>Relevant experience should match the skills required for this job.</p>
                       <div class="candidate-experience-examples"><strong>Examples:</strong><ul><li>If the job requires Laravel, mention your Laravel experience here.</li><li>Exclude unrelated experience.</li><li>Freshers can select 0 years.</li></ul></div>
                     </div>
@@ -3474,54 +3606,7 @@ body.career-apply-page .toolbar {
             @endif
 
 
-            <!-- Availability -->
-            <div class="fs candidate-card interview-card">
-              <div class="fsh candidate-card-header">
-                <div class="candidate-card-title">
-                  <span class="candidate-card-icon candidate-card-icon--interview"><i class="fa-regular fa-calendar-days" aria-hidden="true"></i></span>
-                  <span><strong>Availability for Next 3 Days <span class="rq">*</span></strong><small>Provide three interview windows and the preferred interview mode.</small></span>
-                </div>
-              </div>
-              <div class="fsc candidate-card-body">
-                <div class="ag">
-                  <div class="ai candidate-slot candidate-slot--one">
-                    <div class="candidate-slot-head">
-                      <span class="candidate-slot-number">1</span>
-                      <strong class="candidate-slot-title">Slot 1</strong>
-                    </div>
-                    <div class="candidate-slot-fields">
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateOne" id="interviewDateOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeOne" id="interviewTimeOne" value="{{ (@$application->interviewDateOne) ? \Carbon\Carbon::parse(@$application->interviewDateOne)->format('h:i A'): '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_one" id="interview_mode_one" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_one == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
-                    </div>
-                  </div>
 
-                  <div class="ai candidate-slot candidate-slot--two">
-                    <div class="candidate-slot-head">
-                      <span class="candidate-slot-number">2</span>
-                      <strong class="candidate-slot-title">Slot 2</strong>
-                    </div>
-                    <div class="candidate-slot-fields">
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateTwo" id="interviewDateTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeTwo" id="interviewTimeTwo" value="{{ (@$application->interviewDateTwo) ? \Carbon\Carbon::parse(@$application->interviewDateTwo)->format('h:i A') : '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_two" id="interview_mode_two" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_two == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
-                    </div>
-                  </div>
-
-                  <div class="ai candidate-slot candidate-slot--three">
-                    <div class="candidate-slot-head">
-                      <span class="candidate-slot-number">3</span>
-                      <strong class="candidate-slot-title">Slot 3</strong>
-                    </div>
-                    <div class="candidate-slot-fields">
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-calendar-days" aria-hidden="true"></i> Date <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid" placeholder="Select date" name="interviewDateThree" id="interviewDateThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('d-m-Y') : '' }}" type="text" autocomplete="off"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-regular fa-clock" aria-hidden="true"></i> Time <b>*</b></span><span class="candidate-slot-control"><input class="form-control form-control-solid jero-god-time-input" placeholder="Select time" name="interviewTimeThree" id="interviewTimeThree" value="{{ (@$application->interviewDateThree) ? \Carbon\Carbon::parse(@$application->interviewDateThree)->format('h:i A') : '' }}" type="text" autocomplete="off" readonly style="cursor: pointer;"></span></label>
-                      <label class="candidate-slot-field"><span><i class="fa-solid fa-video" aria-hidden="true"></i> Mode <b>*</b></span><span class="candidate-slot-control candidate-slot-control--select"><select name="interview_mode_three" id="interview_mode_three" onchange="getInterviewModeChild(this.value, {{ $jobId }});" class="form-select form-select-solid"><option value="">Select mode</option>@if (!empty(@$interview_mode)) @foreach (@$interview_mode as $int_mode_val)<option value="{{ @$int_mode_val->name }}" {{ @$application->interview_mode_three == $int_mode_val->name ? 'selected' : '' }}>{{ @$int_mode_val->name }}</option>@endforeach @endif</select></span></label>
-                    </div>
-                  </div>
-                </div>
-                </div>
-            </div>
 
             <!-- Professional Links -->
             <div class="fs addl-card candidate-card professional-links-card">
@@ -5633,15 +5718,17 @@ var KTUPDATECandidate = {
           });
           candidatePrimarySkillEmpty.hidden = selected.length > 0;
 
-          candidateSkillMatch.classList.toggle('is-empty', required.length === 0);
-          candidateSkillMatch.classList.toggle('is-complete', required.length > 0 && percentage === 100);
-          candidateSkillMatchRing.style.setProperty('--candidate-skill-match', percentage + '%');
-          candidateSkillMatchPercentage.textContent = required.length ? percentage + '%' : '--';
-          candidateSkillMatchDetail.textContent = !required.length
-              ? 'No job skills defined'
-              : (percentage === 100
-                  ? 'All required skills matched'
-                  : matched.length + ' of ' + required.length + ' required skills matched');
+          if (candidateSkillMatch && candidateSkillMatchRing && candidateSkillMatchPercentage && candidateSkillMatchDetail) {
+              candidateSkillMatch.classList.toggle('is-empty', required.length === 0);
+              candidateSkillMatch.classList.toggle('is-complete', required.length > 0 && percentage === 100);
+              candidateSkillMatchRing.style.setProperty('--candidate-skill-match', percentage + '%');
+              candidateSkillMatchPercentage.textContent = required.length ? percentage + '%' : '--';
+              candidateSkillMatchDetail.textContent = !required.length
+                  ? 'No job skills defined'
+                  : (percentage === 100
+                      ? 'All required skills matched'
+                      : matched.length + ' of ' + required.length + ' required skills matched');
+          }
 
           // Render Suggestions: Missing job requirements or synergy relations
           candidateSuggestedSkillsList.replaceChildren();
@@ -6823,6 +6910,264 @@ function jumpToCandidateField(fieldKey) {
     }
 }
 
+function clearCandidateFieldValidationErrors(targetKey) {
+    if (targetKey) {
+        $('[data-field-error="' + targetKey + '"]').remove();
+        if (targetKey === 'resume') {
+            $('#uploadBox, .resume-card').removeClass('has-validation-error');
+        } else if (targetKey === 'kt_tagify_work_location') {
+            $('#kt_tagify_work_location, #jero-cs-location, #jero-cs-location .jero-cs-trigger').removeClass('has-validation-error');
+            $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').removeClass('has-validation-error');
+        } else if (targetKey === 'qualification') {
+            $('#qualification, #jero-cs-qualification, #jero-cs-qualification .jero-cs-trigger').removeClass('has-validation-error');
+            $('#jero-cs-qualification').closest('.candidate-field-control, .bd-control').removeClass('has-validation-error');
+        } else if (targetKey === 'nationality') {
+            $('#nationality, #jero-cs-nationality, #jero-cs-nationality .jero-cs-trigger').removeClass('has-validation-error');
+            $('#jero-cs-nationality').closest('.candidate-field-control, .bd-control').removeClass('has-validation-error');
+        } else if (targetKey === 'gender') {
+            $('#gender, #jero-cs-gender, #jero-cs-gender .jero-cs-trigger').removeClass('has-validation-error');
+            $('#jero-cs-gender').closest('.candidate-field-control, .bd-control').removeClass('has-validation-error');
+        } else if (targetKey === 'skills') {
+            $('#kt_tagify_2, .candidate-primary-skill-entry, .candidate-primary-skill-combobox').removeClass('has-validation-error');
+        } else if (targetKey === 'total_exp') {
+            $('#total_exp_year, #total_exp_month').removeClass('has-validation-error');
+            $('#total_exp_year').closest('.candidate-experience-field').removeClass('has-validation-error');
+        } else if (targetKey === 'rel_exp') {
+            $('#rel_exp_year, #rel_exp_month').removeClass('has-validation-error');
+            $('#rel_exp_year').closest('.candidate-experience-field').removeClass('has-validation-error');
+        } else if (targetKey === 'employmentType') {
+            $('#EmploymentType, #jero-cs-EmploymentType').removeClass('has-validation-error');
+        } else if (targetKey === 'ctc') {
+            $('#ctc').removeClass('has-validation-error');
+            $('#ctc').closest('.candidate-salary-input-wrap').removeClass('has-validation-error');
+        } else if (targetKey === 'ectc') {
+            $('#ectc').removeClass('has-validation-error');
+            $('#ectc').closest('.candidate-salary-input-wrap').removeClass('has-validation-error');
+        } else if (targetKey === 'np_id') {
+            $('.candidate-notice-options-grid, #np_id, #ddl_np_id').removeClass('has-validation-error');
+        } else if (targetKey === 'wm') {
+            $('.candidate-work-mode-grid, .candidate-work-mode-option').removeClass('has-validation-error');
+        } else if (targetKey === 'phone' || targetKey === 'secondary_mobile') {
+            var $pEl = $('#' + targetKey);
+            $pEl.removeClass('has-validation-error is-invalid');
+            var $pWrap = $pEl.closest('.jero-phone-box-wrapper');
+            if ($pWrap.length) {
+                $pWrap.removeClass('has-validation-error is-invalid');
+                $pWrap.find('.jero-phone-input-group').removeClass('has-validation-error is-invalid');
+            }
+        } else {
+            var cfg = candidateFieldConfigMap[targetKey];
+            var selector = cfg && cfg.selector ? cfg.selector : ('#' + targetKey);
+            var $target = $(selector);
+            $target.removeClass('has-validation-error is-invalid');
+            $target.closest('.candidate-field-control, .candidate-salary-input-wrap, .fv-row').removeClass('has-validation-error is-invalid');
+        }
+    } else {
+        $('.has-validation-error').removeClass('has-validation-error');
+        $('.field-error-message').remove();
+        $('.jero-phone-input-group, .jero-phone-box-wrapper').removeClass('has-validation-error is-invalid');
+    }
+}
+window.clearCandidateFieldValidationErrors = clearCandidateFieldValidationErrors;
+
+function applyCandidateFieldValidationErrors(missingFields) {
+    clearCandidateFieldValidationErrors();
+    if (!missingFields || !missingFields.length) return;
+
+    missingFields.forEach(function (f) {
+        var key = f.key;
+        var msg = f.message || (f.label + ' is required.');
+        var errorHtml = '<div class="field-error-message" data-field-error="' + key + '">'
+            + '<svg class="fe-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:4px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+            + '<span>' + $('<div>').text(msg).html() + '</span>'
+            + '</div>';
+
+        if (key === 'resume') {
+            var $up = $('#uploadBox');
+            $up.addClass('has-validation-error');
+            $up.closest('.resume-card').addClass('has-validation-error');
+            if (!$('[data-field-error="resume"]').length) {
+                $up.after(errorHtml);
+            }
+        } else if (key === 'careersummary') {
+            var $cs = $('#careersummary');
+            $cs.addClass('has-validation-error');
+            $cs.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="careersummary"]').length) {
+                $cs.closest('.candidate-field-control').after(errorHtml);
+            }
+        } else if (key === 'full_name') {
+            var $fn = $('#full_name');
+            $fn.addClass('has-validation-error');
+            $fn.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="full_name"]').length) {
+                $fn.closest('.candidate-field-control').after(errorHtml);
+            }
+        } else if (key === 'email') {
+            var $em = $('#email');
+            $em.addClass('has-validation-error');
+            $em.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="email"]').length) {
+                $em.closest('.candidate-field-control').after(errorHtml);
+            }
+        } else if (key === 'phone' || key === 'secondary_mobile') {
+            var $pEl = $('#' + key);
+            $pEl.addClass('has-validation-error');
+            var $phoneWrap = $pEl.closest('.jero-phone-box-wrapper');
+            if ($phoneWrap.length) {
+                $phoneWrap.addClass('has-validation-error');
+                $phoneWrap.find('.jero-phone-input-group').addClass('has-validation-error');
+            }
+            if (!$('[data-field-error="' + key + '"]').length) {
+                if ($phoneWrap.length) {
+                    $phoneWrap.after(errorHtml);
+                } else {
+                    $pEl.after(errorHtml);
+                }
+            }
+        } else if (key === 'kt_tagify_work_location') {
+            var $loc = $('#kt_tagify_work_location');
+            $loc.addClass('has-validation-error');
+            var $locBox = $('#jero-cs-location');
+            if ($locBox.length) {
+                $locBox.addClass('has-validation-error');
+                $locBox.closest('.candidate-field-control, .bd-control').addClass('has-validation-error');
+            }
+            if (!$('[data-field-error="kt_tagify_work_location"]').length) {
+                var $ctrl = $locBox.length ? $locBox.closest('.candidate-field-control, .bd-control') : $loc.closest('.candidate-field-control');
+                if ($ctrl.length) {
+                    $ctrl.after(errorHtml);
+                } else {
+                    $loc.after(errorHtml);
+                }
+            }
+        } else if (key === 'qualification') {
+            var $q = $('#qualification');
+            $q.addClass('has-validation-error');
+            var $qBox = $('#jero-cs-qualification');
+            if ($qBox.length) {
+                $qBox.addClass('has-validation-error');
+                $qBox.closest('.candidate-field-control, .bd-control').addClass('has-validation-error');
+            }
+            if (!$('[data-field-error="qualification"]').length) {
+                var $ctrlQ = $qBox.length ? $qBox.closest('.candidate-field-control, .bd-control') : $q.closest('.candidate-field-control');
+                if ($ctrlQ.length) $ctrlQ.after(errorHtml);
+                else $q.after(errorHtml);
+            }
+        } else if (key === 'nationality') {
+            var $nat = $('#nationality');
+            $nat.addClass('has-validation-error');
+            var $natBox = $('#jero-cs-nationality');
+            if ($natBox.length) {
+                $natBox.addClass('has-validation-error');
+                $natBox.closest('.candidate-field-control, .bd-control').addClass('has-validation-error');
+            }
+            if (!$('[data-field-error="nationality"]').length) {
+                var $ctrlNat = $natBox.length ? $natBox.closest('.candidate-field-control, .bd-control') : $nat.closest('.candidate-field-control');
+                if ($ctrlNat.length) $ctrlNat.after(errorHtml);
+                else $nat.after(errorHtml);
+            }
+        } else if (key === 'gender') {
+            var $gen = $('#gender');
+            $gen.addClass('has-validation-error');
+            var $genBox = $('#jero-cs-gender');
+            if ($genBox.length) {
+                $genBox.addClass('has-validation-error');
+                $genBox.closest('.candidate-field-control, .bd-control').addClass('has-validation-error');
+            }
+            if (!$('[data-field-error="gender"]').length) {
+                var $ctrlGen = $genBox.length ? $genBox.closest('.candidate-field-control, .bd-control') : $gen.closest('.candidate-field-control');
+                if ($ctrlGen.length) $ctrlGen.after(errorHtml);
+                else $gen.after(errorHtml);
+            }
+        } else if (key === 'skills') {
+            var $entry = $('.candidate-primary-skill-entry');
+            $entry.addClass('has-validation-error');
+            if (!$('[data-field-error="skills"]').length) {
+                var $combo = $('.candidate-primary-skill-combobox');
+                if ($combo.length) $combo.after(errorHtml);
+                else $entry.after(errorHtml);
+            }
+        } else if (key === 'total_exp') {
+            var $te = $('#total_exp_year');
+            $te.addClass('has-validation-error');
+            $te.closest('.candidate-experience-field').addClass('has-validation-error');
+            if (!$('[data-field-error="total_exp"]').length) {
+                $te.closest('.ei').after(errorHtml);
+            }
+        } else if (key === 'rel_exp') {
+            var $re = $('#rel_exp_year');
+            $re.addClass('has-validation-error');
+            $re.closest('.candidate-experience-field').addClass('has-validation-error');
+            if (!$('[data-field-error="rel_exp"]').length) {
+                $re.closest('.ei').after(errorHtml);
+            }
+        } else if (key === 'current_company' || key === 'current_designation') {
+            var $cd = $('#' + key);
+            $cd.addClass('has-validation-error');
+            $cd.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="' + key + '"]').length) {
+                $cd.closest('.candidate-field-control').after(errorHtml);
+            }
+        } else if (key === 'employmentType') {
+            var $et = $('#EmploymentType');
+            $et.addClass('has-validation-error');
+            $et.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="employmentType"]').length) {
+                $et.closest('.candidate-field-control').after(errorHtml);
+            }
+        } else if (key === 'ctc' || key === 'ectc') {
+            var $sal = $('#' + key);
+            $sal.addClass('has-validation-error');
+            $sal.closest('.candidate-salary-input-wrap').addClass('has-validation-error');
+            if (!$('[data-field-error="' + key + '"]').length) {
+                $sal.closest('.candidate-salary-input-wrap').after(errorHtml);
+            }
+        } else if (key === 'np_id') {
+            var $npGrid = $('.candidate-notice-options-grid');
+            $npGrid.addClass('has-validation-error');
+            if (!$('[data-field-error="np_id"]').length) {
+                $npGrid.after(errorHtml);
+            }
+        } else if (key === 'wm') {
+            var $wmGrid = $('.candidate-work-mode-grid');
+            $wmGrid.addClass('has-validation-error');
+            if (!$('[data-field-error="wm"]').length) {
+                $wmGrid.after(errorHtml);
+            }
+        } else if (key === 'job_skills') {
+            var $jsTable = $('.candidate-job-skills-scroll table');
+            $jsTable.addClass('has-validation-error');
+            if (!$('[data-field-error="job_skills"]').length) {
+                $jsTable.after(errorHtml);
+            }
+        } else if (key === 'screening_questions') {
+            $('.screening-question-input, [name^="answer["]').addClass('has-validation-error');
+            if (!$('[data-field-error="screening_questions"]').length) {
+                $('.screening-questions-card .candidate-card-body').append(errorHtml);
+            }
+        } else {
+            var cfg = candidateFieldConfigMap[key];
+            var selector = cfg && cfg.selector ? cfg.selector : ('#' + key);
+            var $target = $(selector);
+            $target.addClass('has-validation-error');
+            $target.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="' + key + '"]').length) {
+                $target.after(errorHtml);
+            }
+        }
+    });
+}
+window.applyCandidateFieldValidationErrors = applyCandidateFieldValidationErrors;
+
+// Live auto-clear error listeners
+$(document).on('input change focus', 'input, select, textarea', function () {
+    var fieldKey = this.name || this.id;
+    if (fieldKey) {
+        clearCandidateFieldValidationErrors(fieldKey);
+    }
+});
+
 function showCandidateRequiredFieldsModal(missingFields) {
     if (!missingFields || !missingFields.length) {
         missingFields = [
@@ -6987,7 +7332,7 @@ var KTAddCandidate = function () {
             if (!$btn.length) { $btn = $('#save-form, #update-form').first(); }
             var resetBtnHtml = isEdit
                 ? '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Application</span>'
-                : '<i class="fa-solid fa-paper-plane me-2" aria-hidden="true"></i><span>Apply Now</span>';
+                : '<i class="fa-solid fa-paper-plane me-2" aria-hidden="true" style="color: #ffffff !important;"></i><span>Submit Application</span>';
             var savingBtnHtml = isEdit
                 ? '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating Application...'
                 : '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting Application...';
@@ -7203,6 +7548,8 @@ var KTAddCandidate = function () {
             // 1. RAM Validation for Missing Required Fields FIRST!
             var missing = detectCandidateMissingFields(form, validator);
             if (missing && missing.length > 0) {
+                applyCandidateFieldValidationErrors(missing);
+                jumpToCandidateField(missing[0].key);
                 showCandidateRequiredFieldsModal(missing);
                 return false;
             }
@@ -7211,12 +7558,32 @@ var KTAddCandidate = function () {
             if (validator && typeof validator.validate === 'function') {
                 validator.validate().then(function (status) {
                     if (status === 'Valid') {
+                        clearCandidateFieldValidationErrors();
                         executeCandidateSubmit();
                     } else {
                         var missingNow = detectCandidateMissingFields(form, validator);
                         if (missingNow && missingNow.length > 0) {
+                            applyCandidateFieldValidationErrors(missingNow);
+                            jumpToCandidateField(missingNow[0].key);
                             showCandidateRequiredFieldsModal(missingNow);
                         } else {
+                            var formErrors = [];
+                            $(form).find('.is-invalid, .has-validation-error, input:invalid, select:invalid, textarea:invalid').each(function () {
+                                var k = this.name || this.id;
+                                if (k) {
+                                    var cfg = candidateFieldConfigMap[k] || {};
+                                    formErrors.push({
+                                        key: k,
+                                        label: cfg.label || k,
+                                        selector: cfg.selector || ('#' + k),
+                                        message: cfg.message || 'Please check this field.'
+                                    });
+                                }
+                            });
+                            if (formErrors.length > 0) {
+                                applyCandidateFieldValidationErrors(formErrors);
+                                jumpToCandidateField(formErrors[0].key);
+                            }
                             Swal.fire({
                                 text: "Please check the highlighted fields with formatting errors.",
                                 icon: "error",
@@ -7229,12 +7596,16 @@ var KTAddCandidate = function () {
                     console.warn('[Candidate Submit] FormValidation error, falling back:', valErr);
                     var fallbackMissing = detectCandidateMissingFields(form, null);
                     if (fallbackMissing && fallbackMissing.length > 0) {
+                        applyCandidateFieldValidationErrors(fallbackMissing);
+                        jumpToCandidateField(fallbackMissing[0].key);
                         showCandidateRequiredFieldsModal(fallbackMissing);
                     } else {
+                        clearCandidateFieldValidationErrors();
                         executeCandidateSubmit();
                     }
                 });
             } else {
+                clearCandidateFieldValidationErrors();
                 executeCandidateSubmit();
             }
         };
@@ -8233,472 +8604,6 @@ $(function initializeCandidateSkillRatings() {
 </script>
 
 
-<script>
-(function initializeCandidateAvailabilityPickers() {
-    'use strict';
-
-    var dateFields = [
-        { id: 'interviewDateOne', offset: 0 },
-        { id: 'interviewDateTwo', offset: 1 },
-        { id: 'interviewDateThree', offset: 2 }
-    ];
-    var timeFieldIds = ['interviewTimeOne', 'interviewTimeTwo', 'interviewTimeThree'];
-    var timeFormat = @json($defaultTimeFormat == 1 ? 'h:i K' : 'H:i');
-
-    function parseDisplayDate(value) {
-        var match = String(value || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
-        return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
-    }
-
-    function futureDate(offset) {
-        var date = new Date();
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() + offset);
-        return date;
-    }
-
-    function nativeDateValue(date) {
-        var month = String(date.getMonth() + 1).padStart(2, '0');
-        var day = String(date.getDate()).padStart(2, '0');
-        return date.getFullYear() + '-' + month + '-' + day;
-    }
-
-    function nativeTimeValue(value) {
-        var match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
-        if (!match) {
-            return '';
-        }
-
-        var hour = Number(match[1]);
-        var suffix = String(match[3] || '').toUpperCase();
-        if (suffix === 'PM' && hour < 12) {
-            hour += 12;
-        } else if (suffix === 'AM' && hour === 12) {
-            hour = 0;
-        }
-
-        return String(hour).padStart(2, '0') + ':' + match[2];
-    }
-
-    // ── GOD-LEVEL ENTERPRISE TIME CLOCK PICKER ──
-    function initJeroGodLevelTimePicker(fieldIds, formatStr) {
-        var is12Hour = (formatStr !== 'H:i');
-        var activeInput = null;
-        var currentHour = 10;
-        var currentMin = 0;
-        var currentAmPm = 'AM';
-
-        var popover = document.getElementById('jero-god-time-picker');
-        if (!popover) {
-            popover = document.createElement('div');
-            popover.id = 'jero-god-time-picker';
-            popover.className = 'jgtp-popover';
-            popover.innerHTML = [
-                '<div class="jgtp-header">',
-                '  <div class="jgtp-header-top">',
-                '    <span class="jgtp-slot-badge"><i class="fa-regular fa-clock me-1"></i> <span id="jgtp-slot-label">Slot 1 Interview Time</span></span>',
-                '    <button type="button" class="jgtp-close-btn" id="jgtp-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>',
-                '  </div>',
-                '  <div class="jgtp-display-row">',
-                '    <div class="jgtp-digits">',
-                '      <span class="jgtp-digit jgtp-hour-display" id="jgtp-hour-display">10</span>',
-                '      <span class="jgtp-colon">:</span>',
-                '      <span class="jgtp-digit jgtp-min-display" id="jgtp-min-display">00</span>',
-                '    </div>',
-                '    <div class="jgtp-ampm-switch" id="jgtp-ampm-switch">',
-                '      <button type="button" class="jgtp-ampm-btn is-active" data-ampm="AM">AM</button>',
-                '      <button type="button" class="jgtp-ampm-btn" data-ampm="PM">PM</button>',
-                '    </div>',
-                '  </div>',
-                '</div>',
-                '<div class="jgtp-body">',
-                '  <div class="jgtp-section">',
-                '    <div class="jgtp-section-label"><i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Interview Slots</div>',
-                '    <div class="jgtp-presets-grid" id="jgtp-presets-grid">',
-                '      <button type="button" class="jgtp-preset-chip" data-time="09:00 AM">09:00 AM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="10:00 AM">10:00 AM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="11:00 AM">11:00 AM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="11:30 AM">11:30 AM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="12:00 PM">12:00 PM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="02:00 PM">02:00 PM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="03:00 PM">03:00 PM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="04:00 PM">04:00 PM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="05:00 PM">05:00 PM</button>',
-                '      <button type="button" class="jgtp-preset-chip" data-time="06:00 PM">06:00 PM</button>',
-                '    </div>',
-                '  </div>',
-                '  <div class="jgtp-section">',
-                '    <div class="jgtp-section-label"><i class="fa-regular fa-clock me-1 text-primary"></i> Select Hour</div>',
-                '    <div class="jgtp-hours-grid" id="jgtp-hours-grid"></div>',
-                '  </div>',
-                '  <div class="jgtp-section">',
-                '    <div class="jgtp-section-label"><i class="fa-solid fa-stopwatch me-1 text-info"></i> Select Minute</div>',
-                '    <div class="jgtp-mins-grid" id="jgtp-mins-grid">',
-                '      <button type="button" class="jgtp-min-btn is-active" data-min="00">:00</button>',
-                '      <button type="button" class="jgtp-min-btn" data-min="15">:15</button>',
-                '      <button type="button" class="jgtp-min-btn" data-min="30">:30</button>',
-                '      <button type="button" class="jgtp-min-btn" data-min="45">:45</button>',
-                '    </div>',
-                '    <div class="jgtp-mins-subgrid" id="jgtp-mins-subgrid">',
-                '      <button type="button" class="jgtp-min-subchip" data-min="05">:05</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="10">:10</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="20">:20</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="25">:25</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="35">:35</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="40">:40</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="50">:50</button>',
-                '      <button type="button" class="jgtp-min-subchip" data-min="55">:55</button>',
-                '    </div>',
-                '  </div>',
-                '</div>',
-                '<div class="jgtp-footer">',
-                '  <button type="button" class="jgtp-btn jgtp-btn-clear" id="jgtp-btn-clear">Clear</button>',
-                '  <button type="button" class="jgtp-btn jgtp-btn-now" id="jgtp-btn-now">Current Time</button>',
-                '  <button type="button" class="jgtp-btn jgtp-btn-apply" id="jgtp-btn-apply"><i class="fa-solid fa-check me-1"></i> Done</button>',
-                '</div>'
-            ].join('');
-            document.body.appendChild(popover);
-
-            var hoursGrid = popover.querySelector('#jgtp-hours-grid');
-            for (var h = 1; h <= 12; h++) {
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'jgtp-hour-btn';
-                var hStr = (h < 10 ? '0' : '') + h;
-                btn.setAttribute('data-hour', h);
-                btn.textContent = hStr;
-                hoursGrid.appendChild(btn);
-            }
-        }
-
-        var hourDisplay = popover.querySelector('#jgtp-hour-display');
-        var minDisplay = popover.querySelector('#jgtp-min-display');
-        var ampmSwitch = popover.querySelector('#jgtp-ampm-switch');
-        var slotLabel = popover.querySelector('#jgtp-slot-label');
-
-        function formatFormattedTime(h, m, ap) {
-            var hStr = (h < 10 ? '0' : '') + h;
-            var mStr = (m < 10 ? '0' : '') + m;
-            if (is12Hour) {
-                return hStr + ':' + mStr + ' ' + ap;
-            } else {
-                var h24 = h;
-                if (ap === 'PM' && h24 < 12) h24 += 12;
-                if (ap === 'AM' && h24 === 12) h24 = 0;
-                return ((h24 < 10 ? '0' : '') + h24) + ':' + mStr;
-            }
-        }
-
-        function updateDisplay() {
-            var hStr = (currentHour < 10 ? '0' : '') + currentHour;
-            var mStr = (currentMin < 10 ? '0' : '') + currentMin;
-            hourDisplay.textContent = hStr;
-            minDisplay.textContent = mStr;
-
-            popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
-                btn.classList.toggle('is-active', btn.getAttribute('data-ampm') === currentAmPm);
-            });
-
-            popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
-                btn.classList.toggle('is-active', parseInt(btn.getAttribute('data-hour'), 10) === currentHour);
-            });
-
-            var mPadded = (currentMin < 10 ? '0' : '') + currentMin;
-            popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
-                btn.classList.toggle('is-active', btn.getAttribute('data-min') === mPadded);
-            });
-
-            var currentTimeStr = formatFormattedTime(currentHour, currentMin, currentAmPm);
-            popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
-                btn.classList.toggle('is-active', btn.getAttribute('data-time') === currentTimeStr);
-            });
-        }
-
-        function parseTimeValue(val) {
-            if (!val) return null;
-            var m = String(val).trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
-            if (!m) return null;
-            var h = parseInt(m[1], 10);
-            var min = parseInt(m[2], 10);
-            var ap = m[3] ? m[3].toUpperCase() : null;
-            if (!ap) {
-                if (h >= 12) {
-                    ap = 'PM';
-                    if (h > 12) h -= 12;
-                } else {
-                    ap = 'AM';
-                    if (h === 0) h = 12;
-                }
-            }
-            return { hour: h, min: min, ampm: ap };
-        }
-
-        function positionPicker(input) {
-            if (!input) return;
-            var vh = window.innerHeight;
-            var vw = window.innerWidth;
-            var rect = input.getBoundingClientRect();
-            var popoverWidth = 310;
-            var popoverHeight = popover.offsetHeight || 295;
-
-            var spaceBelow = vh - rect.bottom - 8;
-            var spaceAbove = rect.top - 8;
-
-            var top;
-
-            if (spaceBelow >= popoverHeight) {
-                // Comfortable room below input
-                top = rect.bottom + 4;
-            } else if (spaceAbove >= popoverHeight) {
-                // Comfortable room above input
-                top = rect.top - popoverHeight - 4;
-            } else {
-                // Viewport is constrained (e.g. 15.6" screen / small viewport)
-                // Pick whichever side has more room and clamp
-                if (spaceBelow >= spaceAbove) {
-                    top = rect.bottom + 4;
-                    var availBelow = Math.max(180, spaceBelow);
-                    popover.style.maxHeight = availBelow + 'px';
-                } else {
-                    var availAbove = Math.max(180, spaceAbove);
-                    top = Math.max(8, rect.top - availAbove - 4);
-                    popover.style.maxHeight = availAbove + 'px';
-                }
-            }
-
-            // Boundary clamping to ensure popover never spills offscreen
-            if (top < 8) {
-                top = 8;
-            }
-            if (top + popoverHeight > vh - 8) {
-                top = Math.max(8, vh - popoverHeight - 8);
-            }
-
-            // If still overflows viewport bottom, enforce maxHeight
-            if (top + (popover.offsetHeight || popoverHeight) > vh - 8) {
-                popover.style.maxHeight = Math.max(180, vh - top - 8) + 'px';
-            }
-
-            // Horizontal alignment with boundary protection
-            var left = rect.left;
-            if (left + popoverWidth > vw - 10) {
-                left = Math.max(10, vw - popoverWidth - 10);
-            }
-            if (left < 10) {
-                left = 10;
-            }
-
-            popover.style.top = Math.round(top) + 'px';
-            popover.style.left = Math.round(left) + 'px';
-            popover.style.width = popoverWidth + 'px';
-        }
-
-        function openPicker(input) {
-            activeInput = input;
-            var val = input.value;
-            var parsed = parseTimeValue(val);
-            if (parsed) {
-                currentHour = parsed.hour;
-                currentMin = parsed.min;
-                currentAmPm = parsed.ampm;
-            } else {
-                currentHour = 10;
-                currentMin = 0;
-                currentAmPm = 'AM';
-            }
-
-            var slotName = 'Slot 1';
-            if (input.id === 'interviewTimeTwo') slotName = 'Slot 2';
-            else if (input.id === 'interviewTimeThree') slotName = 'Slot 3';
-            slotLabel.textContent = slotName + ' Interview Time';
-
-            updateDisplay();
-
-            // Clear previous max-height constraint before recalculation
-            popover.style.maxHeight = '';
-
-            popover.classList.add('is-open');
-            input.classList.add('is-picker-active');
-
-            positionPicker(input);
-        }
-
-        function closePicker() {
-            if (!popover.classList.contains('is-open')) return;
-            popover.classList.remove('is-open');
-            popover.style.maxHeight = '';
-            if (activeInput) {
-                activeInput.classList.remove('is-picker-active');
-                activeInput = null;
-            }
-        }
-
-        function applyTime() {
-            if (!activeInput) return;
-            var formatted = formatFormattedTime(currentHour, currentMin, currentAmPm);
-            activeInput.value = formatted;
-            activeInput.dispatchEvent(new Event('input', { bubbles: true }));
-            activeInput.dispatchEvent(new Event('change', { bubbles: true }));
-            closePicker();
-        }
-
-        popover.querySelector('#jgtp-close').onclick = closePicker;
-        popover.querySelector('#jgtp-btn-apply').onclick = applyTime;
-        popover.querySelector('#jgtp-btn-clear').onclick = function () {
-            if (activeInput) {
-                activeInput.value = '';
-                activeInput.dispatchEvent(new Event('input', { bubbles: true }));
-                activeInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-            closePicker();
-        };
-        popover.querySelector('#jgtp-btn-now').onclick = function () {
-            var now = new Date();
-            var h = now.getHours();
-            var m = Math.round(now.getMinutes() / 15) * 15;
-            if (m === 60) {
-                m = 0;
-                h += 1;
-            }
-            var ap = h >= 12 ? 'PM' : 'AM';
-            h = h % 12;
-            if (h === 0) h = 12;
-            currentHour = h;
-            currentMin = m;
-            currentAmPm = ap;
-            updateDisplay();
-        };
-
-        popover.querySelectorAll('.jgtp-ampm-btn').forEach(function (btn) {
-            btn.onclick = function () {
-                currentAmPm = btn.getAttribute('data-ampm');
-                updateDisplay();
-            };
-        });
-
-        popover.querySelectorAll('.jgtp-hour-btn').forEach(function (btn) {
-            btn.onclick = function () {
-                currentHour = parseInt(btn.getAttribute('data-hour'), 10);
-                updateDisplay();
-            };
-        });
-
-        popover.querySelectorAll('.jgtp-min-btn, .jgtp-min-subchip').forEach(function (btn) {
-            btn.onclick = function () {
-                currentMin = parseInt(btn.getAttribute('data-min'), 10);
-                updateDisplay();
-            };
-        });
-
-        popover.querySelectorAll('.jgtp-preset-chip').forEach(function (btn) {
-            btn.onclick = function () {
-                var tVal = btn.getAttribute('data-time');
-                var parsed = parseTimeValue(tVal);
-                if (parsed) {
-                    currentHour = parsed.hour;
-                    currentMin = parsed.min;
-                    currentAmPm = parsed.ampm;
-                    updateDisplay();
-                }
-                if (activeInput) {
-                    activeInput.value = formatFormattedTime(currentHour, currentMin, currentAmPm);
-                    activeInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    activeInput.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                closePicker();
-            };
-        });
-
-        fieldIds.forEach(function (id) {
-            var input = document.getElementById(id);
-            if (!input) return;
-            input.readOnly = true;
-            input.style.cursor = 'pointer';
-            input.onclick = function (e) {
-                e.stopPropagation();
-                if (activeInput === input && popover.classList.contains('is-open')) {
-                    closePicker();
-                } else {
-                    openPicker(input);
-                }
-            };
-            input.onfocus = function () {
-                if (activeInput !== input) {
-                    openPicker(input);
-                }
-            };
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!popover.classList.contains('is-open')) return;
-            if (!popover.contains(e.target) && (!activeInput || !activeInput.contains(e.target))) {
-                closePicker();
-            }
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && popover.classList.contains('is-open')) {
-                closePicker();
-            }
-        });
-
-        window.addEventListener('scroll', function () {
-            if (activeInput && popover.classList.contains('is-open')) {
-                positionPicker(activeInput);
-            }
-        }, true);
-
-        window.addEventListener('resize', function () {
-            if (activeInput && popover.classList.contains('is-open')) {
-                positionPicker(activeInput);
-            }
-        });
-    }
-
-    // Initialize Flatpickr for Date fields ONLY (Date calendar)
-    if (typeof window.flatpickr === 'function') {
-        dateFields.forEach(function (config) {
-            var field = document.getElementById(config.id);
-            if (!field || field._flatpickr) {
-                return;
-            }
-
-            var savedDate = parseDisplayDate(field.value);
-            window.flatpickr(field, {
-                dateFormat: 'd-m-Y',
-                altInput: true,
-                altFormat: 'd-M-Y',
-                allowInput: true,
-                clickOpens: true,
-                disableMobile: true,
-                defaultDate: savedDate || futureDate(config.offset),
-                minDate: savedDate ? null : 'today',
-                disable: savedDate ? [function (date) {
-                    var today = futureDate(0);
-                    return date < today && date.getTime() !== savedDate.getTime();
-                }] : []
-            });
-        });
-    } else {
-        dateFields.forEach(function (config) {
-            var field = document.getElementById(config.id);
-            if (!field) {
-                return;
-            }
-
-            var savedDate = parseDisplayDate(field.value);
-            field.type = 'date';
-            field.value = nativeDateValue(savedDate || futureDate(config.offset));
-            if (!savedDate) {
-                field.min = nativeDateValue(futureDate(0));
-            }
-        });
-    }
-
-    // Initialize God-Level Time Clock Picker on Availability time inputs
-    initJeroGodLevelTimePicker(timeFieldIds, timeFormat);
-})();
-</script>
 <script>
 /**
  * Highest Qualification System: 100% In-Browser RAM Custom Combobox & Curation Engine
