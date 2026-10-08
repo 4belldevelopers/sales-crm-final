@@ -1447,6 +1447,16 @@
 
 /* Disambiguation Ribbon for NEEDS_CONFIRMATION State */
 .jero-disambiguation-bar {
+    display: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.jero-disambiguation-bar.is-visible,
+.jero-disambiguation-bar:not(:empty) {
     display: flex !important;
     flex-wrap: wrap !important;
     align-items: center !important;
@@ -1454,9 +1464,16 @@
     margin-top: 6px !important;
     padding: 6px 10px !important;
     background: #f8fafc !important;
-    border: 1px dashed #cbd5e1 !important;
+    border: none !important;
     border-radius: 6px !important;
     font-family: 'Poppins', sans-serif !important;
+}
+
+.jero-disambiguation-bar:empty {
+    display: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 .jero-disambiguation-badge {
@@ -2073,7 +2090,15 @@
     @include('sections.service_company.toolbar',['id' => @$jobDetail->id ?? 0])
     <div class="d-flex align-items-center py-1 candidate-header-actions">
       @php
+          $currentAppMasterStatus = (int)(@$application->master_status_id ?? 8);
           if($page_event == 'EDIT'){
+            echo '<div class="d-flex align-items-center me-3 candidate-stage-picker-wrap" style="background:#f1f5f9; border-radius:6px; padding:3px 10px;">';
+            echo '<label for="master_status_id" class="me-2 mb-0 fw-bold fs-7 text-gray-700"><i class="fa-solid fa-flag me-1 text-primary"></i>Stage:</label>';
+            echo '<select name="master_status_id" id="master_status_id" class="form-select form-select-sm form-select-solid py-1 px-3 fw-bold" style="width:auto; min-width:130px; font-size:12px; height:32px;">';
+            echo '<option value="8" ' . ($currentAppMasterStatus == 8 ? 'selected' : '') . '>In Review</option>';
+            echo '<option value="1" ' . ($currentAppMasterStatus != 8 ? 'selected' : '') . '>Sourcing</option>';
+            echo '</select>';
+            echo '</div>';
             echo '<button type="button" name="update" id="update-form" value="update" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i><span>Update Candidate</span></button>';
           }else{
             echo '<button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Submit Candidate</span></button>';
@@ -2102,6 +2127,7 @@
             <input type="hidden" name="currentPage" value="{{ @$currentPage }}" id="currentPage" />
             <input type="hidden" name="currentSlug" value="{{ @$currentSlug }}" id="currentSlug" />
             <input type="hidden" name="resumeCheck" value="{{ $resumeCheck }}" id="resumeCheck" />
+            <input type="hidden" name="current_master_status_id" id="current_master_status_id" value="{{ @$application->master_status_id ?? 8 }}" />
             <input type="hidden" name="AddJobWiseCondidateRankRow" id="AddJobWiseCondidateRankRow" value="{{ (@$AddJobWiseCondidateRankRow) ? $AddJobWiseCondidateRankRow : '' }}">
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
@@ -2375,6 +2401,116 @@
                         :required="true"
                         placeholder="Enter primary number" />
                   </div>
+                  <div class="fg fv-row">
+                    <label>Nationality</label>
+                    <div class="candidate-field-control">
+                      <i class="fa-solid fa-flag" aria-hidden="true"></i>
+                      @php
+                        // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
+                        $countryToDemonym = [
+                            'in' => 'Indian',
+                            'us' => 'American',
+                            'gb' => 'British',
+                            'uk' => 'British',
+                            'ca' => 'Canadian',
+                            'au' => 'Australian',
+                            'ae' => 'Emirati',
+                            'sg' => 'Singaporean',
+                            'de' => 'German',
+                            'fr' => 'French',
+                            'nl' => 'Dutch',
+                            'ie' => 'Irish',
+                            'sa' => 'Saudi',
+                        ];
+                        $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
+                        $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
+
+                        // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
+                        $topPopularNationalities = [
+                            'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
+                            'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
+                            'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
+                            'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
+                            'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
+                            'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
+                            'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
+                            'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
+                            'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
+                            'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
+                            'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
+                            'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
+                            'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
+                        ];
+
+                        // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
+                        $allNationalities = [
+                            'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
+                            'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
+                            'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
+                            'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
+                            'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
+                            'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
+                            'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
+                            'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
+                            'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
+                            'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
+                            'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
+                            'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
+                            'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
+                            'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
+                            'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
+                            'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
+                            'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
+                            'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
+                            'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
+                            'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
+                            'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
+                            'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
+                            'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
+                            'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
+                            'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
+                            'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
+                            'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
+                            'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
+                            'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
+                            'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
+                            'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
+                            'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
+                            'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
+                            'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
+                            'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
+                            'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
+                            'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
+                            'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
+                        ];
+                      @endphp
+                      <select name="nationality" id="nationality">
+                        <option value="">Select nationality</option>
+                        <optgroup label="⭐ Top 10 Popular Nationalities">
+                          @foreach($topPopularNationalities as $natKey => $natItem)
+                            <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
+                          @endforeach
+                        </optgroup>
+                        <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
+                          @foreach($allNationalities as $demonym => $countrySynonyms)
+                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
+                          @endforeach
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Gender</label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
+                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
+                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
+                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
+                    </select></div>
+                  </div>
+                  <div class="fg fv-row">
+                    <label>Date of Birth <span class="text-muted fw-normal" style="font-size:11px;font-weight:400;">(Optional)</span></label>
+                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
+                  </div>
                   <div class="fg fv-row bd-field">
                     <label>Current Location <span class="rq">*</span></label>
                     <div class="candidate-field-control bd-control bd-control--has-combobox">
@@ -2413,8 +2549,8 @@
                         </div>
                       </div>
                     </div>
-                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State --}}
-                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none;"></div>
+                    {{-- Disambiguation Ribbon for NEEDS_CONFIRMATION State (Border Strictly Removed) --}}
+                    <div id="jero-location-disambiguation" class="jero-disambiguation-bar" style="display:none !important; border:none !important;"></div>
                   </div>
                   <div class="fg fv-row bd-field">
                     <label>Highest Qualification <span class="rq">*</span></label>
@@ -2550,116 +2686,6 @@
                         @endif
                       </select>
                     </div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Nationality</label>
-                    <div class="candidate-field-control">
-                      <i class="fa-solid fa-flag" aria-hidden="true"></i>
-                      @php
-                        // Tenant HQ Country Mapping to Demonym (Sensible Defaulting)
-                        $countryToDemonym = [
-                            'in' => 'Indian',
-                            'us' => 'American',
-                            'gb' => 'British',
-                            'uk' => 'British',
-                            'ca' => 'Canadian',
-                            'au' => 'Australian',
-                            'ae' => 'Emirati',
-                            'sg' => 'Singaporean',
-                            'de' => 'German',
-                            'fr' => 'French',
-                            'nl' => 'Dutch',
-                            'ie' => 'Irish',
-                            'sa' => 'Saudi',
-                        ];
-                        $tenantDefaultNat = $countryToDemonym[strtolower($country_code ?? 'in')] ?? 'Indian';
-                        $selectedNationality = @$application->nationality ?: ((@$page_event == 'EDIT' && !empty(@$application->id)) ? '' : $tenantDefaultNat);
-
-                        // ⭐ Top 10 Popular Nationalities / Talent Hubs with Country Synonyms for Instant Search
-                        $topPopularNationalities = [
-                            'Indian'      => ['label' => '🇮🇳 Indian (India)', 'synonyms' => 'india, bharat, hindustan, in, ind'],
-                            'American'    => ['label' => '🇺🇸 American (United States)', 'synonyms' => 'united states, usa, america, us, u.s., u.s.a.'],
-                            'British'     => ['label' => '🇬🇧 British (United Kingdom)', 'synonyms' => 'united kingdom, uk, u.k., britain, england, scotland, wales, gb'],
-                            'Canadian'    => ['label' => '🇨🇦 Canadian (Canada)', 'synonyms' => 'canada, ca, can'],
-                            'Australian'  => ['label' => '🇦🇺 Australian (Australia)', 'synonyms' => 'australia, au, aus, oz'],
-                            'Emirati'     => ['label' => '🇦🇪 Emirati (United Arab Emirates)', 'synonyms' => 'united arab emirates, uae, u.a.e., dubai, abu dhabi, sharjah, ae'],
-                            'Singaporean' => ['label' => '🇸🇬 Singaporean (Singapore)', 'synonyms' => 'singapore, sg, sgp'],
-                            'German'      => ['label' => '🇩🇪 German (Germany)', 'synonyms' => 'germany, deutschland, de, deu'],
-                            'French'      => ['label' => '🇫🇷 French (France)', 'synonyms' => 'france, fr, fra'],
-                            'Dutch'       => ['label' => '🇳🇱 Dutch (Netherlands)', 'synonyms' => 'netherlands, holland, nl, nld, amsterdam'],
-                            'Irish'       => ['label' => '🇮🇪 Irish (Ireland)', 'synonyms' => 'ireland, eire, ie, irl, dublin'],
-                            'Saudi'       => ['label' => '🇸🇦 Saudi (Saudi Arabia)', 'synonyms' => 'saudi arabia, ksa, sa, sau, riyadh'],
-                            'Other'       => ['label' => '🌐 Other / Non-Disclosed', 'synonyms' => 'other, international, non disclosed, unknown'],
-                        ];
-
-                        // Complete 195+ UN Sovereign Demonyms with Country Name Synonyms
-                        $allNationalities = [
-                            'Afghan' => 'Afghanistan', 'Albanian' => 'Albania', 'Algerian' => 'Algeria', 'Andorran' => 'Andorra', 'Angolan' => 'Angola', 
-                            'Antiguan' => 'Antigua and Barbuda', 'Argentine' => 'Argentina', 'Armenian' => 'Armenia', 'Australian' => 'Australia', 'Austrian' => 'Austria',
-                            'Azerbaijani' => 'Azerbaijan', 'Bahamian' => 'Bahamas', 'Bahraini' => 'Bahrain', 'Bangladeshi' => 'Bangladesh', 'Barbadian' => 'Barbados', 
-                            'Belarusian' => 'Belarus', 'Belgian' => 'Belgium', 'Belizean' => 'Belize', 'Beninese' => 'Benin', 'Bhutanese' => 'Bhutan',
-                            'Bolivian' => 'Bolivia', 'Bosnian' => 'Bosnia and Herzegovina', 'Botswanan' => 'Botswana', 'Brazilian' => 'Brazil', 'British' => 'United Kingdom, UK, Britain', 
-                            'Bruneian' => 'Brunei', 'Bulgarian' => 'Bulgaria', 'Burkinabe' => 'Burkina Faso', 'Burmese' => 'Myanmar, Burma', 'Burundian' => 'Burundi',
-                            'Cambodian' => 'Cambodia', 'Cameroonian' => 'Cameroon', 'Canadian' => 'Canada', 'Cape Verdean' => 'Cape Verde', 'Central African' => 'Central African Republic', 
-                            'Chadian' => 'Chad', 'Chilean' => 'Chile', 'Chinese' => 'China, PRC', 'Colombian' => 'Colombia', 'Comorian' => 'Comoros',
-                            'Congolese' => 'Congo', 'Costa Rican' => 'Costa Rica', 'Croatian' => 'Croatia', 'Cuban' => 'Cuba', 'Cypriot' => 'Cyprus', 
-                            'Czech' => 'Czech Republic, Czechia', 'Danish' => 'Denmark', 'Djiboutian' => 'Djibouti', 'Dominican' => 'Dominican Republic', 'Dutch' => 'Netherlands, Holland',
-                            'East Timorese' => 'East Timor', 'Ecuadorean' => 'Ecuador', 'Egyptian' => 'Egypt', 'Emirati' => 'United Arab Emirates, UAE, Dubai', 'Equatorial Guinean' => 'Equatorial Guinea', 
-                            'Eritrean' => 'Eritrea', 'Estonian' => 'Estonia', 'Ethiopian' => 'Ethiopia', 'Fijian' => 'Fiji', 'Filipino' => 'Philippines',
-                            'Finnish' => 'Finland', 'French' => 'France', 'Gabonese' => 'Gabon', 'Gambian' => 'Gambia', 'Georgian' => 'Georgia', 
-                            'German' => 'Germany, Deutschland', 'Ghanaian' => 'Ghana', 'Greek' => 'Greece', 'Grenadian' => 'Grenada', 'Guatemalan' => 'Guatemala',
-                            'Guinean' => 'Guinea', 'Guyanese' => 'Guyana', 'Haitian' => 'Haiti', 'Honduran' => 'Honduras', 'Hungarian' => 'Hungary', 
-                            'Icelander' => 'Iceland', 'Indian' => 'India, Bharat', 'Indonesian' => 'Indonesia', 'Iranian' => 'Iran', 'Iraqi' => 'Iraq',
-                            'Irish' => 'Ireland, Eire', 'Israeli' => 'Israel', 'Italian' => 'Italy', 'Ivorian' => 'Ivory Coast, Cote dIvoire', 'Jamaican' => 'Jamaica', 
-                            'Japanese' => 'Japan', 'Jordanian' => 'Jordan', 'Kazakh' => 'Kazakhstan', 'Kenyan' => 'Kenya', 'Kuwaiti' => 'Kuwait',
-                            'Kyrgyz' => 'Kyrgyzstan', 'Laotian' => 'Laos', 'Latvian' => 'Latvia', 'Lebanese' => 'Lebanon', 'Liberian' => 'Liberia', 
-                            'Libyan' => 'Libya', 'Liechtenstein citizen' => 'Liechtenstein', 'Lithuanian' => 'Lithuania', 'Luxembourgish' => 'Luxembourg', 'Macedonian' => 'North Macedonia',
-                            'Malagasy' => 'Madagascar', 'Malawian' => 'Malawi', 'Malaysian' => 'Malaysia', 'Maldivian' => 'Maldives', 'Malian' => 'Mali', 
-                            'Maltese' => 'Malta', 'Marshallese' => 'Marshall Islands', 'Mauritanian' => 'Mauritania', 'Mauritian' => 'Mauritius', 'Mexican' => 'Mexico',
-                            'Micronesian' => 'Micronesia', 'Moldovan' => 'Moldova', 'Monegasque' => 'Monaco', 'Mongolian' => 'Mongolia', 'Montenegrin' => 'Montenegro', 
-                            'Moroccan' => 'Morocco', 'Mozambican' => 'Mozambique', 'Namibian' => 'Namibia', 'Nauruan' => 'Nauru', 'Nepalese' => 'Nepal',
-                            'New Zealander' => 'New Zealand, NZ', 'Nicaraguan' => 'Nicaragua', 'Nigerian' => 'Nigeria', 'Nigerien' => 'Niger', 'North Korean' => 'North Korea', 
-                            'Norwegian' => 'Norway', 'Omani' => 'Oman', 'Pakistani' => 'Pakistan', 'Palauan' => 'Palau', 'Palestinian' => 'Palestine',
-                            'Panamanian' => 'Panama', 'Papua New Guinean' => 'Papua New Guinea', 'Paraguayan' => 'Paraguay', 'Peruvian' => 'Peru', 'Polish' => 'Poland', 
-                            'Portuguese' => 'Portugal', 'Qatari' => 'Qatar', 'Romanian' => 'Romania', 'Russian' => 'Russia', 'Rwandan' => 'Rwanda',
-                            'Saint Lucian' => 'Saint Lucia', 'Salvadoran' => 'El Salvador', 'Samoan' => 'Samoa', 'San Marinese' => 'San Marino', 'Sao Tomean' => 'Sao Tome and Principe', 
-                            'Saudi' => 'Saudi Arabia, KSA', 'Senegalese' => 'Senegal', 'Serbian' => 'Serbia', 'Seychellois' => 'Seychelles', 'Sierra Leonean' => 'Sierra Leone',
-                            'Singaporean' => 'Singapore', 'Slovak' => 'Slovakia', 'Slovenian' => 'Slovenia', 'Solomon Islander' => 'Solomon Islands', 'Somali' => 'Somalia', 
-                            'South African' => 'South Africa, RSA', 'South Korean' => 'South Korea, Korea', 'South Sudanese' => 'South Sudan', 'Spanish' => 'Spain', 'Sri Lankan' => 'Sri Lanka',
-                            'Sudanese' => 'Sudan', 'Surinamese' => 'Suriname', 'Swazi' => 'Eswatini, Swaziland', 'Swedish' => 'Sweden', 'Swiss' => 'Switzerland', 
-                            'Syrian' => 'Syria', 'Taiwanese' => 'Taiwan', 'Tajik' => 'Tajikistan', 'Tanzanian' => 'Tanzania', 'Thai' => 'Thailand',
-                            'Togolese' => 'Togo', 'Tongan' => 'Tonga', 'Trinidadian' => 'Trinidad and Tobago', 'Tunisian' => 'Tunisia', 'Turkish' => 'Turkey, Turkiye', 
-                            'Turkmen' => 'Turkmenistan', 'Tuvaluan' => 'Tuvalu', 'Ugandan' => 'Uganda', 'Ukrainian' => 'Ukraine', 'Uruguayan' => 'Uruguay',
-                            'Uzbek' => 'Uzbekistan', 'Vanuatu' => 'Vanuatu', 'Vatican citizen' => 'Vatican City', 'Venezuelan' => 'Venezuela', 'Vietnamese' => 'Vietnam', 
-                            'Yemeni' => 'Yemen', 'Zambian' => 'Zambia', 'Zimbabwean' => 'Zimbabwe'
-                        ];
-                      @endphp
-                      <select name="nationality" id="nationality">
-                        <option value="">Select nationality</option>
-                        <optgroup label="⭐ Top 10 Popular Nationalities">
-                          @foreach($topPopularNationalities as $natKey => $natItem)
-                            <option value="{{ $natKey }}" data-synonyms="{{ $natItem['synonyms'] }}" {{ ((string)$selectedNationality === (string)$natKey) ? 'selected="selected"' : '' }}>{{ $natItem['label'] }}</option>
-                          @endforeach
-                        </optgroup>
-                        <optgroup label="🌐 All Sovereign Demonyms (A–Z)">
-                          @foreach($allNationalities as $demonym => $countrySynonyms)
-                            <option value="{{ $demonym }}" data-synonyms="{{ $countrySynonyms }}" {{ ((string)$selectedNationality === (string)$demonym && !isset($topPopularNationalities[$demonym])) ? 'selected="selected"' : '' }}>{{ $demonym }}</option>
-                          @endforeach
-                        </optgroup>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Gender</label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
-                      <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
-                      <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
-                      <option value="Female" {{ (@$application->gender==='Female') ? 'selected' : '' }}>Female</option>
-                    </select></div>
-                  </div>
-                  <div class="fg fv-row">
-                    <label>Date of Birth</label>
-                    <div class="candidate-field-control"><i class="fa-regular fa-calendar" aria-hidden="true"></i><input type="date" name="dob" id="dob" value="{{ @$application->dob }}" onclick="this.showPicker()" placeholder="Select date" /></div>
                   </div>
                 </div>
 
@@ -5461,7 +5487,7 @@ async function isInternetAvailable() {
                     {
                         validators:
                         {
-                            notEmpty:{ message: "Current designation is required"}
+                            // notEmpty:{ message: "Current designation is required"}
                             
                         }
                     },
@@ -5499,8 +5525,14 @@ async function isInternetAvailable() {
                     {
                         validators:
                         {
-                            notEmpty:{ message: 'Primary email is required'},
-                            emailAddress:{message: 'The value is not a valid email address'},
+                            callback: {
+                                message: 'The value is not a valid email address',
+                                callback: function(input) {
+                                    var val = (input.value || '').trim();
+                                    if (!val) return true; // Optional in In Review stage
+                                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                                }
+                            },
                             stringLength:{max: 191, message: "Email must not exceed 191 characters"}
                         }
                     },
@@ -5630,6 +5662,23 @@ async function isInternetAvailable() {
                     }
                 });
                 return; // ⛔ STOP EXECUTION
+            }
+
+            // 1. RAM Validation for Missing Required Fields FIRST (Stage-aware)
+            if (typeof detectCandidateMissingFields === 'function') {
+                var missing = detectCandidateMissingFields(form, validator);
+                if (missing && missing.length > 0) {
+                    if (typeof showCandidateRequiredFieldsModal === 'function') {
+                        showCandidateRequiredFieldsModal(missing);
+                    } else {
+                        Swal.fire({
+                            text: "Please fill all required fields before updating.",
+                            icon: "warning",
+                            confirmButtonText: "Ok, got it!"
+                        });
+                    }
+                    return false;
+                }
             }
 
             validator.validate().then(function (status) {
@@ -5788,7 +5837,13 @@ async function isInternetAvailable() {
                 } 
 				else 
 				{
-                   
+                    if (typeof detectCandidateMissingFields === 'function') {
+                        var missingNow = detectCandidateMissingFields(form, validator);
+                        if (missingNow && missingNow.length > 0) {
+                            showCandidateRequiredFieldsModal(missingNow);
+                            return;
+                        }
+                    }
                     Swal.fire({
 									text				: "Sorry, looks like there are some errors detected, please try again.",
 									icon				: "error",
@@ -7328,7 +7383,12 @@ var candidateFieldConfigMap = {
     'resume': {
         label: 'Upload Resume',
         selector: '#uploadBox',
-        message: 'Please upload a resume file (PDF or Word).'
+        message: 'Please upload a resume file (PDF or Word, max 2MB).'
+    },
+    'careersummary': {
+        label: 'Career Summary',
+        selector: '#careersummary',
+        message: 'Career summary is required.'
     },
     'full_name': {
         label: 'Full Name',
@@ -7365,6 +7425,21 @@ var candidateFieldConfigMap = {
         selector: '#gender',
         message: 'Gender is required.'
     },
+    'skills': {
+        label: 'Primary Skills',
+        selector: '#kt_tagify_2',
+        message: 'Primary skills are required (minimum 1 skill).'
+    },
+    'total_exp': {
+        label: 'Total Experience',
+        selector: '#total_exp_year',
+        message: 'Total experience is required.'
+    },
+    'rel_exp': {
+        label: 'Relevant Experience',
+        selector: '#rel_exp_year',
+        message: 'Relevant experience is required.'
+    },
     'current_company': {
         label: 'Current Company',
         selector: '#current_company',
@@ -7380,20 +7455,40 @@ var candidateFieldConfigMap = {
         selector: '#EmploymentType',
         message: 'Employment type is required.'
     },
-    'total_exp': {
-        label: 'Total Experience',
-        selector: '#total_exp_year',
-        message: 'Total experience is required.'
+    'ctc': {
+        label: 'Current CTC (Salary Details)',
+        selector: '#ctc',
+        message: 'Current salary details are required.'
     },
-    'rel_exp': {
-        label: 'Relevant Experience',
-        selector: '#rel_exp_year',
-        message: 'Relevant experience is required.'
+    'ectc': {
+        label: 'Expected CTC (Salary Details)',
+        selector: '#ectc',
+        message: 'Expected salary details are required.'
     },
-    'skills': {
-        label: 'Primary Skills',
-        selector: '#kt_tagify_2',
-        message: 'Primary skills are required.'
+    'np_id': {
+        label: 'Notice Period & Joining Details',
+        selector: '#np_id',
+        message: 'Notice period is required.'
+    },
+    'wm': {
+        label: 'Preferred Work Mode',
+        selector: 'input[name="wm"]',
+        message: 'Preferred work mode is required.'
+    },
+    'job_skills': {
+        label: 'Job Skills Details',
+        selector: '.candidate-job-skills-scroll table',
+        message: 'Job skills experience and ratings are required.'
+    },
+    'screening_questions': {
+        label: 'Screening Questions',
+        selector: '.candidate-card-icon--questions',
+        message: 'Please answer all required screening questions.'
+    },
+    'recruiter_note': {
+        label: 'Recruiter Comments',
+        selector: '#recruiter_note',
+        message: 'Recruiter comments are required.'
     }
 };
 
@@ -7414,7 +7509,143 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         }
     }
 
-    // 1. Resume check
+    // Determine target stage:
+    // If user changed stage selector on page (#master_status_id), use that value.
+    // Otherwise check hidden #current_master_status_id or window.__candidateMasterStatusId.
+    // On Add Candidate, default is 8 (In Review).
+    var targetStageEl = document.getElementById('master_status_id') || document.getElementById('current_master_status_id');
+    var activeStageId = targetStageEl ? parseInt(targetStageEl.value, 10) : (window.__candidateMasterStatusId || 8);
+
+    // =========================================================================
+    // MANDATORY FOR IN REVIEW STAGE (master_status_id == 8):
+    // Only Full Name * and Primary Contact Number * are mandatory.
+    // All other fields remain optional and do NOT block submission.
+    // =========================================================================
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn || fn.length < 2) addMissing('full_name');
+
+    var ph = ($('#phone').val() || '').trim();
+    if (!ph || ph.length < 6) addMissing('phone');
+
+    // If candidate is in "In Review" stage (8), stop here — all other fields are optional!
+    if (activeStageId === 8) {
+        return missing;
+    }
+
+    // =========================================================================
+    // 100% VALIDATION WHEN CHANGING STAGE FROM In Review -> Sourcing (or Stage 1+):
+    // =========================================================================
+
+    // 1. Primary Email *
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
+
+    // 2. Current Location *
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    var canonLoc = ($('#location_canonical_label').val() || '').trim();
+    var cityId = ($('#location_city_id').val() || '').trim();
+    if (!loc && !canonLoc && !cityId) {
+        addMissing('kt_tagify_work_location');
+        $('#jero-cs-location').addClass('has-validation-error');
+        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
+    }
+
+    // 3. Highest Qualification *
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification');
+
+    // 4. Nationality
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality');
+
+    // 5. Gender
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender');
+
+    // 6. Primary Skills — minimum 1 skill required
+    var sk = ($('#kt_tagify_2').val() || '').trim();
+    if (!sk) {
+        addMissing('skills');
+    } else {
+        try {
+            var parsedSkills = JSON.parse(sk);
+            if (Array.isArray(parsedSkills) && parsedSkills.length === 0) {
+                addMissing('skills');
+            }
+        } catch (e) {
+            if (sk.length < 1) addMissing('skills');
+        }
+    }
+
+    // 7. Experience Details
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) addMissing('total_exp');
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
+
+    // Check if Fresher (Total Experience is 0)
+    var isFresher = (te === '0' || te === 0);
+
+    // Fields NOT mandatory for Freshers:
+    if (!isFresher) {
+        // Professional Profile: Current Designation, Current Company, Employment Type
+        var cd = ($('#current_designation').val() || '').trim();
+        if (!cd) addMissing('current_designation');
+
+        var cc = ($('#current_company').val() || '').trim();
+        if (!cc) addMissing('current_company');
+
+        var et = ($('#EmploymentType').val() || '').trim();
+        if (!et) addMissing('employmentType');
+
+        // Salary Details: Current CTC, Expected CTC
+        var ctc = ($('#ctc').val() || '').trim();
+        if (!ctc) addMissing('ctc');
+
+        var ectc = ($('#ectc').val() || '').trim();
+        if (!ectc) addMissing('ectc');
+
+        // Notice Period & Joining Details
+        var np = ($('#np_id').val() || '').trim();
+        if (!np) addMissing('np_id');
+    }
+
+    // 8. Preferred Work Mode
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm');
+
+    // 9. Job Skills Details (if job has skills)
+    var $jobSkillYears = $('select[name^="YearskillId"]');
+    if ($jobSkillYears.length > 0) {
+        var missingJobSkills = false;
+        $jobSkillYears.each(function() {
+            var val = $(this).val();
+            if (!val || val === '0') {
+                missingJobSkills = true;
+            }
+        });
+        if (missingJobSkills) addMissing('job_skills');
+    }
+
+    // 10. Screening Questions (if job has questions)
+    var $questions = $('.screening-question-input, [name^="answer["]');
+    if ($questions.length > 0) {
+        var missingQuestions = false;
+        $questions.each(function() {
+            var qVal = $(this).val();
+            if (!qVal || !String(qVal).trim()) {
+                missingQuestions = true;
+            }
+        });
+        if (missingQuestions) addMissing('screening_questions');
+    }
+
+    // 11. Recruiter Comments
+    var rn = ($('#recruiter_note').val() || '').trim();
+    if (!rn) addMissing('recruiter_note');
+
+    // 12. Upload Resume
     var hasResume = false;
     if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
         ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
@@ -7430,67 +7661,11 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
             hasResume = true;
         }
     }
-    if (!hasResume) {
-        addMissing('resume');
-    }
+    if (!hasResume) addMissing('resume');
 
-    // 2. Full Name
-    var fn = ($('#full_name').val() || '').trim();
-    if (!fn || fn.length < 2) addMissing('full_name');
-
-    // 3. Email
-    var em = ($('#email').val() || '').trim();
-    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
-
-    // 4. Phone
-    var ph = ($('#phone').val() || '').trim();
-    if (!ph || ph.length < 6) addMissing('phone');
-
-    // 5. Current Location
-    var loc = ($('#kt_tagify_work_location').val() || '').trim();
-    var canonLoc = ($('#location_canonical_label').val() || '').trim();
-    var cityId = ($('#location_city_id').val() || '').trim();
-    if (!loc && !canonLoc && !cityId) {
-        addMissing('kt_tagify_work_location');
-        $('#jero-cs-location').addClass('has-validation-error');
-        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
-    }
-
-    // 6. Current Designation
-    var cd = ($('#current_designation').val() || '').trim();
-    if (!cd) addMissing('current_designation');
-
-    // 7. Current Company
-    var cc = ($('#current_company').val() || '').trim();
-    if (!cc) addMissing('current_company');
-
-    // 8. Employment Type
-    var et = ($('#EmploymentType').val() || '').trim();
-    if (!et) addMissing('employmentType');
-
-    // 9. Total Exp
-    var te = $('#total_exp_year').val();
-    if (te === '' || te === null || te === undefined) addMissing('total_exp');
-
-    // 10. Rel Exp
-    var re = $('#rel_exp_year').val();
-    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
-
-    // 11. Highest Qualification
-    var qual = ($('#qualification').val() || '').trim();
-    if (!qual) addMissing('qualification');
-
-    // 12. Primary Skills
-    var sk = ($('#kt_tagify_2').val() || '').trim();
-    if (!sk) addMissing('skills');
-
-    // 13. Nationality
-    var nat = ($('#nationality').val() || '').trim();
-    if (!nat) addMissing('nationality');
-
-    // 14. Gender
-    var gen = ($('#gender').val() || '').trim();
-    if (!gen) addMissing('gender');
+    // 13. Career Summary *
+    var cs = ($('#careersummary').val() || '').trim();
+    if (!cs) addMissing('careersummary');
 
     return missing;
 }
@@ -7662,16 +7837,6 @@ var KTAddCandidate = function () {
                             stringLength: { min: 2, max: 191, message: "Full name must be between 2 and 191 characters" }
                         }
                     },
-                    'current_designation': {
-                        validators: {
-                            notEmpty: { message: "Current designation is required" }
-                        }
-                    },
-                    'current_company': {
-                        validators: {
-                            notEmpty: { message: "Current company is required" }
-                        }
-                    },
                     'phone': {
                         validators: {
                             notEmpty: { message: "Primary number is required" },
@@ -7687,8 +7852,14 @@ var KTAddCandidate = function () {
                     },
                     'email': {
                         validators: {
-                            notEmpty: { message: "Primary Email is required" },
-                            emailAddress: { message: "The value is not a valid email address" },
+                            callback: {
+                                message: "The value is not a valid email address",
+                                callback: function(input) {
+                                    var val = (input.value || '').trim();
+                                    if (!val) return true; // Optional in In Review stage
+                                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                                }
+                            },
                             stringLength: { max: 191, message: "Email must not exceed 191 characters" }
                         }
                     },

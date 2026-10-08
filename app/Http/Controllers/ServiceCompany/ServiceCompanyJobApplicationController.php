@@ -3089,8 +3089,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'min:2',
                 'max:191',
             ],
-            'email' => [
+            'phone' => [
                 'required',
+                'string',
+                'min:6',
+                'max:20',
+            ],
+            'email' => [
+                'nullable',
                 'email:rfc,dns',
                 'disposable_email',
                 'max:191',
@@ -3105,7 +3111,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'full_name.required' => 'Full name is required',
             'full_name.min' => 'Full name must be at least 2 characters',
             'full_name.max' => 'Full name must not exceed 191 characters',
-            'email.required' => 'Email is required',
+            'phone.required' => 'Primary Contact Number is required',
+            'phone.min' => 'Primary Contact Number must be at least 6 digits',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
             'secondrary_email.email' => 'Please enter a valid secondary email',
@@ -3200,7 +3207,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $jobApplication->job_id = $request->job_id;
         // $jobApplication->status_id 			=	$applicationStatus->id;
         $jobApplication->status_id = 8;
-        $jobApplication->email = strtolower(trim($request->email));
+        $jobApplication->email = ! empty($request->email) ? strtolower(trim($request->email)) : null;
         $jobApplication->phone = $request->phone;
         // $jobApplication->cover_letter 		=	$request->cover_letter;
         $jobApplication->column_priority = 0;
@@ -7340,18 +7347,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ]);
         }
 
-        $validator = Validator::make($request->all(), array_merge([
+        $targetStage = (int) ($request->input('master_status_id') ?: ($request->input('current_master_status_id') ?: 8));
+        $isSourcingOrAbove = ($targetStage !== 8);
+
+        $rules = [
             'full_name' => [
                 'required',
                 'string',
                 'min:2',
                 'max:191',
             ],
-            'email' => [
+            'phone' => [
                 'required',
-                'email:rfc,dns',
-                'disposable_email',
-                'max:191',
+                'string',
+                'min:6',
+                'max:20',
             ],
             'secondrary_email' => [
                 'nullable',
@@ -7359,20 +7369,90 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'max:55',
                 'different:email',
             ],
-        ], CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge([
+        ];
+
+        $messages = [
             'full_name.required' => 'Full name is required',
             'full_name.min' => 'Full name must be at least 2 characters',
             'full_name.max' => 'Full name must not exceed 191 characters',
-            'email.required' => 'Email is required',
-            'email.email' => 'Please enter a valid email',
-            'email.disposable_email' => 'Temporary emails are not allowed',
+            'phone.required' => 'Primary Contact Number is required',
+            'phone.min' => 'Primary Contact Number must be at least 6 digits',
             'secondrary_email.email' => 'Please enter a valid secondary email',
             'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
             'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
-        ], CandidateNoticePeriodState::validationMessages()));
+        ];
+
+        if ($isSourcingOrAbove) {
+            $rules['email'] = ['required', 'email:rfc,dns', 'disposable_email', 'max:191'];
+            $messages['email.required'] = 'Primary Email is required';
+            $messages['email.email'] = 'Please enter a valid email';
+            $messages['email.disposable_email'] = 'Temporary emails are not allowed';
+
+            $rules['qualification'] = ['required'];
+            $messages['qualification.required'] = 'Highest Qualification is required';
+
+            $rules['nationality'] = ['required'];
+            $messages['nationality.required'] = 'Nationality is required';
+
+            $rules['gender'] = ['required'];
+            $messages['gender.required'] = 'Gender is required';
+
+            $rules['wm'] = ['required'];
+            $messages['wm.required'] = 'Preferred Work Mode is required';
+
+            $rules['recruiter_note'] = ['required'];
+            $messages['recruiter_note.required'] = 'Recruiter Comments are required';
+
+            $rules['careersummary'] = ['required'];
+            $messages['careersummary.required'] = 'Career Summary is required';
+
+            $isFresher = ($request->total_exp_year === '0' || $request->total_exp_year === 0 || $request->total_exp_year === '0.0');
+            if (! $isFresher) {
+                $rules['current_designation'] = ['required'];
+                $messages['current_designation.required'] = 'Current Designation is required';
+
+                $rules['current_company'] = ['required'];
+                $messages['current_company.required'] = 'Current Company is required';
+
+                $rules['employmentType'] = ['required'];
+                $messages['employmentType.required'] = 'Employment Type is required';
+
+                $rules['ctc'] = ['required'];
+                $messages['ctc.required'] = 'Current CTC is required';
+
+                $rules['ectc'] = ['required'];
+                $messages['ectc.required'] = 'Expected CTC is required';
+
+                $rules['np_id'] = ['required'];
+                $messages['np_id.required'] = 'Notice Period is required';
+            }
+        } else {
+            $rules['email'] = ['nullable', 'email:rfc,dns', 'disposable_email', 'max:191'];
+            $messages['email.email'] = 'Please enter a valid email';
+            $messages['email.disposable_email'] = 'Temporary emails are not allowed';
+        }
+
+        $validator = Validator::make($request->all(), array_merge($rules, CandidateNoticePeriodState::validationRules($request->input('serving_notice_period'))), array_merge($messages, CandidateNoticePeriodState::validationMessages()));
 
         if ($validator->fails()) {
             return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => $validator->errors()->first()]);
+        }
+
+        if ($isSourcingOrAbove) {
+            $hasLocation = $request->filled('location_city_id') || $request->filled('location_canonical_label') || $request->filled('kt_tagify_work_location');
+            if (! $hasLocation) {
+                return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Current Location is required']);
+            }
+
+            $skills = json_decode($request->skills, true);
+            if (empty($skills) || ! is_array($skills) || count($skills) === 0) {
+                return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Primary Skills are required (minimum 1 skill)']);
+            }
+
+            $hasResume = $request->hasFile('resume') || $request->filled('uploaded_file_path') || $request->filled('resume_original_name') || $request->input('resume_intent') === 'KEEP' || ! empty($jobApplication->resume) || ! empty($jobApplication->current_resume_id);
+            if (! $hasResume) {
+                return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Upload Resume is required']);
+            }
         }
 
         $company_id = auth()->user()->company_id;
@@ -7422,7 +7502,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         if ($request->has('dob')) {
             $jobApplication->dob = $request->dob;
         }
-        $jobApplication->email = strtolower(trim($request->email));
+        $jobApplication->email = ! empty($request->email) ? strtolower(trim($request->email)) : null;
         $jobApplication->secondrary_email = $request->filled('secondrary_email') ? strtolower(trim($request->secondrary_email)) : null;
 
         if (! empty($request->qualification)) {
@@ -7644,6 +7724,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         DB::beginTransaction();
         try {
+
+            if ($request->has('master_status_id') && ! empty($request->input('master_status_id'))) {
+                $targetStage = (int) $request->input('master_status_id');
+                $jobApplication->status_id = $targetStage;
+                $jobApplication->master_status_id = $targetStage;
+                DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $jobApplication->id)
+                    ->update([
+                        'status_id' => $targetStage,
+                        'master_status_id' => $targetStage,
+                        'updated_at' => now(),
+                    ]);
+            }
 
             $jobApplication->save();
 
@@ -10186,6 +10279,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
+<<<<<<< HEAD
      * Intent: Authoritative Candidate Stage Transition Mutation Engine with
      * Transactional Outbox, Idempotency Claiming, and OCC Aggregate Versioning
      * for 10K concurrent users (Zero avoidable infrastructure load).
@@ -10193,6 +10287,93 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
      * Tenancy: Strictly isolated by auth()->user()->company_id.
      * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
      */
+=======
+     * Stage-Aware 100% Validation when moving candidate from In Review (8) -> Sourcing (1).
+     *
+     * @param object $data Candidate payload from Elastic or DB
+     * @return array List of missing required field labels
+     */
+    private function checkCandidateSourcingMissingFields(object $data): array
+    {
+        $missing = [];
+
+        if (empty(trim((string) ($data->full_name ?? '')))) {
+            $missing[] = 'Full Name';
+        }
+        if (empty(trim((string) ($data->email ?? '')))) {
+            $missing[] = 'Primary Email';
+        }
+        if (empty(trim((string) ($data->phone ?? '')))) {
+            $missing[] = 'Primary Contact Number';
+        }
+        if (empty($data->city_id) && empty($data->city) && empty($data->location_id)) {
+            $missing[] = 'Current Location';
+        }
+        if (empty($data->qualification) && empty($data->qualification_name)) {
+            $missing[] = 'Highest Qualification';
+        }
+        if (empty(trim((string) ($data->nationality ?? '')))) {
+            $missing[] = 'Nationality';
+        }
+        if (empty(trim((string) ($data->gender ?? '')))) {
+            $missing[] = 'Gender';
+        }
+
+        $skills = $data->skills ?? null;
+        if (empty($skills)) {
+            $missing[] = 'Primary Skills (minimum 1 skill)';
+        } elseif (is_string($skills)) {
+            $decoded = json_decode($skills, true);
+            if (is_array($decoded) && count($decoded) === 0) {
+                $missing[] = 'Primary Skills (minimum 1 skill)';
+            }
+        }
+
+        if (! isset($data->total_exp) || $data->total_exp === '' || $data->total_exp === null) {
+            $missing[] = 'Total Experience';
+        }
+        if (! isset($data->rel_exp) || $data->rel_exp === '' || $data->rel_exp === null) {
+            $missing[] = 'Relevant Experience';
+        }
+
+        $te = (string) ($data->total_exp ?? '');
+        $isFresher = ($te === '0' || $te === '0.0' || $te === '0.00');
+
+        if (! $isFresher) {
+            if (empty(trim((string) ($data->current_designation ?? '')))) {
+                $missing[] = 'Current Designation';
+            }
+            if (empty(trim((string) ($data->current_company ?? '')))) {
+                $missing[] = 'Current Company';
+            }
+            if (empty($data->ctc)) {
+                $missing[] = 'Salary Details (Current CTC)';
+            }
+            if (empty($data->ectc)) {
+                $missing[] = 'Salary Details (Expected CTC)';
+            }
+            if (empty($data->np_id)) {
+                $missing[] = 'Notice Period & Joining Details';
+            }
+        }
+
+        if (empty(trim((string) ($data->wm ?? '')))) {
+            $missing[] = 'Preferred Work Mode';
+        }
+        if (empty(trim((string) ($data->recruiter_note ?? '')))) {
+            $missing[] = 'Recruiter Comments';
+        }
+        if (empty($data->resume) && empty($data->resumeAwsPath)) {
+            $missing[] = 'Upload Resume';
+        }
+        if (empty(trim((string) ($data->careersummary ?? '')))) {
+            $missing[] = 'Career Summary';
+        }
+
+        return $missing;
+    }
+
+>>>>>>> 5c3f65ff2b288c83293e5b51035b47f1a4983b44
     public function stage_submit(Request $request)
     {
 
@@ -10598,6 +10779,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                             'status' => 'candidatevalidation',
                             'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName),
                         ]);
+                    }
+
+                    // 100% Validation for In Review -> Sourcing transition
+                    if ($currentStageId == 8 && $newStageId == 1) {
+                        $missingFields = $this->checkCandidateSourcingMissingFields($data);
+                        if (! empty($missingFields)) {
+                            return Reply::dataOnly([
+                                'status' => 'candidatevalidation',
+                                'message' => 'Cannot move candidate from <b>In Review</b> to <b>Sourcing</b> until all required fields are complete.<br><br><b>Missing required fields:</b><br>• '.implode('<br>• ', $missingFields).'<br><br>Please edit and complete the candidate profile first.',
+                            ]);
+                        }
                     }
 
                     // dd($newOrder,$currentOrder);
@@ -11841,8 +12033,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'min:2',
                 'max:191',
             ],
-            'email' => [
+            'phone' => [
                 'required',
+                'string',
+                'min:6',
+                'max:20',
+            ],
+            'email' => [
+                'nullable',
                 'email:rfc,dns',
                 'disposable_email',
                 'max:191',
@@ -11857,7 +12055,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             'full_name.required' => 'Full name is required',
             'full_name.min' => 'Full name must be at least 2 characters',
             'full_name.max' => 'Full name must not exceed 191 characters',
-            'email.required' => 'Email is required',
+            'phone.required' => 'Primary Contact Number is required',
+            'phone.min' => 'Primary Contact Number must be at least 6 digits',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
             'secondrary_email.email' => 'Please enter a valid secondary email',
@@ -11963,9 +12162,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $job_application_arr['job_id'] = $request->job_id;
         }
         $job_application_arr['status_id'] = 8;
-        if (! empty($request->email)) {
-            $job_application_arr['email'] = strtolower(trim($request->email));
-        }
+        $job_application_arr['email'] = ! empty($request->email) ? strtolower(trim($request->email)) : null;
         if (! empty($request->phone)) {
             $job_application_arr['phone'] = $request->phone;
         }
@@ -13835,6 +14032,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     // back through InReview first.
                     $isSpecialAgencyEdge = ($currentStageId == 8 && in_array($newStageId, [1, 9], true))
                         || ($currentStageId == 9 && $newStageId == 8);
+
+                    // 100% Validation for In Review -> Sourcing transition
+                    if ($currentStageId == 8 && $newStageId == 1) {
+                        $missingFields = $this->checkCandidateSourcingMissingFields($data);
+                        if (! empty($missingFields)) {
+                            return Reply::dataOnly([
+                                'status' => 'candidatevalidation',
+                                'message' => 'Cannot move candidate from <b>In Review</b> to <b>Sourcing</b> until all required fields are complete.<br><br><b>Missing required fields:</b><br>• '.implode('<br>• ', $missingFields).'<br><br>Please edit and complete the candidate profile first.',
+                            ]);
+                        }
+                    }
 
                     if ($currentStageId == 9 && $newStageId == 1) {
                         return Reply::dataOnly([
