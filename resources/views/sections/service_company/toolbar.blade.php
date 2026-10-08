@@ -173,31 +173,31 @@
                 @php
                     $headerStageId = (int)($stageId ?? 8);
                     $headerStageMetaMap = [
-                        8 => ['name' => 'In Review',   'key' => 'inreview',   'color' => '#8f6700', 'bg' => '#fff6d3', 'border' => '#f0dda0', 'dot' => '#d97706'],
-                        1 => ['name' => 'Sourcing',    'key' => 'sourcing',   'color' => '#475569', 'bg' => '#f1f5f9', 'border' => '#cbd5e1', 'dot' => '#64748b'],
-                        2 => ['name' => 'Screening',   'key' => 'screening',  'color' => '#7e22ce', 'bg' => '#faf5ff', 'border' => '#e9d5ff', 'dot' => '#a855f7'],
-                        3 => ['name' => 'Evaluation',  'key' => 'evaluation', 'color' => '#1d4ed8', 'bg' => '#eff6ff', 'border' => '#bfdbfe', 'dot' => '#3b82f6'],
-                        4 => ['name' => 'Negotiation', 'key' => 'negotiation', 'color' => '#be185d', 'bg' => '#fdf2f8', 'border' => '#fbcfe8', 'dot' => '#ec4899'],
-                        5 => ['name' => 'Offered',     'key' => 'offer',       'color' => '#c2410c', 'bg' => '#fffbeb', 'border' => '#fed7aa', 'dot' => '#f97316'],
-                        6 => ['name' => 'Joined',      'key' => 'joined',     'color' => '#15803d', 'bg' => '#f0fdf4', 'border' => '#bbf7d0', 'dot' => '#22c55e'],
-                        7 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#b91c1c', 'bg' => '#fef2f2', 'border' => '#fecaca', 'dot' => '#ef4444'],
-                        9 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#b91c1c', 'bg' => '#fef2f2', 'border' => '#fecaca', 'dot' => '#ef4444'],
+                        8 => ['name' => 'In Review',   'key' => 'inreview',   'color' => '#92400e', 'bg' => '#fef3c7', 'border' => '#fde68a', 'dot' => '#d97706'],
+                        1 => ['name' => 'Sourcing',    'key' => 'sourcing',   'color' => '#334155', 'bg' => '#f1f5f9', 'border' => '#cbd5e1', 'dot' => '#64748b'],
+                        2 => ['name' => 'Screening',   'key' => 'screening',  'color' => '#6b21a8', 'bg' => '#f3e8ff', 'border' => '#e9d5ff', 'dot' => '#a855f7'],
+                        3 => ['name' => 'Evaluation',  'key' => 'evaluation', 'color' => '#1e40af', 'bg' => '#dbeafe', 'border' => '#bfdbfe', 'dot' => '#3b82f6'],
+                        4 => ['name' => 'Negotiation', 'key' => 'negotiation', 'color' => '#9d174d', 'bg' => '#fce7f3', 'border' => '#fbcfe8', 'dot' => '#ec4899'],
+                        5 => ['name' => 'Offered',     'key' => 'offer',       'color' => '#9a3412', 'bg' => '#ffedd5', 'border' => '#fed7aa', 'dot' => '#f97316'],
+                        6 => ['name' => 'Joined',      'key' => 'joined',     'color' => '#166534', 'bg' => '#dcfce7', 'border' => '#bbf7d0', 'dot' => '#22c55e'],
+                        7 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#991b1b', 'bg' => '#fee2e2', 'border' => '#fecaca', 'dot' => '#ef4444'],
+                        9 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#991b1b', 'bg' => '#fee2e2', 'border' => '#fecaca', 'dot' => '#ef4444'],
                     ];
                     $currentStageInfo = $headerStageMetaMap[$headerStageId] ?? $headerStageMetaMap[8];
                 @endphp
-                <span class="h-20px border-gray-200 border-start mx-4 toolbar-stage-divider"></span>
-                <div class="candidate-header-stage-col" data-stage-id="{{ $headerStageId }}">
-                    <span class="candidate-header-stage-icon" style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};">
-                        <i class="fa-solid fa-flag" aria-hidden="true" style="color: {{ $currentStageInfo['color'] }};"></i>
-                    </span>
-                    <div class="candidate-header-stage-content d-flex flex-column">
-                        <span class="candidate-header-stage-lbl">STAGE</span>
-                        <div class="d-flex align-items-center">
+                <span class="candidate-header-stage-sep" style="display: inline-block !important; width: 1px !important; height: 36px !important; min-width: 1px !important; background: #e8dfc5 !important; margin: 0 14px 0 10px !important; flex-shrink: 0 !important;"></span>
+                <div class="candidate-header-stage-col" data-stage-id="{{ $headerStageId }}" style="display: inline-flex !important; flex-direction: row !important; align-items: center !important; gap: 9px !important; min-height: 42px !important; padding: 0 !important; margin: 0 10px 0 0 !important; flex-shrink: 0 !important;">
+                    <div class="candidate-header-stage-icon" style="width: 30px !important; height: 30px !important; min-width: 30px !important; max-width: 30px !important; border-radius: 7px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; background: {{ $currentStageInfo['bg'] }} !important; border: 1px solid {{ $currentStageInfo['border'] }} !important; box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important; flex-shrink: 0 !important;">
+                        <i class="fa-solid fa-flag" aria-hidden="true" style="color: {{ $currentStageInfo['color'] }} !important; font-size: 11px !important; line-height: 1 !important; display: inline-block !important;"></i>
+                    </div>
+                    <div class="candidate-header-stage-content" style="display: inline-flex !important; flex-direction: column !important; justify-content: center !important; gap: 2px !important; padding: 0 !important; margin: 0 !important;">
+                        <span class="candidate-header-stage-lbl" style="display: block !important; color: #7882a0 !important; font-size: 9px !important; font-weight: 700 !important; line-height: 1.2 !important; text-transform: uppercase !important; letter-spacing: 0.6px !important; margin: 0 !important; padding: 0 !important; user-select: none !important;">STAGE</span>
+                        <div class="d-flex align-items-center" style="margin: 0 !important; padding: 0 !important; line-height: 1 !important;">
                             <span class="candidate-header-stage-pill candidate-header-stage-pill--{{ $currentStageInfo['key'] }}"
-                                  style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};"
+                                  style="display: inline-flex !important; align-items: center !important; gap: 5px !important; padding: 2.5px 9px !important; border-radius: 12px !important; font-size: 10.5px !important; font-weight: 700 !important; line-height: 1.2 !important; border: 1px solid {{ $currentStageInfo['border'] }} !important; background: {{ $currentStageInfo['bg'] }} !important; color: {{ $currentStageInfo['color'] }} !important; white-space: nowrap !important; user-select: none !important; box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;"
                                   title="Current Pipeline Stage: {{ $currentStageInfo['name'] }}">
-                                <span class="candidate-header-stage-dot" style="background: {{ $currentStageInfo['dot'] }};"></span>
-                                <span class="candidate-header-stage-name">{{ $currentStageInfo['name'] }}</span>
+                                <span class="candidate-header-stage-dot" style="width: 6px !important; height: 6px !important; border-radius: 50% !important; background: {{ $currentStageInfo['dot'] }} !important; display: inline-block !important; flex-shrink: 0 !important;"></span>
+                                <span class="candidate-header-stage-name" style="display: inline-block !important; white-space: nowrap !important; color: {{ $currentStageInfo['color'] }} !important;">{{ $currentStageInfo['name'] }}</span>
                             </span>
                         </div>
                     </div>
