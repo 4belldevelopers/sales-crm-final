@@ -11915,7 +11915,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // Step 2: coins are consumed only on new-candidate creation, not on edit.
         $isEdit = ! empty($appId) && (int) $appId !== 0;
         if (! $isEdit) {
-            $packageStatus = GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+            $packageStatus = Cache::remember("company:coins_val:{$companyId}:{$eventId}:{$coinsRequ}", 60, function () use ($companyId, $eventId, $coinsRequ) {
+                return GeneralMethod::coinsValidationsAllcompany($companyId, $eventId, $coinsRequ);
+            });
             if ($packageStatus->status) {
                 session()->flash('packageStatus', $packageStatus->message);
                 $url = url('service_company/apptracker/clientapp/'.@$jobId.'/all');
