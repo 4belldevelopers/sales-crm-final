@@ -887,9 +887,13 @@
                         $("#stage_sub_stage_close").click();
                     });
                 } else if (r.status === 'candidatevalidation') {
-                    Swal.fire("Warning", r.message, "warning").then(function () {
-                        $("#stage_sub_stage_close").click();
-                    });
+                    if (typeof window.showStageRequiredFieldsModal === 'function') {
+                        window.showStageRequiredFieldsModal(r);
+                    } else {
+                        Swal.fire("Warning", r.message, "warning").then(function () {
+                            $("#stage_sub_stage_close").click();
+                        });
+                    }
                 }
             },
             error: function () {

@@ -7453,6 +7453,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             if (! $hasResume) {
                 return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Upload Resume is required']);
             }
+
+            $totalExp = (string) ($request->total_exp_year ?? '');
+            $isFresher = ($totalExp === '0');
+            if (! $isFresher) {
+                $noticePeriod = CandidateNoticePeriodState::fromRequest($request);
+                if (empty($noticePeriod['np_id'])) {
+                    return Reply::dataOnly(['status' => 'mailcheck', 'msgType' => 'warning', 'message' => 'Notice Period & Joining Details is required']);
+                }
+            }
         }
 
         $company_id = auth()->user()->company_id;
@@ -10281,7 +10290,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     /**
      * Stage-Aware 100% Validation when moving candidate from In Review (8) -> Sourcing (1).
      *
-     * @param object $data Candidate payload from Elastic or DB
+     * @param  object  $data  Candidate payload from Elastic or DB
      * @return array List of missing required field labels
      */
     private function checkCandidateSourcingMissingFields(object $data): array
@@ -10783,8 +10792,39 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if ($currentStageId == 8 && $newStageId == 1) {
                         $missingFields = $this->checkCandidateSourcingMissingFields($data);
                         if (! empty($missingFields)) {
+                            $authUserId = auth()->id();
+                            $hasGlobalEdit = Gate::allows('edit_job_applications') || Gate::allows('add_job_applications');
+                            $canEditCandidate = $hasGlobalEdit && DB::table('add_job_wise_condidates as ajwc')
+                                ->leftJoin('job_assign as ja', function ($join) {
+                                    $join->on('ja.job_id', '=', 'ajwc.job_id')
+                                        ->on('ja.company_id', '=', 'ajwc.company_id');
+                                })
+                                ->where('ajwc.id', $addJobWiseCondidate_id)
+                                ->where(function ($query) use ($authUserId) {
+                                    $query->where('ja.spok_user_id', $authUserId)
+                                        ->orWhere('ajwc.submitted_by', $authUserId);
+                                })
+                                ->exists();
+
+                            if (! $canEditCandidate && $hasGlobalEdit) {
+                                $candidateCompany = DB::table('add_job_wise_condidates')
+                                    ->where('id', $addJobWiseCondidate_id)
+                                    ->value('company_id');
+                                if ((int) $candidateCompany === (int) auth()->user()->company_id) {
+                                    $canEditCandidate = true;
+                                }
+                            }
+
+                            $editUrl = route('service_company.job-applications.edit', [GeneralMethod::value_encrypt($addJobWiseCondidate_id)]);
+
                             return Reply::dataOnly([
                                 'status' => 'candidatevalidation',
+                                'modal' => 'required_fields',
+                                'candidate_id' => $addJobWiseCondidate_id,
+                                'missing_fields' => $missingFields,
+                                'can_edit' => $canEditCandidate,
+                                'edit_url' => $canEditCandidate ? $editUrl : null,
+                                'permission_message' => "You do not have permission to edit this candidate's profile. Only the assigned Captain or the recruiter who submitted this candidate can edit it.",
                                 'message' => 'Cannot move candidate from <b>In Review</b> to <b>Sourcing</b> until all required fields are complete.<br><br><b>Missing required fields:</b><br>• '.implode('<br>• ', $missingFields).'<br><br>Please edit and complete the candidate profile first.',
                             ]);
                         }
@@ -14100,8 +14140,43 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if ($currentStageId == 8 && $newStageId == 1) {
                         $missingFields = $this->checkCandidateSourcingMissingFields($data);
                         if (! empty($missingFields)) {
+                            $authUserId = auth()->id();
+                            $hasGlobalEdit = Gate::allows('add_job_applications') || Gate::allows('edit_job_applications');
+                            $jobId = $data->jobId ?? ($addJobWiseCondidate->job_id ?? null);
+                            $canEditCandidate = false;
+                            if ($hasGlobalEdit && $jobId) {
+                                $userCompanyId = auth()->user()->company_id;
+                                $canEditCandidate = DB::table('recommendation_relation')
+                                    ->where('job_id', $jobId)
+                                    ->where('to_company_id', $userCompanyId)
+                                    ->exists();
+                            }
+                            if (! $canEditCandidate) {
+                                $canEditCandidate = $hasGlobalEdit && DB::table('add_job_wise_condidates as ajwc')
+                                    ->leftJoin('job_assign as ja', function ($join) {
+                                        $join->on('ja.job_id', '=', 'ajwc.job_id')
+                                            ->on('ja.company_id', '=', 'ajwc.company_id');
+                                    })
+                                    ->where('ajwc.id', $addJobWiseCondidate_id)
+                                    ->where(function ($query) use ($authUserId) {
+                                        $query->where('ja.spok_user_id', $authUserId)
+                                            ->orWhere('ajwc.submitted_by', $authUserId);
+                                    })
+                                    ->exists();
+                            }
+
+                            $editUrl = $jobId
+                                ? route('service_company.job-applications.clientcreate', [GeneralMethod::value_encrypt($jobId), GeneralMethod::value_encrypt($addJobWiseCondidate_id)])
+                                : route('service_company.job-applications.edit', [GeneralMethod::value_encrypt($addJobWiseCondidate_id)]);
+
                             return Reply::dataOnly([
                                 'status' => 'candidatevalidation',
+                                'modal' => 'required_fields',
+                                'candidate_id' => $addJobWiseCondidate_id,
+                                'missing_fields' => $missingFields,
+                                'can_edit' => $canEditCandidate,
+                                'edit_url' => $canEditCandidate ? $editUrl : null,
+                                'permission_message' => "You do not have permission to edit this candidate's profile. Only the assigned Captain or the recruiter who submitted this candidate can edit it.",
                                 'message' => 'Cannot move candidate from <b>In Review</b> to <b>Sourcing</b> until all required fields are complete.<br><br><b>Missing required fields:</b><br>• '.implode('<br>• ', $missingFields).'<br><br>Please edit and complete the candidate profile first.',
                             ]);
                         }

@@ -32,11 +32,16 @@ final class CandidateNoticePeriodState
     /** @return array{serving_notice_period_mode:int,np_id:?string,last_working_date:?string} */
     public static function normalize(mixed $mode, mixed $date, mixed $days): array
     {
-        $normalizedMode = (int) $mode;
-        if (! in_array($normalizedMode, [self::SELECT_PERIOD, self::SERVING_NOTICE, self::IMMEDIATE_JOINER], true)) {
-            $normalizedMode = self::SELECT_PERIOD;
+        $modeValue = is_scalar($mode) ? trim((string) $mode) : '';
+        if ($modeValue === '' || ! in_array((int) $modeValue, [self::SELECT_PERIOD, self::SERVING_NOTICE, self::IMMEDIATE_JOINER], true)) {
+            return [
+                'serving_notice_period_mode' => null,
+                'np_id' => null,
+                'last_working_date' => null,
+            ];
         }
 
+        $normalizedMode = (int) $modeValue;
         $normalizedDate = self::nullableString($date);
 
         if ($normalizedMode === self::SERVING_NOTICE) {

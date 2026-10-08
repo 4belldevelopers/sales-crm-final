@@ -149,7 +149,8 @@
                     <span class="text-dark fw-bolder fs-6">{{ @$job->min_exp }}-{{ @$job->max_exp }} Yrs</span> 
                     <span class="text-muted fw-bold d-block fs-7">{!! $salaryRangeCurrency !!} {{ $min_salary_abbr }}-{{ $max_salary_abbr }}/{{ $salaryModeWord }}</span> 
                 </div>
-               <span class="h-20px border-gray-200 border-start mx-4"></span>
+                @if(empty($hideLocationDate))
+                <span class="h-20px border-gray-200 border-start mx-4"></span>
                  <div class="d-flex flex-column me-5"> 
                     <span class="text-dark fw-bolder fs-6" data-toggle="tooltip" title="{{$firstJobcities['tooltip']}}">
 						{{ ucwords(substr($locations[0], 0, 20)) }} 
@@ -166,6 +167,37 @@
                     </span> <span class="text-muted fw-bold d-block fs-7">{{ (@$job->total_positions) ? @$job->total_positions.' Opening' : '' }} </span> 
                 <!--end::Interview Date & No. of Openings-->
                 </div>
+                @endif
+
+                @if(!empty($showStage))
+                @php
+                    $headerStageId = (int)($stageId ?? 8);
+                    $headerStageMetaMap = [
+                        8 => ['name' => 'In Review',   'key' => 'inreview',   'color' => '#8f6700', 'bg' => '#fff6d3', 'border' => '#f0dda0', 'dot' => '#d97706'],
+                        1 => ['name' => 'Sourcing',    'key' => 'sourcing',   'color' => '#475569', 'bg' => '#f1f5f9', 'border' => '#cbd5e1', 'dot' => '#64748b'],
+                        2 => ['name' => 'Screening',   'key' => 'screening',  'color' => '#7e22ce', 'bg' => '#faf5ff', 'border' => '#e9d5ff', 'dot' => '#a855f7'],
+                        3 => ['name' => 'Evaluation',  'key' => 'evaluation', 'color' => '#1d4ed8', 'bg' => '#eff6ff', 'border' => '#bfdbfe', 'dot' => '#3b82f6'],
+                        4 => ['name' => 'Negotiation', 'key' => 'negotiation', 'color' => '#be185d', 'bg' => '#fdf2f8', 'border' => '#fbcfe8', 'dot' => '#ec4899'],
+                        5 => ['name' => 'Offered',     'key' => 'offer',       'color' => '#c2410c', 'bg' => '#fffbeb', 'border' => '#fed7aa', 'dot' => '#f97316'],
+                        6 => ['name' => 'Joined',      'key' => 'joined',     'color' => '#15803d', 'bg' => '#f0fdf4', 'border' => '#bbf7d0', 'dot' => '#22c55e'],
+                        7 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#b91c1c', 'bg' => '#fef2f2', 'border' => '#fecaca', 'dot' => '#ef4444'],
+                        9 => ['name' => 'Rejected',    'key' => 'rejected',   'color' => '#b91c1c', 'bg' => '#fef2f2', 'border' => '#fecaca', 'dot' => '#ef4444'],
+                    ];
+                    $currentStageInfo = $headerStageMetaMap[$headerStageId] ?? $headerStageMetaMap[8];
+                @endphp
+                <span class="h-20px border-gray-200 border-start mx-4 toolbar-stage-divider"></span>
+                <div class="d-flex flex-column candidate-header-stage-col" data-stage-id="{{ $headerStageId }}">
+                    <span class="candidate-header-stage-lbl">STAGE</span>
+                    <div class="d-flex align-items-center">
+                        <span class="candidate-header-stage-pill candidate-header-stage-pill--{{ $currentStageInfo['key'] }}"
+                              style="background: {{ $currentStageInfo['bg'] }}; border-color: {{ $currentStageInfo['border'] }}; color: {{ $currentStageInfo['color'] }};"
+                              title="Current Pipeline Stage: {{ $currentStageInfo['name'] }}">
+                            <span class="candidate-header-stage-dot" style="background: {{ $currentStageInfo['dot'] }};"></span>
+                            <span class="candidate-header-stage-name">{{ $currentStageInfo['name'] }}</span>
+                        </span>
+                    </div>
+                </div>
+                @endif
                 
                 @php
                     $rc_path = url('/service_company/apptracker/similar_candidates/' . @$id);

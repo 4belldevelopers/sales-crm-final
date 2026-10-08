@@ -3015,6 +3015,79 @@
     content: '\f073';
 }
 
+/* Candidate Header Stage Column (Enterprise Metronic ATS Standard) */
+.candidate-top-toolbar .page-title > .candidate-header-stage-col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 140px;
+    min-height: 46px;
+    padding-left: 39px !important;
+    margin-right: 0 !important;
+}
+
+.candidate-top-toolbar .page-title > .candidate-header-stage-col::before {
+    content: '\f024' !important; /* FontAwesome fa-flag icon */
+    position: absolute;
+    top: 50%;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #f0dda0;
+    border-radius: 7px;
+    color: #8f6700;
+    background: #fff6d3;
+    font-family: "Jero Font Awesome 6 Free", "Font Awesome 6 Free", "FontAwesome";
+    font-size: 11px;
+    font-weight: 900;
+    transform: translateY(-50%);
+}
+
+.candidate-header-stage-lbl {
+    display: block;
+    color: #7882a0 !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 3px;
+    user-select: none;
+}
+
+.candidate-header-stage-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2.5px 9px;
+    border-radius: 12px;
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.2;
+    border-width: 1px;
+    border-style: solid;
+    white-space: nowrap;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.candidate-header-stage-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.candidate-header-stage-name {
+    display: inline-block;
+    white-space: nowrap;
+}
+
 .candidate-top-toolbar .page-title > span.border-start + .d-flex.flex-column > .text-dark {
     display: block;
     overflow: hidden;
