@@ -49,11 +49,16 @@
 
             /* ---- HR Owner (posted_by + company as the owner sub-label) ---- */
             if ($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0) {
-                $spok = DB::table('job_assign')->select('users.name')
-                    ->join('users', 'users.id', 'job_assign.spok_user_id')
-                    ->where('job_assign.job_id', $row->jobId)
-                    ->where('job_assign.company_id', $row->ClientComID)->first();
-                $owner = $spok ? $spok->name : $row->posted_by;
+                $pairKey = $row->jobId . '_' . $row->ClientComID;
+                if (isset($spokUserMap) && array_key_exists($pairKey, $spokUserMap)) {
+                    $owner = $spokUserMap[$pairKey] ?: $row->posted_by;
+                } else {
+                    $spok = DB::table('job_assign')->select('users.name')
+                        ->join('users', 'users.id', 'job_assign.spok_user_id')
+                        ->where('job_assign.job_id', $row->jobId)
+                        ->where('job_assign.company_id', $row->ClientComID)->first();
+                    $owner = $spok ? $spok->name : $row->posted_by;
+                }
                 $owner = $row->rec_candidate_assign_id ? $row->posted_by : $owner;
             } else {
                 $owner = $row->posted_by;
@@ -87,7 +92,9 @@
                 $stLabel = 'Pre-Joining';  $stBg = '#d1fae5'; $stClr = '#059669'; $stSub = 'Docs in Progress';
             }
             /* ---- Job Status (live job hiring state + requisition id + client/internal tag) ---- */
-            $jobStatusRow   = GeneralMethod::jobDetails($row->jobId);
+            $jobStatusRow   = (isset($jobDetailsMap) && isset($jobDetailsMap[$row->jobId]))
+                ? $jobDetailsMap[$row->jobId]
+                : GeneralMethod::jobDetails($row->jobId);
             $jobStatusRaw   = $jobStatusRow->status ?? '';
             $jobStatusClass = $job_status_arr[$jobStatusRaw] ?? 'text-muted';
             $jobStatusLabel = ucwords($jobStatusRaw);
@@ -105,7 +112,10 @@
             $offer_mode      = $salaryModeOffer[$row->of_offer_mode ? @$row->of_offer_mode : 0];
             if (@$row->confidential == 1) {
                 $offerAmount = 'Confidential';
-                if (GeneralMethod::confidentialAmontShow($row->jobId)) {
+                $canShowConfidential = isset($allowedConfidentialJobIds)
+                    ? (!empty($allowedConfidentialJobIds[$row->jobId]))
+                    : GeneralMethod::confidentialAmontShow($row->jobId);
+                if ($canShowConfidential) {
                     $offerAmount = @$offer_currency . ' ' . @$offer_amount . ' / ' . mb_substr(@$offer_mode, 0, 1);
                 }
             } else {
@@ -123,9 +133,13 @@
             }
             $stageChild = '';
             if (!empty(@$row->childStatus) && @$row->childStatus > 0) {
-                $childStatus = DB::table('candidate_status')->select('name')->where('id', $row->childStatus)->first();
-                if ($childStatus && !empty($childStatus->name)) {
-                    $stageChild = $childStatus->name;
+                if (isset($childStatusMap) && isset($childStatusMap[$row->childStatus])) {
+                    $stageChild = $childStatusMap[$row->childStatus];
+                } else {
+                    $childStatus = DB::table('candidate_status')->select('name')->where('id', $row->childStatus)->first();
+                    if ($childStatus && !empty($childStatus->name)) {
+                        $stageChild = $childStatus->name;
+                    }
                 }
             }
 

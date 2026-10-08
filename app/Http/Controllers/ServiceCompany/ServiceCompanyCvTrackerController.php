@@ -1347,6 +1347,9 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     'no_show' => (int) ($ja['no_show']['doc_count'] ?? 0),
                     'pending_docs' => (int) ($ja['pending_docs']['doc_count'] ?? 0),
                 ];
+                if (isset($joiningCounts['total'])) {
+                    \Illuminate\Support\Facades\Cache::put('joining_tracker_total_count_'.$company_id, $joiningCounts['total'], now()->addMinutes(60));
+                }
             }
 
             // CV Tracker hero KPI cards (Total / Added Today / Added This Week / Immediate
@@ -1429,8 +1432,90 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
             }
 
+            // Phase 3 Batch Optimization for Joining Tracker:
+            // Pre-resolve candidate_status, confidentiality, HR owners, and jobs in ONE batched pass
+            // eliminating 30-50 per-row N+1 database queries on every table page render.
+            $childStatusMap = [];
+            $allowedConfidentialJobIds = [];
+            $spokUserMap = [];
+            $jobDetailsMap = [];
+
+            if ($page_view === 'joining-tracker' && ! empty($data)) {
+                $jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
+
+                // 1. Batch candidate_status lookup for this company
+                $childStatusMap = DB::table('candidate_status')
+                    ->where('company_id', $company_id)
+                    ->pluck('name', 'id')
+                    ->toArray();
+
+                // 2. Batch confidentiality allowance check
+                $isAdmin = $this->user->hasRole('admin');
+                if ($isAdmin) {
+                    $allowedConfidentialJobIds = array_fill_keys($jobIdsOnPage, true);
+                } elseif (! empty($jobIdsOnPage)) {
+                    $allowedConfidentialJobIds = DB::table('job_assign')
+                        ->whereIn('job_id', $jobIdsOnPage)
+                        ->where('user_id', $this->user->id)
+                        ->pluck('job_id')
+                        ->flip()
+                        ->toArray();
+                }
+
+                // 3. Batch HR Owner (spok) lookup for client company requisitions
+                $clientJobPairs = collect($data)
+                    ->filter(function ($r) use ($company_id) {
+                        $clientComId = (int) ($r['ClientComID'] ?? 0);
+                        $jId = (int) ($r['jobId'] ?? 0);
+
+                        return $company_id != $clientComId && $clientComId > 0 && $jId > 0;
+                    })
+                    ->map(function ($r) {
+                        return [
+                            'job_id' => (int) $r['jobId'],
+                            'company_id' => (int) $r['ClientComID'],
+                        ];
+                    })
+                    ->unique(function ($i) {
+                        return $i['job_id'].'_'.$i['company_id'];
+                    })
+                    ->values();
+
+                if ($clientJobPairs->isNotEmpty()) {
+                    $cJobIds = $clientJobPairs->pluck('job_id')->all();
+                    $cComIds = $clientJobPairs->pluck('company_id')->all();
+                    $spokRows = DB::table('job_assign')
+                        ->join('users', 'users.id', '=', 'job_assign.spok_user_id')
+                        ->whereIn('job_assign.job_id', $cJobIds)
+                        ->whereIn('job_assign.company_id', $cComIds)
+                        ->select('job_assign.job_id', 'job_assign.company_id', 'users.name')
+                        ->get();
+
+                    foreach ($spokRows as $sr) {
+                        $spokUserMap[$sr->job_id.'_'.$sr->company_id] = $sr->name;
+                    }
+                }
+
+                // 4. Batch fetch jobs via Elasticsearch mget in ONE round-trip
+                if (! empty($jobIdsOnPage) && $this->elasticService->indexExists(ELASTIC_JOBS)) {
+                    try {
+                        $mgetResp = $this->elasticService->getClient()->mget([
+                            'index' => ELASTIC_JOBS,
+                            'body' => ['ids' => $jobIdsOnPage],
+                        ]);
+                        foreach ($mgetResp['docs'] ?? [] as $doc) {
+                            if (! empty($doc['found']) && ! empty($doc['_source'])) {
+                                $jobDetailsMap[(int) $doc['_id']] = (object) $doc['_source'];
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // Silently fallback to GeneralMethod::jobDetails if mget fails
+                    }
+                }
+            }
+
             $responseData = [
-                'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'mandatorySkillsForDisplay', 'optionalSkillsForDisplay', 'jobSkillsByJobId'))->render(),
+                'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'mandatorySkillsForDisplay', 'optionalSkillsForDisplay', 'jobSkillsByJobId', 'childStatusMap', 'allowedConfidentialJobIds', 'spokUserMap', 'jobDetailsMap'))->render(),
                 'total' => $total,
                 'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
                 'counts' => $offerCounts,

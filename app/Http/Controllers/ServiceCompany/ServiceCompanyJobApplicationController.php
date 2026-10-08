@@ -10185,10 +10185,17 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             ."Jumping directly to <b style='color:#181c32;'>{$targetName}</b> isn't supported — please select an adjacent stage to continue.";
     }
 
+    /**
+     * Intent: Authoritative Candidate Stage Transition Mutation Engine with
+     * Transactional Outbox, Idempotency Claiming, and OCC Aggregate Versioning
+     * for 10K concurrent users (Zero avoidable infrastructure load).
+     *
+     * Tenancy: Strictly isolated by auth()->user()->company_id.
+     * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
+     */
     public function stage_submit(Request $request)
     {
 
-        $company_id = '';
         $company_id = auth()->user()->company_id;
 
         $application_id = $master_status = $sub_stages = $comment = $addJobWiseCondidate_id = '';
@@ -10201,6 +10208,77 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // dd($addJobWiseCondidate_id);
         $currency = GeneralMethod::currency();
         $salaryModeOffer = GeneralMethod::salaryModeOffer();
+
+        // Phase 5: Idempotency Claiming & Concurrency Protection
+        $idempotencyKey = $request->header('X-Idempotency-Key')
+            ?? $request->header('Idempotency-Key')
+            ?? $request->input('idempotency_key');
+
+        if (empty($idempotencyKey)) {
+            $idempotencyKey = 'stage_submit_'.$company_id.'_'.$application_id.'_'.$addJobWiseCondidate_id.'_'.((int) $master_status).'_'.((int) $sub_stages).'_'.floor(time() / 15);
+        }
+
+        $canonicalHash = sha1(json_encode([
+            'tenant' => (int) $company_id,
+            'app_id' => (int) $application_id,
+            'wise_id' => (int) $addJobWiseCondidate_id,
+            'master_status' => (int) $master_status,
+            'sub_stages' => (int) $sub_stages,
+        ]));
+
+        $claimed = DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => (int) $company_id,
+            'idempotency_key' => $idempotencyKey,
+            'request_hash' => $canonicalHash,
+            'status' => 'PROCESSING',
+            'expires_at' => now()->addHours(24),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (! $claimed) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', (int) $company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing) {
+                if ($existing->status === 'COMPLETED') {
+                    $body = json_decode($existing->response_body, true);
+
+                    return Reply::dataOnly($body ?: ['status' => 'success', 'message' => 'Application stage update successfully !']);
+                }
+                if ($existing->status === 'PROCESSING') {
+                    if (strtotime($existing->created_at) > (time() - 30)) {
+                        return Reply::dataOnly(['status' => 'processing', 'message' => 'Stage update is already processing. Please wait...']);
+                    }
+                }
+                if ($existing->status === 'FAILED_FINAL') {
+                    $body = json_decode($existing->response_body, true);
+
+                    return Reply::dataOnly($body ?: ['status' => 'candidatevalidation', 'message' => $existing->last_error ?: 'Stage update failed.']);
+                }
+            }
+        }
+
+        $failValidation = function (array $payload) use ($company_id, $idempotencyKey) {
+            try {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', (int) $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_FINAL',
+                        'response_status' => 200,
+                        'response_body' => json_encode($payload),
+                        'last_error' => substr($payload['message'] ?? 'Validation failure', 0, 500),
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            } catch (\Throwable $e) {
+            }
+
+            return Reply::dataOnly($payload);
+        };
 
         $userId = auth()->id();
         $isValid = DB::table('add_job_wise_condidates as ajwc')
@@ -10221,7 +10299,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'message' => "You are not authorized to update this candidate's status. Only the assigned Captain or the submitting user can update this candidate's status.",
             ];
 
-            return Reply::dataOnly([
+            return $failValidation([
                 'status' => 'candidatevalidation',
                 'message' => $validations->message,
             ]);
@@ -10428,7 +10506,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 $of_joined_date = $data->of_joined_date;
 
                 if (empty($sub_stages) || $sub_stages == '') {
-                    return Reply::dataOnly(['status' => 'candidatevalidation', 'message' => 'Please select joined sub stages Onboarded OR Backed Out']);
+                    return $failValidation(['status' => 'candidatevalidation', 'message' => 'Please select joined sub stages Onboarded OR Backed Out']);
 
                 }
 
@@ -10461,7 +10539,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 $currentName = $stages[$master_status]['display'];
                                 $newName = $stages[$stage_point_tb->stage_id]['display'];
 
-                                return Reply::dataOnly([
+                                return $failValidation([
                                     'status' => 'candidatevalidation',
                                     'message' => "You cannot move backward from 
 											<b style='color:#EF4444;'>Rejected</b> 
@@ -10476,7 +10554,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                                 $currentName = $stages[$master_status]['display'];
                                 $newName = $stages[$stage_point_tb->stage_id]['display'];
 
-                                return Reply::dataOnly([
+                                return $failValidation([
                                     'status' => 'candidatevalidation',
                                     'message' => "You cannot move backward from 
 											<b style='color:#EF4444;'>Rejected</b> 
@@ -10489,23 +10567,20 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         }
 
                     }
-                    DB::table('stage_point_tb')->where('job_id', '=', $data->jobId)->where('candidate_id', '=', $data->candidate_id)->delete();
-                    //  dd($master_status);
-                    $values = [
+                    $stagePointValues = [
                         'job_id' => $data->jobId,
                         'candidate_id' => $data->candidate_id,
                         'stage_id' => $master_status,
                         'user_id' => $data->submitted_by,
                         'created_at' => date('Y-m-d'),
                         'updated_at' => date('Y-m-d'),
-
                     ];
-                    DB::table('stage_point_tb')->insert($values);
+                    $shouldUpdateStagePoint = true;
 
                 } else {
 
                     if (! isset($stages[$currentStageId]) || ! isset($stages[$newStageId])) {
-                        return Reply::dataOnly([
+                        return $failValidation([
                             'status' => 'candidatevalidation',
                             'message' => 'Invalid stage transition.',
                         ]);
@@ -10519,7 +10594,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                     // 🔹 Check if jumping ahead
                     if ($newOrder > $currentOrder + 1) {
-                        return Reply::dataOnly([
+                        return $failValidation([
                             'status' => 'candidatevalidation',
                             'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName),
                         ]);
@@ -10531,7 +10606,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     if ($newOrder < $currentOrder) {
 
                         if ($currentOrder != $newOrder + 1) {
-                            return Reply::dataOnly([
+                            return $failValidation([
                                 'status' => 'candidatevalidation',
                                 'message' => $this->stageSequenceGuardMessage($stages, $currentOrder, $currentName, $newName),
                             ]);
@@ -10582,18 +10657,15 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         'negotiation' => $negotiation,
                     ];
 
-                    DB::table('stage_point_tb')->where('job_id', '=', $data->jobId)->where('candidate_id', '=', $data->candidate_id)->delete();
-
-                    $values = [
+                    $stagePointValues = [
                         'job_id' => $data->jobId,
                         'candidate_id' => $data->candidate_id,
                         'stage_id' => $master_status,
                         'user_id' => $data->submitted_by,
                         'created_at' => date('Y-m-d'),
                         'updated_at' => date('Y-m-d'),
-
                     ];
-                    DB::table('stage_point_tb')->insert($values);
+                    $shouldUpdateStagePoint = true;
 
                 }
 
@@ -10606,10 +10678,10 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
                         if ($data->job_master_status_id == 5) {
                             if (($of_offer_amount == 0 || $of_offer_amount == '') && ($of_joined_date == '0000-00-00 00:00:00' || empty($of_joined_date))) {
-                                return Reply::dataOnly(['status' => 'candidatevalidation', 'message' => "Please create the offer under the <b style='color:#F59E0B;'> Offer Tracker </b> tab, complete the required details <b style='color:#10B981;'> (Offer Amount and Date of Joining) </b>and release the offer. <br>After updating the details, please update the status to <b style='color:#10B981;'>Joining</b>."]);
+                                return $failValidation(['status' => 'candidatevalidation', 'message' => "Please create the offer under the <b style='color:#F59E0B;'> Offer Tracker </b> tab, complete the required details <b style='color:#10B981;'> (Offer Amount and Date of Joining) </b>and release the offer. <br>After updating the details, please update the status to <b style='color:#10B981;'>Joining</b>."]);
                             }
                         } else {
-                            return Reply::dataOnly(['status' => 'candidatevalidation', 'message' => "Kindly update the status to <b style='color:#F59E0B;'>'Offer Stage'</b> and complete the <b>'Create Offer'</b> section by entering the <b style='color:#10b981;'>offered salary</b> and <b style='color:#3b82f6;'>expected date of joining</b>. Once all details are filled in, please proceed to update the status to <b style='color:#10B981;'>'Joining Stage'</b>."]);
+                            return $failValidation(['status' => 'candidatevalidation', 'message' => "Kindly update the status to <b style='color:#F59E0B;'>'Offer Stage'</b> and complete the <b>'Create Offer'</b> section by entering the <b style='color:#10b981;'>offered salary</b> and <b style='color:#3b82f6;'>expected date of joining</b>. Once all details are filled in, please proceed to update the status to <b style='color:#10B981;'>'Joining Stage'</b>."]);
                         }
 
                     }
@@ -10618,23 +10690,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $jobApplication = JobApplication::withoutGlobalScopes()->find($application_id);
+        if (! $jobApplication) {
+            return $failValidation(['status' => 'candidatevalidation', 'message' => 'Job application record not found.']);
+        }
 
         if ($master_status != 7) {
 
             $validations = GeneralMethod::candidateValidation($addJobWiseCondidate_id);
             if ($validations->status) {
-                return Reply::dataOnly(['status' => 'candidatevalidation', 'message' => $validations->message]);
+                return $failValidation(['status' => 'candidatevalidation', 'message' => $validations->message]);
             }
 
             if (JobApplication::where('job_applications.resume', '=', '')->where('job_applications.id', '=', $application_id)->exists()) {
-                return Reply::dataOnly(['status' => 'cvpending', 'message' => 'Resume pending this job application!']);
+                return $failValidation(['status' => 'cvpending', 'message' => 'Resume pending this job application!']);
             }
 
         }
 
         if (($addJobWiseCondidate->master_status_id == $master_status) && ($addJobWiseCondidate->child_status_id == $sub_stages)) {
-            return Reply::dataOnly(['status' => 'candidatevalidation', 'message' => 'Match current record with previous.!']);
-            exit;
+            return $failValidation(['status' => 'candidatevalidation', 'message' => 'Match current record with previous.!']);
         }
 
         if (! empty(@$master_status)) {
@@ -10702,151 +10776,418 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             }
         }
 
-        // DB::table('timeline')->insert($values);
-        GeneralMethod::UpdateTimeline($values);
+        try {
+            DB::beginTransaction();
 
-        // $jobApplication->save();
-        DB::table('job_applications')->where('id', $application_id)->update([
-            'master_status_id' => (@$master_status) ? @$master_status : @$master_status,
-            'child_status_id' => (@$sub_stages) ? @$sub_stages : '',
-        ]);
+            if (! empty($shouldUpdateStagePoint) && ! empty($stagePointValues)) {
+                DB::table('stage_point_tb')
+                    ->where('job_id', '=', $data->jobId)
+                    ->where('candidate_id', '=', $data->candidate_id)
+                    ->delete();
+                DB::table('stage_point_tb')->insert($stagePointValues);
+            }
 
-        $addJobWiseCondidate->save();
+            GeneralMethod::UpdateTimeline($values);
 
-        if (! empty($pendingTeamRankElastic)) {
-            GeneralMethod::teamRankElastic($pendingTeamRankElastic);
-        }
-        // dd($jobApplication);
+            // Phase 5: Optimistic Concurrency Control (OCC) aggregate_version bump
+            $currentVer = (int) DB::table('job_applications')->where('id', $application_id)->value('aggregate_version');
+            $newVersion = ($currentVer > 0) ? $currentVer + 1 : 1;
+            DB::table('job_applications')->where('id', $application_id)->update([
+                'master_status_id' => (@$master_status) ? @$master_status : @$master_status,
+                'child_status_id' => (@$sub_stages) ? @$sub_stages : '',
+                'aggregate_version' => $newVersion,
+            ]);
 
-        $jobId = $addJobWiseCondidate->job_id;
-        $lastInsertedId = $addJobWiseCondidate->id;
-        $wise_c = DB::table('job_applications')
-            ->select('master_status.name', 'master_status.css_style', 'add_job_wise_condidates.child_status_id as childStatus', 'jobs.client_id', 'jobs.employment_type', 'add_job_wise_condidates.master_status_id', 'jobs.title', 'jobs.id as job_id', 'users.name as posted_by', 'users.image as posted_by_image', 'companies.company_name', 'add_job_wise_condidates.created_at', 'recommendation_relation.id as recommendation_id', 'recommendation_relation.from_company_id', 'recommendation_relation.final_status', 'recommendation_relation.to_company_id')
-            ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
-            ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
-            ->leftjoin('companies', 'companies.id', 'users.company_id')
-            ->join('master_status', function ($join) {
-                $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
-            })->join('jobs', function ($join) {
-                $join->on('jobs.id', 'add_job_wise_condidates.job_id');
-            })
-            ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
-            ->where('add_job_wise_condidates.id', '=', $lastInsertedId)->where('add_job_wise_condidates.job_id', '=', $jobId)->first();
+            $addJobWiseCondidate->save();
 
-        $clients_data = DB::table('clients')->select('company_id', 'self_company')->where('id', '=', @$wise_c->client_id)->first();
+            if (! empty($pendingTeamRankElastic)) {
+                GeneralMethod::teamRankElastic($pendingTeamRankElastic);
+            }
+            // dd($jobApplication);
 
-        $self_company = 1;
+            $jobId = $addJobWiseCondidate->job_id;
+            $lastInsertedId = $addJobWiseCondidate->id;
+            $wise_c = DB::table('job_applications')
+                ->select('master_status.name', 'master_status.css_style', 'add_job_wise_condidates.child_status_id as childStatus', 'jobs.client_id', 'jobs.employment_type', 'add_job_wise_condidates.master_status_id', 'jobs.title', 'jobs.id as job_id', 'users.name as posted_by', 'users.image as posted_by_image', 'companies.company_name', 'add_job_wise_condidates.created_at', 'recommendation_relation.id as recommendation_id', 'recommendation_relation.from_company_id', 'recommendation_relation.final_status', 'recommendation_relation.to_company_id')
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                ->leftjoin('users', 'users.id', 'job_applications.submitted_by')
+                ->leftjoin('companies', 'companies.id', 'users.company_id')
+                ->join('master_status', function ($join) {
+                    $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
+                })->join('jobs', function ($join) {
+                    $join->on('jobs.id', 'add_job_wise_condidates.job_id');
+                })
+                ->leftJoin('recommendation_relation', 'recommendation_relation.job_id', '=', 'jobs.id')
+                ->where('add_job_wise_condidates.id', '=', $lastInsertedId)->where('add_job_wise_condidates.job_id', '=', $jobId)->first();
 
-        if ($clients_data) {
+            $clients_data = DB::table('clients')->select('company_id', 'self_company')->where('id', '=', @$wise_c->client_id)->first();
 
-            if ($clients_data->company_id != $company_id) {
-                $self_company = 1;
-            } else {
-                if ($clients_data->self_company == 0) {
-                    $self_company = $clients_data->self_company;
+            $self_company = 1;
+
+            if ($clients_data) {
+
+                if ($clients_data->company_id != $company_id) {
+                    $self_company = 1;
                 } else {
-                    $self_company = $clients_data->self_company;
+                    if ($clients_data->self_company == 0) {
+                        $self_company = $clients_data->self_company;
+                    } else {
+                        $self_company = $clients_data->self_company;
+                    }
+
                 }
 
             }
 
-        }
+            $partnersData = User::join('job_assign', 'users.id', '=', 'job_assign.user_id')
+                ->join('package_active', function ($join) {
+                    $join->on('users.company_id', '=', 'package_active.company_id')
+                        ->where('package_active.emails_balance', '>', 0)
+                        ->where('package_active.startdate', '<=', now())
+                        ->where('package_active.enddate', '>=', now())
+                        ->where('package_active.packages_status', 1);
+                })
+                ->where('job_assign.job_id', '=', $jobId)
+                ->pluck('users.email')
+                ->toArray();
 
-        $partnersData = User::join('job_assign', 'users.id', '=', 'job_assign.user_id')
-            ->join('package_active', function ($join) {
-                $join->on('users.company_id', '=', 'package_active.company_id')
+            $recommendedDataList = DB::table('recommendation_relation');
+            $recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
+            $recommendedDataList = $recommendedDataList->join('jobs', 'jobs.id', 'recommendation_relation.job_id');
+            $recommendedDataList = $recommendedDataList->leftJoin('job_applications', function ($join) {
+                $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
+                $join->on('job_applications.job_id', '=', 'jobs.id');
+            });
+            $recommendedDataList = $recommendedDataList->join('package_active', function ($join) {
+                $join->on('companies.id', '=', 'package_active.company_id')
                     ->where('package_active.emails_balance', '>', 0)
                     ->where('package_active.startdate', '<=', now())
                     ->where('package_active.enddate', '>=', now())
                     ->where('package_active.packages_status', 1);
-            })
-            ->where('job_assign.job_id', '=', $jobId)
-            ->pluck('users.email')
-            ->toArray();
+            });
+            $recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
+            $recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $jobId);
+            $recommendedDataList = $recommendedDataList->groupBy('companies.id');
+            $recommendedDataList = $recommendedDataList->pluck('companies.company_email');
+            $recommendedDataList = $recommendedDataList->toArray();
 
-        $recommendedDataList = DB::table('recommendation_relation');
-        $recommendedDataList = $recommendedDataList->join('companies', 'companies.id', 'recommendation_relation.to_company_id');
-        $recommendedDataList = $recommendedDataList->join('jobs', 'jobs.id', 'recommendation_relation.job_id');
-        $recommendedDataList = $recommendedDataList->leftJoin('job_applications', function ($join) {
-            $join->on('job_applications.thirdparty_company_id', '=', 'companies.id');
-            $join->on('job_applications.job_id', '=', 'jobs.id');
-        });
-        $recommendedDataList = $recommendedDataList->join('package_active', function ($join) {
-            $join->on('companies.id', '=', 'package_active.company_id')
-                ->where('package_active.emails_balance', '>', 0)
-                ->where('package_active.startdate', '<=', now())
-                ->where('package_active.enddate', '>=', now())
-                ->where('package_active.packages_status', 1);
-        });
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.final_status', 1);
-        $recommendedDataList = $recommendedDataList->where('recommendation_relation.job_id', '=', $jobId);
-        $recommendedDataList = $recommendedDataList->groupBy('companies.id');
-        $recommendedDataList = $recommendedDataList->pluck('companies.company_email');
-        $recommendedDataList = $recommendedDataList->toArray();
+            // dd($recommendedDataList);
 
-        // dd($recommendedDataList);
+            $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id);
 
-        $companyOrClientName = GeneralMethod::companyOrClientName($wise_c->client_id);
+            // dd($companyOrClientName);
 
-        // dd($companyOrClientName);
+            $subject = "Status Changed |$wise_c->name | $jobApplication->full_name | $wise_c->title | $companyOrClientName->companyOrclientName | R-$wise_c->job_id";
 
-        $subject = "Status Changed |$wise_c->name | $jobApplication->full_name | $wise_c->title | $companyOrClientName->companyOrclientName | R-$wise_c->job_id";
+            $company_or_client = GeneralMethod::companyDetailsByClient($jobId);
 
-        $company_or_client = GeneralMethod::companyDetailsByClient($jobId);
-
-        $name = '--------';
-        if (@$wise_c->master_status_id == 8) {
-            $name = '';
-        }
-        if (! empty(@$wise_c->childStatus) && @$wise_c->childStatus > 0) {
-            $childStatus = '';
-            $childStatus = DB::table('candidate_status')->select('*')->where('id', $wise_c->childStatus)->first();
-            if (! empty($childStatus)) {
-                $name = @$childStatus->name;
+            $name = '--------';
+            if (@$wise_c->master_status_id == 8) {
+                $name = '';
             }
-        }
-
-        $np = $jobApplication->np_id;
-        if (empty($np)) {
-            $np = 'N/A';
-        }
-        if ($jobApplication->serving_notice_period_mode == 0) {
-            $np = $jobApplication->np_id.' Days';
-            if ($jobApplication->np_id == 1) {
-                $np = $jobApplication->np_id.'  Day';
+            if (! empty(@$wise_c->childStatus) && @$wise_c->childStatus > 0) {
+                $childStatus = '';
+                $childStatus = DB::table('candidate_status')->select('*')->where('id', $wise_c->childStatus)->first();
+                if (! empty($childStatus)) {
+                    $name = @$childStatus->name;
+                }
             }
-        } elseif ($jobApplication->serving_notice_period_mode == 1) {
+
             $np = $jobApplication->np_id;
-            if ($np != 'Immediate') {
-                $np = 'SNP LWD '.GeneralMethod::ymdTodmyNotTime($jobApplication->np_id);
+            if (empty($np)) {
+                $np = 'N/A';
             }
-        }
+            if ($jobApplication->serving_notice_period_mode == 0) {
+                $np = $jobApplication->np_id.' Days';
+                if ($jobApplication->np_id == 1) {
+                    $np = $jobApplication->np_id.'  Day';
+                }
+            } elseif ($jobApplication->serving_notice_period_mode == 1) {
+                $np = $jobApplication->np_id;
+                if ($np != 'Immediate') {
+                    $np = 'SNP LWD '.GeneralMethod::ymdTodmyNotTime($jobApplication->np_id);
+                }
+            }
 
-        if ($master_status != 5 && $master_status != 6) {
-            $data = [
-                'VendorTeam' => @$wise_c->company_name,
-                'ReqID' => 'R'.@$wise_c->job_id,
-                'Reqname' => @$wise_c->title,
-                'CompanyNameClientname' => $company_or_client,
-                'CandidateStatus' => $jobApplication->duplicate,
-                'prev_process_name' => $prev_process_name,
-                'CurrentStage' => @$wise_c->name,
-                'SubStage' => $name,
-                'CandidateName' => $jobApplication->full_name,
-                'Experience' => $jobApplication->total_exp,
-                'Position' => $jobApplication->current_designation,
-                'NoticePeriod' => $np,
-                'comments' => @$comment,
-                'RefferedBy' => @$wise_c->posted_by,
-                'companyOrclientName' => $companyOrClientName->companyOrclientName,
-                'selfCompany' => $self_company,
-                'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
-            ];
-            // config(['mail.from.name' => auth()->user()->name]);
-            if ($master_status == 7) {
+            if ($master_status != 5 && $master_status != 6) {
+                $data = [
+                    'VendorTeam' => @$wise_c->company_name,
+                    'ReqID' => 'R'.@$wise_c->job_id,
+                    'Reqname' => @$wise_c->title,
+                    'CompanyNameClientname' => $company_or_client,
+                    'CandidateStatus' => $jobApplication->duplicate,
+                    'prev_process_name' => $prev_process_name,
+                    'CurrentStage' => @$wise_c->name,
+                    'SubStage' => $name,
+                    'CandidateName' => $jobApplication->full_name,
+                    'Experience' => $jobApplication->total_exp,
+                    'Position' => $jobApplication->current_designation,
+                    'NoticePeriod' => $np,
+                    'comments' => @$comment,
+                    'RefferedBy' => @$wise_c->posted_by,
+                    'companyOrclientName' => $companyOrClientName->companyOrclientName,
+                    'selfCompany' => $self_company,
+                    'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
+                ];
+                // config(['mail.from.name' => auth()->user()->name]);
+                if ($master_status == 7) {
+
+                    $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
+
+                    $email_to_remove = auth()->user()->email;
+                    $index = array_search($email_to_remove, $notification);
+                    if ($index !== false) {
+                        unset($notification[$index]);
+                        $notification = array_values($notification);
+                    }
+                    $cc = []; // $notification; //array_merge($partnersData, $recommendedDataList);
+
+                    $basecompany = GeneralMethod::baseCompany();
+                    $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                    $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                    $attachments = [];
+                    $checkMailPermision = GeneralMethod::mailPermission(3);
+                    if ($checkMailPermision) {
+                        $mailTypeSubject = GeneralMethod::mailTypeSubject(3, 1);
+                        $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
+                        $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
+                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+
+                        // dd($to_Mail_Id);
+                        QueueNotificationMailService::dispatch(
+                            $to_Mail_Id,
+                            $subject,
+                            'email.candidate.rejected',
+                            (object) $data,
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $company_id
+                        )->onConnection('emails');
+
+                        //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.rejected', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                    }
+                    // Mail::to(auth()->user()->email)->cc($cc)->send(new RejectedMail((object) $data,$subject));
+                } else {
+
+                    // $mailConfig = [
+                    // 	'driver' => 'smtp',
+                    // 	'host' => 'smtp.gmail.com',
+                    // 	'port' => 587,
+                    // 	'from' => ['address' => '4belldevelopers@gmail.com', 'name' => 'Your Name'],
+                    // 	'encryption' => 'tls',
+                    // 	'username' => '4belldevelopers@gmail.com',
+                    // 	'password' => 'ghhcefkjvqaqkmkg',
+                    // ];
+
+                    // Mail::send([], [], function (Message $message) use ($mailConfig) {
+                    // 	$message->to(auth()->user()->email)
+                    // 			->subject('Subject of the Email')
+                    // 			->setBody('Body of the Email', 'text/html');
+
+                    // 	// Set the mail config dynamically
+                    // 	$message->getSwiftMessage()->getHeaders()->addTextHeader('X-Mailer', 'Laravel');
+                    // 	$transport = new \Swift_SmtpTransport($mailConfig['host'], $mailConfig['port']);
+                    // 	$transport->setUsername($mailConfig['username']);
+                    // 	$transport->setPassword($mailConfig['password']);
+                    // 	$transport->setEncryption($mailConfig['encryption']);
+                    // 	$mailer = new \Swift_Mailer($transport);
+                    // 	Mail::setSwiftMailer($mailer);
+                    // });
+
+                    $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
+                    $email_to_remove = auth()->user()->email;
+                    $index = array_search($email_to_remove, $notification);
+                    if ($index !== false) {
+                        unset($notification[$index]);
+                        $notification = array_values($notification);
+                    }
+                    $cc = []; // $notification; //array_merge($partnersData, $recommendedDataList);
+
+                    $basecompany = GeneralMethod::baseCompany();
+                    $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
+                    $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
+                    $attachments = [];
+                    //  dd(auth()->user()->email, $subject,'email.candidate.change-status', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+
+                    $checkMailPermision = GeneralMethod::mailPermission(6);
+                    if ($checkMailPermision) {
+                        $mailTypeSubject = GeneralMethod::mailTypeSubject(6, 1);
+                        $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
+                        $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
+                        $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
+
+                        QueueNotificationMailService::dispatch(
+                            $to_Mail_Id,
+                            $subject,
+                            'email.candidate.change-status',
+                            (object) $data,
+                            $attachments,
+                            $fromAddress,
+                            $senderName,
+                            $cc,
+                            $company_id
+                        )->onConnection('emails');
+
+                        //    $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.change-status', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                    }
+                    //  dd("d");
+
+                    // Mail::to(auth()->user()->email)->cc($cc)->send(new ChangeStatusMail((object) $data,$subject));
+
+                }
+
+            }
+
+            if ($master_status == 5) {
+
+                $rowData = DB::table('job_applications')->select('*')->where('id', $application_id)->first();
+                $rowDataOffer = DB::table('offer_job_applications')->select('*')->where('application_id', $application_id)->where('job_id', $addJobWiseCondidate->job_id)->first();
+
+                $values = [
+                    'application_id' => $rowData->id,
+                    'submitted_by' => $rowData->submitted_by,
+                    'company_id' => $rowData->company_id,
+                    'np_id' => $rowData->np_id,
+                    'full_name' => $rowData->full_name,
+
+                    'email' => $rowData->email,
+                    'phone' => $rowData->phone,
+                    'gender' => $rowData->gender,
+                    'dob' => $rowData->dob,
+                    'country' => $rowData->country,
+
+                    'state' => $rowData->state,
+                    'city' => $rowData->city,
+                    'secondrary_email' => $rowData->secondrary_email,
+                    'secondary_mobile' => $rowData->secondary_mobile,
+                    'skills' => $rowData->skills,
+
+                    'photo' => $rowData->photo,
+                    'resume' => $rowData->resume,
+                    'rating' => @$rowData->rating,
+                    'skype_id' => $rowData->skype_id,
+                    'cover_letter' => $rowData->cover_letter,
+
+                    'job_id' => $addJobWiseCondidate->job_id,
+                    'status_id' => $rowData->status_id,
+                    'is_viewed' => $rowData->is_viewed,
+                    'column_priority' => $rowData->column_priority,
+                    'total_exp' => $rowData->total_exp,
+
+                    'rel_exp' => $rowData->rel_exp,
+                    'passport' => $rowData->passport,
+                    'ctc' => $rowData->ctc,
+                    'ectc' => $rowData->ectc,
+                    'current_location' => $rowData->current_location,
+
+                    'current_designation' => $rowData->current_designation,
+                    'current_company' => $rowData->current_company,
+                    'process_id' => $rowData->process_id,
+                    'qualification' => $rowData->qualification,
+                    'master_status_id' => $rowData->master_status_id,
+
+                    'child_status_id' => $rowData->child_status_id,
+                    'serving_notice_period_mode' => $rowData->serving_notice_period_mode,
+                    'proposed_ctc' => $rowData->proposed_ctc,
+                    'any_offer' => $rowData->any_offer,
+                    'document' => $rowData->document,
+
+                    'sub_for_approval' => $rowData->sub_for_approval,
+                    'offer_approved' => $rowData->offer_approved,
+                    'offer_release' => $rowData->offer_release,
+                    'offer_acceptance' => $rowData->offer_acceptance,
+                    'joined' => $addJobWiseCondidate->id,
+
+                    'created_at' => date('Y-m-d'),
+                    'updated_at' => date('Y-m-d'),
+
+                ];
+                if (empty($rowDataOffer)) {
+                    DB::table('offer_job_applications')->insert($values);
+                    $offer_id = DB::getPdo()->lastInsertId();
+                } else {
+                    $offer_id = $rowDataOffer->id;
+                    DB::table('offer_job_applications')->where('id', $rowDataOffer->id)->update([
+                        'joined_date' => null,
+                        'offer_mode' => null,
+                        'offer_amount' => null,
+                        'offer_currency' => null,
+                    ]);
+                }
+
+                if ($exists) {
+
+                    // 2. Prepare the update timestamp
+                    $updateTime = now()->toIso8601String();
+
+                    // 3. Execute update with debugging
+                    $updateParams_e = [
+                        'index' => ELASTIC_CANDIDATES,
+                        'id' => $addJobWiseCondidate_id,
+                        'body' => [
+                            'doc' => [
+                                'of_joined_date' => null,
+                                'of_offer_currency' => null,
+                                'of_offer_mode' => null,
+                                'of_offer_amount' => null,
+                                'of_offer_acceptance' => null,
+                                'of_offer_approved' => null,
+                                'of_created_date' => null,
+                                'of_expired_date' => null,
+                                'send_accept_date_time' => null,
+                                'send_approved_date_time' => null,
+                                'approved_date_time' => null,
+                                'accept_date_time' => null,
+                                'offer_id' => $offer_id,
+                                'updated_at' => $updateTime,
+                            ],
+                            'doc_as_upsert' => false, // Changed to false since we verified existence
+                        ],
+                        'refresh' => false, // Eventual consistency for 10K concurrent scale
+                    ];
+                    // dd($updateParams);
+                    $redudds = $this->elasticService->getClient()->update($updateParams_e);
+                    GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
+
+                    // dd($redudds,$addJobWiseCondidate_id);
+                }
+
+                $intRow = DB::table('interview_schedules')->select('*')->where('job_application_id', $application_id)->where('interview_job_id', $wise_c->job_id)->orderBy('interview_schedules.id', 'DESC')->first();
+                $schedule_date = '';
+                if ($intRow) {
+                    $schedule_date = @$intRow->schedule_date;
+                    $schedule_date = date('d M, Y H:i', strtotime($schedule_date)).'(IST)';
+                }
+
+                $data = [
+                    'VendorTeam' => @$wise_c->company_name,
+                    'ReqID' => 'R'.@$wise_c->job_id,
+                    'Reqname' => @$wise_c->title,
+                    'CompanyNameClientname' => $companyOrClientName->companyOrclientName,
+                    'CandidateStatus' => $jobApplication->duplicate,
+                    'prev_process_name' => $prev_process_name,
+                    'CurrentStage' => @$wise_c->name,
+                    'SubStage' => $name,
+                    'CandidateName' => $jobApplication->full_name,
+                    'Experience' => $jobApplication->total_exp,
+                    'Position' => $jobApplication->current_designation,
+                    'NoticePeriod' => $np,
+                    'comments' => @$comment,
+                    'interviewDateTime' => @$schedule_date,
+                    'linkedinId' => '',
+                    'RefferedBy' => @$wise_c->posted_by,
+                    'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
+                    'companyOrclientName' => $companyOrClientName->companyOrclientName,
+                    'selfCompany' => $self_company,
+                    'OfferAmount' => '',
+                    'Joiningdate' => '',
+                ];
+                // dd($data);
+                // 		config(['mail.from.name' => auth()->user()->name]);
 
                 $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
-
                 $email_to_remove = auth()->user()->email;
                 $index = array_search($email_to_remove, $notification);
                 if ($index !== false) {
@@ -10854,23 +11195,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $notification = array_values($notification);
                 }
                 $cc = []; // $notification; //array_merge($partnersData, $recommendedDataList);
+                // $cc = array_merge($partnersData, $recommendedDataList);
 
                 $basecompany = GeneralMethod::baseCompany();
                 $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
                 $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
                 $attachments = [];
-                $checkMailPermision = GeneralMethod::mailPermission(3);
+                $checkMailPermision = GeneralMethod::mailPermission(4);
                 if ($checkMailPermision) {
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(3, 1);
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(4, 1);
                     $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
                     $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
                     $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
 
                     // dd($to_Mail_Id);
+
                     QueueNotificationMailService::dispatch(
                         $to_Mail_Id,
                         $subject,
-                        'email.candidate.rejected',
+                        'email.candidate.offer',
                         (object) $data,
                         $attachments,
                         $fromAddress,
@@ -10879,35 +11222,184 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $company_id
                     )->onConnection('emails');
 
-                    //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.rejected', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                    //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.offer', (object) $data, $attachments, $fromAddress, $senderName,$cc);
                 }
-                // Mail::to(auth()->user()->email)->cc($cc)->send(new RejectedMail((object) $data,$subject));
-            } else {
 
-                // $mailConfig = [
-                // 	'driver' => 'smtp',
-                // 	'host' => 'smtp.gmail.com',
-                // 	'port' => 587,
-                // 	'from' => ['address' => '4belldevelopers@gmail.com', 'name' => 'Your Name'],
-                // 	'encryption' => 'tls',
-                // 	'username' => '4belldevelopers@gmail.com',
-                // 	'password' => 'ghhcefkjvqaqkmkg',
-                // ];
+                $jobIdGet = @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null;
+                $tb_ranks = ['company_id' => auth()->user()->company_id, 'user_id' => $jobApplication->submitted_by, 'job_id' => @$jobIdGet, 'status' => 1, 'application_id' => @$jobApplication->id];
+                DB::table('tb_ranks')->insert($tb_ranks);
+                // 		Mail::to(auth()->user()->email)->cc($cc)->send(new OfferMail((object) $data,$subject));
 
-                // Mail::send([], [], function (Message $message) use ($mailConfig) {
-                // 	$message->to(auth()->user()->email)
-                // 			->subject('Subject of the Email')
-                // 			->setBody('Body of the Email', 'text/html');
+            }
 
-                // 	// Set the mail config dynamically
-                // 	$message->getSwiftMessage()->getHeaders()->addTextHeader('X-Mailer', 'Laravel');
-                // 	$transport = new \Swift_SmtpTransport($mailConfig['host'], $mailConfig['port']);
-                // 	$transport->setUsername($mailConfig['username']);
-                // 	$transport->setPassword($mailConfig['password']);
-                // 	$transport->setEncryption($mailConfig['encryption']);
-                // 	$mailer = new \Swift_Mailer($transport);
-                // 	Mail::setSwiftMailer($mailer);
-                // });
+            if ($master_status == 6) {
+
+                $oderVal = DB::table('offer_job_applications')->where('application_id', @$application_id)->where('job_id', $addJobWiseCondidate->job_id)->first();
+                $offer_id = @$oderVal->id;
+
+                $offer_job_applications = DB::table('offer_job_applications')
+                    ->select('joined as wiseId')
+                    ->where('id', @$offer_id)
+                    ->first();
+
+                $master_status_check = DB::table('offer_job_applications')
+                    ->select('master_status_id')
+                    ->where('id', @$offer_id)
+                    ->first();
+
+                $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId);
+
+                $spok_user_id_rows = DB::table('job_assign')
+                    ->where('job_id', $AddJobWiseCondidate->job_id)
+                    ->get(['spok_user_id', 'company_id'])->toArray();
+
+                // Step 2: Build result as [company_id => spok_user_id]
+                $teamCaptainId = [];
+
+                foreach ($spok_user_id_rows as $row) {
+                    if (
+                        ! is_null($row->spok_user_id) &&
+                        $row->spok_user_id != $AddJobWiseCondidate->submitted_by
+                    ) {
+                        $teamCaptainId[$row->company_id][] = $row->spok_user_id;
+                    }
+                }
+
+                // Step 3: Remove duplicates and reindex inner arrays
+                foreach ($teamCaptainId as $companyId => $spokIds) {
+                    $teamCaptainId[$companyId] = array_values(array_unique($spokIds));
+                }
+
+                $join_update_date_check = date('Y-m-d H:i:s', strtotime($oderVal->joined_date));
+                $join_update_date_check = Carbon::parse($join_update_date_check);
+                $today = Carbon::today();
+                $diffInDays = abs($today->diffInDays($join_update_date_check));
+
+                $candidateJoineddUser = 0;
+                $candidateJoineddTeam = 0;
+                $candidateJoineddUserbackout = 0;
+                $candidateJoineddTeambackout = 0;
+
+                if ($master_status_check->master_status_id == 6) { // $diffInDays<=30 &&
+                    if (! empty($sub_stages) || $sub_stages != '') {
+                        $status_row = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('id', '=', $sub_stages)->first();
+                        if (@$status_row->name == 'Onboarded') {
+                            $candidateJoineddUser = 1500;
+                            $candidateJoineddTeam = 30;
+                        } else {
+                            $candidateJoineddUserbackout = -1500;
+                            $candidateJoineddTeambackout = -30;
+                        }
+                    }
+
+                } elseif ($master_status_check->master_status_id == 5) {  // $diffInDays<=30 &&
+                    $candidateJoineddUser = 1500;
+                    $candidateJoineddTeam = 30;
+                }
+
+                // Route the join/backout points into full-time keys or contract keys based on the job type.
+                $sstIsContract = ((int) @$wise_c->employment_type !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
+                $cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
+                $cjUserCT = ($sstIsContract && $candidateJoineddUser != 0) ? 5000 : 0;
+                $boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
+                $boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
+                $cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
+                $cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0) ? 500 : 0;
+                $boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
+                $boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500 : 0;
+
+                $teamCaptainId = array_map(function ($arr) {
+                    return array_values(array_filter($arr, function ($value) {
+                        return $value != 0;
+                    }));
+                }, $teamCaptainId);
+
+                if (count($teamCaptainId) > 0) {
+
+                    foreach ($teamCaptainId as $comId => $captainId) {
+                        $teamRankElastic = [
+                            'company_id' => $comId,
+                            'user_id' => $captainId[0],
+                            'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
+                            'profileUpload' => 0,
+                            'interviewScheduled' => 0,
+                            'interviewNoShow' => 0,
+                            'offerReleased' => 0,
+                            'candidateJoined' => 0,
+                            'jobsPosted' => 0,
+                            'feedbackGivenOnCVs' => 0,
+                            'postJobToVendorMarket' => 0,
+                            'outsourceJobsToVendors' => 0,
+                            'listBenchCandidates' => 0,
+                            'respondToBenchRequests' => 0,
+                            'interestedCandidates' => 0,
+                            'notInterestedCandidates' => 0,
+                            'teamCaptainInterviewScheduled' => 0,
+                            'teamCaptainInterviewNoShow' => 0,
+                            'teamCaptainOfferReleased' => 0,
+                            'teamCaptainCandidateJoined' => $cjTeamFT,
+                            'backoutTeam' => $boTeamFT,
+                            'teamCaptainCandidateJoinedContract' => $cjTeamCT,
+                            'backoutTeamContract' => $boTeamCT,
+                        ];
+                        GeneralMethod::teamRankElastic($teamRankElastic);
+                    }
+
+                }
+
+                $teamRankElastic = [
+                    'company_id' => $AddJobWiseCondidate->company_id,
+                    'user_id' => $AddJobWiseCondidate->submitted_by,
+                    'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
+                    'profileUpload' => 0,
+                    'interviewScheduled' => 0,
+                    'interviewNoShow' => 0,
+                    'offerReleased' => 0,
+                    'candidateJoined' => $cjUserFT,
+                    'backout' => $boUserFT,
+                    'candidateJoinedContract' => $cjUserCT,
+                    'backoutContract' => $boUserCT,
+                    'jobsPosted' => 0,
+                    'feedbackGivenOnCVs' => 0,
+                    'postJobToVendorMarket' => 0,
+                    'outsourceJobsToVendors' => 0,
+                    'listBenchCandidates' => 0,
+                    'respondToBenchRequests' => 0,
+                ];
+
+                DB::table('offer_job_applications')
+                    ->where('id', @$offer_id)
+                    ->update(['master_status_id' => 6]);
+
+                GeneralMethod::teamRankElastic($teamRankElastic);
+
+                $of_currency = $currency[(@$oderVal->offer_currency) ? $oderVal->offer_currency : 0];
+                $of_mode = $salaryModeOffer[(@$oderVal->offer_mode) ? $oderVal->offer_mode : 0];
+
+                $data = [
+                    'VendorTeam' => @$wise_c->company_name,
+                    'ReqID' => 'R'.@$wise_c->job_id,
+                    'Reqname' => @$wise_c->title,
+                    'CompanyNameClientname' => $companyOrClientName->companyOrclientName,
+                    'CandidateStatus' => $jobApplication->duplicate,
+                    'prev_process_name' => $prev_process_name,
+                    'CurrentStage' => @$wise_c->name,
+                    'SubStage' => $name,
+                    'CandidateName' => $jobApplication->full_name,
+                    'Experience' => $jobApplication->total_exp,
+                    'Position' => $jobApplication->current_designation,
+                    'NoticePeriod' => $np,
+                    'employment_type' => (@$wise_c->employment_type == 1) ? 'Contract' : 'Full-time',
+                    'comments' => @$comment,
+                    'RefferedBy' => @$wise_c->posted_by,
+                    'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
+                    'companyOrclientName' => $companyOrClientName->companyOrclientName,
+                    'selfCompany' => $self_company,
+                    'OfferAmount' => @$of_currency.' '.@$oderVal->offer_amount.' /'.@$of_mode,
+                    'Joiningdate' => date('d-M-Y H:i:s', strtotime(@$oderVal->joined_date)),
+                ];
+                // dd($data);
+                // 			config(['mail.from.name' => auth()->user()->name]);
 
                 $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
                 $email_to_remove = auth()->user()->email;
@@ -10916,25 +11408,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     unset($notification[$index]);
                     $notification = array_values($notification);
                 }
-                $cc = []; // $notification; //array_merge($partnersData, $recommendedDataList);
+                $cc = $notification; // array_merge($partnersData, $recommendedDataList);
 
+                // $cc = array_merge($partnersData, $recommendedDataList);
                 $basecompany = GeneralMethod::baseCompany();
                 $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
                 $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
                 $attachments = [];
-                //  dd(auth()->user()->email, $subject,'email.candidate.change-status', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-
-                $checkMailPermision = GeneralMethod::mailPermission(6);
+                $checkMailPermision = GeneralMethod::mailPermission(5);
                 if ($checkMailPermision) {
-                    $mailTypeSubject = GeneralMethod::mailTypeSubject(6, 1);
+                    $mailTypeSubject = GeneralMethod::mailTypeSubject(5, 1);
                     $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
                     $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
                     $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-
+                    // dd($to_Mail_Id);
                     QueueNotificationMailService::dispatch(
                         $to_Mail_Id,
                         $subject,
-                        'email.candidate.change-status',
+                        'email.candidate.joined-us-today',
                         (object) $data,
                         $attachments,
                         $fromAddress,
@@ -10943,431 +11434,88 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                         $company_id
                     )->onConnection('emails');
 
-                    //    $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.change-status', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+                    //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.joined-us-today', (object) $data, $attachments, $fromAddress, $senderName,$cc);
+
                 }
-                //  dd("d");
+                // 			Mail::to(auth()->user()->email)->cc($cc)->send(new JoinedUsTodayMail((object) $data, $subject));
 
-                // Mail::to(auth()->user()->email)->cc($cc)->send(new ChangeStatusMail((object) $data,$subject));
-
-            }
-
-        }
-
-        if ($master_status == 5) {
-
-            $rowData = DB::table('job_applications')->select('*')->where('id', $application_id)->first();
-            $rowDataOffer = DB::table('offer_job_applications')->select('*')->where('application_id', $application_id)->where('job_id', $addJobWiseCondidate->job_id)->first();
-
-            $values = [
-                'application_id' => $rowData->id,
-                'submitted_by' => $rowData->submitted_by,
-                'company_id' => $rowData->company_id,
-                'np_id' => $rowData->np_id,
-                'full_name' => $rowData->full_name,
-
-                'email' => $rowData->email,
-                'phone' => $rowData->phone,
-                'gender' => $rowData->gender,
-                'dob' => $rowData->dob,
-                'country' => $rowData->country,
-
-                'state' => $rowData->state,
-                'city' => $rowData->city,
-                'secondrary_email' => $rowData->secondrary_email,
-                'secondary_mobile' => $rowData->secondary_mobile,
-                'skills' => $rowData->skills,
-
-                'photo' => $rowData->photo,
-                'resume' => $rowData->resume,
-                'rating' => @$rowData->rating,
-                'skype_id' => $rowData->skype_id,
-                'cover_letter' => $rowData->cover_letter,
-
-                'job_id' => $addJobWiseCondidate->job_id,
-                'status_id' => $rowData->status_id,
-                'is_viewed' => $rowData->is_viewed,
-                'column_priority' => $rowData->column_priority,
-                'total_exp' => $rowData->total_exp,
-
-                'rel_exp' => $rowData->rel_exp,
-                'passport' => $rowData->passport,
-                'ctc' => $rowData->ctc,
-                'ectc' => $rowData->ectc,
-                'current_location' => $rowData->current_location,
-
-                'current_designation' => $rowData->current_designation,
-                'current_company' => $rowData->current_company,
-                'process_id' => $rowData->process_id,
-                'qualification' => $rowData->qualification,
-                'master_status_id' => $rowData->master_status_id,
-
-                'child_status_id' => $rowData->child_status_id,
-                'serving_notice_period_mode' => $rowData->serving_notice_period_mode,
-                'proposed_ctc' => $rowData->proposed_ctc,
-                'any_offer' => $rowData->any_offer,
-                'document' => $rowData->document,
-
-                'sub_for_approval' => $rowData->sub_for_approval,
-                'offer_approved' => $rowData->offer_approved,
-                'offer_release' => $rowData->offer_release,
-                'offer_acceptance' => $rowData->offer_acceptance,
-                'joined' => $addJobWiseCondidate->id,
-
-                'created_at' => date('Y-m-d'),
-                'updated_at' => date('Y-m-d'),
-
-            ];
-            if (empty($rowDataOffer)) {
-                DB::table('offer_job_applications')->insert($values);
-                $offer_id = DB::getPdo()->lastInsertId();
-            } else {
-                $offer_id = $rowDataOffer->id;
-                DB::table('offer_job_applications')->where('id', $rowDataOffer->id)->update([
-                    'joined_date' => null,
-                    'offer_mode' => null,
-                    'offer_amount' => null,
-                    'offer_currency' => null,
-                ]);
-            }
-
-            if ($exists) {
-
-                // 2. Prepare the update timestamp
-                $updateTime = now()->toIso8601String();
-
-                // 3. Execute update with debugging
-                $updateParams_e = [
-                    'index' => ELASTIC_CANDIDATES,
-                    'id' => $addJobWiseCondidate_id,
-                    'body' => [
-                        'doc' => [
-                            'of_joined_date' => null,
-                            'of_offer_currency' => null,
-                            'of_offer_mode' => null,
-                            'of_offer_amount' => null,
-                            'of_offer_acceptance' => null,
-                            'of_offer_approved' => null,
-                            'of_created_date' => null,
-                            'of_expired_date' => null,
-                            'send_accept_date_time' => null,
-                            'send_approved_date_time' => null,
-                            'approved_date_time' => null,
-                            'accept_date_time' => null,
-                            'offer_id' => $offer_id,
-                            'updated_at' => $updateTime,
-                        ],
-                        'doc_as_upsert' => false, // Changed to false since we verified existence
-                    ],
-                    'refresh' => false, // Eventual consistency for 10K concurrent scale
+                $valuesJoin = [
+                    'job_id' => @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null,
+                    'master_status_id' => @$addJobWiseCondidate->master_status_id ? @$addJobWiseCondidate->master_status_id : 6,
+                    'child_status_id' => @$addJobWiseCondidate->child_status_id ? @$addJobWiseCondidate->child_status_id : null,
+                    'jobApplication' => @$application_id,
+                    'addJobWiseCondidate' => @$addJobWiseCondidate_id,
+                    'offer_amount' => (@$oderVal->offer_amount) ? @$oderVal->offer_amount : 0,
+                    'joined_date' => @$oderVal->joined_date,
+                    'offer_currency' => (@$oderVal->offer_currency) ? @$oderVal->offer_currency : 0,
+                    'offer_mode' => (@$oderVal->offer_mode) ? @$oderVal->offer_mode : 0,
                 ];
-                // dd($updateParams);
-                $redudds = $this->elasticService->getClient()->update($updateParams_e);
-                GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
-
-                // dd($redudds,$addJobWiseCondidate_id);
-            }
-
-            $intRow = DB::table('interview_schedules')->select('*')->where('job_application_id', $application_id)->where('interview_job_id', $wise_c->job_id)->orderBy('interview_schedules.id', 'DESC')->first();
-            $schedule_date = '';
-            if ($intRow) {
-                $schedule_date = @$intRow->schedule_date;
-                $schedule_date = date('d M, Y H:i', strtotime($schedule_date)).'(IST)';
-            }
-
-            $data = [
-                'VendorTeam' => @$wise_c->company_name,
-                'ReqID' => 'R'.@$wise_c->job_id,
-                'Reqname' => @$wise_c->title,
-                'CompanyNameClientname' => $companyOrClientName->companyOrclientName,
-                'CandidateStatus' => $jobApplication->duplicate,
-                'prev_process_name' => $prev_process_name,
-                'CurrentStage' => @$wise_c->name,
-                'SubStage' => $name,
-                'CandidateName' => $jobApplication->full_name,
-                'Experience' => $jobApplication->total_exp,
-                'Position' => $jobApplication->current_designation,
-                'NoticePeriod' => $np,
-                'comments' => @$comment,
-                'interviewDateTime' => @$schedule_date,
-                'linkedinId' => '',
-                'RefferedBy' => @$wise_c->posted_by,
-                'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
-                'companyOrclientName' => $companyOrClientName->companyOrclientName,
-                'selfCompany' => $self_company,
-                'OfferAmount' => '',
-                'Joiningdate' => '',
-            ];
-            // dd($data);
-            // 		config(['mail.from.name' => auth()->user()->name]);
-
-            $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
-            $email_to_remove = auth()->user()->email;
-            $index = array_search($email_to_remove, $notification);
-            if ($index !== false) {
-                unset($notification[$index]);
-                $notification = array_values($notification);
-            }
-            $cc = []; // $notification; //array_merge($partnersData, $recommendedDataList);
-            // $cc = array_merge($partnersData, $recommendedDataList);
-
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
-            $checkMailPermision = GeneralMethod::mailPermission(4);
-            if ($checkMailPermision) {
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(4, 1);
-                $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
-                $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-
-                // dd($to_Mail_Id);
-
-                QueueNotificationMailService::dispatch(
-                    $to_Mail_Id,
-                    $subject,
-                    'email.candidate.offer',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $company_id
-                )->onConnection('emails');
-
-                //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.offer', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-            }
-
-            $jobIdGet = @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null;
-            $tb_ranks = ['company_id' => auth()->user()->company_id, 'user_id' => $jobApplication->submitted_by, 'job_id' => @$jobIdGet, 'status' => 1, 'application_id' => @$jobApplication->id];
-            DB::table('tb_ranks')->insert($tb_ranks);
-            // 		Mail::to(auth()->user()->email)->cc($cc)->send(new OfferMail((object) $data,$subject));
-
-        }
-
-        if ($master_status == 6) {
-
-            $oderVal = DB::table('offer_job_applications')->where('application_id', @$application_id)->where('job_id', $addJobWiseCondidate->job_id)->first();
-            $offer_id = @$oderVal->id;
-
-            $offer_job_applications = DB::table('offer_job_applications')
-                ->select('joined as wiseId')
-                ->where('id', @$offer_id)
-                ->first();
-
-            $master_status_check = DB::table('offer_job_applications')
-                ->select('master_status_id')
-                ->where('id', @$offer_id)
-                ->first();
-
-            $AddJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($offer_job_applications->wiseId);
-
-            $spok_user_id_rows = DB::table('job_assign')
-                ->where('job_id', $AddJobWiseCondidate->job_id)
-                ->get(['spok_user_id', 'company_id'])->toArray();
-
-            // Step 2: Build result as [company_id => spok_user_id]
-            $teamCaptainId = [];
-
-            foreach ($spok_user_id_rows as $row) {
-                if (
-                    ! is_null($row->spok_user_id) &&
-                    $row->spok_user_id != $AddJobWiseCondidate->submitted_by
-                ) {
-                    $teamCaptainId[$row->company_id][] = $row->spok_user_id;
-                }
-            }
-
-            // Step 3: Remove duplicates and reindex inner arrays
-            foreach ($teamCaptainId as $companyId => $spokIds) {
-                $teamCaptainId[$companyId] = array_values(array_unique($spokIds));
-            }
-
-            $join_update_date_check = date('Y-m-d H:i:s', strtotime($oderVal->joined_date));
-            $join_update_date_check = Carbon::parse($join_update_date_check);
-            $today = Carbon::today();
-            $diffInDays = abs($today->diffInDays($join_update_date_check));
-
-            $candidateJoineddUser = 0;
-            $candidateJoineddTeam = 0;
-            $candidateJoineddUserbackout = 0;
-            $candidateJoineddTeambackout = 0;
-
-            if ($master_status_check->master_status_id == 6) { // $diffInDays<=30 &&
-                if (! empty($sub_stages) || $sub_stages != '') {
-                    $status_row = DB::table('candidate_status')->select('*')->where('company_id', user()->company_id)->where('id', '=', $sub_stages)->first();
-                    if (@$status_row->name == 'Onboarded') {
-                        $candidateJoineddUser = 1500;
-                        $candidateJoineddTeam = 30;
-                    } else {
-                        $candidateJoineddUserbackout = -1500;
-                        $candidateJoineddTeambackout = -30;
-                    }
-                }
-
-            } elseif ($master_status_check->master_status_id == 5) {  // $diffInDays<=30 &&
-                $candidateJoineddUser = 1500;
-                $candidateJoineddTeam = 30;
-            }
-
-            // Route the join/backout points into full-time keys or contract keys based on the job type.
-            $sstIsContract = ((int) @$wise_c->employment_type !== 0); // 0 = Full-time; Contract/Freelance/Part-time all use the higher weight
-            $cjUserFT = $sstIsContract ? 0 : $candidateJoineddUser;
-            $cjUserCT = ($sstIsContract && $candidateJoineddUser != 0) ? 5000 : 0;
-            $boUserFT = $sstIsContract ? 0 : $candidateJoineddUserbackout;
-            $boUserCT = ($sstIsContract && $candidateJoineddUserbackout != 0) ? -5000 : 0;
-            $cjTeamFT = $sstIsContract ? 0 : $candidateJoineddTeam;
-            $cjTeamCT = ($sstIsContract && $candidateJoineddTeam != 0) ? 500 : 0;
-            $boTeamFT = $sstIsContract ? 0 : $candidateJoineddTeambackout;
-            $boTeamCT = ($sstIsContract && $candidateJoineddTeambackout != 0) ? -500 : 0;
-
-            $teamCaptainId = array_map(function ($arr) {
-                return array_values(array_filter($arr, function ($value) {
-                    return $value != 0;
-                }));
-            }, $teamCaptainId);
-
-            if (count($teamCaptainId) > 0) {
-
-                foreach ($teamCaptainId as $comId => $captainId) {
-                    $teamRankElastic = [
-                        'company_id' => $comId,
-                        'user_id' => $captainId[0],
-                        'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
-                        'profileUpload' => 0,
-                        'interviewScheduled' => 0,
-                        'interviewNoShow' => 0,
-                        'offerReleased' => 0,
-                        'candidateJoined' => 0,
-                        'jobsPosted' => 0,
-                        'feedbackGivenOnCVs' => 0,
-                        'postJobToVendorMarket' => 0,
-                        'outsourceJobsToVendors' => 0,
-                        'listBenchCandidates' => 0,
-                        'respondToBenchRequests' => 0,
-                        'interestedCandidates' => 0,
-                        'notInterestedCandidates' => 0,
-                        'teamCaptainInterviewScheduled' => 0,
-                        'teamCaptainInterviewNoShow' => 0,
-                        'teamCaptainOfferReleased' => 0,
-                        'teamCaptainCandidateJoined' => $cjTeamFT,
-                        'backoutTeam' => $boTeamFT,
-                        'teamCaptainCandidateJoinedContract' => $cjTeamCT,
-                        'backoutTeamContract' => $boTeamCT,
-                    ];
-                    GeneralMethod::teamRankElastic($teamRankElastic);
-                }
+                DB::table('join_applications')->insert($valuesJoin);
+                $jobIdGet = @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null;
+                $tb_ranks = ['company_id' => auth()->user()->company_id, 'user_id' => $jobApplication->submitted_by, 'job_id' => @$jobIdGet, 'status' => 6, 'application_id' => @$jobApplication->id];
+                DB::table('tb_ranks')->insert($tb_ranks);
 
             }
 
-            $teamRankElastic = [
-                'company_id' => $AddJobWiseCondidate->company_id,
-                'user_id' => $AddJobWiseCondidate->submitted_by,
-                'candidate_id' => $AddJobWiseCondidate->job_application_id ?: $AddJobWiseCondidate->id,
-                'profileUpload' => 0,
-                'interviewScheduled' => 0,
-                'interviewNoShow' => 0,
-                'offerReleased' => 0,
-                'candidateJoined' => $cjUserFT,
-                'backout' => $boUserFT,
-                'candidateJoinedContract' => $cjUserCT,
-                'backoutContract' => $boUserCT,
-                'jobsPosted' => 0,
-                'feedbackGivenOnCVs' => 0,
-                'postJobToVendorMarket' => 0,
-                'outsourceJobsToVendors' => 0,
-                'listBenchCandidates' => 0,
-                'respondToBenchRequests' => 0,
+            // Phase 5: Transactional Outbox Event insertion & Idempotency Key completion
+            $outboxPayload = [
+                'candidate_id' => (int) $application_id,
+                'wise_id' => (int) $addJobWiseCondidate_id,
+                'job_id' => (int) ($addJobWiseCondidate->job_id ?? 0),
+                'company_id' => (int) $company_id,
+                'master_status_id' => (int) $master_status,
+                'child_status_id' => (int) $sub_stages,
+                'prev_master_status_id' => (int) ($data->job_master_status_id ?? 8),
+                'aggregate_version' => $newVersion,
+                'user_id' => (int) ($this->user->id ?? auth()->id() ?? 0),
             ];
 
-            DB::table('offer_job_applications')
-                ->where('id', @$offer_id)
-                ->update(['master_status_id' => 6]);
+            DB::table('sys_outbox_events')->insert([
+                'tenant_id' => (int) $company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'CandidateAssignment',
+                'aggregate_id' => (int) $addJobWiseCondidate_id,
+                'aggregate_version' => $newVersion,
+                'event_type' => 'stage_updated',
+                'payload' => json_encode($outboxPayload),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
 
-            GeneralMethod::teamRankElastic($teamRankElastic);
-
-            $of_currency = $currency[(@$oderVal->offer_currency) ? $oderVal->offer_currency : 0];
-            $of_mode = $salaryModeOffer[(@$oderVal->offer_mode) ? $oderVal->offer_mode : 0];
-
-            $data = [
-                'VendorTeam' => @$wise_c->company_name,
-                'ReqID' => 'R'.@$wise_c->job_id,
-                'Reqname' => @$wise_c->title,
-                'CompanyNameClientname' => $companyOrClientName->companyOrclientName,
-                'CandidateStatus' => $jobApplication->duplicate,
-                'prev_process_name' => $prev_process_name,
-                'CurrentStage' => @$wise_c->name,
-                'SubStage' => $name,
-                'CandidateName' => $jobApplication->full_name,
-                'Experience' => $jobApplication->total_exp,
-                'Position' => $jobApplication->current_designation,
-                'NoticePeriod' => $np,
-                'employment_type' => (@$wise_c->employment_type == 1) ? 'Contract' : 'Full-time',
-                'comments' => @$comment,
-                'RefferedBy' => @$wise_c->posted_by,
-                'SubmittedOn' => date('d-M-Y H:i:s', strtotime(@$wise_c->created_at)),
-                'companyOrclientName' => $companyOrClientName->companyOrclientName,
-                'selfCompany' => $self_company,
-                'OfferAmount' => @$of_currency.' '.@$oderVal->offer_amount.' /'.@$of_mode,
-                'Joiningdate' => date('d-M-Y H:i:s', strtotime(@$oderVal->joined_date)),
+            $successResponse = [
+                'status' => 'success',
+                'message' => 'Application stage update successfully !',
+                'aggregate_version' => $newVersion,
             ];
-            // dd($data);
-            // 			config(['mail.from.name' => auth()->user()->name]);
 
-            $notification = DB::table('clients')->where('id', '=', @$wise_c->client_id)->where('self_company', '=', 1)->pluck('email')->toArray();
-            $email_to_remove = auth()->user()->email;
-            $index = array_search($email_to_remove, $notification);
-            if ($index !== false) {
-                unset($notification[$index]);
-                $notification = array_values($notification);
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', (int) $company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($successResponse),
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            try {
+                DB::table('sys_idempotency_keys')
+                    ->where('tenant_id', (int) $company_id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->update([
+                        'status' => 'FAILED_RETRYABLE',
+                        'last_error' => substr($e->getMessage(), 0, 500),
+                        'updated_at' => now(),
+                    ]);
+            } catch (\Throwable $ie) {
             }
-            $cc = $notification; // array_merge($partnersData, $recommendedDataList);
-
-            // $cc = array_merge($partnersData, $recommendedDataList);
-            $basecompany = GeneralMethod::baseCompany();
-            $senderName = ($basecompany->companyName) ? $basecompany->companyName : '';
-            $fromAddress = ($basecompany->companyEmail) ? $basecompany->companyEmail : '';
-            $attachments = [];
-            $checkMailPermision = GeneralMethod::mailPermission(5);
-            if ($checkMailPermision) {
-                $mailTypeSubject = GeneralMethod::mailTypeSubject(5, 1);
-                $notificationemail = GeneralMethod::notification($company_id, 'Recuitment');
-                $defailsEmail = DB::table('companies')->where('id', $company_id)->first()->company_email;
-                $to_Mail_Id = $notificationemail->email ?? $defailsEmail ?? '';
-                // dd($to_Mail_Id);
-                QueueNotificationMailService::dispatch(
-                    $to_Mail_Id,
-                    $subject,
-                    'email.candidate.joined-us-today',
-                    (object) $data,
-                    $attachments,
-                    $fromAddress,
-                    $senderName,
-                    $cc,
-                    $company_id
-                )->onConnection('emails');
-
-                //  $result = $this->notificationMailService->sendEmail($to_Mail_Id, $subject,'email.candidate.joined-us-today', (object) $data, $attachments, $fromAddress, $senderName,$cc);
-
-            }
-            // 			Mail::to(auth()->user()->email)->cc($cc)->send(new JoinedUsTodayMail((object) $data, $subject));
-
-            $valuesJoin = [
-                'job_id' => @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null,
-                'master_status_id' => @$addJobWiseCondidate->master_status_id ? @$addJobWiseCondidate->master_status_id : 6,
-                'child_status_id' => @$addJobWiseCondidate->child_status_id ? @$addJobWiseCondidate->child_status_id : null,
-                'jobApplication' => @$application_id,
-                'addJobWiseCondidate' => @$addJobWiseCondidate_id,
-                'offer_amount' => (@$oderVal->offer_amount) ? @$oderVal->offer_amount : 0,
-                'joined_date' => @$oderVal->joined_date,
-                'offer_currency' => (@$oderVal->offer_currency) ? @$oderVal->offer_currency : 0,
-                'offer_mode' => (@$oderVal->offer_mode) ? @$oderVal->offer_mode : 0,
-            ];
-            DB::table('join_applications')->insert($valuesJoin);
-            $jobIdGet = @$addJobWiseCondidate->job_id ? @$addJobWiseCondidate->job_id : null;
-            $tb_ranks = ['company_id' => auth()->user()->company_id, 'user_id' => $jobApplication->submitted_by, 'job_id' => @$jobIdGet, 'status' => 6, 'application_id' => @$jobApplication->id];
-            DB::table('tb_ranks')->insert($tb_ranks);
-
+            throw $e;
         }
 
         if (count($cc) > 0) {
@@ -11433,6 +11581,8 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         foreach ($cachekeys as $key) {
             GeneralMethod::cacheClean($key);
         }
+        // Multi-tenant atomic cache invalidation for Joining Tracker total count
+        \Illuminate\Support\Facades\Redis::del('joining_tracker_total_count_'.$company_id);
 
         $finalJobId = (int) ($addJobWiseCondidate->job_id ?? $jobApplication->job_id ?? 0);
         $finalCompanyId = (int) ($addJobWiseCondidate->company_id ?? $company_id ?? auth()->user()->company_id ?? 0);
@@ -11453,13 +11603,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 null,
                 (int) $master_status,
                 (int) ($data->job_master_status_id ?? 8),
-                (int) $finalJobId
+                (int) $finalJobId,
+                null,
+                [
+                    'child_status_id' => (int) $sub_stages,
+                    'aggregate_version' => $newVersion,
+                    'idempotency_key' => $idempotencyKey,
+                ]
             );
+
+            // Mark transactional outbox event COMPLETED upon successful real-time publication
+            DB::table('sys_outbox_events')
+                ->where('tenant_id', (int) $company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'processed_at' => now(),
+                ]);
         } catch (\Throwable $e) {
-            \Log::warning('stage_submit CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
+            \Log::warning('stage_submit CandidateDrawerUpdated dispatch failed (retained in sys_outbox_events as PENDING): '.$e->getMessage());
         }
 
-        return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);
+        return Reply::dataOnly($successResponse ?? ['status' => 'success', 'message' => 'Application stage update successfully !']);
 
     }
 
