@@ -7158,22 +7158,29 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ];
         array_unshift($sort, $assignmentSortScript);
 
+        // Intent: Career Apply page strictly displays candidates who applied directly through the Client's Career Apply flow.
+        // Candidates sourced by an agency against a shared requirement must never appear here.
         $boolQuery = [
             'bool' => [
                 'should' => [
-                    // First condition
+                    // First condition — authentic direct career applicants
                     [
                         'bool' => [
                             'must' => array_merge([
                                 ['term' => ['company_id' => $company_id]],
                                 ['term' => ['job_id' => $jobid]],
                                 ['term' => ['status_type' => 'DIRECT']],
+                                ['term' => ['thirdparty_company_id' => 0]],
                             ]),
                         ],
                     ],
                 ],
                 'minimum_should_match' => 1,
                 'filter' => [], // We'll add all filters here
+                'must_not' => [
+                    ['range' => ['thirdparty_company_id' => ['gt' => 0]]],
+                    ['range' => ['ClientComID' => ['gt' => 0]]],
+                ],
             ],
         ];
 

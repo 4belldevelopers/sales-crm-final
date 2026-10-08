@@ -11836,6 +11836,28 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             $redud = $this->elasticService->getClient()->update($updateParams);
             GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
 
+            // Intent: Career Apply candidates and Agency-sourced candidates must remain strictly separated.
+            // Ensure agency-sourced candidate is pruned from Career Apply index if present.
+            $isAgencyCandidate = ((int) ($addJobWiseCondidate->thirdparty_company_id ?? 0) > 0)
+                || ((int) ($wise_c->thirdparty_company_id ?? 0) > 0)
+                || ((int) DB::table('job_applications')->where('id', (int) $application_id)->value('thirdparty_company_id') > 0);
+
+            if ($isAgencyCandidate && (int) $application_id > 0) {
+                try {
+                    if ($this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                        if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => (int) $application_id])) {
+                            $this->elasticService->getClient()->delete([
+                                'index' => ELASTIC_CAREER_APPLY,
+                                'id' => (int) $application_id,
+                                'refresh' => true,
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('stage_submit: Pruning from ELASTIC_CAREER_APPLY failed: '.$e->getMessage());
+                }
+            }
+
             // dd($redud);
         }
 
@@ -14473,6 +14495,29 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 ]);
                 if ($exists) {
                     GeneralMethod::elasticBenchCandidateAddEditIndex($application_id);
+                }
+            }
+
+            // Intent: Career Apply candidates and Agency-sourced candidates must remain strictly separated.
+            // Ensure agency-sourced candidate is pruned from Career Apply index if present.
+            $targetAppId = (int) ($application_id ?: ($data->candidate_id ?? 0));
+            $isAgencyCandidate = ((int) ($addJobWiseCondidate->thirdparty_company_id ?? 0) > 0)
+                || ((int) ($data->thirdparty_company_id ?? 0) > 0)
+                || ($targetAppId > 0 && (int) DB::table('job_applications')->where('id', $targetAppId)->value('thirdparty_company_id') > 0);
+
+            if ($isAgencyCandidate && $targetAppId > 0) {
+                try {
+                    if ($this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                        if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => $targetAppId])) {
+                            $this->elasticService->getClient()->delete([
+                                'index' => ELASTIC_CAREER_APPLY,
+                                'id' => $targetAppId,
+                                'refresh' => true,
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('client_stage_submit: Pruning from ELASTIC_CAREER_APPLY failed: '.$e->getMessage());
                 }
             }
 

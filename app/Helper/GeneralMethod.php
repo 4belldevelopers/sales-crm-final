@@ -12219,6 +12219,7 @@ END:VCALENDAR";
         $applications = JobApplication::select(
             'job_applications.id',
             'job_applications.thirdparty_company_id',
+            'job_applications.status_type',
             'job_applications.full_name',
             'job_applications.email',
             'job_applications.phone',
@@ -12364,6 +12365,33 @@ END:VCALENDAR";
 
         foreach ($applications as $application) {
             $wiseId = $application->id;
+
+            // Intent: Career Apply candidates and Agency-sourced candidates must remain strictly logically and physically separated.
+            // Candidates sourced by an agency (thirdparty_company_id > 0, status_type != 'DIRECT', or assigned via recommendation)
+            // must NEVER be indexed into ELASTIC_CAREER_APPLY. If a document previously existed, purge it immediately.
+            $isAgencySourced = ((int) $application->thirdparty_company_id > 0)
+                || ((string) $application->status_type !== 'DIRECT')
+                || DB::table('add_job_wise_condidates')
+                    ->where('job_application_id', $application->id)
+                    ->where('thirdparty_company_id', '>', 0)
+                    ->exists();
+
+            if ($isAgencySourced) {
+                try {
+                    if ($elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                        if ($elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => $wiseId])) {
+                            $elasticService->getClient()->delete([
+                                'index' => ELASTIC_CAREER_APPLY,
+                                'id' => $wiseId,
+                                'refresh' => true,
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("careerStore(): Purging agency candidate {$wiseId} from ELASTIC_CAREER_APPLY failed: {$e->getMessage()}");
+                }
+                continue;
+            }
 
             $logos = DB::table('companies')
                 ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions', 'jobs.company_id as companyChech', 'clients.name as clients_name')
@@ -13830,22 +13858,28 @@ END:VCALENDAR";
 
         // ####################################  START  CAREER COUNTER
 
+        // Intent: Career Apply counter strictly counts direct career applications for this client and job.
+        // Agency-sourced candidates (thirdparty_company_id > 0, ClientComID > 0) are strictly excluded.
         $boolQueryCareer = [
             'bool' => [
                 'should' => [
-                    // First condition
                     [
                         'bool' => [
                             'must' => [
                                 ['term' => ['company_id' => $company_id]],
                                 ['term' => ['job_id' => $id]],
+                                ['term' => ['status_type' => 'DIRECT']],
+                                ['term' => ['thirdparty_company_id' => 0]],
                             ],
                         ],
                     ],
                 ],
                 'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
-                'must_not' => [],
+                'filter' => [],
+                'must_not' => [
+                    ['range' => ['thirdparty_company_id' => ['gt' => 0]]],
+                    ['range' => ['ClientComID' => ['gt' => 0]]],
+                ],
             ],
         ];
 

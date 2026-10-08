@@ -41,8 +41,12 @@ class JobApplicationObserver
         UpdatePipelineCountersJob::dispatch($app->id)->onQueue('counters')->afterCommit();
         UpdateApplicationCountersJob::dispatch($app->id)->onQueue('counters')->afterCommit();
 
-        // Sync candidate state to Elasticsearch read model post-commit
-        if (class_exists(\App\Jobs\SyncCandidateToElasticJob::class)) {
+        // Sync candidate state to Career Apply Elasticsearch read model post-commit
+        // strictly for direct career portal applicants. Agency-sourced candidates
+        // (thirdparty_company_id > 0 or status_type != 'DIRECT') are strictly isolated
+        // and must never be indexed into ELASTIC_CAREER_APPLY.
+        $isDirectCareerApplicant = ((int) $app->thirdparty_company_id === 0 && (string) $app->status_type === 'DIRECT');
+        if ($isDirectCareerApplicant && class_exists(\App\Jobs\SyncCandidateToElasticJob::class)) {
             \App\Jobs\SyncCandidateToElasticJob::dispatch($app->id)->afterCommit();
         }
 
