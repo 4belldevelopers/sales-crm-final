@@ -3454,11 +3454,11 @@ class SaasFrontController extends SaasFrontBaseController
 
             return view('auth.login', $this->data);
         }
-        // Bad or expired token — branded error page (Sprint 4 task 4.10 / Sprint 5 task 5.13).
-        $this->messsage = __('messages.emailVerifyFail');
-        $this->class = 'error';
 
-        return view('saas-front.email-verification', $this->data);
+        // Invalid, missing, or expired token — redirect to login page with error flash message.
+        return redirect()->route('login')
+            ->with('accountnotverify', __('messages.emailVerifyFail'))
+            ->with('error', __('messages.emailVerifyFail'));
     }
 
     public function changeLanguage($code)

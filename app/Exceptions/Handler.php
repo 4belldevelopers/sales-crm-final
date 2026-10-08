@@ -2,10 +2,12 @@
 
 namespace App\Exceptions;
 
-use Throwable;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Session\TokenMismatchException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
+
 class Handler extends ExceptionHandler
 {
     /**
@@ -51,7 +53,13 @@ class Handler extends ExceptionHandler
         if ($exception instanceof TokenMismatchException) {
             return redirect('/login')->with('error', 'Your session has expired. Please log in again.');
         }
-        
+
+        if ($exception instanceof InvalidSignatureException) {
+            return redirect()->route('login')
+                ->with('accountnotverify', __('messages.emailVerifyFail'))
+                ->with('error', __('messages.emailVerifyFail'));
+        }
+
         // if ($exception instanceof NotFoundHttpException) {
         //     if (auth()->check()) {
         //         return response()->view('errors.404-authenticated', [], 404);
@@ -59,9 +67,8 @@ class Handler extends ExceptionHandler
         //         return redirect('/login');
         //     }
         // }
-        
+
         return parent::render($request, $exception);
-        
-        
+
     }
 }
