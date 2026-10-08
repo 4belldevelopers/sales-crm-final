@@ -310,3 +310,5 @@
     csdRenderQuickNotes();
     csdUpdateSubmitButton($('input[name="master_status"]:checked').attr('id'));
 </script>
+
+@include('service_company.job-applications.stage_validation_modal')

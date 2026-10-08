@@ -2050,11 +2050,21 @@
       $created_at 		=	@$jobDetail->created_at;
       $created_at 		=	date("d M, Y", strtotime($created_at));
 		
-      $snp_mode = 2; // Default to Immediate Joiner
+      $snp_mode = null;
       if (isset($application) && !empty($application->id)) {
-        $stored_snp_mode = (int) ($application->serving_notice_period_mode ?? 0);
-        if (in_array($stored_snp_mode, [0, 1, 2], true) && ($stored_snp_mode !== 0 || !empty($application->np_id))) {
-          $snp_mode = $stored_snp_mode;
+        if (isset($application->serving_notice_period_mode) && $application->serving_notice_period_mode !== null && $application->serving_notice_period_mode !== '') {
+          $stored_snp_mode = (int) $application->serving_notice_period_mode;
+          if (in_array($stored_snp_mode, [0, 1, 2], true)) {
+            $snp_mode = $stored_snp_mode;
+          }
+        } elseif (!empty($application->np_id)) {
+          if (is_numeric($application->np_id)) {
+            $snp_mode = 0;
+          } elseif (strtolower((string) $application->np_id) === 'immediate') {
+            $snp_mode = 2;
+          } else {
+            $snp_mode = 1;
+          }
         }
       }
       $snp_last_working = '';
@@ -7607,8 +7617,16 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         if (!ectc) addMissing('ectc');
 
         // Notice Period & Joining Details
-        var np = ($('#np_id').val() || '').trim();
-        if (!np) addMissing('np_id');
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (!snpMode) {
+            addMissing('np_id');
+        } else if (snpMode === '0') {
+            var npDays = ($('#ddl_np_id').val() || '').trim();
+            if (!npDays) addMissing('np_id');
+        } else if (snpMode === '1' || snpMode === '2') {
+            var npDate = ($('#np_id').val() || '').trim();
+            if (!npDate) addMissing('np_id');
+        }
     }
 
     // 8. Preferred Work Mode
@@ -8508,7 +8526,7 @@ $(document).ready(function() {
     var noticeDateInput = root.querySelector('#np_id');
     var noticeDateDisplay = root.querySelector('#np_id_display');
     var noticeDaysSelect = root.querySelector('#ddl_np_id');
-    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '2';
+    var previousNoticeMode = noticePeriodSelect ? String(noticePeriodSelect.value) : '';
 
     function formatNoticeDate(value) {
         if (!value) {
@@ -8535,7 +8553,7 @@ $(document).ready(function() {
         }
 
         noticePeriodOptions.forEach(function (option) {
-            var selected = option.getAttribute('data-notice-period-value') === mode;
+            var selected = Boolean(mode && option.getAttribute('data-notice-period-value') === mode);
             option.classList.toggle('is-selected', selected);
             option.setAttribute('aria-checked', selected ? 'true' : 'false');
         });

@@ -2048,18 +2048,34 @@ select#gender {
 
         $snp_one	=	$snp_two	= $snp_zero	= $snp_text_dummy = $snp_last_working = "";
         $snp_text_one	=	$snp_text_two	= $snp_text_zero	=	'display:none;';		
-        $snp_mode = isset($application->serving_notice_period_mode) ? (int)$application->serving_notice_period_mode : 2;
-        if($snp_mode == 1){
+        $snp_mode = null;
+        if (isset($application) && !empty($application->id)) {
+          if (isset($application->serving_notice_period_mode) && $application->serving_notice_period_mode !== null && $application->serving_notice_period_mode !== '') {
+            $stored_snp_mode = (int) $application->serving_notice_period_mode;
+            if (in_array($stored_snp_mode, [0, 1, 2], true)) {
+              $snp_mode = $stored_snp_mode;
+            }
+          } elseif (!empty($application->np_id)) {
+            if (is_numeric($application->np_id)) {
+              $snp_mode = 0;
+            } elseif (strtolower((string) $application->np_id) === 'immediate') {
+              $snp_mode = 2;
+            } else {
+              $snp_mode = 1;
+            }
+          }
+        }
+        if($snp_mode === 1){
           $snp_one		=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
           $snp_text_dummy = 'Serving Notice Period (SNP)';   
           $snp_last_working = @$application->np_id;                                 	
-        }else if($snp_mode == 2){
+        }else if($snp_mode === 2){
           $snp_two	=	'checked="checked"';
           $snp_text_one	=	'display: flex;';
           $snp_text_dummy = 'Immediate Joiner';  
           $snp_last_working = @$application->last_working_date;   
-        }else{
+        }else if($snp_mode === 0){
           $snp_zero		=	'checked="checked"';	
           $snp_text_zero	=	'display:block';
         } 
@@ -2918,9 +2934,10 @@ select#gender {
                   <div class="fg fv-row">
                     <label>Notice Period <span class="rq">*</span></label>
                     <select name="serving_notice_period" id="serving_notice_period">
-                      <option value="0" {{ ($snp_mode===0) ? 'selected' : '' }}>Select notice period</option>
-                      <option value="1" {{ ($snp_mode===1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
-                      <option value="2" {{ ($snp_mode===2) ? 'selected' : '' }}>Immediate Joiner</option>
+                      <option value="" {{ ($snp_mode === null) ? 'selected' : '' }}>Select notice period</option>
+                      <option value="0" {{ ($snp_mode === 0) ? 'selected' : '' }}>Select Notice Period</option>
+                      <option value="1" {{ ($snp_mode === 1) ? 'selected' : '' }}>Serving Notice Period (SNP)</option>
+                      <option value="2" {{ ($snp_mode === 2) ? 'selected' : '' }}>Immediate Joiner</option>
                     </select>
                   </div>
 
@@ -7047,11 +7064,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
 		//alert(cvalue); 
 		$('#np_id').val('');
 		$('#ddl_np_id').val('');
-		if(cvalue == 0){
+		if(cvalue === '0' || cvalue === 0){
 			$('#ddl_np_id').show();
 			$('#np_id').hide();		
       $('#snp-immediate').hide();
-		}else if(cvalue==1){
+		}else if(cvalue === '1' || cvalue === 1){
       $('#snp-immediate').show();
 			$('#ddl_np_id').hide();
 			$('#np_id').show();		
@@ -7063,7 +7080,7 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
       $('#text_display').val('Serving Notice Period');
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
-		}else if(cvalue ==2){
+		}else if(cvalue === '2' || cvalue === 2){
       $('#snp-immediate').show();
 			$('#ddl_np_id').hide();
 			$('#np_id').show();		
@@ -7072,6 +7089,11 @@ localStorage.setItem('currentPage', "{{ @$currentPage }}");
       $('#text_display').val('Immediate');
       $("#snp-immediate").attr('style','display:flex');	
       dateManageFunc();
+		}else{
+      $('#snp-immediate').hide();
+			$('#ddl_np_id').hide();
+			$('#np_id').hide();
+			$('#np_id').attr("disabled", true);
 		}	
     })
 
@@ -7577,8 +7599,16 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         if (!ectc) addMissing('ectc');
 
         // Notice Period & Joining Details
-        var np = ($('#np_id').val() || '').trim();
-        if (!np) addMissing('np_id');
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (!snpMode) {
+            addMissing('np_id');
+        } else if (snpMode === '0') {
+            var npDays = ($('#ddl_np_id').val() || '').trim();
+            if (!npDays) addMissing('np_id');
+        } else if (snpMode === '1' || snpMode === '2') {
+            var npDate = ($('#np_id').val() || '').trim();
+            if (!npDate) addMissing('np_id');
+        }
     }
 
     // 8. Preferred Work Mode
