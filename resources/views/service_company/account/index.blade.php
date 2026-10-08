@@ -1687,6 +1687,7 @@ input[type="radio"]:checked {
         // (the previous inline drawer body computed these inline; the agency_commercials_drawer
         // partial expects them as already-resolved values).
         $defaultTenantCurrencyKey = \App\Helper\GeneralMethod::defaultCurrencyKey();
+        $aatFulltimeDefaultRate = (float) (@$aatTerms->fulltime_success_fee_percentage ?? 8.33);
         $aatFixedFeeCurrency = (int) (@$aatTerms->fulltime_fixed_fee_currency ?? $defaultTenantCurrencyKey);
         $aatGeneralCurrency = (int) (@$aatTerms->general_currency ?? $defaultTenantCurrencyKey);
         $aatPaymentTerms = (int) (@$aatTerms->fulltime_payment_terms_days ?? 30);
