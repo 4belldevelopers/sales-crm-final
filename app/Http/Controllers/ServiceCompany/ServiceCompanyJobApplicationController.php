@@ -10279,15 +10279,6 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
     }
 
     /**
-<<<<<<< HEAD
-     * Intent: Authoritative Candidate Stage Transition Mutation Engine with
-     * Transactional Outbox, Idempotency Claiming, and OCC Aggregate Versioning
-     * for 10K concurrent users (Zero avoidable infrastructure load).
-     *
-     * Tenancy: Strictly isolated by auth()->user()->company_id.
-     * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
-     */
-=======
      * Stage-Aware 100% Validation when moving candidate from In Review (8) -> Sourcing (1).
      *
      * @param object $data Candidate payload from Elastic or DB
@@ -10373,7 +10364,14 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         return $missing;
     }
 
->>>>>>> 5c3f65ff2b288c83293e5b51035b47f1a4983b44
+    /**
+     * Intent: Authoritative Candidate Stage Transition Mutation Engine with
+     * Transactional Outbox, Idempotency Claiming, and OCC Aggregate Versioning
+     * for 10K concurrent users (Zero avoidable infrastructure load).
+     *
+     * Tenancy: Strictly isolated by auth()->user()->company_id.
+     * Complies with docs/CODE_DOCUMENTATION_STANDARD.md and docs/AI_RULES.md.
+     */
     public function stage_submit(Request $request)
     {
 
@@ -11676,10 +11674,25 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 'created_at' => now(),
             ]);
 
+            $msRow = DB::table('master_status')->where('id', (int) $master_status)->first();
+            $csName = '';
+            if (! empty($sub_stages)) {
+                $csRow = DB::table('candidate_status')->where('id', (int) $sub_stages)->first();
+                $csName = $csRow->name ?? '';
+            }
+
             $successResponse = [
                 'status' => 'success',
                 'message' => 'Application stage update successfully !',
                 'aggregate_version' => $newVersion,
+                'wise_id' => (int) $addJobWiseCondidate_id,
+                'candidate_id' => (int) $application_id,
+                'master_status_id' => (int) $master_status,
+                'master_status_name' => $msRow->name ?? '',
+                'css_style' => $msRow->css_style ?? '',
+                'old_master_status_id' => (int) ($data->job_master_status_id ?? 8),
+                'sub_stage_id' => (int) $sub_stages,
+                'sub_stage_name' => $csName,
             ];
 
             DB::table('sys_idempotency_keys')
@@ -11801,6 +11814,9 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     'child_status_id' => (int) $sub_stages,
                     'aggregate_version' => $newVersion,
                     'idempotency_key' => $idempotencyKey,
+                    'master_status_name' => $msRow->name ?? '',
+                    'css_style' => $msRow->css_style ?? '',
+                    'sub_stage_name' => $csName,
                 ]
             );
 
@@ -13576,6 +13592,53 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $sub_stages = @$request->sub_stages;
         $comment = @$request->comment;
 
+        // Phase 5: Idempotency Claiming & Concurrency Protection
+        $idempotencyKey = $request->header('X-Idempotency-Key')
+            ?? $request->header('Idempotency-Key')
+            ?? $request->input('idempotency_key');
+
+        if (empty($idempotencyKey)) {
+            $idempotencyKey = 'client_stage_submit_'.$company_id.'_'.$application_id.'_'.$addJobWiseCondidate_id.'_'.((int) $master_status).'_'.((int) $sub_stages).'_'.floor(time() / 15);
+        }
+
+        $canonicalHash = sha1(json_encode([
+            'tenant' => (int) $company_id,
+            'app_id' => (int) $application_id,
+            'wise_id' => (int) $addJobWiseCondidate_id,
+            'master_status' => (int) $master_status,
+            'sub_stages' => (int) $sub_stages,
+        ]));
+
+        $claimed = DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => (int) $company_id,
+            'idempotency_key' => $idempotencyKey,
+            'request_hash' => $canonicalHash,
+            'status' => 'PROCESSING',
+            'expires_at' => now()->addHours(24),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        if (! $claimed) {
+            $existing = DB::table('sys_idempotency_keys')
+                ->where('tenant_id', (int) $company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->first();
+
+            if ($existing) {
+                if ($existing->status === 'COMPLETED') {
+                    $body = json_decode($existing->response_body, true);
+
+                    return Reply::dataOnly($body ?: ['status' => 'success', 'message' => 'Application stage update successfully !']);
+                }
+                if ($existing->status === 'PROCESSING') {
+                    if (strtotime($existing->created_at) > (time() - 30)) {
+                        return Reply::dataOnly(['status' => 'processing', 'message' => 'Stage update is already processing. Please wait...']);
+                    }
+                }
+            }
+        }
+
         $addJobWiseCondidate = AddJobWiseCondidate::withoutGlobalScopes()->find($addJobWiseCondidate_id);
         $exists = $this->elasticService->getClient()->exists([
             'index' => ELASTIC_CANDIDATES,
@@ -14332,6 +14395,13 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             app(\App\Services\Apptracker\CounterService::class)->onStageMoved($finalJobId, (int) $application_id, (int) $master_status, $finalCompanyId);
         }
 
+        $msRow = DB::table('master_status')->where('id', (int) $master_status)->first();
+        $csName = '';
+        if (! empty($sub_stages)) {
+            $csRow = DB::table('candidate_status')->where('id', (int) $sub_stages)->first();
+            $csName = $csRow->name ?? '';
+        }
+
         try {
             $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', (int) $application_id)->pluck('id')->toArray();
             \App\Events\CandidateDrawerUpdated::dispatch(
@@ -14345,13 +14415,44 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                 null,
                 (int) $master_status,
                 (int) ($data->job_master_status_id ?? 8),
-                (int) $finalJobId
+                (int) $finalJobId,
+                null,
+                [
+                    'child_status_id' => (int) $sub_stages,
+                    'master_status_name' => $msRow->name ?? '',
+                    'css_style' => $msRow->css_style ?? '',
+                    'sub_stage_name' => $csName,
+                ]
             );
         } catch (\Throwable $e) {
             \Log::warning('client_stage_submit CandidateDrawerUpdated dispatch failed: '.$e->getMessage());
         }
 
-        return Reply::dataOnly(['status' => 'success', 'message' => 'Application stage update successfully !']);
+        $resPayload = [
+            'status' => 'success',
+            'message' => 'Application stage update successfully !',
+            'wise_id' => (int) ($addJobWiseCondidate_id ?? 0),
+            'candidate_id' => (int) $application_id,
+            'master_status_id' => (int) $master_status,
+            'master_status_name' => $msRow->name ?? '',
+            'css_style' => $msRow->css_style ?? '',
+            'old_master_status_id' => (int) ($data->job_master_status_id ?? 8),
+            'sub_stage_id' => (int) ($sub_stages ?? 0),
+            'sub_stage_name' => $csName,
+        ];
+
+        DB::table('sys_idempotency_keys')
+            ->where('tenant_id', (int) $company_id)
+            ->where('idempotency_key', $idempotencyKey)
+            ->update([
+                'status' => 'COMPLETED',
+                'response_status' => 200,
+                'response_body' => json_encode($resPayload),
+                'completed_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+        return Reply::dataOnly($resPayload);
 
     }
 

@@ -28,6 +28,9 @@
     if (isset($row->job_max_sal_mode) && isset($row->job_max_salary_currency)) {
         $jobMode = $row->job_max_sal_mode;
         $jobCurrency = $row->job_max_salary_currency;
+    } elseif (isset($jobDetailsMap[$row->jobId])) {
+        $jobMode = $jobDetailsMap[$row->jobId]->max_sal_mode ?? @$row->current_ctc_mode;
+        $jobCurrency = $jobDetailsMap[$row->jobId]->max_salary_currency ?? @$row->current_ctc_cur;
     } else {
         $jobData = DB::table('jobs')->select('max_sal_mode as jobMode','max_salary_currency as jobCurrency')->where('id','=',$row->jobId)->first();
         $jobMode = $jobData->jobMode ?? @$row->current_ctc_mode;
@@ -63,7 +66,11 @@
                     $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
                     $percentage = '0%';
                     if (!empty($row->jobId)) {
-                        $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                        if (!empty($jobSkillsByJobId[$row->jobId])) {
+                            $percentage = GeneralMethod::skill_percentage_from_array($jobSkillsByJobId[$row->jobId], $skillArr);
+                        } else {
+                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                        }
                     } elseif (!empty($percentBasis)) {
                         $matches = 0;
                         foreach ($percentBasis as $req) {
@@ -84,9 +91,9 @@
                 @php
 
                     $bgTextDecore = $strVal = $tredmark = '';
-                    $str = trim(@$row->full_name);
+                    $str = trim((string) @$row->full_name);
                     if (!empty($str)) {
-                        $str = $strVal = strtolower($str[0]);
+                        $str = $strVal = mb_strtolower(mb_substr($str, 0, 1));
                         $str = ord($str);
                         if ($str >= 97 && $str <= 101) {
                             $bgTextDecore = 'fs-3 bg-light-danger text-danger';
@@ -184,7 +191,11 @@
                         // above, rather than always the row's own job.
                         $percentBasis = array_merge($mandatoryBasis, $optionalBasis);
                         if (!empty($row->jobId)) {
-                            $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                            if (!empty($jobSkillsByJobId[$row->jobId])) {
+                                $percentage = GeneralMethod::skill_percentage_from_array($jobSkillsByJobId[$row->jobId], $skillArr);
+                            } else {
+                                $percentage = GeneralMethod::skill_percentage($row->jobId, $skillArr);
+                            }
                         } elseif (!empty($percentBasis)) {
                             $matches = 0;
                             foreach ($percentBasis as $req) {
@@ -387,14 +398,17 @@
             </td>
             <td>
                 @php
-                    $current_ctc_cur = '';
-                    $current_ctc_cur = $currencySymbole[@$jobCurrency];
-
-                    $current_ectc_cur = '';
-                    $current_ectc_cur = $currencySymbole[@$jobCurrency];
+                    $currencyLookup = function ($key) use ($currencySymbole) {
+                        if (empty($currencySymbole)) return '';
+                        if (is_array($currencySymbole)) return $currencySymbole[$key] ?? '';
+                        if ($currencySymbole instanceof \Illuminate\Support\Collection) return $currencySymbole->get($key, '');
+                        return @$currencySymbole[$key] ?? '';
+                    };
+                    $current_ctc_cur = $currencyLookup(@$jobCurrency);
+                    $current_ectc_cur = $currencyLookup(@$jobCurrency);
 
                     if ($row->condidate_type == 'bench_condidate') {
-                        $current_ectc_cur = $currencySymbole[@$jobCurrency];
+                        $current_ectc_cur = $currencyLookup(@$jobCurrency);
                     }
 
                     $payFormatViewSalary = GeneralMethod::formatViewSalary($row->ctc_yearly,$symbols,$jobMode);
@@ -516,7 +530,9 @@
                     if (empty($row->country)) {
                         $row_country_name = '----';
                     } else {
-                        if (!empty(@$row->country)) {
+                        if (!empty($row->country_name)) {
+                            $row_country_name = $row->country_name;
+                        } elseif (!empty(@$row->country)) {
                             if (is_numeric(@$row->country)) {
                                 $country_name_Arr = GeneralMethod::getCountryName(@$row->country);
                                 foreach ($country_name_Arr as $cval) {
@@ -532,11 +548,15 @@
                     if (!empty($row->city_name)) {
                         $row_city_name = $row->city_name;
                     } elseif (@$row->country == 101) {
-                        $row_city = DB::table('city_list')
-                            ->select('*')
-                            ->where('city_id', @$row->city_id)
-                            ->first();
-                        $row_city_name = @$row_city->city;
+                        if (isset($cityDataMap[@$row->city_id])) {
+                            $row_city_name = $cityDataMap[@$row->city_id];
+                        } else {
+                            $row_city = DB::table('city_list')
+                                ->select('*')
+                                ->where('city_id', @$row->city_id)
+                                ->first();
+                            $row_city_name = @$row_city->city;
+                        }
                     } else {
                         $row_city_name = @$row->city;
                     }
@@ -568,8 +588,13 @@
                     if (!empty($row->spokperson_name)) {
                         $rowpostedby = $row->spokperson_name;
                     } elseif ($company_id != $row->ClientComID && $row->ClientComID != 0 && $row->ClientComID > 0) {
-                        $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
-                        $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                        $spokKey = $row->jobId.'_'.$row->ClientComID;
+                        if (isset($spokUserMap[$spokKey])) {
+                            $rowpostedby = $spokUserMap[$spokKey];
+                        } else {
+                            $spokperson = DB::table('job_assign')->select('users.name')->join('users', 'users.id', 'job_assign.spok_user_id')->where('job_assign.job_id', $row->jobId)->where('job_assign.company_id', $row->ClientComID)->first();
+                            $rowpostedby = (@$spokperson) ? @$spokperson->name : $row->posted_by;
+                        }
                         $rowpostedby = $row->rec_candidate_assign_id ? $row->posted_by :  $rowpostedby;
                     } else {
                         $rowpostedby = $row->posted_by;
@@ -648,10 +673,12 @@
                 @php
                     $status = $active = $hold = $inactive = $class = $recommendation_id = '';
 
-                    // $job_status = $row->job_status;
-                    
-                    $job_status_get = GeneralMethod::jobDetails($row->jobId);
-                    $job_status = $job_status_get->status;
+                    if (isset($jobDetailsMap[$row->jobId])) {
+                        $job_status = $jobDetailsMap[$row->jobId]->status ?? ($row->job_status ?? 'active');
+                    } else {
+                        $job_status_get = GeneralMethod::jobDetails($row->jobId);
+                        $job_status = $job_status_get->status;
+                    }
 
                     $status = ucwords($job_status);
                     $class = '';
@@ -735,13 +762,16 @@
                     if (!empty($row->child_status_name)) {
                         $name = $row->child_status_name;
                     } elseif (!empty(@$row->childStatus) && @$row->childStatus > 0) {
-                        $childStatus = '';
-                        $childStatus = DB::table('candidate_status')
-                            ->select('*')
-                            ->where('id', $row->childStatus)
-                            ->first();
-                        if (!empty($childStatus)) {
-                            $name = @$childStatus->name;
+                        if (isset($childStatusMap[$row->childStatus])) {
+                            $name = $childStatusMap[$row->childStatus];
+                        } else {
+                            $childStatus = DB::table('candidate_status')
+                                ->select('*')
+                                ->where('id', $row->childStatus)
+                                ->first();
+                            if (!empty($childStatus)) {
+                                $name = @$childStatus->name;
+                            }
                         }
                     }
                     $stageModalAttrs = ($stage_default_css === 'client_stage_locked_notice')

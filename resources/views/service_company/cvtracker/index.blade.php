@@ -2180,11 +2180,21 @@
                     success: function(response) {
                         if (response.status == 'success') {
                             Swal.fire("Success", 'Application stage update successfully !', "success");
-                            // var table;
-                            var page = $('#paginationcandidate .active_disabled').data('page');
-                            fetchCandidates(page);
-                            // $.unblockUI();
-                            // table._fnDraw();
+                            var rowId = response.wise_id || $('#status_frm input[name="job_wise_condidates_id"]').val() || $('#status_frm input[name="row_id"]').val();
+                            if (window.patchCandidateRowStage) {
+                                window.patchCandidateRowStage(
+                                    rowId,
+                                    response.master_status_id,
+                                    response.master_status_name,
+                                    response.css_style,
+                                    response.sub_stage_name,
+                                    response.old_master_status_id,
+                                    response.candidate_id
+                                );
+                            } else {
+                                var page = $('#paginationcandidate .active_disabled').data('page');
+                                fetchCandidates(page);
+                            }
 
                         } else if (response.status == "info") {
                             Swal.fire('Fail!', response.message, 'error')
@@ -2315,14 +2325,23 @@
                         if (response.status == 'success') {
                             Swal.fire("Success", 'Application stage update successfully !', "success")
                                 .then(function() {
-                                    // $('#stage_sub_stage').modal('hide'); 
                                     $("#stage_sub_stage_close").click();
                                 });
-                            // $('#myTable').DataTable().draw();
-                            // var table;
-                            var page = $('#paginationcandidate .active_disabled').data('page');
-                            fetchCandidates(page);
-                            // table._fnDraw();
+                            var rowId = response.wise_id || $('#status_frm input[name="job_wise_condidates_id"]').val() || $('#status_frm input[name="row_id"]').val();
+                            if (window.patchCandidateRowStage) {
+                                window.patchCandidateRowStage(
+                                    rowId,
+                                    response.master_status_id,
+                                    response.master_status_name,
+                                    response.css_style,
+                                    response.sub_stage_name,
+                                    response.old_master_status_id,
+                                    response.candidate_id
+                                );
+                            } else {
+                                var page = $('#paginationcandidate .active_disabled').data('page');
+                                fetchCandidates(page);
+                            }
                             load_interviewSchedule();
                         } else if (response.status == 'cvpending') {
                             Swal.fire("Warning", 'Resume pending this job application.', "warning")
@@ -2498,8 +2517,14 @@
             }
 
             // document.getElementById("loader_search").classList.remove("hidden");
+            var urlParams = new URLSearchParams(window.location.search);
+            var isV2Active = urlParams.get('v2') === '1' || {{ config('app.cvtracker_v2_enabled', false) ? 'true' : 'false' }};
+            var candidateEndpoint = isV2Active
+                ? `{!! route('service_company.cvtracker.v2.allcandidates') !!}?page=${targetPage}`
+                : `{!! route('service_company.cvtracker.allcandidates') !!}?page=${targetPage}`;
+
             return $.ajax({
-                url: `{!! route('service_company.cvtracker.allcandidates') !!}?page=${targetPage}`,
+                url: candidateEndpoint,
                 type: 'GET',
                 data: {
                     search: search,
@@ -2567,6 +2592,72 @@
             });
         }
         window.updateCvHeroStats = updateCvHeroStats;
+
+        window.patchCandidateRowStage = function(wiseId, masterStatusId, masterStatusName, cssStyle, subStageName, oldMasterStatusId, candidateId) {
+            if (!wiseId && !candidateId && !masterStatusId) return;
+            var wid = wiseId ? String(wiseId) : null;
+            var cid = candidateId ? String(candidateId) : null;
+
+            var $row = $();
+            if (wid) $row = $row.add($('tr[data-wise-id="' + wid + '"]'));
+            if (cid && !$row.length) $row = $row.add($('tr[data-candidate-id="' + cid + '"]'));
+
+            var STAGE_ID_TO_TAB = {
+                8: 'inreview',
+                1: 'sourcing',
+                2: 'screening',
+                3: 'evaluation',
+                4: 'negotiation',
+                5: 'offered',
+                6: 'joined',
+                7: 'rejected',
+                9: 'rejected'
+            };
+
+            var currentStageTab = $('#stage_tab_filter_val').val() || '';
+            if (currentStageTab && currentStageTab !== 'all' && oldMasterStatusId && masterStatusId && String(oldMasterStatusId) !== String(masterStatusId)) {
+                $row.fadeOut(300, function() {
+                    $(this).remove();
+                    if ($('#candidatetList tr').length === 0) {
+                        var page = $('#paginationcandidate .active_disabled').data('page') || 1;
+                        fetchCandidates(page);
+                    }
+                });
+            } else if ($row.length) {
+                var $stageLink = $row.find('.stage_sub_stage, .client_stage_sub_stage');
+                if ($stageLink.length) {
+                    if (cssStyle && masterStatusName) {
+                        var $badge = $stageLink.find('.badge');
+                        $badge.attr('class', 'badge fw-bolder fs-6 ' + cssStyle + ' px-2 py-1');
+                        $badge.text(masterStatusName.substring(0, 10));
+                    }
+                    if (subStageName !== undefined && subStageName !== null) {
+                        $stageLink.find('.text-muted').text(subStageName || '');
+                    }
+                    $row.css('transition', 'background-color 0.4s ease');
+                    var origBg = $row.css('background-color');
+                    $row.css('background-color', '#f0fdf4');
+                    setTimeout(function() {
+                        $row.css('background-color', origBg || '');
+                    }, 1200);
+                }
+            }
+
+            if (oldMasterStatusId && STAGE_ID_TO_TAB[oldMasterStatusId]) {
+                var $oldTab = $('[data-cvh-tab="' + STAGE_ID_TO_TAB[oldMasterStatusId] + '"]');
+                if ($oldTab.length) {
+                    var cnt = Math.max(0, parseInt($oldTab.text().replace(/,/g, ''), 10) - 1);
+                    $oldTab.text(cnt.toLocaleString());
+                }
+            }
+            if (masterStatusId && STAGE_ID_TO_TAB[masterStatusId]) {
+                var $newTab = $('[data-cvh-tab="' + STAGE_ID_TO_TAB[masterStatusId] + '"]');
+                if ($newTab.length) {
+                    var cnt = (parseInt($newTab.text().replace(/,/g, ''), 10) || 0) + 1;
+                    $newTab.text(cnt.toLocaleString());
+                }
+            }
+        };
 
        $(document).on('change', '.chk_copy_item', function () {
            const isChecked = $(this).is(':checked');

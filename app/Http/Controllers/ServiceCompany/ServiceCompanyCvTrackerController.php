@@ -115,57 +115,51 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
 
         $company_id = auth()->user()->company_id;
         $chkAdminRole = $this->user->hasRole('admin');
-        $this->boardColumns = ApplicationStatus::all();
-        $this->candidateStatus = DB::table('master_status')->select('*')->orderBy('master_status.priority', 'ASC')->get();
-        $this->locations = JobLocation::all();
-        $this->skills = Skill::all();
-        $this->clients = Client::all();
+        $this->boardColumns = Cache::remember('master:application_status', 86400, fn () => ApplicationStatus::all());
+        $this->candidateStatus = Cache::remember('master:candidate_master_status_priority', 86400, fn () => DB::table('master_status')->select('*')->orderBy('master_status.priority', 'ASC')->get());
+        $this->locations = Cache::remember('master:job_locations', 86400, fn () => JobLocation::all());
+        $this->skills = Cache::remember('master:skills', 86400, fn () => Skill::all());
+        $this->clients = Cache::remember("tenant:{$company_id}:clients", 3600, fn () => Client::all());
 
         if ($chkAdminRole > 0) {
-            $this->jobs = Job::where('jobs.company_id', $this->user->company_id)->get();
+            $this->jobs = Cache::remember("tenant:{$company_id}:jobs_admin", 1800, fn () => Job::where('jobs.company_id', $this->user->company_id)->get());
         } else {
-            $this->jobs = DB::table('jobs')
+            $this->jobs = Cache::remember("tenant:{$company_id}:jobs_user_{$this->user->id}", 1800, fn () => DB::table('jobs')
                 ->join('job_assign', 'job_assign.job_id', '=', 'jobs.id')
                 ->select('jobs.id', 'jobs.title')
                 ->where('jobs.status', 'active')
                 ->where('jobs.company_id', $this->user->company_id)
                 ->where('job_assign.user_id', $this->user->id)
-                ->get();
+                ->get());
         }
-        $this->users = User::select('users.*')->where('status', '=', 'active')->where('company_id', '=', $this->user->company_id)->get();
-        $this->noticeperiod = NoticePeriod::all();
+        $this->users = Cache::remember("tenant:{$company_id}:active_users", 1800, fn () => User::select('users.*')->where('status', '=', 'active')->where('company_id', '=', $this->user->company_id)->get());
+        $this->noticeperiod = Cache::remember('master:notice_periods', 86400, fn () => NoticePeriod::all());
 
-        $this->applicationCounter = DB::table('job_applications');
-        $this->applicationCounter = $this->applicationCounter->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id');
-        $this->applicationCounter = $this->applicationCounter->join('master_status', function ($join) {
-            $join->on('master_status.id', 'add_job_wise_condidates.master_status_id');
+        $this->applicationCounter = Cache::remember("tenant:{$company_id}:cv_app_counter", 300, function () use ($company_id) {
+            return DB::table('job_applications')
+                ->join('add_job_wise_condidates', 'add_job_wise_condidates.job_application_id', 'job_applications.id')
+                ->join('master_status', 'master_status.id', 'add_job_wise_condidates.master_status_id')
+                ->where(function ($query) use ($company_id) {
+                    $query->where('add_job_wise_condidates.company_id', '=', $company_id)
+                        ->where('add_job_wise_condidates.thirdparty_company_id', '=', 0);
+                })
+                ->orWhere(function ($query) use ($company_id) {
+                    $query->where('add_job_wise_condidates.company_id', '=', $company_id)
+                        ->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)
+                        ->where('add_job_wise_condidates.master_status_id', '!=', 8);
+                })
+                ->orWhere(function ($query) use ($company_id) {
+                    $query->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id);
+                })
+                ->count();
         });
-        $this->applicationCounter = $this->applicationCounter->select('job_applications.id');
-        $this->applicationCounter = $this->applicationCounter->where(function ($query) use ($company_id) {
-            return
-                $query->where('add_job_wise_condidates.company_id', '=', $company_id)
-                    ->where('add_job_wise_condidates.thirdparty_company_id', '=', 0);
-        });
-        $this->applicationCounter = $this->applicationCounter->orWhere(function ($query) use ($company_id) {
-            return
-                $query->where('add_job_wise_condidates.company_id', '=', $company_id)
-                    ->where('add_job_wise_condidates.thirdparty_company_id', '>', 0)
-                    ->where('add_job_wise_condidates.master_status_id', '!=', 8);
-        });
-        $this->applicationCounter = $this->applicationCounter->orWhere(function ($query) use ($company_id) {
-            return $query->where('add_job_wise_condidates.thirdparty_company_id', '=', $company_id);
-        });
-        $this->cities = GeneralMethod::allCities();
+        $this->cities = Cache::remember('master:all_cities', 86400, fn () => GeneralMethod::allCities());
         $this->default_skill = '';
-        $this->qualificationTag = DB::table('qualification_master')
-            ->select('*')
+        $this->qualificationTag = Cache::remember('master:qualification_master_tags', 86400, fn () => DB::table('qualification_master')
             ->orderBy('qualification_master.display_order', 'ASC')
-            ->get()
-            ->map(function ($row) {
-                return $row->name;
-            });
-        $this->applicationCounter = $this->applicationCounter->count();
-        $this->countries = DB::table('countries')->get();
+            ->pluck('name')
+            ->toArray());
+        $this->countries = Cache::remember('master:countries', 86400, fn () => DB::table('countries')->get());
 
         // Initial KPI seed for the CV Tracker hero cards. Only "total" is seeded from
         // MySQL (reusing $applicationCounter, already company_id-scoped above) to avoid a
@@ -374,7 +368,7 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'notice' => $app_int_notice,
                 'activity' => $app_int_activity,
                 'status_filter' => $app_int_status,
-                'user_id' => $this->user->id,
+                'user_scope' => ($status_cus == 6 && ! $this->user->hasRole('admin')) ? 'u'.$this->user->id.'_'.(in_array('salary_view', (array) $this->userPermissions) ? '1' : '0') : (in_array('salary_view', (array) $this->userPermissions) ? '1' : '0'),
                 'segmentTwo' => $segmentTwo,
                 // Offer Tracker tab must vary the cache key, otherwise switching tabs
                 // returns a stale cached result set (the tab filter wasn't part of the key).
@@ -384,12 +378,12 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 'stage_tab' => request('stage_tab'),
             ];
 
-            $userVersion = cache()->get('allcvtracker_version_user_'.$this->user->id, 1);
+            $salView = in_array('salary_view', (array) $this->userPermissions) ? 's1' : 's0';
+            $userScope = ($status_cus == 6 && ! $this->user->hasRole('admin')) ? 'u'.$this->user->id.'_'.$salView : $salView;
             $tenantVersion = cache()->get('allcvtracker_version_company_'.$company_id, 1);
-            $version = $userVersion.'_'.$tenantVersion;
-            $cacheKeySet = 'ats:allcvtracker:'.$company_id.':'.$this->user->id.':'.$version.':'.md5(json_encode($cachePayload));
+            $cacheKeySet = 'ats:allcvtracker:'.$company_id.':'.$userScope.':'.$tenantVersion.':'.md5(json_encode($cachePayload));
             /* ----------------------------
-            ⚡ Check DragonflyDB first
+            ⚡ Check DragonflyDB / Redis first
             ----------------------------- */
             if (cache()->has($cacheKeySet)) {
                 return response()->json(cache()->get($cacheKeySet));
@@ -1432,15 +1426,16 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                 }
             }
 
-            // Phase 3 Batch Optimization for Joining Tracker:
-            // Pre-resolve candidate_status, confidentiality, HR owners, and jobs in ONE batched pass
-            // eliminating 30-50 per-row N+1 database queries on every table page render.
+            // Phase 1 Batch Optimization for All Candidates & Joining Tracker:
+            // Pre-resolve candidate_status, cities, confidentiality, HR owners, and jobs in ONE batched pass
+            // eliminating 80-100 per-row N+1 database queries on every table page render.
             $childStatusMap = [];
             $allowedConfidentialJobIds = [];
             $spokUserMap = [];
             $jobDetailsMap = [];
+            $cityDataMap = [];
 
-            if ($page_view === 'joining-tracker' && ! empty($data)) {
+            if (! empty($data)) {
                 $jobIdsOnPage = collect($data)->pluck('jobId')->filter()->unique()->values()->all();
 
                 // 1. Batch candidate_status lookup for this company
@@ -1496,26 +1491,29 @@ class ServiceCompanyCvTrackerController extends ServiceCompanyBaseController
                     }
                 }
 
-                // 4. Batch fetch jobs via Elasticsearch mget in ONE round-trip
-                if (! empty($jobIdsOnPage) && $this->elasticService->indexExists(ELASTIC_JOBS)) {
-                    try {
-                        $mgetResp = $this->elasticService->getClient()->mget([
-                            'index' => ELASTIC_JOBS,
-                            'body' => ['ids' => $jobIdsOnPage],
-                        ]);
-                        foreach ($mgetResp['docs'] ?? [] as $doc) {
-                            if (! empty($doc['found']) && ! empty($doc['_source'])) {
-                                $jobDetailsMap[(int) $doc['_id']] = (object) $doc['_source'];
-                            }
-                        }
-                    } catch (\Throwable $e) {
-                        // Silently fallback to GeneralMethod::jobDetails if mget fails
+                // 4. Batch fetch cities for all candidates on page
+                $cityIdsOnPage = collect($data)->pluck('city_id')->filter()->unique()->values()->all();
+                if (! empty($cityIdsOnPage)) {
+                    $cityDataMap = DB::table('city_list')
+                        ->whereIn('city_id', $cityIdsOnPage)
+                        ->pluck('city', 'city_id')
+                        ->toArray();
+                }
+
+                // 5. Batch fetch jobs (max_sal_mode, max_salary_currency, status, title) in ONE query
+                if (! empty($jobIdsOnPage)) {
+                    $dbJobs = DB::table('jobs')
+                        ->whereIn('id', $jobIdsOnPage)
+                        ->select('id', 'max_sal_mode', 'max_salary_currency', 'status', 'title')
+                        ->get();
+                    foreach ($dbJobs as $dj) {
+                        $jobDetailsMap[(int) $dj->id] = $dj;
                     }
                 }
             }
 
             $responseData = [
-                'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'mandatorySkillsForDisplay', 'optionalSkillsForDisplay', 'jobSkillsByJobId', 'childStatusMap', 'allowedConfidentialJobIds', 'spokUserMap', 'jobDetailsMap'))->render(),
+                'html' => view('service_company.ajax_pages.'.$page_view.'', compact('data', 'userPermissions', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'mandatorySkillsForDisplay', 'optionalSkillsForDisplay', 'jobSkillsByJobId', 'childStatusMap', 'allowedConfidentialJobIds', 'spokUserMap', 'jobDetailsMap', 'cityDataMap'))->render(),
                 'total' => $total,
                 'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
                 'counts' => $offerCounts,
