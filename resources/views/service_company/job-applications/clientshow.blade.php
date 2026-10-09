@@ -587,9 +587,27 @@ if(!empty($application->posted_by_image)){
 							@php 
 							if(!empty($jobSkill))
 							{
+								$dedupedSkills = [];
+								foreach ($jobSkill as $skill_item) {
+									$sObj = (object) $skill_item;
+									$nameKey = mb_strtolower(trim((string) ($sObj->skill_name ?? '')));
+									if ($nameKey === '') continue;
+									if (!isset($dedupedSkills[$nameKey])) {
+										$dedupedSkills[$nameKey] = clone $sObj;
+									} else {
+										if (empty($dedupedSkills[$nameKey]->skill_value) && !empty($sObj->skill_value)) {
+											$dedupedSkills[$nameKey]->skill_value = $sObj->skill_value;
+										}
+										if ((int) ($dedupedSkills[$nameKey]->rating ?? 0) < (int) ($sObj->rating ?? 0)) {
+											$dedupedSkills[$nameKey]->rating = $sObj->rating;
+										}
+									}
+								}
+
 								$html		=	'<div class="row">';	
-							foreach($jobSkill as $skill_val)
+							foreach($dedupedSkills as $skill_val)
 							{  
+								$skill_val = (object) $skill_val;
 								$exp = 'EXP.';  
 								$yrs = '';      
 								if(!empty($skill_val->skill_value)){
@@ -608,7 +626,7 @@ if(!empty($application->posted_by_image)){
 								$html		.=	'
 								<div class="col-md-3">
 									<div class="d-flex flex-column text-dark-75">
-										<span class="fw-bold fs-6 text-muted">'.strtoupper($skill_val->skill_name).' '.$exp.'</span>
+										<span class="fw-bold fs-6 text-muted">'.strtoupper(trim((string) $skill_val->skill_name)).' '.$exp.'</span>
 										<span class="fw-bolder text-gray-800 fs-6">'.$skillShowView.' </span> 
 									</div>
 								</div>';	

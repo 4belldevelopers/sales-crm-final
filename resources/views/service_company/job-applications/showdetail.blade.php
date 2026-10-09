@@ -2992,8 +2992,28 @@
                 @php 
                           if(!empty($jobSkill))
                           {
+                            $dedupedSkills = [];
+                            foreach($jobSkill as $skill_item)
+                            {
+                              $sObj = (object) $skill_item;
+                              $nameKey = mb_strtolower(trim((string) ($sObj->skill_name ?? '')));
+                              if ($nameKey === '') {
+                                continue;
+                              }
+                              if (!isset($dedupedSkills[$nameKey])) {
+                                $dedupedSkills[$nameKey] = clone $sObj;
+                              } else {
+                                if (empty($dedupedSkills[$nameKey]->skill_value) && !empty($sObj->skill_value)) {
+                                  $dedupedSkills[$nameKey]->skill_value = $sObj->skill_value;
+                                }
+                                if ((int) ($dedupedSkills[$nameKey]->rating ?? 0) < (int) ($sObj->rating ?? 0)) {
+                                  $dedupedSkills[$nameKey]->rating = $sObj->rating;
+                                }
+                              }
+                            }
+
                             $html		=	'<div class="row">';	
-                          foreach($jobSkill as $skill_val)
+                          foreach($dedupedSkills as $skill_val)
                           {  
                              $skill_val = (object) $skill_val;                            
                             
@@ -3022,7 +3042,7 @@
                                 <path d="M2 12l10 5 10-5"></path>
                               </svg>
                             </div>
-                            '.ucwords(strtolower($skill_val->skill_name)).'
+                            '.ucwords(strtolower(trim((string) $skill_val->skill_name))).'
                           </div>
                           <div class="skill-exp-cell">'.$skillShowView.'</div>
                           <div class="skill-rating-cell">
@@ -3771,7 +3791,25 @@
                   <tbody>
                         <input type="hidden" name="job_id" value="{{ @$job_id }}" id="job_id" />
                         <input type="hidden" name="appId" value="{{ @$application->id }}" id="appId" />
-                            @foreach($jobSkill as $skill_val)
+                        @php
+                          $dedupedModalSkills = [];
+                          foreach($jobSkill ?? [] as $sk_item) {
+                              $skO = (object) $sk_item;
+                              $mk = mb_strtolower(trim((string) ($skO->skill_name ?? '')));
+                              if ($mk === '') continue;
+                              if (!isset($dedupedModalSkills[$mk])) {
+                                  $dedupedModalSkills[$mk] = clone $skO;
+                              } else {
+                                  if (empty($dedupedModalSkills[$mk]->skill_value) && !empty($skO->skill_value)) {
+                                      $dedupedModalSkills[$mk]->skill_value = $skO->skill_value;
+                                  }
+                                  if ((int) ($dedupedModalSkills[$mk]->rating ?? 0) < (int) ($skO->rating ?? 0)) {
+                                      $dedupedModalSkills[$mk]->rating = $skO->rating;
+                                  }
+                              }
+                          }
+                        @endphp
+                            @foreach($dedupedModalSkills as $skill_val)
                             @php
                              $skill_val = (object) $skill_val;
                             @endphp
