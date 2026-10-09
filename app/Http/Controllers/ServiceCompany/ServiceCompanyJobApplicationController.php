@@ -13406,17 +13406,22 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
     public function download($id)
     {
-        $resume = '';
         $resumeData = DB::table('documents')->select('*')->where('documentable_id', $id)->where('name', '=', 'Resume')->orderBy('created_at', 'desc')->first();
-        $resume = $resumeData->hashname;
-        $company = user()->company_id;
+        $resume = @$resumeData->hashname;
         $jobApplication = JobApplication::withoutGlobalScopes()->findOrFail($id);
-        $path = public_path().'/user-uploads/documents/'.$jobApplication->id.'/'.$resume;
+        $resume = $resume ?: $jobApplication->resume;
 
-        // dd($path);
-        // if (!file_exists($path)) {
-        // 	abort(404);
-        // }
+        if (!empty($resume) && str_starts_with($resume, 'http')) {
+            return redirect()->route('download.resume', ['id' => $id, 'path' => rtrim(strtr(base64_encode($resume), '+/', '-_'), '=')]);
+        }
+
+        $path = public_path().'/user-uploads/documents/'.$jobApplication->id.'/'.$resume;
+        if (!file_exists($path)) {
+            if (!empty($resume)) {
+                return redirect()->route('download.resume', ['id' => $id, 'path' => rtrim(strtr(base64_encode($resume), '+/', '-_'), '=')]);
+            }
+            abort(404);
+        }
         return response()->download($path);
     }
 

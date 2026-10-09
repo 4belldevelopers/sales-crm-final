@@ -11,6 +11,14 @@ class User extends Authenticatable
 {
     use HasFactory, HasRoles, Notifiable;
 
+    /**
+     * Intent: Backwards-compatible alias for legacy controller permission checks ($user->cans('...')).
+     */
+    public function cans($permission, $arguments = [])
+    {
+        return $this->can($permission, $arguments);
+    }
+
     public function scopeCompany($query)
     {
         return $query->where('users.company_id', auth()->user()->company_id);
