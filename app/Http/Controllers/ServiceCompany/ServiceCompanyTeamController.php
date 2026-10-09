@@ -106,40 +106,42 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
     public function teamDelete(Request $request)
     {
+        $company_id = $this->user->company_id;
+        $arr = (array) $request->arr;
 
-        if (count($request->arr) > 0) {
-            /**
-                foreach($request->arr as $userID){
-                    // Soft delete a user
-                    User::find($userID)->delete();
+        if (count($arr) > 0) {
+            $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+            $mutationService = app(\App\Services\TeamMutationService::class);
 
-                    // Check if a user is soft deleted
-                    User::withTrashed()->find($userID);
+            $result = $mutationService->executeIdempotentMutation(
+                tenantId: (int) $company_id,
+                targetUserId: (int) ($arr[0] ?? 0),
+                idempotencyKey: $idempotencyKey,
+                eventType: 'team_member.deleted',
+                requestPayload: [
+                    'arr' => $arr,
+                ],
+                mutationCallback: function () use ($company_id, $arr) {
+                    DB::table('users')
+                        ->where('company_id', $company_id)
+                        ->whereIn('id', $arr)
+                        ->update(['status' => 'inactive', 'working_status' => 0]);
 
-                    // Restore a user
-                    User::withTrashed()->find($userID)->restore();
+                    foreach ($arr as $uid) {
+                        Cache::put('user:epoch:'.(int) $uid, now()->timestamp, 7 * 24 * 3600);
+                        GeneralMethod::userIndexingupload((int) $uid);
+                    }
 
-                    // Permanently delete a user
-                    User::withTrashed()->find($userID)->forceDelete();
-
-                    // Get only soft deleted users
-                    User::onlyTrashed()->get();
+                    return [
+                        'status' => 'success',
+                        'msgType' => 'success',
+                        'message' => 'Team member inactive successfully.',
+                        'affected_ids' => $arr,
+                    ];
                 }
-             */
-            DB::table('users')->whereIn('id', $request->arr)->update(['status' => 'inactive', 'working_status' => 0]);
-            // DB::table('users_profile')->whereIn('user_id', $request->arr)->delete();
-            // DB::table('client_contact_info')->whereIn('user_id', $request->arr)->delete();
-            // Phase 3.4: bump epoch for each deactivated user so their sessions are kicked.
-            foreach ((array) $request->arr as $uid) {
-                Cache::put('user:epoch:'.(int) $uid, now()->timestamp, 7 * 24 * 3600);
-            }
-            // V2 Phase 4: Invalidate cached team counts and team listing for the company
-            $this->clearTeamCache($this->user->company_id);
+            );
 
-            $message = 'Team member inactive successfully.';
-            $type = 'success';
-
-            return Reply::dataOnly(['status' => 'success', 'msgType' => $type, 'message' => $message]);
+            return Reply::dataOnly($result);
         }
     }
 
@@ -559,6 +561,8 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
             'html' => view('service_company.ajax_pages.team-list-ajax', compact('data', 'userPermissions', 'company_id'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.team-pagination', compact('pagination'))->render(),
+            'raw_data' => $data,
+            'version' => $version,
         ];
 
         cache()->put($cacheKeySet, $responseData, now()->addMinutes(ALL_TEAM_TIME));
@@ -1214,96 +1218,115 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
 
         $company_id = auth()->user()->company_id;
         $chkStatus = $request->chkStatus;
-        $userId = $request->userId;
+        $userId = (int) $request->userId;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
         User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
 
         if ($chkStatus == 'true') {
-
             $eventId = 1;
             $coinsDeductions = GeneralMethod::coinsValidations((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '');
             if ($coinsDeductions->status) {
                 return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
-            } else {
-                GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '0');
-                DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1)->update(['working_status' => 1, 'auto_date_team' => Carbon::today()]);
-                $activeUserCount = DB::table('users')->select('users.id')->where('users.company_id', @$company_id)->where('users.root_user', '!=', 1)->where('users.working_status', '=', 1)->count();
-                $users_balance = $this->customActivePackage['users_quantity'] - $activeUserCount;
-                DB::table('package_active')->where('package_active.company_id', @$company_id)->limit(1)
-                    ->update(['users_used' => $activeUserCount, 'users_balance' => $users_balance]);
-                $this->clearTeamCache($company_id);
-
-                return Reply::dataOnly(['status' => 'success']);
-
             }
-
-            // if($packageStatus['STATUS']==1){
-            // 	if($packageStatus['EXPIRE']== 'false'){
-            // 		if($packageStatus['BALANCE'] > 0 ){
-
-            // 	DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1) ->update(array('working_status' => 1));
-            // 	$activeUserCount	=	DB::table('users')->select('users.id')->where('users.company_id', @$company_id)->where('users.root_user', '!=', 1)->where('users.working_status', '=', 1)->count();
-            // 	$users_balance		=	$this->customActivePackage['users_quantity']-$activeUserCount;
-            // 	DB::table('package_active')->where('package_active.company_id', @$company_id)->limit(1)
-            // 	->update(array('users_used' 	=> $activeUserCount, 'users_balance' => $users_balance) );
-            // 	return Reply::dataOnly(['status' => 'success']);
-
-            // 		}else{
-            // 			return Reply::dataOnly(['status' => 'info', 'message'=> 'Team user working status can not update because your package balance max limit reached , please contact to Administrator.']);
-            // 		}
-            // 	}else{
-            // 		return Reply::dataOnly(['status' => 'info', 'message'=> 'Team user working status can not update because your package expired , please contact to Administrator.']);
-            // 	}
-            // }else{
-            // 	return Reply::dataOnly(['status' => 'info', 'message'=> 'Team user working status can not update because your package status is Inactive , please contact to Administrator.']);
-            // }
-
-        } else {
-
-            DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1)->update(['working_status' => 0]);
-            $activeUserCount = DB::table('users')->select('users.id')->where('users.company_id', @$company_id)->where('users.root_user', '!=', 1)->where('users.working_status', '=', 1)->count();
-            $users_balance = $this->customActivePackage['users_quantity'] - $activeUserCount;
-            if ($users_balance < 0) {
-                $users_balance = 0;
-            }
-            DB::table('package_active')->where('package_active.company_id', @$company_id)->limit(1)
-                ->update(['users_used' => $activeUserCount, 'users_balance' => $users_balance]);
-            $this->clearTeamCache($company_id);
-
-            return Reply::dataOnly(['status' => 'success']);
-
         }
 
+        $mutationService = app(\App\Services\TeamMutationService::class);
+        $result = $mutationService->executeIdempotentMutation(
+            tenantId: (int) $company_id,
+            targetUserId: $userId,
+            idempotencyKey: $idempotencyKey,
+            eventType: 'team_member.working_status_updated',
+            requestPayload: [
+                'userId' => $userId,
+                'chkStatus' => $chkStatus,
+                'working_status' => ($chkStatus == 'true') ? 1 : 0,
+            ],
+            mutationCallback: function () use ($company_id, $userId, $chkStatus) {
+                if ($chkStatus == 'true') {
+                    $eventId = 1;
+                    GeneralMethod::coinsDeductions((int) $company_id, $eventId, auth()->user()->id, $company_id, '', '0');
+                    DB::table('users')->where('company_id', $company_id)->where('id', $userId)->limit(1)->update(['working_status' => 1, 'auto_date_team' => Carbon::today()]);
+                    $activeUserCount = DB::table('users')->select('users.id')->where('users.company_id', $company_id)->where('users.root_user', '!=', 1)->where('users.working_status', '=', 1)->count();
+                    $users_balance = $this->customActivePackage['users_quantity'] - $activeUserCount;
+                    DB::table('package_active')->where('package_active.company_id', $company_id)->limit(1)
+                        ->update(['users_used' => $activeUserCount, 'users_balance' => $users_balance]);
+                } else {
+                    DB::table('users')->where('company_id', $company_id)->where('id', $userId)->limit(1)->update(['working_status' => 0]);
+                    $activeUserCount = DB::table('users')->select('users.id')->where('users.company_id', $company_id)->where('users.root_user', '!=', 1)->where('users.working_status', '=', 1)->count();
+                    $users_balance = $this->customActivePackage['users_quantity'] - $activeUserCount;
+                    if ($users_balance < 0) {
+                        $users_balance = 0;
+                    }
+                    DB::table('package_active')->where('package_active.company_id', $company_id)->limit(1)
+                        ->update(['users_used' => $activeUserCount, 'users_balance' => $users_balance]);
+                }
+
+                GeneralMethod::userIndexingupload($userId);
+
+                return [
+                    'status' => 'success',
+                    'user_id' => $userId,
+                    'working_status' => ($chkStatus == 'true') ? 1 : 0,
+                ];
+            }
+        );
+
+        return Reply::dataOnly($result);
     }
 
     public function statusUpdate(Request $request)
     {
         $company_id = auth()->user()->company_id;
         $chkStatus = $request->chkStatus;
-        $userId = $request->userId;
+        $userId = (int) $request->userId;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         // Phase 11 Optimization: Strict tenant scoping validation
         User::where('id', $userId)->where('company_id', $company_id)->firstOrFail();
 
-        $status_text = '';
-        if ($chkStatus == 'true') {
-            DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1)->update(['status' => 'active', 'working_status' => 1, 'auto_date_team' => Carbon::today()]);
-            $status_text = 'Avtive';
-        } else {
+        $statusValue = ($chkStatus == 'true' || $chkStatus === true || $chkStatus === '1') ? 'active' : 'inactive';
 
-            DB::table('users')->where('company_id', @$company_id)->where('id', @$userId)->limit(1)->update(['status' => 'inactive', 'working_status' => 0]);
-            // Phase 3.4: bump epoch so active sessions are kicked on next request.
-            Cache::put('user:epoch:'.(int) $userId, now()->timestamp, 7 * 24 * 3600);
-            $status_text = 'Avtive';
-        }
+        $mutationService = app(\App\Services\TeamMutationService::class);
+        $result = $mutationService->executeIdempotentMutation(
+            tenantId: (int) $company_id,
+            targetUserId: $userId,
+            idempotencyKey: $idempotencyKey,
+            eventType: 'team_member.status_updated',
+            requestPayload: [
+                'userId' => $userId,
+                'chkStatus' => $chkStatus,
+                'status' => $statusValue,
+            ],
+            mutationCallback: function () use ($company_id, $userId, $statusValue) {
+                if ($statusValue === 'active') {
+                    DB::table('users')->where('company_id', $company_id)->where('id', $userId)->limit(1)->update([
+                        'status' => 'active',
+                        'working_status' => 1,
+                        'auto_date_team' => Carbon::today(),
+                    ]);
+                } else {
+                    DB::table('users')->where('company_id', $company_id)->where('id', $userId)->limit(1)->update([
+                        'status' => 'inactive',
+                        'working_status' => 0,
+                    ]);
+                    // Phase 3.4: bump epoch so active sessions are kicked on next request.
+                    Cache::put('user:epoch:'.(int) $userId, now()->timestamp, 7 * 24 * 3600);
+                }
 
-        GeneralMethod::userIndexingupload($userId);
+                GeneralMethod::userIndexingupload($userId);
 
-        // V2 Phase 4: Invalidate cached team counts and tenant team listing
-        $this->clearTeamCache($company_id);
+                return [
+                    'status' => 'success',
+                    'status_text' => ucfirst($statusValue),
+                    'user_id' => $userId,
+                    'user_status' => $statusValue,
+                ];
+            }
+        );
 
-        return Reply::dataOnly(['status' => 'success', 'status_text' => $status_text]);
+        return Reply::dataOnly($result);
     }
 
     public function reSendmail(Request $request)
@@ -1467,6 +1490,59 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
                         GeneralMethod::userIndexingupload((int) $user->id);
                         SyncUserToElasticJob::dispatch((int) $user->id)->afterCommit();
                         $this->clearTeamCache($company_id);
+
+                        $inviteIdempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key') ?? ('invite_'.$company_id.'_'.md5(strtolower((string) $request->email)));
+                        $versionKey = 'ats:teamversion:company_'.$company_id;
+                        $newVersion = (int) (Cache::get($versionKey, 1));
+
+                        try {
+                            DB::table('sys_outbox_events')->insert([
+                                'tenant_id' => $company_id,
+                                'idempotency_key' => $inviteIdempotencyKey,
+                                'aggregate_type' => 'TeamMember',
+                                'aggregate_id' => (int) $user->id,
+                                'aggregate_version' => $newVersion,
+                                'event_type' => 'team_member.created',
+                                'payload' => json_encode([
+                                    'user_id' => $user->id,
+                                    'name' => $user->name,
+                                    'email' => $user->email,
+                                    'role_id' => $request->role_id,
+                                    'action' => 'team_member.created',
+                                    'timestamp' => now()->toIso8601String(),
+                                ]),
+                                'status' => 'COMPLETED',
+                                'attempts' => 1,
+                                'available_at' => now(),
+                                'processed_at' => now(),
+                                'created_at' => now(),
+                            ]);
+
+                            DB::table('sys_idempotency_keys')->updateOrInsert(
+                                ['tenant_id' => $company_id, 'idempotency_key' => $inviteIdempotencyKey],
+                                [
+                                    'request_hash' => sha1(strtolower((string) $request->email)),
+                                    'status' => 'COMPLETED',
+                                    'response_status' => 200,
+                                    'response_body' => json_encode(['status' => 'success', 'msgType' => 'success', 'message' => $message]),
+                                    'expires_at' => now()->addHours(24),
+                                    'completed_at' => now(),
+                                    'updated_at' => now(),
+                                ]
+                            );
+
+                            broadcast(new \App\Events\TeamMemberUpdated(
+                                companyId: (int) $company_id,
+                                userId: (int) $user->id,
+                                action: 'team_member.created',
+                                senderId: (int) (auth()->id() ?? 0),
+                                status: 'inactive',
+                                roleId: (int) $request->role_id,
+                                version: $newVersion
+                            ))->toOthers();
+                        } catch (\Throwable $evtEx) {
+                            \Log::warning('TeamMemberCreated outbox/broadcast warning: '.$evtEx->getMessage());
+                        }
                     } catch (\Throwable $e) {
                         DB::rollBack();
 
@@ -1602,57 +1678,68 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
     public function roleupdate(Request $request)
     {
         $company_id = auth()->user()->company_id;
-        $cuser_id = $request->cuser_id;
-        $user_role = $request->user_role;
+        $cuser_id = (int) $request->cuser_id;
+        $user_role = (int) $request->user_role;
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
 
         if (! empty($cuser_id) && ! empty($user_role)) {
             // Phase 11 Optimization: Strict tenant scoping validation
             $targetUser = User::where('id', $cuser_id)->where('company_id', $company_id)->firstOrFail();
-            DB::beginTransaction();
-            try {
-                DB::table('role_user')
-                    ->where('user_id', $cuser_id)
-                    ->limit(1)
-                    ->update(['role_id' => $user_role]);
 
-                $rolesAs = DB::table('roles')
-                    ->join('role_user', 'role_user.role_id', '=', 'roles.id')
-                    ->select('roles.name')
-                    ->where('role_user.user_id', '=', $cuser_id)
-                    ->first();
-                if ($rolesAs) {
-                    $user = User::withoutGlobalScopes()->find($cuser_id);
-                    if ($user) {
-                        $user->assignRole($rolesAs->name);
+            $role_row = DB::table('roles')->where('id', $user_role)->first();
+            $roleName = $role_row->display_name ?? ($role_row->name ?? 'Role');
+
+            $mutationService = app(\App\Services\TeamMutationService::class);
+            $result = $mutationService->executeIdempotentMutation(
+                tenantId: (int) $company_id,
+                targetUserId: $cuser_id,
+                idempotencyKey: $idempotencyKey,
+                eventType: 'team_member.role_updated',
+                requestPayload: [
+                    'cuser_id' => $cuser_id,
+                    'user_role' => $user_role,
+                    'role_id' => $user_role,
+                    'role_name' => $roleName,
+                ],
+                mutationCallback: function () use ($cuser_id, $user_role, $roleName) {
+                    DB::table('role_user')->updateOrInsert(
+                        ['user_id' => $cuser_id],
+                        ['role_id' => $user_role]
+                    );
+
+                    $roleRaw = DB::table('roles')->where('id', $user_role)->first();
+                    if ($roleRaw) {
+                        $user = User::withoutGlobalScopes()->find($cuser_id);
+                        if ($user) {
+                            $user->assignRole($roleRaw->name);
+                        }
                     }
+
+                    $userId = auth()->id();
+                    $cachekeys = [
+                        'allteam_version_user_'.$userId,
+                        'teamviewmore_version_user_'.$userId,
+                    ];
+                    foreach ($cachekeys as $key) {
+                        GeneralMethod::cacheClean($key);
+                    }
+
+                    GeneralMethod::userIndexingupload((int) $cuser_id);
+
+                    return [
+                        'status' => 'success',
+                        'message' => 'User role has been updated successfully.',
+                        'user_id' => $cuser_id,
+                        'role_id' => $user_role,
+                        'role_name' => $roleName,
+                    ];
                 }
+            );
 
-                DB::commit();
-
-                $userId = auth()->id();
-                $cachekeys = [
-                    'allteam_version_user_'.$userId,
-                    'teamviewmore_version_user_'.$userId,
-                ];
-                foreach ($cachekeys as $key) {
-                    GeneralMethod::cacheClean($key);
-                }
-
-                // Update Elasticsearch document synchronously post-commit and dispatch queue job as fallback
-                GeneralMethod::userIndexingupload((int) $cuser_id);
-                SyncUserToElasticJob::dispatch((int) $cuser_id)->afterCommit();
-                $this->clearTeamCache($company_id);
-
-                return Reply::dataOnly(['status' => 'success']);
-            } catch (\Throwable $e) {
-                DB::rollBack();
-
-                return Reply::dataOnly(['status' => 'error', 'message' => 'Failed to update role: '.$e->getMessage()]);
-            }
+            return Reply::dataOnly($result);
         } else {
             return Reply::dataOnly(['status' => 'warning', 'message' => 'something worng, please try again one more time ']);
         }
-
     }
 
     public function teamScoreboard(Request $request)
@@ -1665,21 +1752,25 @@ class ServiceCompanyTeamController extends ServiceCompanyBaseController
         $end = $reportMonth->copy()->endOfMonth()->toIso8601String();
 
         try {
-            // Internal rank (within company) — full result includes leaders + total
-            $internal = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
-            $userData = $internal['user'] ?? ['score' => 0, 'rank' => 'N/A'];
-            $leaders = $internal['leaders'] ?? collect();
-            $total = $internal['total'] ?? 0;
+            $monthKey = date('Ym', strtotime($start));
+            $cacheKey = "ats:team:scoreboard:{$companyId}:{$userId}:{$monthKey}";
+            $view = Cache::remember($cacheKey, 3600, function () use ($companyId, $userId, $start, $end) {
+                // Internal rank (within company) — full result includes leaders + total
+                $internal = \App\Helper\GeneralMethod::getTeamRankData($companyId, $userId, $start, $end, true, true);
+                $userData = $internal['user'] ?? ['score' => 0, 'rank' => 'N/A'];
+                $leaders = $internal['leaders'] ?? collect();
+                $total = $internal['total'] ?? 0;
 
-            // Team page shows internal ranks only — no cross-company global rank
-            $view = view('service_company.dashboard._scoreboard', [
-                'U' => is_array($userData) ? $userData : (array) $userData,
-                'totalCount' => $total,
-                'mode' => 'internal',
-                'otherRank' => null,
-                'month' => date('M Y', strtotime($start)),
-                'leaders' => $leaders,
-            ])->render();
+                // Team page shows internal ranks only — no cross-company global rank
+                return view('service_company.dashboard._scoreboard', [
+                    'U' => is_array($userData) ? $userData : (array) $userData,
+                    'totalCount' => $total,
+                    'mode' => 'internal',
+                    'otherRank' => null,
+                    'month' => date('M Y', strtotime($start)),
+                    'leaders' => $leaders,
+                ])->render();
+            });
 
             return Reply::dataOnly(['status' => 'success', 'view' => $view]);
         } catch (\Throwable $e) {
