@@ -709,8 +709,7 @@
                         <div class="team-filter-bar">
                             <div class="team-search-wrap">
                                 <span class="team-search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                                <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..."
-                                    onkeyup="filtersdataget()" />
+                                <input type="text" id="kt_tagify_2" placeholder="Search by name, email or phone..." autocomplete="off" />
                             </div>
                             <div class="team-sort-card">
                                 <span class="team-sort-label">
@@ -905,14 +904,233 @@
             // new Tagify(input2);
         </script>
         <script>
-            $('#kt_tagify_2').keyup(function() {
-                // table._fnDraw();
-				fetchTeams();
+            // Phase 2: Tenant-Scoped IndexedDB Store for Team Listing & Reference Data
+            const CURRENT_COMPANY_ID = {{ (int) (auth()->user()->company_id ?? 0) }};
+            const CURRENT_USER_ID = {{ (int) (auth()->user()->id ?? 0) }};
+            const TEAM_DB_NAME = 'jero_team_local_store_' + CURRENT_COMPANY_ID;
+            const TEAM_DB_VERSION = 1;
+            const TEAM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+
+            const JeroTeamLocalStore = (function() {
+                let dbPromise = null;
+
+                function getDB() {
+                    if (!window.indexedDB) return Promise.resolve(null);
+                    if (dbPromise) return dbPromise;
+
+                    dbPromise = new Promise(function(resolve) {
+                        try {
+                            const req = window.indexedDB.open(TEAM_DB_NAME, TEAM_DB_VERSION);
+                            req.onupgradeneeded = function(e) {
+                                const db = e.target.result;
+                                if (!db.objectStoreNames.contains('team_cache')) {
+                                    db.createObjectStore('team_cache', { keyPath: 'cache_key' });
+                                }
+                                if (!db.objectStoreNames.contains('meta')) {
+                                    db.createObjectStore('meta', { keyPath: 'id' });
+                                }
+                            };
+                            req.onsuccess = function(e) {
+                                const db = e.target.result;
+                                try {
+                                    const tx = db.transaction(['meta'], 'readonly');
+                                    const metaStore = tx.objectStore('meta');
+                                    const metaReq = metaStore.get('current_context');
+                                    metaReq.onsuccess = function() {
+                                        const meta = metaReq.result;
+                                        if (meta && (meta.tenant_id !== CURRENT_COMPANY_ID || meta.user_id !== CURRENT_USER_ID)) {
+                                            // Tenant/User mismatch: purge immediately to prevent cross-tenant data leaks
+                                            const wipeTx = db.transaction(['team_cache', 'meta'], 'readwrite');
+                                            wipeTx.objectStore('team_cache').clear();
+                                            wipeTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_COMPANY_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                                        } else if (!meta) {
+                                            const setTx = db.transaction(['meta'], 'readwrite');
+                                            setTx.objectStore('meta').put({ id: 'current_context', tenant_id: CURRENT_COMPANY_ID, user_id: CURRENT_USER_ID, updated_at: Date.now() });
+                                        }
+                                    };
+                                } catch (err) {
+                                    console.warn('JeroTeamLocalStore tenancy check error:', err);
+                                }
+                                resolve(db);
+                            };
+                            req.onerror = function() { resolve(null); };
+                        } catch (err) {
+                            resolve(null);
+                        }
+                    });
+
+                    return dbPromise;
+                }
+
+                return {
+                    get: async function(key) {
+                        const db = await getDB();
+                        if (!db || !key) return null;
+                        return new Promise(function(resolve) {
+                            try {
+                                const tx = db.transaction(['team_cache'], 'readonly');
+                                const store = tx.objectStore('team_cache');
+                                const req = store.get(key);
+                                req.onsuccess = function() {
+                                    const res = req.result;
+                                    if (res && (Date.now() - res.timestamp < TEAM_CACHE_TTL_MS)) {
+                                        resolve(res.payload);
+                                    } else {
+                                        resolve(null);
+                                    }
+                                };
+                                req.onerror = function() { resolve(null); };
+                            } catch (e) {
+                                resolve(null);
+                            }
+                        });
+                    },
+                    set: async function(key, payload) {
+                        const db = await getDB();
+                        if (!db || !key || !payload) return;
+                        try {
+                            const tx = db.transaction(['team_cache'], 'readwrite');
+                            const store = tx.objectStore('team_cache');
+                            store.put({
+                                cache_key: key,
+                                payload: payload,
+                                timestamp: Date.now()
+                            });
+                        } catch (e) {
+                            // Non-fatal if storage quota exceeded or disabled
+                        }
+                    },
+                    purge: async function() {
+                        const db = await getDB();
+                        if (!db) return;
+                        try {
+                            const tx = db.transaction(['team_cache'], 'readwrite');
+                            tx.objectStore('team_cache').clear();
+                        } catch (e) {
+                            // Non-fatal
+                        }
+                    }
+                };
+            })();
+            window.JeroTeamLocalStore = JeroTeamLocalStore;
+
+            // Phase 1 Optimization: Unified Client RAM state container
+            window.teamState = {
+                records: [],
+                statusTab: 'all',
+                pageSize: parseInt(localStorage.getItem('teamPageSize')) || 10,
+                currentPage: parseInt(localStorage.getItem('currentPageTeam')) || 1,
+                totalCount: 0,
+                rolesCache: null,
+                searchDebounceTimer: null
+            };
+
+            // Phase 5 Optimization: Client-side Idempotency Key generator
+            function generateIdempotencyKey(action) {
+                var uuid = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') 
+                    ? crypto.randomUUID() 
+                    : ((action || 'tm') + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+                return uuid;
+            }
+            window.generateIdempotencyKey = generateIdempotencyKey;
+
+            // Phase 4 Optimization: Real-Time Team Member Delta Synchronization via Reverb WebSockets
+            function handleTeamMemberRealtimeUpdate(e) {
+                if (!e || !e.user_id) return;
+                var currentUserId = parseInt("{{ auth()->id() ?? 0 }}", 10);
+                var senderId = e.sender_id ? parseInt(e.sender_id, 10) : 0;
+
+                // 1. Invalidate L2 IndexedDB cache immediately so subsequent pagination or refreshes fetch fresh data
+                if (window.JeroTeamLocalStore) {
+                    window.JeroTeamLocalStore.purge();
+                }
+
+                // If event originated from this exact browser session, local UI was already patched optimistically
+                if (senderId && senderId === currentUserId) {
+                    return;
+                }
+
+                var userId = parseInt(e.user_id, 10);
+
+                // 2. Perform surgical DOM and RAM delta updates
+                if (e.action === 'team_member.role_updated') {
+                    var $btn = $('.update-user-role[data-row-id="' + userId + '"]');
+                    var $pill = $btn.siblings('.team-role-pill');
+                    if ($pill.length && e.role_name) {
+                        $pill.text(e.role_name);
+                        var lower = e.role_name.toLowerCase();
+                        $pill.removeClass('role-admin role-lead role-default');
+                        if (lower.indexOf('admin') !== -1) {
+                            $pill.addClass('role-admin');
+                        } else if (lower.indexOf('lead') !== -1) {
+                            $pill.addClass('role-lead');
+                        } else {
+                            $pill.addClass('role-default');
+                        }
+                    }
+
+                    if (window.teamState && Array.isArray(window.teamState.records)) {
+                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === userId; });
+                        if (rec) {
+                            rec.display_name = e.role_name;
+                            rec.role_name = e.role_name;
+                        }
+                    }
+                } else if (e.action === 'team_member.status_updated') {
+                    var $chk = $('#status_change_' + userId);
+                    if ($chk.length) {
+                        var isActive = (e.status === 'active');
+                        $chk.prop('checked', isActive);
+                        var $statusText = $chk.parents('td').find('.status_text');
+                        if (isActive) {
+                            $statusText.text('Active').removeClass('text-danger').addClass('text-success');
+                        } else {
+                            $statusText.text('Inactive').removeClass('text-success').addClass('text-danger');
+                        }
+                    }
+
+                    if (window.teamState && Array.isArray(window.teamState.records)) {
+                        var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === userId; });
+                        if (rec) {
+                            rec.status = e.status;
+                        }
+                    }
+                } else if (e.action === 'team_member.working_status_updated') {
+                    var $ws = $('#working_status_' + userId);
+                    if ($ws.length) {
+                        $ws.prop('checked', parseInt(e.working_status, 10) === 1);
+                    }
+                } else if (e.action === 'team_member.created' || e.action === 'team_member.deleted') {
+                    // Member added or removed: asynchronously reload team records for current page
+                    fetchTeams(window.teamState.currentPage || 1);
+                }
+            }
+
+            // Bind Reverb WebSocket channel listener on company-scoped private channel
+            $(document).ready(function() {
+                var companyId = parseInt("{{ (int) auth()->user()->company_id }}", 10);
+                if (companyId > 0 && typeof window.Echo !== 'undefined') {
+                    try {
+                        window.Echo.private('company.' + companyId)
+                            .listen('.team.member.updated', function(eventData) {
+                                handleTeamMemberRealtimeUpdate(eventData);
+                            });
+                    } catch (wsErr) {
+                        console.warn('Echo Reverb subscription notice:', wsErr);
+                    }
+                }
+            });
+
+            // Phase 1 Optimization: 250ms debounced search to eliminate request storms
+            $('#kt_tagify_2').on('input', function() {
+                clearTimeout(window.teamState.searchDebounceTimer);
+                window.teamState.searchDebounceTimer = setTimeout(function() {
+                    filtersdataget();
+                }, 250);
             });
 
             function filtersdataget() {
-                // table._fnDraw();
-				fetchTeams();
+                fetchTeams(1);
             }
 
             $(document).on('click', '.teamViewScore', function() {
@@ -1086,6 +1304,9 @@
                         $.ajax({
                             type: 'POST',
                             url: url,
+                            headers: {
+                                'X-Idempotency-Key': generateIdempotencyKey('teamdelete')
+                            },
                             data: {
                                 '_token': token,
                                 '_method': 'POST',
@@ -1094,7 +1315,9 @@
                             cache: false,
                             success: function(response) {
                                 if (response.status == "success") {
-                                    // table._fnDraw();
+                                    if (window.JeroTeamLocalStore) {
+                                        window.JeroTeamLocalStore.purge();
+                                    }
 									fetchTeams();
                                     $('.teamdelete').addClass("d-none");
                                     Swal.fire({
@@ -1120,32 +1343,63 @@
             });
 
             function handleClick(currentValue, currentId) {
-  
                 var chkStatus = currentValue.checked;
                 var userId = currentId;
-                var statusText = $(currentValue).parents('td').find('.status_text');
-                if ($(currentValue).is(':checked')) {
-                    statusText.text('Active').removeClass('text-danger').addClass('text-success');
+                var $statusText = $(currentValue).parents('td').find('.status_text');
+                
+                // Optimistic UI update
+                if (chkStatus) {
+                    $statusText.text('Active').removeClass('text-danger').addClass('text-success');
                 } else {
-                    statusText.text('Inactive').removeClass('text-success').addClass('text-danger');
+                    $statusText.text('Inactive').removeClass('text-success').addClass('text-danger');
                 }
+
                 var url = "{{ route('service_company.team.statusUpdate') }}";
                 var token = "{{ csrf_token() }}";
-                var baseurl = "{{ asset('assets/images/Loading2.gif') }}";
+
                 $.ajax({
                     type: 'POST',
                     url: url,
-                    beforeSend: function() {},
+                    headers: {
+                        'X-Idempotency-Key': generateIdempotencyKey('status_' + userId)
+                    },
                     data: {
                         '_token': token,
                         'chkStatus': chkStatus,
                         'userId': userId
                     },
                     success: function(response) {
-                        if (response.status == "success") {
-                            fetchTeams(); 
-                            $('#' + block).remove();  
+                        if (response.status === "success") {
+                            if (window.JeroTeamLocalStore) {
+                                window.JeroTeamLocalStore.purge();
+                            }
+                            // Phase 1 Optimization: Update RAM state without full-table re-fetch
+                            if (window.teamState && Array.isArray(window.teamState.records)) {
+                                var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === parseInt(userId, 10); });
+                                if (rec) {
+                                    rec.status = chkStatus ? 'active' : 'inactive';
+                                }
+                            }
+                        } else {
+                            // Revert on server business failure
+                            currentValue.checked = !chkStatus;
+                            if (!chkStatus) {
+                                $statusText.text('Active').removeClass('text-danger').addClass('text-success');
+                            } else {
+                                $statusText.text('Inactive').removeClass('text-success').addClass('text-danger');
+                            }
+                            Swal.fire({ icon: 'warning', title: 'Update Failed', text: response.message || 'Status could not be updated.', confirmButtonColor: '#6366f1' });
                         }
+                    },
+                    error: function(xhr) {
+                        // Revert on server/network error
+                        currentValue.checked = !chkStatus;
+                        if (!chkStatus) {
+                            $statusText.text('Active').removeClass('text-danger').addClass('text-success');
+                        } else {
+                            $statusText.text('Inactive').removeClass('text-success').addClass('text-danger');
+                        }
+                        Swal.fire({ icon: 'error', title: 'Network Error', text: 'Error ' + xhr.status + '. Status update reverted.', confirmButtonColor: '#6366f1' });
                     }
                 });
             }
@@ -1255,7 +1509,9 @@
             }
 
             function submitEditRole() {
-                var roleId = $('input[name="user_role"]:checked').val();
+                var $selectedRadio = $('input[name="user_role"]:checked');
+                var roleId = $selectedRadio.val();
+                var roleName = $selectedRadio.data('role-name') || $selectedRadio.closest('label').find('div:nth-child(2) > div:first-child').text().trim();
                 var userId = $('#cuser_id').val();
                 if (!roleId) {
                     Swal.fire({ icon: 'warning', title: 'Select a role', text: 'Please choose a role before updating.', confirmButtonColor: '#6366f1' });
@@ -1270,22 +1526,53 @@
                 $.ajax({
                     type: 'POST',
                     url: url,
+                    headers: {
+                        'X-Idempotency-Key': generateIdempotencyKey('role_' + userId)
+                    },
                     data: { _token: token, cuser_id: userId, user_role: roleId },
                     success: function(response) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> Update Role';
                         if (response.status === 'success') {
+                            if (window.JeroTeamLocalStore) {
+                                window.JeroTeamLocalStore.purge();
+                            }
                             closeEditRoleDrawer();
-                            Swal.fire({ icon: 'success', title: 'Role Updated', text: response.message || 'User role has been updated successfully.', confirmButtonColor: '#6366f1' })
-                                .then(function() { location.reload(); });
+
+                            // Phase 1 Optimization: Local DOM row update without full-page document reload
+                            var $btn = $('.update-user-role[data-row-id="' + userId + '"]');
+                            var $pill = $btn.siblings('.team-role-pill');
+                            if ($pill.length && roleName) {
+                                $pill.text(roleName);
+                                var lower = roleName.toLowerCase();
+                                $pill.removeClass('role-admin role-lead role-default');
+                                if (lower.indexOf('admin') !== -1) {
+                                    $pill.addClass('role-admin');
+                                } else if (lower.indexOf('lead') !== -1) {
+                                    $pill.addClass('role-lead');
+                                } else {
+                                    $pill.addClass('role-default');
+                                }
+                            }
+
+                            // Update RAM state
+                            if (window.teamState && Array.isArray(window.teamState.records)) {
+                                var rec = window.teamState.records.find(function(r) { return parseInt(r.id, 10) === parseInt(userId, 10); });
+                                if (rec) {
+                                    rec.display_name = roleName;
+                                    rec.role_name = roleName;
+                                }
+                            }
+
+                            Swal.fire({ icon: 'success', title: 'Role Updated', text: response.message || 'User role has been updated successfully.', confirmButtonColor: '#6366f1' });
                         } else {
                             Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'Could not update role.', confirmButtonColor: '#6366f1' });
-                            btn.disabled = false;
-                            btn.innerHTML = '<i class="fa-solid fa-check"></i> Update Role';
                         }
                     },
                     error: function(xhr) {
-                        Swal.fire({ icon: 'error', title: 'Server Error', text: xhr.status + ' ' + xhr.statusText, confirmButtonColor: '#6366f1' });
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fa-solid fa-check"></i> Update Role';
+                        Swal.fire({ icon: 'error', title: 'Server Error', text: xhr.status + ' ' + xhr.statusText, confirmButtonColor: '#6366f1' });
                     }
                 });
             }
@@ -1295,42 +1582,60 @@
                 if (e.key === 'Escape') closeEditRoleDrawer();
             });
 
+            // Phase 1 Optimization: Populate roles into select helper
+            function populateInviteRoleOptions(roles) {
+                var $select = $('#inviteRole');
+                $select.find('option:not([disabled])').remove();
+                if (roles && roles.length > 0) {
+                    $.each(roles, function(i, role) {
+                        var val = role.id;
+                        var label = role.display_name || role.name;
+                        if (val && label) {
+                            $select.append('<option value="' + val + '">' + label + '</option>');
+                        }
+                    });
+                }
+            }
+
             // ---- Invite Drawer ----
             function openInviteDrawer() {
                 var rolesUrl = "{{ route('service_company.team.add_team_member_form', '123') }}";
-                // Load roles into select
-                $.get(rolesUrl, function(response) {
-                    if (response.status === 'coinCheck') {
-                        Swal.fire("Insufficient Coins", response.message, "warning");
-                        return;
-                    }
-                    if (response.status === 'success') {
-                        var $select = $('#inviteRole');
-                        $select.find('option:not([disabled])').remove();
 
-                        // Phase 1 Optimization: Populate options directly from JSON roles array
-                        if (response.roles && response.roles.length > 0) {
-                            $.each(response.roles, function(i, role) {
-                                var val = role.id;
-                                var label = role.display_name || role.name;
-                                if (val && label) {
-                                    $select.append('<option value="' + val + '">' + label + '</option>');
-                                }
-                            });
-                        } else if (response.view) {
-                            // Fallback to legacy HTML string parsing
-                            var $html = $(response.view);
-                            $html.find('input[type="radio"][name="role_id"]').each(function() {
-                                var val = $(this).val();
-                                var label = $(this).siblings('label').find('.fw-bolder').text().trim()
-                                         || $(this).closest('.d-flex').find('.fw-bolder').text().trim();
-                                if (val && label) {
-                                    $select.append('<option value="' + val + '">' + label + '</option>');
-                                }
-                            });
+                // Phase 1 Optimization: Use cached roles in RAM if available (0 HTTP requests!)
+                if (window.teamState && window.teamState.rolesCache && window.teamState.rolesCache.length > 0) {
+                    populateInviteRoleOptions(window.teamState.rolesCache);
+                } else {
+                    $.get(rolesUrl, function(response) {
+                        if (response.status === 'coinCheck') {
+                            Swal.fire("Insufficient Coins", response.message, "warning");
+                            return;
                         }
-                    }
-                });
+                        if (response.status === 'success') {
+                            if (response.roles && response.roles.length > 0) {
+                                if (window.teamState) {
+                                    window.teamState.rolesCache = response.roles;
+                                }
+                                populateInviteRoleOptions(response.roles);
+                            } else if (response.view) {
+                                var $html = $(response.view);
+                                var extracted = [];
+                                $html.find('input[type="radio"][name="role_id"]').each(function() {
+                                    var val = $(this).val();
+                                    var label = $(this).siblings('label').find('.fw-bolder').text().trim()
+                                             || $(this).closest('.d-flex').find('.fw-bolder').text().trim();
+                                    if (val && label) {
+                                        extracted.push({ id: val, display_name: label });
+                                    }
+                                });
+                                if (window.teamState) {
+                                    window.teamState.rolesCache = extracted;
+                                }
+                                populateInviteRoleOptions(extracted);
+                            }
+                        }
+                    });
+                }
+
                 // Reset form
                 $('#inviteForm')[0].reset();
                 $('#inviteMsg').hide().text('');
@@ -1374,12 +1679,18 @@
                 $.ajax({
                     url: '{{ route("service_company.team.store") }}?_token={{ csrf_token() }}',
                     type: 'POST',
+                    headers: {
+                        'X-Idempotency-Key': generateIdempotencyKey('invite_' + ($('#inviteEmail').val() || ''))
+                    },
                     data: formData,
                     processData: false,
                     contentType: false,
                     success: function(response) {
                         $btn.removeClass('loading').prop('disabled', false);
                         if (response.msgType === 'success') {
+                            if (window.JeroTeamLocalStore) {
+                                window.JeroTeamLocalStore.purge();
+                            }
                             closeInviteDrawer();
                             fetchTeams();
                             Swal.fire('Invitation Sent!', response.message, 'success');
@@ -1434,6 +1745,9 @@
                         $.ajax({
                             type: 'POST',
                             url: url,
+                            headers: {
+                                'X-Idempotency-Key': generateIdempotencyKey('working_status_' + userId)
+                            },
                             beforeSend: function() {},
                             data: {
                                 '_token': token,
@@ -1442,6 +1756,9 @@
                             },
                             success: function(response) {
                                 if (response.status == "success") {
+                                    if (window.JeroTeamLocalStore) {
+                                        window.JeroTeamLocalStore.purge();
+                                    }
                                     swalWithBootstrapButtons.fire('Success!',
                                         'Working status update successfully.', 'success')
                                 } else if (response.status == "info") {
@@ -2030,28 +2347,87 @@
 			var teamStatusTab = 'all';
 			var teamPageSize = parseInt(localStorage.getItem('teamPageSize')) || 10;
 
-			function fetchTeams(page = page_no, search = '') {
+			var currentTeamFetchXhr = null;
+
+			async function fetchTeams(page = page_no, search = '') {
+				if (currentTeamFetchXhr && currentTeamFetchXhr.readyState !== 4) {
+					currentTeamFetchXhr.abort();
+				}
+
+				var customSearch = ($('#kt_tagify_2').val() || '').trim();
+				var sortFilter = $('#sortingfilter').val() || '';
+				var cacheKey = 'team_' + teamStatusTab + '_p' + page + '_s' + teamPageSize + '_q' + customSearch + '_sort' + sortFilter;
+
+				// Phase 2: Check IndexedDB L2 Persistent Cache first (0ms, 0 HTTP requests)
+				if (window.JeroTeamLocalStore) {
+					try {
+						var cached = await window.JeroTeamLocalStore.get(cacheKey);
+						if (cached && cached.html) {
+							$('.loadingMessageteamsListajax').css({ display: 'none' });
+							localStorage.setItem('currentPageTeam', page);
+
+							if (window.teamState) {
+								window.teamState.currentPage = page;
+								window.teamState.totalCount = cached.total || 0;
+								window.teamState.statusTab = teamStatusTab;
+								if (cached.raw_data && Array.isArray(cached.raw_data)) {
+									window.teamState.records = cached.raw_data;
+								}
+							}
+
+							$('#teamsListajax').html(cached.html);
+							$('#paginationTeams').html(cached.pagination);
+							updateTeamSelectedCount();
+							return Promise.resolve(cached);
+						}
+					} catch(e) {
+						// Fall through to server fetch on any cache read exception
+					}
+				}
+
 				$('.loadingMessageteamsListajax').css({ display: 'block' });
-				return $.ajax({
+				currentTeamFetchXhr = $.ajax({
 					url: `{!! route('service_company.team.data_ajax') !!}?page=${page}`,
 					type: 'GET',
 					data: {
 						search: $('#inputSearch').val(),
-						cus_search: $('#kt_tagify_2').val(),
+						cus_search: customSearch,
 						country: $('#country').val(),
-						sortingfilter: $('#sortingfilter').val(),
+						sortingfilter: sortFilter,
 						statusTab: teamStatusTab,
 						size: teamPageSize,
 						per_page: teamPageSize
 					},
 					success: function(response) {
 						$('.loadingMessageteamsListajax').css({ display: 'none' });
-                        localStorage.setItem('currentPageTeam', 1);
+						localStorage.setItem('currentPageTeam', page);
+
+						// Phase 1 Optimization: Cache raw records in RAM
+						if (window.teamState) {
+							window.teamState.currentPage = page;
+							window.teamState.totalCount = response.total || 0;
+							window.teamState.statusTab = teamStatusTab;
+							if (response.raw_data && Array.isArray(response.raw_data)) {
+								window.teamState.records = response.raw_data;
+							}
+						}
+
+						// Phase 2 Optimization: Store in IndexedDB
+						if (window.JeroTeamLocalStore && response && response.html) {
+							window.JeroTeamLocalStore.set(cacheKey, response);
+						}
+
 						$('#teamsListajax').html(response.html);
 						$('#paginationTeams').html(response.pagination);
 						updateTeamSelectedCount();
+					},
+					error: function(xhr, status) {
+						if (status !== 'abort') {
+							$('.loadingMessageteamsListajax').css({ display: 'none' });
+						}
 					}
 				});
+				return currentTeamFetchXhr;
 			}
 
 			// Switch status tabs (All / Active / Inactive / Invited / Suspended)

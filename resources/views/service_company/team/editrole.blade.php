@@ -106,6 +106,7 @@
                 {{-- Radio --}}
                 <input type="radio" name="user_role" id="role_{{ $rlist->id }}"
                     value="{{ $rlist->id }}"
+                    data-role-name="{{ ucwords($rlist->display_name ?? $rlist->name) }}"
                     {{ $isSelected ? 'checked' : '' }}
                     style="width:18px; height:18px; accent-color:#6366f1; flex-shrink:0; margin-top:2px; cursor:pointer;">
             </label>
