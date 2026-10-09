@@ -329,11 +329,15 @@ body.career-apply-page .toolbar {
     color: #D97706 !important;
     background: #FFF7ED !important;
 }
-.job-candidate-create .candidate-work-mode-option:has(input:checked) {
+.job-candidate-create .candidate-work-mode-option:has(input:checked),
+.job-candidate-create .candidate-work-mode-option.is-selected,
+.job-candidate-create .candidate-work-mode-option.is-active {
     border-color: #F59E0B !important;
     background-color: #FFF7ED !important;
 }
-.job-candidate-create .candidate-work-mode-option:has(input:checked) .candidate-work-mode-radio {
+.job-candidate-create .candidate-work-mode-option:has(input:checked) .candidate-work-mode-radio,
+.job-candidate-create .candidate-work-mode-option.is-selected .candidate-work-mode-radio,
+.job-candidate-create .candidate-work-mode-option.is-active .candidate-work-mode-radio {
     border-color: #F59E0B !important;
     background: #F59E0B !important;
 }
@@ -3064,7 +3068,7 @@ textarea.has-validation-error:focus,
                     <div class="ei">
                       <label class="candidate-experience-field"><span>Years</span><select id="total_exp_year" name="total_exp_year">
                         <option value="">Years</option>
-                        <option value="0" {{ $selected_exp_year==0 ? 'selected' : '' }}>Fresher</option>
+                        <option value="0" {{ (!is_null($selected_exp_year) && (string)$selected_exp_year === '0') ? 'selected' : '' }}>Fresher</option>
                         @php
                             for ($i = 1; $i <= 60; $i++) {
                                   $selected = '';
@@ -3178,18 +3182,18 @@ textarea.has-validation-error:focus,
                     <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
                   </div>
                   <div class="fg fv-row">
-                    <label>Current Designation <span class="rq">*</span></label>
-                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" value="{{( @$application->current_designation) ? @$application->current_designation : @$jobDetail->title }}" placeholder="Enter current designation" /></div>
+                    <label>Current Designation <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
+                    <div class="candidate-field-control"><i class="fa-solid fa-briefcase" aria-hidden="true"></i><input type="text" name="current_designation" id="current_designation" data-job-title="{{ @$jobDetail->title }}" value="{{ (@$application->current_designation) ? @$application->current_designation : ((!is_null($selected_exp_year) && (string)$selected_exp_year === '0') ? '' : @$jobDetail->title) }}" placeholder="Enter current designation" /></div>
                     <small class="candidate-professional-help">e.g. Software Engineer, Product Manager</small>
                   </div>
                   <div class="fg fv-row">
                     <label>Employment Type <span class="rq">*</span></label>
                     <div class="candidate-field-control"><i class="fa-solid fa-rectangle-list" aria-hidden="true"></i><select name="employmentType" id="EmploymentType">
                       <option value="">Select employment type</option>
-                      <option {{ (@$application->employmentType==='Full Time') ? 'selected' : '' }}>Full Time</option>
-                      <option {{ (@$application->employmentType==='Contract') ? 'selected' : '' }}>Contract</option>
-                      <option {{ (@$application->employmentType==='Part Time') ? 'selected' : '' }}>Part Time</option>
-                      <option {{ (@$application->employmentType==='Freelance') ? 'selected' : '' }}>Freelance</option>
+                      <option value="Full Time" {{ (@$application->employmentType === 'Full Time' || empty(@$application->employmentType)) ? 'selected' : '' }}>Full Time</option>
+                      <option value="Contract" {{ (@$application->employmentType === 'Contract') ? 'selected' : '' }}>Contract</option>
+                      <option value="Part Time" {{ (@$application->employmentType === 'Part Time') ? 'selected' : '' }}>Part Time</option>
+                      <option value="Freelance" {{ (@$application->employmentType === 'Freelance') ? 'selected' : '' }}>Freelance</option>
                     </select></div>
                   </div>
                 </div>
@@ -3393,7 +3397,7 @@ textarea.has-validation-error:focus,
               </div>
               <div class="fsc candidate-card-body aw-body">
                 <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="rq">*</span></label>
+                  <label>Notice Period <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
                   <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
@@ -3421,7 +3425,7 @@ textarea.has-validation-error:focus,
 
                 <div class="candidate-notice-details-grid">
                   <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDateField" {{ !in_array($snp_mode, [1, 2], true) ? 'hidden' : '' }}>
-                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq">*</span></label>
+                    <label id="candidateNoticeDateLabel">{{ $snp_mode === 1 ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)' }} <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                       <div class="candidate-date-picker">
@@ -3431,7 +3435,7 @@ textarea.has-validation-error:focus,
                     </div>
                   </div>
                   <div class="fg fv-row candidate-notice-detail" id="candidateNoticeDaysField" {{ $snp_mode !== 0 ? 'hidden' : '' }}>
-                    <label>Notice Period <span class="rq">*</span></label>
+                    <label>Notice Period <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
                     <div class="candidate-notice-input-shell">
                       <i class="fa-regular fa-clock" aria-hidden="true"></i>
                       <select class="form-select form-select-solid" aria-label="Select Notice Period" id="ddl_np_id" name="ddl_np_id" {{ $snp_mode !== 0 ? 'disabled' : '' }}>
@@ -3464,9 +3468,9 @@ textarea.has-validation-error:focus,
               </div>
               <div class="fsc candidate-card-body">
                 <div class="candidate-work-mode-grid">
-                  <label class="candidate-work-mode-option" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
-                  <label class="candidate-work-mode-option" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
+                  <label class="candidate-work-mode-option {{ @$application->wm == 'remote' ? 'is-selected is-active' : '' }}" for="wr"><input type="radio" name="wm" id="wr" {{ @$application->wm == 'remote' ? 'checked' : '' }} value="remote" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--remote"><i class="fa-solid fa-laptop" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Remote</strong><small>Can work from any location.</small></span></label>
+                  <label class="candidate-work-mode-option {{ @$application->wm == 'hybrid' ? 'is-selected is-active' : '' }}" for="wh"><input type="radio" name="wm" id="wh" {{ @$application->wm == 'hybrid' ? 'checked' : '' }} value="hybrid" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--hybrid"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Hybrid</strong><small>Combination of office and remote.</small></span></label>
+                  <label class="candidate-work-mode-option {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'is-selected is-active' : '' }}" for="wo"><input type="radio" name="wm" id="wo" {{ (@$application->wm == 'office' || empty(@$application->wm)) ? 'checked' : '' }} value="office" /><span class="candidate-work-mode-radio"></span><span class="candidate-work-mode-icon candidate-work-mode-icon--office"><i class="fa-solid fa-building" aria-hidden="true"></i></span><span class="candidate-work-mode-copy"><strong>Work From Office (WFO)</strong><small>Office location based work.</small></span></label>
                 </div>
               </div>
             </div>
@@ -6903,12 +6907,13 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     var et = ($('#EmploymentType').val() || '').trim();
     if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType', 'Please select an employment type.');
 
-    // 13. Current Designation * (Mandatory for ALL applicants)
-    var cd = ($('#current_designation').val() || '').trim();
-    if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation', 'Current designation is required.');
-
     // Fields mandatory ONLY for Experienced Candidates (Experience > 0):
+    // For Freshers: Current Designation (can remain blank), Current Company, Current Salary, Expected Salary, and Notice Period are OPTIONAL.
     if (!isFresher) {
+        // 13. Current Designation * (Optional / blank for Freshers)
+        var cd = ($('#current_designation').val() || '').trim();
+        if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation', 'Current designation is required for experienced candidates.');
+
         // 14. Current Company * (Optional for Freshers)
         var cc = ($('#current_company').val() || '').trim();
         if (!cc) addMissing('current_company', 'Current Company', '#current_company', 'Current company is required for experienced candidates.');
@@ -6928,22 +6933,22 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         if (billAnnual <= 0 && billMonthly <= 0 && ectcVal <= 0) {
             addMissing('ectc', 'Expected Salary', '.candidate-salary-panel--expected', 'Expected salary details are required for experienced candidates.');
         }
-    }
 
-    // 17. Notice Period & Joining Details * (Mandatory for ALL applicants)
-    var snpMode = ($('#serving_notice_period').val() || '').trim();
-    if (!snpMode && snpMode !== '0') {
-        addMissing('np_id', 'Notice Period & Joining Details', '.candidate-notice-options', 'Please select a notice period option.');
-    } else if (snpMode === '0') {
-        var npDays = ($('#ddl_np_id').val() || '').trim();
-        if (!npDays || npDays === '0') {
-            addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
-        }
-    } else if (snpMode === '1' || snpMode === '2') {
-        var npDate = ($('#np_id').val() || '').trim();
-        if (!npDate) {
-            var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Joining Date';
-            addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
+        // 17. Notice Period & Joining Details * (Optional for Freshers)
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (!snpMode && snpMode !== '0') {
+            addMissing('np_id', 'Notice Period & Joining Details', '.candidate-notice-options', 'Please select a notice period option.');
+        } else if (snpMode === '0') {
+            var npDays = ($('#ddl_np_id').val() || '').trim();
+            if (!npDays || npDays === '0') {
+                addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
+            }
+        } else if (snpMode === '1' || snpMode === '2') {
+            var npDate = ($('#np_id').val() || '').trim();
+            if (!npDate) {
+                var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+                addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
+            }
         }
     }
 
@@ -7413,9 +7418,13 @@ function syncFresherUIState() {
     if (isFresher) {
         $('.candidate-experienced-only-rq').hide();
         $('.candidate-fresher-note').show();
+        // Current Designation blank if fresher selected
+        $('#current_designation').val('');
+        clearCandidateFieldValidationErrors('current_designation');
         clearCandidateFieldValidationErrors('current_company');
         clearCandidateFieldValidationErrors('ctc');
         clearCandidateFieldValidationErrors('ectc');
+        clearCandidateFieldValidationErrors('np_id');
     } else {
         $('.candidate-experienced-only-rq').show();
         $('.candidate-fresher-note').hide();
@@ -7423,11 +7432,31 @@ function syncFresherUIState() {
 }
 window.syncFresherUIState = syncFresherUIState;
 
+function syncWorkModeUI() {
+    var $checked = $('input[name="wm"]:checked');
+    if (!$checked.length) {
+        $('#wo').prop('checked', true);
+        $checked = $('#wo');
+    }
+    $('.candidate-work-mode-option').removeClass('is-selected is-active');
+    $checked.closest('.candidate-work-mode-option').addClass('is-selected is-active');
+}
+window.syncWorkModeUI = syncWorkModeUI;
+
 $(document).on('change', '#total_exp_year', function () {
     syncFresherUIState();
 });
 
+$(document).on('change click', 'input[name="wm"], .candidate-work-mode-option', function () {
+    syncWorkModeUI();
+    clearCandidateFieldValidationErrors('wm');
+});
+
 $(function () {
+    if (!$('#EmploymentType').val()) {
+        $('#EmploymentType').val('Full Time');
+    }
+    syncWorkModeUI();
     syncFresherUIState();
 });
 
