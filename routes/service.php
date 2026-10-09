@@ -304,7 +304,7 @@ Route::group(['middleware' => 'auth'], function () {
                 Route::get('find-data-talent', [ServiceCompanyAppTrackerController::class, 'findTalentData'])->name('apptracker.findTalentData');
                 Route::get('find-agency', [ServiceCompanyCompanyController::class, 'findAgency'])->name('find.findAgency');
                 Route::get('find-agency-data', [ServiceCompanyCompanyController::class, 'findAgencyData'])->name('find.findAgencyData');
-                Route::get('agency-request/{id?}', [ServiceCompanyCompanyController::class, 'findAgencyRequest'])->name('agency.recommanded_request');
+                Route::match(['get', 'post'], 'agency-request/{id?}', [ServiceCompanyCompanyController::class, 'findAgencyRequest'])->name('agency.recommanded_request');
                 Route::get('apptrackerajax/public_bench_data', [ServiceCompanyAppTrackerController::class, 'public_bench_data_ajax'])->name('apptracker.public_bench_data_ajax');
                 Route::get('apptracker/sub_stage/{status?}/{application_id?}/{job_id?}', [ServiceCompanyAppTrackerController::class, 'sub_stage'])->name('apptracker.sub_stage');
                 Route::get('apptracker/{id}/{mstatus_id}', [ServiceCompanyAppTrackerController::class, 'index'])->name('apptracker.index');

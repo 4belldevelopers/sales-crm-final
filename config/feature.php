@@ -86,7 +86,19 @@ return [
     | concurrency idempotency locks.
     | Defaults to true.
     |--------------------------------------------------------------------------
-    */
     'bench_talent_requests_v2_enabled' => (bool) env('FEATURE_BENCH_TALENT_REQUESTS_V2_ENABLED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Service Company Transaction Log V2 Engine
+    |
+    | Intent: Master feature flag for V2 Transaction Log optimizations.
+    | Controls single consolidated aggregate query, composite index utilization,
+    | client-side LRU RAM caching, Reverb WebSocket delta updates, and
+    | transactional outbox event relay.
+    | Defaults to true.
+    |--------------------------------------------------------------------------
+    */
+    'transaction_log_v2_enabled' => (bool) env('FEATURE_TRANSACTION_LOG_V2_ENABLED', true),
 
 ];

@@ -295,6 +295,11 @@
     animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes txPulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.3); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
 
 .txlog-empty {
     text-align: center;
@@ -443,6 +448,17 @@
                         </button>
                     </div>
 
+                </div>
+
+                {{-- Live Update Notification Banner (Phase 4: Reverb Real-Time Sync) --}}
+                <div id="txlog-live-notice" class="align-items-center justify-content-between px-5 py-2 my-2 mx-4 rounded" style="display:none;background:#eef6ff;border:1px solid #c9e2ff;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#009ef7;display:inline-block;animation:txPulse 1.5s infinite;"></span>
+                        <span class="fs-7 fw-semibold text-gray-800">New transactions were recorded on your account.</span>
+                    </div>
+                    <button type="button" id="btn-txlog-live-reload" class="btn btn-sm btn-primary py-1 px-3 fs-8 fw-bold">
+                        Jump to Latest (Page 1)
+                    </button>
                 </div>
 
                 {{-- Table Column Headers --}}
@@ -600,13 +616,113 @@
         c.classList.toggle('active-chip', act);
     });
 
+    // ── In-Memory Bounded RAM Cache (LRU, max 10 pages, 60s TTL) ───────────────
+    // Offloads rapid page turns (e.g. Page 1 <-> Page 2) with 0 network requests
+    var pageCache = new Map();
+    var MAX_CACHE_ENTRIES = 10;
+    var CACHE_TTL_MS = 60000; // 60 seconds
+
+    function getCacheKey() {
+        return JSON.stringify({
+            pagetype         : state.pagetype,
+            search           : state.search,
+            date_from        : state.date_from,
+            date_to          : state.date_to,
+            transection_type : state.transection_type,
+            per_page         : state.per_page,
+            page             : state.page,
+        });
+    }
+
+    function getFromCache(key) {
+        if (!pageCache.has(key)) return null;
+        var entry = pageCache.get(key);
+        if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+            pageCache.delete(key);
+            return null;
+        }
+        // Refresh entry position in Map for LRU eviction order
+        pageCache.delete(key);
+        pageCache.set(key, entry);
+        return entry.data;
+    }
+
+    function setInCache(key, data) {
+        if (pageCache.size >= MAX_CACHE_ENTRIES) {
+            var oldestKey = pageCache.keys().next().value;
+            pageCache.delete(oldestKey);
+        }
+        pageCache.set(key, { data: data, timestamp: Date.now() });
+    }
+
+    function clearCache() {
+        pageCache.clear();
+    }
+
+    // ── URL Query String Synchronization ───────────────────────────────────────
+    // Synchronizes active tab, page, and filters with browser address bar for deep linking & back button
+    function syncBrowserUrl() {
+        if (typeof window.history.replaceState === 'function') {
+            var url = new URL(window.location.href);
+            url.searchParams.set('pagetype', state.pagetype);
+            if (state.page > 1) {
+                url.searchParams.set('page', state.page);
+            } else {
+                url.searchParams.delete('page');
+            }
+            if (state.search) {
+                url.searchParams.set('search', state.search);
+            } else {
+                url.searchParams.delete('search');
+            }
+            if (state.date_from) {
+                url.searchParams.set('date_from', state.date_from);
+            } else {
+                url.searchParams.delete('date_from');
+            }
+            if (state.date_to) {
+                url.searchParams.set('date_to', state.date_to);
+            } else {
+                url.searchParams.delete('date_to');
+            }
+            if (state.transection_type) {
+                url.searchParams.set('transection_type', state.transection_type);
+            } else {
+                url.searchParams.delete('transection_type');
+            }
+            if (state.per_page && state.per_page !== 10) {
+                url.searchParams.set('per_page', state.per_page);
+            } else {
+                url.searchParams.delete('per_page');
+            }
+            window.history.replaceState(null, '', url.pathname + url.search);
+        }
+    }
+
     // ── Fetch ─────────────────────────────────────────────────────────────────
     /**
      * Primary AJAX request executor for transaction logs.
      * Reused for initial page load, tab switches, search, filters, pagination, and resets.
      * Cancels any pending request in-flight to prevent duplicate/stale responses.
+     * Serves cached responses from RAM when available to minimize infrastructure load.
      */
-    function fetchData() {
+    function fetchData(forceRefresh) {
+        if (state.page === 1) {
+            hideLiveNotice();
+        }
+        syncBrowserUrl();
+
+        var cacheKey = getCacheKey();
+        if (!forceRefresh) {
+            var cached = getFromCache(cacheKey);
+            if (cached) {
+                renderItems(cached.data);
+                renderPagination(cached);
+                updateStats(cached);
+                return;
+            }
+        }
+
         showLoader();
 
         // Abort previous in-flight request if present
@@ -643,6 +759,7 @@
         })
         .then(function(json) {
             if (json.success) {
+                setInCache(cacheKey, json);
                 renderItems(json.data);
                 renderPagination(json);
                 updateStats(json);
@@ -910,12 +1027,95 @@
             document.querySelectorAll('.txlog-chip').forEach(function(c) {
                 c.classList.toggle('active-chip', c.getAttribute('data-preset') === 'this_month');
             });
-            resetPage(); fetchData();
+            clearCache();
+            resetPage();
+            fetchData(true);
         });
     }
 
-    // ── Initial load ──────────────────────────────────────────────────────────
+    // ── Real-Time WebSocket Synchronization via Laravel Reverb (Phase 4) ─────
+    var authCompanyId = {{ (int) (auth()->user()->company_id ?? 0) }};
+    var elLiveNotice  = document.getElementById('txlog-live-notice');
+    var btnLiveReload = document.getElementById('btn-txlog-live-reload');
+
+    function showLiveNotice() {
+        if (elLiveNotice) {
+            elLiveNotice.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    function hideLiveNotice() {
+        if (elLiveNotice) {
+            elLiveNotice.style.setProperty('display', 'none', 'important');
+        }
+    }
+
+    if (btnLiveReload) {
+        btnLiveReload.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideLiveNotice();
+            state.page = 1;
+            fetchData(true);
+        });
+    }
+
+    function initRealtimeSync() {
+        if (typeof window.Echo === 'undefined' || !authCompanyId) {
+            return; // Gracefully degrade if WebSockets or Echo are not active
+        }
+
+        try {
+            window.Echo.private('company.' + authCompanyId)
+                .listen('.coin.transaction.updated', function(e) {
+                    if (!e || parseInt(e.company_id, 10) !== authCompanyId) return;
+
+                    // Invalidate in-memory RAM cache to ensure next read gets authoritative server data
+                    clearCache();
+
+                    // Check if event corresponds to currently active tab
+                    var currentTabType = (state.pagetype === 'salestab') ? 'sales' : 'operational';
+                    if (e.event_type && e.event_type !== currentTabType) {
+                        return; // Event was for the other tab; cache cleared, will fetch fresh on tab switch
+                    }
+
+                    // If user is currently viewing Page 1 with no search filter, silently refresh Page 1
+                    if (state.page === 1 && state.search === '') {
+                        fetchData(true);
+                    } else {
+                        // User is on Page 2+ or applying a search filter: display non-disruptive banner
+                        showLiveNotice();
+                    }
+                })
+                .listen('.OperationalCoinUpdated', function(e) {
+                    if (!e) return;
+                    clearCache();
+                    if (state.pagetype === 'operationaltab') {
+                        if (state.page === 1 && state.search === '') {
+                            fetchData(true);
+                        } else {
+                            showLiveNotice();
+                        }
+                    }
+                });
+        } catch (err) {
+            // Suppress unexpected WebSocket connection errors
+        }
+    }
+
+    // ── Expose Interface for Real-Time Synchronization (Phase 4) ─────────────
+    window.JWTransactionLog = {
+        refresh: function() {
+            clearCache();
+            hideLiveNotice();
+            fetchData(true);
+        },
+        clearCache: clearCache,
+        getState: function() { return Object.assign({}, state); }
+    };
+
+    // ── Initial load & WebSocket attach ───────────────────────────────────────
     fetchData();
+    initRealtimeSync();
 
 })();
 </script>

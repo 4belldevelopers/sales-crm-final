@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\CoinOutboxService;
 use App\Services\ElasticService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -127,7 +128,7 @@ class ProcessCompanyCoinDeductionJob implements ShouldQueue
                     ->whereIn('id', $activeUserIdsToUpdate)
                     ->update(['working_status' => 1, 'auto_date_team' => $today]);
 
-                DB::table('coin_transection_logs')->insert([
+                $logId = DB::table('coin_transection_logs')->insertGetId([
                     'coin_order_id' => $companyCoin->coin_order_id,
                     'from_company_id' => $companyId,
                     'company_id' => $companyId,
@@ -149,6 +150,17 @@ class ProcessCompanyCoinDeductionJob implements ShouldQueue
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                // Transactional Outbox: durable outbox log and decoupled Reverb broadcast
+                CoinOutboxService::recordAndDispatch(
+                    companyId: $companyId,
+                    logId: (int) $logId,
+                    eventType: 'operational',
+                    transectionType: 'debit',
+                    coins: (float) $totalDeductionRequired,
+                    balanceCoins: (float) $currentBalance,
+                    eventDescription: 'Team Manage Auto Deductions'
+                );
             }
 
             if (! empty($inactiveUserIdsToUpdate)) {
@@ -224,7 +236,7 @@ class ProcessCompanyCoinDeductionJob implements ShouldQueue
                     ->whereIn('id', $activeJobIdsToUpdate)
                     ->update(['auto_date_job' => $today]);
 
-                DB::table('coin_transection_logs')->insert([
+                $logId = DB::table('coin_transection_logs')->insertGetId([
                     'coin_order_id' => $companyCoin->coin_order_id,
                     'from_company_id' => $companyId,
                     'company_id' => $companyId,
@@ -246,6 +258,17 @@ class ProcessCompanyCoinDeductionJob implements ShouldQueue
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                // Transactional Outbox: durable outbox log and decoupled Reverb broadcast
+                CoinOutboxService::recordAndDispatch(
+                    companyId: $companyId,
+                    logId: (int) $logId,
+                    eventType: 'operational',
+                    transectionType: 'debit',
+                    coins: (float) $totalDeductionRequired,
+                    balanceCoins: (float) $currentBalance,
+                    eventDescription: 'Jobs Manage Auto Deductions'
+                );
             }
 
             if (! empty($inactiveJobIdsToUpdate)) {
