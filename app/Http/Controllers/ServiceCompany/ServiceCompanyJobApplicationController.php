@@ -5466,21 +5466,36 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         // ->where('candidate_job_skill_exp.job_id','=', $this->job_id)
         // ->where('candidate_job_skill_exp.candidate_id','=', $this->application->id)
         // ->get();
-        $job_details = Job::withoutGlobalScopes()->find($this->job_id);
+        $_wsJobId = $job_id ?: ($jobId ?? @$this->application->job_id);
 
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id); // Add the candidate condition
+                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
             })
-            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
-            ->where('job_metronics_skills.job_id', '=', $this->job_id)
-            ->where('job_metronics_skills.company_id', '=', $job_details->company_id)
+            ->select(
+                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'),
+                DB::raw('MIN(job_metronics_skills.id) as id'),
+                'job_metronics_skills.skill_name',
+                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+            )
+            ->where('job_metronics_skills.job_id', '=', $_wsJobId)
+            ->whereNotNull('job_metronics_skills.skill_name')
+            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+            ->groupBy('job_metronics_skills.skill_name')
             ->get();
-        // dd($job_details->company_id);
+
+        if ($this->jobSkill) {
+            foreach ($this->jobSkill as $sk) {
+                if ($sk->rating === null) {
+                    $sk->rating = 0;
+                }
+            }
+        }
 
         $this->skillShow = true;
-        if (! DB::table('candidate_job_skill_exp')->where('candidate_job_skill_exp.job_id', '=', $this->job_id)->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id)->exists()) {
+        if (! empty($_wsJobId) && ! DB::table('candidate_job_skill_exp')->where('candidate_job_skill_exp.job_id', '=', $_wsJobId)->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id)->exists()) {
             $this->skillShow = false;
         }
 
@@ -5859,18 +5874,37 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $this->interview_mode = DB::table('interview_mode')->select('*')->orderBy('interview_mode.id', 'ASC')->get();
 
-        // Populate job skills for skill-highlight panel — mirrors show() but uses local $jobId
-        $this->jobSkill = collect();
-        $_wsJobId = $jobId ?? @$this->application->job_id;
-        if (! empty($_wsJobId)) {
-            $this->jobSkill = DB::table('job_metronics_skills')
-                ->leftJoin('candidate_job_skill_exp', function ($join) {
-                    $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                        ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
-                })
-                ->select('job_metronics_skills.id as job_skill_id', 'job_metronics_skills.id as id', 'job_metronics_skills.skill_name', 'candidate_job_skill_exp.skill_value', 'candidate_job_skill_exp.rating')
-                ->where('job_metronics_skills.job_id', '=', $_wsJobId)
-                ->get();
+        // Populate job skills for skill-highlight panel — ensure deduplication & rating
+        if (empty($this->jobSkill) || $this->jobSkill->isEmpty()) {
+            $this->jobSkill = collect();
+            $_wsJobId = $jobId ?? @$this->application->job_id ?? $this->job_id;
+            if (! empty($_wsJobId)) {
+                $this->jobSkill = DB::table('job_metronics_skills')
+                    ->leftJoin('candidate_job_skill_exp', function ($join) {
+                        $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
+                            ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
+                    })
+                    ->select(
+                        DB::raw('MIN(job_metronics_skills.id) as job_skill_id'),
+                        DB::raw('MIN(job_metronics_skills.id) as id'),
+                        'job_metronics_skills.skill_name',
+                        DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                        DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+                    )
+                    ->where('job_metronics_skills.job_id', '=', $_wsJobId)
+                    ->whereNotNull('job_metronics_skills.skill_name')
+                    ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+                    ->groupBy('job_metronics_skills.skill_name')
+                    ->get();
+
+                if ($this->jobSkill) {
+                    foreach ($this->jobSkill as $sk) {
+                        if ($sk->rating === null) {
+                            $sk->rating = 0;
+                        }
+                    }
+                }
+            }
         }
 
         // $view = view('service_company.job-applications.show', $this->data)->render();
@@ -13387,10 +13421,19 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         $this->jobSkill = DB::table('job_metronics_skills')
             ->leftJoin('candidate_job_skill_exp', function ($join) {
                 $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id')
-                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id); // Add the candidate condition
+                    ->where('candidate_job_skill_exp.candidate_id', '=', $this->application->id);
             })
-            ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
+            ->select(
+                DB::raw('MIN(job_metronics_skills.id) as job_skill_id'),
+                DB::raw('MIN(job_metronics_skills.id) as id'),
+                'job_metronics_skills.skill_name',
+                DB::raw('MAX(candidate_job_skill_exp.skill_value) as skill_value'),
+                DB::raw('MAX(candidate_job_skill_exp.rating) as rating')
+            )
             ->where('job_metronics_skills.job_id', '=', $this->job_id)
+            ->whereNotNull('job_metronics_skills.skill_name')
+            ->whereRaw("TRIM(job_metronics_skills.skill_name) != ''")
+            ->groupBy('job_metronics_skills.skill_name')
             ->get();
 
         $this->skillShow = true;
