@@ -117,11 +117,6 @@ class JobApplyService
                 'string',
                 'max:100',
             ],
-            'current_designation' => [
-                'required',
-                'string',
-                'max:191',
-            ],
             'wm' => [
                 'required',
                 'string',
@@ -152,7 +147,6 @@ class JobApplyService
             'qualification.required' => 'Highest qualification is required',
             'qualification.min' => 'Highest qualification is required',
             'employmentType.required' => 'Employment type is required',
-            'current_designation.required' => 'Current designation is required',
             'wm.required' => 'Preferred work mode is required',
             'wm.in' => 'Please select a valid work mode',
             'total_exp_year.required' => 'Total experience is required',
@@ -219,6 +213,14 @@ class JobApplyService
 
         $isFresher = ($totalExpYearVal !== null && (string) $totalExpYearVal === '0');
         if (! $isFresher) {
+            if (empty(trim((string) $request->input('current_designation')))) {
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'Current designation is required for experienced candidates.',
+                ]);
+            }
+
             if (empty(trim((string) $request->input('current_company')))) {
                 return Reply::dataOnly([
                     'status' => 'mailcheck',
@@ -230,7 +232,7 @@ class JobApplyService
             $payAnnual = (float) $request->input('pay_annual');
             $payMonthly = (float) $request->input('pay_monthly');
             $ctcVal = (float) $request->input('ctc');
-            if ($payAnnual <= 0 && $payMonthly <= 0 && $ctcVal <= 0) {
+            if ($payAnnual <= 0 && payMonthly <= 0 && $ctcVal <= 0) {
                 return Reply::dataOnly([
                     'status' => 'mailcheck',
                     'msgType' => 'warning',
@@ -241,40 +243,40 @@ class JobApplyService
             $billAnnual = (float) $request->input('bill_annual');
             $billMonthly = (float) $request->input('bill_monthly');
             $ectcVal = (float) $request->input('ectc');
-            if ($billAnnual <= 0 && $billMonthly <= 0 && $ectcVal <= 0) {
+            if ($billAnnual <= 0 && billMonthly <= 0 && $ectcVal <= 0) {
                 return Reply::dataOnly([
                     'status' => 'mailcheck',
                     'msgType' => 'warning',
                     'message' => 'Expected salary details are required for experienced candidates.',
                 ]);
             }
-        }
 
-        /* Intent: Server-side validation for Notice Period & Joining Details */
-        $snpMode = $request->input('serving_notice_period');
-        if ($snpMode === null || $snpMode === '') {
-            return Reply::dataOnly([
-                'status' => 'mailcheck',
-                'msgType' => 'warning',
-                'message' => 'Please select a notice period option.',
-            ]);
-        } elseif ((string) $snpMode === '0') {
-            if (empty($request->input('ddl_np_id')) || (string) $request->input('ddl_np_id') === '0') {
+            /* Intent: Server-side validation for Notice Period & Joining Details (mandatory for experienced candidates only) */
+            $snpMode = $request->input('serving_notice_period');
+            if ($snpMode === null || $snpMode === '') {
                 return Reply::dataOnly([
                     'status' => 'mailcheck',
                     'msgType' => 'warning',
-                    'message' => 'Please select notice period days.',
+                    'message' => 'Please select a notice period option.',
                 ]);
-            }
-        } elseif ((string) $snpMode === '1' || (string) $snpMode === '2') {
-            if (empty(trim((string) $request->input('np_id')))) {
-                $lwdLabel = ((string) $snpMode === '1') ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+            } elseif ((string) $snpMode === '0') {
+                if (empty($request->input('ddl_np_id')) || (string) $request->input('ddl_np_id') === '0') {
+                    return Reply::dataOnly([
+                        'status' => 'mailcheck',
+                        'msgType' => 'warning',
+                        'message' => 'Please select notice period days.',
+                    ]);
+                }
+            } elseif ((string) $snpMode === '1' || (string) $snpMode === '2') {
+                if (empty(trim((string) $request->input('np_id')))) {
+                    $lwdLabel = ((string) $snpMode === '1') ? 'Expected Last Working Date (LWD)' : 'Joining Date';
 
-                return Reply::dataOnly([
-                    'status' => 'mailcheck',
-                    'msgType' => 'warning',
-                    'message' => "{$lwdLabel} is required.",
-                ]);
+                    return Reply::dataOnly([
+                        'status' => 'mailcheck',
+                        'msgType' => 'warning',
+                        'message' => "{$lwdLabel} is required.",
+                    ]);
+                }
             }
         }
 
