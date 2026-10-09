@@ -93,6 +93,46 @@ class JobApplyService
                 'max:55',
                 'different:email',
             ],
+            'careersummary' => [
+                'required',
+                'string',
+            ],
+            'nationality' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'gender' => [
+                'required',
+                'string',
+                'max:50',
+            ],
+            'qualification' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
+            'employmentType' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+            'current_designation' => [
+                'required',
+                'string',
+                'max:191',
+            ],
+            'wm' => [
+                'required',
+                'string',
+                'in:remote,hybrid,office',
+            ],
+            'total_exp_year' => [
+                'required',
+            ],
+            'rel_exp_year' => [
+                'required',
+            ],
         ], [
             'full_name.required' => 'Full name is required',
             'full_name.min' => 'Full name must be at least 2 characters',
@@ -106,6 +146,17 @@ class JobApplyService
             'secondrary_email.email' => 'Please enter a valid secondary email',
             'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
             'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
+            'careersummary.required' => 'Career summary is required',
+            'nationality.required' => 'Nationality is required',
+            'gender.required' => 'Gender is required',
+            'qualification.required' => 'Highest qualification is required',
+            'qualification.min' => 'Highest qualification is required',
+            'employmentType.required' => 'Employment type is required',
+            'current_designation.required' => 'Current designation is required',
+            'wm.required' => 'Preferred work mode is required',
+            'wm.in' => 'Please select a valid work mode',
+            'total_exp_year.required' => 'Total experience is required',
+            'rel_exp_year.required' => 'Relevant experience is required',
         ]);
 
         if ($validator->fails()) {
@@ -114,6 +165,117 @@ class JobApplyService
                 'msgType' => 'warning',
                 'message' => $validator->errors()->first(),
             ]);
+        }
+
+        /* Intent: Server-side validation for Resume Upload */
+        $hasResume = $request->filled('resume_session_uuid')
+            || $request->hasFile('resume')
+            || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))
+            || $request->filled('existing_resume_path');
+        if (! $hasResume) {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'Please upload a resume file (PDF or Word, max 6MB).',
+            ]);
+        }
+
+        /* Intent: Server-side validation for Current Location */
+        $hasLocation = ($request->filled('location_city_id') && (int) $request->location_city_id > 0)
+            || $request->filled('kt_tagify_work_location')
+            || $request->filled('location_canonical_label');
+        if (! $hasLocation) {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'Current location is required.',
+            ]);
+        }
+
+        /* Intent: Server-side validation for Primary Skills */
+        $skillArr = json_decode((string) $request->input('skills'), true);
+        $hasSkills = (! empty($skillArr) && is_array($skillArr) && count($skillArr) > 0)
+            || ! empty(trim((string) $request->input('skills')));
+        if (! $hasSkills) {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'Primary skills are required (minimum 1 skill).',
+            ]);
+        }
+
+        /* Intent: Server-side validation for Experience Details & Fresher Logic */
+        $totalExpYearVal = $request->input('total_exp_year');
+        $relExpYearVal = $request->input('rel_exp_year');
+        $numTe = (float) $totalExpYearVal;
+        $numRe = (float) $relExpYearVal;
+        if ($numRe > $numTe) {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => "Relevant experience ({$numRe} yrs) cannot exceed total experience ({$numTe} yrs).",
+            ]);
+        }
+
+        $isFresher = ($totalExpYearVal !== null && (string) $totalExpYearVal === '0');
+        if (! $isFresher) {
+            if (empty(trim((string) $request->input('current_company')))) {
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'Current company is required for experienced candidates.',
+                ]);
+            }
+
+            $payAnnual = (float) $request->input('pay_annual');
+            $payMonthly = (float) $request->input('pay_monthly');
+            $ctcVal = (float) $request->input('ctc');
+            if ($payAnnual <= 0 && $payMonthly <= 0 && $ctcVal <= 0) {
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'Current salary details are required for experienced candidates.',
+                ]);
+            }
+
+            $billAnnual = (float) $request->input('bill_annual');
+            $billMonthly = (float) $request->input('bill_monthly');
+            $ectcVal = (float) $request->input('ectc');
+            if ($billAnnual <= 0 && $billMonthly <= 0 && $ectcVal <= 0) {
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'Expected salary details are required for experienced candidates.',
+                ]);
+            }
+        }
+
+        /* Intent: Server-side validation for Notice Period & Joining Details */
+        $snpMode = $request->input('serving_notice_period');
+        if ($snpMode === null || $snpMode === '') {
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'Please select a notice period option.',
+            ]);
+        } elseif ((string) $snpMode === '0') {
+            if (empty($request->input('ddl_np_id')) || (string) $request->input('ddl_np_id') === '0') {
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'Please select notice period days.',
+                ]);
+            }
+        } elseif ((string) $snpMode === '1' || (string) $snpMode === '2') {
+            if (empty(trim((string) $request->input('np_id')))) {
+                $lwdLabel = ((string) $snpMode === '1') ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => "{$lwdLabel} is required.",
+                ]);
+            }
         }
 
         $company_id = (int) $request->input('company_id');
@@ -643,7 +805,7 @@ class JobApplyService
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
                     ->update(['resume' => $finalResumeUrl]);
-            } elseif ($request->hasFile('resume')) {
+            } elseif ($request->hasFile('resume') || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))) {
                 $companyNameR2 = DB::table('companies')->where('id', $company_id)->value('company_name');
                 $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
                 $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
@@ -671,7 +833,7 @@ class JobApplyService
                 }
             }
 
-            if (empty($request->input('resumeCheck')) && ! $resumeSession && ! $request->hasFile('resume')) {
+            if (empty($request->input('resumeCheck')) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
                     ->update(['resume' => '']);
