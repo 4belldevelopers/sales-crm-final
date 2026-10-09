@@ -4355,6 +4355,43 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             return Reply::dataOnly(['status' => 'closeJob', 'message' => "You can't add a job because the limit has been exceeded"]);
         }
 
+        // Phase 4: Idempotency Protection Check
+        $idempotencyKey = $request->header('X-Idempotency-Key') ?? $request->input('idempotency_key');
+        if (empty($idempotencyKey)) {
+            $idempotencyKey = 'mkt_claim_'.$to_company_id.'_'.$jobidGet;
+        }
+
+        $mutationService = app(\App\Services\MarketJobMutationService::class);
+        $canonicalHash = $mutationService->computeCanonicalHash($request->all());
+
+        $existingIdempotency = DB::table('sys_idempotency_keys')
+            ->where('tenant_id', $to_company_id)
+            ->where('idempotency_key', $idempotencyKey)
+            ->first();
+
+        if ($existingIdempotency && $existingIdempotency->status === 'COMPLETED') {
+            $cachedBody = json_decode($existingIdempotency->response_body, true);
+
+            return response()->json(is_array($cachedBody) ? $cachedBody : ['status' => 'success', 'message' => '']);
+        }
+
+        if ($existingIdempotency && $existingIdempotency->status === 'PROCESSING') {
+            return response()->json([
+                'status' => 'waiting',
+                'message' => 'This request is already being processed. Please wait.',
+            ], 425);
+        }
+
+        DB::table('sys_idempotency_keys')->insertOrIgnore([
+            'tenant_id' => $to_company_id,
+            'idempotency_key' => $idempotencyKey,
+            'request_hash' => $canonicalHash,
+            'status' => 'PROCESSING',
+            'expires_at' => now()->addHours(24),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         $searchTermsLocation = request('kt_tagify_location');
         //    dd($searchTermsLocation);
         if (empty($searchTermsLocation)) {
@@ -4395,6 +4432,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $eventId = 40;
                 $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 if ($coinsDeductions->status) {
+                    DB::table('sys_idempotency_keys')->where('tenant_id', $to_company_id)->where('idempotency_key', $idempotencyKey)->delete();
+
                     return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 } else {
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
@@ -4405,6 +4444,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $eventId = 41;
                 $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 if ($coinsDeductions->status) {
+                    DB::table('sys_idempotency_keys')->where('tenant_id', $to_company_id)->where('idempotency_key', $idempotencyKey)->delete();
+
                     return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 } else {
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
@@ -4418,6 +4459,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $eventId = 38;
                 $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 if ($coinsDeductions->status) {
+                    DB::table('sys_idempotency_keys')->where('tenant_id', $to_company_id)->where('idempotency_key', $idempotencyKey)->delete();
+
                     return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 } else {
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
@@ -4428,6 +4471,8 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
                 $eventId = 39;
                 $coinsDeductions = GeneralMethod::coinsValidations((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
                 if ($coinsDeductions->status) {
+                    DB::table('sys_idempotency_keys')->where('tenant_id', $to_company_id)->where('idempotency_key', $idempotencyKey)->delete();
+
                     return Reply::dataOnly(['status' => 'info', 'message' => $coinsDeductions->message, 'company_coins' => $coinsDeductions->company_coins]);
                 } else {
                     GeneralMethod::coinsDeductions((int) $to_company_id, $eventId, auth()->user()->id, $from_company_id, '', '');
@@ -5233,7 +5278,84 @@ class ServiceCompanyJobsController extends ServiceCompanyBaseController
             GeneralMethod::cacheClean($key);
         }
 
+        // Phase 3: Broadcast real-time delta update to active recruiter sessions in tenant company
+        try {
+            event(new \App\Events\MarketJobDeltaUpdated(
+                companyId: (int) $to_company_id,
+                jobId: (int) $jobidGet,
+                eventType: 'claimed',
+                entityVersion: (int) (cache()->get("tenant:{$to_company_id}:market_jobs:version", 1)),
+                actionType: 'under_review',
+                statusLabel: 'HOLD'
+            ));
+
+            if ($from_company_id && $from_company_id !== $to_company_id) {
+                event(new \App\Events\MarketJobDeltaUpdated(
+                    companyId: (int) $from_company_id,
+                    jobId: (int) $jobidGet,
+                    eventType: 'vendor_claimed',
+                    entityVersion: (int) (cache()->get("tenant:{$from_company_id}:market_jobs:version", 1)),
+                    actionType: 'vendor_fulfilled',
+                    vendorAddedCount: (int) ($resultCount ?? 1)
+                ));
+            }
+        } catch (\Throwable $broadcastEx) {
+            \Illuminate\Support\Facades\Log::warning('[MarketJobDeltaUpdated] Broadcast dispatch failed', [
+                'error' => $broadcastEx->getMessage(),
+                'job_id' => $jobidGet,
+                'company_id' => $to_company_id,
+            ]);
+        }
+
         $data = ['status' => 'success', 'message' => ''];
+
+        // Phase 4: Complete Idempotency record and register Transactional Outbox Event
+        try {
+            DB::table('sys_idempotency_keys')
+                ->where('tenant_id', $to_company_id)
+                ->where('idempotency_key', $idempotencyKey)
+                ->update([
+                    'status' => 'COMPLETED',
+                    'response_status' => 200,
+                    'response_body' => json_encode($data),
+                    'completed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+            $versionKey = 'tenant:'.$to_company_id.':market_jobs:version';
+            $currentVersion = (int) cache()->get($versionKey, 1);
+            $newVersion = $currentVersion + 1;
+            cache()->put($versionKey, $newVersion, now()->addDays(30));
+
+            $outboxId = DB::table('sys_outbox_events')->insertGetId([
+                'tenant_id' => (int) $to_company_id,
+                'idempotency_key' => $idempotencyKey,
+                'aggregate_type' => 'MarketJob',
+                'aggregate_id' => (int) $jobidGet,
+                'aggregate_version' => $newVersion,
+                'event_type' => 'MarketJobClaimed',
+                'payload' => json_encode([
+                    'tenant_id' => (int) $to_company_id,
+                    'job_id' => (int) $jobidGet,
+                    'from_company_id' => (int) $from_company_id,
+                    'aggregate_version' => $newVersion,
+                    'response_data' => $data,
+                    'timestamp' => now()->toIso8601String(),
+                ]),
+                'status' => 'PENDING',
+                'attempts' => 0,
+                'available_at' => now(),
+                'created_at' => now(),
+            ]);
+
+            \App\Jobs\ProcessMarketJobOutboxEventJob::dispatch((int) $outboxId);
+        } catch (\Throwable $outboxEx) {
+            \Illuminate\Support\Facades\Log::warning('[MarketJobOutbox] Outbox logging/dispatch skipped or failed', [
+                'error' => $outboxEx->getMessage(),
+                'job_id' => $jobidGet,
+                'tenant_id' => $to_company_id,
+            ]);
+        }
 
         return response()->json($data);
 
