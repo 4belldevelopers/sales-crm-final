@@ -2746,11 +2746,14 @@
             <!-- Primary Skills -->
             @php
               $candidateRequiredSkills = collect($jobSkill ?? [])->filter(function ($skill) {
-                  return is_object($skill) && trim((string) ($skill->skill_name ?? '')) !== '';
+                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
+                  return trim((string) $name) !== '';
               })->map(function ($skill) {
+                  $name = is_object($skill) ? ($skill->skill_name ?? '') : (is_array($skill) ? ($skill['skill_name'] ?? '') : '');
+                  $id = is_object($skill) ? ($skill->id ?? '') : (is_array($skill) ? ($skill['id'] ?? '') : '');
                   return [
-                      'id' => (string) ($skill->id ?? ''),
-                      'name' => trim((string) $skill->skill_name),
+                      'id' => (string) $id,
+                      'name' => trim((string) $name),
                   ];
               })->unique(function ($skill) {
                   return mb_strtolower(preg_replace('/\s+/', ' ', $skill['name']));
@@ -5560,8 +5563,242 @@ var KTUPDATECandidate = {
           tagifyskill.DOM.scope.setAttribute('aria-hidden', 'true');
       }
 
+      // JERO Autonomous Client-First Skills Taxonomy & Match Engine (0% MySQL / 0% Elasticsearch Read Load)
+      var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
+      var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
+      var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
+      var _skillsCategoryMap = (_skillsTaxonomy && _skillsTaxonomy.skill_category_map) || {};
+      var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
+
+      var SKILL_SYNONYMS = {
+          'js': 'javascript',
+          'javascript': 'javascript',
+          'ecmascript': 'javascript',
+          'es6': 'javascript',
+          'ts': 'typescript',
+          'typescript': 'typescript',
+          'py': 'python',
+          'python': 'python',
+          'python3': 'python',
+          'python2': 'python',
+          'golang': 'go',
+          'go': 'go',
+          'go (golang)': 'go',
+          'go lang': 'go',
+          'c#': 'csharp',
+          'csharp': 'csharp',
+          'c sharp': 'csharp',
+          'c#.net': 'csharp',
+          'c++': 'cpp',
+          'cpp': 'cpp',
+          'c plus plus': 'cpp',
+          'node': 'nodejs',
+          'nodejs': 'nodejs',
+          'node.js': 'nodejs',
+          'node js': 'nodejs',
+          'react': 'react',
+          'reactjs': 'react',
+          'react.js': 'react',
+          'react js': 'react',
+          'vue': 'vue',
+          'vuejs': 'vue',
+          'vue.js': 'vue',
+          'vue js': 'vue',
+          'angular': 'angular',
+          'angularjs': 'angular',
+          'angular.js': 'angular',
+          'angular js': 'angular',
+          'next': 'nextjs',
+          'nextjs': 'nextjs',
+          'next.js': 'nextjs',
+          'next js': 'nextjs',
+          'nuxt': 'nuxtjs',
+          'nuxtjs': 'nuxtjs',
+          'nuxt.js': 'nuxtjs',
+          'nuxt js': 'nuxtjs',
+          'express': 'express',
+          'expressjs': 'express',
+          'express.js': 'express',
+          'express js': 'express',
+          'nest': 'nestjs',
+          'nestjs': 'nestjs',
+          'nest.js': 'nestjs',
+          'nest js': 'nestjs',
+          'dotnet': 'dotnet',
+          '.net': 'dotnet',
+          'dot net': 'dotnet',
+          '.net core': 'dotnet core',
+          'dotnet core': 'dotnet core',
+          'net core': 'dotnet core',
+          'net': 'dotnet',
+          'asp.net': 'aspnet',
+          'aspnet': 'aspnet',
+          'asp.net core': 'aspnet core',
+          'aspnet core': 'aspnet core',
+          'asp net': 'aspnet',
+          'k8s': 'kubernetes',
+          'kube': 'kubernetes',
+          'kubernetes': 'kubernetes',
+          'postgres': 'postgresql',
+          'postgresql': 'postgresql',
+          'psql': 'postgresql',
+          'aws': 'aws',
+          'amazon web services': 'aws',
+          'amazon web service': 'aws',
+          'gcp': 'gcp',
+          'google cloud': 'gcp',
+          'google cloud platform': 'gcp',
+          'azure': 'azure',
+          'microsoft azure': 'azure',
+          'ms azure': 'azure',
+          'sql server': 'mssql',
+          'mssql': 'mssql',
+          'ms sql': 'mssql',
+          'microsoft sql server': 'mssql',
+          'mongo': 'mongodb',
+          'mongodb': 'mongodb',
+          'ci/cd': 'cicd',
+          'cicd': 'cicd',
+          'ci cd': 'cicd',
+          'continuous integration': 'cicd',
+          'rest': 'rest api',
+          'rest api': 'rest api',
+          'rest apis': 'rest api',
+          'restful': 'rest api',
+          'restful api': 'rest api',
+          'restful apis': 'rest api',
+          'spring': 'spring boot',
+          'spring boot': 'spring boot',
+          'springboot': 'spring boot',
+          'ror': 'ruby on rails',
+          'ruby on rails': 'ruby on rails',
+          'rails': 'ruby on rails',
+          'ai': 'ai',
+          'artificial intelligence': 'ai',
+          'ml': 'ml',
+          'machine learning': 'ml',
+          'power bi': 'power bi',
+          'powerbi': 'power bi',
+          'ui/ux': 'ui/ux',
+          'ui ux': 'ui/ux',
+          'microservices': 'microservices',
+          'microservice': 'microservices',
+          'microservices architecture': 'microservices'
+      };
+
+      function resolveSkillAlias(str) {
+          var clean = String(str || '').trim();
+          var lower = clean.toLowerCase();
+          if (_skillsAliases && _skillsAliases[lower]) {
+              return _skillsAliases[lower];
+          }
+          if (SKILL_SYNONYMS[lower]) {
+              return SKILL_SYNONYMS[lower];
+          }
+          return clean;
+      }
+
+      function canonicalSkillToken(str) {
+          if (!str) return '';
+          var s = String(str).trim().toLowerCase();
+          if (_skillsAliases && _skillsAliases[s]) {
+              s = String(_skillsAliases[s]).toLowerCase();
+          }
+          if (SKILL_SYNONYMS[s]) {
+              s = SKILL_SYNONYMS[s];
+          }
+          s = s.replace(/^(node|react|vue|angular|next|nuxt|express)(\.js|js|\s+js)$/i, '$1');
+          return s.replace(/[\.\-\_\s\/]/g, '');
+      }
+
+      var ROLE_WORDS = [
+          'developer', 'developers', 'dev',
+          'programmer', 'programmers',
+          'engineer', 'engineers',
+          'architect', 'architects',
+          'specialist', 'specialists',
+          'consultant', 'consultants',
+          'analyst', 'analysts',
+          'coder', 'coders',
+          'lead', 'senior', 'sr', 'junior', 'jr', 'mid', 'principal', 'staff', 'associate', 'intern', 'trainee',
+          'core', 'advanced', 'expert',
+          'development', 'programming', 'engineering'
+      ];
+
+      function stripRoleWords(str) {
+          var s = String(str || '').trim().toLowerCase();
+          var words = s.split(/[\s\-_/]+/).filter(Boolean);
+          var filtered = words.filter(function (w) {
+              return !ROLE_WORDS.includes(w);
+          });
+          return filtered.length > 0 ? filtered.join(' ') : s;
+      }
+
+      function decomposeSkillAlternatives(skill) {
+          if (!skill) return [];
+          var str = String(skill).trim();
+          var parts = str.split(/[\/,|]|\bor\b/i);
+          return parts.map(function (p) {
+              return p.trim();
+          }).filter(function (p) {
+              return p.length > 0;
+          });
+      }
+
+      function singleAtomicSkillMatch(reqStr, candStr) {
+          if (!reqStr || !candStr) return false;
+
+          var r = String(reqStr).trim().toLowerCase();
+          var c = String(candStr).trim().toLowerCase();
+          if (!r || !c) return false;
+
+          if (r === c) return true;
+
+          var rKey = r.replace(/[\.\-\_\s\/]/g, '');
+          var cKey = c.replace(/[\.\-\_\s\/]/g, '');
+          if (rKey === cKey && rKey.length > 0) return true;
+
+          var rCanon = canonicalSkillToken(r);
+          var cCanon = canonicalSkillToken(c);
+          if (rCanon === cCanon && rCanon.length > 0) return true;
+
+          var rStripped = stripRoleWords(r);
+          var cStripped = stripRoleWords(c);
+
+          if (rStripped !== r || cStripped !== c) {
+              if (rStripped === c || r === cStripped || rStripped === cStripped) return true;
+              if (canonicalSkillToken(rStripped) === canonicalSkillToken(c) ||
+                  canonicalSkillToken(r) === canonicalSkillToken(cStripped) ||
+                  canonicalSkillToken(rStripped) === canonicalSkillToken(cStripped)) {
+                  return true;
+              }
+          }
+
+          var protectedTech = ['c', 'r', 'go', 'java', 'sql', 'js', 'ts', 'ai', 'ml', 'ui', 'ux'];
+          if (protectedTech.includes(rCanon) || protectedTech.includes(cCanon)) {
+              return false;
+          }
+
+          var rWords = r.split(/[\s\-_/]+/).filter(Boolean);
+          var cWords = c.split(/[\s\-_/]+/).filter(Boolean);
+          if (rWords.length > 1 && cWords.length >= rWords.length) {
+              if (c.indexOf(r) !== -1) return true;
+          }
+          if (cWords.length > 1 && rWords.length >= cWords.length) {
+              if (r.indexOf(c) !== -1) return true;
+          }
+
+          return false;
+      }
+
       function candidateSkillKey(value) {
-          return String(value || '').trim().replace(/[\.\-\_\s\/]/g, '').toLocaleLowerCase();
+          var raw = String(value || '').trim();
+          if (!raw) return '';
+          var resolved = resolveSkillAlias(raw);
+          var stripped = stripRoleWords(resolved);
+          var canon = canonicalSkillToken(stripped);
+          if (canon) return canon;
+          return String(resolved).trim().replace(/[\.\-\_\s\/]/g, '').toLowerCase();
       }
 
       function candidateSkillName(skill) {
@@ -5591,12 +5828,28 @@ var KTUPDATECandidate = {
       }
 
       function candidateSkillsMatch(requiredSkill, selectedSkill) {
-          var requiredId = String(requiredSkill.id || '').trim();
-          var selectedId = String(selectedSkill.id || '').trim();
-          if (requiredId && selectedId) {
-              return requiredId === selectedId;
+          var reqName = candidateSkillName(requiredSkill);
+          var selName = candidateSkillName(selectedSkill);
+          if (!reqName || !selName) return false;
+
+          var reqId = String((requiredSkill && requiredSkill.id) || '').trim();
+          var selId = String((selectedSkill && selectedSkill.id) || '').trim();
+          if (reqId && selId && reqId === selId) {
+              return true;
           }
-          return candidateSkillKey(requiredSkill.name) === candidateSkillKey(selectedSkill.name);
+
+          var reqAlts = decomposeSkillAlternatives(reqName);
+          var selAlts = decomposeSkillAlternatives(selName);
+
+          for (var i = 0; i < reqAlts.length; i++) {
+              for (var j = 0; j < selAlts.length; j++) {
+                  if (singleAtomicSkillMatch(reqAlts[i], selAlts[j])) {
+                      return true;
+                  }
+              }
+          }
+
+          return false;
       }
 
       function closeCandidateSkillSuggestions() {
@@ -5632,22 +5885,6 @@ var KTUPDATECandidate = {
           var activeItem = candidateSkillSuggestionItems[candidateSkillActiveIndex];
           candidatePrimarySkillQuickInput.setAttribute('aria-activedescendant', activeItem.element.id);
           activeItem.element.scrollIntoView({ block: 'nearest' });
-      }
-
-      // JERO Autonomous Client-First Skills Taxonomy Engine (0% MySQL / 0% Elasticsearch Read Load)
-      var _skillsTaxonomy = window._jeroSkillsTaxonomy || null;
-      var _skillsAliases = (_skillsTaxonomy && _skillsTaxonomy.aliases) || {};
-      var _skillsRelations = (_skillsTaxonomy && _skillsTaxonomy.relations) || {};
-      var _skillsCategoryMap = (_skillsTaxonomy && _skillsTaxonomy.skill_category_map) || {};
-      var _skillsList = (_skillsTaxonomy && _skillsTaxonomy.skills) || [];
-
-      function resolveSkillAlias(str) {
-          var clean = String(str || '').trim();
-          var lower = clean.toLowerCase();
-          if (_skillsAliases && _skillsAliases[lower]) {
-              return _skillsAliases[lower];
-          }
-          return clean;
       }
 
       var JERO_SKILLS_VERSION = '2026-10-06.enterprise-god-level-v3';
@@ -5745,8 +5982,9 @@ var KTUPDATECandidate = {
 
           var selected = candidateSelectedSkills();
           var isAlreadySelected = function (name) {
-              var n = candidateSkillKey(resolveSkillAlias(name));
-              return selected.some(function (s) { return candidateSkillKey(resolveSkillAlias(s.name)) === n; });
+              return selected.some(function (s) {
+                  return candidateSkillKey(s.name) === candidateSkillKey(name) || candidateSkillsMatch(s, { name: name });
+              });
           };
 
           var results = [];
@@ -5815,7 +6053,7 @@ var KTUPDATECandidate = {
           candidateUniqueSkills(candidateRequiredSkills).forEach(function (skill) {
               var skillNorm = candidateSkillKey(skill.name);
               if (!seen.has(skillNorm) && !isAlreadySelected(skill.name)) {
-                  if (skillNorm.indexOf(normalizedQuery) !== -1) {
+                  if (skillNorm.indexOf(normalizedQuery) !== -1 || candidateSkillsMatch(skill, { name: rawTrimmed })) {
                       results.push({
                           id: skill.id,
                           name: skill.name,
@@ -6064,7 +6302,7 @@ var KTUPDATECandidate = {
 
           // Strict Deduplication Check with Pulse Feedback
           var isDuplicate = selected.some(function (s) {
-              return candidateSkillKey(s.name) === norm;
+              return candidateSkillKey(s.name) === norm || candidateSkillsMatch(s, { name: rawName }) || candidateSkillsMatch(s, { name: resolvedName });
           });
 
           if (isDuplicate) {
@@ -6077,7 +6315,7 @@ var KTUPDATECandidate = {
           }
 
           var requiredSkill = candidateUniqueSkills(candidateRequiredSkills).find(function (skill) {
-              return candidateSkillKey(skill.name) === norm;
+              return candidateSkillsMatch(skill, { name: rawName }) || candidateSkillsMatch(skill, { name: resolvedName });
           });
 
           var tagPayload = requiredSkill ? { value: requiredSkill.name, id: requiredSkill.id } : resolvedName;
@@ -6094,18 +6332,26 @@ var KTUPDATECandidate = {
       window.addCandidatePrimarySkillsBatch = function (skillsList) {
           if (!Array.isArray(skillsList) || !skillsList.length) return;
           var selected = candidateSelectedSkills();
-          var selectedSet = new Set(selected.map(function (s) { return candidateSkillKey(s.name); }));
           var toAdd = [];
 
           skillsList.forEach(function (raw) {
-              var clean = resolveSkillAlias(String(raw || '').trim());
-              var norm = candidateSkillKey(clean);
-              if (clean && !selectedSet.has(norm)) {
-                  selectedSet.add(norm);
+              var clean = String(raw || '').trim();
+              if (!clean) return;
+              var resolved = resolveSkillAlias(clean);
+              var norm = candidateSkillKey(resolved);
+
+              var isAlreadySelected = selected.some(function (s) {
+                  return candidateSkillKey(s.name) === norm || candidateSkillsMatch(s, { name: clean }) || candidateSkillsMatch(s, { name: resolved });
+              }) || toAdd.some(function (t) {
+                  var tName = typeof t === 'object' ? t.value : t;
+                  return candidateSkillKey(tName) === norm;
+              });
+
+              if (!isAlreadySelected) {
                   var req = candidateUniqueSkills(candidateRequiredSkills).find(function (r) {
-                      return candidateSkillKey(r.name) === norm;
+                      return candidateSkillsMatch(r, { name: clean }) || candidateSkillsMatch(r, { name: resolved });
                   });
-                  toAdd.push(req ? { value: req.name, id: req.id } : clean);
+                  toAdd.push(req ? { value: req.name, id: req.id } : resolved);
               }
           });
 
@@ -6128,7 +6374,15 @@ var KTUPDATECandidate = {
                   return candidateSkillsMatch(requiredSkill, selectedSkill);
               });
           });
-          var percentage = required.length ? Math.round((matched.length / required.length) * 100) : 0;
+
+          var percentage = 0;
+          if (required.length > 0) {
+              if (matched.length === required.length) {
+                  percentage = 100;
+              } else {
+                  percentage = Math.min(99, Math.round((matched.length / required.length) * 100));
+              }
+          }
 
           candidatePrimarySkillChips.replaceChildren();
           selected.forEach(function (skill) {
@@ -6157,9 +6411,7 @@ var KTUPDATECandidate = {
           candidateSkillMatchPercentage.textContent = required.length ? percentage + '%' : '--';
           candidateSkillMatchDetail.textContent = !required.length
               ? 'No job skills defined'
-              : (percentage === 100
-                  ? 'All required skills matched'
-                  : matched.length + ' of ' + required.length + ' required skills matched');
+              : (matched.length + ' of ' + required.length + ' required skills matched');
 
           // Render Suggestions: Missing job requirements or synergy relations
           candidateSuggestedSkillsList.replaceChildren();
