@@ -1877,7 +1877,12 @@ class HomeController extends Controller
         $currentPage = 1;
         $this->currencyConverter = GeneralMethod::currencyConverter();
 
-        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'tenant_currency', 'tenant_currency_key', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'cityListArr', 'currentPage', 'company_id'));
+        /* Intent: Fast circuit-breaker capacity check for career job application limit */
+        $capacityService = app(\App\Services\JobApplicationCapacityService::class);
+        $applications_closed = $jobId ? $capacityService->isApplicationsClosed((int) $jobId) : false;
+        $capacityStatus = $jobId ? $capacityService->getCapacityStatus((int) $jobId) : null;
+
+        return view('career-apply', compact('pageTitle', 'account', 'client', 'industries_name', 'jobs', 'gender', 'qualification', 'jobId', 'appId', 'jobDetail', 'page_event', 'currency', 'tenant_currency', 'tenant_currency_key', 'salaryMode', 'interview_mode', 'statelist', 'job_additional_detail', 'jobLocation', 'cities', 'default_loc', 'jobSkill', 'skillShow', 'cityListArr', 'currentPage', 'company_id', 'applications_closed', 'capacityStatus'));
     }
 
     public function jobDetails($jobId = null, $company_id = null)
@@ -2094,6 +2099,15 @@ class HomeController extends Controller
 
     public function uploadresume(Request $request)
     {
+        /* Intent: Early rejection before reading raw bytes or streaming to Cloudflare R2 if job is at capacity */
+        $jobId = (int) ($request->header('X-Job-Id') ?: $request->input('job_id', 0));
+        if ($jobId > 0 && app(\App\Services\JobApplicationCapacityService::class)->isApplicationsClosed($jobId)) {
+            return response()->json([
+                'success' => false,
+                'capacity_reached' => true,
+                'message' => 'This position has received the maximum number of applications and is no longer accepting new applications.',
+            ], 422);
+        }
 
         // Raw-byte upload: browser sends xhr.send(file), PHP reads php://input.
         // No multipart = no upload_tmp_dir write, no temp file on disk.

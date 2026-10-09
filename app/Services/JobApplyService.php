@@ -36,7 +36,8 @@ use Illuminate\Support\Facades\Validator;
 class JobApplyService
 {
     public function __construct(
-        protected ElasticService $elasticService
+        protected ElasticService $elasticService,
+        protected JobApplicationCapacityService $capacityService
     ) {}
 
     /**
@@ -46,6 +47,27 @@ class JobApplyService
      */
     public function submitApplication(Request $request)
     {
+        /* Intent: Fast zero-cost bot trap via hidden honeypot field */
+        $honeypot = config('career.honeypot_field', 'career_applicant_website_url');
+        if ($request->filled($honeypot)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'Invalid submission detected.',
+            ]);
+        }
+
+        $jobId = (int) $request->input('job_id');
+
+        /* Intent: Fast O(1) circuit-breaker capacity check before any validation, locks, or ES/DB queries */
+        if ($jobId > 0 && $this->capacityService->isApplicationsClosed($jobId)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'This position has received the maximum number of applications and is no longer accepting new applications.',
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'full_name' => [
                 'required',
@@ -58,6 +80,12 @@ class JobApplyService
                 'email:rfc,dns',
                 'disposable_email',
                 'max:191',
+            ],
+            'phone' => [
+                'required',
+                'string',
+                'min:6',
+                'max:25',
             ],
             'secondrary_email' => [
                 'nullable',
@@ -72,6 +100,9 @@ class JobApplyService
             'email.required' => 'Email is required',
             'email.email' => 'Please enter a valid email',
             'email.disposable_email' => 'Temporary emails are not allowed',
+            'phone.required' => 'Primary contact number is required',
+            'phone.min' => 'Please enter a valid contact number',
+            'phone.max' => 'Contact number must not exceed 25 characters',
             'secondrary_email.email' => 'Please enter a valid secondary email',
             'secondrary_email.max' => 'Secondary email must not exceed 55 characters',
             'secondrary_email.different' => 'Secondary email cannot be the same as primary email',
@@ -86,8 +117,13 @@ class JobApplyService
         }
 
         $company_id = (int) $request->input('company_id');
-        $email = strtolower(trim((string) $request->input('email')));
         $jobId = (int) $request->input('job_id');
+        if ($company_id <= 0 && $jobId > 0) {
+            $company_id = (int) DB::table('jobs')->where('id', $jobId)->value('company_id');
+        }
+        $email = strtolower(trim((string) $request->input('email')));
+        $phone = trim((string) $request->input('phone'));
+        $normalizedPhone = preg_replace('/[^0-9]/', '', $phone);
         $submissionToken = trim((string) $request->input('submission_token'));
 
         /* Intent: Phase 5 atomic submission token lock (60s TTL) to prevent concurrent double-clicks */
@@ -103,27 +139,121 @@ class JobApplyService
             }
         }
 
-        /* Intent: Fast Redis atomic key lock check to prevent duplicate submission race conditions */
+        /* Intent: Fast Redis atomic key lock check for duplicate email */
         $dedupKey = "apply:dedup:{$company_id}:{$jobId}:".md5(strtolower($email));
         if (Cache::has($dedupKey)) {
             if ($lockKey) {
                 Cache::forget($lockKey);
             }
 
-            return Reply::redirectValidation(
-                url('job-details/'.GeneralMethod::value_encrypt($jobId).'/'.$company_id),
-                __('menu.jobApplications').' '.__('You have already applied for this job')
-            );
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'You have already applied for this job with this email address.',
+            ]);
         }
 
-        /* Intent: Elasticsearch read-check fallback for candidate existence */
-        $esDuplicateCheck = $this->checkElasticDuplicate($email, $jobId);
+        /* Intent: Fast Redis atomic key lock check for duplicate contact number */
+        $phoneDedupKey = ! empty($normalizedPhone) ? "apply:dedup_phone:{$company_id}:{$jobId}:".md5($normalizedPhone) : null;
+        if ($phoneDedupKey && Cache::has($phoneDedupKey)) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => 'You have already applied for this job with this contact number.',
+            ]);
+        }
+
+        /* Intent: Elasticsearch read-check fallback for candidate existence by email or contact number */
+        $esDuplicateCheck = $this->checkElasticDuplicate($email, $phone, $jobId, $company_id);
         if ($esDuplicateCheck !== null) {
             if ($lockKey) {
                 Cache::forget($lockKey);
             }
 
             return $esDuplicateCheck;
+        }
+
+        /* Intent: Authoritative MySQL check on write path to guarantee zero duplicate submissions for the same job */
+        $existingApplication = DB::table('job_applications')
+            ->where('company_id', $company_id)
+            ->where('job_id', $jobId)
+            ->whereNull('deleted_at')
+            ->where(function ($query) use ($email, $phone, $normalizedPhone) {
+                $query->where('email', $email);
+                if (! empty($phone)) {
+                    $query->orWhere('phone', $phone);
+                }
+                if (! empty($normalizedPhone) && $normalizedPhone !== $phone) {
+                    $query->orWhere('phone', $normalizedPhone);
+                }
+            })
+            ->first(['id', 'email', 'phone']);
+
+        if (! $existingApplication) {
+            /* Intent: Authoritative check against App Tracker submissions (add_job_wise_condidates / rec_candidate_assign) for this job */
+            $existingApplication = DB::table('job_applications')
+                ->whereNull('job_applications.deleted_at')
+                ->where(function ($query) use ($email, $phone, $normalizedPhone) {
+                    $query->where('job_applications.email', $email);
+                    if (! empty($phone)) {
+                        $query->orWhere('job_applications.phone', $phone);
+                    }
+                    if (! empty($normalizedPhone) && $normalizedPhone !== $phone) {
+                        $query->orWhere('job_applications.phone', $normalizedPhone);
+                    }
+                })
+                ->where(function ($q) use ($jobId, $company_id) {
+                    $q->whereExists(function ($sub) use ($jobId, $company_id) {
+                        $sub->select(DB::raw(1))
+                            ->from('add_job_wise_condidates')
+                            ->whereColumn('add_job_wise_condidates.job_application_id', 'job_applications.id')
+                            ->where('add_job_wise_condidates.job_id', $jobId)
+                            ->where(function ($compQuery) use ($company_id) {
+                                $compQuery->where('add_job_wise_condidates.company_id', $company_id)
+                                    ->orWhere('add_job_wise_condidates.thirdparty_company_id', $company_id);
+                            });
+                    })->orWhereExists(function ($sub) use ($jobId, $company_id) {
+                        $sub->select(DB::raw(1))
+                            ->from('rec_candidate_assign')
+                            ->where(function ($candQ) {
+                                $candQ->whereColumn('rec_candidate_assign.source_application_id', 'job_applications.id')
+                                    ->orWhereColumn('rec_candidate_assign.source_from_id', 'job_applications.id')
+                                    ->orWhereColumn('rec_candidate_assign.parent_id', 'job_applications.id');
+                            })
+                            ->where('rec_candidate_assign.source_jobid', $jobId)
+                            ->where(function ($compQuery) use ($company_id) {
+                                $compQuery->where('rec_candidate_assign.source_company_id', $company_id)
+                                    ->orWhere('rec_candidate_assign.source_from_company_id', $company_id);
+                            });
+                    });
+                })
+                ->first(['job_applications.id', 'job_applications.email', 'job_applications.phone']);
+        }
+
+        if ($existingApplication) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
+            // Populate Redis dedup cache to short-circuit future attempts immediately
+            Cache::put($dedupKey, 1, 86400 * 30);
+            if ($phoneDedupKey) {
+                Cache::put($phoneDedupKey, 1, 86400 * 30);
+            }
+
+            $dupMessage = (strtolower((string) $existingApplication->email) === $email)
+                ? 'You have already applied for this job with this email address.'
+                : 'You have already applied for this job with this contact number.';
+
+            return Reply::dataOnly([
+                'status' => 'mailcheck',
+                'msgType' => 'warning',
+                'message' => $dupMessage,
+            ]);
         }
 
         /* Intent: Pre-flight resume session validation prior to DB transaction */
@@ -340,6 +470,22 @@ class JobApplyService
 
         $esSkillRecords = [];
 
+        /* Intent: Atomically reserve application slot against 1,000 max limit to prevent concurrency overshoot */
+        $slotReserved = false;
+        $reservedSlot = $this->capacityService->reserveSlot($jobId);
+        if (! $reservedSlot['success']) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'This position has received the maximum number of applications and is no longer accepting new applications.',
+            ]);
+        }
+        $slotReserved = true;
+
         DB::beginTransaction();
         try {
             $jobApplication->save();
@@ -355,6 +501,10 @@ class JobApplyService
 
                 if ($claimed === 0) {
                     DB::rollBack();
+                    if ($slotReserved) {
+                        $this->capacityService->releaseSlot($jobId);
+                        $slotReserved = false;
+                    }
 
                     return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                         'message' => 'Resume session was already claimed. Please upload the resume again.']);
@@ -370,6 +520,10 @@ class JobApplyService
                         ->where('status', ResumeUploadStatus::Completed->value)
                         ->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
                     DB::rollBack();
+                    if ($slotReserved) {
+                        $this->capacityService->releaseSlot($jobId);
+                        $slotReserved = false;
+                    }
 
                     return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                         'message' => 'Resume file not found in storage. Please upload the resume again.']);
@@ -591,9 +745,13 @@ class JobApplyService
             }
 
             DB::commit();
+            $slotReserved = false;
 
             /* Intent: Store Redis atomic deduplication key (300s TTL) post-commit */
-            Cache::put($dedupKey, 1, 300);
+            Cache::put($dedupKey, 1, 86400 * 30);
+            if ($phoneDedupKey) {
+                Cache::put($phoneDedupKey, 1, 86400 * 30);
+            }
 
             /* Intent: Asynchronously dispatch ES candidate & skill indexing jobs off the web HTTP thread */
             SyncCandidateToElasticJob::dispatch($jobApplication->id);
@@ -634,6 +792,10 @@ class JobApplyService
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            if (isset($slotReserved) && $slotReserved) {
+                $this->capacityService->releaseSlot($jobId);
+                $slotReserved = false;
+            }
             if (isset($lockKey) && $lockKey) {
                 Cache::forget($lockKey);
             }
@@ -644,20 +806,37 @@ class JobApplyService
     }
 
     /**
-     * Check Elasticsearch duplicate candidates by email & jobId.
+     * Check Elasticsearch duplicate candidates by email, phone & jobId.
      */
-    protected function checkElasticDuplicate(string $email, int $jobId): ?\Illuminate\Http\JsonResponse
+    protected function checkElasticDuplicate(string $email, ?string $phone, int $jobId, int $companyId = 0): ?array
     {
         try {
+            $normalizedPhone = ! empty($phone) ? preg_replace('/[^0-9]/', '', $phone) : null;
+            $shouldQueries = [
+                ['term' => ['email' => $email]],
+            ];
+            if (! empty($phone)) {
+                $shouldQueries[] = ['term' => ['phone' => $phone]];
+            }
+            if (! empty($normalizedPhone) && $normalizedPhone !== $phone) {
+                $shouldQueries[] = ['term' => ['phone' => $normalizedPhone]];
+            }
+
+            $filterQueries = [
+                ['term' => ['job_id' => $jobId]],
+            ];
+            if ($companyId > 0) {
+                $filterQueries[] = ['term' => ['company_id' => $companyId]];
+            }
+
             $params = [
                 'index' => ELASTIC_CAREER_APPLY,
                 'body' => [
                     'query' => [
                         'bool' => [
-                            'must' => [
-                                ['term' => ['email' => $email]],
-                                ['term' => ['job_id' => $jobId]],
-                            ],
+                            'filter' => $filterQueries,
+                            'should' => $shouldQueries,
+                            'minimum_should_match' => 1,
                         ],
                     ],
                     'size' => 1,
@@ -665,10 +844,26 @@ class JobApplyService
             ];
             $response = $this->elasticService->getClient()->search($params);
             if (($response['hits']['total']['value'] ?? 0) > 0) {
-                return Reply::redirectValidation(
-                    url('job-details/'.GeneralMethod::value_encrypt($jobId)),
-                    __('menu.jobApplications').' '.__('You have already applied for this job')
-                );
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'You have already applied for this job with this email address or contact number.',
+                ]);
+            }
+
+            $candFilterQueries = [
+                ['term' => ['jobId' => $jobId]],
+            ];
+            if ($companyId > 0) {
+                $candFilterQueries[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['company_id' => $companyId]],
+                            ['term' => ['ClientComID' => $companyId]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
             }
 
             $paramsCandidates = [
@@ -676,10 +871,9 @@ class JobApplyService
                 'body' => [
                     'query' => [
                         'bool' => [
-                            'must' => [
-                                ['term' => ['email' => $email]],
-                                ['term' => ['jobId' => $jobId]],
-                            ],
+                            'filter' => $candFilterQueries,
+                            'should' => $shouldQueries,
+                            'minimum_should_match' => 1,
                         ],
                     ],
                     'size' => 1,
@@ -687,10 +881,11 @@ class JobApplyService
             ];
             $responseCand = $this->elasticService->getClient()->search($paramsCandidates);
             if (($responseCand['hits']['total']['value'] ?? 0) > 0) {
-                return Reply::redirectValidation(
-                    url('job-details/'.GeneralMethod::value_encrypt($jobId)),
-                    __('menu.jobApplications').' '.__('You have already added this job')
-                );
+                return Reply::dataOnly([
+                    'status' => 'mailcheck',
+                    'msgType' => 'warning',
+                    'message' => 'You have already applied for this job with this email address or contact number.',
+                ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Elasticsearch duplicate check warning: '.$e->getMessage());

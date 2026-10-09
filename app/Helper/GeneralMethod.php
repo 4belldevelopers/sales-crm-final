@@ -12219,6 +12219,7 @@ END:VCALENDAR";
         $applications = JobApplication::select(
             'job_applications.id',
             'job_applications.thirdparty_company_id',
+            'job_applications.status_type',
             'job_applications.full_name',
             'job_applications.email',
             'job_applications.phone',
@@ -12364,6 +12365,12 @@ END:VCALENDAR";
 
         foreach ($applications as $application) {
             $wiseId = $application->id;
+
+            // Only direct career applications belong in ELASTIC_CAREER_APPLY.
+            // Other sources (agency, bench, etc.) are indexed into their respective indices (ELASTIC_CANDIDATES, etc.).
+            if ((string) $application->status_type !== 'DIRECT') {
+                continue;
+            }
 
             $logos = DB::table('companies')
                 ->select('companies.*', 'clients.logo_logical_path', 'jobs.total_positions', 'jobs.company_id as companyChech', 'clients.name as clients_name')
@@ -13105,10 +13112,22 @@ END:VCALENDAR";
             ->select('id as candidate_id');
 
         if ($companyId) {
-            $q1->where('company_id', $companyId);
-            $q2->where('source_company_id', $companyId);
-            $q3->where('source_company_id', $companyId);
-            $q4->where('source_company_id', $companyId);
+            $q1->where(function ($sub) use ($companyId) {
+                $sub->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            });
+            $q2->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
+            $q3->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
+            $q4->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
             $q5->where('company_id', $companyId);
         }
 
@@ -13318,12 +13337,6 @@ END:VCALENDAR";
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ]),
                         ],
                     ],
@@ -13830,21 +13843,22 @@ END:VCALENDAR";
 
         // ####################################  START  CAREER COUNTER
 
+        // Intent: Career Apply counter strictly counts direct career applications for this client and job.
         $boolQueryCareer = [
             'bool' => [
                 'should' => [
-                    // First condition
                     [
                         'bool' => [
                             'must' => [
                                 ['term' => ['company_id' => $company_id]],
                                 ['term' => ['job_id' => $id]],
+                                ['term' => ['status_type' => 'DIRECT']],
                             ],
                         ],
                     ],
                 ],
                 'minimum_should_match' => 1,
-                'filter' => [], // We'll add all filters here
+                'filter' => [],
                 'must_not' => [],
             ],
         ];
