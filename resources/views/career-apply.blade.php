@@ -36,16 +36,22 @@
     --jac-success: #10B981 !important;
 }
 
+html {
+    scroll-behavior: auto !important;
+    overflow-x: clip !important;
+    height: auto !important;
+}
+
 .candidate-top-toolbar {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
-    z-index: 50 !important;
+    z-index: 100 !important;
     background: #ffffff !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -54,16 +60,17 @@ body.career-apply-page {
     padding-top: 0 !important;
     margin: 0 !important;
     background-color: #f8fafc !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
     min-height: 100vh !important;
+    height: auto !important;
 }
 
 body.career-apply-page .toolbar {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
 }
 
 .candidate-top-toolbar .candidate-toolbar-container {
@@ -512,17 +519,35 @@ textarea.has-validation-error,
 .candidate-field-control:has(.has-validation-error),
 .candidate-primary-skill-entry.has-validation-error,
 .candidate-salary-input-wrap.has-validation-error,
+.candidate-notice-options.has-validation-error,
 .candidate-notice-options-grid.has-validation-error,
+.candidate-notice-input-shell.has-validation-error,
 .candidate-work-mode-grid.has-validation-error,
 .candidate-intro-grid .resume-card.has-validation-error,
 .resume-card.has-validation-error,
 #uploadBox.has-validation-error,
 .jero-custom-select.has-validation-error,
-.jero-custom-select.has-validation-error .jero-cs-trigger {
+.jero-custom-select.has-validation-error .jero-cs-trigger,
+.salary-card .ig.has-validation-error,
+.ig.has-validation-error,
+.jero-phone-input-group.has-validation-error,
+.jero-phone-box-wrapper.has-validation-error .jero-phone-input-group,
+.candidate-experience-field select.has-validation-error,
+.candidate-experience-field.has-validation-error select,
+.candidate-job-skill-select.has-validation-error,
+.candidate-rating-select.has-validation-error + .select2-container .select2-selection,
+.candidate-rating-select.has-validation-error + .select2 .select2-selection,
+.select2-selection.has-validation-error {
     border: 1.5px solid #ef4444 !important;
     background-color: #fef2f2 !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
     border-radius: 6px !important;
+}
+
+.candidate-job-skills-scroll tr.has-validation-error {
+    background-color: #fef2f2 !important;
+    outline: 1.5px solid #ef4444 !important;
+    outline-offset: -1px;
 }
 
 input.has-validation-error:focus,
@@ -2357,6 +2382,8 @@ textarea.has-validation-error:focus,
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
             <input type="hidden" name="resume_version" id="resume_version" value="{{ (int)(@$application->resume_version ?? 1) }}">
             <input type="hidden" name="resume_intent" id="resume_intent" value="{{ (!empty($application->resume) || !empty($application->current_resume_id)) ? 'KEEP' : 'NONE' }}">
+            {{-- Intent: Pre-built career listing URL embedded at render time; used by JobApplyService to redirect after successful submission (zero-cost: no Redis/MySQL at submit time, Rule 4) --}}
+            <input type="hidden" name="career_listing_url" id="career_listing_url" value="{{ route('get.careerJobPage', ['companyName' => \Illuminate\Support\Str::slug($account->company_name ?? 'company'), 'companyId' => $company_id]) }}" />
           <div class="fc">
             <!-- Upload + Career Summary -->
             <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
@@ -2637,7 +2664,7 @@ textarea.has-validation-error:focus,
                         placeholder="Enter primary number" />
                   </div>
                   <div class="fg fv-row">
-                    <label>Nationality</label>
+                    <label>Nationality <span class="rq">*</span></label>
                     <div class="candidate-field-control">
                       <i class="fa-solid fa-flag" aria-hidden="true"></i>
                       @php
@@ -2735,7 +2762,7 @@ textarea.has-validation-error:focus,
                     </div>
                   </div>
                   <div class="fg fv-row">
-                    <label>Gender</label>
+                    <label>Gender <span class="rq">*</span></label>
                     <div class="candidate-field-control"><i class="fa-regular fa-user" aria-hidden="true"></i><select name="gender" id="gender">
                       <option value="Rather Not Say" {{ (@$application->gender==='Rather Not Say') ? 'selected' : '' }}>Rather Not Say</option>
                       <option value="Male" {{ (@$application->gender==='Male') ? 'selected' : '' }}>Male</option>
@@ -3249,7 +3276,7 @@ textarea.has-validation-error:focus,
                   <section class="candidate-salary-panel candidate-salary-panel--current">
                     <div class="candidate-salary-panel-head">
                       <span><i class="fa-solid fa-coins" aria-hidden="true"></i></span>
-                      <div><strong>Current Salary</strong><small>What the candidate currently earns</small></div>
+                      <div><strong>Current Salary <span class="rq">*</span></strong><small>What the candidate currently earns</small></div>
 
                     </div>
                     <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
@@ -3286,13 +3313,13 @@ textarea.has-validation-error:focus,
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span class="rq">*</span> <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span class="rq">*</span> <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span class="rq">*</span> <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -3303,20 +3330,20 @@ textarea.has-validation-error:focus,
                   </section>
 
                   <section class="candidate-salary-panel candidate-salary-panel--expected">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary</strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary <span class="rq">*</span></strong><small>What the candidate expects to earn</small></div></div>
                     <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
                       <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" data-salary-mode="0">Annual</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
-                      <div class="fg fv-row"><label>Expected Salary (Annual) <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span class="rq">*</span> <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span class="rq">*</span> <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span class="rq">*</span> <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -3366,7 +3393,7 @@ textarea.has-validation-error:focus,
               </div>
               <div class="fsc candidate-card-body aw-body">
                 <div class="candidate-notice-status-block fv-row">
-                  <label>Notice Period <span class="candidate-optional-label">(Optional)</span></label>
+                  <label>Notice Period <span class="rq">*</span></label>
                   <div class="candidate-notice-options" role="radiogroup" aria-label="Notice Period Selection">
                     <button type="button" class="candidate-notice-option {{ $snp_mode === 2 ? 'is-selected' : '' }}" data-notice-period-value="2" role="radio" aria-checked="{{ $snp_mode === 2 ? 'true' : 'false' }}">
                       <span class="candidate-notice-option-radio" aria-hidden="true"></span>
@@ -3432,7 +3459,7 @@ textarea.has-validation-error:focus,
               <div class="fsh candidate-card-header">
                 <div class="candidate-card-title">
                   <span class="candidate-card-icon candidate-card-icon--work-mode"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
-                  <span><strong>Preferred Work Mode</strong><small>Select the candidate's preferred way of working.</small></span>
+                  <span><strong>Preferred Work Mode <span class="rq">*</span></strong><small>Select the candidate's preferred way of working.</small></span>
                 </div>
               </div>
               <div class="fsc candidate-card-body">
@@ -3473,9 +3500,10 @@ textarea.has-validation-error:focus,
                                   $selected_skill_rating = null;
                                   $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
 
-                                  if(!empty($skill_val->skill_value)){
+                                  /* Intent: Only pre-select skill experience if explicitly in EDIT mode with a valid application ID; fresh applications start completely clean */
+                                  if (($page_event ?? 'ADD') === 'EDIT' && !empty($appId) && !empty($skill_val->skill_value)) {
                                     $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
-                                    if($skillValue !== ''){
+                                    if ($skillValue !== '') {
                                       $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
                                       $skill_exp_years = $total_skill_exp[0] ?? null;
                                       $skill_exp_months = $total_skill_exp[1] ?? null; 
@@ -3483,7 +3511,7 @@ textarea.has-validation-error:focus,
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
                                       $selected_skill_rating = $skill_val->rating ?? null;
-                                     }
+                                    }
                                   }
                             @endphp
 
@@ -3595,7 +3623,7 @@ textarea.has-validation-error:focus,
                              
                             // }	
                             $html		.=	'<div class="col-md-4">
-                                      <label class="form-label">'.strtoupper($aDetailArr->detail_value).':</label>
+                                      <label class="form-label">'.strtoupper($aDetailArr->detail_value).' <span class="rq">*</span>:</label>
                                       <input type="hidden" name="job_question[]" value="'.$aDetailArr->id.'">
                                       <input type="text" class="form-control form-control-solid" name="additional_detail[]" placeholder="Enter detail" value="'.@$ans_value.'">
                                       <span class="text-muted form-text">Please enter your details</span>
@@ -4289,6 +4317,9 @@ $(document).ready(function () {
     // Authoritative Edit/Add state directly from Laravel route/view model (Phase 6)
     var IS_EDIT_MODE = {{ $page_event === 'EDIT' ? 'true' : 'false' }};
     console.log('[PARSER] IS_EDIT_MODE authoritatively set to:', IS_EDIT_MODE);
+    if (!IS_EDIT_MODE && typeof resetJobSkillsDetails === 'function') {
+        resetJobSkillsDetails();
+    }
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     // resume-presign.js is loaded unconditionally; v2 activates only when the
@@ -4410,12 +4441,32 @@ $(document).ready(function () {
             || message.indexOf('Presign request failed') !== -1;
     }
 
+    /**
+     * Intent: Reset all Job Skills Details selects (Year, Month, Rating) to default unselected state.
+     * Guarantees that every new profile upload or profile switch starts with clean, unselected skill inputs.
+     */
+    function resetJobSkillsDetails() {
+        $('select[name^="YearskillId"]').each(function () {
+            $(this).val('0').trigger('change');
+        });
+        $('select[name^="MonthskillId"]').each(function () {
+            $(this).val('').trigger('change');
+        });
+        $('select[name^="rating"]').each(function () {
+            $(this).val('0').trigger('change');
+        });
+    }
+    window.resetJobSkillsDetails = resetJobSkillsDetails;
+
     // ==========================
     // Common file handler
     // ==========================
     function processFile(file, event = null) {
 
         if (!file) return;
+
+        // Reset Job Skills Details whenever a new profile/resume is selected or dropped
+        resetJobSkillsDetails();
 
         const ext = file.name.split('.').pop().toLowerCase();
 
@@ -4560,6 +4611,7 @@ $(document).ready(function () {
     function backToDropzone() {
         resumeUploadGeneration++;
         resetProgress();
+        resetJobSkillsDetails();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
@@ -6579,7 +6631,7 @@ var candidateFieldConfigMap = {
     'resume': {
         label: 'Upload Resume',
         selector: '#uploadBox',
-        message: 'Please upload a resume file (PDF or Word, max 2MB).'
+        message: 'Please upload a resume file (PDF or Word, max 6MB).'
     },
     'careersummary': {
         label: 'Career Summary',
@@ -6589,7 +6641,7 @@ var candidateFieldConfigMap = {
     'full_name': {
         label: 'Full Name',
         selector: '#full_name',
-        message: 'Candidate full name is required.'
+        message: 'Candidate full name is required (minimum 2 characters).'
     },
     'email': {
         label: 'Primary Email',
@@ -6599,17 +6651,7 @@ var candidateFieldConfigMap = {
     'phone': {
         label: 'Primary Contact Number',
         selector: '#phone',
-        message: 'A valid primary mobile number is required.'
-    },
-    'kt_tagify_work_location': {
-        label: 'Current Location',
-        selector: '#jero-cs-location',
-        message: 'Current location is required.'
-    },
-    'qualification': {
-        label: 'Highest Qualification',
-        selector: '#qualification',
-        message: 'Highest qualification is required.'
+        message: 'A valid primary mobile number is required (minimum 6 digits).'
     },
     'nationality': {
         label: 'Nationality',
@@ -6620,6 +6662,16 @@ var candidateFieldConfigMap = {
         label: 'Gender',
         selector: '#gender',
         message: 'Gender is required.'
+    },
+    'kt_tagify_work_location': {
+        label: 'Current Location',
+        selector: '#jero-cs-location',
+        message: 'Current location is required.'
+    },
+    'qualification': {
+        label: 'Highest Qualification',
+        selector: '#qualification',
+        message: 'Highest qualification is required.'
     },
     'skills': {
         label: 'Primary Skills',
@@ -6652,34 +6704,34 @@ var candidateFieldConfigMap = {
         message: 'Employment type is required.'
     },
     'ctc': {
-        label: 'Current CTC (Salary Details)',
-        selector: '#ctc',
+        label: 'Current Salary',
+        selector: '.candidate-salary-panel--current',
         message: 'Current salary details are required.'
     },
     'ectc': {
-        label: 'Expected CTC (Salary Details)',
-        selector: '#ectc',
+        label: 'Expected Salary',
+        selector: '.candidate-salary-panel--expected',
         message: 'Expected salary details are required.'
     },
     'np_id': {
         label: 'Notice Period & Joining Details',
-        selector: '#np_id',
-        message: 'Notice period is required.'
+        selector: '.candidate-availability-card',
+        message: 'Notice period and joining details are required.'
     },
     'wm': {
         label: 'Preferred Work Mode',
-        selector: 'input[name="wm"]',
+        selector: '.candidate-work-mode-grid',
         message: 'Preferred work mode is required.'
     },
     'job_skills': {
         label: 'Job Skills Details',
         selector: '.candidate-job-skills-scroll table',
-        message: 'Job skills experience and ratings are required.'
+        message: 'Experience years and proficiency rating (1-5 stars) are required for all job skills.'
     },
     'screening_questions': {
         label: 'Screening Questions',
-        selector: '.candidate-card-icon--questions',
-        message: 'Please answer all required screening questions.'
+        selector: '#job_additional_detail',
+        message: 'Please answer all screening questions.'
     }
 };
 
@@ -6700,146 +6752,7 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
         }
     }
 
-    // Determine target stage:
-    // If user changed stage selector on page (#master_status_id), use that value.
-    // Otherwise check hidden #current_master_status_id or window.__candidateMasterStatusId.
-    // On Add Candidate, default is 8 (In Review).
-    var targetStageEl = document.getElementById('master_status_id') || document.getElementById('current_master_status_id');
-    var activeStageId = targetStageEl ? parseInt(targetStageEl.value, 10) : (window.__candidateMasterStatusId || 8);
-
-    // =========================================================================
-    // MANDATORY FOR IN REVIEW STAGE (master_status_id == 8):
-    // Only Full Name * and Primary Contact Number * are mandatory.
-    // All other fields remain optional and do NOT block submission.
-    // =========================================================================
-    var fn = ($('#full_name').val() || '').trim();
-    if (!fn || fn.length < 2) addMissing('full_name');
-
-    var ph = ($('#phone').val() || '').trim();
-    if (!ph || ph.length < 6) addMissing('phone');
-
-    // Career Page: Complete validation enforced across all cards and sections! No stage bypass.
-
-    // =========================================================================
-    // 100% VALIDATION WHEN CHANGING STAGE FROM In Review -> Sourcing (or Stage 1+):
-    // =========================================================================
-
-    // 1. Primary Email *
-    var em = ($('#email').val() || '').trim();
-    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
-
-    // 2. Current Location *
-    var loc = ($('#kt_tagify_work_location').val() || '').trim();
-    var canonLoc = ($('#location_canonical_label').val() || '').trim();
-    var cityId = ($('#location_city_id').val() || '').trim();
-    if (!loc && !canonLoc && !cityId) {
-        addMissing('kt_tagify_work_location');
-        $('#jero-cs-location').addClass('has-validation-error');
-        $('#jero-cs-location').closest('.candidate-field-control, .bd-control, .fg').addClass('has-validation-error');
-    }
-
-    // 3. Highest Qualification *
-    var qual = ($('#qualification').val() || '').trim();
-    if (!qual) addMissing('qualification');
-
-    // 4. Nationality
-    var nat = ($('#nationality').val() || '').trim();
-    if (!nat) addMissing('nationality');
-
-    // 5. Gender
-    var gen = ($('#gender').val() || '').trim();
-    if (!gen) addMissing('gender');
-
-    // 6. Primary Skills — minimum 1 skill required
-    var sk = ($('#kt_tagify_2').val() || '').trim();
-    if (!sk) {
-        addMissing('skills');
-    } else {
-        try {
-            var parsedSkills = JSON.parse(sk);
-            if (Array.isArray(parsedSkills) && parsedSkills.length === 0) {
-                addMissing('skills');
-            }
-        } catch (e) {
-            if (sk.length < 1) addMissing('skills');
-        }
-    }
-
-    // 7. Experience Details
-    var te = $('#total_exp_year').val();
-    if (te === '' || te === null || te === undefined) addMissing('total_exp');
-
-    var re = $('#rel_exp_year').val();
-    if (re === '' || re === null || re === undefined) addMissing('rel_exp');
-
-    // Check if Fresher (Total Experience is 0)
-    var isFresher = (te === '0' || te === 0);
-
-    // Fields NOT mandatory for Freshers:
-    if (!isFresher) {
-        // Professional Profile: Current Designation, Current Company, Employment Type
-        var cd = ($('#current_designation').val() || '').trim();
-        if (!cd) addMissing('current_designation');
-
-        var cc = ($('#current_company').val() || '').trim();
-        if (!cc) addMissing('current_company');
-
-        var et = ($('#EmploymentType').val() || '').trim();
-        if (!et) addMissing('employmentType');
-
-        // Salary Details: Current CTC, Expected CTC
-        var ctc = ($('#ctc').val() || '').trim();
-        if (!ctc) addMissing('ctc');
-
-        var ectc = ($('#ectc').val() || '').trim();
-        if (!ectc) addMissing('ectc');
-
-        // Notice Period & Joining Details
-        var snpMode = ($('#serving_notice_period').val() || '').trim();
-        if (!snpMode) {
-            addMissing('np_id');
-        } else if (snpMode === '0') {
-            var npDays = ($('#ddl_np_id').val() || '').trim();
-            if (!npDays) addMissing('np_id');
-        } else if (snpMode === '1' || snpMode === '2') {
-            var npDate = ($('#np_id').val() || '').trim();
-            if (!npDate) addMissing('np_id');
-        }
-    }
-
-    // 8. Preferred Work Mode
-    var wm = $('input[name="wm"]:checked').val();
-    if (!wm) addMissing('wm');
-
-    // 9. Job Skills Details (if job has skills)
-    var $jobSkillYears = $('select[name^="YearskillId"]');
-    if ($jobSkillYears.length > 0) {
-        var missingJobSkills = false;
-        $jobSkillYears.each(function() {
-            var val = $(this).val();
-            if (!val || val === '0') {
-                missingJobSkills = true;
-            }
-        });
-        if (missingJobSkills) addMissing('job_skills');
-    }
-
-    // 10. Screening Questions (if job has questions)
-    var $questions = $('.screening-question-input, [name^="answer["]');
-    if ($questions.length > 0) {
-        var missingQuestions = false;
-        $questions.each(function() {
-            var qVal = $(this).val();
-            if (!qVal || !String(qVal).trim()) {
-                missingQuestions = true;
-            }
-        });
-        if (missingQuestions) addMissing('screening_questions');
-    }
-
-    // 11. Recruiter Comments omitted on candidate-facing Career Page
-
-    // 12. Upload Resume
+    // 1. Upload Resume *
     var hasResume = false;
     if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
         ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
@@ -6857,9 +6770,166 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     }
     if (!hasResume) addMissing('resume');
 
-    // 13. Career Summary *
+    // 2. Career Summary *
     var cs = ($('#careersummary').val() || '').trim();
     if (!cs) addMissing('careersummary');
+
+    // 3. Full Name *
+    var fn = ($('#full_name').val() || '').trim();
+    if (!fn || fn.length < 2) addMissing('full_name');
+
+    // 4. Primary Email *
+    var em = ($('#email').val() || '').trim();
+    if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) addMissing('email');
+
+    // 5. Primary Contact Number *
+    var ph = ($('#phone').val() || '').trim();
+    if (!ph || ph.length < 6) addMissing('phone');
+
+    // 6. Nationality *
+    var nat = ($('#nationality').val() || '').trim();
+    if (!nat) addMissing('nationality');
+
+    // 7. Gender *
+    var gen = ($('#gender').val() || '').trim();
+    if (!gen) addMissing('gender');
+
+    // 8. Current Location *
+    var loc = ($('#kt_tagify_work_location').val() || '').trim();
+    var canonLoc = ($('#location_canonical_label').val() || '').trim();
+    var cityId = ($('#location_city_id').val() || '').trim();
+    if (!loc && !canonLoc && !cityId) {
+        addMissing('kt_tagify_work_location');
+    }
+
+    // 9. Highest Qualification *
+    var qual = ($('#qualification').val() || '').trim();
+    if (!qual) addMissing('qualification');
+
+    // 10. Primary Skills * — minimum 1 skill required
+    var sk = ($('#kt_tagify_2').val() || '').trim();
+    if (!sk) {
+        addMissing('skills');
+    } else {
+        try {
+            var parsedSkills = JSON.parse(sk);
+            if (Array.isArray(parsedSkills) && parsedSkills.length === 0) {
+                addMissing('skills');
+            }
+        } catch (e) {
+            if (sk.length < 1) addMissing('skills');
+        }
+    }
+
+    // 11. Experience Details *
+    var te = $('#total_exp_year').val();
+    if (te === '' || te === null || te === undefined) {
+        addMissing('total_exp');
+    }
+
+    var re = $('#rel_exp_year').val();
+    if (re === '' || re === null || re === undefined) {
+        addMissing('rel_exp');
+    } else if (te !== '' && te !== null && te !== undefined) {
+        var numTe = parseFloat(te) || 0;
+        var numRe = parseFloat(re) || 0;
+        if (numRe > numTe) {
+            addMissing('rel_exp', 'Relevant Experience', '#rel_exp_year', 'Relevant experience (' + numRe + ' yrs) cannot exceed total experience (' + numTe + ' yrs).');
+        }
+    }
+
+    // Check if Fresher (Total Experience is 0)
+    var isFresher = (te === '0' || te === 0);
+
+    // Fields mandatory for Non-Freshers (Experience > 0):
+    if (!isFresher) {
+        // 12. Current Company *
+        var cc = ($('#current_company').val() || '').trim();
+        if (!cc) addMissing('current_company');
+
+        // 13. Current Designation *
+        var cd = ($('#current_designation').val() || '').trim();
+        if (!cd) addMissing('current_designation');
+
+        // 14. Employment Type *
+        var et = ($('#EmploymentType').val() || '').trim();
+        if (!et) addMissing('employmentType');
+
+        // 15. Current Salary *
+        var payAnnual = parseFloat($('#pay_annual').val()) || 0;
+        var payMonthly = parseFloat($('#pay_monthly').val()) || 0;
+        var ctcVal = parseFloat($('#ctc').val()) || 0;
+        if (payAnnual <= 0 && payMonthly <= 0 && ctcVal <= 0) {
+            addMissing('ctc');
+        }
+
+        // 16. Expected Salary *
+        var billAnnual = parseFloat($('#bill_annual').val()) || 0;
+        var billMonthly = parseFloat($('#bill_monthly').val()) || 0;
+        var ectcVal = parseFloat($('#ectc').val()) || 0;
+        if (billAnnual <= 0 && billMonthly <= 0 && ectcVal <= 0) {
+            addMissing('ectc');
+        }
+
+        // 17. Notice Period & Joining Details *
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (!snpMode && snpMode !== '0') {
+            addMissing('np_id', 'Notice Period', '.candidate-notice-options', 'Please select a notice period option.');
+        } else if (snpMode === '0') {
+            var npDays = ($('#ddl_np_id').val() || '').trim();
+            if (!npDays || npDays === '0') {
+                addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
+            }
+        } else if (snpMode === '1' || snpMode === '2') {
+            var npDate = ($('#np_id').val() || '').trim();
+            if (!npDate) {
+                var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)';
+                addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
+            }
+        }
+    }
+
+    // 18. Preferred Work Mode *
+    var wm = $('input[name="wm"]:checked').val();
+    if (!wm) addMissing('wm');
+
+    // 19. Job Skills Details * (Experience Years AND Proficiency Rating for each job skill)
+    var $jobSkillYears = $('select[name^="YearskillId"]');
+    var $jobSkillRatings = $('select[name^="rating"]');
+    if ($jobSkillYears.length > 0) {
+        var missingJobSkills = false;
+        $jobSkillYears.each(function() {
+            var $yr = $(this);
+            var yrVal = $yr.val();
+            var nameAttr = $yr.attr('name') || '';
+            var skillIdMatch = nameAttr.match(/\[(\d+)\]/);
+            var skillId = skillIdMatch ? skillIdMatch[1] : '';
+            var $rt = skillId ? $('select[name="rating[' + skillId + ']"]') : $jobSkillRatings.eq($jobSkillYears.index(this));
+            var rtVal = $rt ? $rt.val() : '';
+
+            if (!yrVal || yrVal === '0' || !rtVal || rtVal === '0') {
+                missingJobSkills = true;
+            }
+        });
+        if (missingJobSkills) {
+            addMissing('job_skills', 'Job Skills Details', '.candidate-job-skills-scroll table', 'Experience years and proficiency rating (1-5 stars) are required for all job skills.');
+        }
+    }
+
+    // 20. Screening Questions * (if job has questions)
+    var $screeningInputs = $('input[name="additional_detail[]"]');
+    if ($screeningInputs.length > 0) {
+        var missingScreening = false;
+        $screeningInputs.each(function() {
+            var val = ($(this).val() || '').trim();
+            if (!val) {
+                missingScreening = true;
+            }
+        });
+        if (missingScreening) {
+            addMissing('screening_questions', 'Screening Questions', '#job_additional_detail', 'Please answer all required screening questions.');
+        }
+    }
 
     return missing;
 }
@@ -6867,10 +6937,34 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
 function jumpToCandidateField(fieldKey) {
     closeCandidateRequiredFieldsModal();
 
-    var cfg = candidateFieldConfigMap[fieldKey];
-    var targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
-    if (!targetEl) {
-        targetEl = document.querySelector('[name="' + fieldKey + '"]');
+    var targetEl = null;
+    if (fieldKey === 'ctc') {
+        var $curPanel = $('.candidate-salary-panel--current');
+        targetEl = $curPanel.find('.candidate-salary-period.is-active input[type="number"]')[0] || $curPanel[0];
+    } else if (fieldKey === 'ectc') {
+        var $expPanel = $('.candidate-salary-panel--expected');
+        targetEl = $expPanel.find('.candidate-salary-period.is-active input[type="number"]')[0] || $expPanel[0];
+    } else if (fieldKey === 'np_id') {
+        var snpMode = ($('#serving_notice_period').val() || '').trim();
+        if (snpMode === '0') {
+            targetEl = document.getElementById('ddl_np_id');
+        } else if (snpMode === '1' || snpMode === '2') {
+            targetEl = document.getElementById('np_id_display');
+        } else {
+            targetEl = document.querySelector('.candidate-notice-options');
+        }
+    } else if (fieldKey === 'job_skills') {
+        var $firstMiss = $('.candidate-job-skills-scroll tr.has-validation-error select.has-validation-error').first();
+        targetEl = $firstMiss.length ? $firstMiss[0] : document.querySelector('.candidate-job-skills-scroll table');
+    } else if (fieldKey === 'screening_questions') {
+        var $firstQ = $('input[name="additional_detail[]"].has-validation-error').first();
+        targetEl = $firstQ.length ? $firstQ[0] : document.getElementById('job_additional_detail');
+    } else {
+        var cfg = candidateFieldConfigMap[fieldKey];
+        targetEl = cfg && cfg.selector ? document.querySelector(cfg.selector) : null;
+        if (!targetEl) {
+            targetEl = document.querySelector('[name="' + fieldKey + '"]');
+        }
     }
 
     if (targetEl) {
@@ -6882,7 +6976,7 @@ function jumpToCandidateField(fieldKey) {
         var scrollTarget = targetEl.closest('.fv-row, .card, .form-group, .fs, .candidate-card') || targetEl;
         scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        var highlightEl = targetEl.closest('.fv-row, .form-group, .candidate-card, .candidate-field-control') || targetEl;
+        var highlightEl = targetEl.closest('.fv-row, .form-group, .candidate-card, .candidate-field-control, .candidate-salary-panel, .candidate-notice-status-block') || targetEl;
         $(highlightEl).addClass('field-attention-highlight');
         setTimeout(function () {
             $(highlightEl).removeClass('field-attention-highlight');
@@ -6918,6 +7012,10 @@ function jumpToCandidateField(fieldKey) {
                 } else if (typeof targetEl.focus === 'function') {
                     targetEl.focus();
                 }
+            } else if (fieldKey === 'job_skills' && $(targetEl).hasClass('candidate-rating-select')) {
+                var $s2 = $(targetEl).next('.select2-container');
+                if ($s2.length) $s2.find('.select2-selection').focus();
+                else targetEl.focus();
             } else if (typeof targetEl.focus === 'function') {
                 targetEl.focus();
             }
@@ -6940,8 +7038,7 @@ function clearCandidateFieldValidationErrors(targetKey) {
             $('#nationality, #jero-cs-nationality, #jero-cs-nationality .jero-cs-trigger').removeClass('has-validation-error');
             $('#jero-cs-nationality').closest('.candidate-field-control, .bd-control').removeClass('has-validation-error');
         } else if (targetKey === 'gender') {
-            $('#gender, #jero-cs-gender, #jero-cs-gender .jero-cs-trigger').removeClass('has-validation-error');
-            $('#jero-cs-gender').closest('.candidate-field-control, .bd-control').removeClass('has-validation-error');
+            $('#gender').removeClass('has-validation-error').closest('.candidate-field-control').removeClass('has-validation-error');
         } else if (targetKey === 'skills') {
             $('#kt_tagify_2, .candidate-primary-skill-entry, .candidate-primary-skill-combobox').removeClass('has-validation-error');
         } else if (targetKey === 'total_exp') {
@@ -6950,18 +7047,25 @@ function clearCandidateFieldValidationErrors(targetKey) {
         } else if (targetKey === 'rel_exp') {
             $('#rel_exp_year, #rel_exp_month').removeClass('has-validation-error');
             $('#rel_exp_year').closest('.candidate-experience-field').removeClass('has-validation-error');
+        } else if (targetKey === 'current_company') {
+            $('#current_company').removeClass('has-validation-error').closest('.candidate-field-control').removeClass('has-validation-error');
+        } else if (targetKey === 'current_designation') {
+            $('#current_designation').removeClass('has-validation-error').closest('.candidate-field-control').removeClass('has-validation-error');
         } else if (targetKey === 'employmentType') {
-            $('#EmploymentType, #jero-cs-EmploymentType').removeClass('has-validation-error');
+            $('#EmploymentType').removeClass('has-validation-error').closest('.candidate-field-control').removeClass('has-validation-error');
         } else if (targetKey === 'ctc') {
-            $('#ctc').removeClass('has-validation-error');
-            $('#ctc').closest('.candidate-salary-input-wrap').removeClass('has-validation-error');
+            $('.candidate-salary-panel--current .ig, #pay_annual, #pay_monthly, #ctc').removeClass('has-validation-error');
         } else if (targetKey === 'ectc') {
-            $('#ectc').removeClass('has-validation-error');
-            $('#ectc').closest('.candidate-salary-input-wrap').removeClass('has-validation-error');
+            $('.candidate-salary-panel--expected .ig, #bill_annual, #bill_monthly, #ectc').removeClass('has-validation-error');
         } else if (targetKey === 'np_id') {
-            $('.candidate-notice-options-grid, #np_id, #ddl_np_id').removeClass('has-validation-error');
+            $('.candidate-notice-options, #candidateNoticeDateField .candidate-notice-input-shell, #candidateNoticeDaysField .candidate-notice-input-shell, #np_id, #np_id_display, #ddl_np_id').removeClass('has-validation-error');
         } else if (targetKey === 'wm') {
             $('.candidate-work-mode-grid, .candidate-work-mode-option').removeClass('has-validation-error');
+        } else if (targetKey === 'job_skills') {
+            $('.candidate-job-skills-scroll table, .candidate-job-skills-scroll tr, .candidate-job-skill-select, .candidate-rating-select').removeClass('has-validation-error');
+            $('.select2-selection.has-validation-error').removeClass('has-validation-error');
+        } else if (targetKey === 'screening_questions') {
+            $('input[name="additional_detail[]"]').removeClass('has-validation-error');
         } else if (targetKey === 'phone' || targetKey === 'secondary_mobile') {
             var $pEl = $('#' + targetKey);
             $pEl.removeClass('has-validation-error is-invalid');
@@ -6980,6 +7084,7 @@ function clearCandidateFieldValidationErrors(targetKey) {
     } else {
         $('.has-validation-error').removeClass('has-validation-error');
         $('.field-error-message').remove();
+        $('.select2-selection.has-validation-error').removeClass('has-validation-error');
         $('.jero-phone-input-group, .jero-phone-box-wrapper').removeClass('has-validation-error is-invalid');
     }
 }
@@ -7007,36 +7112,29 @@ function applyCandidateFieldValidationErrors(missingFields) {
         } else if (key === 'careersummary') {
             var $cs = $('#careersummary');
             $cs.addClass('has-validation-error');
-            $cs.closest('.candidate-field-control').addClass('has-validation-error');
+            $cs.closest('.candidate-field-control, .candidate-card-body').addClass('has-validation-error');
             if (!$('[data-field-error="careersummary"]').length) {
-                $cs.closest('.candidate-field-control').after(errorHtml);
+                $cs.after(errorHtml);
             }
-        } else if (key === 'full_name') {
-            var $fn = $('#full_name');
-            $fn.addClass('has-validation-error');
-            $fn.closest('.candidate-field-control').addClass('has-validation-error');
-            if (!$('[data-field-error="full_name"]').length) {
-                $fn.closest('.candidate-field-control').after(errorHtml);
-            }
-        } else if (key === 'email') {
-            var $em = $('#email');
-            $em.addClass('has-validation-error');
-            $em.closest('.candidate-field-control').addClass('has-validation-error');
-            if (!$('[data-field-error="email"]').length) {
-                $em.closest('.candidate-field-control').after(errorHtml);
+        } else if (key === 'full_name' || key === 'email') {
+            var $el = $('#' + key);
+            $el.addClass('has-validation-error');
+            $el.closest('.candidate-field-control').addClass('has-validation-error');
+            if (!$('[data-field-error="' + key + '"]').length) {
+                $el.closest('.candidate-field-control').after(errorHtml);
             }
         } else if (key === 'phone' || key === 'secondary_mobile') {
             var $pEl = $('#' + key);
             $pEl.addClass('has-validation-error');
-            var $phoneWrap = $pEl.closest('.jero-phone-box-wrapper');
-            if ($phoneWrap.length) {
-                $phoneWrap.addClass('has-validation-error');
-                $phoneWrap.find('.jero-phone-input-group').addClass('has-validation-error');
-            }
-            if (!$('[data-field-error="' + key + '"]').length) {
-                if ($phoneWrap.length) {
-                    $phoneWrap.after(errorHtml);
-                } else {
+            var $pWrap = $pEl.closest('.jero-phone-box-wrapper');
+            if ($pWrap.length) {
+                $pWrap.addClass('has-validation-error');
+                $pWrap.find('.jero-phone-input-group').addClass('has-validation-error');
+                if (!$('[data-field-error="' + key + '"]').length) {
+                    $pWrap.after(errorHtml);
+                }
+            } else {
+                if (!$('[data-field-error="' + key + '"]').length) {
                     $pEl.after(errorHtml);
                 }
             }
@@ -7085,15 +7183,9 @@ function applyCandidateFieldValidationErrors(missingFields) {
         } else if (key === 'gender') {
             var $gen = $('#gender');
             $gen.addClass('has-validation-error');
-            var $genBox = $('#jero-cs-gender');
-            if ($genBox.length) {
-                $genBox.addClass('has-validation-error');
-                $genBox.closest('.candidate-field-control, .bd-control').addClass('has-validation-error');
-            }
+            $gen.closest('.candidate-field-control').addClass('has-validation-error');
             if (!$('[data-field-error="gender"]').length) {
-                var $ctrlGen = $genBox.length ? $genBox.closest('.candidate-field-control, .bd-control') : $gen.closest('.candidate-field-control');
-                if ($ctrlGen.length) $ctrlGen.after(errorHtml);
-                else $gen.after(errorHtml);
+                $gen.closest('.candidate-field-control').after(errorHtml);
             }
         } else if (key === 'skills') {
             var $entry = $('.candidate-primary-skill-entry');
@@ -7131,35 +7223,82 @@ function applyCandidateFieldValidationErrors(missingFields) {
             if (!$('[data-field-error="employmentType"]').length) {
                 $et.closest('.candidate-field-control').after(errorHtml);
             }
-        } else if (key === 'ctc' || key === 'ectc') {
-            var $sal = $('#' + key);
-            $sal.addClass('has-validation-error');
-            $sal.closest('.candidate-salary-input-wrap').addClass('has-validation-error');
-            if (!$('[data-field-error="' + key + '"]').length) {
-                $sal.closest('.candidate-salary-input-wrap').after(errorHtml);
+        } else if (key === 'ctc') {
+            var $curPanel = $('.candidate-salary-panel--current');
+            var $activeCurIg = $curPanel.find('.candidate-salary-period.is-active .ig');
+            $activeCurIg.addClass('has-validation-error');
+            $curPanel.find('input[type="number"]').addClass('has-validation-error');
+            if (!$('[data-field-error="ctc"]').length) {
+                if ($activeCurIg.length) $activeCurIg.after(errorHtml);
+                else $curPanel.append(errorHtml);
+            }
+        } else if (key === 'ectc') {
+            var $expPanel = $('.candidate-salary-panel--expected');
+            var $activeExpIg = $expPanel.find('.candidate-salary-period.is-active .ig');
+            $activeExpIg.addClass('has-validation-error');
+            $expPanel.find('input[type="number"]').addClass('has-validation-error');
+            if (!$('[data-field-error="ectc"]').length) {
+                if ($activeExpIg.length) $activeExpIg.after(errorHtml);
+                else $expPanel.append(errorHtml);
             }
         } else if (key === 'np_id') {
-            var $npGrid = $('.candidate-notice-options-grid');
-            $npGrid.addClass('has-validation-error');
-            if (!$('[data-field-error="np_id"]').length) {
-                $npGrid.after(errorHtml);
+            var snpMode = ($('#serving_notice_period').val() || '').trim();
+            if (!snpMode && snpMode !== '0') {
+                var $npOptions = $('.candidate-notice-options');
+                $npOptions.addClass('has-validation-error');
+                if (!$('[data-field-error="np_id"]').length) $npOptions.after(errorHtml);
+            } else if (snpMode === '0') {
+                var $daysShell = $('#candidateNoticeDaysField .candidate-notice-input-shell');
+                $daysShell.addClass('has-validation-error');
+                $('#ddl_np_id').addClass('has-validation-error');
+                if (!$('[data-field-error="np_id"]').length) $daysShell.after(errorHtml);
+            } else {
+                var $dateShell = $('#candidateNoticeDateField .candidate-notice-input-shell');
+                $dateShell.addClass('has-validation-error');
+                $('#np_id_display').addClass('has-validation-error');
+                if (!$('[data-field-error="np_id"]').length) $dateShell.after(errorHtml);
             }
         } else if (key === 'wm') {
             var $wmGrid = $('.candidate-work-mode-grid');
             $wmGrid.addClass('has-validation-error');
-            if (!$('[data-field-error="wm"]').length) {
-                $wmGrid.after(errorHtml);
-            }
+            if (!$('[data-field-error="wm"]').length) $wmGrid.after(errorHtml);
         } else if (key === 'job_skills') {
             var $jsTable = $('.candidate-job-skills-scroll table');
             $jsTable.addClass('has-validation-error');
+            $('select[name^="YearskillId"]').each(function() {
+                var $yr = $(this);
+                var yrVal = $yr.val();
+                var nameAttr = $yr.attr('name') || '';
+                var skillIdMatch = nameAttr.match(/\[(\d+)\]/);
+                var skillId = skillIdMatch ? skillIdMatch[1] : '';
+                var $rt = skillId ? $('select[name="rating[' + skillId + ']"]') : null;
+                var rtVal = $rt ? $rt.val() : '';
+                var $row = $yr.closest('tr');
+
+                if (!yrVal || yrVal === '0') {
+                    $yr.addClass('has-validation-error');
+                    $row.addClass('has-validation-error');
+                }
+                if (!rtVal || rtVal === '0') {
+                    if ($rt) {
+                        $rt.addClass('has-validation-error');
+                        $rt.next('.select2-container').find('.select2-selection').addClass('has-validation-error');
+                    }
+                    $row.addClass('has-validation-error');
+                }
+            });
             if (!$('[data-field-error="job_skills"]').length) {
-                $jsTable.after(errorHtml);
+                $('.candidate-job-skills-scroll').after(errorHtml);
             }
         } else if (key === 'screening_questions') {
-            $('.screening-question-input, [name^="answer["]').addClass('has-validation-error');
+            $('input[name="additional_detail[]"]').each(function() {
+                var $input = $(this);
+                if (!($input.val() || '').trim()) {
+                    $input.addClass('has-validation-error');
+                }
+            });
             if (!$('[data-field-error="screening_questions"]').length) {
-                $('.screening-questions-card .candidate-card-body').append(errorHtml);
+                $('#job_additional_detail').after(errorHtml);
             }
         } else {
             var cfg = candidateFieldConfigMap[key];
@@ -7179,8 +7318,35 @@ window.applyCandidateFieldValidationErrors = applyCandidateFieldValidationErrors
 $(document).on('input change focus', 'input, select, textarea', function () {
     var fieldKey = this.name || this.id;
     if (fieldKey) {
-        clearCandidateFieldValidationErrors(fieldKey);
+        if (fieldKey.indexOf('YearskillId') !== -1 || fieldKey.indexOf('rating') !== -1) {
+            clearCandidateFieldValidationErrors('job_skills');
+        } else if (fieldKey === 'pay_annual' || fieldKey === 'pay_monthly' || fieldKey === 'ctc') {
+            clearCandidateFieldValidationErrors('ctc');
+        } else if (fieldKey === 'bill_annual' || fieldKey === 'bill_monthly' || fieldKey === 'ectc') {
+            clearCandidateFieldValidationErrors('ectc');
+        } else if (fieldKey === 'serving_notice_period' || fieldKey === 'np_id' || fieldKey === 'np_id_display' || fieldKey === 'ddl_np_id') {
+            clearCandidateFieldValidationErrors('np_id');
+        } else if (fieldKey === 'additional_detail[]' || fieldKey === 'additional_detail') {
+            clearCandidateFieldValidationErrors('screening_questions');
+        } else {
+            clearCandidateFieldValidationErrors(fieldKey);
+        }
     }
+});
+
+$(document).on('click', '.candidate-notice-option', function () {
+    clearCandidateFieldValidationErrors('np_id');
+});
+
+$(document).on('click', '.candidate-work-mode-option', function () {
+    clearCandidateFieldValidationErrors('wm');
+});
+
+$(document).on('click', '.jero-cs-item', function () {
+    var $cs = $(this).closest('.jero-custom-select');
+    if ($cs.attr('id') === 'jero-cs-location') clearCandidateFieldValidationErrors('kt_tagify_work_location');
+    if ($cs.attr('id') === 'jero-cs-qualification') clearCandidateFieldValidationErrors('qualification');
+    if ($cs.attr('id') === 'jero-cs-nationality') clearCandidateFieldValidationErrors('nationality');
 });
 
 function showCandidateRequiredFieldsModal(missingFields) {
