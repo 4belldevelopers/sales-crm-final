@@ -1987,12 +1987,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ], $this->getSearchConditions($custom_search, $country)),
                         ],
                     ],
@@ -7158,10 +7152,11 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         ];
         array_unshift($sort, $assignmentSortScript);
 
+        // Intent: Career Apply page strictly displays candidates who applied directly through the Client's Career Apply flow.
         $boolQuery = [
             'bool' => [
                 'should' => [
-                    // First condition
+                    // First condition — authentic direct career applicants
                     [
                         'bool' => [
                             'must' => array_merge([
@@ -9200,12 +9195,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ], $this->getSearchConditions($custom_search, $country)),
                         ],
                     ],

@@ -69,5 +69,13 @@ class JobApplicationObserver
     {
         DecrementPipelineCountersJob::dispatch($app->id)->onQueue('counters');
         DecrementApplicationCountersJob::dispatch($app->id)->onQueue('counters');
+
+        /* Intent: Re-open capacity counter when application is deleted/purged */
+        if ($app->job_id) {
+            try {
+                app(\App\Services\JobApplicationCapacityService::class)->releaseSlot((int) $app->job_id);
+            } catch (\Throwable) {
+            }
+        }
     }
 }
