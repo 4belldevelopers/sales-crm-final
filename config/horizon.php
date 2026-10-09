@@ -298,6 +298,20 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+        // Market Jobs transactional outbox & real-time delta relay supervisor
+        'supervisor-outbox' => [
+            'connection' => 'redis',
+            'queue' => ['market-outbox', 'outbox'],
+            'balance' => 'simple',
+            'maxProcesses' => 6,
+            'minProcesses' => 2,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 3,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -328,6 +342,10 @@ return [
                 'maxProcesses' => 4,
                 'minProcesses' => 1,
             ],
+            'supervisor-outbox' => [
+                'maxProcesses' => 8,
+                'minProcesses' => 2,
+            ],
         ],
 
         'local' => [
@@ -348,6 +366,9 @@ return [
             ],
             'supervisor-webhooks' => [
                 'maxProcesses' => 1,
+            ],
+            'supervisor-outbox' => [
+                'maxProcesses' => 2,
             ],
         ],
     ],

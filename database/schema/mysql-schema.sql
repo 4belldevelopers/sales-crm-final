@@ -2562,7 +2562,8 @@ CREATE TABLE `market_job_added_count` (
   `status` int(11) NOT NULL DEFAULT 0 COMMENT '0-new added, 1-old added ',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_mkt_job_status` (`job_id`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `master_currency`;

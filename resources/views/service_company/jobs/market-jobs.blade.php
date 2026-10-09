@@ -999,6 +999,308 @@
     <link href="{{ asset('demo/css/plugins.bundle.css') }}{{ TM_VERSION }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('demo/js/plugins.bundle.js') }}{{ TM_VERSION }}"></script>
     <script>
+        /**
+         * MarketJobStore - Client-First In-Memory Data & Cache Store (Phase 1)
+         * Provides zero-latency RAM caching for pagination, instant filter switching,
+         * in-flight request cancellation, and bounded memory management.
+         * Tenancy & Isolation: Scoped strictly to the Market Jobs page.
+         */
+        window.MarketJobStore = {
+            jobs: new Map(),
+            pageCache: new Map(),
+            maxCachedPages: 25,
+            currentXhr: null,
+            cacheTtlMs: 60000, // 60 seconds bounded RAM TTL
+
+            generateKey: function(params) {
+                return JSON.stringify(params);
+            },
+
+            getPage: function(key) {
+                var entry = this.pageCache.get(key);
+                if (!entry) return null;
+                if ((Date.now() - entry.timestamp) > this.cacheTtlMs) {
+                    this.pageCache.delete(key);
+                    return null;
+                }
+                return entry.response;
+            },
+
+            setPage: function(key, data) {
+                if (this.pageCache.size >= this.maxCachedPages) {
+                    var oldestKey = this.pageCache.keys().next().value;
+                    this.pageCache.delete(oldestKey);
+                }
+                this.pageCache.set(key, {
+                    response: data,
+                    timestamp: Date.now()
+                });
+
+                // Extract & cache individual jobs in entities map
+                var items = data && data.items;
+                if (items && !Array.isArray(items) && Array.isArray(items.data)) {
+                    items = items.data;
+                }
+                if (Array.isArray(items)) {
+                    for (var i = 0; i < items.length; i++) {
+                        var itm = items[i];
+                        if (itm && itm.id) {
+                            this.jobs.set(itm.id, itm);
+                        }
+                    }
+                }
+            },
+
+            invalidate: function() {
+                this.pageCache.clear();
+                this.jobs.clear();
+            },
+
+            invalidatePages: function() {
+                this.pageCache.clear();
+            },
+
+            updateJobDelta: function(jobId, delta) {
+                var job = this.jobs.get(Number(jobId)) || this.jobs.get(String(jobId));
+                if (job) {
+                    if (delta.status_label) job.status_label = delta.status_label;
+                    if (delta.action_type) job.action_type = delta.action_type;
+                    if (typeof delta.vendor_added_count !== 'undefined' && delta.vendor_added_count !== null) job.vendor_added_count = delta.vendor_added_count;
+                    if (typeof delta.bench_match_count !== 'undefined' && delta.bench_match_count !== null) job.bench_match_count = delta.bench_match_count;
+                    if (typeof delta.remaining_slots !== 'undefined' && delta.remaining_slots !== null) job.remaining_slots = delta.remaining_slots;
+                    this.jobs.set(job.id, job);
+                }
+                this.invalidatePages();
+            },
+
+            abortInFlight: function() {
+                if (this.currentXhr && this.currentXhr.readyState !== 4) {
+                    try {
+                        this.currentXhr.abort();
+                    } catch (e) {
+                        // ignore abort exception
+                    }
+                    this.currentXhr = null;
+                }
+            }
+        };
+
+        /**
+         * JeroMarketJobsDB - Scoped IndexedDB Cache Engine (Phase 2)
+         * Provides persistent L2 storage across page reloads/tab closures,
+         * strict tenant isolation (jero_mkt_tenant_{companyId}), Stale-While-Revalidate,
+         * and LRU eviction budgeting (max 50 pages, max 1000 jobs).
+         */
+        window.JeroMarketJobsDB = (function() {
+            var DB_NAME = 'jero_mkt_tenant_{{ auth()->check() ? auth()->user()->company_id : 0 }}';
+            var DB_VERSION = 1;
+            var STORE_PAGES = 'pages';
+            var STORE_JOBS = 'jobs';
+            var STORE_META = 'meta';
+            var MAX_PAGES = 50;
+            var MAX_JOBS = 1000;
+            var PAGE_TTL_MS = 300000; // 5 minutes TTL
+            var dbInstance = null;
+
+            function getDB() {
+                if (dbInstance) return Promise.resolve(dbInstance);
+                return new Promise(function(resolve) {
+                    if (!window.indexedDB) {
+                        resolve(null);
+                        return;
+                    }
+                    try {
+                        var request = window.indexedDB.open(DB_NAME, DB_VERSION);
+                        request.onupgradeneeded = function(e) {
+                            var db = e.target.result;
+                            if (!db.objectStoreNames.contains(STORE_PAGES)) {
+                                var pageStore = db.createObjectStore(STORE_PAGES, { keyPath: 'key' });
+                                pageStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            }
+                            if (!db.objectStoreNames.contains(STORE_JOBS)) {
+                                var jobStore = db.createObjectStore(STORE_JOBS, { keyPath: 'id' });
+                                jobStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            }
+                            if (!db.objectStoreNames.contains(STORE_META)) {
+                                db.createObjectStore(STORE_META, { keyPath: 'key' });
+                            }
+                        };
+                        request.onsuccess = function(e) {
+                            dbInstance = e.target.result;
+                            resolve(dbInstance);
+                        };
+                        request.onerror = function() {
+                            resolve(null);
+                        };
+                    } catch(err) {
+                        resolve(null);
+                    }
+                });
+            }
+
+            return {
+                getPage: function(key) {
+                    return getDB().then(function(db) {
+                        if (!db) return null;
+                        return new Promise(function(resolve) {
+                            try {
+                                var tx = db.transaction(STORE_PAGES, 'readonly');
+                                var store = tx.objectStore(STORE_PAGES);
+                                var req = store.get(String(key));
+                                req.onsuccess = function() {
+                                    var res = req.result;
+                                    if (!res) {
+                                        resolve(null);
+                                        return;
+                                    }
+                                    if (Date.now() - res.timestamp > PAGE_TTL_MS) {
+                                        // Expired entry
+                                        resolve(null);
+                                        return;
+                                    }
+                                    resolve(res);
+                                };
+                                req.onerror = function() { resolve(null); };
+                            } catch(e) {
+                                resolve(null);
+                            }
+                        });
+                    });
+                },
+
+                setPage: function(key, response) {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction([STORE_PAGES, STORE_JOBS], 'readwrite');
+                            tx.onerror = function(e) {
+                                if (e.target && e.target.error && e.target.error.name === 'QuotaExceededError') {
+                                    console.warn('[JeroMarketJobsDB] Quota exceeded. Purging cached pages...');
+                                    try {
+                                        var purgeTx = db.transaction(STORE_PAGES, 'readwrite');
+                                        purgeTx.objectStore(STORE_PAGES).clear();
+                                    } catch(pe) {}
+                                }
+                            };
+
+                            var pageStore = tx.objectStore(STORE_PAGES);
+                            pageStore.put({
+                                key: String(key),
+                                response: response,
+                                timestamp: Date.now()
+                            });
+
+                            // LRU eviction on pages
+                            var countReq = pageStore.count();
+                            countReq.onsuccess = function() {
+                                if (countReq.result > MAX_PAGES) {
+                                    var index = pageStore.index('timestamp');
+                                    var cursorReq = index.openCursor();
+                                    var deleted = 0;
+                                    var toDelete = countReq.result - MAX_PAGES;
+                                    cursorReq.onsuccess = function(e) {
+                                        var cursor = e.target.result;
+                                        if (cursor && deleted < toDelete) {
+                                            cursor.delete();
+                                            deleted++;
+                                            cursor.continue();
+                                        }
+                                    };
+                                }
+                            };
+
+                            // Extract & index individual jobs in jobs store
+                            var items = response && response.items;
+                            if (items && !Array.isArray(items) && Array.isArray(items.data)) {
+                                items = items.data;
+                            }
+                            if (Array.isArray(items) && items.length > 0) {
+                                var jobStore = tx.objectStore(STORE_JOBS);
+                                for (var i = 0; i < items.length; i++) {
+                                    var itm = items[i];
+                                    if (itm && itm.id) {
+                                        jobStore.put({
+                                            id: Number(itm.id),
+                                            data: itm,
+                                            timestamp: Date.now()
+                                        });
+                                    }
+                                }
+
+                                // LRU eviction on jobs
+                                var jobCountReq = jobStore.count();
+                                jobCountReq.onsuccess = function() {
+                                    if (jobCountReq.result > MAX_JOBS) {
+                                        var jIndex = jobStore.index('timestamp');
+                                        var jCursorReq = jIndex.openCursor();
+                                        var jDeleted = 0;
+                                        var jToDelete = jobCountReq.result - MAX_JOBS;
+                                        jCursorReq.onsuccess = function(e) {
+                                            var cursor = e.target.result;
+                                            if (cursor && jDeleted < jToDelete) {
+                                                cursor.delete();
+                                                jDeleted++;
+                                                cursor.continue();
+                                            }
+                                        };
+                                    }
+                                };
+                            }
+                        } catch(e) {
+                            console.warn('[JeroMarketJobsDB] setPage error:', e);
+                        }
+                    });
+                },
+
+                clearPages: function() {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction(STORE_PAGES, 'readwrite');
+                            tx.objectStore(STORE_PAGES).clear();
+                        } catch(e) {}
+                    });
+                },
+
+                updateJobDelta: function(jobId, delta) {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction([STORE_PAGES, STORE_JOBS], 'readwrite');
+                            tx.objectStore(STORE_PAGES).clear(); // Clear cached pages
+
+                            var jobStore = tx.objectStore(STORE_JOBS);
+                            var req = jobStore.get(Number(jobId));
+                            req.onsuccess = function() {
+                                var res = req.result;
+                                if (res && res.data) {
+                                    if (delta.status_label) res.data.status_label = delta.status_label;
+                                    if (delta.action_type) res.data.action_type = delta.action_type;
+                                    if (typeof delta.vendor_added_count !== 'undefined' && delta.vendor_added_count !== null) res.data.vendor_added_count = delta.vendor_added_count;
+                                    if (typeof delta.bench_match_count !== 'undefined' && delta.bench_match_count !== null) res.data.bench_match_count = delta.bench_match_count;
+                                    if (typeof delta.remaining_slots !== 'undefined' && delta.remaining_slots !== null) res.data.remaining_slots = delta.remaining_slots;
+                                    res.timestamp = Date.now();
+                                    jobStore.put(res);
+                                }
+                            };
+                        } catch(e) {}
+                    });
+                },
+
+                clearAll: function() {
+                    return getDB().then(function(db) {
+                        if (!db) return;
+                        try {
+                            var tx = db.transaction([STORE_PAGES, STORE_JOBS, STORE_META], 'readwrite');
+                            tx.objectStore(STORE_PAGES).clear();
+                            tx.objectStore(STORE_JOBS).clear();
+                            tx.objectStore(STORE_META).clear();
+                        } catch(e) {}
+                    });
+                }
+            };
+        })();
+
         /* ── Skills Tagify Initialization ── */
         var inputElm = document.querySelector('#kt_tagify_users');
         window.tagify = null;
@@ -1375,11 +1677,7 @@
             fetchCandidates();
         }
 
-        $(document).ready(function() {
-            $(document).on('keyup', '#inputSearch', function () {
-                fetchCandidates();
-            });
-        });
+        // Note: #inputSearch and #kt_tagify_2 are handled via the unified debounced handler below
 
 
 
@@ -1653,15 +1951,27 @@
                                  
                                 // return false;
 															
+																var mktIdempotencyKey = 'claim_' + jobId + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
 																$.ajax({
 																			type  		: 'GET',
 																			url   		: url,
-																			data		: {'jobId': jobId, 'status':status,'kt_tagify_location': kt_tagify_location },
+																			data		: {
+																				'jobId': jobId,
+																				'status': status,
+																				'kt_tagify_location': kt_tagify_location,
+																				'idempotency_key': mktIdempotencyKey
+																			},
+																			headers		: {
+																				'X-Idempotency-Key': mktIdempotencyKey
+																			},
 																			success 	: function (response) {
 																				
 																						if(response.status == 'success'){
 																							swalWithBootstrapButtons.fire
 																							('Accept!', 'Job has been added successfully.', 'success')	
+																						}else if(response.status == 'waiting'){
+																							swalWithBootstrapButtons.fire
+																							('Processing', response.message || 'Request is already being processed.', 'info')
 																						}else if(response.status == 'closeJob'){
 																							swalWithBootstrapButtons.fire
 																							("Ignore!",response.message, "error")
@@ -1672,9 +1982,20 @@
                                             setTimeout(() => {
                                               // table._fnDraw();
 																						  // tableLoad('load');	
-                                              fetchCandidates();
+                                              if (window.MarketJobStore && typeof window.MarketJobStore.invalidate === 'function') {
+                                                  window.MarketJobStore.invalidate();
+                                              }
+                                              if (window.JeroMarketJobsDB && typeof window.JeroMarketJobsDB.clearPages === 'function') {
+                                                  window.JeroMarketJobsDB.clearPages();
+                                              }
+                                              fetchCandidates(1, '', { forceNetwork: true });
                                             }, 1500);	
                                             																							
+																			},
+																			error: function (xhr) {
+																				$('.request_approval').prop('disabled', false).text('Submit Candidates');
+																				var errorMsg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'An error occurred while processing your request. Please try again.';
+																				swalWithBootstrapButtons.fire('Error', errorMsg, 'error');
 																			}
 																	});
 														} 
@@ -1835,7 +2156,7 @@
             }
 
             return `
-            <div class="job-card ${cardAccentClass}">
+            <div class="job-card ${cardAccentClass}" data-market-job-id="${row.id}">
 
                 <!-- ── COL 1: Title, Badges, Subtitle, Skills ── -->
                 <div class="jc-col-main">
@@ -2046,9 +2367,13 @@
             if (!$(e.target).closest('#simf_sort_wrap').length) simfCloseSortPanel();
         });
 
-        // ── Live Search with Debounce (Apptracker style) ──
-        let searchDebounceTimer;
-        $(document).on('keyup input', '#kt_tagify_2', function(e) {
+        // ── Live Search with Debounce (Phase 1 Optimization) ──
+        let searchDebounceTimer = null;
+        $(document).on('keyup input', '#kt_tagify_2, #inputSearch', function(e) {
+            // Ignore navigational and modifier keys (Arrows, Shift, Ctrl, Alt, Tab, Esc, Cmd)
+            if ([9, 16, 17, 18, 27, 37, 38, 39, 40, 91, 93].indexOf(e.keyCode) !== -1) {
+                return;
+            }
             clearTimeout(searchDebounceTimer);
             if (e.keyCode === 13) {
                 filtersdataget();
@@ -2056,7 +2381,7 @@
             }
             searchDebounceTimer = setTimeout(function() {
                 filtersdataget();
-            }, 350);
+            }, 250);
         });
 
         /* ══════════════════════════════════════════════════════════════════
@@ -2359,89 +2684,257 @@
             fetchCandidates(1);
         });
 
-        function fetchCandidates(page = 1, search = '') {
+        /**
+         * Authoritative DOM rendering pipeline for Market Job cards.
+         * Used interchangeably by live AJAX responses and in-memory/IndexedDB cache hits.
+         */
+        function applyMarketJobsPayload(response) {
+            var items = response.items;
+            // Handle both plain array [] and ResourceCollection {data:[]} wrapping
+            if (items && !Array.isArray(items) && Array.isArray(items.data)) {
+                items = items.data;
+            }
+            if (items && Array.isArray(items)) {
+                if (items.length > 0) {
+                    try {
+                        let html = items.map(function(item, idx) {
+                            try {
+                                return renderMarketJobCard(item);
+                            } catch(cardErr) {
+                                console.error('[MarketJobs] renderMarketJobCard failed for item #' + idx, cardErr, item);
+                                return '<div class="alert alert-warning m-2">Card render error: ' + cardErr.message + '</div>';
+                            }
+                        }).join('');
+                        $('#marketJobLists').html(html);
+                        $('#marketJobLists').css({ display: 'block', minHeight: '100px' });
+                    } catch(renderErr) {
+                        console.error('[MarketJobs] Render pipeline error:', renderErr);
+                        $('#marketJobLists').html('<div class="alert alert-danger m-4">Render error: ' + renderErr.message + '</div>');
+                    }
+                } else {
+                    $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
+                }
+            } else if (response.html) {
+                $('#marketJobLists').html(response.html);
+            } else {
+                $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
+            }
+            $('#span_jobMarket').html(response.total);
+            $('#mktf_footer_number').text(response.total || 0);
+            $('#pagination').html(response.pagination || '');
+        }
+
+        /**
+         * Real-Time Delta Synchronization (Phase 3)
+         * Surgical in-place DOM patch for market job card without re-rendering entire page.
+         */
+        function applyJobCardDelta(jobId, delta) {
+            var $card = $('[data-market-job-id="' + jobId + '"]');
+            if (!$card.length) return;
+
+            // 1. Update status badge if changed
+            if (delta.status_label) {
+                var $statusBadge = $card.find('.jc-badge-open, .jc-badge-hold');
+                var $statusIndicator = $card.find('.jc-status-indicator');
+                if (delta.status_label === 'HOLD') {
+                    $statusBadge.removeClass('jc-badge-open').addClass('jc-badge-hold').html('<span class="jc-dot-mini"></span>HOLD');
+                    $statusIndicator.html('<span class="jc-dot-hold"></span>Hold');
+                    $card.removeClass('jc-accent-green').addClass('jc-accent-yellow');
+                } else if (delta.status_label === 'OPEN') {
+                    $statusBadge.removeClass('jc-badge-hold').addClass('jc-badge-open').html('<span class="jc-dot-mini"></span>OPEN');
+                    $statusIndicator.html('<span class="jc-dot-open"></span>Active · Open');
+                    $card.removeClass('jc-accent-yellow').addClass('jc-accent-green');
+                }
+            }
+
+            // 2. Update CTA button if action_type changed
+            if (delta.action_type) {
+                var $ctaBtn = $card.find('.jc-col-actions .btn-cta-primary');
+                if (delta.action_type === 'under_review') {
+                    $ctaBtn.replaceWith('<button class="btn-cta-primary" style="background:#F59E0B;" disabled>Under Review</button>');
+                } else if (delta.action_type === 'vendor_fulfilled') {
+                    $ctaBtn.replaceWith('<button class="btn-cta-primary" style="background:#EF4444;" disabled>Vendor Fulfilled</button>');
+                } else if (delta.action_type === 'vendor_limit') {
+                    $ctaBtn.replaceWith('<button class="btn-cta-primary" style="background:#EF4444;" disabled>Vendor Limit</button>');
+                }
+            }
+
+            // 3. Update bench count if changed
+            if (typeof delta.bench_match_count !== 'undefined' && delta.bench_match_count !== null) {
+                $card.find('.jc-bench-num').text(delta.bench_match_count);
+            }
+
+            // Visual feedback pulse to indicate live sync
+            $card.css('transition', 'box-shadow 0.4s ease')
+                 .css('box-shadow', '0 0 12px rgba(16, 185, 129, 0.45)');
+            setTimeout(function() {
+                $card.css('box-shadow', '');
+            }, 1800);
+        }
+
+        function getCurrentMarketQueryParams(page) {
+            var perPage = localStorage.getItem('candidatePerPage') || 10;
+            return {
+                page: page || 1,
+                custom_tab: currentActiveTab,
+                search: $('#inputSearch').val() || '',
+                custom_search: $('#kt_tagify_2').val() || '',
+                custom_status: 'active',
+                custom_hiringtype: $('#hiringtype').val() || '',
+                cus_search: $('#kt_tagify_users').val() || '',
+                min_exp: $('#min_exp').val() || '',
+                max_exp: $('#max_exp').val() || '',
+                kt_tagify_location: $('#kt_tagify_location').val() || '',
+                min_sal: $('#min_sal').val() || '',
+                max_sal: $('#max_sal').val() || '',
+                min_salary_currency: $('#min_salary_currency').val() || '',
+                sal_mode: $('#sal_mode').val() || '',
+                app_int_activity: $('[name="app_int_activity"]:checked').val() || '',
+                app_int_outsource: $('[name="app_int_outsource"]:checked').val() || '',
+                per_page: perPage,
+                size: perPage
+            };
+        }
+
+        function executeServerFetch(queryParams, cacheKey, fetchOptions) {
+            fetchOptions = fetchOptions || {};
+            var isBackground = !!fetchOptions.isBackground;
+            var deferred = fetchOptions.deferred;
+
+            if (!isBackground) {
+                window.MarketJobStore.abortInFlight();
+                $('.loadingMessage').css({ display: 'block' });
+            }
+
+            var xhr = $.ajax({
+                url: `{!! route('service_company.jobs.marketJobListV2_ajax') !!}?page=${queryParams.page}`,
+                type: 'GET',
+                data: queryParams,
+                success: function(response) {
+                    if (window.MarketJobStore.currentXhr === xhr) {
+                        window.MarketJobStore.currentXhr = null;
+                    }
+                    if (!isBackground) {
+                        $('.loadingMessage').css({ display: 'none' });
+                    }
+
+                    // Populate L1 RAM and L2 IndexedDB caches
+                    window.MarketJobStore.setPage(cacheKey, response);
+                    if (window.JeroMarketJobsDB && typeof window.JeroMarketJobsDB.setPage === 'function') {
+                        window.JeroMarketJobsDB.setPage(cacheKey, response);
+                    }
+
+                    if (isBackground) {
+                        // Background Revalidation: only apply to DOM if recruiter is still looking at this exact query
+                        var currentKey = window.MarketJobStore.generateKey(getCurrentMarketQueryParams(queryParams.page));
+                        if (currentKey === cacheKey) {
+                            applyMarketJobsPayload(response);
+                        }
+                    } else {
+                        applyMarketJobsPayload(response);
+                        if (deferred) deferred.resolve(response);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    if (window.MarketJobStore.currentXhr === xhr) {
+                        window.MarketJobStore.currentXhr = null;
+                    }
+                    if (status === 'abort' || xhr.statusText === 'abort' || xhr.readyState === 0) {
+                        return;
+                    }
+                    if (!isBackground) {
+                        $('.loadingMessage').css({ display: 'none' });
+                        var msg = 'Error loading jobs.';
+                        try {
+                            var resp = JSON.parse(xhr.responseText);
+                            msg = resp.message || resp.error || msg;
+                        } catch(e) {
+                            msg = xhr.status + ' ' + error;
+                        }
+                        $('#marketJobLists').html('<div class="alert alert-danger m-4">Failed to load jobs: ' + msg + '</div>');
+                        console.error('[MarketJobs AJAX Error]', xhr.status, error, xhr.responseText);
+                        if (deferred) deferred.reject(xhr);
+                    }
+                }
+            });
+
+            if (!isBackground) {
+                window.MarketJobStore.currentXhr = xhr;
+            }
+            return xhr;
+        }
+
+        function fetchCandidates(page = 1, search = '', options = {}) {
             if (typeof mktfSyncPendingInputs === 'function') {
                 mktfSyncPendingInputs();
             }
-            $('.loadingMessage').css({ display: 'block' });
-            var perPage = localStorage.getItem('candidatePerPage') || 10;
-            return $.ajax({
-                url: `{!! route('service_company.jobs.marketJobListV2_ajax') !!}?page=${page}`,
-                type: 'GET',
-                data: {
-                  custom_tab: currentActiveTab,
-                  search:$('#inputSearch').val(),
-                  custom_search:$('#kt_tagify_2').val(),
-                  custom_status:'active',
-                  custom_hiringtype:$('#hiringtype').val(),
-                  cus_search:$('#kt_tagify_users').val(),
-                  min_exp:$('#min_exp').val(),
-                  max_exp:$('#max_exp').val(),
-                  kt_tagify_location:$('#kt_tagify_location').val(),
-                  min_sal:$('#min_sal').val(),
-                  max_sal:$('#max_sal').val(),
-                  min_salary_currency: $('#min_salary_currency').val(),
-                  sal_mode:$('#sal_mode').val(),
-                  app_int_activity:$('[name="app_int_activity"]:checked').val(),
-                  app_int_outsource:$('[name="app_int_outsource"]:checked').val(),
-                  per_page: perPage,
-                  size: perPage
-                },
-                success: function(response) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    console.log('[MarketJobs] AJAX success. status=' + response.status + ' total=' + response.total);
-                    console.log('[MarketJobs] items type=' + typeof response.items + ' isArray=' + Array.isArray(response.items));
-                    if (response.items) { console.log('[MarketJobs] items length=' + (response.items.length || 'N/A (not array)')); console.log('[MarketJobs] first item:', response.items[0] || response.items.data && response.items.data[0]); }
 
-                    var items = response.items;
-                    // Handle both plain array [] and ResourceCollection {data:[]} wrapping
-                    if (items && !Array.isArray(items) && Array.isArray(items.data)) {
-                        items = items.data;
-                    }
-                    if (items && Array.isArray(items)) {
-                        if (items.length > 0) {
-                            try {
-                                let html = items.map(function(item, idx) {
-                                    try {
-                                        return renderMarketJobCard(item);
-                                    } catch(cardErr) {
-                                        console.error('[MarketJobs] renderMarketJobCard failed for item #' + idx, cardErr, item);
-                                        return '<div class="alert alert-warning m-2">Card render error: ' + cardErr.message + '</div>';
-                                    }
-                                }).join('');
-                                console.log('[MarketJobs] Rendered HTML length=' + html.length);
-                                $('#marketJobLists').html(html);
-                                $('#marketJobLists').css({ display: 'block', minHeight: '100px' });
-                            } catch(renderErr) {
-                                console.error('[MarketJobs] Render pipeline error:', renderErr);
-                                $('#marketJobLists').html('<div class="alert alert-danger m-4">Render error: ' + renderErr.message + '</div>');
-                            }
-                        } else {
-                            $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
-                        }
-                    } else if (response.html) {
-                        $('#marketJobLists').html(response.html);
+            var queryParams = getCurrentMarketQueryParams(page);
+            var cacheKey = window.MarketJobStore.generateKey(queryParams);
+            var deferred = $.Deferred();
+
+            // ── Tier 1: In-Memory RAM Cache Hit Check (Instant < 2ms) ──
+            var ramCached = window.MarketJobStore.getPage(cacheKey);
+            if (ramCached && !options.forceNetwork) {
+                window.MarketJobStore.abortInFlight();
+                $('.loadingMessage').css({ display: 'none' });
+                applyMarketJobsPayload(ramCached);
+                return deferred.resolve(ramCached).promise();
+            }
+
+            // ── Tier 2: Scoped IndexedDB Cache Check (< 10ms across reloads) ──
+            if (window.JeroMarketJobsDB && typeof window.JeroMarketJobsDB.getPage === 'function' && !options.forceNetwork) {
+                window.JeroMarketJobsDB.getPage(cacheKey).then(function(idbEntry) {
+                    if (idbEntry && idbEntry.response) {
+                        // Instant Render from L2 IndexedDB!
+                        window.MarketJobStore.abortInFlight();
+                        $('.loadingMessage').css({ display: 'none' });
+                        window.MarketJobStore.setPage(cacheKey, idbEntry.response); // Warm up L1 RAM
+                        applyMarketJobsPayload(idbEntry.response);
+                        deferred.resolve(idbEntry.response);
+
+                        // Stale-While-Revalidate: Background authoritative fetch to detect server updates
+                        executeServerFetch(queryParams, cacheKey, { isBackground: true });
                     } else {
-                        $('#marketJobLists').html(renderEnterpriseEmptyState(currentActiveTab));
+                        // Cache Miss: Live Authoritative Fetch
+                        executeServerFetch(queryParams, cacheKey, { isBackground: false, deferred: deferred });
                     }
-                    $('#span_jobMarket').html(response.total);
-                    $('#mktf_footer_number').text(response.total || 0);
-                    $('#pagination').html(response.pagination);
-                },
-                error: function(xhr, status, error) {
-                    $('.loadingMessage').css({ display: 'none' });
-                    var msg = 'Error loading jobs.';
-                    try {
-                        var resp = JSON.parse(xhr.responseText);
-                        msg = resp.message || resp.error || msg;
-                    } catch(e) {
-                        msg = xhr.status + ' ' + error;
-                    }
-                    $('#marketJobLists').html('<div class="alert alert-danger m-4">Failed to load jobs: ' + msg + '</div>');
-                    console.error('[MarketJobs AJAX Error]', xhr.status, error, xhr.responseText);
-                }
-            });
+                }).catch(function() {
+                    executeServerFetch(queryParams, cacheKey, { isBackground: false, deferred: deferred });
+                });
+            } else {
+                executeServerFetch(queryParams, cacheKey, { isBackground: false, deferred: deferred });
+            }
+
+            return deferred.promise();
         }
+
+        // ── Phase 3: Real-Time WebSocket Echo Listener for Market Job Deltas ──
+        $(document).ready(function() {
+            if (typeof window.Echo !== 'undefined') {
+                var tenantCompanyId = {{ auth()->check() ? (int) auth()->user()->company_id : 0 }};
+                if (tenantCompanyId > 0) {
+                    window.Echo.private('company.' + tenantCompanyId)
+                        .listen('.market.job.delta', function(e) {
+                            if (!e || !e.job_id) return;
+                            console.log('[MarketJobDelta] Real-time delta received for job #' + e.job_id, e);
+
+                            // 1. Update L1 RAM store
+                            if (window.MarketJobStore && typeof window.MarketJobStore.updateJobDelta === 'function') {
+                                window.MarketJobStore.updateJobDelta(e.job_id, e);
+                            }
+
+                            // 2. Update L2 IndexedDB store
+                            if (window.JeroMarketJobsDB && typeof window.JeroMarketJobsDB.updateJobDelta === 'function') {
+                                window.JeroMarketJobsDB.updateJobDelta(e.job_id, e);
+                            }
+
+                            // 3. Targeted surgical DOM patch
+                            applyJobCardDelta(e.job_id, e);
+                        });
+                }
+            }
+        });
 
 
          $('body').on('change', '#defaultCurrency', function() {
