@@ -1987,12 +1987,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ], $this->getSearchConditions($custom_search, $country)),
                         ],
                     ],
@@ -7159,7 +7153,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         array_unshift($sort, $assignmentSortScript);
 
         // Intent: Career Apply page strictly displays candidates who applied directly through the Client's Career Apply flow.
-        // Candidates sourced by an agency against a shared requirement must never appear here.
         $boolQuery = [
             'bool' => [
                 'should' => [
@@ -7170,17 +7163,12 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                                 ['term' => ['company_id' => $company_id]],
                                 ['term' => ['job_id' => $jobid]],
                                 ['term' => ['status_type' => 'DIRECT']],
-                                ['term' => ['thirdparty_company_id' => 0]],
                             ]),
                         ],
                     ],
                 ],
                 'minimum_should_match' => 1,
                 'filter' => [], // We'll add all filters here
-                'must_not' => [
-                    ['range' => ['thirdparty_company_id' => ['gt' => 0]]],
-                    ['range' => ['ClientComID' => ['gt' => 0]]],
-                ],
             ],
         ];
 
@@ -9207,12 +9195,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ], $this->getSearchConditions($custom_search, $country)),
                         ],
                     ],
