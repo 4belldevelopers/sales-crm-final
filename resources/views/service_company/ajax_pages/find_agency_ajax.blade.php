@@ -352,26 +352,9 @@
                         $id = $row->id;
 
                         $html = '';
-                        $recommendateCounter = DB::table('staffing_company_invitation')
-                            ->select('staffing_company_invitation.id')
-                            ->where('staffing_company_invitation.from_company_id', $from_company)
-                            ->where('staffing_company_invitation.to_company_id', $id)
-                            //->where('recommendation_relation.final_status', '=', 1)
-                            ->count();
+                        $matchcount = 0;
 
-                        $matchcount = DB::table('package_active');
-                        if (!empty($currentJobSkill)) {
-                            foreach ($currentJobSkill as $jskill) {
-                                $matchcount = $matchcount->orWhere(
-                                    'package_active.boostkeywords_text',
-                                    'LIKE',
-                                    "%{$jskill}%",
-                                );
-                            }
-                        }
-                        $matchcount = 0; //$row->boostkeywordCount; //$matchcount->where('package_active.company_id','=',$row->id)->count();
-
-                        $Sizecount = DB::table('users')->where('company_id', $row->id)->count();
+                        $Sizecount = $Sizecount ?? ($row->_user_size_count ?? 0);
                         $regStatus = 'UnRegistered';
                         $regStatusCss = 'text';
                         if (!empty($row->staffing_company_relation)) {

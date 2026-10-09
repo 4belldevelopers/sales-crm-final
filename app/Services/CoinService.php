@@ -131,7 +131,18 @@ class CoinService
                             'updated_at' => now(),
                         ];
 
-                        DB::table('coin_transection_logs')->insert($logData);
+                        $logId = DB::table('coin_transection_logs')->insertGetId($logData);
+
+                        // Transactional Outbox: durable outbox log and decoupled Reverb broadcast
+                        CoinOutboxService::recordAndDispatch(
+                            companyId: $companyId,
+                            logId: (int) $logId,
+                            eventType: $coinEvent->event_type,
+                            transectionType: 'debit',
+                            coins: (float) $deductionRate,
+                            balanceCoins: (float) $newBalance,
+                            eventDescription: $logData['event']
+                        );
 
                         // Invalidate and update Redis balance cache
                         try {
