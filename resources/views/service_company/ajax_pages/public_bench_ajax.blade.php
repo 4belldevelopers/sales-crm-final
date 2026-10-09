@@ -367,7 +367,15 @@
                             ->select('job_application_id')
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)
                             ->where('add_job_wise_condidates.job_application_id', '=', $row->id)->count();
-                        $isAdded = ($existingCandidatesQuery > 0);
+                        $recCounter = DB::table('rec_candidate_assign')
+                            ->where('source_jobid', '=', $jobid)
+                            ->where(function ($q) use ($row) {
+                                $q->where('source_from_id', @$row->id)
+                                  ->orWhere('source_application_id', @$row->id);
+                            })
+                            ->where('ac_status', 1)
+                            ->count();
+                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0);
                     }
                     $isRequested = (isset($requestedCandidateIds) && in_array((int) @$row->id, $requestedCandidateIds, true));
 

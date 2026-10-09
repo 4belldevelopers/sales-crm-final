@@ -605,16 +605,6 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ->flip()
             ->toArray();
 
-        // 4b. Direct candidate application in job_applications for this job
-        $directJobApps = DB::table('job_applications')
-            ->where('job_id', $jobId)
-            ->whereIn('id', $candidateIds)
-            ->pluck('id')
-            ->all();
-        foreach ($directJobApps as $dId) {
-            $existingInJobSet[$dId] = true;
-        }
-
         // 5. Job required skills (1 single query for the entire page)
         $jobRequiredSkills = DB::table('job_metronics_skills')
             ->where('job_id', $jobId)
@@ -719,9 +709,13 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         }
 
         $baseMaps['rec_assigned'] = $recAssignedSet;
+        $baseMaps['recAssignedSet'] = $recAssignedSet;
         $baseMaps['source_from_type'] = $sourceTypeMap;
+        $baseMaps['sourceTypeMap'] = $sourceTypeMap;
         $baseMaps['parent_assigned'] = $parentAssignedSet;
+        $baseMaps['parentAssignedSet'] = $parentAssignedSet;
         $baseMaps['existing_in_job'] = $existingInJobSet;
+        $baseMaps['existingCandidatesSet'] = $existingInJobSet;
         $baseMaps['job_skills'] = $jobRequiredSkills;
         $baseMaps['city_map'] = $cityMap;
         $baseMaps['country_map'] = $countryMap;
@@ -7134,15 +7128,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
                 'type' => 'number',
                 'script' => [
                     'lang' => 'painless',
-                    'source' => "
-                        if (doc.containsKey('status') && doc['status'].size() > 0 && doc['status'].value == 1) {
-                            return 1;
-                        }
-                        if (doc.containsKey('id') && doc['id'].size() > 0 && params.assignedIds.contains((int) doc['id'].value)) {
-                            return 1;
-                        }
-                        return 0;
-                    ",
+                    'source' => (! empty($assignedCandidateIds))
+                        ? "params.assignedIds.contains((int) doc['id'].value) ? 1 : 0"
+                        : '0',
                     'params' => [
                         'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
                     ],
@@ -9623,9 +9611,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         $sal_mode = request('sal_mode');
         $min_salary_currency = request('min_salary_currency');
         $app_int_outsource = request('app_int_outsource');
-        $rowMaps = $this->prepareRowMaps($data, $company_id, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
+        $rowMaps = $this->prepareSimilarCandidatesRowMaps($data, $company_id, (int) $jobid, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.dsimilar_existing_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];

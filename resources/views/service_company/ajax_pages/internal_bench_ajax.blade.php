@@ -364,6 +364,7 @@
                             ->where('source_from_id', @$row->id)
                             ->where('source_from_type', 1)
                             ->where('source_jobid', @$jobid)
+                            ->where('ac_status', 1)
                             ->count();
                         $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0);
                     }
