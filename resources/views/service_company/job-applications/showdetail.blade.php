@@ -879,7 +879,7 @@
           }
           </script>
         @else
-          <a href="javascript:void(0);" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
+          <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>

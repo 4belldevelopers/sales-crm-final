@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 /**
  * JobApplyService — High-performance V2 business logic service for Job Apply module.
@@ -802,40 +803,151 @@ class JobApplyService
             }
 
             /* Move resume session or dispatch R2 upload worker */
+            $fileUrl = null;
+            $full_name = null;
+            $mimeType = 'application/pdf';
+
             if ($resumeSession) {
-                $finalResumeUrl = app(ResumeUploadSessionService::class)->moveToCompanyPath($resumeSession);
-                DB::table('job_applications')
-                    ->where('id', $jobApplication->id)
-                    ->update(['resume' => $finalResumeUrl]);
-            } elseif ($request->hasFile('resume') || ($request->filled('uploaded_file_path') && $request->filled('resume_original_name'))) {
+                try {
+                    $finalResumeUrl = app(ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
+                    $fileUrl = $finalResumeUrl;
+                    $full_name = $resumeSession->original_filename ?? 'resume.pdf';
+                    $mimeType = $resumeSession->mime_type ?? 'application/pdf';
+                    DB::table('job_applications')
+                        ->where('id', $jobApplication->id)
+                        ->update(['resume' => $finalResumeUrl]);
+                } catch (\Throwable $se) {
+                    Log::warning('JobApplyService: resumeSession moveToCompanyPath failed: '.$se->getMessage());
+                }
+            } elseif ($request->hasFile('resume') || $request->filled('uploaded_file_path') || $request->filled('resume_original_name') || session('resume_temp_path')) {
                 $companyNameR2 = DB::table('companies')->where('id', $company_id)->value('company_name');
                 $companyNameR2 = strtolower(trim($companyNameR2 ?? 'unknown'));
                 $companyNameR2 = preg_replace('/[^a-z0-9_-]/i', '_', $companyNameR2);
                 $companyNameRTwo = $companyNameR2.'_'.$company_id;
 
-                $tempPath = $request->input('uploaded_file_path');
-                $full_name = $request->input('resume_original_name');
-                if ($tempPath && $full_name) {
-                    // Intent: Generate candidate-specific unique R2 path synchronously before queue dispatch to prevent non-unique filename collisions in async queues.
-                    $year = date('Y');
-                    $month = date('m');
+                $tempPath = $request->input('uploaded_file_path') ?: session('resume_temp_path');
+                $full_name = $request->input('resume_original_name') ?: session('resume_original_name');
+
+                $year = date('Y');
+                $month = date('m');
+
+                if ($request->hasFile('resume')) {
+                    $uploadedFile = $request->file('resume');
+                    $full_name = $full_name ?: $uploadedFile->getClientOriginalName();
                     $baseName = pathinfo($full_name, PATHINFO_FILENAME);
-                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION));
+                    $ext = strtolower($uploadedFile->getClientOriginalExtension() ?: 'pdf');
                     $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
-                    $uuidSuffix = (string) \Illuminate\Support\Str::uuid();
+                    $uuidSuffix = (string) Str::uuid();
                     $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
                     $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
                     $fileUrl = "https://file.jero.works/{$r2Path}";
 
-                    UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)
-                        ->onConnection('emails');
+                    try {
+                        Storage::disk('r2')->put($r2Path, file_get_contents($uploadedFile->getRealPath()));
+                    } catch (\Throwable $putEx) {
+                        Log::warning('JobApplyService: Direct R2 file put failed: '.$putEx->getMessage());
+                    }
+
+                    $mimeType = match ($ext) {
+                        'pdf' => 'application/pdf',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        default => 'application/octet-stream',
+                    };
+
+                    DB::table('job_applications')
+                        ->where('id', $jobApplication->id)
+                        ->update(['resume' => $fileUrl]);
+                } elseif ($tempPath) {
+                    $full_name = $full_name ?: ($request->input('full_name') ? $request->input('full_name').'_resume.pdf' : basename($tempPath));
+                    $baseName = pathinfo($full_name, PATHINFO_FILENAME);
+                    $ext = strtolower(pathinfo($tempPath, PATHINFO_EXTENSION) ?: pathinfo($full_name, PATHINFO_EXTENSION) ?: 'pdf');
+                    $safeBaseName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $baseName);
+                    $uuidSuffix = (string) Str::uuid();
+                    $uniqueFileName = "{$jobApplication->id}_{$safeBaseName}_{$uuidSuffix}.{$ext}";
+                    $r2Path = "Companies/{$companyNameRTwo}/Resumes/{$year}/{$month}/{$uniqueFileName}";
+                    $fileUrl = "https://file.jero.works/{$r2Path}";
+
+                    $mimeType = match ($ext) {
+                        'pdf' => 'application/pdf',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        default => 'application/octet-stream',
+                    };
+
+                    // Synchronous move inside Cloudflare R2
+                    $movedSync = false;
+                    try {
+                        if (Storage::disk('r2')->exists($tempPath)) {
+                            Storage::disk('r2')->copy($tempPath, $r2Path);
+                            Storage::disk('r2')->delete($tempPath);
+                            $movedSync = true;
+                        }
+                    } catch (\Throwable $copyEx) {
+                        Log::warning('JobApplyService: Direct R2 copy failed: '.$copyEx->getMessage());
+                    }
+
+                    if (! $movedSync) {
+                        // Dispatch async fallback worker
+                        UploadResumeToTestRTwo::dispatch($tempPath, $full_name, $jobApplication->id, $companyNameRTwo, $year, $month, $r2Path)
+                            ->onConnection('emails');
+                    }
+
                     DB::table('job_applications')
                         ->where('id', $jobApplication->id)
                         ->update(['resume' => $fileUrl]);
                 }
             }
 
-            if (empty($request->input('resumeCheck')) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path')) {
+            /* Persist resume to documents and resume_assets tables for universal ATS & listing retrieval */
+            if (! empty($fileUrl)) {
+                try {
+                    $resumeAssetId = DB::table('resume_assets')->insertGetId([
+                        'company_id' => (int) $company_id,
+                        'candidate_id' => (int) $jobApplication->id,
+                        'upload_session_id' => $resumeSession?->uuid ?? null,
+                        'object_key' => (string) $fileUrl,
+                        'original_filename' => (string) ($full_name ?: 'resume.pdf'),
+                        'mime_type' => $mimeType,
+                        'file_size' => 0,
+                        'checksum_sha256' => null,
+                        'version' => 1,
+                        'status' => 'ACTIVE',
+                        'parser_status' => $request->input('parser_status', 'BYPASSED'),
+                        'parser_version' => $request->input('parser_version', null),
+                        'created_at' => now(),
+                        'attached_at' => now(),
+                    ]);
+
+                    if ($resumeAssetId) {
+                        DB::table('job_applications')
+                            ->where('id', $jobApplication->id)
+                            ->update(['current_resume_id' => $resumeAssetId]);
+                    }
+                } catch (\Throwable $rae) {
+                    Log::warning('JobApplyService: resume_assets insert fallback: '.$rae->getMessage());
+                }
+
+                try {
+                    DB::table('documents')->updateOrInsert(
+                        [
+                            'documentable_type' => 'App\JobApplication',
+                            'documentable_id' => $jobApplication->id,
+                            'name' => 'Resume',
+                        ],
+                        [
+                            'hashname' => $fileUrl,
+                            'company_id' => $company_id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]
+                    );
+                } catch (\Throwable $docEx) {
+                    Log::warning('JobApplyService: documents insert fallback: '.$docEx->getMessage());
+                }
+            }
+
+            if (empty($request->input('resumeCheck')) && ! $resumeSession && ! $request->hasFile('resume') && ! $request->filled('uploaded_file_path') && ! session('resume_temp_path')) {
                 DB::table('job_applications')
                     ->where('id', $jobApplication->id)
                     ->update(['resume' => '']);

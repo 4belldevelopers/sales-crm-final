@@ -2381,6 +2381,8 @@ textarea.has-validation-error:focus,
             {{-- v2 upload session UUID — populated by resume-presign.js when browser_upload flag is ON --}}
             <input type="hidden" name="resume_session_uuid" id="resume_session_uuid" value="">
             <input type="hidden" name="resume_upload_method" id="resume_upload_method" value="">
+            <input type="hidden" name="uploaded_file_path" id="uploaded_file_path" value="">
+            <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
             {{-- V4 Remediation hidden fields --}}
             <input type="hidden" name="client_submission_uuid" id="client_submission_uuid" value="">
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
@@ -2626,8 +2628,6 @@ textarea.has-validation-error:focus,
               </div>
               <div class="col-lg-8 col-xl-8">
                 {{-- <input class="select-file w-100 mb-2 dropzone bg-light " accept=".png,.jpg,.jpeg,.pdf,.doc,.docx,.xls,.xlsx,.rtf" type="file" > --}}
-                <input type="hidden" name="uploaded_file_path" id="uploaded_file_path">
-                <input type="hidden" name="resume_original_name" id="resume_original_name" value="">
                 <div class="fv-row"> <span class="form-text text-muted d-block">*Please upload the resume (Max file size 2MB). Allowed file types: PDF or Word.</span> </div>
                 <!--end::Input group-->
               </div>
@@ -7651,9 +7651,15 @@ var KTAddCandidate = function () {
             }
 
             var formData = new FormData($('#createForm')[0]);
-            // Strip binary resume file if already uploaded to R2
-            if ($('#resume_session_uuid').val() || $('#uploaded_file_path').val()) {
+            var upPath = $('#uploaded_file_path').val() ? String($('#uploaded_file_path').val()).trim() : '';
+            var sessUuid = $('#resume_session_uuid').val() ? String($('#resume_session_uuid').val()).trim() : '';
+            var origName = $('#resume_original_name').val() ? String($('#resume_original_name').val()).trim() : '';
+
+            // Strip binary resume file only if Cloudflare R2 upload already completed
+            if (sessUuid || upPath) {
                 if (formData.delete) { formData.delete('resume'); }
+                if (upPath) { formData.set('uploaded_file_path', upPath); }
+                if (origName) { formData.set('resume_original_name', origName); }
             }
 
             var candidateEditId = '{{ @$application->id ?: @$appId }}';
