@@ -36,7 +36,8 @@ use Illuminate\Support\Facades\Validator;
 class JobApplyService
 {
     public function __construct(
-        protected ElasticService $elasticService
+        protected ElasticService $elasticService,
+        protected JobApplicationCapacityService $capacityService
     ) {}
 
     /**
@@ -46,6 +47,27 @@ class JobApplyService
      */
     public function submitApplication(Request $request)
     {
+        /* Intent: Fast zero-cost bot trap via hidden honeypot field */
+        $honeypot = config('career.honeypot_field', 'career_applicant_website_url');
+        if ($request->filled($honeypot)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'Invalid submission detected.',
+            ]);
+        }
+
+        $jobId = (int) $request->input('job_id');
+
+        /* Intent: Fast O(1) circuit-breaker capacity check before any validation, locks, or ES/DB queries */
+        if ($jobId > 0 && $this->capacityService->isApplicationsClosed($jobId)) {
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'This position has received the maximum number of applications and is no longer accepting new applications.',
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'full_name' => [
                 'required',
@@ -95,10 +117,13 @@ class JobApplyService
         }
 
         $company_id = (int) $request->input('company_id');
+        $jobId = (int) $request->input('job_id');
+        if ($company_id <= 0 && $jobId > 0) {
+            $company_id = (int) DB::table('jobs')->where('id', $jobId)->value('company_id');
+        }
         $email = strtolower(trim((string) $request->input('email')));
         $phone = trim((string) $request->input('phone'));
         $normalizedPhone = preg_replace('/[^0-9]/', '', $phone);
-        $jobId = (int) $request->input('job_id');
         $submissionToken = trim((string) $request->input('submission_token'));
 
         /* Intent: Phase 5 atomic submission token lock (60s TTL) to prevent concurrent double-clicks */
@@ -167,6 +192,47 @@ class JobApplyService
                 }
             })
             ->first(['id', 'email', 'phone']);
+
+        if (! $existingApplication) {
+            /* Intent: Authoritative check against App Tracker submissions (add_job_wise_condidates / rec_candidate_assign) for this job */
+            $existingApplication = DB::table('job_applications')
+                ->whereNull('job_applications.deleted_at')
+                ->where(function ($query) use ($email, $phone, $normalizedPhone) {
+                    $query->where('job_applications.email', $email);
+                    if (! empty($phone)) {
+                        $query->orWhere('job_applications.phone', $phone);
+                    }
+                    if (! empty($normalizedPhone) && $normalizedPhone !== $phone) {
+                        $query->orWhere('job_applications.phone', $normalizedPhone);
+                    }
+                })
+                ->where(function ($q) use ($jobId, $company_id) {
+                    $q->whereExists(function ($sub) use ($jobId, $company_id) {
+                        $sub->select(DB::raw(1))
+                            ->from('add_job_wise_condidates')
+                            ->whereColumn('add_job_wise_condidates.job_application_id', 'job_applications.id')
+                            ->where('add_job_wise_condidates.job_id', $jobId)
+                            ->where(function ($compQuery) use ($company_id) {
+                                $compQuery->where('add_job_wise_condidates.company_id', $company_id)
+                                    ->orWhere('add_job_wise_condidates.thirdparty_company_id', $company_id);
+                            });
+                    })->orWhereExists(function ($sub) use ($jobId, $company_id) {
+                        $sub->select(DB::raw(1))
+                            ->from('rec_candidate_assign')
+                            ->where(function ($candQ) {
+                                $candQ->whereColumn('rec_candidate_assign.source_application_id', 'job_applications.id')
+                                    ->orWhereColumn('rec_candidate_assign.source_from_id', 'job_applications.id')
+                                    ->orWhereColumn('rec_candidate_assign.parent_id', 'job_applications.id');
+                            })
+                            ->where('rec_candidate_assign.source_jobid', $jobId)
+                            ->where(function ($compQuery) use ($company_id) {
+                                $compQuery->where('rec_candidate_assign.source_company_id', $company_id)
+                                    ->orWhere('rec_candidate_assign.source_from_company_id', $company_id);
+                            });
+                    });
+                })
+                ->first(['job_applications.id', 'job_applications.email', 'job_applications.phone']);
+        }
 
         if ($existingApplication) {
             if ($lockKey) {
@@ -404,6 +470,22 @@ class JobApplyService
 
         $esSkillRecords = [];
 
+        /* Intent: Atomically reserve application slot against 1,000 max limit to prevent concurrency overshoot */
+        $slotReserved = false;
+        $reservedSlot = $this->capacityService->reserveSlot($jobId);
+        if (! $reservedSlot['success']) {
+            if ($lockKey) {
+                Cache::forget($lockKey);
+            }
+
+            return Reply::dataOnly([
+                'status' => 'error',
+                'msgType' => 'warning',
+                'message' => 'This position has received the maximum number of applications and is no longer accepting new applications.',
+            ]);
+        }
+        $slotReserved = true;
+
         DB::beginTransaction();
         try {
             $jobApplication->save();
@@ -419,6 +501,10 @@ class JobApplyService
 
                 if ($claimed === 0) {
                     DB::rollBack();
+                    if ($slotReserved) {
+                        $this->capacityService->releaseSlot($jobId);
+                        $slotReserved = false;
+                    }
 
                     return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                         'message' => 'Resume session was already claimed. Please upload the resume again.']);
@@ -434,6 +520,10 @@ class JobApplyService
                         ->where('status', ResumeUploadStatus::Completed->value)
                         ->update(['status' => ResumeUploadStatus::Uploaded->value, 'updated_at' => now()]);
                     DB::rollBack();
+                    if ($slotReserved) {
+                        $this->capacityService->releaseSlot($jobId);
+                        $slotReserved = false;
+                    }
 
                     return Reply::dataOnly(['status' => 'error', 'msgType' => 'warning',
                         'message' => 'Resume file not found in storage. Please upload the resume again.']);
@@ -655,6 +745,7 @@ class JobApplyService
             }
 
             DB::commit();
+            $slotReserved = false;
 
             /* Intent: Store Redis atomic deduplication key (300s TTL) post-commit */
             Cache::put($dedupKey, 1, 86400 * 30);
@@ -701,6 +792,10 @@ class JobApplyService
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            if (isset($slotReserved) && $slotReserved) {
+                $this->capacityService->releaseSlot($jobId);
+                $slotReserved = false;
+            }
             if (isset($lockKey) && $lockKey) {
                 Cache::forget($lockKey);
             }
@@ -760,7 +855,15 @@ class JobApplyService
                 ['term' => ['jobId' => $jobId]],
             ];
             if ($companyId > 0) {
-                $candFilterQueries[] = ['term' => ['companyId' => $companyId]];
+                $candFilterQueries[] = [
+                    'bool' => [
+                        'should' => [
+                            ['term' => ['company_id' => $companyId]],
+                            ['term' => ['ClientComID' => $companyId]],
+                        ],
+                        'minimum_should_match' => 1,
+                    ],
+                ];
             }
 
             $paramsCandidates = [

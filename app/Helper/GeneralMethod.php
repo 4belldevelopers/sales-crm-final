@@ -12366,30 +12366,9 @@ END:VCALENDAR";
         foreach ($applications as $application) {
             $wiseId = $application->id;
 
-            // Intent: Career Apply candidates and Agency-sourced candidates must remain strictly logically and physically separated.
-            // Candidates sourced by an agency (thirdparty_company_id > 0, status_type != 'DIRECT', or assigned via recommendation)
-            // must NEVER be indexed into ELASTIC_CAREER_APPLY. If a document previously existed, purge it immediately.
-            $isAgencySourced = ((int) $application->thirdparty_company_id > 0)
-                || ((string) $application->status_type !== 'DIRECT')
-                || DB::table('add_job_wise_condidates')
-                    ->where('job_application_id', $application->id)
-                    ->where('thirdparty_company_id', '>', 0)
-                    ->exists();
-
-            if ($isAgencySourced) {
-                try {
-                    if ($elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
-                        if ($elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => $wiseId])) {
-                            $elasticService->getClient()->delete([
-                                'index' => ELASTIC_CAREER_APPLY,
-                                'id' => $wiseId,
-                                'refresh' => true,
-                            ]);
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning("careerStore(): Purging agency candidate {$wiseId} from ELASTIC_CAREER_APPLY failed: {$e->getMessage()}");
-                }
+            // Only direct career applications belong in ELASTIC_CAREER_APPLY.
+            // Other sources (agency, bench, etc.) are indexed into their respective indices (ELASTIC_CANDIDATES, etc.).
+            if ((string) $application->status_type !== 'DIRECT') {
                 continue;
             }
 
@@ -13133,10 +13112,22 @@ END:VCALENDAR";
             ->select('id as candidate_id');
 
         if ($companyId) {
-            $q1->where('company_id', $companyId);
-            $q2->where('source_company_id', $companyId);
-            $q3->where('source_company_id', $companyId);
-            $q4->where('source_company_id', $companyId);
+            $q1->where(function ($sub) use ($companyId) {
+                $sub->where('company_id', $companyId)
+                    ->orWhere('thirdparty_company_id', $companyId);
+            });
+            $q2->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
+            $q3->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
+            $q4->where(function ($sub) use ($companyId) {
+                $sub->where('source_company_id', $companyId)
+                    ->orWhere('source_from_company_id', $companyId);
+            });
             $q5->where('company_id', $companyId);
         }
 
@@ -13346,12 +13337,6 @@ END:VCALENDAR";
                                 ['term' => ['condidate_type' => 'other']],
                                 ['range' => ['ClientComID' => ['gt' => 0]]],
                                 ['range' => ['job_id' => ['gt' => 0]]],
-                            ], [
-                                ['bool' => [
-                                    'must_not' => [
-                                        ['terms' => ['job_master_status_id' => [8, 9]]],
-                                    ],
-                                ]],
                             ]),
                         ],
                     ],
@@ -13859,7 +13844,6 @@ END:VCALENDAR";
         // ####################################  START  CAREER COUNTER
 
         // Intent: Career Apply counter strictly counts direct career applications for this client and job.
-        // Agency-sourced candidates (thirdparty_company_id > 0, ClientComID > 0) are strictly excluded.
         $boolQueryCareer = [
             'bool' => [
                 'should' => [
@@ -13869,17 +13853,13 @@ END:VCALENDAR";
                                 ['term' => ['company_id' => $company_id]],
                                 ['term' => ['job_id' => $id]],
                                 ['term' => ['status_type' => 'DIRECT']],
-                                ['term' => ['thirdparty_company_id' => 0]],
                             ],
                         ],
                     ],
                 ],
                 'minimum_should_match' => 1,
                 'filter' => [],
-                'must_not' => [
-                    ['range' => ['thirdparty_company_id' => ['gt' => 0]]],
-                    ['range' => ['ClientComID' => ['gt' => 0]]],
-                ],
+                'must_not' => [],
             ],
         ];
 

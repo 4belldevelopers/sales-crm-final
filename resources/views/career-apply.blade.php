@@ -2305,7 +2305,11 @@ textarea.has-validation-error:focus,
         'account' => @$account,
     ])
     <div class="d-flex align-items-center py-1 candidate-header-actions">
-      <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true" style="color: #ffffff !important;"></i><span>Submit Application</span></button>
+      @if(!empty($applications_closed))
+        <button type="button" class="btn btn-secondary disabled candidate-submit-action" disabled style="opacity: 0.8; cursor: not-allowed; background-color: #E2E8F0 !important; color: #64748B !important; border-color: #CBD5E1 !important;"><i class="fa-solid fa-lock me-2" aria-hidden="true" style="color: #64748B !important;"></i><span>Applications Closed</span></button>
+      @else
+        <button type="button" name="save" id="save-form" value="save" class="btn btn-primary talent-topbar-primary candidate-submit-action"><i class="fa-solid fa-paper-plane me-2" aria-hidden="true" style="color: #ffffff !important;"></i><span>Submit Application</span></button>
+      @endif
     </div>
   </div>
   <!--end::Container-->
@@ -2321,9 +2325,20 @@ textarea.has-validation-error:focus,
        
         <!-- MAIN -->
         <main class="mc">
+          @if(!empty($applications_closed))
+          <div class="alert alert-warning d-flex align-items-center p-5 mb-5 shadow-sm" role="alert" style="background-color: #FFF7ED; border: 1px solid #FFEDD5; border-left: 5px solid #F97316; border-radius: 8px;">
+            <i class="fa-solid fa-circle-exclamation fs-2hx text-warning me-4" style="color: #F97316 !important;"></i>
+            <div class="d-flex flex-column">
+              <h4 class="mb-1 text-dark fw-bolder" style="font-size: 1.1rem; color: #9A3412 !important;">Applications Closed</h4>
+              <span class="text-gray-700 fs-6" style="color: #7C2D12 !important;">This position has received the maximum number of applications and is no longer accepting new applications.</span>
+            </div>
+          </div>
+          @endif
           <!-- Form -->
           <form class="ajax-form" method="POST" id="createForm" name="createForm" enctype="multipart/form-data">
             @csrf
+            {{-- Honeypot bot protection field (invisible to humans) --}}
+            <input type="text" name="{{ config('career.honeypot_field', 'career_applicant_website_url') }}" value="" style="display:none !important; position:absolute !important; left:-9999px !important;" tabindex="-1" autocomplete="off" aria-hidden="true" />
             <input type="hidden" name="company_id" value="{{ @$company_id }}" id="company_id" />
             <input type="hidden" name="job_id" value="{{ @$jobId }}" id="job_id" />
             <input type="hidden" name="appId" value="{{ @$appId }}" id="appId" />
@@ -7662,6 +7677,15 @@ document.addEventListener('keydown', function (e) {
         }
     }
 });
+
+@if(!empty($applications_closed))
+$(function() {
+    $('#createForm input:not([type="hidden"]), #createForm select, #createForm textarea').prop('disabled', true);
+    $('#save-form, #update-form').prop('disabled', true).addClass('disabled');
+    $('#uploadBox').css({'pointer-events': 'none', 'opacity': '0.5'});
+    $('#dropzone').css({'pointer-events': 'none', 'opacity': '0.5'});
+});
+@endif
 function re_test(text){
     // Deprecated: Resume parsing is executed 100% client-side via JeroClientParser.
     // Zero server POST requests to extract.resume-job-applications or file.unset.
