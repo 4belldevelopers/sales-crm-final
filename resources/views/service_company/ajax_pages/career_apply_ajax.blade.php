@@ -340,18 +340,23 @@
             </td>
             <td>
                 @php
-                    $isAdded = ((int) (@$row->status ?? 0) === 1) || (isset($assignedCandidateIds) && in_array((int) @$row->id, $assignedCandidateIds, true));
+                    $candId = (int) (@$row->id ?? 0);
+                    $isAdded = (isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true));
                     if (! $isAdded && ! isset($assignedCandidateIds)) {
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
                             ->select('job_application_id')
                             ->where('add_job_wise_condidates.job_id', '=', $jobid)
-                            ->where('add_job_wise_condidates.job_application_id', '=', @$row->id)->count();
+                            ->where('add_job_wise_condidates.job_application_id', '=', $candId)->count();
                         $recCounter = DB::table('rec_candidate_assign')
                             ->select('id')
-                            ->where('source_from_id', @$row->id)
-                            ->where('source_jobid', @$jobid)
+                            ->where('source_jobid', '=', $jobid)
+                            ->where(function ($q) use ($candId) {
+                                $q->where('source_from_id', $candId)
+                                  ->orWhere('source_application_id', $candId);
+                            })
+                            ->where('ac_status', 1)
                             ->count();
-                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0 || (int) @$row->status === 1);
+                        $isAdded = ($existingCandidatesQuery > 0 || $recCounter > 0);
                     }
 
                     if ($isAdded) {

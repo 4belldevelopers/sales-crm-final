@@ -13067,10 +13067,10 @@ END:VCALENDAR";
      * added, or submitted to the specified job.
      * Scoped strictly to (candidate_id + CURRENT job_id) across:
      * 1. add_job_wise_condidates (job_id = $jobId)
-     * 2. rec_candidate_assign (source_jobid = $jobId -> source_from_id, source_application_id, parent_id)
-     * 3. job_applications (job_id = $jobId -> id)
+     * 2. rec_candidate_assign (source_jobid = $jobId -> source_from_id, source_application_id, parent_id with ac_status = 1)
      *
      * Candidates assigned to other jobs are never excluded.
+     * Raw career applications (job_applications without App Tracker assignment) are not treated as assigned.
      *
      * @return int[]
      */
@@ -13107,10 +13107,6 @@ END:VCALENDAR";
             ->where('parent_id', '>', 0)
             ->select('parent_id as candidate_id');
 
-        $q5 = DB::table('job_applications')
-            ->where('job_id', $jobId)
-            ->select('id as candidate_id');
-
         if ($companyId) {
             $q1->where(function ($sub) use ($companyId) {
                 $sub->where('company_id', $companyId)
@@ -13128,11 +13124,10 @@ END:VCALENDAR";
                 $sub->where('source_company_id', $companyId)
                     ->orWhere('source_from_company_id', $companyId);
             });
-            $q5->where('company_id', $companyId);
         }
 
         return DB::query()
-            ->fromSub($q1->union($q2)->union($q3)->union($q4)->union($q5), 'assigned_cands')
+            ->fromSub($q1->union($q2)->union($q3)->union($q4), 'assigned_cands')
             ->pluck('candidate_id')
             ->map(fn ($id) => (int) $id)
             ->filter(fn ($id) => $id > 0)

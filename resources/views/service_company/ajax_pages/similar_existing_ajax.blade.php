@@ -866,6 +866,9 @@
                         $source_from_type = $rowMaps['source_from_type'][$candId] ?? 0;
                         $isParentAssigned = isset($rowMaps['parent_assigned'][$candId]);
                         $isExistingInJob = isset($rowMaps['existing_in_job'][$candId]);
+                        if (isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true)) {
+                            $isExistingInJob = true;
+                        }
 
                         if ($isRecAssigned || $isParentAssigned || $isExistingInJob) {
                             $html = '<div class="d-flex flex-column"> 
@@ -878,7 +881,7 @@
                                         <a href="javascript:void(0);" class="btn btn-sm btn-primary add_to_inreview" data-row-from="existing" data-row-source_from_type="' . @$source_from_type . '" data-row-id="' . @$row->candidate_id . '" data-row-wiseId="' . @$row->id . '" data-row-jobid="' . @$jobid . '">
                                             Add to Job
                                         </a> 
-                                    </div>';
+                                     </div>';
                         }
                     } else {
                         // Safe fallback to legacy queries if rowMaps is not provided
@@ -889,6 +892,7 @@
                                 $q->where('source_from_id', @$row->candidate_id)
                                   ->orWhere('source_application_id', @$row->candidate_id);
                             })
+                            ->where('ac_status', 1)
                             ->count();
 
                         $source_from_type = 0;
@@ -919,6 +923,7 @@
                             ->where('source_jobid', '=', $jobid)
                             ->whereIn('source_from_type', [1, 2])
                             ->where('parent_id', '=', @$row->candidate_id)
+                            ->where('ac_status', 1)
                             ->count();
 
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
@@ -926,12 +931,7 @@
                             ->where('job_application_id', '=', $row->candidate_id)
                             ->count();
 
-                        $directJobApp = DB::table('job_applications')
-                            ->where('job_id', '=', $jobid)
-                            ->where('id', '=', $row->candidate_id)
-                            ->count();
-
-                        if ($recCounter > 0 || $parent_conter > 0 || $existingCandidatesQuery > 0 || $directJobApp > 0) {
+                        if ($recCounter > 0 || $parent_conter > 0 || $existingCandidatesQuery > 0) {
                             $html = '<div class="d-flex flex-column"> 
                                         <button type="button" class="btn btn-sm" disabled style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:default;display:inline-flex;align-items:center;gap:5px;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added
