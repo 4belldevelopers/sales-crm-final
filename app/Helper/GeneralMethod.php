@@ -13137,6 +13137,50 @@ END:VCALENDAR";
     }
 
     /**
+     * Intent: Retrieves all normalized emails for candidates assigned to the specified job
+     * (via add_job_wise_condidates or rec_candidate_assign).
+     * Used by Similar Candidates recommendation logic to exclude candidates across all duplicate/variant profiles.
+     * Tenancy Note: Tenant-scoped through getJobAssignedCandidateIds() ($companyId).
+     *
+     * @param  int  $jobId
+     * @param  int|null  $companyId
+     * @param  int[]  $candidateIds  Optional precomputed candidate IDs
+     * @return string[]
+     */
+    public static function getJobAssignedCandidateEmails(int $jobId, ?int $companyId = null, array $candidateIds = []): array
+    {
+        if ($jobId <= 0) {
+            return [];
+        }
+
+        if (empty($candidateIds)) {
+            $candidateIds = self::getJobAssignedCandidateIds($jobId, $companyId);
+        }
+
+        if (empty($candidateIds)) {
+            return [];
+        }
+
+        $rawEmails = DB::table('job_applications')
+            ->whereIn('id', $candidateIds)
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->pluck('email')
+            ->toArray();
+
+        $emails = [];
+        foreach ($rawEmails as $email) {
+            $e = trim((string) $email);
+            if ($e !== '') {
+                $emails[] = $e;
+                $emails[] = strtolower($e);
+            }
+        }
+
+        return array_values(array_unique($emails));
+    }
+
+    /**
      * Get candidate IDs that have a pending Bench Talent Request (ac_status = 0)
      * for the specified job.
      *
@@ -13178,6 +13222,7 @@ END:VCALENDAR";
 
         foreach ($cIds as $cId) {
             if ($cId > 0) {
+                Cache::forget("custome_count_all:v4:{$cId}:{$jobId}");
                 Cache::forget("custome_count_all:v3:{$cId}:{$jobId}");
                 Cache::forget("custome_count_all:{$cId}:{$jobId}");
             }
@@ -13200,7 +13245,7 @@ END:VCALENDAR";
 
         $company_id = (int) (auth()->user()->company_id ?? 0);
         $jobId = (int) $id;
-        $cacheKey = "custome_count_all:v3:{$company_id}:{$jobId}";
+        $cacheKey = "custome_count_all:v4:{$company_id}:{$jobId}";
 
         if (isset($requestMemo[$cacheKey])) {
             return $requestMemo[$cacheKey];
@@ -13386,7 +13431,37 @@ END:VCALENDAR";
             ],
         ];
 
-        // Do not remove candidates already assigned to the current job; they are included and ordered after unassigned candidates.
+        // Similar Candidates recommendation logic:
+        // Show only candidates who are already added to at least one OTHER job but are NOT added to the current job.
+        // 1. Exclude the current job ID at the data/query level
+        $boolQuery['bool']['must_not'][] = ['term' => ['jobId' => (int) $id]];
+        $boolQuery['bool']['must_not'][] = ['term' => ['job_id' => (int) $id]];
+
+        // 2. Exclude any candidates already assigned to the current job (by candidate_id and email)
+        $assignedCandidateIds = self::getJobAssignedCandidateIds($id, $company_id);
+        $assignedCandidateEmails = self::getJobAssignedCandidateEmails($id, $company_id, $assignedCandidateIds);
+
+        if (! empty($assignedCandidateIds)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'candidate_id' => array_values(array_map('intval', $assignedCandidateIds)),
+                ],
+            ];
+        }
+        if (! empty($assignedCandidateEmails)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'email' => array_values($assignedCandidateEmails),
+                ],
+            ];
+        }
+
+        // 3. Ensure candidates are added to at least one job (jobId > 0)
+        $boolQuery['bool']['filter'][] = [
+            'range' => [
+                'jobId' => ['gt' => 0],
+            ],
+        ];
 
         if (! empty($location)) {
 
