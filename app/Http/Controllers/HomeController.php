@@ -1646,9 +1646,10 @@ class HomeController extends Controller
                     $jobHit['time_ago'] = Carbon::parse($createdAt)->diffForHumans(['parts' => 1]);
 
                     /* Recommendation and company display */
-                    $matchRec = collect($jobHit['recommendation_relation'] ?? [])->first(function($item) use ($company_id){
+                    $matchRec = collect($jobHit['recommendation_relation'] ?? [])->first(function ($item) use ($company_id) {
                         $fromCo = is_array($item) ? ($item['from_company_id'] ?? null) : ($item->from_company_id ?? null);
-                        $toCo   = is_array($item) ? ($item['to_company_id'] ?? null)   : ($item->to_company_id   ?? null);
+                        $toCo = is_array($item) ? ($item['to_company_id'] ?? null) : ($item->to_company_id ?? null);
+
                         return $fromCo == $company_id || $toCo == $company_id;
                     });
                     $matchToCo = is_array($matchRec) ? ($matchRec['to_company_id'] ?? null) : ($matchRec->to_company_id ?? null);
@@ -1664,15 +1665,15 @@ class HomeController extends Controller
 
                     /* Work & Employment Types */
                     $jobHit['work_mode'] = (($jobHit['work_type'] ?? '') === 'yes') ? 'Remote' : 'Hybrid';
-                    $jobHit['emp_type']  = (($jobHit['employment_type'] ?? 0) == 1) ? 'Contract' : 'Full-time';
+                    $jobHit['emp_type'] = (($jobHit['employment_type'] ?? 0) == 1) ? 'Contract' : 'Full-time';
 
                     /* Salary and Experience presentation formatting */
                     $minSalModeStr = strtoupper(mb_substr($salaryMode[$jobHit['min_sal_mode'] ?? 0] ?? '', 0, 1));
                     $maxSalModeStr = strtoupper(mb_substr($salaryMode[$jobHit['max_sal_mode'] ?? 0] ?? '', 0, 1));
-                    $minCurStr     = strip_tags($currencySymbole[$jobHit['min_salary_currency'] ?? 0] ?? '₹');
-                    $maxCurStr     = strip_tags($currencySymbole[$jobHit['max_salary_currency'] ?? 0] ?? '₹');
-                    $minSalFmt     = GeneralMethod::thousandsCurrencyFormat($jobHit['min_salary'] ?? 0);
-                    $maxSalFmt     = GeneralMethod::thousandsCurrencyFormat($jobHit['max_salary'] ?? 0);
+                    $minCurStr = strip_tags($currencySymbole[$jobHit['min_salary_currency'] ?? 0] ?? '₹');
+                    $maxCurStr = strip_tags($currencySymbole[$jobHit['max_salary_currency'] ?? 0] ?? '₹');
+                    $minSalFmt = GeneralMethod::thousandsCurrencyFormat($jobHit['min_salary'] ?? 0);
+                    $maxSalFmt = GeneralMethod::thousandsCurrencyFormat($jobHit['max_salary'] ?? 0);
 
                     $jobHit['min_sal_mode_str'] = $minSalModeStr;
                     $jobHit['max_sal_mode_str'] = $maxSalModeStr;
@@ -1680,8 +1681,8 @@ class HomeController extends Controller
                     $jobHit['max_cur_sym'] = $maxCurStr;
                     $jobHit['min_salary_fmt'] = $minSalFmt;
                     $jobHit['max_salary_fmt'] = $maxSalFmt;
-                    $jobHit['has_salary'] = (!empty($jobHit['min_salary']) || !empty($jobHit['max_salary']));
-                    $jobHit['has_exp'] = (!empty($jobHit['min_exp']) || !empty($jobHit['max_exp']));
+                    $jobHit['has_salary'] = (! empty($jobHit['min_salary']) || ! empty($jobHit['max_salary']));
+                    $jobHit['has_exp'] = (! empty($jobHit['min_exp']) || ! empty($jobHit['max_exp']));
                 }
                 unset($jobHit);
             }
@@ -1838,13 +1839,12 @@ class HomeController extends Controller
                 ->orderBy('client_location_jobs.id', 'DESC')
                 ->first();
 
+            /* Intent: Public career apply job skills list scoped strictly to target job and tenant company; never join candidate exp during fresh application flow to prevent cross-candidate data leakage */
             $jobSkill = DB::table('job_metronics_skills')
-                ->leftJoin('candidate_job_skill_exp', function ($join) {
-                    $join->on('candidate_job_skill_exp.job_skill_id', '=', 'job_metronics_skills.id');
-                })
-                ->select('job_metronics_skills.*', 'candidate_job_skill_exp.skill_value')
+                ->select('job_metronics_skills.*')
                 ->where('job_metronics_skills.job_id', '=', $jobId)
-                ->groupBy('job_metronics_skills.id')
+                ->where('job_metronics_skills.company_id', '=', $company_id)
+                ->orderBy('job_metronics_skills.id', 'ASC')
                 ->get();
 
             return compact('jobDetail', 'job_additional_detail', 'jobLocation', 'jobSkill');
@@ -5736,13 +5736,12 @@ class HomeController extends Controller
     public function candidateIndexElastic(Request $request)
     {
 
-
         $add_job_wise_condidates = tenant_table('add_job_wise_condidates')->select('id', 'job_id')->orderByDesc(column: 'created_at')->limit(50)->get();
 
         foreach ($add_job_wise_condidates as $add_job_wise) {
             GeneralMethod::JobApplicationsAddEditUpload($add_job_wise->id);
         }
-         dd("dhjfhjf");
+        dd('dhjfhjf');
 
         $mapping = $this->elasticService->getClient()->indices()->getMapping([
             'index' => ELASTIC_CANDIDATES,
@@ -13608,7 +13607,6 @@ class HomeController extends Controller
      * Security: Generates stateless cryptographic HMAC signature (_sig) for server-side trust validation.
      * Compatibility: Returns canonical object schema when format=canonical; returns string array for legacy Tagify callers.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function citySuggestions(Request $request)
@@ -13616,7 +13614,7 @@ class HomeController extends Controller
         if (! $request->has('q')) {
             return response()->json(['error' => 'No query provided'], 400);
         }
-        $query = (string)$request->input('q');
+        $query = (string) $request->input('q');
         $rawTerms = array_map('trim', explode(',', $query));
         $terms = array_values(array_filter($rawTerms, function ($t) {
             return mb_strlen($t) >= 1;
@@ -13647,7 +13645,7 @@ class HomeController extends Controller
             $shouldClauses[] = [
                 'wildcard' => [
                     'city_name' => [
-                        'value' => $cleanTerm . '*',
+                        'value' => $cleanTerm.'*',
                         'boost' => 3.5,
                     ],
                 ],
@@ -13657,7 +13655,7 @@ class HomeController extends Controller
             $shouldClauses[] = [
                 'wildcard' => [
                     'city_name' => [
-                        'value' => '*' . $cleanTerm . '*',
+                        'value' => '*'.$cleanTerm.'*',
                         'boost' => 2.5,
                     ],
                 ],
@@ -13675,7 +13673,7 @@ class HomeController extends Controller
             $shouldClauses[] = [
                 'wildcard' => [
                     'state_name' => [
-                        'value' => '*' . $cleanTerm . '*',
+                        'value' => '*'.$cleanTerm.'*',
                         'boost' => 1.5,
                     ],
                 ],
@@ -13696,7 +13694,7 @@ class HomeController extends Controller
                 $shouldClauses[] = [
                     'wildcard' => [
                         'country_name' => [
-                            'value' => '*' . $cTerm . '*',
+                            'value' => '*'.$cTerm.'*',
                             'boost' => 1.0,
                         ],
                     ],
@@ -13704,7 +13702,7 @@ class HomeController extends Controller
             }
         }
 
-        $limit = min((int)$request->input('limit', 25), 100);
+        $limit = min((int) $request->input('limit', 25), 100);
         if ($limit <= 0) {
             $limit = 25;
         }
@@ -13725,7 +13723,8 @@ class HomeController extends Controller
         try {
             $response = $this->elasticService->getClient()->search($params);
         } catch (\Throwable $e) {
-            \Log::warning('Elasticsearch location autocomplete fallback: ' . $e->getMessage());
+            \Log::warning('Elasticsearch location autocomplete fallback: '.$e->getMessage());
+
             return response()->json([
                 'query' => $query,
                 'count' => 0,
@@ -13735,7 +13734,7 @@ class HomeController extends Controller
         }
 
         $hits = $response['hits']['hits'] ?? [];
-        $appKey = (string)config('app.key');
+        $appKey = (string) config('app.key');
 
         $canonicalList = collect($hits)->map(function ($hit) use ($appKey) {
             $src = $hit['_source'] ?? [];
@@ -13766,9 +13765,9 @@ class HomeController extends Controller
                 $aliases = [strtolower($cityRaw)];
             }
 
-            $cityId = (int)($src['city_id'] ?? $src['id'] ?? 0);
-            $stateId = (int)($src['state_id'] ?? 0);
-            $countryId = (int)($src['country_id'] ?? 0);
+            $cityId = (int) ($src['city_id'] ?? $src['id'] ?? 0);
+            $stateId = (int) ($src['state_id'] ?? 0);
+            $countryId = (int) ($src['country_id'] ?? 0);
             $countryCode = strtoupper(trim($src['country_code'] ?? ''));
             if (empty($countryCode)) {
                 $countryCode = 'XX';
@@ -13782,26 +13781,26 @@ class HomeController extends Controller
             $sig = hash_hmac('sha256', $sigPayload, $appKey);
 
             return [
-                'id'           => (int)($src['id'] ?? $cityId),
-                'city_id'      => $cityId,
-                'state_id'     => $stateId,
-                'country_id'   => $countryId,
+                'id' => (int) ($src['id'] ?? $cityId),
+                'city_id' => $cityId,
+                'state_id' => $stateId,
+                'country_id' => $countryId,
                 'canonical_id' => $canonicalId,
-                'city'         => $city,
-                'state'        => $state,
-                'country'      => $country,
+                'city' => $city,
+                'state' => $state,
+                'country' => $country,
                 'country_code' => $countryCode,
-                'label'        => $label,
-                'aliases'      => array_values(array_unique(array_filter($aliases))),
-                '_sig'         => $sig,
+                'label' => $label,
+                'aliases' => array_values(array_unique(array_filter($aliases))),
+                '_sig' => $sig,
             ];
         });
 
         // Forward compatibility: if caller requests format=canonical, return rich canonical object
         if ($request->input('format') === 'canonical' || $request->boolean('canonical')) {
             return response()->json([
-                'query'   => $query,
-                'count'   => $canonicalList->count(),
+                'query' => $query,
+                'count' => $canonicalList->count(),
                 'results' => $canonicalList->values(),
             ]);
         }

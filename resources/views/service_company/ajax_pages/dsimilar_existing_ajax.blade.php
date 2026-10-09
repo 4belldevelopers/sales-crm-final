@@ -705,14 +705,14 @@
                     $source_from_id = $candId;
 
                     if (isset($rowMaps)) {
-                        $recCounter = isset($rowMaps['recAssignedSet'][$candId]) ? 1 : 0;
-                        $source_from_type = $rowMaps['sourceTypeMap'][$candId] ?? 0;
-                        $parent_conter = isset($rowMaps['parentAssignedSet'][$candId]) ? 1 : 0;
-                        $existingCandidatesQuery = isset($rowMaps['existingCandidatesSet'][$candId]) ? 1 : 0;
-                        $directJobApp = isset($rowMaps['directJobAppSet'][$candId]) ? 1 : 0;
+                        $isRecAssigned = isset($rowMaps['rec_assigned'][$candId]) || isset($rowMaps['recAssignedSet'][$candId]);
+                        $source_from_type = $rowMaps['source_from_type'][$candId] ?? $rowMaps['sourceTypeMap'][$candId] ?? 0;
+                        $isParentAssigned = isset($rowMaps['parent_assigned'][$candId]) || isset($rowMaps['parentAssignedSet'][$candId]);
+                        $isExistingInJob = isset($rowMaps['existing_in_job'][$candId]) || isset($rowMaps['existingCandidatesSet'][$candId]);
                         if (isset($assignedCandidateIds) && in_array($candId, $assignedCandidateIds, true)) {
-                            $existingCandidatesQuery = 1;
+                            $isExistingInJob = true;
                         }
+                        $isAdded = ($isRecAssigned || $isParentAssigned || $isExistingInJob);
                     } else {
                         $recCounter = DB::table('rec_candidate_assign')
                             ->where('source_jobid', @$jobid)
@@ -720,6 +720,7 @@
                                 $q->where('source_from_id', $candId)
                                     ->orWhere('source_application_id', $candId);
                             })
+                            ->where('ac_status', 1)
                             ->count();
 
                         $source_from_type = 0;
@@ -750,6 +751,7 @@
                             ->where('source_jobid', '=', $jobid)
                             ->whereIn('source_from_type', [1, 2])
                             ->where('parent_id', '=', $candId)
+                            ->where('ac_status', 1)
                             ->count();
 
                         $existingCandidatesQuery = DB::table('add_job_wise_condidates')
@@ -757,13 +759,10 @@
                             ->where('job_application_id', '=', $candId)
                             ->count();
 
-                        $directJobApp = DB::table('job_applications')
-                            ->where('job_id', '=', $jobid)
-                            ->where('id', '=', $candId)
-                            ->count();
+                        $isAdded = ($recCounter > 0 || $parent_conter > 0 || $existingCandidatesQuery > 0);
                     }
 
-                    if ($recCounter > 0 || $parent_conter > 0 || $existingCandidatesQuery > 0 || $directJobApp > 0) {
+                    if ($isAdded) {
                         $html = '<div class="d-flex flex-column"> 
                                     <button type="button" class="btn btn-sm" disabled style="background:#16a34a;color:#fff;border-color:#16a34a;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:default;display:inline-flex;align-items:center;gap:5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Added
