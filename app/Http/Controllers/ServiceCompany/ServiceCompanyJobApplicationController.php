@@ -999,6 +999,24 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
             \Log::warning('recruiterNoteUpdate ELASTIC_CANDIDATES_BENCH update failed: '.$e->getMessage());
         }
 
+        // Also synchronize ELASTIC_CAREER_APPLY if present (Career Page candidates)
+        try {
+            if (defined('ELASTIC_CAREER_APPLY') && $this->elasticService->indexExists(ELASTIC_CAREER_APPLY)) {
+                if ($this->elasticService->getClient()->exists(['index' => ELASTIC_CAREER_APPLY, 'id' => (int) $appId])) {
+                    $this->elasticService->getClient()->update([
+                        'index' => ELASTIC_CAREER_APPLY,
+                        'id' => (int) $appId,
+                        'body' => [
+                            'doc' => ['recruiter_note' => $recruiterNote],
+                        ],
+                    ]);
+                    $this->elasticService->getClient()->indices()->refresh(['index' => ELASTIC_CAREER_APPLY]);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('recruiterNoteUpdate ELASTIC_CAREER_APPLY update failed: '.$e->getMessage());
+        }
+
         // 3. Bust candidate drawer cache across all slugs and associated job-wise IDs
         $drawerViewVersion = @filemtime(resource_path('views/service_company/job-applications/showdetail.blade.php')) ?: 0;
         $wiseIds = DB::table('add_job_wise_condidates')->where('job_application_id', $appId)->pluck('id')->toArray();
@@ -17021,17 +17039,60 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         return in_array(strtolower($word), array_map('strtolower', $designationKeywords));
     }
 
-    /** Returns recruiter note templates for the current company (global + company-scoped). */
+    /** Returns recruiter note templates for the current company (standard templates + company-scoped DB templates). */
     public function recruiterNoteTemplates(Request $request)
     {
-        $templates = DB::table('recruiter_note_master')
+        $standardTemplates = [
+            [
+                'id' => 101,
+                'title' => 'Strong Fit',
+                'category' => 'Candidate Fit & Experience',
+                'content' => "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role.",
+            ],
+            [
+                'id' => 104,
+                'title' => 'Similar Company / Product Experience',
+                'category' => 'Candidate Fit & Experience',
+                'content' => "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration.",
+            ],
+            [
+                'id' => 102,
+                'title' => '🟢 Immediate Joiner',
+                'category' => 'Availability & Notice Period',
+                'content' => "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change].",
+            ],
+            [
+                'id' => 103,
+                'title' => '🟢 Serving Notice Period',
+                'category' => 'Availability & Notice Period',
+                'content' => "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week.",
+            ],
+        ];
+
+        $companyId = auth()->check() ? auth()->user()->company_id : null;
+        $dbTemplates = DB::table('recruiter_note_master')
             ->where('status', 1)
-            ->where(function ($q) {
-                $q->whereNull('company_id')->orWhere('company_id', auth()->user()->company_id);
+            ->where(function ($q) use ($companyId) {
+                $q->whereNull('company_id');
+                if ($companyId) {
+                    $q->orWhere('company_id', $companyId);
+                }
             })
             ->orderBy('id')
             ->get(['id', 'title', 'content']);
 
-        return response()->json(['status' => 'success', 'data' => $templates]);
+        $result = collect($standardTemplates);
+        foreach ($dbTemplates as $dbTpl) {
+            if (! $result->contains('title', $dbTpl->title)) {
+                $result->push([
+                    'id' => $dbTpl->id,
+                    'title' => $dbTpl->title,
+                    'category' => 'Custom Templates',
+                    'content' => $dbTpl->content,
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'success', 'data' => $result->values()]);
     }
 }
