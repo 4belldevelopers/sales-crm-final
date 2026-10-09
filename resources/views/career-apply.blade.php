@@ -3173,7 +3173,7 @@ textarea.has-validation-error:focus,
               <div class="fsc candidate-card-body pd-body">
                 <div class="professional-profile-grid">
                   <div class="fg fv-row">
-                    <label>Current Company <span class="rq">*</span></label>
+                    <label>Current Company <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></label>
                     <div class="candidate-field-control"><i class="fa-regular fa-building" aria-hidden="true"></i><input type="text" name="current_company" id="current_company" value="{{ @$application->current_company }}" placeholder="Enter current company" /></div>
                     <small class="candidate-professional-help">e.g. TCS, Infosys, Amazon</small>
                   </div>
@@ -3276,7 +3276,7 @@ textarea.has-validation-error:focus,
                   <section class="candidate-salary-panel candidate-salary-panel--current">
                     <div class="candidate-salary-panel-head">
                       <span><i class="fa-solid fa-coins" aria-hidden="true"></i></span>
-                      <div><strong>Current Salary <span class="rq">*</span></strong><small>What the candidate currently earns</small></div>
+                      <div><strong>Current Salary <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></strong><small>What the candidate currently earns</small></div>
 
                     </div>
                     <div class="candidate-salary-tabs" role="tablist" aria-label="Salary frequency">
@@ -3313,13 +3313,13 @@ textarea.has-validation-error:focus,
                           @endphp
                         </select>
                       </div>
-                      <div class="fg fv-row"><label>Current Salary (Annual) <span class="rq">*</span> <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Annual) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="pay_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_annual" id="pay_annual" value="{{ @$application->ctc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Current Salary (Monthly) <span class="rq">*</span> <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Monthly) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="pay_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="pay_monthly" id="pay_monthly" value="{{ @$application->ctc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted payratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="current" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Current Salary (Hourly) <span class="rq">*</span> <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
+                      <div class="fg fv-row"><label>Current Salary (Hourly) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="pay_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ctc" id="ctc" value="{{ @$application->ctc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted CurrentCTC"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateCurrentSalaryHint">Enter your current {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -3330,20 +3330,20 @@ textarea.has-validation-error:focus,
                   </section>
 
                   <section class="candidate-salary-panel candidate-salary-panel--expected">
-                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary <span class="rq">*</span></strong><small>What the candidate expects to earn</small></div></div>
+                    <div class="candidate-salary-panel-head"><span><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span><div><strong>Expected Salary <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional for Freshers)</span></strong><small>What the candidate expects to earn</small></div></div>
                     <div class="candidate-salary-tabs candidate-salary-tabs--synced" role="group" aria-label="Expected salary frequency, synchronized with Current Salary">
                       <button type="button" class="{{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="annual" data-salary-mode="0">Annual</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="monthly" data-salary-mode="1">Monthly</button>
                       <button type="button" class="{{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-group="expected" data-salary-period="hourly" data-salary-mode="2">Hourly</button>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'annual' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="annual">
-                      <div class="fg fv-row"><label>Expected Salary (Annual) <span class="rq">*</span> <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Annual) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="bill_rate_annual_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_annual" id="bill_annual" value="{{ @$application->ectc_yearly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billrateannual"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'monthly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="monthly">
-                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span class="rq">*</span> <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Monthly) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="bill_rate_monthly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="bill_monthly" id="bill_monthly" value="{{ @$application->ectc_monthly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted billratemonthly"></span></div>
                     </div>
                     <div class="candidate-salary-period {{ $candidateSalaryPeriod === 'hourly' ? 'is-active' : '' }}" data-salary-panel="expected" data-salary-period="hourly">
-                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span class="rq">*</span> <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
+                      <div class="fg fv-row"><label>Expected Salary (Hourly) <span class="rq candidate-experienced-only-rq">*</span><span class="candidate-fresher-note text-muted fw-normal" style="display:none;font-size:11px;font-weight:400;margin-left:4px;">(Optional)</span> <span id="bill_rate_hourly_usd" class="jero-pill-wrapper"></span></label><div class="ig"><input type="number" name="ectc" id="ectc" value="{{ @$application->ectc_hourly }}" placeholder="Enter amount" /><span class="ig-a changeTextCurrency">INR</span></div><span class="form-text text-muted expectedctc"></span></div>
                     </div>
                     <div class="candidate-salary-hint"><i class="fa-regular fa-lightbulb" aria-hidden="true"></i><span id="candidateExpectedSalaryHint">Enter your expected {{ $candidateSalaryPeriod }} salary.</span></div>
                     <div class="candidate-salary-auto candidate-salary-auto--dynamic">
@@ -4341,14 +4341,19 @@ $(document).ready(function () {
         };
     }
 
+    window._resumeUploadState = '{{ $hasExistingResume ? "uploaded" : "idle" }}';
+
     // ── v2 state → existing progress bar UI bridge ───────────────────────────
     if (RESUMES_FEATURE_BROWSER_UPLOAD) {
         window.ResumePresign.onStateChange(function (data) {
             if (data.state === 'uploading') {
+                window._resumeUploadState = 'uploading';
                 $('#upWrap').show();
                 $('#upBar').css('width', data.progress + '%');
                 $('#upStats').html(data.progress + '% &middot; Uploading to cloud&hellip;');
             } else if (data.state === 'uploaded') {
+                window._resumeUploadState = 'uploaded';
+                clearCandidateFieldValidationErrors('resume');
                 $('#upBar').css('width', '100%');
                 $('#upStats').html('100% &middot; Upload complete');
                 $('#upPill').css('display', 'inline-flex');
@@ -4366,6 +4371,7 @@ $(document).ready(function () {
                 $('#resumeCheck').val('1');
                 // Storage upload is isolated: do NOT clear ri.value or re-call showUploadedCard to avoid parser conflicts
             } else if (data.state === 'failed') {
+                window._resumeUploadState = 'failed';
                 if (typeof _showUploadError === 'function') {
                     _showUploadError(data.error || 'Upload failed. Please remove and try again.');
                 }
@@ -4471,7 +4477,14 @@ $(document).ready(function () {
         const ext = file.name.split('.').pop().toLowerCase();
 
         if ($.inArray(ext, ['pdf', 'doc', 'docx']) === -1) {
-            alert('Only PDF, DOC and DOCX files are allowed.');
+            window._resumeUploadState = 'failed';
+            applyCandidateFieldValidationErrors([{
+                key: 'resume',
+                label: 'Upload Resume',
+                selector: '#uploadBox',
+                message: 'Only PDF, DOC and DOCX files are allowed.'
+            }]);
+            jumpToCandidateField('resume');
             return;
         }
 
@@ -4479,9 +4492,19 @@ $(document).ready(function () {
 
         // Server is `max:6048` KB = 6 MB. Keep the JS check in sync.
         if (sizeMB > 6) {
-            alert('Maximum file size is 6 MB.');
+            window._resumeUploadState = 'failed';
+            applyCandidateFieldValidationErrors([{
+                key: 'resume',
+                label: 'Upload Resume',
+                selector: '#uploadBox',
+                message: 'Maximum file size is 6 MB.'
+            }]);
+            jumpToCandidateField('resume');
             return;
         }
+
+        window._resumeUploadState = 'uploading';
+        clearCandidateFieldValidationErrors('resume');
         var uploadGeneration = ++resumeUploadGeneration;
 
         // Show human-readable size: KB for small files (avoids "0.07 MB" display)
@@ -4612,6 +4635,8 @@ $(document).ready(function () {
         resumeUploadGeneration++;
         resetProgress();
         resetJobSkillsDetails();
+        window._resumeUploadState = 'idle';
+        clearCandidateFieldValidationErrors('resume');
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());
@@ -4712,6 +4737,13 @@ $(document).ready(function () {
     var _resumeUploadId      = null;
 
     function _showUploadError(msg) {
+        window._resumeUploadState = 'failed';
+        applyCandidateFieldValidationErrors([{
+            key: 'resume',
+            label: 'Upload Resume',
+            selector: '#uploadBox',
+            message: msg || 'Resume upload failed. Please remove and try again.'
+        }]);
         $('#upBanner').removeClass('ok').addClass('err').html(
             '<svg class="up-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
             + '<circle cx="12" cy="12" r="10"/>'
@@ -4731,6 +4763,8 @@ $(document).ready(function () {
         window.__upXhrChannelClaimed = true;
         resetProgress();
         window.__upXhrChannelClaimed = true;
+        window._resumeUploadState = 'uploading';
+        clearCandidateFieldValidationErrors('resume');
         if (_parseStatusInterval) { clearInterval(_parseStatusInterval); _parseStatusInterval = null; }
         _resumeUploadId = null;
 
@@ -4769,6 +4803,8 @@ $(document).ready(function () {
             upXhr = null;
 
             if (this.status >= 200 && this.status < 300 && r && r.success) {
+                window._resumeUploadState = 'uploaded';
+                clearCandidateFieldValidationErrors('resume');
                 $('#upBar').css('width', '100%');
                 $('#upStats').text('100% &middot; ' + fmtKB(file.size) + ' / ' + fmtKB(file.size));
                 $('#upPill').css('display', 'inline-flex');
@@ -4789,11 +4825,13 @@ $(document).ready(function () {
 
                 // Zero server polling: 100% of resume parsing runs client-side
             } else {
+                window._resumeUploadState = 'failed';
                 _showUploadError((r && r.message) ? r.message : 'Upload failed. Try again.');
             }
         };
 
         upXhr.onerror = function () {
+            window._resumeUploadState = 'failed';
             _showUploadError('Network error during upload. Click Remove and try again.');
         };
 
@@ -5752,6 +5790,9 @@ var KTUPDATECandidate = {
       function refreshCandidatePrimarySkills() {
           var required = candidateUniqueSkills(candidateRequiredSkills);
           var selected = candidateSelectedSkills();
+          if (selected.length > 0 && typeof clearCandidateFieldValidationErrors === 'function') {
+              clearCandidateFieldValidationErrors('skills');
+          }
           var matched = required.filter(function (requiredSkill) {
               return selected.some(function (selectedSkill) {
                   return candidateSkillsMatch(requiredSkill, selectedSkill);
@@ -6753,22 +6794,29 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     }
 
     // 1. Upload Resume *
-    var hasResume = false;
-    if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
-        ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
-        ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
-        hasResume = true;
+    if (window._resumeUploadState === 'uploading') {
+        addMissing('resume', 'Upload Resume', '#uploadBox', 'Resume upload is still in progress. Please wait for upload to complete before submitting.');
+    } else if (window._resumeUploadState === 'failed') {
+        addMissing('resume', 'Upload Resume', '#uploadBox', 'Resume upload failed. Please remove and re-upload a valid resume file (PDF or Word, max 6MB).');
     } else {
-        var ri = document.getElementById('resume');
-        if (ri && ri.files && ri.files.length > 0) {
+        var hasResume = false;
+        if (($('#uploaded_file_path').val() && String($('#uploaded_file_path').val()).trim()) ||
+            ($('#resume_original_name').val() && String($('#resume_original_name').val()).trim()) ||
+            ($('#resume_session_uuid').val() && String($('#resume_session_uuid').val()).trim()) ||
+            ($('#resume_intent').val() === 'KEEP' || $('#existing_resume_path').val())) {
             hasResume = true;
-        } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
-            hasResume = true;
-        } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
-            hasResume = true;
+        } else {
+            var ri = document.getElementById('resume');
+            if (ri && ri.files && ri.files.length > 0) {
+                hasResume = true;
+            } else if ($('#fileInfo').is(':visible') && $('#fileName').text().trim()) {
+                hasResume = true;
+            } else if ($('#upInfo').is(':visible') && $('#upFileName').text().trim()) {
+                hasResume = true;
+            }
         }
+        if (!hasResume) addMissing('resume', 'Upload Resume', '#uploadBox', 'Please upload a resume file (PDF or Word, max 6MB).');
     }
-    if (!hasResume) addMissing('resume');
 
     // 2. Career Summary *
     var cs = ($('#careersummary').val() || '').trim();
@@ -6784,7 +6832,10 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
 
     // 5. Primary Contact Number *
     var ph = ($('#phone').val() || '').trim();
-    if (!ph || ph.length < 6) addMissing('phone');
+    var phDigits = ph.replace(/[^0-9]/g, '');
+    if (!ph || phDigits.length < 6 || phDigits.length > 15) {
+        addMissing('phone', 'Primary Contact Number', '#phone', 'A valid primary contact number is required (between 6 and 15 digits).');
+    }
 
     // 6. Nationality *
     var nat = ($('#nationality').val() || '').trim();
@@ -6806,19 +6857,26 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     var qual = ($('#qualification').val() || '').trim();
     if (!qual) addMissing('qualification');
 
-    // 10. Primary Skills * — minimum 1 skill required
+    // 10. Primary Skills * — minimum 1 valid skill required
     var sk = ($('#kt_tagify_2').val() || '').trim();
-    if (!sk) {
-        addMissing('skills');
-    } else {
+    var hasValidSkills = false;
+    if (sk) {
         try {
             var parsedSkills = JSON.parse(sk);
-            if (Array.isArray(parsedSkills) && parsedSkills.length === 0) {
-                addMissing('skills');
+            if (Array.isArray(parsedSkills)) {
+                hasValidSkills = parsedSkills.some(function (s) {
+                    return s && typeof s.value === 'string' && s.value.trim().length > 0;
+                });
+            } else if (typeof parsedSkills === 'string' && parsedSkills.trim().length > 0) {
+                hasValidSkills = true;
             }
         } catch (e) {
-            if (sk.length < 1) addMissing('skills');
+            var rawList = sk.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+            if (rawList.length > 0) hasValidSkills = true;
         }
+    }
+    if (!hasValidSkills) {
+        addMissing('skills', 'Primary Skills', '.candidate-primary-skill-combobox', 'Primary skills are required (minimum 1 skill).');
     }
 
     // 11. Experience Details *
@@ -6841,57 +6899,57 @@ function detectCandidateMissingFields(formEl, validatorInstance) {
     // Check if Fresher (Total Experience is 0)
     var isFresher = (te === '0' || te === 0);
 
-    // Fields mandatory for Non-Freshers (Experience > 0):
+    // 12. Employment Type * (Mandatory for ALL applicants)
+    var et = ($('#EmploymentType').val() || '').trim();
+    if (!et) addMissing('employmentType', 'Employment Type', '#EmploymentType', 'Please select an employment type.');
+
+    // 13. Current Designation * (Mandatory for ALL applicants)
+    var cd = ($('#current_designation').val() || '').trim();
+    if (!cd) addMissing('current_designation', 'Current Designation', '#current_designation', 'Current designation is required.');
+
+    // Fields mandatory ONLY for Experienced Candidates (Experience > 0):
     if (!isFresher) {
-        // 12. Current Company *
+        // 14. Current Company * (Optional for Freshers)
         var cc = ($('#current_company').val() || '').trim();
-        if (!cc) addMissing('current_company');
+        if (!cc) addMissing('current_company', 'Current Company', '#current_company', 'Current company is required for experienced candidates.');
 
-        // 13. Current Designation *
-        var cd = ($('#current_designation').val() || '').trim();
-        if (!cd) addMissing('current_designation');
-
-        // 14. Employment Type *
-        var et = ($('#EmploymentType').val() || '').trim();
-        if (!et) addMissing('employmentType');
-
-        // 15. Current Salary *
+        // 15. Current Salary * (Optional for Freshers)
         var payAnnual = parseFloat($('#pay_annual').val()) || 0;
         var payMonthly = parseFloat($('#pay_monthly').val()) || 0;
         var ctcVal = parseFloat($('#ctc').val()) || 0;
         if (payAnnual <= 0 && payMonthly <= 0 && ctcVal <= 0) {
-            addMissing('ctc');
+            addMissing('ctc', 'Current Salary', '.candidate-salary-panel--current', 'Current salary details are required for experienced candidates.');
         }
 
-        // 16. Expected Salary *
+        // 16. Expected Salary * (Optional for Freshers)
         var billAnnual = parseFloat($('#bill_annual').val()) || 0;
         var billMonthly = parseFloat($('#bill_monthly').val()) || 0;
         var ectcVal = parseFloat($('#ectc').val()) || 0;
         if (billAnnual <= 0 && billMonthly <= 0 && ectcVal <= 0) {
-            addMissing('ectc');
-        }
-
-        // 17. Notice Period & Joining Details *
-        var snpMode = ($('#serving_notice_period').val() || '').trim();
-        if (!snpMode && snpMode !== '0') {
-            addMissing('np_id', 'Notice Period', '.candidate-notice-options', 'Please select a notice period option.');
-        } else if (snpMode === '0') {
-            var npDays = ($('#ddl_np_id').val() || '').trim();
-            if (!npDays || npDays === '0') {
-                addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
-            }
-        } else if (snpMode === '1' || snpMode === '2') {
-            var npDate = ($('#np_id').val() || '').trim();
-            if (!npDate) {
-                var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Last Working Date (LWD)';
-                addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
-            }
+            addMissing('ectc', 'Expected Salary', '.candidate-salary-panel--expected', 'Expected salary details are required for experienced candidates.');
         }
     }
 
-    // 18. Preferred Work Mode *
+    // 17. Notice Period & Joining Details * (Mandatory for ALL applicants)
+    var snpMode = ($('#serving_notice_period').val() || '').trim();
+    if (!snpMode && snpMode !== '0') {
+        addMissing('np_id', 'Notice Period & Joining Details', '.candidate-notice-options', 'Please select a notice period option.');
+    } else if (snpMode === '0') {
+        var npDays = ($('#ddl_np_id').val() || '').trim();
+        if (!npDays || npDays === '0') {
+            addMissing('np_id', 'Notice Period Days', '#ddl_np_id', 'Please select notice period days.');
+        }
+    } else if (snpMode === '1' || snpMode === '2') {
+        var npDate = ($('#np_id').val() || '').trim();
+        if (!npDate) {
+            var lwdLabel = snpMode === '1' ? 'Expected Last Working Date (LWD)' : 'Joining Date';
+            addMissing('np_id', lwdLabel, '#np_id_display', lwdLabel + ' is required.');
+        }
+    }
+
+    // 18. Preferred Work Mode * (Mandatory for ALL applicants)
     var wm = $('input[name="wm"]:checked').val();
-    if (!wm) addMissing('wm');
+    if (!wm) addMissing('wm', 'Preferred Work Mode', '.candidate-work-mode-grid', 'Please select a preferred work mode.');
 
     // 19. Job Skills Details * (Experience Years AND Proficiency Rating for each job skill)
     var $jobSkillYears = $('select[name^="YearskillId"]');
@@ -7347,6 +7405,30 @@ $(document).on('click', '.jero-cs-item', function () {
     if ($cs.attr('id') === 'jero-cs-location') clearCandidateFieldValidationErrors('kt_tagify_work_location');
     if ($cs.attr('id') === 'jero-cs-qualification') clearCandidateFieldValidationErrors('qualification');
     if ($cs.attr('id') === 'jero-cs-nationality') clearCandidateFieldValidationErrors('nationality');
+});
+
+function syncFresherUIState() {
+    var te = $('#total_exp_year').val();
+    var isFresher = (te !== null && te !== '' && String(te).trim() === '0');
+    if (isFresher) {
+        $('.candidate-experienced-only-rq').hide();
+        $('.candidate-fresher-note').show();
+        clearCandidateFieldValidationErrors('current_company');
+        clearCandidateFieldValidationErrors('ctc');
+        clearCandidateFieldValidationErrors('ectc');
+    } else {
+        $('.candidate-experienced-only-rq').show();
+        $('.candidate-fresher-note').hide();
+    }
+}
+window.syncFresherUIState = syncFresherUIState;
+
+$(document).on('change', '#total_exp_year', function () {
+    syncFresherUIState();
+});
+
+$(function () {
+    syncFresherUIState();
 });
 
 function showCandidateRequiredFieldsModal(missingFields) {
@@ -7890,6 +7972,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $(document).on('change', '#total_exp_year, #rel_exp_year, #total_exp, #rel_exp', function() { 
         total_exp_and_rel_exp();
+        syncFresherUIState();
     });
 
     function normalizeResumeText(text) {
