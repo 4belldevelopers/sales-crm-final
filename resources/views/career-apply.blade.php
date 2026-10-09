@@ -36,16 +36,22 @@
     --jac-success: #10B981 !important;
 }
 
+html {
+    scroll-behavior: auto !important;
+    overflow-x: clip !important;
+    height: auto !important;
+}
+
 .candidate-top-toolbar {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
-    z-index: 50 !important;
+    z-index: 100 !important;
     background: #ffffff !important;
     border-bottom: 1px solid #e2e8f0 !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -54,16 +60,17 @@ body.career-apply-page {
     padding-top: 0 !important;
     margin: 0 !important;
     background-color: #f8fafc !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
     min-height: 100vh !important;
+    height: auto !important;
 }
 
 body.career-apply-page .toolbar {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
 }
 
 .candidate-top-toolbar .candidate-toolbar-container {
@@ -2357,6 +2364,8 @@ textarea.has-validation-error:focus,
             <input type="hidden" name="client_update_uuid" id="client_update_uuid" value="">
             <input type="hidden" name="resume_version" id="resume_version" value="{{ (int)(@$application->resume_version ?? 1) }}">
             <input type="hidden" name="resume_intent" id="resume_intent" value="{{ (!empty($application->resume) || !empty($application->current_resume_id)) ? 'KEEP' : 'NONE' }}">
+            {{-- Intent: Pre-built career listing URL embedded at render time; used by JobApplyService to redirect after successful submission (zero-cost: no Redis/MySQL at submit time, Rule 4) --}}
+            <input type="hidden" name="career_listing_url" id="career_listing_url" value="{{ route('get.careerJobPage', ['companyName' => \Illuminate\Support\Str::slug($account->company_name ?? 'company'), 'companyId' => $company_id]) }}" />
           <div class="fc">
             <!-- Upload + Career Summary -->
             <div class="g2 candidate-intro-grid" style="margin-bottom:16px">
@@ -3473,9 +3482,10 @@ textarea.has-validation-error:focus,
                                   $selected_skill_rating = null;
                                   $skill_val_id = $skill_val->id ?? $skill_val->job_skill_id ?? $skill_val->skill_id ?? null;
 
-                                  if(!empty($skill_val->skill_value)){
+                                  /* Intent: Only pre-select skill experience if explicitly in EDIT mode with a valid application ID; fresh applications start completely clean */
+                                  if (($page_event ?? 'ADD') === 'EDIT' && !empty($appId) && !empty($skill_val->skill_value)) {
                                     $skillValue = str_replace(['Years','Year',' '],'', (string)$skill_val->skill_value);
-                                    if($skillValue !== ''){
+                                    if ($skillValue !== '') {
                                       $total_skill_exp = GeneralMethod::separateNumberParts($skillValue);
                                       $skill_exp_years = $total_skill_exp[0] ?? null;
                                       $skill_exp_months = $total_skill_exp[1] ?? null; 
@@ -3483,7 +3493,7 @@ textarea.has-validation-error:focus,
                                       $selected_skill_exp_year = $skill_exp_years;
                                       $selected_skill_exp_month = $skill_exp_months;
                                       $selected_skill_rating = $skill_val->rating ?? null;
-                                     }
+                                    }
                                   }
                             @endphp
 
@@ -4289,6 +4299,9 @@ $(document).ready(function () {
     // Authoritative Edit/Add state directly from Laravel route/view model (Phase 6)
     var IS_EDIT_MODE = {{ $page_event === 'EDIT' ? 'true' : 'false' }};
     console.log('[PARSER] IS_EDIT_MODE authoritatively set to:', IS_EDIT_MODE);
+    if (!IS_EDIT_MODE && typeof resetJobSkillsDetails === 'function') {
+        resetJobSkillsDetails();
+    }
 
     // ── v2 upload: presign URL injected from PHP; flag computed at runtime ──────
     // resume-presign.js is loaded unconditionally; v2 activates only when the
@@ -4410,12 +4423,32 @@ $(document).ready(function () {
             || message.indexOf('Presign request failed') !== -1;
     }
 
+    /**
+     * Intent: Reset all Job Skills Details selects (Year, Month, Rating) to default unselected state.
+     * Guarantees that every new profile upload or profile switch starts with clean, unselected skill inputs.
+     */
+    function resetJobSkillsDetails() {
+        $('select[name^="YearskillId"]').each(function () {
+            $(this).val('0').trigger('change');
+        });
+        $('select[name^="MonthskillId"]').each(function () {
+            $(this).val('').trigger('change');
+        });
+        $('select[name^="rating"]').each(function () {
+            $(this).val('0').trigger('change');
+        });
+    }
+    window.resetJobSkillsDetails = resetJobSkillsDetails;
+
     // ==========================
     // Common file handler
     // ==========================
     function processFile(file, event = null) {
 
         if (!file) return;
+
+        // Reset Job Skills Details whenever a new profile/resume is selected or dropped
+        resetJobSkillsDetails();
 
         const ext = file.name.split('.').pop().toLowerCase();
 
@@ -4560,6 +4593,7 @@ $(document).ready(function () {
     function backToDropzone() {
         resumeUploadGeneration++;
         resetProgress();
+        resetJobSkillsDetails();
         // Cancel v2 upload if in progress (aborts R2 XHR + clears session UUID)
         if (RESUMES_FEATURE_BROWSER_UPLOAD) {
             window.ResumePresign.cancelUpload(getUpContextKey());

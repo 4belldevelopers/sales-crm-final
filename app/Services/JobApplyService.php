@@ -785,8 +785,22 @@ class JobApplyService
 
             $message = 'messages.createdSuccessfully';
 
+            /* Intent: Redirect to the career job listings page after successful submission.
+             * The career_listing_url is pre-built at blade render time (zero cost — no Redis/MySQL).
+             * Validate it is on the same host to prevent open-redirect abuse before trusting it. */
+            $careerListingUrl = trim((string) $request->input('career_listing_url', ''));
+            $appHost = parse_url(url('/'), PHP_URL_HOST);
+            $isValidCareerUrl = (
+                ! empty($careerListingUrl) &&
+                parse_url($careerListingUrl, PHP_URL_HOST) === $appHost
+            );
+
+            $redirectUrl = $isValidCareerUrl
+                ? $careerListingUrl
+                : url('job-apply/'.$jobId.'/'.$company_id);
+
             return Reply::redirect(
-                url('job-apply/'.$jobId.'/'.$company_id),
+                $redirectUrl,
                 __('menu.jobApplications').' '.__($message)
             );
 
