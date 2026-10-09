@@ -5713,7 +5713,7 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
 
         $resume = '';
         $resumeData = DB::table('documents')->select('*')->where('documentable_id', $this->application->id)->where('name', '=', 'Resume')->first();
-        $this->resume = @$resumeData->hashname;
+        $this->resume = @$resumeData->hashname ?: @$this->application->resume;
 
         $this->bench_assign_count = DB::table('bench_assign')->select('users.id', 'users.name', 'users.email', 'users.mobile', 'users_profile.designation', 'users.working_status')->join('users', 'users.id', '=', 'bench_assign.user_id')->leftJoin('users_profile', 'users_profile.user_id', '=', 'users.id')->where('bench_assign.bench_applications_id', '=', @$this->application->id)->count();
 
@@ -5805,6 +5805,12 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
                     $this->application->offer_amount = $data->of_offer_amount ?? @$this->application->offer_amount;
                     $this->application->joined_date = $data->of_joined_date ?? @$this->application->joined_date;
                     $this->application->hashname = ($data->hashname ?? null) ? $data->hashname : ($data->resume ?? @$this->application->hashname);
+                    if (empty($this->application->resume)) {
+                        $this->application->resume = $data->resume ?? $this->resume ?? @$this->application->hashname;
+                    }
+                    if (empty($this->resume)) {
+                        $this->resume = $this->application->resume;
+                    }
                     $this->application->phone_code = $data->phone_code ?? @$this->application->phone_code;
                     $this->application->second_phone_code = $data->second_phone_code ?? @$this->application->second_phone_code;
                     $this->application->id = $data->candidate_id ?? $this->application->id;
@@ -5833,13 +5839,21 @@ class ServiceCompanyJobApplicationController extends ServiceCompanyBaseControlle
         }
 
         $this->resumeAwsPath = false;
-        if (! empty($this->application->resume)) {
-            $info = pathinfo($this->application->resume);
-            $path = str_replace('https://file.jero.works/', '', $this->application->resume);
-            $s3Path = 'Resumes/'.$info['basename'];
+        $effectiveResume = $this->application->resume ?: $this->resume ?: ($this->application->hashname ?? null);
+        if (! empty($effectiveResume)) {
+            $this->application->resume = $effectiveResume;
+            $info = pathinfo($effectiveResume);
+            $path = ltrim(str_replace('https://file.jero.works/', '', $effectiveResume), '/');
+            $s3Path = 'Resumes/'.($info['basename'] ?? '');
 
-            if (Storage::disk('r2')->exists($path)) {
+            if (Storage::disk('r2')->exists($path) || (! empty($info['basename']) && Storage::disk('r2')->exists($s3Path))) {
                 $this->resumeAwsPath = true;
+            } else {
+                $fallbackPdf = preg_replace('/\.[^.\/]+$/', '.pdf', $path);
+                if ($fallbackPdf !== $path && Storage::disk('r2')->exists($fallbackPdf)) {
+                    $this->resumeAwsPath = true;
+                    $this->application->resume = 'https://file.jero.works/'.$fallbackPdf;
+                }
             }
         }
 

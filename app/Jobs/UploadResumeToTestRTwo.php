@@ -100,11 +100,53 @@ class UploadResumeToTestRTwo implements ShouldQueue
         $dbSave = 'https://file.jero.works/'.$r2Path;
 
         // ✅ MOVE FILE INSIDE R2
-        Storage::disk('r2')->move($tempPath, $r2Path);
+        try {
+            Storage::disk('r2')->move($tempPath, $r2Path);
+        } catch (\Throwable $me) {
+            \Log::warning('UploadResumeToTestRTwo: R2 move fallback: '.$me->getMessage());
+        }
 
         DB::table('job_applications')
             ->where('id', $this->jobApplicationId)
             ->update(['resume' => $dbSave]);
+
+        $appRow = DB::table('job_applications')->where('id', $this->jobApplicationId)->first(['company_id', 'current_resume_id']);
+        $companyId = $appRow?->company_id ?? 0;
+
+        try {
+            DB::table('documents')->updateOrInsert(
+                [
+                    'documentable_type' => 'App\JobApplication',
+                    'documentable_id' => $this->jobApplicationId,
+                    'name' => 'Resume',
+                ],
+                [
+                    'hashname' => $dbSave,
+                    'company_id' => $companyId,
+                    'updated_at' => now(),
+                ]
+            );
+        } catch (\Throwable $de) {
+            \Log::warning('UploadResumeToTestRTwo: documents update error: '.$de->getMessage());
+        }
+
+        try {
+            DB::table('resume_assets')
+                ->where('candidate_id', $this->jobApplicationId)
+                ->where('status', 'ACTIVE')
+                ->update([
+                    'object_key' => $dbSave,
+                    'updated_at' => now(),
+                ]);
+        } catch (\Throwable $re) {
+            \Log::warning('UploadResumeToTestRTwo: resume_assets update error: '.$re->getMessage());
+        }
+
+        try {
+            \App\Jobs\SyncCandidateToElasticJob::dispatch($this->jobApplicationId);
+        } catch (\Throwable $ee) {
+            \Log::warning('UploadResumeToTestRTwo: SyncCandidateToElasticJob dispatch error: '.$ee->getMessage());
+        }
 
         \Log::info('R2 temp moved to Resumes with unique key', ['r2Path' => $r2Path]);
     }

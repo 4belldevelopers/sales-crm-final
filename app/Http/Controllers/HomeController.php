@@ -824,12 +824,23 @@ class HomeController extends Controller
         }
         $customName = $candidateName.'.'.$ext;
 
-        // If not found at stored path, try PDF fallback (covers records with corrupted .htm extension in DB)
+        // If not found at stored path, try PDF fallback, Resumes root fallback, or temp path recovery
         if (in_array($ext, ['htm', 'html']) || ! Storage::disk('r2')->exists($storedPath)) {
             $fallbackPath = preg_replace('/\.[^.\/]+$/', '.pdf', $storedPath);
+            $baseNameOnly = basename($storedPath);
             if ($fallbackPath !== $storedPath && Storage::disk('r2')->exists($fallbackPath)) {
                 $storedPath = $fallbackPath;
                 $customName = $candidateName.'.pdf';
+            } elseif (Storage::disk('r2')->exists('Resumes/'.$baseNameOnly)) {
+                $storedPath = 'Resumes/'.$baseNameOnly;
+            } elseif (Storage::disk('r2')->exists('temp/'.$baseNameOnly)) {
+                // Auto-promote from temp if present
+                try {
+                    Storage::disk('r2')->copy('temp/'.$baseNameOnly, $storedPath);
+                } catch (\Throwable) {}
+                if (! Storage::disk('r2')->exists($storedPath)) {
+                    $storedPath = 'temp/'.$baseNameOnly;
+                }
             } else {
                 abort(404, 'Resume file not found. Please re-upload the resume.');
             }
