@@ -4153,14 +4153,27 @@
           <div class="jw-drawer-body rn-drawer-body d-none">
             <input type="hidden" id="rn_app_id" value="{{ @$application->id }}">
 
-            {{-- Template selector — populated via AJAX on first open --}}
-            <div class="rn-section" id="rn-template-wrap" style="display:none;">
-              <label class="rn-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Select Template <span>(Optional — loads content into the comments below)</span>
-              </label>
+            {{-- Template selector --}}
+            <div class="rn-section" id="rn-template-wrap">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="rn-label mb-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;color:#a1a5b7;flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  Select Template <span>(Optional — loads content into comments)</span>
+                </label>
+                <button type="button" class="btn btn-sm btn-light-warning py-0 px-2" id="btn_sync_drawer_rm_template" title="Automatically prefill and sync comments with candidate details" style="font-size:10.5px;height:22px;line-height:20px;border-radius:4px;font-weight:500;">
+                  <i class="fa-solid fa-arrows-rotate me-1" style="font-size:9px;"></i> Sync Details
+                </button>
+              </div>
               <select class="rn-select" id="rn_template_select">
                 <option value="">Select Comment Template...</option>
+                <optgroup label="Candidate Fit & Experience">
+                  <option value="101">Strong Fit</option>
+                  <option value="104">Similar Company / Product Experience</option>
+                </optgroup>
+                <optgroup label="Availability & Notice Period">
+                  <option value="102">🟢 Immediate Joiner</option>
+                  <option value="103">🟢 Serving Notice Period</option>
+                </optgroup>
               </select>
             </div>
 
@@ -5049,8 +5062,87 @@ setTimeout(() => {
     
 
     // ===== DRAWER 4: Recruiter Notes =====
-    var rnTemplates = {};
+    @php
+        $drawerSkillsList = [];
+        if (!empty($jobSkill)) {
+            foreach ($jobSkill as $__jsk) {
+                $__jskObj = (object) $__jsk;
+                $__skName = trim((string) (@$__jskObj->skill_name ?? ''));
+                if ($__skName !== '' && !in_array($__skName, $drawerSkillsList, true)) {
+                    $drawerSkillsList[] = $__skName;
+                }
+            }
+        }
+        if (empty($drawerSkillsList) && !empty($application->skills)) {
+            foreach (explode(',', $application->skills) as $__cs) {
+                $__cs = trim($__cs);
+                if ($__cs !== '' && !in_array($__cs, $drawerSkillsList, true)) {
+                    $drawerSkillsList[] = $__cs;
+                }
+            }
+        }
+        $drawerSkillsStr = !empty($drawerSkillsList) ? implode(', ', array_slice($drawerSkillsList, 0, 5)) : 'required skills';
+        $drawerExpStr = !empty($application->total_experience) ? $application->total_experience . ' years' : (!empty($application->rel_exp) ? $application->rel_exp . ' years' : '5+ years');
+        $drawerCompStr = !empty($application->company_name) ? $application->company_name : (!empty($application->current_company) ? $application->current_company : '');
+        $drawerNoticeStr = !empty($application->notice_period) ? $application->notice_period : (!empty($application->serving_notice_period_mode) ? 'Serving Notice Period' : '2–3 days');
+        $drawerLwdStr = !empty($application->last_working_date) ? \Carbon\Carbon::parse($application->last_working_date)->format('d M Y') : 'Immediate';
+    @endphp
+
+    var drawerCandidateVars = {
+        relevantExperience: @json($drawerExpStr),
+        allSkills: @json($drawerSkillsStr),
+        currentCompany: @json($drawerCompStr),
+        joiningTimeline: @json($drawerNoticeStr),
+        lastWorkingDay: @json($drawerLwdStr),
+        jobChangeReason: 'career advancement'
+    };
+
+    var rnFallbackTemplates = {
+        '101': {
+            id: 101,
+            title: 'Strong Fit',
+            category: 'Candidate Fit & Experience',
+            content: "Strong match for the requirement with [relevant experience] of relevant experience in [all skills in job]. Currently working on a similar product environment and appears technically aligned with the role."
+        },
+        '104': {
+            id: 104,
+            title: 'Similar Company / Product Experience',
+            category: 'Candidate Fit & Experience',
+            content: "Currently working[current company context] in a product-based environment with responsibilities very similar to this position. Good understanding of Agile development and cross-functional collaboration."
+        },
+        '102': {
+            id: 102,
+            title: '🟢 Immediate Joiner',
+            category: 'Availability & Notice Period',
+            content: "Immediate joiner and available to start within [joining timeline]. Relevant experience matches the requirement closely. Candidate is actively looking due to [reason for job change]."
+        },
+        '103': {
+            id: 103,
+            title: '🟢 Serving Notice Period',
+            category: 'Availability & Notice Period',
+            content: "Currently serving notice period with last working day on [last working day]. Candidate is open to completing the process immediately and can join from the following week."
+        }
+    };
+    var rnTemplates = Object.assign({}, rnFallbackTemplates);
     var rnTemplatesLoaded = false;
+
+    function interpolateDrawerTemplate(content) {
+        if (!content) return '';
+        var v = drawerCandidateVars;
+        var out = content;
+        out = out.replace(/\[relevant experience\]/gi, v.relevantExperience || '5+ years');
+        out = out.replace(/\[all skills in job\]/gi, v.allSkills || 'required skills');
+        out = out.replace(/\(Mentioned all the skills in job\)/gi, v.allSkills || 'required skills');
+        if (v.currentCompany) {
+            out = out.replace(/\[current company context\]/gi, ' at ' + v.currentCompany);
+        } else {
+            out = out.replace(/\[current company context\]/gi, '');
+        }
+        out = out.replace(/\[joining timeline\]/gi, v.joiningTimeline || '2–3 days');
+        out = out.replace(/\[reason for job change\]/gi, v.jobChangeReason || 'career advancement');
+        out = out.replace(/\[last working day\]/gi, v.lastWorkingDay || 'Immediate');
+        return out.replace(/[ \t]{2,}/g, ' ').trim();
+    }
 
     $(document).on('click', '.editRecruiterNote', function(e) {
         e.preventDefault();
@@ -5063,13 +5155,16 @@ setTimeout(() => {
         if (!rnTemplatesLoaded) {
             $.getJSON('{{ route('service_company.job-applications.recruiterNoteTemplates') }}', function(res) {
                 if (res.status === 'success' && res.data && res.data.length > 0) {
-                    var opts = '<option value="">Select Comment Template...</option>';
+                    var customGroup = '';
                     $.each(res.data, function(i, tpl) {
                         rnTemplates[tpl.id] = tpl;
-                        opts += '<option value="' + tpl.id + '">' + $('<div>').text(tpl.title).html() + '</option>';
+                        if ($('#rn_template_select option[value="' + tpl.id + '"]').length === 0) {
+                            customGroup += '<option value="' + tpl.id + '">' + $('<div>').text(tpl.title).html() + '</option>';
+                        }
                     });
-                    $('#rn_template_select').html(opts);
-                    $('#rn-template-wrap').show();
+                    if (customGroup) {
+                        $('#rn_template_select').append('<optgroup label="Custom Templates">' + customGroup + '</optgroup>');
+                    }
                     rnTemplatesLoaded = true;
                 }
             });
@@ -5088,7 +5183,24 @@ setTimeout(() => {
     $(document).on('change', '#rn_template_select', function() {
         var id = $(this).val();
         if (id && rnTemplates[id]) {
-            $('#jw_recruiter_note_editor').html(rnTemplates[id].content);
+            var rawContent = rnTemplates[id].content || '';
+            var formatted = interpolateDrawerTemplate(rawContent);
+            $('#jw_recruiter_note_editor').html(formatted);
+        }
+    });
+
+    $(document).on('click', '#btn_sync_drawer_rm_template', function(e) {
+        e.preventDefault();
+        var selectedId = $('#rn_template_select').val() || '101';
+        if (!selectedId || !rnTemplates[selectedId]) {
+            selectedId = '101';
+            $('#rn_template_select').val('101');
+        }
+        var rawContent = rnTemplates[selectedId] ? rnTemplates[selectedId].content : '';
+        var formatted = interpolateDrawerTemplate(rawContent);
+        $('#jw_recruiter_note_editor').html(formatted);
+        if (typeof toastr !== 'undefined') {
+            toastr.success('Recruiter comments synchronized with candidate details!');
         }
     });
 
