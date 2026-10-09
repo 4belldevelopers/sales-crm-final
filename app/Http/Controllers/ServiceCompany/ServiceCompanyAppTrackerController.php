@@ -2164,11 +2164,45 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // Determine "Added" candidates specifically for the CURRENT JOB ID.
         // A candidate assigned to another job is NOT considered "Added" for this job.
         $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignedCandidateEmails = GeneralMethod::getJobAssignedCandidateEmails((int) $jobid, (int) $company_id, $assignedCandidateIds);
         $existingMap = array_flip($assignedCandidateIds);
 
         $boolQuery['bool']['must_not'][] = [
             'terms' => [
                 'job_master_status_id' => [5, 6],
+            ],
+        ];
+
+        // Recommendation Logic: Show only candidates added to at least one OTHER job,
+        // but NOT added to the current job ($jobid).
+        // 1. Exclude current job ID at the data/query level
+        $boolQuery['bool']['must_not'][] = [
+            'term' => ['jobId' => (int) $jobid],
+        ];
+        $boolQuery['bool']['must_not'][] = [
+            'term' => ['job_id' => (int) $jobid],
+        ];
+
+        // 2. Exclude any candidate already assigned to the current job (direct or recommended/parent)
+        if (! empty($assignedCandidateIds)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'candidate_id' => array_values(array_map('intval', $assignedCandidateIds)),
+                ],
+            ];
+        }
+        if (! empty($assignedCandidateEmails)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'email' => array_values($assignedCandidateEmails),
+                ],
+            ];
+        }
+
+        // 3. Ensure candidate is added to at least one job (jobId > 0)
+        $boolQuery['bool']['filter'][] = [
+            'range' => [
+                'jobId' => ['gt' => 0],
             ],
         ];
 
@@ -2307,25 +2341,9 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             $boolQuery['bool']['filter'][] = $servingCandidateFilter;
         }
 
-        // Primary sort: Candidates with "Add to Job" status must always appear FIRST (0),
-        // followed by candidates already "Added" to the current job (1).
-        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates assigned to another job are NOT "Added" for this job.
-        $assignmentSortScript = [
-            '_script' => [
-                'type' => 'number',
-                'script' => [
-                    'lang' => 'painless',
-                    'source' => (! empty($assignedCandidateIds))
-                        ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
-                        : '0',
-                    'params' => [
-                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
-                    ],
-                ],
-                'order' => 'asc',
-            ],
-        ];
-        array_unshift($sort, $assignmentSortScript);
+        // Note: Candidates already assigned to the current job are completely excluded at the
+        // query level (must_not jobId, candidate_id, email), so no assignment sort script is needed.
+        // Similarity relevance and user-selected sort options remain the primary ranking criteria.
 
         // Build the final query
         $params = [
@@ -2448,7 +2466,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // dd($data);
         $rowMaps = $this->prepareSimilarCandidatesRowMaps($data, $company_id, (int) $jobid, (int) $request->input('app_duplicate', 0), (int) $request->input('app_duplicate_days', 0));
         $responseData = [
-            'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'hasActiveFilters', 'search', 'rowMaps'))->render(),
+            'html' => view('service_company.ajax_pages.similar_existing_ajax', compact('data', 'userPermissions', 'app_int_status', 'app_int_activity', 'app_int_notice', 'sal_mode', 'min_salary_currency', 'app_int_outsource', 'jobid', 'requiredSkills', 'modeFilter', 'currencyFilter', 'symbolsFilter', 'hasActiveFilters', 'search', 'rowMaps', 'assignedCandidateIds'))->render(),
             'total' => $total,
             'pagination' => view('service_company.ajax_pages.pagination', compact('pagination'))->render(),
         ];
@@ -4665,6 +4683,8 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         GeneralMethod::cacheClean('allapptracker_version_user_'.$this->user->id);
         GeneralMethod::cacheClean('allcandidates_version_user_'.$this->user->id);
         GeneralMethod::cacheClean('alljobslist_version_user_'.$this->user->id);
+        GeneralMethod::cacheClean('allsimilarcandidates_version_user_'.$this->user->id);
+        GeneralMethod::cacheClean('alldsimilarcandidates_version_user_'.$this->user->id);
         Cache::forget('custome_count_all:'.$source_company_id.':'.$source_jobid);
 
         $successResponse = [
@@ -9487,6 +9507,7 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
         // Determine "Added" candidates specifically for the CURRENT JOB ID.
         // A candidate assigned to another job is NOT considered "Added" for this job.
         $assignedCandidateIds = GeneralMethod::getJobAssignedCandidateIds((int) $jobid, (int) $company_id);
+        $assignedCandidateEmails = GeneralMethod::getJobAssignedCandidateEmails((int) $jobid, (int) $company_id, $assignedCandidateIds);
 
         $boolQuery['bool']['must_not'][] = [
             'terms' => [
@@ -9494,25 +9515,42 @@ class ServiceCompanyAppTrackerController extends ServiceCompanyBaseController
             ],
         ];
 
-        // Primary sort: Candidates with "Add to Job" status must always appear FIRST (0),
-        // followed by candidates already "Added" to the current job (1).
-        // Scoped strictly to (candidate_id + CURRENT job_id). Candidates assigned to another job are NOT "Added" for this job.
-        $assignmentSortScript = [
-            '_script' => [
-                'type' => 'number',
-                'script' => [
-                    'lang' => 'painless',
-                    'source' => (! empty($assignedCandidateIds))
-                        ? "params.assignedIds.contains((int) doc['candidate_id'].value) ? 1 : 0"
-                        : '0',
-                    'params' => [
-                        'assignedIds' => array_values(array_map('intval', $assignedCandidateIds)),
-                    ],
+        // Recommendation Logic: Show only candidates added to at least one OTHER job,
+        // but NOT added to the current job ($jobid).
+        // 1. Exclude current job ID at the data/query level
+        $boolQuery['bool']['must_not'][] = [
+            'term' => ['jobId' => (int) $jobid],
+        ];
+        $boolQuery['bool']['must_not'][] = [
+            'term' => ['job_id' => (int) $jobid],
+        ];
+
+        // 2. Exclude any candidate already assigned to the current job (direct or recommended/parent)
+        if (! empty($assignedCandidateIds)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'candidate_id' => array_values(array_map('intval', $assignedCandidateIds)),
                 ],
-                'order' => 'asc',
+            ];
+        }
+        if (! empty($assignedCandidateEmails)) {
+            $boolQuery['bool']['must_not'][] = [
+                'terms' => [
+                    'email' => array_values($assignedCandidateEmails),
+                ],
+            ];
+        }
+
+        // 3. Ensure candidate is added to at least one job (jobId > 0)
+        $boolQuery['bool']['filter'][] = [
+            'range' => [
+                'jobId' => ['gt' => 0],
             ],
         ];
-        array_unshift($sort, $assignmentSortScript);
+
+        // Note: Candidates already assigned to the current job are completely excluded at the
+        // query level (must_not jobId, candidate_id, email), so no assignment sort script is needed.
+        // Similarity relevance and user-selected sort options remain the primary ranking criteria.
 
         // Build the final query
         $params = [
