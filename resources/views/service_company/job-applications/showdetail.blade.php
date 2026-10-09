@@ -830,7 +830,13 @@
 
       <div class="cdr-topbar-split" role="separator" aria-hidden="true"></div>
 
-      @if(!empty($application->resume) && in_array(strtolower(pathinfo($application->resume, PATHINFO_EXTENSION)),['pdf', 'doc', 'docx', 'htm', 'html']))
+      @php
+        $_rawResumeUrl = !empty($application->resume) ? $application->resume : (!empty($resume) ? $resume : '');
+        $_resumeExt = strtolower(pathinfo(parse_url($_rawResumeUrl, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
+        $_hasValidResume = !empty($_rawResumeUrl) && (empty($_resumeExt) || in_array($_resumeExt, ['pdf', 'doc', 'docx', 'htm', 'html']));
+      @endphp
+
+      @if($_hasValidResume)
         @if($resumeAwsPath)
           <div class="cdr-dl-wrap" id="hdrDlWrapApp">
             <button type="button" class="cdr-action-btn cdr-btn-secondary" id="hdrDlToggleApp" aria-haspopup="true" aria-expanded="false">
@@ -839,7 +845,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cdr-caret" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div id="hdrDlMenuApp" class="cdr-dl-menu">
-              <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-dl-item">
+              <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($_rawResumeUrl), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-dl-item">
                 Download Resume
               </a>
               <button type="button" onclick="hdrDownloadWithLogoApp()" class="cdr-dl-item cdr-dl-item-logo">
@@ -879,7 +885,7 @@
           }
           </script>
         @else
-          <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($application->resume), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
+          <a href="{{ route('download.resume', ['id' => $application->id,'path' => rtrim(strtr(base64_encode($_rawResumeUrl), '+/', '-_'), '=')]) }}" target="_blank" class="cdr-action-btn cdr-btn-secondary downloadCount {{ $dnone }}" id="hdrDlToggleApp" role="button" aria-haspopup="true" aria-expanded="false" title="Download resume">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Download Resume
           </a>
@@ -5261,7 +5267,7 @@ setTimeout(() => {
   $rdcR2SignUrl = '';
   $rdcResumePdfUrl = '';
   $rdcResumeAvailable = false;
-  $rdcResumeRaw = (string)(@$application->resume ?? '');
+  $rdcResumeRaw = (string)(@$application->resume ?: (@$resume ?? ''));
   if($rdcResumeRaw !== ''){
     // Direct R2 key used by browser-first download/conversion options; no extra query.
     $rdcR2Key = '';

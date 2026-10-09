@@ -423,7 +423,7 @@ class JobApplyService
 
         /* Intent: Pre-flight resume session validation prior to DB transaction */
         $resumeSession = null;
-        if (config('resumes.features.submit_with_session') && config('resumes.features.career_controller') && $request->filled('resume_session_uuid')) {
+        if ($request->filled('resume_session_uuid')) {
             $resumeSession = ResumeUpload::byUuid($request->input('resume_session_uuid'))
                 ->forCompany($company_id)
                 ->first();
@@ -703,6 +703,9 @@ class JobApplyService
                         'updated_at' => now(),
                     ]);
 
+                $resumeSession->linked_candidate_id = $jobApplication->id;
+                $resumeSession->candidate_id = $jobApplication->id;
+
                 UploadSessionAudit::record($resumeSession->id, 'ActionSubmitLinked', [
                     'candidate_id' => $jobApplication->id,
                 ], $company_id, null);
@@ -809,6 +812,8 @@ class JobApplyService
 
             if ($resumeSession) {
                 try {
+                    $resumeSession->linked_candidate_id = $jobApplication->id;
+                    $resumeSession->candidate_id = $jobApplication->id;
                     $finalResumeUrl = app(ResumeUploadSession::class)->moveToCompanyPath($resumeSession);
                     $fileUrl = $finalResumeUrl;
                     $full_name = $resumeSession->original_filename ?? 'resume.pdf';
