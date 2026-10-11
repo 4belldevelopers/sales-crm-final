@@ -592,7 +592,7 @@
             .header-fixed.toolbar-fixed #kt_wrapper, .toolbar-fixed #kt_wrapper { padding-top: 65px !important; }
             #jrwrap.internal-job-create { margin-top: 0 !important; padding-top: 0 !important; }
         </style>
-        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011p">
+        <link rel="stylesheet" href="{{ asset('css/internal-job-create-design.css') }}?v=20261011q">
     @endif
 @endpush
 @section('content')
@@ -4608,6 +4608,6 @@
          bottom of <body>. The onReady() guard inside the file handles both the
          readyState === 'loading' case and the already-interactive/complete case. --}}
     @if(request()->routeIs('service_company.jobs.create') || request()->is('service_company/jobs/create*'))
-        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011p"></script>
+        <script src="{{ asset('js/internal-job-create-design.js') }}?v=20261011q"></script>
     @endif
 @endpush
