@@ -1260,5 +1260,293 @@
     min-width: 0 !important;
 }
 
+/* ==========================================================================
+   Qualification & Education Card (UNESCO ISCED-2011 / Enterprise Standard)
+   ========================================================================== */
+#jrwrap.internal-job-create .ij-qual-card {
+    position: relative !important;
+    overflow: visible !important;
+}
 
+#jrwrap.internal-job-create .ij-qual-card .form-group-cus {
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+}
 
+#jrwrap.internal-job-create .ij-quick-qual-wrap {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 8px 12px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3.5px 10px !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 999px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+    line-height: 1.2 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill:hover {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-1px) !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill.is-universal {
+    border-color: #a7f3d0 !important;
+    background: #f0fdf4 !important;
+    color: #065f46 !important;
+    font-weight: 600 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill.is-universal:hover {
+    background: #ecfdf5 !important;
+    border-color: #6ee7b7 !important;
+    color: #047857 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill.is-active {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.25) !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill.is-universal.is-active {
+    background: #059669 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 4px rgba(5, 150, 105, 0.25) !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-pill svg {
+    width: 10px !important;
+    height: 10px !important;
+    stroke: currentColor !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-input-wrap {
+    position: relative !important;
+    width: 100% !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-input-wrap .form-input {
+    padding-right: 120px !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-dropdown {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    z-index: 1200 !important;
+    display: none;
+    padding: 6px 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-dropdown.active {
+    display: block !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-group-title {
+    padding: 7px 12px 4px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #64748b !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #f1f5f9 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    user-select: none !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-group:first-child .ij-qual-group-title {
+    border-top: none !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 14px !important;
+    font-size: 12.5px !important;
+    color: #1e293b !important;
+    cursor: pointer !important;
+    transition: background 0.12s ease !important;
+    gap: 10px !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item:hover,
+#jrwrap.internal-job-create .ij-qual-item.is-focused {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item.is-selected {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item-icon {
+    color: #94a3b8 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item.is-selected .ij-qual-item-icon {
+    color: #2563eb !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item-name {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 12px !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-item-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+    font-size: 10.5px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-universal {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border-color: #a7f3d0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-bachelor {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-master {
+    background: #f5f3ff !important;
+    color: #7c3aed !important;
+    border-color: #ddd6fe !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-doc {
+    background: #fff7ed !important;
+    color: #c2410c !important;
+    border-color: #fed7aa !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-dip {
+    background: #fefce8 !important;
+    color: #a16207 !important;
+    border-color: #fef08a !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-prof {
+    background: #f0fdf4 !important;
+    color: #15803d !important;
+    border-color: #bbf7d0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-badge-sec {
+    background: #f8fafc !important;
+    color: #64748b !important;
+    border-color: #e2e8f0 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-highlight {
+    background: #fef08a !important;
+    color: #854d0e !important;
+    border-radius: 2px !important;
+    padding: 0 1px !important;
+    font-weight: 700 !important;
+}
+
+/* Selected Qualification Chips */
+#jrwrap.internal-job-create .ij-qual-selected-chips {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+    min-height: 28px !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 5px 12px !important;
+    background: #ffffff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #1e40af !important;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.08) !important;
+    transition: all 0.15s ease !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-chip:hover {
+    border-color: #60a5fa !important;
+    background: #eff6ff !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-chip.is-universal {
+    border-color: #a7f3d0 !important;
+    color: #065f46 !important;
+    background: #f0fdf4 !important;
+}
+
+#jrwrap.internal-job-create .ij-qual-chip.is-universal:hover {
+    border-color: #34d399 !important;
+    background: #ecfdf5 !important;
+}
+
+#jrwrap.internal-job-create .ij-additional-card {
+    position: relative !important;
+}
